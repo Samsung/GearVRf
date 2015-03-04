@@ -94,6 +94,17 @@ public class GVRMaterial extends GVRHybridObject implements
         super(gvrContext, NativeMaterial.ctor(shaderType.ID));
     }
 
+    /**
+     * A convenience overload: builds a {@link GVRMaterial} that uses the most
+     * common stock shader, the {@linkplain GVRShaderType.Unlit 'unlit'} shader.
+     * 
+     * @param gvrContext
+     *            Current {@link GVRContext}
+     */
+    public GVRMaterial(GVRContext gvrContext) {
+        this(gvrContext, GVRShaderType.Unlit.ID);
+    }
+
     GVRMaterial(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
