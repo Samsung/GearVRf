@@ -20,6 +20,7 @@ import java.util.PriorityQueue;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVRScript;
 
 /**
  * Schedule {@linkplain Runnable runnables} to run on the GL thread at a future
@@ -34,9 +35,42 @@ import org.gearvrf.GVRDrawFrameListener;
  * 
  * <p>
  * The periodic engine is an optional component of GVRF: You need to
- * {@linkplain #getInstance(GVRContext) get the singleton} in order to use it.
- * The engine maintains a priority queue of events, which it checks in an
- * {@link GVRDrawFrameListener}:
+ * {@linkplain GVRContext#getPeriodicEngine() get the singleton} in order to use
+ * it. For example,
+ * 
+ * <pre>
+ * 
+ * Runnable pulse = new Runnable() {
+ * 
+ *     public void run() {
+ *         new GVRScaleAnimation(uiObject, 0.5f, 2f) //
+ *                 .setRepeatMode(GVRRepeatMode.PINGPONG) //
+ *                 .start(mAnimationEngine);
+ *     }
+ * };
+ * gvrContext.getPeriodicEngine().runEvery(pulse, 1f, 2f, 10);
+ * </pre>
+ * 
+ * will grow and shrink the {@code uiObject} ten times, every other second,
+ * starting in a second. This can be a good way to draw the user's attention to
+ * something like a notification.
+ * 
+ * <p>
+ * The engine maintains a priority queue of events, which it checks in a
+ * {@linkplain GVRDrawFrameListener frame listener}; events run as
+ * {@linkplain GVRContext#runOnGlThread(Runnable) run-once events.} Every frame,
+ * GVRF runs any run-once events; then any frame listeners (including
+ * animations); then your {@linkplain GVRScript#onStep() onStep() method;} and
+ * then it renders the scene. This means that any periodic events that run on a
+ * given frame will run before any animations. It also means that there is
+ * always a one frame delay between the time an event is dequeued and the time
+ * it actually runs. Scheduling an event from a point in the render pipeline
+ * after the periodic engine will add an additional one frame delay. (The
+ * periodic engine may run before the animation engine or after it - try not to
+ * write code that depends on one running before the other.) Running at 60 fps,
+ * each frame is normally 17 milliseconds apart, unless you add too many
+ * callbacks or put too much code into your {@code onStep()}; Android garbage
+ * collection can introduce additional delays.
  */
 public class GVRPeriodicEngine {
     private static GVRPeriodicEngine sInstance = null;
