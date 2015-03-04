@@ -141,12 +141,10 @@ public class GVRAnimationEngine {
         @Override
         public void onDrawFrame(float frameTime) {
             synchronized (mAnimations) {
-                Iterator<GVRAnimation> iterator = mAnimations.iterator();
-                while (iterator.hasNext()) {
-                    GVRAnimation animation = iterator.next();
-                    boolean terminate = animation.onDrawFrame(frameTime) != true;
-                    if (terminate) {
-                        iterator.remove();
+                List<GVRAnimation> animations = new ArrayList<GVRAnimation>(mAnimations);
+                for (GVRAnimation animation : animations) {
+                    if (animation.onDrawFrame(frameTime) == false) {
+                        mAnimations.remove(animation);
                     }
                 }
             }
