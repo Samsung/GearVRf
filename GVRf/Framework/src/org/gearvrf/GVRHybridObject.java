@@ -16,13 +16,15 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.util.LongSparseArray;
 
 /** Base wrapper class for GVRF C++ classes */
 public class GVRHybridObject {
 
-
-    private static final int REGISTRATIONS_BETWEEN_DEREFERENCE_SCANS = 1000;
+    private static final int REGISTRATIONS_BETWEEN_DEREFERENCE_SCANS = 250;
 
     /** Enables a 1:1 mapping between native objects and Java wrappers */
     protected static final LongSparseArray<GVRHybridObject> sWrappers = new LongSparseArray<GVRHybridObject>();
@@ -64,21 +66,22 @@ public class GVRHybridObject {
         }
 
         mGVRContext = gvrContext;
+        
+        GVRReferenceQueue referenceQueue = gvrContext.getReferenceQueue();
         if (this instanceof GVRRecyclableObject) {
             mReference = new GVRRecyclableReference(ptr,
-                    (GVRRecyclableObject) this, gvrContext.getReferenceQueue()
-                            .getRecyclableQueue());
+                    (GVRRecyclableObject) this,
+                    referenceQueue.getRecyclableQueue());
         } else {
-            GVRHybridReference hybridReference = new GVRHybridReference(ptr,
-                    this, gvrContext.getReferenceQueue()
-                            .getHybridReferenceQueue());
-            mReference = hybridReference;
+            mReference = new GVRHybridReference(ptr, this,
+                    referenceQueue.getHybridReferenceQueue());
         }
+        
         /*
          * Needed to save the reference from being garbage collected before the
          * linked hybrid object gets collected.
          */
-        gvrContext.getReferenceQueue().addReference(mReference);
+        referenceQueue.addReference(mReference);
     }
 
     /**
@@ -183,13 +186,32 @@ public class GVRHybridObject {
         }
 
         private void removeSingleReferences() {
+            final List<GVRRecyclableObject> recyclables = new ArrayList<GVRRecyclableObject>();
             synchronized (sWrappers) {
                 for (int index = sWrappers.size() - 1; index >= 0; --index) {
                     GVRHybridObject wrapper = sWrappers.valueAt(index);
                     if (wrapper.getUseCount() == 1) {
                         sWrappers.removeAt(index);
+                        if (wrapper instanceof GVRRecyclableObject) {
+                            recyclables.add((GVRRecyclableObject) wrapper);
+                        }
                     }
                 }
+            }
+
+            if (recyclables.size() > 0) {
+                // Pass list to GL thread, outside of synchronized block
+                GVRContext gvrContext = recyclables.get(0).getGVRContext();
+                gvrContext.runOnGlThread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        for (GVRRecyclableObject recyclable : recyclables) {
+                            NativeRecyclableObject.recycle(recyclable.getPtr());
+                        }
+
+                    }
+                });
             }
         }
     }

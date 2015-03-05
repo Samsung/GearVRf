@@ -16,7 +16,6 @@
 
 package org.gearvrf;
 
-
 /** Frame Buffer object. */
 public class GVRRenderTexture extends GVRTexture {
     /**
@@ -55,6 +54,14 @@ public class GVRRenderTexture extends GVRTexture {
 
     GVRRenderTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+    }
+
+    @Override
+    protected boolean registerWrapper() {
+        // Render textures are only manipulated within the Java code; we never
+        // have long-lived native references to them, and we don't want the
+        // deference thread to recycle() these.
+        return false;
     }
 }
 

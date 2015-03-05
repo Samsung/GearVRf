@@ -16,7 +16,6 @@
 
 package org.gearvrf;
 
-
 /** Wrapper for a GL texture. */
 public class GVRTexture extends GVRRecyclableObject {
     protected GVRTexture(GVRContext gvrContext, long ptr) {
@@ -31,7 +30,7 @@ public class GVRTexture extends GVRRecyclableObject {
     }
 
     @Override
-    protected final boolean registerWrapper() {
+    protected boolean registerWrapper() {
         return true;
     }
 

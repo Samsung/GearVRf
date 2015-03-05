@@ -76,9 +76,18 @@ class GVRRecyclableReference extends PhantomReference<GVRRecyclableObject>
     }
 
     /**
-     * "Recycles" the native object. The exact semantics are dependent on the
-     * native object implementation, but for current objects this means deleting
-     * the GL shader program.
+     * Close the native resource.
+     * 
+     * This <em>must</em> be called from the GL thread.
+     * 
+     * <p>
+     * This is called from what amounts to a finalizer. Objects with
+     * {@linkplain GVRHybridObject#registerWrapper() registered wrappers} will
+     * usually be recycled long before Java garbage collection disposes of the
+     * wrapper. It <em>is</em> safe to call
+     * {@link NativeRecyclableObject#recycle(long)} more than once for all
+     * existing JNI code; do not add any new code that will fail if native
+     * {@code recycle()} is called multiple times!
      */
     void recycle() {
         NativeRecyclableObject.recycle(mPtr);

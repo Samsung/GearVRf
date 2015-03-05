@@ -15,7 +15,7 @@
 
 
 /***************************************************************************
- * Data for doing a post effect on the scene.
+ * Objects that have native resources that need to be closed or freed.
  ***************************************************************************/
 
 #ifndef RECYCLABLE_OBJECT_H_
@@ -32,6 +32,8 @@ public:
     RecyclableObject() :
             HybridObject() {
     }
+
+    /** Close/free the native resource. It must be safe to call this more than once! */
     virtual void recycle() {
     }
 };
