@@ -94,6 +94,7 @@ public class GVRConsole extends GVRPostEffect {
     private final Canvas canvas = new Canvas(HUD);
     private final Paint paint = new Paint();
     private final float defaultTextSize = paint.getTextSize();
+    private GVRBitmapTexture texture = null;
 
     /**
      * Create a console, specifying the initial eye mode.
@@ -250,7 +251,16 @@ public class GVRConsole extends GVRPostEffect {
     }
 
     private void setMainTexture() {
-        setMainTexture(new GVRBitmapTexture(getGVRContext(), HUD));
+
+        boolean textureUpdated = false;
+        if (texture != null) {
+            textureUpdated = texture.update(HUD);
+        }
+
+        if (textureUpdated != true) {
+            texture = new GVRBitmapTexture(getGVRContext(), HUD);
+            setMainTexture(texture);
+        }
     }
 
     private static synchronized GVRPostEffectShaderId getShaderId(

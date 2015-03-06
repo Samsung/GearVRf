@@ -16,9 +16,10 @@
 
 package org.gearvrf;
 
-
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.opengl.GLUtils;
+import static android.opengl.GLES20.*;
 
 /** Bitmap-based texture. */
 public class GVRBitmapTexture extends GVRTexture {
@@ -26,7 +27,7 @@ public class GVRBitmapTexture extends GVRTexture {
      * Constructs a texture using a pre-existing {@link Bitmap}.
      * 
      * @param gvrContext
-     *            Current {@link GVRContext} 
+     *            Current {@link GVRContext}
      * @param bitmap
      *            A non-null {@link Bitmap} instance.
      */
@@ -39,13 +40,13 @@ public class GVRBitmapTexture extends GVRTexture {
      * the {@code assets} directory.
      * 
      * This method uses a native code path to create a texture directly from a
-     * {@code .png} file; it does not create an Android {@link Bitmap}. It may thus be
-     * slightly faster than loading a {@link Bitmap} and creating a texture with
-     * {@link #GVRBaseTexture(GVRContext, Bitmap)}, and it should reduce memory
-     * pressure, a bit.
+     * {@code .png} file; it does not create an Android {@link Bitmap}. It may
+     * thus be slightly faster than loading a {@link Bitmap} and creating a
+     * texture with {@link #GVRBaseTexture(GVRContext, Bitmap)}, and it should
+     * reduce memory pressure, a bit.
      * 
      * @param gvrContext
-     *            Current {@link GVRContext} 
+     *            Current {@link GVRContext}
      * @param pngAssetFilename
      *            The name of a {@code .png} file, relative to the assets
      *            directory. The assets directory may contain an arbitrarily
@@ -55,6 +56,14 @@ public class GVRBitmapTexture extends GVRTexture {
     public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename) {
         super(gvrContext, NativeBaseTexture.ctorWithFile(gvrContext
                 .getContext().getAssets(), pngAssetFilename));
+    }
+
+    public boolean update(Bitmap bitmap) {
+
+        glBindTexture(GL_TEXTURE_2D, getId());
+        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
+        return (glGetError() == GL_NO_ERROR);
+
     }
 }
 
