@@ -28,24 +28,28 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_ctor(JNIEnv * env,
+Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
         jobject obj, jobject bitmap);
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_ctorWithFile(JNIEnv * env,
+Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
         jobject obj, jobject asset_manager, jstring filename);
-
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj);
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
+        jlong jtexture, jint width, jint height, jbyteArray jdata);
 }
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_ctor(JNIEnv * env,
+Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
         jobject obj, jobject bitmap) {
     return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
             new BaseTexture(env, bitmap)));
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_ctorWithFile(JNIEnv * env,
+Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
         jobject obj, jobject asset_manager, jstring filename) {
 
     const char* native_string = env->GetStringUTFChars(filename, 0);
@@ -77,6 +81,22 @@ Java_org_gearvrf_NativeBaseTexture_ctorWithFile(JNIEnv * env,
     unsigned char *pixels = loader.pOutImage.bits;
     return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
             new BaseTexture(imgW, imgH, pixels)));
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj) {
+    return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
+            new BaseTexture()));
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
+        jlong jtexture, jint width, jint height, jbyteArray jdata) {
+    std::shared_ptr<BaseTexture> texture = *reinterpret_cast<std::shared_ptr<BaseTexture>*>(jtexture);
+    jbyte* data = env->GetByteArrayElements(jdata, 0);
+    jboolean result = texture->update(width, height, data);
+    env->ReleaseByteArrayElements(jdata, data, 0);
+    return result;
 }
 
 }

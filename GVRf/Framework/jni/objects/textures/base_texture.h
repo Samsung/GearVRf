@@ -62,6 +62,17 @@ public:
                 GL_UNSIGNED_BYTE, pixels);
     }
 
+    explicit BaseTexture() : Texture(new GLTexture(TARGET)) {
+
+    }
+
+    bool update(int width, int height, void* data) {
+        glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        return (glGetError() == 0) ? 1 : 0;
+    }
+
     GLenum getTarget() const {
         return TARGET;
     }

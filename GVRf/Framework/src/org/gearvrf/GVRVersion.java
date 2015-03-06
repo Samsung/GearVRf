@@ -34,5 +34,8 @@ public class GVRVersion {
     /** Adds asynchronous mesh loading */
     public static final String V_1_6_2 = "1.6.2";
 
-    public static final String CURRENT = V_1_6_2;
+    /** Adds float point textures, and texture updating */
+    public static final String V_1_6_3 = "1.6.3";
+
+    public static final String CURRENT = V_1_6_3;
 }
