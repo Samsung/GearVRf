@@ -91,54 +91,6 @@ public class GVRActivity extends VrActivity {
 
     /**
      * Links {@linkplain GVRScript a script} to the activity; sets the version;
-     * sets the lens distortion compensation parameters; and sets the renderer
-     * to be used. GVRF does provide a
-     * {@linkplain GLSurfaceView.Renderer#onDrawFrame(javax.microedition.khronos.opengles.GL10)
-     * per-frame callback:} if you don't need the
-     * {@link GLSurfaceView.Renderer#onSurfaceCreated(javax.microedition.khronos.opengles.GL10, javax.microedition.khronos.egl.EGLConfig)
-     * onSurfaceCreated()} or
-     * {@link GLSurfaceView.Renderer#onSurfaceChanged(javax.microedition.khronos.opengles.GL10, int, int)
-     * onSurfaceChanged()} callbacks, you do not need to provide your own
-     * {@link GVRSurfaceViewRenderer} implementation, and can use the simpler
-     * {@link #setScript(GVRScript, String)} overload.
-     * 
-     * @param gvrScript
-     *            An instance of {@link GVRScript} to handle callbacks on the GL
-     *            thread.
-     * @param distortionDataFileName
-     *            Name of the XML file containing the device parameters. We
-     *            currently only support the Galaxy Note 4 because that is the
-     *            only shipping device with the proper GL extensions. When more
-     *            devices support GVRF, we will publish new device files, along
-     *            with app-level auto-detect guidelines. This approach will let
-     *            you support new devices, using the same version of GVRF that
-     *            you have already tested and approved.
-     * 
-     *            <p>
-     *            The XML filename is relative to the application's
-     *            {@code assets} directory, and can specify a file in a
-     *            directory under the application's {@code assets} directory.
-     * @param renderer
-     *            A customized instance of {@link GVRSurfaceViewRenderer}. You
-     *            only need to supply this if you need access to the
-     *            {@link GLSurfaceView.Renderer#onSurfaceCreated(javax.microedition.khronos.opengles.GL10, javax.microedition.khronos.egl.EGLConfig)
-     *            onSurfaceCreated()} or
-     *            {@link GLSurfaceView.Renderer#onSurfaceChanged(javax.microedition.khronos.opengles.GL10, int, int)
-     *            onSurfaceChanged()} callbacks.
-     */
-    public void setScript(GVRScript gvrScript, String distortionDataFileName,
-            GVRSurfaceViewRenderer renderer) {
-        if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            mGVRViewManager = new GVRViewManager(this, gvrScript,
-                    distortionDataFileName, renderer);
-        } else {
-            throw new IllegalArgumentException(
-                    "You can not set orientation to portrait for GVRF apps.");
-        }
-    }
-
-    /**
-     * Links {@linkplain GVRScript a script} to the activity; sets the version;
      * sets the lens distortion compensation parameters.
      * 
      * @param gvrScript
@@ -159,8 +111,13 @@ public class GVRActivity extends VrActivity {
      *            directory under the application's {@code assets} directory.
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
-        setScript(gvrScript, distortionDataFileName,
-                (GVRSurfaceViewRenderer) null);
+        if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+            mGVRViewManager = new GVRViewManager(this, gvrScript,
+                    distortionDataFileName);
+        } else {
+            throw new IllegalArgumentException(
+                    "You can not set orientation to portrait for GVRF apps.");
+        }
     }
 
     void drawFrame() {
@@ -179,11 +136,11 @@ public class GVRActivity extends VrActivity {
     void beforeDrawEyes() {
         mGVRViewManager.beforeDrawEyes();
     }
-    
+
     void onDrawEyeView(int eye, float fovDegrees) {
         mGVRViewManager.onDrawEyeView(eye, fovDegrees);
     }
-    
+
     void afterDrawEyes() {
         mGVRViewManager.afterDrawEyes();
     }

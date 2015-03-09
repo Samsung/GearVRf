@@ -51,7 +51,6 @@ import android.view.SurfaceView;
  * 
  * Now it's about the GL thread. It lets the user handle the scene by calling the users GVRScript.onStep().
  * There are also GVRFrameListeners, GVRAnimationEngine, and Runnables but they aren't that special.
- * Then the methods of GVRRenderer is called to render the main scene.
  */
 
 /**
@@ -59,8 +58,7 @@ import android.view.SurfaceView;
  * 
  * It implements {@link GVRContext}. It handles Android application callbacks
  * like cycles such as the standard Android {@link Activity#onResume()},
- * {@link Activity#onPause()}, and {@link Activity#onDestroy()}; and the
- * standard {@link GLSurfaceView#Renderer} callbacks.
+ * {@link Activity#onPause()}, and {@link Activity#onDestroy()}.
  * 
  * <p>
  * Most importantly, {@link #onDrawFrame()} does the actual rendering, using the
@@ -113,12 +111,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
      *            {@link GVRScript} which describes
      * @param distortionDataFileName
      *            distortion filename under assets folder
-     * @param renderer
-     *            Renders the scene described by {@code gvrScript} into a
-     *            {@link SurfaceView}.
      */
     GVRViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
-            String distortionDataFileName, GVRSurfaceViewRenderer renderer) {
+            String distortionDataFileName) {
         super(gvrActivity);
 
         // Clear singletons and per-run data structures
