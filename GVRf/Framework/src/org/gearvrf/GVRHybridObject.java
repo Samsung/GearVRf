@@ -51,7 +51,27 @@ public class GVRHybridObject {
     private final GVRReference mReference;
 
     GVRHybridObject(GVRContext gvrContext, long ptr) {
+        mGVRContext = gvrContext;
+
+        GVRReferenceQueue referenceQueue = gvrContext.getReferenceQueue();
+        if (this instanceof GVRRecyclableObject) {
+            mReference = new GVRRecyclableReference(ptr,
+                    (GVRRecyclableObject) this,
+                    referenceQueue.getRecyclableQueue());
+        } else {
+            mReference = new GVRHybridReference(ptr, this,
+                    referenceQueue.getHybridReferenceQueue());
+        }
+
+        /*
+         * Needed to save the reference from being garbage collected before the
+         * linked hybrid object gets collected.
+         */
+        referenceQueue.addReference(mReference);
+
         if (registerWrapper()) {
+            // 'Register' fully initialized object, so that getX() calls can
+            // return this (possibly sub-classed) object, not a new wrapper
             final long nativePointer = NativeHybridObject.getNativePointer(ptr);
             synchronized (sWrappers) {
                 sWrappers.put(nativePointer, this);
@@ -64,24 +84,6 @@ public class GVRHybridObject {
                 }
             }
         }
-
-        mGVRContext = gvrContext;
-        
-        GVRReferenceQueue referenceQueue = gvrContext.getReferenceQueue();
-        if (this instanceof GVRRecyclableObject) {
-            mReference = new GVRRecyclableReference(ptr,
-                    (GVRRecyclableObject) this,
-                    referenceQueue.getRecyclableQueue());
-        } else {
-            mReference = new GVRHybridReference(ptr, this,
-                    referenceQueue.getHybridReferenceQueue());
-        }
-        
-        /*
-         * Needed to save the reference from being garbage collected before the
-         * linked hybrid object gets collected.
-         */
-        referenceQueue.addReference(mReference);
     }
 
     /**
