@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * JNI
  ***************************************************************************/
@@ -21,6 +20,7 @@
 #include "base_texture.h"
 #include "png_loader.h"
 #include "util/gvr_jni.h"
+#include "util/gvr_java_stack_trace.h"
 #include "android/asset_manager_jni.h"
 
 #include <png.h>
@@ -44,8 +44,14 @@ Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
         jobject obj, jobject bitmap) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
-            new BaseTexture(env, bitmap)));
+    try {
+        jlong res_texture = reinterpret_cast<jlong>(new std::shared_ptr<
+                BaseTexture>(new BaseTexture(env, bitmap)));
+        return res_texture;
+    } catch (const std::string &err) {
+        printJavaCallStack(env, err);
+        throw err;
+    }
 }
 
 JNIEXPORT jlong JNICALL
@@ -92,7 +98,8 @@ Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj) {
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata) {
-    std::shared_ptr<BaseTexture> texture = *reinterpret_cast<std::shared_ptr<BaseTexture>*>(jtexture);
+    std::shared_ptr<BaseTexture> texture = *reinterpret_cast<std::shared_ptr<
+            BaseTexture>*>(jtexture);
     jbyte* data = env->GetByteArrayElements(jdata, 0);
     jboolean result = texture->update(width, height, data);
     env->ReleaseByteArrayElements(jdata, data, 0);

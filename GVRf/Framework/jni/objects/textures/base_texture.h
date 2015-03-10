@@ -36,16 +36,18 @@ public:
         AndroidBitmapInfo info;
         void *pixels;
         int ret;
+        if(bitmap == NULL){
+        	std::string error = "new BaseTexture() failed! Input bitmap is NULL.";
+        	throw error;
+        }
         if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
             std::string error = "AndroidBitmap_getInfo () failed! error = "
                     + ret;
-            LOGE("%s", error.c_str());
             throw error;
         }
         if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
             std::string error = "AndroidBitmap_lockPixels () failed! error = "
                     + ret;
-            LOGE("%s", error.c_str());
             throw error;
         }
         AndroidBitmap_unlockPixels(env, bitmap);
