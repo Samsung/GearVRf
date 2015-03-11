@@ -22,14 +22,13 @@ import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+import org.gearvrf.utility.Log;
 
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
-
 /*
  * This is the most important part of gvrf.
  * Initialization can be told as 2 parts. A General part and the GL part.
@@ -113,6 +112,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     GVRViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
             String distortionDataFileName, GVRSurfaceViewRenderer renderer) {
         super(gvrActivity);
+
+        // Clear singletons and per-run data structures
+        resetOnRestart();
 
         GVRAsynchronousResourceLoader.setup(this);
 

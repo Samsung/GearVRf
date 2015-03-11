@@ -35,6 +35,15 @@ public class SolarViewManager extends GVRScript {
 
         private static Object[] lock = new Object[0];
         private static GVRMesh sphereMesh = null;
+        static {
+            GVRContext.addResetOnRestartHandler(new Runnable() {
+
+                @Override
+                public void run() {
+                    sphereMesh = null;
+                }
+            });
+        }
 
         private static final int MESH_PRIORITY = 1000;
         private static final int TEXTURE_PRIORITY = 100;

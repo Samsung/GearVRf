@@ -35,7 +35,6 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 
 /**
  * A debugging console for VR apps.
@@ -220,7 +219,7 @@ public class GVRConsole extends GVRPostEffect {
     }
 
     private static void log(String TAG, String pattern, Object... parameters) {
-        Log.d(TAG, String.format(pattern, parameters));
+//        Log.d(TAG, pattern, parameters);
     }
 
     private void updateHUD() {
@@ -279,6 +278,17 @@ public class GVRConsole extends GVRPostEffect {
 
     private static GVRCustomPostEffectShaderId shaderId;
     private static GVRPostEffectMap shaderMap;
+
+    static {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                shaderId = null; // should be enough
+                shaderMap = null; // can't hurt
+            }
+        });
+    }
 
     private static final float BASE_TEXT_SIZE = 3f;
     private static final int HUD_HEIGHT = 1024;

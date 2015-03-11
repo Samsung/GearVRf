@@ -29,6 +29,16 @@ public class GVRHybridObject {
     /** Enables a 1:1 mapping between native objects and Java wrappers */
     protected static final LongSparseArray<GVRHybridObject> sWrappers = new LongSparseArray<GVRHybridObject>();
 
+    static {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                sWrappers.clear();
+            }
+        });
+    }
+
     private static int sRegistrationCount = 0;
 
     /** Returns an existing wrapper, or {@code null} */

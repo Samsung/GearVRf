@@ -23,9 +23,27 @@ import android.util.SparseArray;
  * 
  * The inheritance tree represents the fact that stock shaders do not use
  * {@link GVRPostEffectMap name maps.}
-  */
+ */
 public abstract class GVRPostEffectShaderId {
     private final static SparseArray<GVRPostEffectShaderId> sIds = new SparseArray<GVRPostEffectShaderId>();
+
+    static {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                // Remove any custom shaders, which are GVRContext-dependent;
+                // leave all stock shaders, which are not
+                SparseArray<GVRPostEffectShaderId> clone = sIds.clone();
+                for (int index = 0, size = clone.size(); index < size; ++index) {
+                    if (clone.valueAt(index) instanceof GVRCustomPostEffectShaderId) {
+                        sIds.removeAt(index);
+                    }
+                }
+            }
+        });
+    }
+
     final int ID;
 
     @SuppressWarnings("unchecked")

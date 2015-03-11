@@ -22,6 +22,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRScript;
 
+
 /**
  * Schedule {@linkplain Runnable runnables} to run on the GL thread at a future
  * time.
@@ -74,6 +75,16 @@ import org.gearvrf.GVRScript;
  */
 public class GVRPeriodicEngine {
     private static GVRPeriodicEngine sInstance = null;
+
+    static {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                sInstance = null;
+            }
+        });
+    }
 
     private final GVRContext mContext;
     private final DrawFrameListener mDrawFrameListener = new DrawFrameListener();

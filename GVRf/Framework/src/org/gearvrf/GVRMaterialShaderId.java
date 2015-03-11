@@ -27,6 +27,23 @@ import android.util.SparseArray;
 public abstract class GVRMaterialShaderId {
     private final static SparseArray<GVRMaterialShaderId> sIds = new SparseArray<GVRMaterialShaderId>();
 
+    static {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                // Remove any custom shaders, which are GVRContext-dependent;
+                // leave all stock shaders, which are not
+                SparseArray<GVRMaterialShaderId> clone = sIds.clone();
+                for (int index = 0, size = clone.size(); index < size; ++index) {
+                    if (clone.valueAt(index) instanceof GVRCustomMaterialShaderId) {
+                        sIds.removeAt(index);
+                    }
+                }
+            }
+        });
+    }
+
     final int ID;
 
     @SuppressWarnings("unchecked")

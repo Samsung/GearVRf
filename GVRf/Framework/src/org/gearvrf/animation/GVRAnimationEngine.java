@@ -17,7 +17,6 @@
 package org.gearvrf.animation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.gearvrf.GVRContext;
@@ -50,6 +49,16 @@ import org.gearvrf.GVRSceneObject;
 public class GVRAnimationEngine {
 
     private static GVRAnimationEngine sInstance = null;
+
+    static {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                sInstance = null;
+            }
+        });
+    }
 
     private final List<GVRAnimation> mAnimations = new ArrayList<GVRAnimation>();
     private final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
@@ -141,7 +150,8 @@ public class GVRAnimationEngine {
         @Override
         public void onDrawFrame(float frameTime) {
             synchronized (mAnimations) {
-                List<GVRAnimation> animations = new ArrayList<GVRAnimation>(mAnimations);
+                List<GVRAnimation> animations = new ArrayList<GVRAnimation>(
+                        mAnimations);
                 for (GVRAnimation animation : animations) {
                     if (animation.onDrawFrame(frameTime) == false) {
                         mAnimations.remove(animation);

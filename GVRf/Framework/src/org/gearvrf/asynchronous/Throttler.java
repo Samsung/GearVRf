@@ -246,6 +246,8 @@ abstract class Throttler {
      * Pending requests
      */
 
+    // TODO I don't THINK we need to reset PendingRequests on restart, but I may
+    // be wrong ....
     private static final PendingRequests requests = new PendingRequests();
 
     /**
@@ -569,8 +571,8 @@ abstract class Throttler {
     private static class PriorityCancelingLifoThreadPolicyProvider implements
             ThreadPolicyProvider<PriorityCancelable> {
 
-        private static final PriorityQueue<PriorityGroup> queue = new PriorityQueue<PriorityGroup>();
-        private static final SparseArray<PriorityGroup> groups = new SparseArray<PriorityGroup>();
+        private final PriorityQueue<PriorityGroup> queue = new PriorityQueue<PriorityGroup>();
+        private final SparseArray<PriorityGroup> groups = new SparseArray<PriorityGroup>();
 
         private void addGroup(int priority, PriorityGroup newGroup) {
             queue.add(newGroup);

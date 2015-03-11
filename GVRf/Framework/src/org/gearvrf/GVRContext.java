@@ -18,6 +18,8 @@ package org.gearvrf;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
@@ -28,6 +30,7 @@ import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.periodic.GVRPeriodicEngine;
+import org.gearvrf.utility.Log;
 
 import android.app.Activity;
 import android.app.Application;
@@ -48,6 +51,8 @@ import android.view.KeyEvent;
  * {@linkplain #getFrameTime() the frame time.}
  */
 public abstract class GVRContext {
+    private static final String TAG = Log.tag(GVRContext.class);
+
     private final Context mContext;
 
     /*
@@ -846,6 +851,64 @@ public abstract class GVRContext {
     public GVRPeriodicEngine getPeriodicEngine() {
         return GVRPeriodicEngine.getInstance(this);
     }
+
+    /**
+     * Register a method that is called every time GVRF creates a new
+     * {@link GVRContext}.
+     * 
+     * Android apps aren't mapped 1:1 to Linux processes; the system may keep a
+     * process loaded even after normal complete shutdown, and call Android
+     * lifecycle methods to reinitialize it. This causes problems for (in
+     * particular) lazy-created singletons that are tied to a particular
+     * {@code GVRContext}. This method lets you register a handler that will be
+     * called on restart, which can reset your {@code static} variables to the
+     * compiled-in start state.
+     * 
+     * <p>
+     * For example,
+     * 
+     * <pre>
+     * 
+     * static YourSingletonClass sInstance;
+     * static {
+     *     GVRContext.addResetOnRestartHandler(new Runnable() {
+     * 
+     *         &#064;Override
+     *         public void run() {
+     *             sInstance = null;
+     *         }
+     *     });
+     * }
+     * 
+     * </pre>
+     * 
+     * <p>
+     * GVRF will force an Android garbage collection after running any handlers,
+     * which will free any remaining native objects from the previous run.
+     * 
+     * @param handler
+     *            Callback to run on restart.
+     */
+    public synchronized static void addResetOnRestartHandler(Runnable handler) {
+        sHandlers.add(handler);
+    }
+
+    protected synchronized static void resetOnRestart() {
+        for (Runnable handler : sHandlers) {
+            Log.d(TAG, "Running on-restart handler %s", handler);
+            handler.run();
+        }
+
+        // We've probably just nulled-out a bunch of references, but many GVRF
+        // apps do relatively little Java memory allocation, so it may actually
+        // be a longish while before the recyclable references go stale.
+        System.gc();
+
+        // We do NOT want to clear sHandlers - the static initializers won't be
+        // run again, even if the new run does recreate singletons.
+    }
+
+    private static final List<Runnable> sHandlers = new ArrayList<Runnable>();
 
     abstract GVRReferenceQueue getReferenceQueue();
 
