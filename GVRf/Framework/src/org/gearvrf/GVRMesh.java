@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /**
  * This is one of the key GVRF classes: It holds GL meshes.
@@ -194,9 +192,11 @@ public class GVRMesh extends GVRHybridObject {
      * @param key
      *            Name of the shader attribute
      * @param vec2Vector
-     *            Data to bind to the shader attribute.
+     *            Two-component {@code float} vector data to bind to the shader
+     *            attribute.
      */
     public void setVec2Vector(String key, float[] vec2Vector) {
+        isValidVector(vec2Vector, 2);
         NativeMesh.setVec2Vector(getPtr(), key, vec2Vector);
     }
 
@@ -219,9 +219,11 @@ public class GVRMesh extends GVRHybridObject {
      * @param key
      *            Name of the shader attribute
      * @param vec3Vector
-     *            Data to bind to the shader attribute.
+     *            Three-component {@code float} vector data to bind to the
+     *            shader attribute.
      */
     public void setVec3Vector(String key, float[] vec3Vector) {
+        isValidVector(vec3Vector, 3);
         NativeMesh.setVec3Vector(getPtr(), key, vec3Vector);
     }
 
@@ -244,9 +246,11 @@ public class GVRMesh extends GVRHybridObject {
      * @param key
      *            Name of the shader attribute
      * @param vec4Vector
-     *            Data to bind to the shader attribute.
+     *            Four-component {@code float} vector data to bind to the shader
+     *            attribute.
      */
     public void setVec4Vector(String key, float[] vec4Vector) {
+        isValidVector(vec4Vector, 4);
         NativeMesh.setVec4Vector(getPtr(), key, vec4Vector);
     }
 
@@ -266,6 +270,16 @@ public class GVRMesh extends GVRHybridObject {
      */
     public GVRMesh getBoundingBox() {
         return new GVRMesh(getGVRContext(), NativeMesh.getBoundingBox(getPtr()));
+    }
+
+    private static void isValidVector(float[] vector, int expectedLength) {
+        if (vector == null) {
+            throw new IllegalArgumentException(
+                    "Input vector should not be null.");
+        } else if (expectedLength != vector.length) {
+            throw new IllegalArgumentException("Input vector should have "
+                    + expectedLength + " elements, not " + vector.length);
+        }
     }
 }
 
