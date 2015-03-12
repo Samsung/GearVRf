@@ -25,10 +25,12 @@ import android.os.Build;
 
 /** A listener for a TYPE_ROTATION_VECTOR type sensor. */
 class GVRInternalSensorListener implements SensorEventListener {
-    public static final Quaternion COORDINATE_QUATERNION = new Quaternion(
+    private static final Quaternion COORDINATE_QUATERNION = new Quaternion(
             Math.sqrt(0.5), 0.0f, 0.0f, -Math.sqrt(0.5));
-    public static final Quaternion OFFSET_QUATERNION = new Quaternion(
+    private static final Quaternion OFFSET_QUATERNION = new Quaternion(
             Math.sqrt(0.5), 0.0f, Math.sqrt(0.5), 0.0f);
+    private static final Quaternion CONSTANT_EXPRESSION = COORDINATE_QUATERNION
+            .getInverse().multiply(OFFSET_QUATERNION);
 
     private RotationSensor mSensor = null;
 
@@ -56,8 +58,7 @@ class GVRInternalSensorListener implements SensorEventListener {
 
         Quaternion sensorQuaternion = new Quaternion(w, x, y, z);
 
-        Quaternion quaternion = COORDINATE_QUATERNION.getInverse()
-                .multiply(OFFSET_QUATERNION).multiply(sensorQuaternion)
+        Quaternion quaternion = CONSTANT_EXPRESSION.multiply(sensorQuaternion)
                 .multiply(COORDINATE_QUATERNION);
 
         mSensor.onInternalRotationSensor(GVRTime.getCurrentTime(),
