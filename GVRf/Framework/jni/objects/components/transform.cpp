@@ -36,11 +36,13 @@ Transform::~Transform() {
 }
 
 void Transform::invalidate() {
-    model_matrix_.invalidate();
-    std::vector < std::shared_ptr
-            < SceneObject >> children(owner_object()->children());
-    for (auto it = children.begin(); it != children.end(); ++it) {
-        (*it)->transform()->invalidate();
+    if (model_matrix_.isValid()) {
+        model_matrix_.invalidate();
+        std::vector < std::shared_ptr
+                < SceneObject >> children(owner_object()->children());
+        for (auto it = children.begin(); it != children.end(); ++it) {
+            (*it)->transform()->invalidate();
+        }
     }
 }
 
@@ -65,23 +67,40 @@ glm::mat4 Transform::getModelMatrix() {
     return model_matrix_.element();
 }
 
-void Transform::setModelMatrix(glm::mat4 matrix){
-	glm::vec3 new_position(matrix[3][0],matrix[3][1], matrix[3][2]);
-	float xs = matrix[0][0] * matrix[0][1] * matrix[0][2] * matrix[0][3] < 0 ? -1 : 1;
-	float ys = matrix[1][0] * matrix[1][1] * matrix[1][2] * matrix[1][3] < 0 ? -1 : 1;
-	float zs = matrix[2][0] * matrix[2][1] * matrix[2][2] * matrix[2][3] < 0 ? -1 : 1;
-	glm::vec3 new_scale;
-	new_scale.x = xs * glm::sqrt(matrix[0][0] * matrix[0][0] + matrix[0][1] * matrix[0][1] + matrix[0][2] * matrix[0][2]);
-	new_scale.y = ys * glm::sqrt(matrix[1][0] * matrix[1][0] + matrix[1][1] * matrix[1][1] + matrix[1][2] * matrix[1][2]);
-	new_scale.z = zs * glm::sqrt(matrix[2][0] * matrix[2][0] + matrix[2][1] * matrix[2][1] + matrix[2][2] * matrix[2][2]);
-	glm::mat3 rotation_mat(matrix[0][0] / new_scale.x, matrix[0][1] / new_scale.y, matrix[0][2] / new_scale.z,
-			matrix[1][0] / new_scale.x, matrix[1][1] / new_scale.y, matrix[1][2] / new_scale.z,
-			matrix[2][0] / new_scale.x, matrix[2][1] / new_scale.y, matrix[2][2] / new_scale.z);
+void Transform::setModelMatrix(glm::mat4 matrix) {
+    glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);
+    float xs =
+            matrix[0][0] * matrix[0][1] * matrix[0][2] * matrix[0][3] < 0 ?
+                    -1 : 1;
+    float ys =
+            matrix[1][0] * matrix[1][1] * matrix[1][2] * matrix[1][3] < 0 ?
+                    -1 : 1;
+    float zs =
+            matrix[2][0] * matrix[2][1] * matrix[2][2] * matrix[2][3] < 0 ?
+                    -1 : 1;
+    glm::vec3 new_scale;
+    new_scale.x = xs
+            * glm::sqrt(
+                    matrix[0][0] * matrix[0][0] + matrix[0][1] * matrix[0][1]
+                            + matrix[0][2] * matrix[0][2]);
+    new_scale.y = ys
+            * glm::sqrt(
+                    matrix[1][0] * matrix[1][0] + matrix[1][1] * matrix[1][1]
+                            + matrix[1][2] * matrix[1][2]);
+    new_scale.z = zs
+            * glm::sqrt(
+                    matrix[2][0] * matrix[2][0] + matrix[2][1] * matrix[2][1]
+                            + matrix[2][2] * matrix[2][2]);
+    glm::mat3 rotation_mat(matrix[0][0] / new_scale.x,
+            matrix[0][1] / new_scale.y, matrix[0][2] / new_scale.z,
+            matrix[1][0] / new_scale.x, matrix[1][1] / new_scale.y,
+            matrix[1][2] / new_scale.z, matrix[2][0] / new_scale.x,
+            matrix[2][1] / new_scale.y, matrix[2][2] / new_scale.z);
 
-	position_ = new_position;
-	scale_ = new_scale;
-	rotation_ = glm::quat_cast(rotation_mat);;
-	invalidate();
+    position_ = new_position;
+    scale_ = new_scale;
+    rotation_ = glm::quat_cast(rotation_mat);
+    invalidate();
 }
 
 void Transform::translate(float x, float y, float z) {
