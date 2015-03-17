@@ -156,7 +156,7 @@ void SceneObject::removeChildObject(std::shared_ptr<SceneObject> child) {
     if (child->parent_.lock().get() == this) {
         children_.erase(std::remove(children_.begin(), children_.end(), child),
                 children_.end());
-        child->parent_.lock().reset();
+        child->parent_.reset();
     }
 }
 
