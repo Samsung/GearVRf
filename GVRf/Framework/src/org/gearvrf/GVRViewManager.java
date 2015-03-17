@@ -13,15 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
-import android.app.Activity;
-import android.opengl.GLSurfaceView;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.SurfaceView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +22,13 @@ import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+
+import android.app.Activity;
+import android.opengl.GLSurfaceView;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.SurfaceView;
 
 /*
  * This is the most important part of gvrf.
@@ -71,7 +70,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private static final String TAG = "GVRViewManager";
 
     private final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
-    private final List<GVRDrawFrameListener> mFrameListeners = new ArrayList<GVRDrawFrameListener>();
+
+    private final Object[] mFrameListenersLock = new Object[0];
+    private List<GVRDrawFrameListener> mFrameListeners = new ArrayList<GVRDrawFrameListener>();
 
     private final GVRScript mScript;
     private final RotationSensor mRotationSensor;
@@ -89,8 +90,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private final GVRRecyclableObjectProtector mRecyclableObjectProtector = new GVRRecyclableObjectProtector();
     GVRActivity mActivity;
     private int mCurrentEye;
-    private native void renderCamera(long appPtr,
-            long scene, long camera,
+
+    private native void renderCamera(long appPtr, long scene, long camera,
             long renderTexture, long shaderManager,
             long postEffectShaderManager, long postEffectRenderTextureA,
             long postEffectRenderTextureB, long[] extraPostEffectData);
@@ -143,15 +144,15 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         float screenHeightMeters = (float) screenHeightPixels / metrics.ydpi
                 * INCH_TO_METERS;
 
-        mLensInfo = new GVRLensInfo(screenWidthPixels,
-                screenHeightPixels, screenWidthMeters, screenHeightMeters,
-                xmlParser);
+        mLensInfo = new GVRLensInfo(screenWidthPixels, screenHeightPixels,
+                screenWidthMeters, screenHeightMeters, xmlParser);
 
         GVRPerspectiveCamera.setDefaultFovY(xmlParser.getFovY());
-// Different width/height aspect ratio makes the rendered screen warped when the screen rotates
-//        GVRPerspectiveCamera.setDefaultAspectRatio(mLensInfo
-//                .getRealScreenWidthMeters()
-//                / mLensInfo.getRealScreenHeightMeters());
+        // Different width/height aspect ratio makes the rendered screen warped
+        // when the screen rotates
+        // GVRPerspectiveCamera.setDefaultAspectRatio(mLensInfo
+        // .getRealScreenWidthMeters()
+        // / mLensInfo.getRealScreenHeightMeters());
     }
 
     /**
@@ -208,23 +209,20 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         Log.v(TAG, "onSurfaceCreated end");
     }
 
-    private void renderCamera(long activity_ptr,
-            GVRScene scene, GVRCamera camera,
-            GVRRenderTexture renderTexture, GVRRenderBundle renderBundle,
+    private void renderCamera(long activity_ptr, GVRScene scene,
+            GVRCamera camera, GVRRenderTexture renderTexture,
+            GVRRenderBundle renderBundle,
             Vector<GVRPostEffect> extraPostEffectDataVector) {
         long[] extraPostEffectData = new long[extraPostEffectDataVector.size()];
         for (int i = 0; i < extraPostEffectDataVector.size(); ++i) {
             extraPostEffectData[i] = extraPostEffectDataVector.get(i).getPtr();
-        }    
-        renderCamera(activity_ptr, 
-                scene.getPtr(),
-                camera.getPtr(),
-                renderTexture.getPtr(),
-                renderBundle.getMaterialShaderManager().getPtr(),
-                renderBundle.getPostEffectShaderManager().getPtr(),
-                renderBundle.getPostEffectRenderTextureA().getPtr(),
-                renderBundle.getPostEffectRenderTextureB().getPtr(),
-                extraPostEffectData);
+        }
+        renderCamera(activity_ptr, scene.getPtr(), camera.getPtr(),
+                renderTexture.getPtr(), renderBundle.getMaterialShaderManager()
+                        .getPtr(), renderBundle.getPostEffectShaderManager()
+                        .getPtr(), renderBundle.getPostEffectRenderTextureA()
+                        .getPtr(), renderBundle.getPostEffectRenderTextureB()
+                        .getPtr(), extraPostEffectData);
     }
 
     /**
@@ -238,45 +236,46 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     void onDrawEyeView(int eye, float fovDegrees) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
-            Vector<GVRPostEffect> postEffectData = new
-                    Vector<GVRPostEffect>();
+            Vector<GVRPostEffect> postEffectData = new Vector<GVRPostEffect>();
             if (eye == 1) {
                 mMainScene.getMainCameraRig().predict(4.0f / 60.0f);
-                renderCamera(mActivity.appPtr,
-                        mMainScene,
-                        mMainScene.getMainCameraRig().getRightCamera(),
-                        mRenderBundle.getRightRenderTexture(),
-                        mRenderBundle,
+                renderCamera(mActivity.appPtr, mMainScene, mMainScene
+                        .getMainCameraRig().getRightCamera(),
+                        mRenderBundle.getRightRenderTexture(), mRenderBundle,
                         postEffectData);
-                mActivity.setCamera(mMainScene.getMainCameraRig().getRightCamera());
+                mActivity.setCamera(mMainScene.getMainCameraRig()
+                        .getRightCamera());
             } else {
                 mReferenceQueue.clean();
                 mRecyclableObjectProtector.clean();
                 mFrameTime = (GVRTime.getCurrentTime() - mPreviousTimeNanos) / 1e9f;
                 mPreviousTimeNanos = GVRTime.getCurrentTime();
-                // call onDrawFrame when there must be eye = 0, otherwise animation gets slow
-            Runnable runnable = null;
-            while ((runnable = mRunnables.poll()) != null) {
-                runnable.run();
-            }
-                synchronized (mFrameListeners) {
-                    for (GVRDrawFrameListener listener : mFrameListeners) {
+                // call onDrawFrame when there must be eye = 0, otherwise
+                // animation gets slow
+                Runnable runnable = null;
+                while ((runnable = mRunnables.poll()) != null) {
+                    runnable.run();
+                }
+
+                synchronized (mFrameListenersLock) {
+                    final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
+                    for (GVRDrawFrameListener listener : frameListeners) {
                         listener.onDrawFrame(mFrameTime);
                     }
                 }
+
                 mScript.onStep();
                 mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
-                renderCamera(mActivity.appPtr,
-                        mMainScene,
-                        mMainScene.getMainCameraRig().getLeftCamera(),
-                        mRenderBundle.getLeftRenderTexture(),
-                        mRenderBundle,
+                renderCamera(mActivity.appPtr, mMainScene, mMainScene
+                        .getMainCameraRig().getLeftCamera(),
+                        mRenderBundle.getLeftRenderTexture(), mRenderBundle,
                         postEffectData);
-                mActivity.setCamera(mMainScene.getMainCameraRig().getLeftCamera());
+                mActivity.setCamera(mMainScene.getMainCameraRig()
+                        .getLeftCamera());
             }
         }
     }
-    
+
     /**
      * Called to draw the current frames in the view.
      */
@@ -291,14 +290,22 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     /**
      * Called to reset current sensor data.
      * 
-     * @param timeStamp current time stamp
-     * @param rotationW Quaternion rotation W
-     * @param rotationX Quaternion rotation X
-     * @param rotationY Quaternion rotation Y
-     * @param rotationZ Quaternion rotation Z
-     * @param gyroX Gyro rotation X
-     * @param gyroY Gyro rotation Y
-     * @param gyroZ Gyro rotation Z
+     * @param timeStamp
+     *            current time stamp
+     * @param rotationW
+     *            Quaternion rotation W
+     * @param rotationX
+     *            Quaternion rotation X
+     * @param rotationY
+     *            Quaternion rotation Y
+     * @param rotationZ
+     *            Quaternion rotation Z
+     * @param gyroX
+     *            Gyro rotation X
+     * @param gyroY
+     *            Gyro rotation Y
+     * @param gyroZ
+     *            Gyro rotation Z
      */
     @Override
     public void onRotationSensor(long timeStamp, float rotationW,
@@ -366,14 +373,18 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     @Override
     public void registerDrawFrameListener(GVRDrawFrameListener frameListener) {
-        synchronized (mFrameListeners) {
+        synchronized (mFrameListenersLock) {
+            mFrameListeners = new ArrayList<GVRDrawFrameListener>(
+                    mFrameListeners);
             mFrameListeners.add(frameListener);
         }
     }
 
     @Override
     public void unregisterDrawFrameListener(GVRDrawFrameListener frameListener) {
-        synchronized (mFrameListeners) {
+        synchronized (mFrameListenersLock) {
+            mFrameListeners = new ArrayList<GVRDrawFrameListener>(
+                    mFrameListeners);
             mFrameListeners.remove(frameListener);
         }
     }
