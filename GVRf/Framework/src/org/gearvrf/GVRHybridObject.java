@@ -46,6 +46,13 @@ public class GVRHybridObject {
         final long nativePointer = NativeHybridObject.getNativePointer(ptr);
         synchronized (sWrappers) {
             int index = sWrappers.indexOfKey(nativePointer);
+            if (index >= 0) {
+                // We have a wrapper for the nativePointer - we should delete
+                // the `new std::shared_ptr`, so that we don't waste its memory
+                // and so that (even more importantly!) we don't accumulate a
+                // spurious reference count to the native object
+                NativeHybridObject.delete(ptr);
+            }
             return index < 0 ? null : sWrappers.valueAt(index);
         }
     }
