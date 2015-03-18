@@ -40,9 +40,24 @@ import android.graphics.Color;
  * <ul>
  * <li>The id of a (stock or custom) shader, which is used to draw the mesh. See
  * {@link GVRShaderType} and {@link GVRContext#getMaterialShaderManager()}.
+ * 
  * <li>Data to pass to the shader. This usually - but not always - means a
  * {@link GVRTexture} and can include other named values to pass to the shader.
  * </ul>
+ * 
+ * <p>
+ * The simplest way to create a {@link GVRMaterial} is to call the
+ * {@linkplain GVRMaterial#GVRMaterial(GVRContext) constructor that takes only a
+ * GVRContext.} Then you just {@link GVRMaterial#setMainTexture(GVRTexture)
+ * setMainTexture()} and you're ready to draw with the default shader, which is
+ * called 'unlit' because it simply drapes the texture over the mesh, without
+ * any lighting or reflection effects.
+ * 
+ * <pre>
+ * // for example
+ * GVRMaterial material = new GVRMaterial(gvrContext);
+ * material.setMainTexture(texture);
+ * </pre>
  */
 public class GVRMaterial extends GVRHybridObject implements
         GVRShaders<GVRMaterialShaderId> {
@@ -136,7 +151,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * Get the {@code color} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code color}. With the common {@linkplain GVRShaderType.Unlit 'unlit'
+     * {@code color}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
      * shader,} this allows you to add an overlay color on top of the texture.
      * 
      * @return The current {@code vec3 color} as a three-element array
@@ -159,7 +174,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * Set the {@code color} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code color}. With the common {@linkplain GVRShaderType.Unlit 'unlit'
+     * {@code color}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
      * shader,} this allows you to add an overlay color on top of the texture.
      * Values are between {@code 0.0f} and {@code 1.0f}, inclusive. .
      * 
@@ -188,24 +203,46 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     /**
-     * Get the {@code opacity} uniform.
+     * Get the opacity.
      * 
-     * By convention, GVRF shaders can use a {@code float} uniform named
-     * {@code opacity}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
-     * shader,} this controls the opacity of the whole material.
+     * This method returns the {@code opacity} uniform.
      * 
-     * @return The current {@code opacity} uniform
+     * The {@linkplain #setOpacity(float) setOpacity() documentation} explains
+     * what the {@code opacity} uniform does.
+     * 
+     * @return The {@code opacity} uniform used to render this material
      */
     public float getOpacity() {
         return getFloat("opacity");
     }
 
     /**
-     * Set the {@code opacity} uniform.
+     * Set the opacity, in a complicated way.
      * 
-     * By convention, GVRF shaders can use a {@code float} uniform named
-     * {@code opacity}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
-     * shader,} this controls the opacity of the whole material.
+     * There are two things you need to know, how opacity is applied, and how
+     * opacity is implemented.
+     * 
+     * <p>
+     * First, GVRF does not sort by distance every object it can see, then draw
+     * from back to front. Rather, it sorts every object by
+     * {@linkplain GVRRenderData#getRenderingOrder() render order,} then draws
+     * the {@linkplain GVRScene scene graph} in traversal order. So, if you want
+     * to see a scene object through another scene object, you have to
+     * explicitly {@linkplain GVRRenderData#setRenderingOrder(int) set the
+     * rendering order} so that the translucent object draws after the opaque
+     * object. You can use any integer values you like, but GVRF supplies
+     * {@linkplain GVRRenderData.GVRRenderingOrder four standard values;} the
+     * {@linkplain GVRRenderData#getRenderingOrder() default value} is
+     * {@linkplain GVRRenderData.GVRRenderingOrder#GEOMETRY GEOMETRY.}
+     * 
+     * <p>
+     * Second, technically all this method does is set the {@code opacity}
+     * uniform. What this does depends on the actual shader. If you don't
+     * specify a shader (or you specify the
+     * {@linkplain GVRMaterial.GVRShaderType.Unlit#ID unlit} shader) setting
+     * {@code opacity} does exactly what you expect; you only have to worry
+     * about the render order. However, it is totally up to a custom shader
+     * whether or how it will handle opacity.
      * 
      * @param opacity
      *            Value between {@code 0.0f} and {@code 1.0f}, inclusive.

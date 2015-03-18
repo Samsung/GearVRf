@@ -28,11 +28,17 @@ public class GVRRenderData extends GVRComponent {
     /**
      * Rendering hints.
      * 
-     * The rendering process sorts the scene graph, from back to front. But when
-     * several objects are at the same distance from the camera, you can get
-     * strange effects, like translucent objects not drawing properly. Calling
-     * {@link GVRRenderData#setRenderingOrder(int)} will resolve these problems:
-     * objects at the same distance are sorted from low render order to high
+     * You might expect the rendering process to sort the scene graph, from back
+     * to front, so it can then draw translucent objects over the objects behind
+     * them. But that's not how GVRF works. Instead, it sorts the scene graph by
+     * render order, then draws the sorted graph in traversal order. (Please
+     * don't waste your time getting angry or trying to make sense of this;
+     * please just take it as a bald statement of How GVRF Currently Works.)
+     * 
+     * <p>
+     * The point is, to get transparency to work as you expect, you do need to
+     * explicitly call {@link GVRRenderData#setRenderingOrder(int)
+     * setRenderingOrder():} objects are sorted from low render order to high
      * render order, so that a {@link #GEOMETRY} object will show through a
      * {@link #TRANSPARENT} object.
      */
