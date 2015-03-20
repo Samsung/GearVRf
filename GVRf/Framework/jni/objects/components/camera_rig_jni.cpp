@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * JNI
  ***************************************************************************/
@@ -23,6 +22,8 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "util/gvr_jni.h"
+
+#include "util/gvr_java_stack_trace.h"
 
 namespace gvr {
 extern "C" {
@@ -226,12 +227,18 @@ Java_org_gearvrf_NativeCameraRig_getVec2(JNIEnv * env,
             CameraRig>*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec2 camera_rig_vec2 = camera_rig->getVec2(native_key);
-    jfloatArray jvec2 = env->NewFloatArray(2);
-    env->SetFloatArrayRegion(jvec2, 0, 2,
-            reinterpret_cast<jfloat*>(&camera_rig_vec2));
-    env->ReleaseStringUTFChars(key, char_key);
-    return jvec2;
+    try {
+        glm::vec2 camera_rig_vec2 = camera_rig->getVec2(native_key);
+        jfloatArray jvec2 = env->NewFloatArray(2);
+        env->SetFloatArrayRegion(jvec2, 0, 2,
+                reinterpret_cast<jfloat*>(&camera_rig_vec2));
+        env->ReleaseStringUTFChars(key, char_key);
+        return jvec2;
+    } catch (const std::string & err) {
+        env->ReleaseStringUTFChars(key, char_key);
+        printJavaCallStack(env, err);
+        throw err;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -252,12 +259,18 @@ Java_org_gearvrf_NativeCameraRig_getVec3(JNIEnv * env,
             CameraRig>*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec3 camera_rig_vec3 = camera_rig->getVec3(native_key);
-    jfloatArray jvec3 = env->NewFloatArray(3);
-    env->SetFloatArrayRegion(jvec3, 0, 3,
-            reinterpret_cast<jfloat*>(&camera_rig_vec3));
-    env->ReleaseStringUTFChars(key, char_key);
-    return jvec3;
+    try {
+        glm::vec3 camera_rig_vec3 = camera_rig->getVec3(native_key);
+        jfloatArray jvec3 = env->NewFloatArray(3);
+        env->SetFloatArrayRegion(jvec3, 0, 3,
+                reinterpret_cast<jfloat*>(&camera_rig_vec3));
+        env->ReleaseStringUTFChars(key, char_key);
+        return jvec3;
+    } catch (const std::string & err) {
+        env->ReleaseStringUTFChars(key, char_key);
+        printJavaCallStack(env, err);
+        throw err;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -279,12 +292,18 @@ Java_org_gearvrf_NativeCameraRig_getVec4(JNIEnv * env,
             CameraRig>*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec4 camera_rig_vec4 = camera_rig->getVec4(native_key);
-    jfloatArray jvec4 = env->NewFloatArray(4);
-    env->SetFloatArrayRegion(jvec4, 0, 4,
-            reinterpret_cast<jfloat*>(&camera_rig_vec4));
-    env->ReleaseStringUTFChars(key, char_key);
-    return jvec4;
+    try {
+        glm::vec4 camera_rig_vec4 = camera_rig->getVec4(native_key);
+        jfloatArray jvec4 = env->NewFloatArray(4);
+        env->SetFloatArrayRegion(jvec4, 0, 4,
+                reinterpret_cast<jfloat*>(&camera_rig_vec4));
+        env->ReleaseStringUTFChars(key, char_key);
+        return jvec4;
+    } catch (const std::string & err) {
+        env->ReleaseStringUTFChars(key, char_key);
+        printJavaCallStack(env, err);
+        throw err;
+    }
 }
 
 JNIEXPORT void JNICALL
