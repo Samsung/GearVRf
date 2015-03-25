@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+
+
+
+<lens name="S5">
+    <distortion k0="9.87874894e-01" k1="3.52017449e+02" k2="-1.59428570e+05" k3="3.22462294e+08"/>
+    <chromatic r0="1.0" r1="0.0" g0="1.0" g1="0.0" b0="1.0" b1="0.0"/>
+    <metric horizontal-screen-size="0.113" lens-separation-distance="0.062"/>
+    <scene fov-y="95.0" camera-separation-distance="0.062" minimum-pixel-density="1.0"/>
+</lens>

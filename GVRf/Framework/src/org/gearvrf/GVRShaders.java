@@ -1,0 +1,213 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package org.gearvrf;
+
+/**
+ * The API shared by {@link GVRMaterial} and {@link GVRPostEffect}.
+ * 
+ * <p>
+ * <table border="1">
+ * <tr>
+ * <td>{@link GVRMaterialShaderManager} {@code implements}
+ * {@link GVRShaderManagers}</td>
+ * <td>{@link GVRMaterialMap} {@code implements} {@link GVRShaderMaps}</td>
+ * <td>{@link GVRMaterial} {@code implements} {@link GVRShaders}</td>
+ * </tr>
+ * <tr>
+ * <td>{@link GVRPostEffectShaderManager} {@code implements} {@link GVRShaderManagers}
+ * </td>
+ * <td>{@link GVRPostEffectMap} {@code implements} {@link GVRShaderMaps}
+ * </td>
+ * <td>{@link GVRPostEffect} {@code implements} {@link GVRShaders}</td>
+ * </tr>
+ * </table>
+ * </p>
+ */
+public interface GVRShaders<ID> {
+
+    static final String MAIN_TEXTURE = "main_texture";
+
+    /** @return The current shader id. */
+    public ID getShaderType();
+
+    /**
+     * Set shader id
+     * 
+     * @param shaderId
+     *            The new shader id. This is an opaque type, used to keep object
+     *            and scene shader ids in distinct namespaces.
+     */
+    public void setShaderType(ID shaderId);
+
+    /**
+     * The {@link GVRTexture texture} currently bound to the
+     * {@code main_texture} shader uniform.
+     * 
+     * With most shaders, this is the texture that is actually displayed.
+     * 
+     * @return The {@linkplain GVRTexture main texture}
+     */
+    public GVRTexture getMainTexture();
+
+    /**
+     * Bind a different {@link GVRTexture texture} to the {@code main_texture}
+     * shader uniform.
+     * 
+     * <p>
+     * <em>Note</em>: {@linkplain GVRTexture GVR textures} are reference
+     * counted. While you can freely change the texture associated with a
+     * {@link GVRMaterial} or a {@link GVRPostEffect}, a sequence like
+     * 
+     * <pre>
+     * GVRTexture currentTexture = material.getMainTexture();
+     * material.setMainTexture(otherTexture);
+     * // ...
+     * material.setMainTexture(currentTexture);
+     * </pre>
+     * 
+     * may not do what you expect. The {@code setMainTexture(otherTexture)} call
+     * will decrement the reference count on {@code currentTexture}: If the
+     * reference count goes to 0, the texture will be released, and the
+     * {@code setMainTexture(currentTexture)} call will leave the
+     * {@link GVRMaterial} invisible (or will break the
+     * {@link GVRPostEffect}). You can prevent this by adding a new
+     * reference
+     * 
+     * <pre>
+     * material.setTexture(&quot;any_name_you're_not_otherwise_using&quot;, currentTexture);
+     * </pre>
+     * 
+     * before you call {@code setMainTexture(otherTexture)}.
+     * 
+     * @param texture
+     *            The {@link GVRTexture} to bind.
+     */
+    public void setMainTexture(GVRTexture texture);
+
+    /**
+     * Get the {@link GVRTexture texture} currently bound to the shader uniform
+     * {@code key}.
+     * 
+     * @param key
+     *            A texture name
+     * @return The current {@link GVRTexture texture}.
+     */
+    public GVRTexture getTexture(String key);
+
+    /**
+     * Bind a {@link GVRTexture texture} to the shader uniform {@code key}.
+     * 
+     * <p>
+     * Note that this will increment the reference count of the new texture, and
+     * decrement the reference count of any current texture. See
+     * {@link #setMainTexture(GVRTexture)} for more details.
+     * 
+     * @param key
+     *            Name of the shader uniform to bind the texture to.
+     * @param texture
+     *            The {@link GVRTexture texture} to bind.
+     */
+    public void setTexture(String key, GVRTexture texture);
+
+    /**
+     * Get the {@code float} bound to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform
+     * @return The bound {@code float} value.
+     */
+    public float getFloat(String key);
+
+    /**
+     * Bind a {@code float} to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform
+     * @param value
+     *            New data
+     */
+    public void setFloat(String key, float value);
+
+    /**
+     * Get the {@code float[2]} vector bound to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform
+     * @return The {@code vec2} as a Java {@code float[2]}
+     */
+    public float[] getVec2(String key);
+
+    /**
+     * Bind a {@code vec2} to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform
+     * @param x
+     *            First component of the vector.
+     * @param y
+     *            Second component of the vector.
+     */
+    public void setVec2(String key, float x, float y);
+
+    /**
+     * Get the {@code float[3]} vector bound to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform
+     * @return The {@code vec3} as a Java {@code float[3]}
+     */
+    public float[] getVec3(String key);
+
+    /**
+     * Bind a {@code vec3} to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform to bind the data to.
+     * @param x
+     *            First component of the vector.
+     * @param y
+     *            Second component of the vector.
+     * @param z
+     *            Third component of the vector.
+     */
+    public void setVec3(String key, float x, float y, float z);
+
+    /**
+     * Get the {@code float[4]} vector bound to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform
+     * @return The {@code vec4} as a Java {@code float[3]}
+     */
+    public float[] getVec4(String key);
+
+    /**
+     * Bind a {@code vec4} to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform to bind the data to.
+     * @param x
+     *            First component of the vector.
+     * @param y
+     *            Second component of the vector.
+     * @param z
+     *            Third component of the vector.
+     * @param w
+     *            Fourth component of the vector.
+     */
+    public void setVec4(String key, float x, float y, float z, float w);
+}
