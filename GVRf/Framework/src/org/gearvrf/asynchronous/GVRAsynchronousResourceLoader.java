@@ -16,14 +16,20 @@
 
 package org.gearvrf.asynchronous;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRHybridObject;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRHybridObject;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Threads;
+
+import android.graphics.Bitmap;
 
 /**
  * Internal API for asynchronous resource loading.
@@ -221,5 +227,35 @@ public class GVRAsynchronousResourceLoader {
             throw new IllegalArgumentException(
                     "Priority < GVRContext.LOWEST_PRIORITY or > GVRContext.HIGHEST_PRIORITY");
         }
+    }
+
+    /**
+     * An internal method, public only so that GVRContext can make cross-package
+     * calls.
+     * 
+     * A wrapper around
+     * {@link android.graphics.BitmapFactory#decodeStream(InputStream)
+     * BitmapFactory.decodeStream} that uses an
+     * {@link android.graphics.BitmapFactory.Options} <code>inTempStorage</code>
+     * decode buffer. On low memory, returns half (quarter, eighth, ...) size
+     * images.
+     * <p>
+     * If {@code stream} is a {@link FileInputStream} and is at offset 0 (zero),
+     * uses
+     * {@link android.graphics.BitmapFactory#decodeFileDescriptor(FileDescriptor)
+     * BitmapFactory.decodeFileDescriptor()} instead of
+     * {@link android.graphics.BitmapFactory#decodeStream(InputStream)
+     * BitmapFactory.decodeStream()}.
+     * 
+     * @param stream
+     *            Bitmap stream
+     * @param closeStream
+     *            If {@code true}, closes {@code stream}
+     * @return Bitmap, or null if cannot be decoded into a bitmap
+     */
+    public static Bitmap decodeStream(InputStream stream, boolean closeStream) {
+        return AsyncBitmapTexture.decodeStream(stream,
+                AsyncBitmapTexture.glMaxTextureSize,
+                AsyncBitmapTexture.glMaxTextureSize, true, null, closeStream);
     }
 }

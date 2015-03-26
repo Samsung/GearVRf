@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.simplegallery;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import android.media.MediaPlayer;
-
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPostEffect;
@@ -34,8 +32,8 @@ import org.gearvrf.animation.GVRRotationByAxisWithPivotAnimation;
 import org.gearvrf.animation.GVRScaleAnimation;
 import org.gearvrf.scene_objects.GVRVideoSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObject.GVRVideoType;
-import org.gearvrf.simplegallery.R;
 
+import android.media.MediaPlayer;
 public class GalleryViewManager extends GVRScript {
 
     private static final float ANIMATION_DURATION = 0.3f;
@@ -66,14 +64,17 @@ public class GalleryViewManager extends GVRScript {
         mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
                 .getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
-        GVRMesh sphereMesh = mGVRContext.loadMesh("sphere.obj");
+        GVRMesh sphereMesh = mGVRContext.loadMesh(new GVRAndroidResource(
+                mGVRContext, R.raw.sphere_mesh));
 
         GVRSceneObject leftScreen = new GVRSceneObject(mGVRContext, sphereMesh,
-                mGVRContext.loadTexture("left_screen.png"));
+                mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext,
+                        R.drawable.left_screen_png)));
         leftScreen.getTransform().setScale(10.0f, 10.0f, 10.0f);
         leftScreen.getRenderData().setRenderMask(GVRRenderMaskBit.Left);
         GVRSceneObject rightScreen = new GVRSceneObject(mGVRContext,
-                sphereMesh, mGVRContext.loadTexture("right_screen.png"));
+                sphereMesh, mGVRContext.loadTexture(new GVRAndroidResource(
+                        mGVRContext, R.drawable.right_screen_png)));
         rightScreen.getTransform().setScale(10.0f, 10.0f, 10.0f);
         rightScreen.getRenderData().setRenderMask(GVRRenderMaskBit.Right);
 
@@ -81,15 +82,15 @@ public class GalleryViewManager extends GVRScript {
         mGVRContext.getMainScene().addSceneObject(rightScreen);
 
         List<GVRTexture> numberTextures = new ArrayList<GVRTexture>();
-        numberTextures.add(mGVRContext.loadTexture("photo_1.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_2.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_3.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_4.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_5.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_6.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_7.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_8.jpg"));
-        numberTextures.add(mGVRContext.loadTexture("photo_9.jpg"));
+        int[] resourceIds = new int[] { R.drawable.photo_1_jpg,
+                R.drawable.photo_2_jpg, R.drawable.photo_3_jpg,
+                R.drawable.photo_4_jpg, R.drawable.photo_5_jpg,
+                R.drawable.photo_6_jpg, R.drawable.photo_7_jpg,
+                R.drawable.photo_8_jpg, R.drawable.photo_9_jpg };
+        for (int id : resourceIds) {
+            numberTextures.add(mGVRContext.loadTexture(new GVRAndroidResource(
+                    mGVRContext, id)));
+        }
 
         for (int i = 0; i < numberTextures.size(); ++i) {
             GVRSceneObject number = new GVRSceneObject(mGVRContext, 2.0f, 1.0f,

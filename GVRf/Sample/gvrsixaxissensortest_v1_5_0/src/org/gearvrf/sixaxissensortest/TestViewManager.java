@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.sixaxissensortest;
+
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +22,7 @@ import android.graphics.Color;
 import android.graphics.Paint.Align;
 import android.util.Log;
 
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
@@ -46,7 +47,6 @@ public class TestViewManager extends GVRScript {
     private GVRSceneObject mStateBoard = null;
 
     private double mPreviousDegree = 0.0f;
-    private long mTimeStamp = 0l;
 
     private float mAValue = 3.0f;
     private float mBValue = 10.0f;
@@ -67,7 +67,8 @@ public class TestViewManager extends GVRScript {
         mGVRContext.getMainScene().getMainCameraRig()
                 .setCameraRigType(GVRCameraRig.GVRCameraRigType.YawOnly.ID);
 
-        GVRMesh cylinderMesh = mGVRContext.loadMesh("cylinder.obj");
+        GVRMesh cylinderMesh = mGVRContext.loadMesh(new GVRAndroidResource(
+                mGVRContext, R.raw.cylinder_obj));
         Bitmap cylinderBitmap = BitmapFactory.decodeResource(mGVRContext
                 .getContext().getResources(), R.drawable.cylinder2);
         GVRSceneObject cylinder = new GVRSceneObject(mGVRContext, cylinderMesh,
@@ -123,7 +124,6 @@ public class TestViewManager extends GVRScript {
         mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
                 .addChildObject(mStateBoard);
 
-        mTimeStamp = System.currentTimeMillis();
     }
 
     @Override
@@ -134,10 +134,6 @@ public class TestViewManager extends GVRScript {
         if (degree < 0.0) {
             degree += 360.0;
         }
-
-        long currentTime = System.currentTimeMillis();
-        float deltaTime = (currentTime - mTimeStamp) / 1000.0f;
-        mTimeStamp = currentTime;
 
         double deltaDegree = degree - mPreviousDegree;
         mPreviousDegree = degree;

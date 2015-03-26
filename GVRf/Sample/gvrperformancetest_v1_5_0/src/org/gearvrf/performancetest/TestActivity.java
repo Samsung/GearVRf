@@ -25,7 +25,7 @@ public class TestActivity extends GVRActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScript(new TestScript(), "gvr_note4.xml");
+        setScript(new TestScript(this), "gvr_note4.xml");
     }
 
 }

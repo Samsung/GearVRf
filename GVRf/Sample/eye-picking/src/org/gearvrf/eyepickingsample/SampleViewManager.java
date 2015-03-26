@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.gearvrf.eyepickingsample;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMaterial;
@@ -27,8 +28,11 @@ import org.gearvrf.GVRMeshEyePointee;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
+import org.gearvrf.utility.Log;
 
 public class SampleViewManager extends GVRScript {
+
+    private static final String TAG = "SampleViewManager";
 
     private static final float UNPICKED_COLOR_R = 0.7f;
     private static final float UNPICKED_COLOR_G = 0.7f;
@@ -42,6 +46,12 @@ public class SampleViewManager extends GVRScript {
     private GVRContext mGVRContext = null;
     private ColorShader mColorShader = null;
     private List<GVRSceneObject> mObjects = new ArrayList<GVRSceneObject>();
+
+    private GVRActivity mActivity;
+
+    SampleViewManager(GVRActivity activity) {
+        mActivity = activity;
+    }
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -106,14 +116,31 @@ public class SampleViewManager extends GVRScript {
         /*
          * Adding bunnies.
          */
+
+        GVRMesh mesh = null;
+        try {
+            mesh = mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext,
+                    "bunny.obj"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            mesh = null;
+        }
+        if (mesh == null) {
+            mActivity.finish();
+            Log.e(TAG, "Mesh was not loaded. Stopping application!");
+        }
+        // activity was stored in order to stop the application if the mesh is
+        // not loaded. Since we don't need anymore, we set it to null to reduce chance of memory leak.
+        mActivity = null;
+
         // These 2 are testing by the whole mesh.
-        object = getColorMesh(1.0f, "bunny.obj");
+        object = getColorMesh(1.0f, mesh);
         object.getTransform().setPosition(0.0f, 0.0f, -2.0f);
         attachDefaultEyePointee(object);
         mGVRContext.getMainScene().addSceneObject(object);
         mObjects.add(object);
 
-        object = getColorMesh(1.0f, "bunny.obj");
+        object = getColorMesh(1.0f, mesh);
         object.getTransform().setPosition(3.0f, 3.0f, -2.0f);
         attachDefaultEyePointee(object);
         mGVRContext.getMainScene().addSceneObject(object);
@@ -121,13 +148,13 @@ public class SampleViewManager extends GVRScript {
         mObjects.add(object);
 
         // These 2 are testing by the bounding box of the mesh.
-        object = getColorMesh(2.0f, "bunny.obj");
+        object = getColorMesh(2.0f, mesh);
         object.getTransform().setPosition(-5.0f, 0.0f, -2.0f);
         attachBoundingBoxEyePointee(object);
         mGVRContext.getMainScene().addSceneObject(object);
         mObjects.add(object);
 
-        object = getColorMesh(1.0f, "bunny.obj");
+        object = getColorMesh(1.0f, mesh);
         object.getTransform().setPosition(0.0f, -5.0f, -2.0f);
         attachBoundingBoxEyePointee(object);
         mGVRContext.getMainScene().addSceneObject(object);
@@ -169,13 +196,14 @@ public class SampleViewManager extends GVRScript {
         return board;
     }
 
-    private GVRSceneObject getColorMesh(float scale, String fileName) {
+    private GVRSceneObject getColorMesh(float scale, GVRMesh mesh) {
         GVRMaterial material = new GVRMaterial(mGVRContext,
                 mColorShader.getShaderId());
         material.setVec4(ColorShader.COLOR_KEY, UNPICKED_COLOR_R,
                 UNPICKED_COLOR_G, UNPICKED_COLOR_B, UNPICKED_COLOR_A);
-        GVRMesh mesh = mGVRContext.loadMesh(fileName);
-        GVRSceneObject meshObject = new GVRSceneObject(mGVRContext, mesh);
+
+        GVRSceneObject meshObject = null;
+        meshObject = new GVRSceneObject(mGVRContext, mesh);
         meshObject.getTransform().setScale(scale, scale, scale);
         meshObject.getRenderData().setMaterial(material);
 

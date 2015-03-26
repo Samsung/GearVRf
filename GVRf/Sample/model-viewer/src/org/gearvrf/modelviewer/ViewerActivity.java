@@ -48,7 +48,7 @@ public class ViewerActivity extends GVRActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mScript = new ViewerScript();
+        mScript = new ViewerScript(this);
         mDetector = new VRTouchPadGestureDetector(this);
         setScript(mScript, "gvr_note4.xml");
     }

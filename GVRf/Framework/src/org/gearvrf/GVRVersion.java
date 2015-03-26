@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /** GVRF version strings. */
@@ -27,7 +26,7 @@ public class GVRVersion {
      * Future versions will be backward compatible with 1.6.0.
      */
     public static final String V_1_6_0 = "1.6.0";
-    
+
     /** Adds asynchronous texture loading */
     public static final String V_1_6_1 = "1.6.1";
 
@@ -40,5 +39,11 @@ public class GVRVersion {
     /** Splash screen */
     public static final String V_1_6_4 = "1.6.4";
 
-    public static final String CURRENT = V_1_6_4;
+    /**
+     * Remove deprecated loadMesh() methods; add blocking
+     * {@link GVRContext#loadTexture(GVRAndroidResource)} method.
+     */
+    public static final String V_1_6_5 = "1.6.5";
+
+    public static final String CURRENT = V_1_6_5;
 }

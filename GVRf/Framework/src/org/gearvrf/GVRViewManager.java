@@ -28,10 +28,8 @@ import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
 
 import android.app.Activity;
-import android.opengl.GLSurfaceView;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
-import android.view.SurfaceView;
 
 /*
  * This is the most important part of gvrf.
@@ -43,8 +41,8 @@ import android.view.SurfaceView;
  * 
  * After the initialization, gvrf works with 2 types of threads.
  * Input threads, and a GL thread.
- * Input threads are about the sensor, joysticks, and keyboards. The send data to gvrf.
- * gvr handles those data as a message. It saves the data, doesn't do something
+ * Input threads are about the sensor, joysticks, and keyboards. They send data to gvrf.
+ * gvrf handles those data as a message. It saves the data, doesn't do something
  * immediately. That's because gvrf is built to do everything about the scene in the GL thread.
  * There might be some pros by doing some rendering related stuffs outside the GL thread,
  * but since I thought simplicity of the structure results in efficiency, I didn't do that.
@@ -207,8 +205,14 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     void onSurfaceCreated() {
         Log.v(TAG, "onSurfaceCreated");
 
+        Thread currentThread = Thread.currentThread();
+
         // Reduce contention with other Android processes
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+        currentThread.setPriority(Thread.MAX_PRIORITY);
+
+        // we know that the current thread is a GL one, so we store it to
+        // prevent non-GL thread from calling GL functions
+        mGLThreadID = currentThread.getId();
 
         mPreviousTimeNanos = GVRTime.getCurrentTime();
 
@@ -261,6 +265,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
         }
     }
+
 
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {

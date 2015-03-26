@@ -15,6 +15,7 @@
 
 package org.gearvrf.simplesample;
 
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -42,7 +43,8 @@ public class SampleViewManager extends GVRScript {
                 .setBackgroundColor(Color.WHITE);
 
         // load texture
-        GVRTexture texture = gvrContext.loadTexture("GearVR.jpg");
+        GVRTexture texture = gvrContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.gearvr_logo_jpg));
 
         // create a scene object (this constructor creates a rectangular scene
         // object that uses the standard 'unlit' shader)

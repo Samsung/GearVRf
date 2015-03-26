@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.cockpit;
 
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRMesh;
@@ -35,12 +35,17 @@ public class CockpitViewManager extends GVRScript {
         mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
                 .getTransform().setPosition(0.0f, 6.0f, 1.0f);
 
-        GVRMesh shipMesh = mGVRContext.loadMesh("gvrf_ship.obj");
-        GVRMesh spaceMesh = mGVRContext.loadMesh("gvrf_space.obj");
+        GVRMesh shipMesh = mGVRContext.loadMesh(new GVRAndroidResource(
+                mGVRContext, R.raw.gvrf_ship_mesh));
+        GVRMesh spaceMesh = mGVRContext.loadMesh(new GVRAndroidResource(
+                mGVRContext, R.raw.gvrf_space_mesh));
 
-        GVRTexture shipTexture = gvrContext.loadTexture("gvrf_ship.png");
+        GVRTexture shipTexture = gvrContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.gvrf_ship_png));
         mShipSceneObject = new GVRSceneObject(gvrContext, shipMesh, shipTexture);
-        GVRTexture spaceTexture = gvrContext.loadTexture("gvrf_space.png");
+        GVRTexture spaceTexture = gvrContext
+                .loadTexture(new GVRAndroidResource(mGVRContext,
+                        R.drawable.gvrf_space_png));
         mSpaceSceneObject = new GVRSceneObject(gvrContext, spaceMesh,
                 spaceTexture);
 

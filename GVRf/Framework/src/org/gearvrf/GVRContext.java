@@ -15,7 +15,6 @@
 
 package org.gearvrf;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -104,6 +103,14 @@ public abstract class GVRContext {
      */
     public static final int DEFAULT_PRIORITY = 0;
 
+    /**
+     * The ID of the GLthread. We use this ID to prevent non-GL thread from
+     * calling GL functions.
+     * 
+     * @since 1.6.5
+     */
+    protected long mGLThreadID;
+
     /*
      * Methods
      */
@@ -123,132 +130,6 @@ public abstract class GVRContext {
      */
     public Context getContext() {
         return mContext;
-    }
-
-    /**
-     * Loads a file placed in the assets directory (or one of its
-     * subdirectories) as a {@link GVRMesh}.
-     * 
-     * Contrast this overload with {@link #loadMesh(int)}, which can load a
-     * {@code res/raw} file. See the discussion of asset-relative filenames
-     * <i>vs.</i> {@code R.raw} resource ids in the <a
-     * href="package-summary.html#assets">package description</a>.
-     * 
-     * @param fileName
-     *            The name of a file, relative to the assets directory. The
-     *            assets directory may contain an arbitrarily complex tree of
-     *            subdirectories; the file name can specify any location in or
-     *            under the assets directory.
-     * @return The file as a GL mesh or {@code null} if the file does not exist
-     *         (or cannot be read)
-     * 
-     * @deprecated We will continue to support the overload jungle (at least
-     *             until public release) but suggest that you switch to the new,
-     *             simpler {@link #loadMesh(GVRAndroidResource)}
-     */
-
-    public GVRMesh loadMesh(String fileName) {
-        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromAssets(this,
-                fileName);
-        return assimpImporter == null ? null : assimpImporter.getMesh(0);
-    }
-
-    /**
-     * Loads a file (placed anywhere on the file system) as a {@link GVRMesh}.
-     * 
-     * {@link #loadMesh(int)} and {@link #loadMesh(String)} are your best choice
-     * for loading resources compiled into your app; this method is best for
-     * loading downloaded (or dynamically generated) content stored somewhere in
-     * your app's private storage.
-     * 
-     * @param file
-     *            Path to the file
-     * @return The file as a GL mesh or {@code null} if the file does not exist
-     *         (or cannot be read)
-     * 
-     * @deprecated We will continue to support the overload jungle (at least
-     *             until public release) but suggest that you switch to the new,
-     *             simpler {@link #loadMesh(GVRAndroidResource)}
-     */
-    public GVRMesh loadMesh(File file) {
-        if (file.canRead() != true) {
-            return null;
-        }
-        String absolutePath = file.getAbsolutePath();
-        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromSDCard(this,
-                absolutePath);
-        return assimpImporter.getMesh(0);
-    }
-
-    /**
-     * 100% synonymous with {@link #loadMesh(String)}.
-     * 
-     * Introduced solely to maintain parallelism with
-     * {@link #loadMeshFromFileSystem(String)}. Contrast this method with
-     * {@link #loadMesh(int)}, which can load a {@code res/raw} file. See the
-     * discussion of asset-relative filenames <i>vs.</i> {@code R.raw} resource
-     * ids in the <a href="package-summary.html#assets">package description</a>.
-     * 
-     * @param assetRelativeFileName
-     *            The name of a file, relative to the assets directory. The
-     *            assets directory may contain an arbitrarily complex tree of
-     *            subdirectories; the file name can specify any location in or
-     *            under the assets directory.
-     * @return The file as a GL mesh or {@code null} if the file does not exist
-     *         (or cannot be read)
-     * 
-     * @deprecated We will continue to support the overload jungle (at least
-     *             until public release) but suggest that you switch to the new,
-     *             simpler {@link #loadMesh(GVRAndroidResource)}
-     */
-    public GVRMesh loadMeshFromAssets(String assetRelativeFileName) {
-        return loadMesh(assetRelativeFileName);
-    }
-
-    /**
-     * Convenience function that wraps {@link #loadMesh(File)}, constructing the
-     * {@link File} object for you.
-     * 
-     * {@link #loadMesh(int)} and {@link #loadMesh(String)} are your best choice
-     * for loading resources compiled into your app; this method is best for
-     * loading downloaded (or dynamically generated) content stored somewhere in
-     * your app's private storage.
-     * 
-     * @param fileName
-     *            Path to the file
-     * @return The file as a GL mesh or {@code null} if the file does not exist
-     *         (or cannot be read)
-     * 
-     * @deprecated We will continue to support the overload jungle (at least
-     *             until public release) but suggest that you switch to the new,
-     *             simpler {@link #loadMesh(GVRAndroidResource)}
-     */
-    public GVRMesh loadMeshFromFileSystem(String fileName) {
-        return loadMesh(new File(fileName));
-    }
-
-    /**
-     * Loads a {@code res/raw} file {@link GVRMesh}.
-     * 
-     * Contrast this overload with {@link #loadMesh(String)}, which can load a
-     * file from the {@code assets} directory. See the discussion of
-     * asset-relative filenames <i>vs.</i> {@code R.raw} resource ids in the <a
-     * href="package-summary.html#assets">package description</a>.
-     * 
-     * @param resourceId
-     *            The Android-generated id of a file in your {@code res/raw}
-     *            directory.
-     * @return The file as a GL mesh.
-     * 
-     * @deprecated We will continue to support the overload jungle (at least
-     *             until public release) but suggest that you switch to the new,
-     *             simpler {@link #loadMesh(GVRAndroidResource)}
-     */
-
-    public GVRMesh loadMesh(int resourceId) {
-        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, resourceId);
-        return assimpImporter.getMesh(0);
     }
 
     /**
@@ -483,26 +364,89 @@ public abstract class GVRContext {
      * <li>{@link BitmapFactory} methods which give you more control over the
      * image size, or
      * <li>
+     * {@link #loadTexture(GVRAndroidResource)} or
      * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)}
-     * which automatically scales large images to fit the GPU's restrictions and
-     * to avoid {@linkplain OutOfMemoryError out of mremory errors.}
+     * which automatically scale large images to fit the GPU's restrictions and
+     * to avoid {@linkplain OutOfMemoryError out of memory errors.}
      * </ul>
      * 
      * @param fileName
      *            The name of a file, relative to the assets directory. The
      *            assets directory may contain an arbitrarily complex tree of
-     *            subdirectories; the file name can specify any location in or
+     *            sub-directories; the file name can specify any location in or
      *            under the assets directory.
      * @return The file as a texture, or {@code null} if file path does not
      *         exist or the file can not be decoded into a Bitmap.
+     * 
+     * @deprecated We will remove this blocking function during Q3 of 2015. We
+     *             suggest that you switch to
+     *             {@link #loadTexture(GVRAndroidResource)}
+     * 
      */
     public GVRBitmapTexture loadTexture(String fileName) {
+
+        assertGLThread();
+
         if (fileName.endsWith(".png")) { // load png directly to texture
             return new GVRBitmapTexture(this, fileName);
         }
 
         Bitmap bitmap = loadBitmap(fileName);
         return bitmap == null ? null : new GVRBitmapTexture(this, bitmap);
+    }
+
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}.
+     * 
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the texture is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames. For large
+     * images, you should use either
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} (faster) or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
+     * (fastest <em>and</em> least memory pressure).
+     * 
+     * <p>
+     * This method automatically scales large images to fit the GPU's
+     * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
+     * errors.} </ul>
+     * 
+     * @param androidResource
+     *            Basically, a stream containing a bitmap texture. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @return The file as a texture, or {@code null} if the file can not be
+     *         decoded into a Bitmap.
+     * 
+     * @since 1.6.5
+     */
+    public GVRBitmapTexture loadTexture(GVRAndroidResource resource) {
+
+        assertGLThread();
+
+        Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
+                resource.getStream(), false);
+        resource.closeStream();
+        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap);
+    }
+
+    /**
+     * Throws an exception if the current thread is not a GL thread.
+     * 
+     * @since 1.6.5
+     * 
+     */
+    private void assertGLThread() {
+
+        if (Thread.currentThread().getId() != mGLThreadID) {
+            throw new RuntimeException(
+                    "Should not run GL functions from a non-GL thread!");
+        }
+
     }
 
     /**
@@ -850,22 +794,6 @@ public abstract class GVRContext {
      */
     public GVRMaterialShaderManager getMaterialShaderManager() {
         return getRenderBundle().getMaterialShaderManager();
-    }
-
-    /**
-     * The {@linkplain GVRMaterialShaderManager object shader manager}
-     * singleton.
-     * 
-     * Use the shader manager to define custom GL object shaders, which are used
-     * to render a scene object's surface.
-     * 
-     * @return The {@linkplain GVRMaterialShaderManager shader manager}
-     *         singleton.
-     * 
-     * @deprecated Please use {@link #getMaterialShaderManager()}
-     */
-    public GVRMaterialShaderManager getShaderManager() {
-        return getMaterialShaderManager();
     }
 
     /**

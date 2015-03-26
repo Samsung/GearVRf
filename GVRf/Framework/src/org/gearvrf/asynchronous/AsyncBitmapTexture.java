@@ -95,7 +95,7 @@ abstract class AsyncBitmapTexture {
      * {@link #glMaxTextureSize}. The default value is almost certainly too
      * small; the actual value is set by {@link #onGlInitialization()}
      */
-    private static int glMaxTextureSize = DEFAULT_GL_MAX_TEXTURE_SIZE;
+    static int glMaxTextureSize = DEFAULT_GL_MAX_TEXTURE_SIZE;
 
     /**
      * Largest image that we will load into memory.
@@ -366,7 +366,7 @@ abstract class AsyncBitmapTexture {
      *            If {@code true}, closes {@code stream}
      * @return Bitmap, or null if cannot be decoded into a bitmap
      */
-    private static Bitmap decodeStream(InputStream stream, int requestedWidth,
+    static Bitmap decodeStream(InputStream stream, int requestedWidth,
             int requestedHeight, final boolean canShrink,
             Bitmap possibleAlternative, boolean closeStream) {
         BitmapFactory.Options options = standardBitmapFactoryOptions();

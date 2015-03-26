@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.sample;
 
-import android.util.Log;
 
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRScript;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshEyePointee;
@@ -27,7 +25,11 @@ import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
+
+import android.util.Log;
+
 
 public class SampleCubeScript extends GVRScript {
 
@@ -41,12 +43,18 @@ public class SampleCubeScript extends GVRScript {
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
 
-        GVRTexture front = mGVRContext.loadTexture("front.png");
-        GVRTexture back = mGVRContext.loadTexture("back.png");
-        GVRTexture left = mGVRContext.loadTexture("left.png");
-        GVRTexture right = mGVRContext.loadTexture("right.png");
-        GVRTexture top = mGVRContext.loadTexture("top.png");
-        GVRTexture bottom = mGVRContext.loadTexture("bottom.png");
+        GVRTexture front = mGVRContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.front_png));
+        GVRTexture back = mGVRContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.back_png));
+        GVRTexture left = mGVRContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.left_png));
+        GVRTexture right = mGVRContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.right_png));
+        GVRTexture top = mGVRContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.top_png));
+        GVRTexture bottom = mGVRContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.bottom_png));
 
         GVRScene scene = mGVRContext.getMainScene();
 

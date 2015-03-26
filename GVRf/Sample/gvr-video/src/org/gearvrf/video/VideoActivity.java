@@ -45,7 +45,7 @@ public class VideoActivity extends GVRActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mScript = new VideoScript();
+        mScript = new VideoScript(this);
         mDetector = new VRTouchPadGestureDetector(this);
         mBatteryReceiver = new BroadcastReceiver() {
             @Override

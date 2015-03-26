@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.performancetest;
 
+import java.io.IOException;
 import java.util.Random;
 
+import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
@@ -27,7 +29,11 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.GVRRotationByAxisWithPivotAnimation;
 
+import android.util.Log;
+
 public class TestScript extends GVRScript {
+
+    private static final String TAG = "TestScript";
 
     private static final int numberOfBunnies = 20;
     private static final String[] textureNames = { "texture1.jpg",
@@ -36,8 +42,15 @@ public class TestScript extends GVRScript {
 
     GVRAnimationEngine mAnimationEngine;
 
+    private GVRActivity mActivity;
+
+    TestScript(GVRActivity activity) {
+        mActivity = activity;
+    }
+
     @Override
     public void onInit(GVRContext gvrContext) {
+
         mAnimationEngine = gvrContext.getAnimationEngine();
 
         scene = gvrContext.getMainScene();
@@ -58,10 +71,22 @@ public class TestScript extends GVRScript {
                 .setPosition(0.0f, 0.0f, 0.0f);
         for (int i = 0; i < numberOfBunnies; ++i) {
 
-            GVRSceneObject bunny = new GVRSceneObject(gvrContext,
-                    gvrContext.loadMesh("bunny.obj"),
-                    gvrContext
-                            .loadTexture(textureNames[i % textureNames.length]));
+            GVRSceneObject bunny = null;
+            try {
+                // we assume that the mesh and the textures are valid
+                bunny = new GVRSceneObject(gvrContext,
+                        gvrContext.loadMesh(new GVRAndroidResource(gvrContext,
+                                "bunny.obj")),
+                        gvrContext.loadTexture(new GVRAndroidResource(
+                                gvrContext, textureNames[i
+                                        % textureNames.length])));
+            } catch (IOException e) {
+                e.printStackTrace();
+                mActivity.finish();
+                Log.e(TAG,
+                        "Mesh or texture were not loaded. Stopping application!");
+            }
+
             Random random = new Random();
 
             bunny.getTransform().setPosition(0.0f, 0.0f,
