@@ -15,11 +15,12 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.Log;
+
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -37,7 +38,7 @@ import com.oculusvr.vrlib.VrActivity;
  */
 public class GVRActivity extends VrActivity {
 
-    public static final String TAG = "GVROculusActivity";
+    private static final String TAG = Log.tag(GVRActivity.class);
 
     private GVRViewManager mGVRViewManager = null;
 
@@ -161,21 +162,29 @@ public class GVRActivity extends VrActivity {
                 (GVRSurfaceViewRenderer) null);
     }
 
-    public void drawFrame() {
+    void drawFrame() {
         mGVRViewManager.onDrawFrame();
     }
 
-    public void oneTimeInit() {
+    void oneTimeInit() {
         mGVRViewManager.onSurfaceCreated();
         Log.e(TAG, " oneTimeInit from native layer");
     }
 
-    public void oneTimeShutDown() {
+    void oneTimeShutDown() {
         Log.e(TAG, " oneTimeShutDown from native layer");
     }
 
+    void beforeDrawEyes() {
+        mGVRViewManager.beforeDrawEyes();
+    }
+    
     void onDrawEyeView(int eye, float fovDegrees) {
         mGVRViewManager.onDrawEyeView(eye, fovDegrees);
+    }
+    
+    void afterDrawEyes() {
+        mGVRViewManager.afterDrawEyes();
     }
 
     void setCamera(GVRCamera camera) {

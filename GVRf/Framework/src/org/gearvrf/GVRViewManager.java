@@ -66,7 +66,7 @@ import android.view.SurfaceView;
  */
 class GVRViewManager extends GVRContext implements RotationSensorListener {
 
-    private static final String TAG = "GVRViewManager";
+    private static final String TAG = Log.tag(GVRViewManager.class);
 
     private final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
 
@@ -235,6 +235,28 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         Log.v(TAG, "onSurfaceChanged");
     }
 
+    void beforeDrawEyes() {
+        GVRNotifications.notifyBeforeStep();
+
+        mReferenceQueue.clean();
+        mRecyclableObjectProtector.clean();
+        mFrameTime = (GVRTime.getCurrentTime() - mPreviousTimeNanos) / 1e9f;
+        mPreviousTimeNanos = GVRTime.getCurrentTime();
+
+        Runnable runnable = null;
+        while ((runnable = mRunnables.poll()) != null) {
+            runnable.run();
+        }
+
+        synchronized (mFrameListeners) {
+            for (GVRDrawFrameListener listener : mFrameListeners) {
+                listener.onDrawFrame(mFrameTime);
+            }
+        }
+
+        mScript.onStep();
+    }
+
     void onDrawEyeView(int eye, float fovDegrees) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
@@ -248,25 +270,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mActivity.setCamera(mMainScene.getMainCameraRig()
                         .getRightCamera());
             } else {
-                mReferenceQueue.clean();
-                mRecyclableObjectProtector.clean();
-                mFrameTime = (GVRTime.getCurrentTime() - mPreviousTimeNanos) / 1e9f;
-                mPreviousTimeNanos = GVRTime.getCurrentTime();
-                // call onDrawFrame when there must be eye = 0, otherwise
-                // animation gets slow
-                Runnable runnable = null;
-                while ((runnable = mRunnables.poll()) != null) {
-                    runnable.run();
-                }
-
-                synchronized (mFrameListenersLock) {
-                    final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
-                    for (GVRDrawFrameListener listener : frameListeners) {
-                        listener.onDrawFrame(mFrameTime);
-                    }
-                }
-
-                mScript.onStep();
                 mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
                 renderCamera(mActivity.appPtr, mMainScene, mMainScene
                         .getMainCameraRig().getLeftCamera(),
@@ -278,15 +281,17 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         }
     }
 
-    /**
-     * Called to draw the current frames in the view.
-     */
+    /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {
         if (mCurrentEye == 1) {
             mActivity.setCamera(mMainScene.getMainCameraRig().getLeftCamera());
         } else {
             mActivity.setCamera(mMainScene.getMainCameraRig().getRightCamera());
         }
+    }
+
+    void afterDrawEyes() {
+        GVRNotifications.notifyAfterStep();
     }
 
     /**

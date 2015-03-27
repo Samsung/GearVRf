@@ -18,7 +18,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
-static const char * notificationsClassName = "org/gearvrf/GVRNotifications";
 
 namespace gvr {
 
@@ -57,16 +56,14 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
     activityClass = GetGlobalClassReference( activityClassName );
-    drawFrameMethodId      = GetMethodID( "drawFrame", "()V" );
+
     oneTimeInitMethodId     = GetMethodID( "oneTimeInit", "()V" );
     oneTimeShutdownMethodId = GetMethodID( "oneTimeShutDown", "()V" );
+
+    drawFrameMethodId      = GetMethodID( "drawFrame", "()V" );
+    beforeDrawEyesMethodId = GetMethodID( "beforeDrawEyes", "()V" );
     drawEyeViewMethodId = GetMethodID( "onDrawEyeView", "(IF)V" );
-
-    notificationsClass = GetGlobalClassReference(notificationsClassName);
-    notifyBeforeStep = GetStaticMethodID(notificationsClass, "notifyBeforeStep", "()V");
-    notifyAfterStep = GetStaticMethodID(notificationsClass, "notifyAfterStep", "()V");
-
-    //LOG("GVRActivity::GVRActivity");
+    afterDrawEyesMethodId = GetMethodID( "afterDrawEyes", "()V" );
 }
 
 GVRActivity::~GVRActivity() {
@@ -200,8 +197,6 @@ Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
             vp_matrix[0][2], vp_matrix[1][2], vp_matrix[2][2], vp_matrix[3][2],
             vp_matrix[0][3], vp_matrix[1][3], vp_matrix[2][3], vp_matrix[3][3]);
 
-    jni->CallStaticVoidMethod( notificationsClass, notifyAfterStep );
-
     return view2;
 
 }
@@ -211,7 +206,7 @@ Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 Matrix4f GVRActivity::Frame( const VrFrame vrFrame )
 {
     JNIEnv* jni = app->GetVrJni();
-    jni->CallStaticVoidMethod( notificationsClass, notifyBeforeStep );
+    jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
 
     // Get the current vrParms for the buffer resolution.
@@ -239,6 +234,8 @@ Matrix4f GVRActivity::Frame( const VrFrame vrFrame )
     // to the screen.
     //-------------------------------------------
     app->DrawEyeViewsPostDistorted( view2);
+
+    jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
 
     return view2;
 }

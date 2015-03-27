@@ -64,13 +64,16 @@ private:
 
     jobject              javaObject;
     jclass               activityClass;    // must be looked up from main thread or FindClass() will fail
-    jclass               notificationsClass;
-    jmethodID            drawFrameMethodId;
+
     jmethodID            oneTimeInitMethodId;
     jmethodID            oneTimeShutdownMethodId;
+
+    jmethodID            drawFrameMethodId;
+
+    jmethodID            beforeDrawEyesMethodId;
     jmethodID            drawEyeViewMethodId;
-    jmethodID            notifyBeforeStep;
-    jmethodID            notifyAfterStep;
+    jmethodID            afterDrawEyesMethodId;
+
     jclass               GetGlobalClassReference( const char * className ) const;
     jmethodID            GetMethodID( const char * name, const char * signature );
     jmethodID            GetStaticMethodID( jclass activityClass, const char * name, const char * signature );
