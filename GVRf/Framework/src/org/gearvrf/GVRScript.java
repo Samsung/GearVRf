@@ -16,6 +16,9 @@
 
 package org.gearvrf;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 /**
  * Extend this class to create a GVRF application.
  * <p>
@@ -26,6 +29,28 @@ package org.gearvrf;
  * default priority} threads compete with each other.
  */
 public abstract class GVRScript {
+
+    // private static final String TAG = Log.tag(GVRScript.class);
+
+    /**
+     * Default minimum time for splash screen to show: returned by
+     * {@link #getSplashDisplayTime()}.
+     */
+    private static final float DEFAULT_SPLASH_DISPLAY_SECONDS = 5f;
+
+    /**
+     * Default fade-to-transparency time for the splash screen: returned by
+     * {@link #getSplashFadeTime()}.
+     */
+    private static final float DEFAULT_SPLASH_FADE_SECONDS = 0.9f;
+
+    /** Splash screen, distance from the camera. */
+    private static final float DEFAULT_SPLASH_Z = -1.25f;
+
+    /*
+     * Core methods, that you must override.
+     */
+
     /**
      * Called when the GL surface is created, when your app is loaded.
      * 
@@ -58,4 +83,186 @@ public abstract class GVRScript {
      * applies the lens distortion.
      */
     public abstract void onStep();
+
+    /*
+     * Splash screen support: methods to call or overload to change the default
+     * splash screen behavior
+     */
+
+    private GVRViewManager mViewManager;
+
+    /**
+     * Whether the splash screen should be displayed, and for how long.
+     * 
+     * Returned by {@link #getSplashMode}.
+     * 
+     * @since 1.6.4
+     */
+    public enum SplashMode {
+        /**
+         * The splash screen will be shown before
+         * {@link GVRScript#onInit(GVRContext) onInit()} and hidden before the
+         * first call to {@link GVRScript#onStep() onStep()}
+         */
+        AUTOMATIC,
+        /**
+         * The splash screen will be shown before
+         * {@link GVRScript#onInit(GVRContext) onInit()} and will remain up
+         * until you call {@link GVRScript#hideSplashScreen()}
+         */
+        MANUAL,
+        /**
+         * The splash screen will not be shown at all. The screen will go black
+         * until your {@link GVRScript#onInit(GVRContext) onInit()} returns, at
+         * which point it will show any objects you have created, over whatever
+         * {@linkplain GVRCamera#setBackgroundColor(int) background color} you
+         * have set.
+         */
+        NONE
+    }
+
+    /**
+     * Override this method to change the splash mode from the default
+     * {@linkplain SplashMode#AUTOMATIC automatic} mode.
+     * 
+     * @return One of the {@link SplashMode} enums.
+     * 
+     * @since 1.6.4
+     */
+    public SplashMode getSplashMode() {
+        return SplashMode.AUTOMATIC;
+    }
+
+    /**
+     * The minimum amount of time the splash screen will be visible, in seconds.
+     * 
+     * Override this method to change the default.
+     * 
+     * In {@linkplain SplashMode#AUTOMATIC AUTOMATIC} mode, the splash screen
+     * will stay up for {@link #getSplashDisplayTime()} seconds. In
+     * {@linkplain SplashMode#MANUAL MANUAL} mode, the splash screen will stay
+     * up for <em>at least</em> {@link #getSplashDisplayTime()} seconds:
+     * {@link #closeSplashScreen()} will not take effect until the splash screen
+     * times out, even if you call it long before that timeout.
+     * 
+     * @return The minimum splash screen display time, in seconds.
+     */
+    public float getSplashDisplayTime() {
+        return DEFAULT_SPLASH_DISPLAY_SECONDS;
+    }
+
+    /**
+     * Splash screen fade time, in seconds.
+     * 
+     * Override this method to change the default.
+     * 
+     * @return Splash screen fade-out animation duration
+     */
+    public float getSplashFadeTime() {
+        return DEFAULT_SPLASH_FADE_SECONDS;
+    }
+
+    /**
+     * In {@linkplain SplashMode#MANUAL manual mode,} the splash screen will
+     * stay up until you call this method.
+     * 
+     * Calling {@link #closeSplashScreen()} before the
+     * {@linkplain #getSplashDisplayTime() display time} has elapsed will set a
+     * flag, but the splash screen will stay up until the timeout; after the
+     * timeout, the splash screen will close as soon as you call
+     * {@link #closeSplashScreen()}.
+     * 
+     * @since 1.6.4
+     */
+    public final void closeSplashScreen() {
+        mViewManager.closeSplashScreen();
+    }
+
+    /**
+     * Override this method to supply a custom splash screen image.
+     * 
+     * @param gvrContext
+     *            The new {@link GVRContext}
+     * @return Texture to display
+     * 
+     * @since 1.6.4
+     */
+    public GVRTexture getSplashTexture(GVRContext gvrContext) {
+        Bitmap bitmap = BitmapFactory.decodeResource( //
+                gvrContext.getContext().getResources(), //
+                R.drawable.__default_splash_screen__);
+        return new GVRBitmapTexture(gvrContext, bitmap);
+    }
+
+    /**
+     * Override this method to supply a custom splash screen mesh.
+     * 
+     * The default is a 1x1 quad.
+     * 
+     * @param gvrContext
+     *            The new {@link GVRContext}
+     * @return Mesh to use with {@link #getSplashTexture(GVRContext)} and
+     *         {@link #getSplashShader(GVRContext)}.
+     * 
+     * @since 1.6.4
+     */
+    public GVRMesh getSplashMesh(GVRContext gvrContext) {
+        return gvrContext.createQuad(1f, 1f);
+    }
+
+    /**
+     * Override this method to supply a custom splash screen shader.
+     * 
+     * The default is the built-in {@linkplain GVRMaterial.GVRShaderType.Unlit
+     * unlit shader.}
+     * 
+     * @param gvrContext
+     *            The new {@link GVRContext}
+     * @return Shader to use with {@link #getSplashTexture(GVRContext)} and
+     *         {@link #getSplashMesh(GVRContext)}.
+     * 
+     * @since 1.6.4
+     */
+    public GVRMaterialShaderId getSplashShader(GVRContext gvrContext) {
+        return GVRMaterial.GVRShaderType.Unlit.ID;
+    }
+
+    /**
+     * Override this method to change the default splash screen size or
+     * position.
+     * 
+     * This method will be called <em>before</em> {@link #onInit(GVRContext)
+     * onInit()} and before the normal render pipeline starts up. In particular,
+     * this means that any {@links GVRAnimation animations} will not start until
+     * the first {@link #onStep()} and normal rendering starts.
+     * 
+     * @param splashScreen
+     *            The splash object created from
+     *            {@link #getSplashTexture(GVRContext)},
+     *            {@link #getSplashMesh(GVRContext)}, and
+     *            {@link #getSplashShader(GVRContext)}.
+     * 
+     * @since 1.6.4
+     */
+    public void onSplashScreenCreated(GVRSceneObject splashScreen) {
+        GVRTransform transform = splashScreen.getTransform();
+        transform.setPosition(0, 0, DEFAULT_SPLASH_Z);
+    }
+
+    SplashScreen createSplashScreen(GVRViewManager viewManager) {
+        if (getSplashMode() == SplashMode.NONE) {
+            return null;
+        }
+
+        this.mViewManager = viewManager;
+        SplashScreen splashScreen = new SplashScreen(viewManager, //
+                getSplashMesh(viewManager), //
+                getSplashTexture(viewManager), //
+                getSplashShader(viewManager), //
+                this);
+        splashScreen.getRenderData().setRenderingOrder(
+                GVRRenderData.GVRRenderingOrder.OVERLAY);
+        onSplashScreenCreated(splashScreen);
+        return splashScreen;
+    }
 }

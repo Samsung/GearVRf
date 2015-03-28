@@ -37,5 +37,8 @@ public class GVRVersion {
     /** Adds float point textures, and texture updating */
     public static final String V_1_6_3 = "1.6.3";
 
-    public static final String CURRENT = V_1_6_3;
+    /** Splash screen */
+    public static final String V_1_6_4 = "1.6.4";
+
+    public static final String CURRENT = V_1_6_4;
 }

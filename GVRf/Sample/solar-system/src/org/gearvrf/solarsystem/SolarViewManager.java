@@ -13,12 +13,24 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.solarsystem;
 
-import org.gearvrf.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRScript;
+import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRTransform;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRRepeatMode;
@@ -45,16 +57,24 @@ public class SolarViewManager extends GVRScript {
             });
         }
 
+        private static int pending = 0;
+
         private static final int MESH_PRIORITY = 1000;
         private static final int TEXTURE_PRIORITY = 100;
 
         private GVRMesh mesh = null;
         private GVRTexture texture = null;
+        private final SolarViewManager script;
 
-        AsyncSphericalObject(GVRContext context, String textureName) {
+        AsyncSphericalObject(GVRContext context, SolarViewManager script,
+                String textureName) {
             super(context);
 
+            this.script = script;
+
             synchronized (lock) {
+                pending += 1;
+
                 if (sphereMesh != null) {
                     setMesh(sphereMesh);
                 } else {
@@ -163,28 +183,52 @@ public class SolarViewManager extends GVRScript {
             renderData.setMaterial(material);
 
             attachRenderData(renderData);
+
+            synchronized (lock) {
+                pending -= 1;
+                Log.d(TAG, "pending = %d", pending);
+                if (pending == 0) {
+                    script.closeSplashScreen();
+                }
+            }
         }
     }
 
-    private static GVRSceneObject asyncSceneObject(GVRContext context,
+    private GVRSceneObject asyncSceneObject(GVRContext context,
             String textureName) {
-        return new AsyncSphericalObject(context, textureName);
+        return new AsyncSphericalObject(context, this, textureName);
+    }
+
+    @Override
+    public SplashMode getSplashMode() {
+        return SplashMode.MANUAL;
     }
 
     @Override
     public void onInit(GVRContext gvrContext) {
         mAnimationEngine = gvrContext.getAnimationEngine();
 
-        gvrContext.getMainScene().getMainCameraRig().getLeftCamera()
+        GVRScene mainScene = gvrContext.getNextMainScene(new Runnable() {
+
+            @Override
+            public void run() {
+                for (GVRAnimation animation : mAnimations) {
+                    animation.start(mAnimationEngine);
+                }
+                mAnimations = null;
+            }
+        });
+
+        mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-        gvrContext.getMainScene().getMainCameraRig().getRightCamera()
+        mainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        gvrContext.getMainScene().getMainCameraRig().getOwnerObject()
-                .getTransform().setPosition(0.0f, 0.0f, 0.0f);
+        mainScene.getMainCameraRig().getOwnerObject().getTransform()
+                .setPosition(0.0f, 0.0f, 0.0f);
 
         GVRSceneObject solarSystemObject = new GVRSceneObject(gvrContext);
-        gvrContext.getMainScene().addSceneObject(solarSystemObject);
+        mainScene.addSceneObject(solarSystemObject);
 
         GVRSceneObject sunRotationObject = new GVRSceneObject(gvrContext);
         solarSystemObject.addChildObject(sunRotationObject);
@@ -234,8 +278,8 @@ public class SolarViewManager extends GVRScript {
         GVRSceneObject moonRevolutionObject = new GVRSceneObject(gvrContext);
         moonRevolutionObject.getTransform().setPosition(4.0f, 0.0f, 0.0f);
         earthRevolutionObject.addChildObject(moonRevolutionObject);
-        moonRevolutionObject.addChildObject(gvrContext.getMainScene()
-                .getMainCameraRig().getOwnerObject());
+        moonRevolutionObject.addChildObject(mainScene.getMainCameraRig()
+                .getOwnerObject());
 
         GVRSceneObject marsRevolutionObject = new GVRSceneObject(gvrContext);
         marsRevolutionObject.getTransform().setPosition(30.0f, 0.0f, 0.0f);
@@ -262,8 +306,8 @@ public class SolarViewManager extends GVRScript {
 
         counterClockwise(moonRevolutionObject, 60f);
 
-        clockwise(gvrContext.getMainScene().getMainCameraRig().getOwnerObject()
-                .getTransform(), 60f);
+        clockwise(mainScene.getMainCameraRig().getOwnerObject().getTransform(),
+                60f);
 
         counterClockwise(marsRevolutionObject, 1200f);
         counterClockwise(marsRotationObject, 200f);
@@ -273,29 +317,29 @@ public class SolarViewManager extends GVRScript {
     public void onStep() {
     }
 
-    private void run(GVRAnimation animation) {
-        animation
-                //
-                .setRepeatMode(GVRRepeatMode.REPEATED).setRepeatCount(-1)
-                .start(mAnimationEngine);
+    private List<GVRAnimation> mAnimations = new ArrayList<GVRAnimation>();
+
+    private void setup(GVRAnimation animation) {
+        animation.setRepeatMode(GVRRepeatMode.REPEATED).setRepeatCount(-1);
+        mAnimations.add(animation);
     }
 
     private void counterClockwise(GVRSceneObject object, float duration) {
-        run(new GVRRotationByAxisWithPivotAnimation( //
+        setup(new GVRRotationByAxisWithPivotAnimation( //
                 object, duration, 360.0f, //
                 0.0f, 1.0f, 0.0f, //
                 0.0f, 0.0f, 0.0f));
     }
 
     private void clockwise(GVRSceneObject object, float duration) {
-        run(new GVRRotationByAxisWithPivotAnimation( //
+        setup(new GVRRotationByAxisWithPivotAnimation( //
                 object, duration, -360.0f, //
                 0.0f, 1.0f, 0.0f, //
                 0.0f, 0.0f, 0.0f));
     }
 
     private void clockwise(GVRTransform transform, float duration) {
-        run(new GVRRotationByAxisWithPivotAnimation( //
+        setup(new GVRRotationByAxisWithPivotAnimation( //
                 transform, duration, -360.0f, //
                 0.0f, 1.0f, 0.0f, //
                 0.0f, 0.0f, 0.0f));

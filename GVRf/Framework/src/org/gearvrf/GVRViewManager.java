@@ -21,6 +21,10 @@ import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.gearvrf.GVRScript.SplashMode;
+import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVROnFinish;
+import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
 
@@ -29,6 +33,7 @@ import android.opengl.GLSurfaceView;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
+
 /*
  * This is the most important part of gvrf.
  * Initialization can be told as 2 parts. A General part and the GL part.
@@ -76,9 +81,13 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private final GVRScript mScript;
     private final RotationSensor mRotationSensor;
 
+    private SplashScreen mSplashScreen;
+
     private final GVRLensInfo mLensInfo;
     private GVRRenderBundle mRenderBundle = null;
     private GVRScene mMainScene = null;
+    private GVRScene mNextMainScene = null;
+    private Runnable mOnSwitchMainScene = null;
     private GVRScene mSensoredScene = null;
 
     private long mPreviousTimeNanos = 0l;
@@ -157,6 +166,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         // / mLensInfo.getRealScreenHeightMeters());
     }
 
+    /*
+     * Android life cycle
+     */
+
     /**
      * Called when the system is about to start resuming a previous activity.
      * This is typically used to commit unsaved changes to persistent data, stop
@@ -188,6 +201,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         mRotationSensor.onDestroy();
     }
 
+    /*
+     * GL life cycle
+     */
+
     /**
      * Called when the surface changed size. When
      * setPreserveEGLContextOnPause(true) is called in the surface, this is
@@ -206,9 +223,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
          */
         mRenderBundle = new GVRRenderBundle(this, mLensInfo);
         mMainScene = new GVRScene(this);
-        mScript.onInit(this);
-
-        Log.v(TAG, "onSurfaceCreated end");
     }
 
     private void renderCamera(long activity_ptr, GVRScene scene,
@@ -236,25 +250,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     void beforeDrawEyes() {
-        GVRNotifications.notifyBeforeStep();
-
-        mReferenceQueue.clean();
-        mRecyclableObjectProtector.clean();
-        mFrameTime = (GVRTime.getCurrentTime() - mPreviousTimeNanos) / 1e9f;
-        mPreviousTimeNanos = GVRTime.getCurrentTime();
-
-        Runnable runnable = null;
-        while ((runnable = mRunnables.poll()) != null) {
-            runnable.run();
-        }
-
-        synchronized (mFrameListeners) {
-            for (GVRDrawFrameListener listener : mFrameListeners) {
-                listener.onDrawFrame(mFrameTime);
-            }
-        }
-
-        mScript.onStep();
+        mFrameHandler.beforeDrawEyes();
     }
 
     void onDrawEyeView(int eye, float fovDegrees) {
@@ -291,8 +287,163 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     void afterDrawEyes() {
-        GVRNotifications.notifyAfterStep();
+        mFrameHandler.afterDrawEyes();
     }
+
+    /*
+     * Splash screen life cycle
+     */
+
+    /**
+     * Efficient handling of the state machine.
+     * 
+     * We want to be able to show an animated splash screen after
+     * {@link GVRScript#onInit(GVRContext) onInit().} That means our frame
+     * handler acts differently on the very first frame than it does during
+     * splash screen animations, and differently again when we get to normal
+     * mode. If we used a state enum and a switch statement, we'd have to keep
+     * the two in synch, and we'd be spending render microseconds in a switch
+     * statement, vectoring to a call to a handler. Using a interface
+     * implementation instead of a state enum, we just call the handler
+     * directly.
+     */
+    private interface FrameHandler {
+        void beforeDrawEyes();
+
+        void afterDrawEyes();
+    }
+
+    private FrameHandler firstFrame = new FrameHandler() {
+
+        @Override
+        public void beforeDrawEyes() {
+            mSplashScreen = mScript.createSplashScreen(GVRViewManager.this);
+            if (mSplashScreen != null) {
+                getMainScene().addSceneObject(mSplashScreen);
+            }
+
+            mScript.onInit(GVRViewManager.this);
+
+            if (mSplashScreen == null) {
+                mFrameHandler = normalFrames;
+                firstFrame = splashFrames = null;
+            } else {
+                mFrameHandler = splashFrames;
+                firstFrame = null;
+            }
+        }
+
+        @Override
+        public void afterDrawEyes() {
+        }
+    };
+
+    private FrameHandler splashFrames = new FrameHandler() {
+
+        @Override
+        public void beforeDrawEyes() {
+            // splash screen post-init animations
+            long currentTime = doMemoryManagementAndPerFrameCallbacks();
+
+            if (mSplashScreen != null && currentTime >= mSplashScreen.mTimeout) {
+                if (mSplashScreen.closeRequested()
+                        || mScript.getSplashMode() == SplashMode.AUTOMATIC) {
+
+                    final SplashScreen splashScreen = mSplashScreen;
+                    new GVROpacityAnimation(mSplashScreen,
+                            mScript.getSplashFadeTime(), 0) //
+                            .setOnFinish(new GVROnFinish() {
+
+                                @Override
+                                public void finished(GVRAnimation animation) {
+                                    if (mNextMainScene != null) {
+                                        setMainScene(mNextMainScene);
+                                    } else {
+                                        getMainScene().removeSceneObject(
+                                                splashScreen);
+                                    }
+
+                                    mFrameHandler = normalFrames;
+                                    splashFrames = null;
+                                }
+                            }) //
+                            .start(getAnimationEngine());
+
+                    mSplashScreen = null;
+                }
+            }
+        }
+
+        @Override
+        public void afterDrawEyes() {
+        }
+    };
+
+    private final FrameHandler normalFrames = new FrameHandler() {
+
+        public void beforeDrawEyes() {
+            GVRNotifications.notifyBeforeStep();
+
+            doMemoryManagementAndPerFrameCallbacks();
+
+            mScript.onStep();
+        }
+
+        @Override
+        public void afterDrawEyes() {
+            GVRNotifications.notifyAfterStep();
+        }
+    };
+
+    /**
+     * This is the code that needs to be executed before either eye is drawn.
+     * 
+     * @return Current time, from {@link GVRTime#getCurrentTime()}
+     */
+    private long doMemoryManagementAndPerFrameCallbacks() {
+        /*
+         * Native heap memory, GPU memory management.
+         */
+        mReferenceQueue.clean();
+        mRecyclableObjectProtector.clean();
+
+        long currentTime = GVRTime.getCurrentTime();
+        mFrameTime = (currentTime - mPreviousTimeNanos) / 1e9f;
+        mPreviousTimeNanos = currentTime;
+
+        /*
+         * Without the sensor data, can't draw a scene properly.
+         */
+        Log.d(TAG, "MainScene = %s, mSensoredScene = %s", mMainScene,
+                mSensoredScene);
+        if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
+            Runnable runnable = null;
+            while ((runnable = mRunnables.poll()) != null) {
+                runnable.run();
+            }
+
+            synchronized (mFrameListenersLock) {
+                final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
+                for (GVRDrawFrameListener listener : frameListeners) {
+                    listener.onDrawFrame(mFrameTime);
+                }
+            }
+        }
+
+        return currentTime;
+    }
+
+    private FrameHandler mFrameHandler = firstFrame;
+
+    void closeSplashScreen() {
+        if (mSplashScreen != null) {
+            mSplashScreen.close();
+        }
+    }
+
+    /*
+     * GVRF APIs
+     */
 
     /**
      * Called to reset current sensor data.
@@ -357,8 +508,24 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     @Override
-    public void setMainScene(GVRScene scene) {
+    public synchronized void setMainScene(GVRScene scene) {
         mMainScene = scene;
+        if (mNextMainScene == scene) {
+            mNextMainScene = null;
+            if (mOnSwitchMainScene != null) {
+                mOnSwitchMainScene.run();
+                mOnSwitchMainScene = null;
+            }
+        }
+    }
+
+    @Override
+    public synchronized GVRScene getNextMainScene(Runnable onSwitchMainScene) {
+        if (mNextMainScene == null) {
+            mNextMainScene = new GVRScene(this);
+        }
+        mOnSwitchMainScene = onSwitchMainScene;
+        return mNextMainScene;
     }
 
     @Override
