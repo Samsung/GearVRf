@@ -359,9 +359,9 @@ abstract class AsyncBitmapTexture {
      *            On low memory, can we return half (quarter, eighth, ...) size
      *            image? If false, return null on any OutOfMemoryError
      * @param possibleAlternative
-     *            The largest possible decode may be no bigger than a currently
-     *            cached Medium bitmap. Passing in the cached Medium bitmap (if
-     *            any) allows us to detect this before doing the second decode.
+     *            We may have a cached copy that's at least as big as the
+     *            largest possible decode: Passing in the cached bitmap (if any)
+     *            allows us to detect this before doing the second decode.
      * @param closeStream
      *            If {@code true}, closes {@code stream}
      * @return Bitmap, or null if cannot be decoded into a bitmap
