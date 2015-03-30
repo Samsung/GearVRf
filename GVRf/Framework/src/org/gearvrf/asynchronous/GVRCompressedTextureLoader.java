@@ -49,7 +49,9 @@ import android.opengl.GLES20;
  * instance
  * <li>The internal load method passes that {@code CompressedTexture} to a
  * GL-thread callback, that converts it to a texture and passes that texture to
- * the app's {@link GVRAndroidResource.BitmapTextureCallback}
+ * the app's
+ * {@link org.gearvrf.GVRAndroidResource.BitmapTextureCallback
+ * BitmapTextureCallback}
  * </ul>
  * 
  * @since 1.6.1

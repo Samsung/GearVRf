@@ -305,7 +305,7 @@ public abstract class GVRContext {
      *            to abort a 'stale' load.
      * 
      *            <li>Successful loads will call
-     *            {@link GVRAndroidResource.MeshCallback#loaded(GVRMesh, GVRAndroidResource)
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
      *            loaded()} on the GL thread.
      * 
      *            <li>Any errors will call
@@ -358,14 +358,14 @@ public abstract class GVRContext {
      *            to abort a 'stale' load.
      * 
      *            <li>Successful loads will call
-     *            {@link GVRAndroidResource.MeshCallback#loaded(GVRMesh, GVRAndroidResource)
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
      *            loaded()} on the GL thread.
      * 
      *            <li>Any errors will call
      *            {@link GVRAndroidResource.MeshCallback#failed(Throwable, GVRAndroidResource)
      *            failed(),} with no promises about threading.
      *            </ul>
-     * @param androidResource
+     * @param resource
      *            Basically, a stream containing a 3D model. The
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
@@ -548,7 +548,7 @@ public abstract class GVRContext {
      *            you a chance to abort a 'stale' load.
      * 
      *            Successful loads will call
-     *            {@link GVRAndroidResource.BitmapTextureCallback#loaded(GVRTexture, GVRAndroidResource)
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
      *            loaded()} on the GL thread;
      * 
      *            any errors will call
@@ -613,7 +613,7 @@ public abstract class GVRContext {
      *            you a chance to abort a 'stale' load.
      * 
      *            Successful loads will call
-     *            {@link GVRAndroidResource.BitmapTextureCallback#loaded(GVRTexture, GVRAndroidResource)
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
      *            loaded()} on the GL thread;
      * 
      *            any errors will call
@@ -666,7 +666,7 @@ public abstract class GVRContext {
      * 
      * @param callback
      *            Successful loads will call
-     *            {@link GVRAndroidResource.CompressedTextureCallback#loaded(GVRTexture, GVRAndroidResource)
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
      *            loaded()} on the GL thread; any errors will call
      *            {@link GVRAndroidResource.CompressedTextureCallback#failed(Throwable, GVRAndroidResource)
      *            failed()}, with no promises about threading.
@@ -692,7 +692,7 @@ public abstract class GVRContext {
      * 
      * @param callback
      *            Successful loads will call
-     *            {@link GVRAndroidResource.CompressedTextureCallback#loaded(GVRTexture, GVRAndroidResource)}
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)}
      *            on the GL thread; any errors will call
      *            {@link GVRAndroidResource.CompressedTextureCallback#failed(Throwable, GVRAndroidResource)}
      *            , with no promises about threading.

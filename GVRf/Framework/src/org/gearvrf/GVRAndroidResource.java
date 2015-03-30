@@ -169,8 +169,8 @@ public class GVRAndroidResource {
     /**
      * Get the open stream.
      * 
-     * Changes the debug state (visible <i>via</i>@link {@link #toString()}) to
-     * {@link DebugStates#READING}.
+     * Changes the debug state (visible <i>via</i> {@link #toString()}) to
+     * {@linkplain DebugStates#READING READING}.
      * 
      * @return An open {@link InputStream}.
      */
@@ -183,8 +183,8 @@ public class GVRAndroidResource {
      * Close the open stream.
      * 
      * It's OK to call code that closes the stream for you - the only point of
-     * this API is to update the debug state (visible <i>via</i>@link
-     * {@link #toString()}) to {@link DebugStates#CLOSED}.
+     * this API is to update the debug state (visible <i>via</i>
+     * {@link #toString()}) to {@linkplain DebugStates#CLOSED CLOSED}.
      */
     public final void closeStream() {
         try {
@@ -251,6 +251,10 @@ public class GVRAndroidResource {
      * toString(), for debugging.
      */
 
+    /**
+     * For debugging: shows which file the instance describes, and shows the
+     * OPEN / READING / CLOSED state of the input stream.
+     */
     @Override
     public String toString() {
         return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s}",
@@ -265,14 +269,14 @@ public class GVRAndroidResource {
     /**
      * Callback interface for asynchronous resource loading.
      * 
-     * None of the asynchronous resource [textures, and meshes] loading
-     * methods that take a {@link GVRAndroidResource} parameter return a value.
-     * You must supply a copy of this interface to get results.
+     * None of the asynchronous resource [textures, and meshes] loading methods
+     * that take a {@link GVRAndroidResource} parameter return a value. You must
+     * supply a copy of this interface to get results.
      * 
      * <p>
      * While you will often create a callback for each load request, the APIs do
      * each include the {@link GVRAndroidResource} that you are loading. This
-     * lets you to use the same callback implementation with multiple resources.
+     * lets you use the same callback implementation with multiple resources.
      */
     public interface Callback<T extends GVRHybridObject> {
         /**

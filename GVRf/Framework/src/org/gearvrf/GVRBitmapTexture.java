@@ -43,7 +43,7 @@ public class GVRBitmapTexture extends GVRTexture {
      * This method uses a native code path to create a texture directly from a
      * {@code .png} file; it does not create an Android {@link Bitmap}. It may
      * thus be slightly faster than loading a {@link Bitmap} and creating a
-     * texture with {@link #GVRBaseTexture(GVRContext, Bitmap)}, and it should
+     * texture with {@link #GVRBitmapTexture(GVRContext, Bitmap)}, and it should
      * reduce memory pressure, a bit.
      * 
      * @param gvrContext

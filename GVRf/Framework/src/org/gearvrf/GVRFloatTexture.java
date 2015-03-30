@@ -68,7 +68,7 @@ public class GVRFloatTexture extends GVRTexture {
      *            A linear array of float pairs.
      * @return {@code true} if the update succeeded, and {@code false} if it
      *         failed. Updating a texture requires that the new data parameter
-     *         has the exact same {@link width} and {@link height} and pixel
+     *         has the exact same {@code width} and {@code height} and pixel
      *         format as the original data.
      * @throws IllegalArgumentException
      *             If {@code width} or {@code height} is {@literal <= 0,} or if

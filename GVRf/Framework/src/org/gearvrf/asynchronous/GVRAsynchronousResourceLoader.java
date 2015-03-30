@@ -146,11 +146,12 @@ public class GVRAsynchronousResourceLoader {
      *            Basically, a stream containing a compressed texture. Taking a
      *            {@link GVRAndroidResource} parameter eliminates six overloads.
      * @param priority
-     *            A value {@literal >=} {@link #LOWEST_PRIORITY} and
-     *            {@literal <=} {@link #HIGHEST_PRIORITY}
+     *            A value {@literal >=} {@link GVRContext#LOWEST_PRIORITY} and
+     *            {@literal <=} {@link GVRContext#HIGHEST_PRIORITY}
      * @throws IllegalArgumentException
-     *             If {@code priority} {@literal <} {@link #LOWEST_PRIORITY} or
-     *             {@literal >} {@link #HIGHEST_PRIORITY}, or any of the other
+     *             If {@code priority} {@literal <}
+     *             {@link GVRContext#LOWEST_PRIORITY} or {@literal >}
+     *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
      *             parameters are {@code null}.
      */
     public static void loadBitmapTexture(GVRContext gvrContext,
@@ -179,11 +180,12 @@ public class GVRAsynchronousResourceLoader {
      *            Basically, a stream containing a 3D model. Taking a
      *            {@link GVRAndroidResource} parameter eliminates six overloads.
      * @param priority
-     *            A value {@literal >=} {@link #LOWEST_PRIORITY} and
-     *            {@literal <=} {@link #HIGHEST_PRIORITY}
+     *            A value {@literal >=} {@link GVRContext#LOWEST_PRIORITY} and
+     *            {@literal <=} {@link GVRContext#HIGHEST_PRIORITY}
      * @throws IllegalArgumentException
-     *             If {@code priority} {@literal <} {@link #LOWEST_PRIORITY} or
-     *             {@literal >} {@link #HIGHEST_PRIORITY}, or any of the other
+     *             If {@code priority} {@literal <}
+     *             {@link GVRContext#LOWEST_PRIORITY} or {@literal >}
+     *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
      *             parameters are {@code null}.
      * 
      * @since 1.6.2
