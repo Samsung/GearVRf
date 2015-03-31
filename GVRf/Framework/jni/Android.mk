@@ -27,8 +27,8 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-include ../../ovr_mobile_sdk_20150122/VRLib/import_vrlib.mk
-include ../../ovr_mobile_sdk_20150122/VRLib/cflags.mk
+include ../../ovr_mobile_sdk/VRLib/import_vrlib.mk
+include ../../ovr_mobile_sdk/VRLib/cflags.mk
 
 LOCAL_MODULE := gvrf
 
