@@ -18,7 +18,6 @@ package org.gearvrf;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.gearvrf.GVRScript.SplashMode;
@@ -228,7 +227,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private void renderCamera(long activity_ptr, GVRScene scene,
             GVRCamera camera, GVRRenderTexture renderTexture,
             GVRRenderBundle renderBundle,
-            Vector<GVRPostEffect> extraPostEffectDataVector) {
+            List<GVRPostEffect> extraPostEffectDataVector) {
         long[] extraPostEffectData = new long[extraPostEffectDataVector.size()];
         for (int i = 0; i < extraPostEffectDataVector.size(); ++i) {
             extraPostEffectData[i] = extraPostEffectDataVector.get(i).getPtr();
@@ -256,23 +255,22 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     void onDrawEyeView(int eye, float fovDegrees) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
-            Vector<GVRPostEffect> postEffectData = new Vector<GVRPostEffect>();
+            List<GVRPostEffect> postEffectData = new ArrayList<GVRPostEffect>();
+            GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
             if (eye == 1) {
-                mMainScene.getMainCameraRig().predict(4.0f / 60.0f);
-                renderCamera(mActivity.appPtr, mMainScene, mMainScene
-                        .getMainCameraRig().getRightCamera(),
+                mainCameraRig.predict(4.0f / 60.0f);
+                GVRCamera rightCamera = mainCameraRig.getRightCamera();
+                renderCamera(mActivity.appPtr, mMainScene, rightCamera,
                         mRenderBundle.getRightRenderTexture(), mRenderBundle,
                         postEffectData);
-                mActivity.setCamera(mMainScene.getMainCameraRig()
-                        .getRightCamera());
+                mActivity.setCamera(rightCamera);
             } else {
-                mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
-                renderCamera(mActivity.appPtr, mMainScene, mMainScene
-                        .getMainCameraRig().getLeftCamera(),
+                mainCameraRig.predict(3.5f / 60.0f);
+                GVRCamera leftCamera = mainCameraRig.getLeftCamera();
+                renderCamera(mActivity.appPtr, mMainScene, leftCamera,
                         mRenderBundle.getLeftRenderTexture(), mRenderBundle,
                         postEffectData);
-                mActivity.setCamera(mMainScene.getMainCameraRig()
-                        .getLeftCamera());
+                mActivity.setCamera(leftCamera);
             }
         }
     }
