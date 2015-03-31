@@ -24,8 +24,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Threading utilities: thread pool, thread limiter, and some miscellany. */
 public abstract class Threads {
@@ -706,74 +704,6 @@ public abstract class Threads {
             if (Thread.holdsLock(object)) {
                 throw new RuntimeAssertion("Recursive lock of %s", name);
             }
-        }
-    }
-
-    /*
-     * True core count
-     */
-
-    /**
-     * Return a valid core count, even on BIGlittle architectures.
-     * 
-     * On BIGlittle devices, {@link Runtime#availableProcessors()} 'lies' - it
-     * may show 8 processors, when only 4 are really available at any one time.
-     * This method parses {@code /proc/cpuinfo}, extracting the BogoMIPS lines,
-     * and 'grouping' them: it doesn't look for exact matches, but looks at the
-     * ratios. If all groups are of equal size, it returns that size; otherwise
-     * it falls back to {@link Runtime#availableProcessors()}.
-     * 
-     * @return 'True' core count.
-     */
-    public static int trueCoreCount() {
-        String cpuinfo = TextFile.readTextFile("/proc/cpuinfo");
-
-        String pattern = "BogoMIPS" // Our tag value
-                + "\\s+" // Any amount of white space
-                + ":" // A literal colon
-                + "\\s+" // Any amount of white space
-                + "(\\d+(?:\\.\\d+)?)"; // Capture digits, optionally followed
-                                        // by a dot and more digits
-
-        Pattern regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-        Matcher matcher = regex.matcher(cpuinfo);
-
-        Map<Float, Integer> bogoGroups = new HashMap<Float, Integer>();
-        while (matcher.find()) {
-            float bogoMips = Float.parseFloat(matcher.group(1));
-            boolean noMatch = true;
-            for (Map.Entry<Float, Integer> entry : bogoGroups.entrySet()) {
-                float key = entry.getKey();
-                float ratio = key / bogoMips;
-                if (Math.abs(ratio - 1) < 1e-4f) {
-                    entry.setValue(entry.getValue() + 1);
-                    noMatch = false;
-                    break;
-                }
-            }
-            if (noMatch) {
-                bogoGroups.put(bogoMips, 1);
-            }
-        }
-
-        Integer first = null;
-        boolean consistent = true; // probably
-        for (Integer count : bogoGroups.values()) {
-            if (first == null) {
-                first = count;
-            } else {
-                if ((int) count != (int) first) {
-                    consistent = false;
-                    break;
-                }
-            }
-        }
-        if (consistent) {
-            return first;
-        } else {
-            Log.d(TAG,
-                    "Inconsistent info in /proc/cpuinfo - returning Runtime.getRuntime().availableProcessors()");
-            return Runtime.getRuntime().availableProcessors();
         }
     }
 

@@ -80,7 +80,8 @@ abstract class Throttler {
      * static fields
      */
 
-    private static final int CORE_COUNT = Threads.trueCoreCount();
+    private static final int CORE_COUNT = Runtime.getRuntime()
+            .availableProcessors();
 
     /**
      * Max threads doing resource loads at any one time.
