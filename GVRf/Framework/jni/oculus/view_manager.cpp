@@ -28,8 +28,7 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(
         jlong jscene, jlong jcamera, jlong jrender_texture,
         jlong jshader_manager, jlong jpost_effect_shader_manager,
         jlong jpost_effect_render_texture_a,
-        jlong jpost_effect_render_texture_b,
-        jlongArray jextra_post_effect_data
+        jlong jpost_effect_render_texture_b
         )
 {
     GVRActivity *activity = (GVRActivity*)((App *)appPtr)->GetAppInterface();
@@ -49,25 +48,11 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(
     std::shared_ptr<RenderTexture> post_effect_render_texture_b =
             *reinterpret_cast<std::shared_ptr<RenderTexture>*>(jpost_effect_render_texture_b);
 
-    jlong* jextra_post_effect_data_pointer = jni->GetLongArrayElements(
-            jextra_post_effect_data, 0);
-    int length = static_cast<int>(jni->GetArrayLength(jextra_post_effect_data));
-
-    std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data;
-    for (int i = 0; i < length; ++i) {
-        std::shared_ptr<PostEffectData> p = *reinterpret_cast<std::shared_ptr<
-                PostEffectData>*>(jextra_post_effect_data_pointer[i]);
-        extra_post_effect_data.push_back(p);
-    }
-
     activity->viewManager->renderCamera(activity->Scene,
             scene, camera, render_texture, shader_manager,
             post_effect_shader_manager, post_effect_render_texture_a,
-            post_effect_render_texture_b, extra_post_effect_data,
+            post_effect_render_texture_b,
             activity->viewManager->mvp_matrix);
-
-    jni->ReleaseLongArrayElements(jextra_post_effect_data,
-            jextra_post_effect_data_pointer, 0);
 }
 
 } // extern "C"
@@ -99,7 +84,6 @@ void GVRViewManager::renderCamera(OvrSceneView &ovr_scene,
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
             std::shared_ptr<RenderTexture> post_effect_render_texture_a,
             std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-            std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data,
             glm::mat4 mvp) {
 #ifdef GVRF_FBO_FPS
 	// starting to collect rendering time
@@ -122,7 +106,7 @@ void GVRViewManager::renderCamera(OvrSceneView &ovr_scene,
 
     Renderer::renderCamera(scene, camera, render_texture, shader_manager,
                 post_effect_shader_manager, post_effect_render_texture_a,
-                post_effect_render_texture_b, extra_post_effect_data,mvp);
+                post_effect_render_texture_b, mvp);
 
 #ifdef GVRF_FBO_FPS
     // finish rendering

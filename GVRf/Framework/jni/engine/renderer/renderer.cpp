@@ -44,7 +44,6 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
         std::shared_ptr<RenderTexture> post_effect_render_texture_a,
         std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-        std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data,
         glm::mat4 vp_matrix)
 {
     // there is no need to flat and sort every frame.
@@ -74,10 +73,6 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
         std::vector < std::shared_ptr < PostEffectData >> post_effects =
                 camera->post_effect_data();
-        for (auto it = extra_post_effect_data.begin();
-                it != extra_post_effect_data.end(); ++it) {
-            post_effects.push_back(*it);
-        }
 
         glEnable (GL_DEPTH_TEST);
         glDepthFunc (GL_LEQUAL);
@@ -157,8 +152,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         std::shared_ptr<ShaderManager> shader_manager,
         std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
         std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-        std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data) {
+        std::shared_ptr<RenderTexture> post_effect_render_texture_b) {
     std::vector < std::shared_ptr < SceneObject >> scene_objects =
             scene->getWholeSceneObjects();
     std::vector < std::shared_ptr < RenderData >> render_data_vector;
@@ -179,10 +173,6 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
     std::vector < std::shared_ptr < PostEffectData >> post_effects =
             camera->post_effect_data();
-    for (auto it = extra_post_effect_data.begin();
-            it != extra_post_effect_data.end(); ++it) {
-        post_effects.push_back(*it);
-    }
 
     glEnable (GL_DEPTH_TEST);
     glDepthFunc (GL_LEQUAL);

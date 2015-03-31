@@ -54,7 +54,6 @@ public:
                         std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
                         std::shared_ptr<RenderTexture> post_effect_render_texture_a,
                         std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-                        std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data,
                         glm::mat4 mvp);
 
     glm::mat4 mvp_matrix;

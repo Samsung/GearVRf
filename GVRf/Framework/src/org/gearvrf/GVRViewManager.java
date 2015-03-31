@@ -101,7 +101,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private native void renderCamera(long appPtr, long scene, long camera,
             long renderTexture, long shaderManager,
             long postEffectShaderManager, long postEffectRenderTextureA,
-            long postEffectRenderTextureB, long[] extraPostEffectData);
+            long postEffectRenderTextureB);
 
     /**
      * Constructs GVRViewManager object with GVRScript which controls GL
@@ -226,18 +226,13 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     private void renderCamera(long activity_ptr, GVRScene scene,
             GVRCamera camera, GVRRenderTexture renderTexture,
-            GVRRenderBundle renderBundle,
-            List<GVRPostEffect> extraPostEffectDataVector) {
-        long[] extraPostEffectData = new long[extraPostEffectDataVector.size()];
-        for (int i = 0; i < extraPostEffectDataVector.size(); ++i) {
-            extraPostEffectData[i] = extraPostEffectDataVector.get(i).getPtr();
-        }
+            GVRRenderBundle renderBundle) {
         renderCamera(activity_ptr, scene.getPtr(), camera.getPtr(),
                 renderTexture.getPtr(), renderBundle.getMaterialShaderManager()
                         .getPtr(), renderBundle.getPostEffectShaderManager()
                         .getPtr(), renderBundle.getPostEffectRenderTextureA()
                         .getPtr(), renderBundle.getPostEffectRenderTextureB()
-                        .getPtr(), extraPostEffectData);
+                        .getPtr());
     }
 
     /**
@@ -255,21 +250,18 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     void onDrawEyeView(int eye, float fovDegrees) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
-            List<GVRPostEffect> postEffectData = new ArrayList<GVRPostEffect>();
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
             if (eye == 1) {
                 mainCameraRig.predict(4.0f / 60.0f);
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
                 renderCamera(mActivity.appPtr, mMainScene, rightCamera,
-                        mRenderBundle.getRightRenderTexture(), mRenderBundle,
-                        postEffectData);
+                        mRenderBundle.getRightRenderTexture(), mRenderBundle);
                 mActivity.setCamera(rightCamera);
             } else {
                 mainCameraRig.predict(3.5f / 60.0f);
                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
                 renderCamera(mActivity.appPtr, mMainScene, leftCamera,
-                        mRenderBundle.getLeftRenderTexture(), mRenderBundle,
-                        postEffectData);
+                        mRenderBundle.getLeftRenderTexture(), mRenderBundle);
                 mActivity.setCamera(leftCamera);
             }
         }

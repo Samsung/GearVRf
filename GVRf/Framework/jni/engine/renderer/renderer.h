@@ -56,8 +56,7 @@ public:
             std::shared_ptr<ShaderManager> shader_manager,
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
             std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-            std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data);
+            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
 
     static void renderCamera(std::shared_ptr<Scene> scene,
             std::shared_ptr<Camera> camera,
@@ -66,7 +65,6 @@ public:
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
             std::shared_ptr<RenderTexture> post_effect_render_texture_a,
             std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-            std::vector<std::shared_ptr<PostEffectData>> extra_post_effect_data,
             glm::mat4 vp_matrix);
 
 private:
