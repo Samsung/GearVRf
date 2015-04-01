@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -190,4 +191,21 @@ public class GVRActivity extends VrActivity {
     void setCamera(GVRCamera camera) {
         nativeSetCamera(appPtr, camera.getPtr());
     }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        boolean handled = super.dispatchTouchEvent(event);// VrActivity's
+
+        /*
+         * Situation: while the super class VrActivity is implementing
+         * dispatchTouchEvent() without calling its own super
+         * dispatchTouchEvent(), we still need to call the
+         * VRTouchPadGestureDetector onTouchEvent. Call it here, similar way
+         * like in place of viewGroup.onInterceptTouchEvent()
+         */
+        onTouchEvent(event);
+
+        return handled;
+    }
+
 }
