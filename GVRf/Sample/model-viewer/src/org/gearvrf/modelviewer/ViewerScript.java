@@ -687,14 +687,14 @@ public class ViewerScript extends GVRScript {
         // THUMBNAIL_ROT += -1.0f;
         // if( THUMBNAIL_ROT > 360.0f ) THUMBNAIL_ROT = THUMBNAIL_ROT - 360.0f;
         // }
-        THUMBNAIL_ROT += -1.0f;
+        THUMBNAIL_ROT = -1.0f;
         for (int i = 0; i < THUMBNAIL_NUM; i++)
             ThumbnailRotation[i].getTransform().rotateByAxis(THUMBNAIL_ROT,
                     0.0f, 1.0f, 0.0f);
 
         // ---------------------------------------object motion
 
-        OBJECT_ROT += -1.0f;
+        OBJECT_ROT = -1.0f;
         for (int i = 0; i < THUMBNAIL_NUM; i++)
             Objects[i].getTransform()
                     .rotateByAxis(OBJECT_ROT, 0.0f, 1.0f, 0.0f);
