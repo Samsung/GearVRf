@@ -18,18 +18,8 @@ package org.gearvrf.debug;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRCamera;
-import org.gearvrf.GVRCameraRig;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCustomPostEffectShaderId;
-import org.gearvrf.GVRPostEffect;
-import org.gearvrf.GVRPostEffectMap;
-import org.gearvrf.GVRPostEffectShaderId;
-import org.gearvrf.GVRPostEffectShaderManager;
-import org.gearvrf.debug.GVRConsole.EyeMode;
+import org.gearvrf.*;
 
-import org.gearvrf.R;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;

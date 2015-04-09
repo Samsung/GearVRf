@@ -21,8 +21,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gearvrf.GVRAndroidResource;
-
 import android.opengl.GLES20;
 
 /**

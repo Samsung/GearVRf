@@ -19,7 +19,6 @@ import org.gearvrf.utility.Log;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.Window;
