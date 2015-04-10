@@ -17,19 +17,8 @@ package org.gearvrf.modelviewer;
 
 import java.io.IOException;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVREyePointeeHolder;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRMeshEyePointee;
-import org.gearvrf.GVRPicker;
-import org.gearvrf.GVRRenderData;
+import org.gearvrf.*;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScript;
-import org.gearvrf.GVRTexture;
 
 import android.util.Log;
 import android.view.MotionEvent;
@@ -122,9 +111,11 @@ public class ViewerScript extends GVRScript {
         mPhongShader2 = new PhongShader2(mGVRContext);
         mPhongShader3 = new PhongShader3(mGVRContext);
 
-        mGVRContext.getMainScene().getMainCameraRig().getLeftCamera()
+        GVRScene mainScene = mGVRContext.getNextMainScene();
+        
+        mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
-        mGVRContext.getMainScene().getMainCameraRig().getRightCamera()
+        mainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         try {
@@ -325,7 +316,7 @@ public class ViewerScript extends GVRScript {
             Objects[2].addChildObject(obj3);
 
             Objects[2].getTransform().setPosition(0.0f, 0.0f, -EYE_TO_OBJECT);
-            mGVRContext.getMainScene().addSceneObject(Objects[2]);
+            mainScene.addSceneObject(Objects[2]);
 
             // --------------jar
 
@@ -349,7 +340,7 @@ public class ViewerScript extends GVRScript {
             Objects[1].addChildObject(obj4);
 
             Objects[1].getTransform().setPosition(0.0f, 0.0f, -EYE_TO_OBJECT);
-            mGVRContext.getMainScene().addSceneObject(Objects[1]);
+            mainScene.addSceneObject(Objects[1]);
 
             // --------------car
 
@@ -432,7 +423,7 @@ public class ViewerScript extends GVRScript {
 
             Objects[3].getTransform().setPosition(0.0f, -2.0f,
                     -EYE_TO_OBJECT - 3.0f);
-            mGVRContext.getMainScene().addSceneObject(Objects[3]);
+            mainScene.addSceneObject(Objects[3]);
 
             // robot
 
@@ -474,7 +465,7 @@ public class ViewerScript extends GVRScript {
             Objects[4].addChildObject(obj18);
 
             Objects[4].getTransform().setPosition(0.0f, 0.0f, -EYE_TO_OBJECT);
-            mGVRContext.getMainScene().addSceneObject(Objects[4]);
+            mainScene.addSceneObject(Objects[4]);
 
             // leaf
 
@@ -497,7 +488,7 @@ public class ViewerScript extends GVRScript {
             Objects[0].addChildObject(obj21);
 
             Objects[0].getTransform().setPosition(0.0f, 0.0f, -EYE_TO_OBJECT);
-            mGVRContext.getMainScene().addSceneObject(Objects[0]);
+            mainScene.addSceneObject(Objects[0]);
 
             for (int I = 0; I < THUMBNAIL_NUM; I++)
                 for (int i = 0; i < Objects[I].getChildrenCount(); i++)
@@ -580,7 +571,7 @@ public class ViewerScript extends GVRScript {
                         ThumbnailTargetPosition[i][0],
                         ThumbnailTargetPosition[i][1],
                         ThumbnailTargetPosition[i][2]);
-                mGVRContext.getMainScene().addSceneObject(ThumbnailObject[i]);
+                mainScene.addSceneObject(ThumbnailObject[i]);
 
                 GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
                         gvrContext);
@@ -598,7 +589,7 @@ public class ViewerScript extends GVRScript {
             GVRSceneObject env_object = new GVRSceneObject(mGVRContext, sphere,
                     m360);
             env_object.getRenderData().setCullTest(false);
-            mGVRContext.getMainScene().addSceneObject(env_object);
+            mainScene.addSceneObject(env_object);
 
             GVRSceneObject headTracker = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.1f, 0.1f),
@@ -607,7 +598,7 @@ public class ViewerScript extends GVRScript {
             headTracker.getTransform().setPosition(0.0f, 0.0f, -EYE_TO_OBJECT);
             headTracker.getRenderData().setDepthTest(false);
             headTracker.getRenderData().setRenderingOrder(100000);
-            mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
+            mainScene.getMainCameraRig().getOwnerObject()
                     .addChildObject(headTracker);
         } catch (IOException e) {
             e.printStackTrace();

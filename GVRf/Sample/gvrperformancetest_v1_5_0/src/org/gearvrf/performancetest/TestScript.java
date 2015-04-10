@@ -21,6 +21,7 @@ import java.util.Random;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCamera;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -38,7 +39,7 @@ public class TestScript extends GVRScript {
     private static final int numberOfBunnies = 20;
     private static final String[] textureNames = { "texture1.jpg",
             "texture2.jpg", "texture3.jpg", "texture4.jpg", "texture5.jpg" };
-    private GVRScene scene = null;
+    private GVRScene mMainScene = null;
 
     GVRAnimationEngine mAnimationEngine;
 
@@ -53,10 +54,12 @@ public class TestScript extends GVRScript {
 
         mAnimationEngine = gvrContext.getAnimationEngine();
 
-        scene = gvrContext.getMainScene();
+        mMainScene = gvrContext.getNextMainScene();
 
-        GVRCamera leftCamera = scene.getMainCameraRig().getLeftCamera();
-        GVRCamera rightCamera = scene.getMainCameraRig().getRightCamera();
+        GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
+        
+        GVRCamera leftCamera = mainCameraRig.getLeftCamera();
+        GVRCamera rightCamera = mainCameraRig.getRightCamera();
 
         leftCamera.setBackgroundColorR(0.2f);
         leftCamera.setBackgroundColorG(0.2f);
@@ -67,7 +70,7 @@ public class TestScript extends GVRScript {
         rightCamera.setBackgroundColorG(0.2f);
         rightCamera.setBackgroundColorB(0.2f);
         rightCamera.setBackgroundColorA(1.0f);
-        scene.getMainCameraRig().getOwnerObject().getTransform()
+        mainCameraRig.getOwnerObject().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
         for (int i = 0; i < numberOfBunnies; ++i) {
 
@@ -101,7 +104,7 @@ public class TestScript extends GVRScript {
                     random.nextFloat() * 360.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
                     0.0f);
             bunny.getTransform().translate(0.0f, 0.0f, -10.0f);
-            scene.getMainCameraRig().getOwnerObject().addChildObject(bunny);
+            mainCameraRig.getOwnerObject().addChildObject(bunny);
 
             float x = random.nextFloat() - 0.5f;
             float y = random.nextFloat() - 0.5f;

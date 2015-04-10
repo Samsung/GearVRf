@@ -17,6 +17,7 @@ package org.gearvrf.cockpit;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
@@ -32,7 +33,9 @@ public class CockpitViewManager extends GVRScript {
     public void onInit(GVRContext gvrContext) {
 
         mGVRContext = gvrContext;
-        mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
+        GVRScene mainScene = mGVRContext.getNextMainScene();
+        
+        mainScene.getMainCameraRig().getOwnerObject()
                 .getTransform().setPosition(0.0f, 6.0f, 1.0f);
 
         GVRMesh shipMesh = mGVRContext.loadMesh(new GVRAndroidResource(
@@ -49,8 +52,8 @@ public class CockpitViewManager extends GVRScript {
         mSpaceSceneObject = new GVRSceneObject(gvrContext, spaceMesh,
                 spaceTexture);
 
-        mGVRContext.getMainScene().addSceneObject(mShipSceneObject);
-        mGVRContext.getMainScene().addSceneObject(mSpaceSceneObject);
+        mainScene.addSceneObject(mShipSceneObject);
+        mainScene.addSceneObject(mSpaceSceneObject);
 
     }
 
