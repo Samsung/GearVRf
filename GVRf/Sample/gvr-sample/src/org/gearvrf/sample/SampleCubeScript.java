@@ -15,7 +15,6 @@
 
 package org.gearvrf.sample;
 
-
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
@@ -30,7 +29,6 @@ import org.gearvrf.GVRTexture;
 
 import android.util.Log;
 
-
 public class SampleCubeScript extends GVRScript {
 
     private static final float CUBE_WIDTH = 20.0f;
@@ -44,19 +42,19 @@ public class SampleCubeScript extends GVRScript {
         mGVRContext = gvrContext;
 
         GVRTexture front = mGVRContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.front_png));
+                mGVRContext, R.drawable.front));
         GVRTexture back = mGVRContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.back_png));
+                mGVRContext, R.drawable.back));
         GVRTexture left = mGVRContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.left_png));
+                mGVRContext, R.drawable.left));
         GVRTexture right = mGVRContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.right_png));
+                mGVRContext, R.drawable.right));
         GVRTexture top = mGVRContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.top_png));
+                mGVRContext, R.drawable.top));
         GVRTexture bottom = mGVRContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.bottom_png));
+                mGVRContext, R.drawable.bottom));
 
-        GVRScene scene = mGVRContext.getMainScene();
+        GVRScene scene = mGVRContext.getNextMainScene();
 
         mFrontBoardObject = new GVRSceneObject(gvrContext, CUBE_WIDTH,
                 CUBE_WIDTH, front);
@@ -146,8 +144,7 @@ public class SampleCubeScript extends GVRScript {
         eyePointeeHolder3.addPointee(meshEyePointee3);
         mFrontBoardObject3.attachEyePointeeHolder(eyePointeeHolder3);
 
-        for (GVRSceneObject so : mGVRContext.getMainScene()
-                .getWholeSceneObjects()) {
+        for (GVRSceneObject so : scene.getWholeSceneObjects()) {
             Log.v("", "scene object name : " + so.getName());
         }
     }

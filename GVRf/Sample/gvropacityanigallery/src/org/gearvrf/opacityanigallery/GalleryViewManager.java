@@ -23,6 +23,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPostEffect;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
@@ -57,13 +58,17 @@ public class GalleryViewManager extends GVRScript {
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
+        
         mAnimationEngine = gvrContext.getAnimationEngine();
-        mGVRContext.getMainScene().getMainCameraRig().getLeftCamera()
+        
+        GVRScene mainScene = mGVRContext.getNextMainScene();
+        
+        mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-        mGVRContext.getMainScene().getMainCameraRig().getRightCamera()
+        mainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
+        mainScene.getMainCameraRig().getOwnerObject()
                 .getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
         GVRMesh sphereMesh = mGVRContext.loadMesh(new GVRAndroidResource(
@@ -80,8 +85,8 @@ public class GalleryViewManager extends GVRScript {
         rightScreen.getTransform().setScale(10.0f, 10.0f, 10.0f);
         rightScreen.getRenderData().setRenderMask(GVRRenderMaskBit.Right);
 
-        mGVRContext.getMainScene().addSceneObject(leftScreen);
-        mGVRContext.getMainScene().addSceneObject(rightScreen);
+        mainScene.addSceneObject(leftScreen);
+        mainScene.addSceneObject(rightScreen);
 
         List<GVRTexture> numberTextures = new ArrayList<GVRTexture>();
         int[] resourceIds = new int[] { R.drawable.photo_1_jpg,
@@ -125,7 +130,7 @@ public class GalleryViewManager extends GVRScript {
             mBoardParent.addChildObject(board);
         }
 
-        mGVRContext.getMainScene().addSceneObject(mBoardParent);
+        mainScene.addSceneObject(mBoardParent);
 
         mBoardParent.getTransform().rotateByAxisWithPivot(90.0f, 0.0f, 1.0f,
                 0.0f, 0.0f, 0.0f, 0.0f);
@@ -140,9 +145,9 @@ public class GalleryViewManager extends GVRScript {
         postEffect.setVec3("ratio_r", 0.393f, 0.769f, 0.189f);
         postEffect.setVec3("ratio_g", 0.349f, 0.686f, 0.168f);
         postEffect.setVec3("ratio_b", 0.272f, 0.534f, 0.131f);
-        mGVRContext.getMainScene().getMainCameraRig().getLeftCamera()
+        mainScene.getMainCameraRig().getLeftCamera()
                 .addPostEffect(postEffect);
-        mGVRContext.getMainScene().getMainCameraRig().getRightCamera()
+        mainScene.getMainCameraRig().getRightCamera()
                 .addPostEffect(postEffect);
 
     }

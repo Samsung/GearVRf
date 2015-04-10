@@ -19,7 +19,5 @@
 <resources>
 
     <string name="app_name">GVR Video 1.2</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
 
 </resources>

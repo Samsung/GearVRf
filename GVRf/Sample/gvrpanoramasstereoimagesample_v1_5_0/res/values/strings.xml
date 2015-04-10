@@ -19,7 +19,5 @@
 <resources>
 
     <string name="app_name">GVR Panorama Stereo Image Sample</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
 
 </resources>
