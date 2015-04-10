@@ -16,6 +16,7 @@
 #include "activity_jni.h"
 #include <jni.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <VrApi/VrApi_Helpers.h>
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 
@@ -25,10 +26,12 @@ extern "C"
 {
 
 long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
-        JNIEnv * jni, jclass clazz, jobject activity )
+        JNIEnv * jni, jclass clazz, jobject activity,
+        jstring fromPackageName, jstring commandString,
+        jstring uriString)
 {
     LOG("GVRActivity::nativeSetupAppInterface ");
-    return (new GVRActivity(*jni,activity))->SetActivity( jni, clazz, activity );
+    return (new GVRActivity(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
 }
 
 void Java_org_gearvrf_GVRActivity_nativeSetCamera(
@@ -126,7 +129,7 @@ void GVRActivity::ConfigureVrMode( ovrModeParms & modeParms )
     app->GetSwapParms().WarpProgram = WP_SIMPLE;
 }
 
-void GVRActivity::OneTimeInit( const char * launchIntent )
+void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
 {
     LOG( "GVRActivity::OneTimeInit" );
     app->GetVrJni()->CallVoidMethod( javaObject, oneTimeInitMethodId );
@@ -147,7 +150,7 @@ void GVRActivity::OneTimeShutdown()
     // Free GL resources
 }
 
-void GVRActivity::NewIntent( const char * intent )
+void GVRActivity::NewIntent( const char * fromPackageName, const char * command, const char * uri )
 {
 	InitSceneObject();
 }
@@ -219,15 +222,16 @@ Matrix4f GVRActivity::Frame( const VrFrame vrFrame )
 	//Centerview camera matrix can be retrieved from its parent, CameraRig
     glm::mat4 vp_matrix = camera->getCenterViewMatrix();
 
-    Matrix4f view2 = Matrix4f(
-    		vp_matrix[0][0], vp_matrix[1][0], vp_matrix[2][0], vp_matrix[3][0],
-            vp_matrix[0][1], vp_matrix[1][1], vp_matrix[2][1], vp_matrix[3][1],
-            vp_matrix[0][2], vp_matrix[1][2], vp_matrix[2][2], vp_matrix[3][2],
-            vp_matrix[0][3], vp_matrix[1][3], vp_matrix[2][3], vp_matrix[3][3]);
+    ovrMatrix4f view2;
+    view2.M[0][0] = vp_matrix[0][0]; view2.M[1][0] = vp_matrix[1][0]; view2.M[2][0] = vp_matrix[2][0]; view2.M[3][0] = vp_matrix[3][0];
+    view2.M[0][1] = vp_matrix[0][1]; view2.M[1][1] = vp_matrix[1][1]; view2.M[2][1] = vp_matrix[2][1]; view2.M[3][1] = vp_matrix[3][1];
+    view2.M[0][2] = vp_matrix[0][2]; view2.M[1][2] = vp_matrix[1][2]; view2.M[2][2] = vp_matrix[2][2]; view2.M[3][2] = vp_matrix[3][2];
+    view2.M[0][3] = vp_matrix[0][3]; view2.M[1][3] = vp_matrix[1][3]; view2.M[2][3] = vp_matrix[2][3]; view2.M[3][3] = vp_matrix[3][3];
+
 
 	// Set the external velocity matrix so TimeWarp can smoothly rotate the
 	// view even if we are dropping frames.
-	app->GetSwapParms().ExternalVelocity = CalculateExternalVelocity( view2, Scene.YawVelocity );
+	app->GetSwapParms().ExternalVelocity = CalculateExternalVelocity( &view2, Scene.YawVelocity );
 
     //-------------------------------------------
     // Render the two eye views, each to a separate texture, and TimeWarp

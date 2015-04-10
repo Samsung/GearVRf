@@ -19,12 +19,14 @@ import org.gearvrf.utility.Log;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
 import com.oculusvr.vrlib.VrActivity;
+import com.oculusvr.vrlib.VrLib;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -46,7 +48,7 @@ public class GVRActivity extends VrActivity {
         System.loadLibrary("gvrf");
     }
 
-    public static native long nativeSetAppInterface(VrActivity act);
+    public static native long nativeSetAppInterface(VrActivity act, String fromPackageName, String commandString, String uriString);
 
     static native void nativeSetCamera(long appPtr, long camera);
 
@@ -61,7 +63,13 @@ public class GVRActivity extends VrActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         super.onCreate(savedInstanceState);
-        appPtr = nativeSetAppInterface(this);
+
+        Intent intent = getIntent();
+        String commandString = VrLib.getCommandStringFromIntent(intent);
+        String fromPackageNameString = VrLib.getPackageStringFromIntent(intent);
+        String uriString = VrLib.getUriStringFromIntent(intent);
+
+        appPtr = nativeSetAppInterface(this, fromPackageNameString, commandString, uriString);
     }
 
     @Override
