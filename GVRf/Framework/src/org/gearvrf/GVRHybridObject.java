@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import java.util.ArrayList;
@@ -26,8 +25,42 @@ public class GVRHybridObject {
 
     private static final int REGISTRATIONS_BETWEEN_DEREFERENCE_SCANS = 250;
 
+    /**
+     * The 'generation bits' of the {@link #mFlags flags} field.
+     * 
+     * Each {@link GVRHybridObject} has a set of flags. Currently, these flags
+     * contain only two values: the {@link #getKeepWrapper() keep-wrapper flag}
+     * and the generation count. This mask gets the generation count's bits. (As
+     * a matter of efficiency, the generation count is always in the low bits of
+     * the flag field, and this mask doubles as a maximum generation-count
+     * value.)
+     * 
+     * <p>
+     * The generation count is used to prevent a race condition in
+     * {@linkplain DereferenceThread the defererence thread:} if an app does a
+     * lot of simultaneous allocations in {@link GVRScript#onInit(GVRContext)
+     * onInit()} or {@link GVRScript#onStep() onStep()}, it is not impossible
+     * that the deference thread will wake up one or more times before the app
+     * has had a chance to link a wrapped object into the scene graph. That is,
+     * the newly created object might not have any native references yet, and
+     * the deference thread would remove it from {@link #sWrappers}, which would
+     * mean that eye picking (say) would return a new wrapper object for the
+     * native object, not the original, app-created wrapper object (which may be
+     * subclassed, and contain values important to the app). By not
+     * dereferencing the object until {@linkplain #sGenerationCounter the
+     * generation counter} no longer matches the generation count in the flags
+     * field, we guarantee that the object is not dereferenced until the app
+     * callback has returned, which means that the app has had every chance to
+     * either link the object into the scene graph or to set the
+     * {@link #setKeepWrapper(boolean)} flag.
+     */
+    private static final int GENERATION_MASK = Integer.MAX_VALUE;
+
+    /** The keep-wrapper bit of the {@link #mFlags flags} field. */
+    private static final int KEEP_WRAPPER_MASK = ~GENERATION_MASK;
+
     /** Enables a 1:1 mapping between native objects and Java wrappers */
-    protected static final LongSparseArray<GVRHybridObject> sWrappers = new LongSparseArray<GVRHybridObject>();
+    private static final LongSparseArray<GVRHybridObject> sWrappers = new LongSparseArray<GVRHybridObject>();
 
     static {
         GVRContext.addResetOnRestartHandler(new Runnable() {
@@ -40,6 +73,14 @@ public class GVRHybridObject {
     }
 
     private static int sRegistrationCount = 0;
+
+    private static int sGenerationCounter = 0;
+
+    /** Update the generation counter */
+    static void onStep() {
+        sGenerationCounter = (sGenerationCounter == GENERATION_MASK) ? 1
+                : sGenerationCounter + 1;
+    }
 
     /** Returns an existing wrapper, or {@code null} */
     protected static GVRHybridObject wrapper(long ptr) {
@@ -66,6 +107,8 @@ public class GVRHybridObject {
      * The way to access the c++ instance.
      */
     private final GVRReference mReference;
+
+    private int mFlags = sGenerationCounter;
 
     GVRHybridObject(GVRContext gvrContext, long ptr) {
         mGVRContext = gvrContext;
@@ -101,6 +144,65 @@ public class GVRHybridObject {
                 }
             }
         }
+    }
+
+    /**
+     * Set or clear the keep-wrapper flag.
+     * 
+     * This is a very specialized operation: you will not use it often. The only
+     * consequences of misuse are a small memory leak, but you should still know
+     * what you're doing before calling this method.
+     * 
+     * <p>
+     * You only need to set the keep-wrapper flag <em>in some cases</em> when
+     * you're getting a GVRF object from another GVRF object, and it really
+     * matters that the object that you get back is the object you put in (as
+     * opposed to another object that refers to the same native object). The
+     * most common scenario where this matters is one where you have declared
+     * classes that {@code extend GVRSceneObject} and you want to get your
+     * sub-classed object back from the {@link GVRPicker} because that instance
+     * contains app-specific values that a 'generic' {@link GVRSceneObject} does
+     * not.
+     * 
+     * <p>
+     * Please do note that you do <em>not</em> need to set the keep-wrapper flag
+     * for every instance of every object that descends from
+     * {@link GVRSceneObject}! Most wrappers are kept alive by references in the
+     * scene graph; when you remove them from the scene graph, they can
+     * generally be dereferenced and (eventually) garbage collected without any
+     * issues.
+     * 
+     * <p>
+     * This method allows you to handle the special case where you are
+     * continually adding and removing the same object to and from the scene
+     * graph. In these cases, the dereference thread may see that there are no
+     * native references to the object (when it it is not in the scene graph)
+     * and remove the registered reference that lets GVRF return the original,
+     * possibly sub-classed instance. The symptom of this is code like
+     * {@link GVREyePointeeHolder#getOwnerObject()} returning a base class
+     * (<i>eg.</i> {@link GVRSceneObject}) instead of the sub-classed object
+     * that you expect. In these cases, setting the the keep-wrapper flag when
+     * you create the object will preserve object-identity.
+     */
+    public void setKeepWrapper(boolean keep) {
+        if (keep) {
+            mFlags |= KEEP_WRAPPER_MASK; // set bit
+        } else {
+            mFlags &= ~KEEP_WRAPPER_MASK; // clear bit
+        }
+    }
+
+    /**
+     * Get the current state of the keep-wrapper flag.
+     * 
+     * See {@link #setKeepWrapper(boolean)} for details.
+     */
+    public boolean getKeepWrapper() {
+        return (mFlags & KEEP_WRAPPER_MASK) != 0;
+    }
+
+    private int getGenerationCount() {
+        return mFlags & GENERATION_MASK;
     }
 
     /**
@@ -209,7 +311,9 @@ public class GVRHybridObject {
             synchronized (sWrappers) {
                 for (int index = sWrappers.size() - 1; index >= 0; --index) {
                     GVRHybridObject wrapper = sWrappers.valueAt(index);
-                    if (wrapper.getUseCount() == 1) {
+                    if (wrapper.getUseCount() == 1
+                            && wrapper.getKeepWrapper() == false
+                            && wrapper.getGenerationCount() != sGenerationCounter) {
                         sWrappers.removeAt(index);
                         if (wrapper instanceof GVRRecyclableObject) {
                             recyclables.add((GVRRecyclableObject) wrapper);
