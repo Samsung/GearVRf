@@ -376,6 +376,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
             doMemoryManagementAndPerFrameCallbacks();
 
+            GVRHybridObject.onStep();
             mScript.onStep();
         }
 
