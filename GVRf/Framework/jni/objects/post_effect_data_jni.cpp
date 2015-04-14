@@ -71,6 +71,14 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativePostEffectData_setVec4(JNIEnv * env,
         jobject obj, jlong jpost_effect_data, jstring key, jfloat x, jfloat y,
         jfloat z, jfloat w);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativePostEffectData_setMat4(JNIEnv * env,
+        jobject obj, jlong jpost_effect_data, jstring key,
+        jfloat x1, jfloat y1, jfloat z1, jfloat w1,
+        jfloat x2, jfloat y2, jfloat z2, jfloat w2,
+        jfloat x3, jfloat y3, jfloat z3, jfloat w3,
+        jfloat x4, jfloat y4, jfloat z4, jfloat w4);
 }
 ;
 
@@ -234,4 +242,21 @@ Java_org_gearvrf_NativePostEffectData_setVec4(JNIEnv * env,
     env->ReleaseStringUTFChars(key, char_key);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativePostEffectData_setMat4(JNIEnv * env,
+        jobject obj, jlong jpost_effect_data, jstring key,
+        jfloat x1, jfloat y1, jfloat z1, jfloat w1,
+        jfloat x2, jfloat y2, jfloat z2, jfloat w2,
+        jfloat x3, jfloat y3, jfloat z3, jfloat w3,
+        jfloat x4, jfloat y4, jfloat z4, jfloat w4) {
+    std::shared_ptr<PostEffectData> post_effect_data =
+            *reinterpret_cast<std::shared_ptr<PostEffectData>*>(jpost_effect_data);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    post_effect_data->setMat4(native_key, glm::mat4(x1, y1, z1, w1,
+                                                    x2, y2, z2, w2,
+                                                    x3, y3, z3, w3,
+                                                    x4, y4, z4, w4));
+    env->ReleaseStringUTFChars(key, char_key);
+}
 }

@@ -210,4 +210,16 @@ public interface GVRShaders<ID> {
      *            Fourth component of the vector.
      */
     public void setVec4(String key, float x, float y, float z, float w);
+
+    /**
+     * Bind a {@code mat4} to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform to bind the data to.
+     */
+    public void setMat4(String key,
+            float x1, float y1, float z1, float w1,
+            float x2, float y2, float z2, float w2,
+            float x3, float y3, float z3, float w3,
+            float x4, float y4, float z4, float w4);
 }

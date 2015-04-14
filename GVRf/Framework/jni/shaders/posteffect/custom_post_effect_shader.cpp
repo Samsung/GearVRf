@@ -28,7 +28,7 @@
 namespace gvr {
 CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(), float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_() {
+        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(), float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_(), mat4_keys_() {
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     checkGlError("glGetAttribLocation");
@@ -84,6 +84,12 @@ void CustomPostEffectShader::addVec4Key(std::string variable_name,
         std::string key) {
     int location = glGetUniformLocation(program_->id(), variable_name.c_str());
     vec4_keys_[location] = key;
+}
+
+void CustomPostEffectShader::addMat4Key(std::string variable_name,
+        std::string key) {
+    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
+    mat4_keys_[location] = key;
 }
 
 void CustomPostEffectShader::render(
@@ -158,6 +164,11 @@ void CustomPostEffectShader::render(
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
     }
 
+    for (auto it = mat4_keys_.begin(); it != mat4_keys_.end(); ++it) {
+        glm::mat4 m = post_effect_data->getMat4(it->second);
+        glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
+    }
+
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
@@ -209,6 +220,11 @@ void CustomPostEffectShader::render(
     for (auto it = vec4_keys_.begin(); it != vec4_keys_.end(); ++it) {
         glm::vec4 v = post_effect_data->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
+    }
+
+    for (auto it = mat4_keys_.begin(); it != mat4_keys_.end(); ++it) {
+        glm::mat4 m = post_effect_data->getMat4(it->second);
+        glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT,

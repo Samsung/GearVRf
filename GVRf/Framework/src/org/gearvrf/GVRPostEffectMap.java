@@ -55,6 +55,10 @@ public class GVRPostEffectMap extends GVRRecyclableObject implements
     public void addUniformVec4Key(String variableName, String key) {
         NativeCustomPostEffectShader.addVec4Key(getPtr(), variableName, key);
     }
+
+    public void addUniformMat4Key(String variableName, String key) {
+        NativeCustomPostEffectShader.addMat4Key(getPtr(), variableName, key);
+    }
 }
 
 class NativeCustomPostEffectShader {
@@ -71,5 +75,8 @@ class NativeCustomPostEffectShader {
             String variableName, String key);
 
     public static native void addVec4Key(long customPostEffectShader,
+            String variableName, String key);
+
+    public static native void addMat4Key(long customPostEffectShader,
             String variableName, String key);
 }
