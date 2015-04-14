@@ -15,19 +15,26 @@
 
 package org.gearvrf;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScript.SplashMode;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 
@@ -94,10 +101,17 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     GVRActivity mActivity;
     private int mCurrentEye;
 
+    private GVRScreenshotCallback mScreenshotCenterCallback = null;
+    private GVRScreenshotCallback mScreenshotLeftCallback = null;
+    private GVRScreenshotCallback mScreenshotRightCallback = null;
+
     private native void renderCamera(long appPtr, long scene, long camera,
             long renderTexture, long shaderManager,
             long postEffectShaderManager, long postEffectRenderTextureA,
             long postEffectRenderTextureB);
+
+    private native void readRenderResult(long renderTexture,
+            Object readbackBuffer);
 
     /**
      * Constructs GVRViewManager object with GVRScript which controls GL
@@ -246,26 +260,153 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         mFrameHandler.beforeDrawEyes();
     }
 
+    @Override
+    public void captureScreenCenter(GVRScreenshotCallback callback) {
+        if (callback == null) {
+            throw new IllegalArgumentException("callback should not be null.");
+        } else {
+            mScreenshotCenterCallback = callback;
+        }
+    }
+
+    @Override
+    public void captureScreenLeft(GVRScreenshotCallback callback) {
+        if (callback == null) {
+            throw new IllegalArgumentException("callback should not be null.");
+        } else {
+            mScreenshotLeftCallback = callback;
+        }
+    }
+
+    @Override
+    public void captureScreenRight(GVRScreenshotCallback callback) {
+        if (callback == null) {
+            throw new IllegalArgumentException("callback should not be null.");
+        } else {
+            mScreenshotRightCallback = callback;
+        }
+    }
+
+    Bitmap generateBitmap(final byte[] byteArray, final int width,
+            final int height) {
+        int[] pixels = new int[width * height];
+        for (int row = 0; row < height; row++) {
+            int start_position = row * width;
+            int reverse_start_position = (height - 1 - row) * width;
+            for (int col = 0; col < width; col++) {
+                int position = (start_position + col) * 4;
+                int r = byteArray[position++] & 0xff;
+                int g = byteArray[position++] & 0xff;
+                int b = byteArray[position] & 0xff;
+                // flip the image vertically
+                pixels[reverse_start_position + col] = Color.rgb(r, g, b);
+            }
+        }
+        return Bitmap.createBitmap(pixels, width, height,
+                Bitmap.Config.ARGB_8888);
+    }
+
+    void returnScreenshotToCaller(final GVRScreenshotCallback callback,
+            final ByteBuffer readbackBuffer, final int width, final int height) {
+        // run the callback function in a background thread
+        final byte[] byteArray = Arrays.copyOf(readbackBuffer.array(),
+                readbackBuffer.array().length);
+        Threads.spawn(new Runnable() {
+            public void run() {
+                final Bitmap capturedBitmap = generateBitmap(byteArray, width,
+                        height);
+                callback.onScreenCaptured(capturedBitmap);
+            }
+        });
+    }
+
     void onDrawEyeView(int eye, float fovDegrees) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
+
+            // if screenshot is enabled, initialize the readback buffer
+            ByteBuffer readbackBuffer = null;
+            int width = 0, height = 0;
+            if (mScreenshotCenterCallback != null
+                    || mScreenshotLeftCallback != null
+                    || mScreenshotRightCallback != null) {
+                GVRRenderTexture rendernTexture = mRenderBundle.getRightRenderTexture();
+                width = rendernTexture.getWidth();
+                height = rendernTexture.getHeight();
+                readbackBuffer = ByteBuffer.allocateDirect(width * height * 4);
+                readbackBuffer.order(ByteOrder.nativeOrder());
+            }
+
             if (eye == 1) {
                 mainCameraRig.predict(4.0f / 60.0f);
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
                 renderCamera(mActivity.appPtr, mMainScene, rightCamera,
                         mRenderBundle.getRightRenderTexture(), mRenderBundle);
+
+                // if mScreenshotRightCallback is not null, capture right eye
+                if (mScreenshotRightCallback != null) {
+                    readRenderResult(mRenderBundle
+                            .getPostEffectRenderTextureA().getPtr(),
+                            readbackBuffer);
+                    returnScreenshotToCaller(mScreenshotRightCallback,
+                            readbackBuffer, width, height);
+
+                    mScreenshotRightCallback = null;
+                }
+
                 mActivity.setCamera(rightCamera);
             } else {
                 mainCameraRig.predict(3.5f / 60.0f);
+
+                // if mScreenshotCenterCallback is not null, capture center eye
+                if (mScreenshotCenterCallback != null) {
+
+                    // temporarily create a center camera
+                    GVRCamera centerCamera = new GVRPerspectiveCamera(this);
+                    centerCamera.setRenderMask(GVRRenderMaskBit.Left
+                            | GVRRenderMaskBit.Right);
+                    GVRSceneObject centerCameraObject = new GVRSceneObject(this);
+                    centerCameraObject.attachCamera(centerCamera);
+                    mainCameraRig.getOwnerObject().addChildObject(
+                            centerCameraObject);
+
+                    renderCamera(mActivity.appPtr, mMainScene, centerCamera,
+                            mRenderBundle.getRightRenderTexture(),
+                            mRenderBundle);
+                    
+                    centerCameraObject.detachCamera();
+                    mainCameraRig.getOwnerObject().removeChildObject(
+                            centerCameraObject);
+
+                    readRenderResult(mRenderBundle
+                            .getPostEffectRenderTextureA().getPtr(),
+                            readbackBuffer);
+                    returnScreenshotToCaller(mScreenshotCenterCallback,
+                            readbackBuffer, width, height);
+
+                    mScreenshotCenterCallback = null;
+                }
+
                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
                 renderCamera(mActivity.appPtr, mMainScene, leftCamera,
                         mRenderBundle.getLeftRenderTexture(), mRenderBundle);
+
+                // if mScreenshotLeftCallback is not null, capture left eye
+                if (mScreenshotLeftCallback != null) {
+                    readRenderResult(mRenderBundle
+                            .getPostEffectRenderTextureA().getPtr(),
+                            readbackBuffer);
+                    returnScreenshotToCaller(mScreenshotLeftCallback,
+                            readbackBuffer, width, height);
+
+                    mScreenshotLeftCallback = null;
+                }
+
                 mActivity.setCamera(leftCamera);
             }
         }
     }
-
 
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {

@@ -15,18 +15,26 @@
 
 package org.gearvrf.sample;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshEyePointee;
 import org.gearvrf.GVRPicker;
+import org.gearvrf.GVRScreenshotCallback;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
 
+import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.Log;
 
 public class SampleCubeScript extends GVRScript {
@@ -171,5 +179,49 @@ public class SampleCubeScript extends GVRScript {
                         .setOpacity(0.5f);
             }
         }
+    }
+
+    // mode 0: center eye; mode 1: left eye; mode 2: right eye
+    public void captureScreen(int mode, String filename) {
+        switch (mode) {
+        case 0:
+            mGVRContext.captureScreenCenter(newScreenshotCallback(filename));
+            break;
+        case 1:
+            mGVRContext.captureScreenLeft(newScreenshotCallback(filename));
+            break;
+        case 2:
+            mGVRContext.captureScreenRight(newScreenshotCallback(filename));
+            break;
+        }
+    }
+
+    private GVRScreenshotCallback newScreenshotCallback(final String filename) {
+        return new GVRScreenshotCallback() {
+
+            @Override
+            public void onScreenCaptured(Bitmap bitmap) {
+                if (bitmap != null) {
+                    File file = new File(
+                            Environment.getExternalStorageDirectory(), filename);
+                    FileOutputStream outputStream = null;
+                    try {
+                        outputStream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100,
+                                outputStream);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } finally {
+                        try {
+                            outputStream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    Log.e("SampleActivity", "Returned Bitmap is null");
+                }
+            }
+        };
     }
 }

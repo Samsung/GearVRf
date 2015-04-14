@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /** Holds the GVRCameras. */
@@ -75,7 +74,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Set the {@link GVRCameraRigType type} of the camera rig.
-     *
+     * 
      * @param cameraRigType
      *            The rig {@link GVRCameraRigType type}.
      */
@@ -113,7 +112,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Sets the global default distance separating the left and right cameras.
-     *
+     * 
      * @param distance
      *            Global default separation.
      */
@@ -131,7 +130,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Set the distance separating the left and right cameras of the camera rig.
-     *
+     * 
      * @param distance
      *            Separation distance.
      */
@@ -150,7 +149,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map {@code value} to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map {@code value} to.
      * @param value
@@ -172,7 +171,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map a two-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -196,7 +195,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map a three-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -222,7 +221,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map a four-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -240,13 +239,12 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Attach a {@link GVRCamera camera} as the left camera of the camera rig.
-     *
+     * 
      * @param camera
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachLeftCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null)
-        {
+        if (camera.getOwnerObject() == null) {
             throw new IllegalArgumentException("Owner object not set correctly");
         }
         NativeCameraRig.attachLeftCamera(getPtr(), camera.getPtr());
@@ -254,13 +252,12 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Attach a {@link GVRCamera camera} as the right camera of the camera rig.
-     *
+     * 
      * @param camera
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachRightCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null)
-        {
+        if (camera.getOwnerObject() == null) {
             throw new IllegalArgumentException("Owner object not set correctly");
         }
         NativeCameraRig.attachRightCamera(getPtr(), camera.getPtr());
@@ -304,7 +301,7 @@ public class GVRCameraRig extends GVRComponent {
      * should only be done in response to
      * {@link RotationSensorListener#onRotationSensor(long, float, float, float, float, float, float, float)
      * RotationSensorListener.onRotationSensor()}.
-     *
+     * 
      * @param timeStamp
      *            Clock-time when the data was received, in nanoseconds.
      * @param w
@@ -331,7 +328,7 @@ public class GVRCameraRig extends GVRComponent {
     /**
      * Predict what the orientation of the camera rig will be at {@code time}
      * based on the current rotation and angular velocity.
-     *
+     * 
      * @param time
      *            Time to predict orientation for, in seconds.
      * @see #setRotationSensorData(long, float, float, float, float, float,
@@ -344,7 +341,7 @@ public class GVRCameraRig extends GVRComponent {
     /**
      * The direction the camera rig is looking at. In other words, the direction
      * of the local -z axis.
-     *
+     * 
      * @return Array with 3 floats corresponding to a normalized direction
      *         vector. ([0] : x, [1] : y, [2] : z)
      */

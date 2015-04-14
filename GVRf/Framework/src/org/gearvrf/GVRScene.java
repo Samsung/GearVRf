@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
@@ -31,10 +30,11 @@ public class GVRScene extends GVRHybridObject {
 
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
-        GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
-        rightCamera.setRenderMask(GVRRenderMaskBit.Right);
         GVRSceneObject leftCameraObject = new GVRSceneObject(gvrContext);
         leftCameraObject.attachCamera(leftCamera);
+
+        GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
+        rightCamera.setRenderMask(GVRRenderMaskBit.Right);
         GVRSceneObject rightCameraObject = new GVRSceneObject(gvrContext);
         rightCameraObject.attachCamera(rightCamera);
 
@@ -66,7 +66,7 @@ public class GVRScene extends GVRHybridObject {
     }
 
     /**
-     * Add an {@linkplain GVRSceneObject scene object} 
+     * Add an {@linkplain GVRSceneObject scene object}
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to add.
@@ -76,7 +76,7 @@ public class GVRScene extends GVRHybridObject {
     }
 
     /**
-     * Remove a {@linkplain GVRSceneObject scene object} 
+     * Remove a {@linkplain GVRSceneObject scene object}
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to remove.
