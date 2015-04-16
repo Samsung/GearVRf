@@ -131,6 +131,18 @@ public class GVRPostEffect extends GVRHybridObject implements
     public void setVec4(String key, float x, float y, float z, float w) {
         NativePostEffectData.setVec4(getPtr(), key, x, y, z, w);
     }
+
+    public void setMat4(String key,
+            float x1, float y1, float z1, float w1,
+            float x2, float y2, float z2, float w2,
+            float x3, float y3, float z3, float w3,
+            float x4, float y4, float z4, float w4) {
+        NativePostEffectData.setMat4(getPtr(), key,
+                x1, y1, z1, w1,
+                x2, y2, z2, w2,
+                x3, y3, z3, w3,
+                x4, y4, z4, w4);
+    }
 }
 
 class NativePostEffectData {
@@ -164,4 +176,10 @@ class NativePostEffectData {
 
     public static native void setVec4(long postEffectData, String key, float x,
             float y, float z, float w);
+
+    public static native void setMat4(long postEffectData, String key,
+            float x1, float y1, float z1, float w1,
+            float x2, float y2, float z2, float w2,
+            float x3, float y3, float z3, float w3,
+            float x4, float y4, float z4, float w4);
 }

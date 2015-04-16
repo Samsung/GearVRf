@@ -26,6 +26,7 @@
 #include <string>
 
 #include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "objects/hybrid_object.h"
 
@@ -39,7 +40,7 @@ public:
     };
 
     PostEffectData(ShaderType shader_type) :
-            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_() {
+            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_(), mat4s_() {
         switch (shader_type) {
         case COLOR_BLEND_SHADER:
             floats_["r"] = 0.0f;
@@ -136,6 +137,21 @@ public:
         vec4s_[key] = vector;
     }
 
+    glm::mat4 getMat4(std::string key) {
+        auto it = mat4s_.find(key);
+        if (it != mat4s_.end()) {
+            return it->second;
+        } else {
+            std::string error = "PostEffectData::getMat4() : " + key
+                    + " not found";
+            throw error;
+        }
+    }
+
+    void setMat4(std::string key, glm::mat4 mat) {
+        mat4s_[key] = mat;
+    }
+
 private:
     PostEffectData(const PostEffectData& post_effect_data);
     PostEffectData(PostEffectData&& post_effect_data);
@@ -149,6 +165,7 @@ private:
     std::map<std::string, glm::vec2> vec2s_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
+    std::map<std::string, glm::mat4> mat4s_;
 };
 
 }
