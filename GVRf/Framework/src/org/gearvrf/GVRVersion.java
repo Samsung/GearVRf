@@ -45,5 +45,12 @@ public class GVRVersion {
      */
     public static final String V_1_6_5 = "1.6.5";
 
-    public static final String CURRENT = V_1_6_5;
+    /**
+     * Add high-level
+     * {@link GVRPicker#findObjects(GVRScene, float, float, float, float, float, float)}
+     * method.
+     */
+    public static final String V_1_6_6 = "1.6.6";
+
+    public static final String CURRENT = V_1_6_6;
 }
