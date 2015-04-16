@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.Exceptions;
+
 /**
  * This is one of the key GVRF classes: It holds GL meshes.
  * 
@@ -64,6 +66,8 @@ public class GVRMesh extends GVRHybridObject {
      *            Array containing the packed vertex data.
      */
     public void setVertices(float[] vertices) {
+        isNonNull(vertices);
+        isValidData(vertices.length, 3);
         NativeMesh.setVertices(getPtr(), vertices);
     }
 
@@ -89,6 +93,8 @@ public class GVRMesh extends GVRHybridObject {
      *            Array containing the packed normal data.
      */
     public void setNormals(float[] normals) {
+        isNonNull(normals);
+        isValidData(normals.length, 3);
         NativeMesh.setNormals(getPtr(), normals);
     }
 
@@ -114,6 +120,8 @@ public class GVRMesh extends GVRHybridObject {
      *            Array containing the packed texture coordinate data.
      */
     public void setTexCoords(float[] texCoords) {
+        isNonNull(texCoords);
+        isValidData(texCoords.length, 2);
         NativeMesh.setTexCoords(getPtr(), texCoords);
     }
 
@@ -145,6 +153,8 @@ public class GVRMesh extends GVRHybridObject {
      *            Array containing the packed triangle index data.
      */
     public void setTriangles(char[] triangles) {
+        isNonNull(triangles);
+        isValidData(triangles.length, 3);
         NativeMesh.setTriangles(getPtr(), triangles);
     }
 
@@ -170,6 +180,9 @@ public class GVRMesh extends GVRHybridObject {
      *            Data to bind to the shader attribute.
      */
     public void setFloatVector(String key, float[] floatVector) {
+        isNonNull(floatVector);
+        isValidData(floatVector.length, 1);
+        verticesCheck(floatVector.length, 1);
         NativeMesh.setFloatVector(getPtr(), key, floatVector);
     }
 
@@ -196,7 +209,9 @@ public class GVRMesh extends GVRHybridObject {
      *            attribute.
      */
     public void setVec2Vector(String key, float[] vec2Vector) {
-        isValidVector(vec2Vector, 2);
+        isNonNull(vec2Vector);
+        isValidData(vec2Vector.length, 2);
+        verticesCheck(vec2Vector.length, 2);
         NativeMesh.setVec2Vector(getPtr(), key, vec2Vector);
     }
 
@@ -223,7 +238,9 @@ public class GVRMesh extends GVRHybridObject {
      *            shader attribute.
      */
     public void setVec3Vector(String key, float[] vec3Vector) {
-        isValidVector(vec3Vector, 3);
+        isNonNull(vec3Vector);
+        isValidData(vec3Vector.length, 3);
+        verticesCheck(vec3Vector.length, 3);
         NativeMesh.setVec3Vector(getPtr(), key, vec3Vector);
     }
 
@@ -250,7 +267,9 @@ public class GVRMesh extends GVRHybridObject {
      *            attribute.
      */
     public void setVec4Vector(String key, float[] vec4Vector) {
-        isValidVector(vec4Vector, 4);
+        isNonNull(vec4Vector);
+        isValidData(vec4Vector.length, 4);
+        verticesCheck(vec4Vector.length, 4);
         NativeMesh.setVec4Vector(getPtr(), key, vec4Vector);
     }
 
@@ -272,13 +291,31 @@ public class GVRMesh extends GVRHybridObject {
         return new GVRMesh(getGVRContext(), NativeMesh.getBoundingBox(getPtr()));
     }
 
-    private static void isValidVector(float[] vector, int expectedLength) {
-        if (vector == null) {
+    private static void isNonNull(Object data) {
+        if (data == null) {
             throw new IllegalArgumentException(
-                    "Input vector should not be null.");
-        } else if (expectedLength != vector.length) {
-            throw new IllegalArgumentException("Input vector should have "
-                    + expectedLength + " elements, not " + vector.length);
+                    "The input array should not be null.");
+        }
+    }
+
+    private static void isValidData(int dataLength, int expectedComponents) {
+        if (dataLength == 0 || dataLength % expectedComponents != 0) {
+            throw Exceptions
+                    .IllegalArgument(
+                            "The input array should be an array of %d-component elements whose length is non-zero and divisible by %d. But current data length is %d.",
+                            expectedComponents, expectedComponents, dataLength);
+        }
+    }
+
+    private void verticesCheck(int dataLength, int expectedComponents) {
+        int verticesNumber = getVertices().length / 3;
+        int numberOfElements = dataLength / expectedComponents;
+        if (dataLength / expectedComponents != verticesNumber) {
+            throw Exceptions
+                    .IllegalArgument(
+                            "The input array should be an array of %d-component elements and the number of elements should match the number of vertices. The current number of elements is %d, but the current number of vertices is %d.",
+                            expectedComponents, numberOfElements,
+                            verticesNumber);
         }
     }
 }
