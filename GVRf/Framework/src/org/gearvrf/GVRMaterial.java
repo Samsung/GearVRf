@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
+import java.util.concurrent.Future;
+
 import org.gearvrf.utility.Colors;
+import org.gearvrf.utility.Threads;
 
 import android.graphics.Color;
 
@@ -147,6 +149,10 @@ public class GVRMaterial extends GVRHybridObject implements
         setTexture(MAIN_TEXTURE, texture);
     }
 
+    public void setMainTexture(Future<GVRTexture> texture) {
+        setTexture(MAIN_TEXTURE, texture);
+    }
+
     /**
      * Get the {@code color} uniform.
      * 
@@ -262,6 +268,20 @@ public class GVRMaterial extends GVRHybridObject implements
 
     public void setTexture(String key, GVRTexture texture) {
         NativeMaterial.setTexture(getPtr(), key, texture.getPtr());
+    }
+
+    public void setTexture(final String key, final Future<GVRTexture> texture) {
+        Threads.spawn(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    setTexture(key, texture.get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public float getFloat(String key) {

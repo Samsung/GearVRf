@@ -19,10 +19,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
+import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
@@ -43,11 +45,11 @@ import android.view.KeyEvent;
  * services, and global information about an application environment.
  * 
  * Use {@code GVRContext} to {@linkplain #createQuad(float, float) create} and
- * {@linkplain #loadMesh(String) load} GL meshes, Android
+ * {@linkplain #loadMesh(GVRAndroidResource) load} GL meshes, Android
  * {@linkplain #loadBitmap(String) bitmaps}, and
- * {@linkplain #loadTexture(String) GL textures.} {@code GVRContext} also holds
- * the {@linkplain GVRScene main scene} and miscellaneous information like
- * {@linkplain #getFrameTime() the frame time.}
+ * {@linkplain #loadTexture(GVRAndroidResource) GL textures.} {@code GVRContext}
+ * also holds the {@linkplain GVRScene main scene} and miscellaneous information
+ * like {@linkplain #getFrameTime() the frame time.}
  */
 public abstract class GVRContext {
     private static final String TAG = Log.tag(GVRContext.class);
@@ -269,6 +271,59 @@ public abstract class GVRContext {
     }
 
     /**
+     * Simple, high-level method to load a mesh asynchronously, for use with
+     * {@link GVRRenderData#setMesh(Future)}.
+     * 
+     * This method uses a default priority; use
+     * {@link #loadFutureMesh(GVRAndroidResource, int)} to specify a priority;
+     * use one of the lower-level
+     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
+     * methods to get more control over loading.
+     * 
+     * @param resource
+     *            Basically, a stream containing a 3D model. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @return A {@link Future} that you can pass to
+     *         {@link GVRRenderData#setMesh(Future)}
+     * 
+     * @since 1.6.7
+     */
+    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource) {
+        return loadFutureMesh(resource, DEFAULT_PRIORITY);
+    }
+
+    /**
+     * Simple, high-level method to load a mesh asynchronously, for use with
+     * {@link GVRRenderData#setMesh(Future)}.
+     * 
+     * This method trades control for convenience; use one of the lower-level
+     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
+     * methods if, say, you want to do something more than just
+     * {@link GVRRenderData#setMesh(GVRMesh)} when the mesh loads.
+     * 
+     * @param resource
+     *            Basically, a stream containing a 3D model. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>.
+     * @return A {@link Future} that you can pass to
+     *         {@link GVRRenderData#setMesh(Future)}
+     * 
+     * @since 1.6.7
+     */
+    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource,
+            int priority) {
+        return GVRAsynchronousResourceLoader.loadFutureMesh(this, resource,
+                priority);
+    }
+
+    /**
      * Creates a quad consisting of two triangles, with the specified width and
      * height.
      * 
@@ -414,7 +469,7 @@ public abstract class GVRContext {
      * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
      * errors.} </ul>
      * 
-     * @param androidResource
+     * @param resource
      *            Basically, a stream containing a bitmap texture. The
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
@@ -656,6 +711,385 @@ public abstract class GVRContext {
             GVRAndroidResource resource, int quality) {
         GVRAsynchronousResourceLoader.loadCompressedTexture(this, callback,
                 resource, quality);
+    }
+
+    /**
+     * A simplified, low-level method that loads a texture asynchronously,
+     * without making you specify
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)
+     * loadCompressedTexture()}.
+     * 
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     * 
+     * <p>
+     * This method uses a default priority and a default render quality: Use
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)}
+     * to specify an explicit priority, and
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * to specify an explicit quality.
+     * 
+     * <p>
+     * We will continue to support the {@code loadBitmapTexture()} and
+     * {@code loadCompressedTexture()} APIs for at least a little while: We
+     * haven't yet decided whether to deprecate them or not.
+     * 
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     * 
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     * 
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * 
+     * @since 1.6.7
+     */
+    public void loadTexture(TextureCallback callback,
+            GVRAndroidResource resource) {
+        loadTexture(callback, resource, DEFAULT_PRIORITY);
+    }
+
+    /**
+     * A simplified, low-level method that loads a texture asynchronously,
+     * without making you specify
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)
+     * loadCompressedTexture()}.
+     * 
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     * 
+     * <p>
+     * This method uses a default render quality: Use
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * to specify an explicit quality.
+     * 
+     * <p>
+     * We will continue to support the {@code loadBitmapTexture()} and
+     * {@code loadCompressedTexture()} APIs for at least a little while: We
+     * haven't yet decided whether to deprecate them or not.
+     * 
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     * 
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     * 
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * 
+     * @since 1.6.7
+     */
+    public void loadTexture(TextureCallback callback,
+            GVRAndroidResource resource, int priority) {
+        loadTexture(callback, resource, priority, GVRCompressedTexture.BALANCED);
+    }
+
+    /**
+     * A simplified, low-level method that loads a texture asynchronously,
+     * without making you specify
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)
+     * loadCompressedTexture()}.
+     * 
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     * 
+     * <p>
+     * We will continue to support the {@code loadBitmapTexture()} and
+     * {@code loadCompressedTexture()} APIs for at least a little while: We
+     * haven't yet decided whether to deprecate them or not.
+     * 
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     * 
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     * 
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @param quality
+     *            The compressed texture {@link GVRCompressedTexture#mQuality
+     *            quality} parameter: should be one of
+     *            {@link GVRCompressedTexture#SPEED},
+     *            {@link GVRCompressedTexture#BALANCED}, or
+     *            {@link GVRCompressedTexture#QUALITY}, but other values are
+     *            'clamped' to one of the recognized values. Please note that
+     *            this (currently) only applies to compressed textures; normal
+     *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
+     *            quality parameter.
+     * 
+     * @since 1.6.7
+     */
+    public void loadTexture(TextureCallback callback,
+            GVRAndroidResource resource, int priority, int quality) {
+        GVRAsynchronousResourceLoader.loadTexture(this, callback, resource,
+                priority, quality);
+    }
+
+    /**
+     * Simple, high-level method to load a texture asynchronously, for use with
+     * {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
+     * 
+     * This method uses a default priority and a default render quality: use
+     * {@link #loadFutureTexture(GVRAndroidResource, int)} to specify a priority
+     * or {@link #loadFutureTexture(GVRAndroidResource, int, int)} to specify a
+     * priority and render quality.
+     * 
+     * <p>
+     * This method is significantly easier to use than
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource)}
+     * : you don't have to implement a callback; you don't have to pay attention
+     * to the low-level details of
+     * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
+     * {@link GVRRenderData} to your scene object. What's more, you don't even
+     * lose any functionality: {@link Future#cancel(boolean)} lets you cancel a
+     * 'stale' request, just like
+     * {@link GVRAndroidResource.CancelableCallback#stillWanted(GVRAndroidResource)
+     * stillWanted()} does. The flip side, of course, is that it <em>is</em> a
+     * bit more expensive: methods like
+     * {@link GVRMaterial#setMainTexture(Future)} use an extra thread from the
+     * thread pool to wait for the blocking {@link Future#get()} call. For
+     * modest numbers of loads, this overhead is acceptable - but thread
+     * creation is not free, and if your {@link GVRScript#onInit(GVRContext)
+     * onInit()} method fires of dozens of future loads, you may well see an
+     * impact.
+     * 
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     * 
+     * @since 1.6.7
+     */
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource) {
+        return loadFutureTexture(resource, DEFAULT_PRIORITY);
+    }
+
+    /**
+     * Simple, high-level method to load a texture asynchronously, for use with
+     * {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
+     * 
+     * This method uses a default render quality:
+     * {@link #loadFutureTexture(GVRAndroidResource, int, int)} to specify
+     * render quality.
+     * 
+     * <p>
+     * This method is significantly easier to use than
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)
+     * : you don't have to implement a callback; you don't have to pay attention
+     * to the low-level details of
+     * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
+     * {@link GVRRenderData} to your scene object. What's more, you don't even
+     * lose any functionality: {@link Future#cancel(boolean)} lets you cancel a
+     * 'stale' request, just like
+     * {@link GVRAndroidResource.CancelableCallback#stillWanted(GVRAndroidResource)
+     * stillWanted()} does. The flip side, of course, is that it <em>is</em> a
+     * bit more expensive: methods like
+     * {@link GVRMaterial#setMainTexture(Future)} use an extra thread from the
+     * thread pool to wait for the blocking {@link Future#get()} call. For
+     * modest numbers of loads, this overhead is acceptable - but thread
+     * creation is not free, and if your {@link GVRScript#onInit(GVRContext)
+     * onInit()} method fires of dozens of future loads, you may well see an
+     * impact.
+     * 
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     * 
+     * @since 1.6.7
+     */
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
+            int priority) {
+        return loadFutureTexture(resource, priority,
+                GVRCompressedTexture.BALANCED);
+    }
+
+    /**
+     * Simple, high-level method to load a texture asynchronously, for use with
+     * {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
+     * 
+     * 
+     * <p>
+     * This method is significantly easier to use than
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)
+     * : you don't have to implement a callback; you don't have to pay attention
+     * to the low-level details of
+     * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
+     * {@link GVRRenderData} to your scene object. What's more, you don't even
+     * lose any functionality: {@link Future#cancel(boolean)} lets you cancel a
+     * 'stale' request, just like
+     * {@link GVRAndroidResource.CancelableCallback#stillWanted(GVRAndroidResource)
+     * stillWanted()} does. The flip side, of course, is that it <em>is</em> a
+     * bit more expensive: methods like
+     * {@link GVRMaterial#setMainTexture(Future)} use an extra thread from the
+     * thread pool to wait for the blocking {@link Future#get()} call. For
+     * modest numbers of loads, this overhead is acceptable - but thread
+     * creation is not free, and if your {@link GVRScript#onInit(GVRContext)
+     * onInit()} method fires of dozens of future loads, you may well see an
+     * impact.
+     * 
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @param quality
+     *            The compressed texture {@link GVRCompressedTexture#mQuality
+     *            quality} parameter: should be one of
+     *            {@link GVRCompressedTexture#SPEED},
+     *            {@link GVRCompressedTexture#BALANCED}, or
+     *            {@link GVRCompressedTexture#QUALITY}, but other values are
+     *            'clamped' to one of the recognized values. Please note that
+     *            this (currently) only applies to compressed textures; normal
+     *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
+     *            quality parameter.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     * 
+     * @since 1.6.7
+     */
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
+            int priority, int quality) {
+        return GVRAsynchronousResourceLoader.loadFutureTexture(this, resource,
+                priority, quality);
     }
 
     /**

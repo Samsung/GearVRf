@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.scene_objects;
 
 import java.io.IOException;
@@ -47,8 +46,8 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *            current {@link GVRContext}
      * @param mesh
      *            an arbitrarily complex {@link GVRMesh} object - see
-     *            {@link GVRContext#loadMesh(String)} and
-     *            {@link GVRContext#createQuad(float, float)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}
      * @param camera
      *            an Android {@link Camera}. <em>Note</em>: this constructor
      *            calls {@link Camera#setPreviewTexture(SurfaceTexture)} so you
