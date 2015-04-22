@@ -266,7 +266,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         }
     }
 
-
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {
         if (mCurrentEye == 1) {
@@ -312,7 +311,18 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 getMainScene().addSceneObject(mSplashScreen);
             }
 
-            mScript.onInit(GVRViewManager.this);
+            try {
+                mScript.onInit(GVRViewManager.this);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                mActivity.finish();
+
+                // Just to be safe ...
+                mFrameHandler = splashFrames;
+                firstFrame = null;
+
+                return;
+            }
 
             if (mSplashScreen == null) {
                 mFrameHandler = normalFrames;
@@ -405,8 +415,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         /*
          * Without the sensor data, can't draw a scene properly.
          */
-        Log.d(TAG, "MainScene = %s, mSensoredScene = %s", mMainScene,
-                mSensoredScene);
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             Runnable runnable = null;
             while ((runnable = mRunnables.poll()) != null) {

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.scene_objects;
 
 import org.gearvrf.GVRContext;
@@ -50,7 +49,8 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @param gvrContext
      *            current {@link GVRContext}
      * @param mesh
-     *            a {@link GVRMesh} - see {@link GVRContext#loadMesh(String)}
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -103,8 +103,8 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @throws IllegalArgumentException
      *             on an invalid {@code videoType} parameter
      */
-    public GVRVideoSceneObject(GVRContext gvrContext, float width, float height,
-            MediaPlayer mediaPlayer, int videoType) {
+    public GVRVideoSceneObject(GVRContext gvrContext, float width,
+            float height, MediaPlayer mediaPlayer, int videoType) {
         this(gvrContext, gvrContext.createQuad(width, height), mediaPlayer,
                 videoType);
     }

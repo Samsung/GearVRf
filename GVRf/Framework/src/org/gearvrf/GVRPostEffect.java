@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.concurrent.Future;
+
+import org.gearvrf.utility.Threads;
 
 /**
  * A "post effect" shader is a GL shader which can be inserted into the pipeline
@@ -87,6 +90,10 @@ public class GVRPostEffect extends GVRHybridObject implements
         setTexture(MAIN_TEXTURE, texture);
     }
 
+    public void setMainTexture(Future<GVRTexture> texture) {
+        setTexture(MAIN_TEXTURE, texture);
+    }
+
     public GVRTexture getTexture(String key) {
         long ptr = NativePostEffectData.getTexture(getPtr(), key);
         if (ptr == 0) {
@@ -98,6 +105,20 @@ public class GVRPostEffect extends GVRHybridObject implements
 
     public void setTexture(String key, GVRTexture texture) {
         NativePostEffectData.setTexture(getPtr(), key, texture.getPtr());
+    }
+
+    public void setTexture(final String key, final Future<GVRTexture> texture) {
+        Threads.spawn(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    setTexture(key, texture.get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public float getFloat(String key) {

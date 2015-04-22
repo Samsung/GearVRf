@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.concurrent.Future;
+
+import org.gearvrf.utility.Threads;
 
 /**
  * One of the key GVRF classes: Encapsulates the data associated with rendering
@@ -112,6 +115,33 @@ public class GVRRenderData extends GVRComponent {
      */
     public void setMesh(GVRMesh mesh) {
         NativeRenderData.setMesh(getPtr(), mesh.getPtr());
+    }
+
+    /**
+     * Asynchronously set the {@link GVRMesh mesh} to be rendered.
+     * 
+     * Uses a background thread from the thread pool to wait for the
+     * {@code Future.get()} method; unless you are loading dozens of meshes
+     * asynchronously, the extra overhead should be modest compared to the cost
+     * of loading a mesh.
+     * 
+     * @param mesh
+     *            The mesh to be rendered.
+     * 
+     * @since 1.6.7
+     */
+    public void setMesh(final Future<GVRMesh> mesh) {
+        Threads.spawn(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    setMesh(mesh.get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     /**

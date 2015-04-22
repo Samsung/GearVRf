@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.scene_objects;
 
 import org.gearvrf.GVRContext;
@@ -51,12 +50,14 @@ public class GVRWebViewSceneObject extends GVRSceneObject implements
      * @param gvrContext
      *            current {@link GVRContext}
      * @param mesh
-     *            a {@link GVRMesh} - see {@link GVRContext#loadMesh(String)}
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param webView
      *            an Android {@link WebView}
      */
-    public GVRWebViewSceneObject(GVRContext gvrContext, GVRMesh mesh, WebView webView) {
+    public GVRWebViewSceneObject(GVRContext gvrContext, GVRMesh mesh,
+            WebView webView) {
         super(gvrContext, mesh);
         mWebView = webView;
         gvrContext.registerDrawFrameListener(this);
@@ -84,8 +85,8 @@ public class GVRWebViewSceneObject extends GVRSceneObject implements
      * @param webView
      *            a {@link WebView}
      */
-    public GVRWebViewSceneObject(GVRContext gvrContext, float width, float height,
-            WebView webView) {
+    public GVRWebViewSceneObject(GVRContext gvrContext, float width,
+            float height, WebView webView) {
         this(gvrContext, gvrContext.createQuad(width, height), webView);
     }
 

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import java.io.InputStream;
@@ -21,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 
 /**
@@ -47,8 +47,7 @@ import android.opengl.GLES20;
  * instance
  * <li>The internal load method passes that {@code CompressedTexture} to a
  * GL-thread callback, that converts it to a texture and passes that texture to
- * the app's
- * {@link org.gearvrf.GVRAndroidResource.BitmapTextureCallback
+ * the app's {@link org.gearvrf.GVRAndroidResource.BitmapTextureCallback
  * BitmapTextureCallback}
  * </ul>
  * 
@@ -57,6 +56,26 @@ import android.opengl.GLES20;
 public abstract class GVRCompressedTextureLoader {
     protected GVRCompressedTextureLoader() {
     }
+
+    /**
+     * Bytes of header data that we need to
+     * {@link #sniff(byte[], Reader)} or {@link #parse(byte[], Reader)}.
+     * 
+     * When we <em>know</em> that a file contains a compressed texture, we can
+     * simply load the whole thing into a {@code byte[]}, and pass the offset of
+     * the actual data to
+     * {@link #CompressedTexture(int, int, int, int, int, byte[], int, int)}.
+     * But, when a file may contain either an Android {@link Bitmap} or a
+     * compressed texture, we don't want to load the whole file into memory:
+     * {@link BitmapFactory#decodeStream(InputStream)} is more memory-efficient
+     * than {@link BitmapFactory#decodeByteArray(byte[], int, int)}.
+     * 
+     * @return Number of bytes of header data needed to successfully sniff or
+     *         parse the file format.
+     * 
+     * @since 1.6.6
+     */
+    public abstract int headerLength();
 
     /**
      * Does this byte array contain an instance of 'my' compressed texture? The
@@ -161,6 +180,14 @@ public abstract class GVRCompressedTextureLoader {
     public void register() {
         synchronized (loaders) {
             loaders.add(this);
+
+            maximumHeaderLength = 0;
+            for (GVRCompressedTextureLoader loader : loaders) {
+                int headerLength = loader.headerLength();
+                if (headerLength > maximumHeaderLength) {
+                    maximumHeaderLength = headerLength;
+                }
+            }
         }
     }
 
@@ -169,6 +196,7 @@ public abstract class GVRCompressedTextureLoader {
     }
 
     private static final List<GVRCompressedTextureLoader> loaders = new ArrayList<GVRCompressedTextureLoader>();
+    static int maximumHeaderLength = 0;
 
     /*
      * We can (and do) expect apps to register any custom loaders before calling

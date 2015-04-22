@@ -15,21 +15,15 @@
 
 package org.gearvrf.solarsystem;
 
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
-import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
@@ -39,173 +33,20 @@ import org.gearvrf.utility.Log;
 
 public class SolarViewManager extends GVRScript {
 
+    @SuppressWarnings("unused")
+    private static final String TAG = Log.tag(SolarViewManager.class);
+
     private GVRAnimationEngine mAnimationEngine;
 
-    private static class AsyncSphericalObject extends GVRSceneObject {
-
-        private static final String TAG = Log.tag(AsyncSphericalObject.class);
-
-        private static Object[] lock = new Object[0];
-        private static GVRMesh sphereMesh = null;
-        static {
-            GVRContext.addResetOnRestartHandler(new Runnable() {
-
-                @Override
-                public void run() {
-                    sphereMesh = null;
-                }
-            });
-        }
-
-        private static int pending = 0;
-
-        private static final int MESH_PRIORITY = 1000;
-        private static final int TEXTURE_PRIORITY = 100;
-
-        private GVRMesh mesh = null;
-        private GVRTexture texture = null;
-        private final SolarViewManager script;
-
-        AsyncSphericalObject(GVRContext context, SolarViewManager script,
-                String textureName) {
-            super(context);
-
-            this.script = script;
-
-            synchronized (lock) {
-                pending += 1;
-
-                if (sphereMesh != null) {
-                    setMesh(sphereMesh);
-                } else {
-                    try {
-                        context.loadMesh(newMeshCallback(), //
-                                new GVRAndroidResource(context, "sphere.obj"), //
-                                MESH_PRIORITY);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            try {
-                context.loadBitmapTexture(newTextureCallback(), //
-                        new GVRAndroidResource(context, textureName),//
-                        TEXTURE_PRIORITY);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        private MeshCallback newMeshCallback() {
-            return new MeshCallback() {
-
-                final String TAG = AsyncSphericalObject.TAG + ": MeshCallback";
-
-                @Override
-                public void loaded(GVRMesh mesh,
-                        GVRAndroidResource androidResource) {
-                    Log.d(TAG, "loaded(%s,  %s)", mesh, androidResource);
-                    synchronized (lock) {
-                        sphereMesh = mesh;
-                    }
-                    setMesh(mesh);
-                }
-
-                @Override
-                public void failed(Throwable t,
-                        GVRAndroidResource androidResource) {
-                    Log.e(TAG, "failed(%s,  %s)", t, androidResource);
-                }
-
-                @Override
-                public boolean stillWanted(GVRAndroidResource androidResource) {
-                    return true;
-                }
-            };
-        }
-
-        private BitmapTextureCallback newTextureCallback() {
-            return new BitmapTextureCallback() {
-
-                final String TAG = AsyncSphericalObject.TAG
-                        + ": TextureCallback";
-
-                @Override
-                public boolean stillWanted(GVRAndroidResource androidResource) {
-                    return true;
-                }
-
-                @Override
-                public void loaded(GVRTexture texture,
-                        GVRAndroidResource androidResource) {
-                    Log.d(TAG, "loaded(%s,  %s)", texture, androidResource);
-                    setTexture(texture);
-                }
-
-                @Override
-                public void failed(Throwable t,
-                        GVRAndroidResource androidResource) {
-                    Log.e(TAG, "failed(%s,  %s)", t, androidResource);
-                }
-            };
-        }
-
-        private void setMesh(GVRMesh mesh) {
-            this.mesh = mesh;
-            setSkin();
-        }
-
-        private void setTexture(GVRTexture texture) {
-            this.texture = texture;
-            setSkin();
-        }
-
-        private synchronized void setSkin() {
-            if (getRenderData() != null) {
-                Log.d(TAG, "setSkin(): getRenderData() != null");
-                return; // already setup
-            }
-            if (mesh == null || texture == null) {
-                Log.d(TAG, "setSkin(): mesh == %s || texture == %s", //
-                        mesh, texture);
-                return; // still missing a piece
-            }
-
-            GVRContext context = getGVRContext();
-            GVRRenderData renderData = new GVRRenderData(context);
-
-            renderData.setMesh(mesh);
-
-            GVRMaterial material = new GVRMaterial(context,
-                    GVRMaterial.GVRShaderType.Unlit.ID);
-            material.setMainTexture(texture);
-            renderData.setMaterial(material);
-
-            attachRenderData(renderData);
-
-            synchronized (lock) {
-                pending -= 1;
-                Log.d(TAG, "pending = %d", pending);
-                if (pending == 0) {
-                    script.closeSplashScreen();
-                }
-            }
-        }
-    }
-
     private GVRSceneObject asyncSceneObject(GVRContext context,
-            String textureName) {
-        return new AsyncSphericalObject(context, this, textureName);
+            GVRAndroidResource meshResource, String textureName)
+            throws IOException {
+        return new GVRSceneObject(context, meshResource,
+                new GVRAndroidResource(context, textureName));
     }
 
     @Override
-    public SplashMode getSplashMode() {
-        return SplashMode.MANUAL;
-    }
-
-    @Override
-    public void onInit(GVRContext gvrContext) {
+    public void onInit(GVRContext gvrContext) throws IOException {
         mAnimationEngine = gvrContext.getAnimationEngine();
 
         GVRScene mainScene = gvrContext.getNextMainScene(new Runnable() {
@@ -233,8 +74,11 @@ public class SolarViewManager extends GVRScript {
         GVRSceneObject sunRotationObject = new GVRSceneObject(gvrContext);
         solarSystemObject.addChildObject(sunRotationObject);
 
+        GVRAndroidResource meshResource = new GVRAndroidResource(gvrContext,
+                "sphere.obj");
+
         GVRSceneObject sunMeshObject = asyncSceneObject(gvrContext,
-                "sunmap.jpg");
+                meshResource, "sunmap.astc");
         sunMeshObject.getTransform().setPosition(0.0f, 0.0f, 0.0f);
         sunMeshObject.getTransform().setScale(10.0f, 10.0f, 10.0f);
         sunRotationObject.addChildObject(sunMeshObject);
@@ -247,7 +91,7 @@ public class SolarViewManager extends GVRScript {
         mercuryRevolutionObject.addChildObject(mercuryRotationObject);
 
         GVRSceneObject mercuryMeshObject = asyncSceneObject(gvrContext,
-                "mercurymap.jpg");
+                meshResource, "mercurymap.jpg");
         mercuryMeshObject.getTransform().setScale(0.3f, 0.3f, 0.3f);
         mercuryRotationObject.addChildObject(mercuryMeshObject);
 
@@ -259,7 +103,7 @@ public class SolarViewManager extends GVRScript {
         venusRevolutionObject.addChildObject(venusRotationObject);
 
         GVRSceneObject venusMeshObject = asyncSceneObject(gvrContext,
-                "venusmap.jpg");
+                meshResource, "venusmap.jpg");
         venusMeshObject.getTransform().setScale(0.8f, 0.8f, 0.8f);
         venusRotationObject.addChildObject(venusMeshObject);
 
@@ -271,7 +115,7 @@ public class SolarViewManager extends GVRScript {
         earthRevolutionObject.addChildObject(earthRotationObject);
 
         GVRSceneObject earthMeshObject = asyncSceneObject(gvrContext,
-                "earthmap1k.jpg");
+                meshResource, "earthmap1k.jpg");
         earthMeshObject.getTransform().setScale(1.0f, 1.0f, 1.0f);
         earthRotationObject.addChildObject(earthMeshObject);
 
@@ -289,7 +133,7 @@ public class SolarViewManager extends GVRScript {
         marsRevolutionObject.addChildObject(marsRotationObject);
 
         GVRSceneObject marsMeshObject = asyncSceneObject(gvrContext,
-                "mars_1k_color.jpg");
+                meshResource, "mars_1k_color.jpg");
         marsMeshObject.getTransform().setScale(0.6f, 0.6f, 0.6f);
         marsRotationObject.addChildObject(marsMeshObject);
 

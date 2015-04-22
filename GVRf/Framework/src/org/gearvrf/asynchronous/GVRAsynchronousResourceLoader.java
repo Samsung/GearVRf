@@ -13,20 +13,26 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
+import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
-import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRHybridObject;
+import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
 import android.graphics.Bitmap;
@@ -171,6 +177,90 @@ public class GVRAsynchronousResourceLoader {
     }
 
     /**
+     * Load a (compressed or bitmapped) texture asynchronously.
+     * 
+     * This is the implementation of
+     * {@link GVRContext#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * - it will usually be more convenient to call that directly.
+     * 
+     * @param gvrContext
+     *            The GVRF context
+     * @param callback
+     *            Asynchronous notifications
+     * @param resource
+     *            Basically, a stream containing a compressed texture. Taking a
+     *            {@link GVRAndroidResource} parameter eliminates six overloads.
+     * @param priority
+     *            A value {@literal >=} {@link GVRContext#LOWEST_PRIORITY} and
+     *            {@literal <=} {@link GVRContext#HIGHEST_PRIORITY}
+     * @throws IllegalArgumentException
+     *             If {@code priority} {@literal <}
+     *             {@link GVRContext#LOWEST_PRIORITY} or {@literal >}
+     *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
+     *             parameters are {@code null}.
+     */
+    public static void loadTexture(final GVRContext gvrContext,
+            final CancelableCallback<GVRTexture> callback,
+            final GVRAndroidResource resource, final int priority,
+            final int quality) {
+        validateCallbackParameters(gvrContext, callback, resource);
+
+        // 'Sniff' out compressed textures on a thread from the thread-pool
+        Threads.spawn(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    // Save stream position
+                    resource.mark();
+
+                    GVRCompressedTextureLoader loader;
+                    try {
+                        loader = CompressedTexture.sniff(resource.getStream());
+                    } finally {
+                        resource.reset();
+                    }
+
+                    if (loader != null) {
+                        // We have a compressed texture: proceed on this thread
+                        final CompressedTexture compressedTexture = CompressedTexture
+                                .parse(resource.getStream(), false, loader);
+                        resource.closeStream();
+
+                        // Create texture on GL thread
+                        gvrContext.runOnGlThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                GVRTexture texture = compressedTexture
+                                        .toTexture(gvrContext, quality);
+                                callback.loaded(texture, resource);
+                            }
+                        });
+                    } else {
+                        // We don't have a compressed texture: pass to
+                        // AsyncBitmapTexture code
+                        AsyncBitmapTexture.loadTexture(gvrContext, callback,
+                                resource, priority);
+                    }
+                } catch (Exception e) {
+                    callback.failed(e, resource);
+                }
+            }
+        });
+    }
+
+    public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
+            GVRAndroidResource resource, int priority, int quality) {
+        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
+                resource);
+
+        loadTexture(gvrContext, result.callback, resource, priority, quality);
+
+        return result;
+    }
+
+    /**
      * 
      * Load a GL mesh asynchronously.
      * 
@@ -196,12 +286,111 @@ public class GVRAsynchronousResourceLoader {
      * 
      * @since 1.6.2
      */
-    public static void loadMesh(GVRContext gvrContext, MeshCallback callback,
-            GVRAndroidResource resource, int priority) {
+    public static void loadMesh(GVRContext gvrContext,
+            CancelableCallback<GVRMesh> callback, GVRAndroidResource resource,
+            int priority) {
         validatePriorityCallbackParameters(gvrContext, callback, resource,
                 priority);
 
         AsyncMesh.loadMesh(gvrContext, callback, resource, priority);
+    }
+
+    public static Future<GVRMesh> loadFutureMesh(GVRContext gvrContext,
+            GVRAndroidResource resource, int priority) {
+        FutureResource<GVRMesh> result = new FutureResource<GVRMesh>(resource);
+
+        loadMesh(gvrContext, result.callback, resource, priority);
+
+        return result;
+    }
+
+    private static class FutureResource<T extends GVRHybridObject> implements
+            Future<T> {
+
+        private static final String TAG = Log.tag(FutureResource.class);
+
+        private final GVRAndroidResource resource;
+
+        private T result = null;
+        private Throwable error = null;
+        private boolean pending = true;
+        private boolean canceled = false;
+
+        public FutureResource(GVRAndroidResource resource) {
+            this.resource = resource;
+        }
+
+        private final CancelableCallback<T> callback = new CancelableCallback<T>() {
+
+            @Override
+            public void loaded(T data, GVRAndroidResource androidResource) {
+                synchronized (resource) {
+                    result = data;
+                    pending = false;
+                    resource.notify();
+                }
+//                Log.d(TAG, "loaded(%s)", resource);
+            }
+
+            @Override
+            public void failed(Throwable t, GVRAndroidResource androidResource) {
+                synchronized (resource) {
+                    error = t;
+                    pending = false;
+                    resource.notify();
+                }
+                Log.d(TAG, "failed(%s), %s", resource, t);
+            }
+
+            @Override
+            public boolean stillWanted(GVRAndroidResource androidResource) {
+                return canceled == false;
+            }
+        };
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            canceled = true;
+            return pending;
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            return get(0);
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException,
+                ExecutionException, TimeoutException {
+            return get(unit.toMillis(timeout));
+        }
+
+        private T get(long millis) throws InterruptedException,
+                ExecutionException {
+            synchronized (resource) {
+                if (pending) {
+                    resource.wait(millis);
+                }
+            }
+            if (canceled) {
+                throw new CancellationException();
+            }
+            if (error != null) {
+                throw new ExecutionException(error);
+            }
+            return result;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return canceled;
+        }
+
+        @Override
+        public boolean isDone() {
+            return pending == false;
+        }
+
     }
 
     private static <T extends GVRHybridObject> void validateCallbackParameters(

@@ -17,11 +17,10 @@
 package org.gearvrf.asynchronous;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRAndroidResource.CancelableCallback;
-import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
@@ -41,7 +40,7 @@ abstract class AsyncMesh {
      * The API
      */
 
-    static void loadMesh(GVRContext gvrContext, MeshCallback callback,
+    static void loadMesh(GVRContext gvrContext, CancelableCallback<GVRMesh> callback,
             GVRAndroidResource resource, int priority) {
         Throttler.registerCallback(gvrContext, MESH_CLASS, callback, resource,
                 priority);

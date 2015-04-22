@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
+import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
-import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
@@ -67,6 +67,12 @@ abstract class AsyncBitmapTexture {
     static void loadTexture(GVRContext gvrContext,
             BitmapTextureCallback callback, GVRAndroidResource resource,
             int priority) {
+        Throttler.registerCallback(gvrContext, TEXTURE_CLASS, callback,
+                resource, priority);
+    }
+
+    static void loadTexture(GVRContext gvrContext, CancelableCallback<GVRTexture> callback,
+            GVRAndroidResource resource, int priority) {
         Throttler.registerCallback(gvrContext, TEXTURE_CLASS, callback,
                 resource, priority);
     }

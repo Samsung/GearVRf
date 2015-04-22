@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.gearvrf.utility.MarkingFileInputStream;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -68,7 +68,7 @@ public class GVRAndroidResource {
      *             File doesn't exist, or can't be read.
      */
     public GVRAndroidResource(String path) throws FileNotFoundException {
-        stream = new FileInputStream(path);
+        stream = new MarkingFileInputStream(path);
         debugState = DebugStates.OPEN;
 
         filePath = path;
@@ -86,7 +86,7 @@ public class GVRAndroidResource {
      *             File doesn't exist, or can't be read.
      */
     public GVRAndroidResource(File file) throws FileNotFoundException {
-        stream = new FileInputStream(file);
+        stream = new MarkingFileInputStream(file);
         debugState = DebugStates.OPEN;
 
         filePath = file.getAbsolutePath();
@@ -170,7 +170,7 @@ public class GVRAndroidResource {
      * Get the open stream.
      * 
      * Changes the debug state (visible <i>via</i> {@link #toString()}) to
-     * {@linkplain DebugStates#READING READING}.
+     * {@linkplain GVRAndroidResource.DebugStates#READING READING}.
      * 
      * @return An open {@link InputStream}.
      */
@@ -184,7 +184,8 @@ public class GVRAndroidResource {
      * 
      * It's OK to call code that closes the stream for you - the only point of
      * this API is to update the debug state (visible <i>via</i>
-     * {@link #toString()}) to {@linkplain DebugStates#CLOSED CLOSED}.
+     * {@link #toString()}) to
+     * {@linkplain GVRAndroidResource.DebugStates#CLOSED CLOSED}.
      */
     public final void closeStream() {
         try {
@@ -192,6 +193,44 @@ public class GVRAndroidResource {
             stream.close();
         } catch (IOException e) {
             // Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Save the stream position, for later use with {@link #reset()}.
+     * 
+     * All {@link GVRAndroidResource} streams support
+     * {@link InputStream#mark(int) mark()} and {@link InputStream#reset()
+     * reset().} Calling {@link #mark()} right after construction will allow you
+     * to read the header then {@linkplain #reset() rewind the stream} if you
+     * can't handle the file format.
+     * 
+     * @since 1.6.7
+     */
+    public void mark() {
+        stream.mark(Integer.MAX_VALUE);
+    }
+
+    /**
+     * Restore the stream position, to the point set by a previous
+     * {@link #mark() mark().}
+     * 
+     * Please note that calling {@link #reset()} generally 'consumes' the
+     * {@link #mark()} - <em>do not</em> call
+     * 
+     * <pre>
+     * mark();
+     * reset();
+     * reset();
+     * </pre>
+     * 
+     * @since 1.6.7
+     */
+    public void reset() {
+        try {
+            stream.reset();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -351,6 +390,18 @@ public class GVRAndroidResource {
     /** Callback for asynchronous bitmap-texture loads. */
     public interface BitmapTextureCallback extends
             CancelableCallback<GVRTexture> {
+    }
+
+    /**
+     * Callback for asynchronous texture loads.
+     * 
+     * Both compressed and bitmapped textures, using the
+     * {@link GVRContext#loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource)}
+     * APIs.
+     * 
+     * @since 1.6.7
+     */
+    public interface TextureCallback extends CancelableCallback<GVRTexture> {
     }
 
     /** Callback for asynchronous mesh loads */

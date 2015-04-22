@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import java.io.IOException;
@@ -34,7 +33,8 @@ import android.opengl.GLES20;
  * 
  * <p>
  * Get an instance by calling one of the {@code load()} overloads; register a
- * new loader by calling {@link #register(GVRCompressedTextureLoader)}.
+ * new loader by calling
+ * {@link GVRCompressedTextureLoader#register(GVRCompressedTextureLoader)}.
  * 
  * <p>
  * Note that {@link #toTexture(GVRContext, int)} <em>must</em> be called from
@@ -143,6 +143,63 @@ class CompressedTexture {
             }
             return valid.parse(data, reader);
         }
+    }
+
+    static GVRCompressedTextureLoader sniff(InputStream stream)
+            throws IOException {
+        byte[] data = readBytes(stream,
+                GVRCompressedTextureLoader.maximumHeaderLength);
+
+        Reader reader = new Reader(data);
+
+        GVRCompressedTextureLoader valid = null;
+        List<GVRCompressedTextureLoader> loaders = GVRCompressedTextureLoader
+                .getLoaders();
+        synchronized (loaders) {
+            for (GVRCompressedTextureLoader loader : loaders) {
+                if (loader.sniff(data, reader)) {
+                    if (valid != null) {
+                        throw new IllegalArgumentException(
+                                "Multiple loaders think this smells right");
+                    }
+                    valid = loader;
+                }
+                reader.reset();
+            }
+            return valid;
+        }
+    }
+
+    static CompressedTexture parse(InputStream stream, boolean closeStream,
+            GVRCompressedTextureLoader loader) throws IOException {
+        byte[] data;
+        try {
+            data = readBytes(stream);
+        } finally {
+            if (closeStream) {
+                stream.close();
+            }
+        }
+
+        return loader.parse(data, new Reader(data));
+    }
+
+    private static byte[] readBytes(InputStream stream, final int bytes)
+            throws IOException {
+        byte[] result = new byte[bytes], buffer = new byte[bytes];
+        int length = 0;
+
+        for (int read = 0; read >= 0 && length < bytes; read = stream
+                .read(buffer)) {
+            if (read > 0) {
+                for (int index = 0; index < read && length < bytes;) {
+                    result[length++] = buffer[index++];
+                }
+            }
+        }
+        buffer = null;
+
+        return result;
     }
 
     private static byte[] readBytes(InputStream stream) throws IOException {

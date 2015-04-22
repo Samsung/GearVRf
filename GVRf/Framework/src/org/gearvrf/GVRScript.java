@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import org.gearvrf.animation.GVRAnimation;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -57,10 +58,25 @@ public abstract class GVRScript {
      * This is where you should build your initial scene graph. Any expensive
      * calls you make here are 'hidden' (in the sense that they won't cause the
      * app to skip any frames) but they <em>will</em> still affect app startup
-     * time: use lazy-create patterns where you can, and/or load large bitmaps
-     * in a background (non-GL) thread.
+     * time: use lazy-create patterns where you can, and/or use the asynchronous
+     * resource loading methods in {@link GVRContext} instead of the synchronous
+     * ones.
+     * 
+     * @throws Throwable
+     *             {@code onInit()} routines typically need to load various
+     *             resources. Some of the Android resource-loading code throws
+     *             exceptions (especially when you are loading files from the
+     *             {@code assets} folder). If you don't catch these exceptions -
+     *             and just let them propagate out of {@code onInit()} - GVRF
+     *             will log the exception and shutdown your app.
+     * 
+     *             <p>
+     *             This is probably <em>not</em> the behavior you want if your
+     *             resources may fail to load because of (say) network issues,
+     *             but it is just fine for handling development-time issues like
+     *             typing {@code "mesh.obi"} instead of {@code "mesh.obj"}.
      */
-    public abstract void onInit(GVRContext gvrContext);
+    public abstract void onInit(GVRContext gvrContext) throws Throwable;
 
     /**
      * Called every frame.
@@ -108,7 +124,7 @@ public abstract class GVRScript {
         /**
          * The splash screen will be shown before
          * {@link GVRScript#onInit(GVRContext) onInit()} and will remain up
-         * until you call {@link GVRScript#hideSplashScreen()}
+         * until you call {@link GVRScript#closeSplashScreen()}
          */
         MANUAL,
         /**
@@ -233,8 +249,8 @@ public abstract class GVRScript {
      * 
      * This method will be called <em>before</em> {@link #onInit(GVRContext)
      * onInit()} and before the normal render pipeline starts up. In particular,
-     * this means that any {@links GVRAnimation animations} will not start until
-     * the first {@link #onStep()} and normal rendering starts.
+     * this means that any {@linkplain GVRAnimation animations} will not start
+     * until the first {@link #onStep()} and normal rendering starts.
      * 
      * @param splashScreen
      *            The splash object created from

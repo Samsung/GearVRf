@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import static android.opengl.GLES30.*;
@@ -27,6 +26,11 @@ class EricssonTextureCompression2 extends GVRCompressedTextureLoader {
 
     private static final int PKM_SIGNATURE = 0x204d4b50; // "PKM "
     private static final int VERSION_SIGNATURE = 0x00003032; // "20\u0000\u0000"
+
+    @Override
+    public int headerLength() {
+        return 16;
+    }
 
     @Override
     public boolean sniff(byte[] data, Reader reader) {
