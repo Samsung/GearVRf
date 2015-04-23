@@ -995,7 +995,7 @@ public abstract class GVRContext {
      * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)
      * : you don't have to implement a callback; you don't have to pay attention
      * to the low-level details of
-     * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
+     *{@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
      * {@link GVRRenderData} to your scene object. What's more, you don't even
      * lose any functionality: {@link Future#cancel(boolean)} lets you cancel a
      * 'stale' request, just like
@@ -1044,7 +1044,7 @@ public abstract class GVRContext {
      * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)
      * : you don't have to implement a callback; you don't have to pay attention
      * to the low-level details of
-     * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
+     *{@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
      * {@link GVRRenderData} to your scene object. What's more, you don't even
      * lose any functionality: {@link Future#cancel(boolean)} lets you cancel a
      * 'stale' request, just like
@@ -1382,4 +1382,22 @@ public abstract class GVRContext {
      *            none.
      */
     public abstract void captureScreenRight(GVRScreenshotCallback callback);
+
+    /**
+     * Capture a 3D screenshot from the position of left eye. The 3D screenshot
+     * is composed of six images from six directions (i.e. +x, -x, +y, -y, +z,
+     * and -z).
+     * 
+     * The screenshot capture is done asynchronously -- the function does not
+     * return the result immediately. Instead, it registers a callback function
+     * and pass the result (when it is available) to the callback function. The
+     * callback will happen on a background thread: It will probably not be the
+     * same thread that calls this method, and it will not be either the GUI or
+     * the GL thread.
+     * 
+     * @param callback
+     *            Callback function to process the capture result. It may not be
+     *            {@code null}.
+     */
+    public abstract void captureScreen3D(GVRScreenshot3DCallback callback);
 }
