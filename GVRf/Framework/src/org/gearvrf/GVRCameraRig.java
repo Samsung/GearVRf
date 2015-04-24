@@ -145,7 +145,11 @@ public class GVRCameraRig extends GVRComponent {
      * @return The {@code float} value associated with {@code key}.
      */
     public float getFloat(String key) {
-        return NativeCameraRig.getFloat(getPtr(), key);
+        float[] value = NativeCameraRig.getFloat(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value[0];
     }
 
     /**
@@ -167,7 +171,11 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key}.
      */
     public float[] getVec2(String key) {
-        return NativeCameraRig.getVec2(getPtr(), key);
+        float[] value = NativeCameraRig.getVec2(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**
@@ -191,7 +199,11 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key}.
      */
     public float[] getVec3(String key) {
-        return NativeCameraRig.getVec3(getPtr(), key);
+        float[] value = NativeCameraRig.getVec3(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**
@@ -217,7 +229,11 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key} .
      */
     public float[] getVec4(String key) {
-        return NativeCameraRig.getVec4(getPtr(), key);
+        float[] value = NativeCameraRig.getVec4(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**
@@ -373,7 +389,7 @@ class NativeCameraRig {
     static native void setCameraSeparationDistance(long cameraRig,
             float distance);
 
-    static native float getFloat(long cameraRig, String key);
+    static native float[] getFloat(long cameraRig, String key);
 
     static native void setFloat(long cameraRig, String key, float value);
 

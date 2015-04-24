@@ -167,7 +167,11 @@ public class GVRMesh extends GVRHybridObject {
      * @return Array of {@code float} scalars.
      */
     public float[] getFloatVector(String key) {
-        return NativeMesh.getFloatVector(getPtr(), key);
+        float[] value = NativeMesh.getFloatVector(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**
@@ -195,7 +199,11 @@ public class GVRMesh extends GVRHybridObject {
      * @return Array of two-component {@code float} vectors.
      */
     public float[] getVec2Vector(String key) {
-        return NativeMesh.getVec2Vector(getPtr(), key);
+        float[] value = NativeMesh.getVec2Vector(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**
@@ -224,7 +232,11 @@ public class GVRMesh extends GVRHybridObject {
      * @return Array of three-component {@code float} vectors.
      */
     public float[] getVec3Vector(String key) {
-        return NativeMesh.getVec3Vector(getPtr(), key);
+        float[] value = NativeMesh.getVec3Vector(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**
@@ -253,7 +265,11 @@ public class GVRMesh extends GVRHybridObject {
      * @return Array of four-component {@code float} vectors.
      */
     public float[] getVec4Vector(String key) {
-        return NativeMesh.getVec4Vector(getPtr(), key);
+        float[] value = NativeMesh.getVec4Vector(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     /**

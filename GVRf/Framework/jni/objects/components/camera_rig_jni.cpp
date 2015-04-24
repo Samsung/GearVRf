@@ -23,8 +23,6 @@
 
 #include "util/gvr_jni.h"
 
-#include "util/gvr_java_stack_trace.h"
-
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
@@ -57,7 +55,7 @@ Java_org_gearvrf_NativeCameraRig_getCameraSeparationDistance(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setCameraSeparationDistance(
         JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat distance);
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getFloat(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key);
 
@@ -197,16 +195,22 @@ Java_org_gearvrf_NativeCameraRig_setCameraSeparationDistance(
     camera_rig->set_camera_separation_distance(distance);
 }
 
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getFloat(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key) {
     std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
             CameraRig>*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    jfloat camera_rig_float = camera_rig->getFloat(native_key);
     env->ReleaseStringUTFChars(key, char_key);
-    return camera_rig_float;
+    try {
+        jfloat value = camera_rig->getFloat(native_key);
+        jfloatArray result_float = env->NewFloatArray(1);
+        env->SetFloatArrayRegion(result_float, 0, 1, &value);
+        return result_float;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -236,8 +240,7 @@ Java_org_gearvrf_NativeCameraRig_getVec2(JNIEnv * env,
         return jvec2;
     } catch (const std::string & err) {
         env->ReleaseStringUTFChars(key, char_key);
-        printJavaCallStack(env, err);
-        throw err;
+        return NULL;
     }
 }
 
@@ -268,8 +271,7 @@ Java_org_gearvrf_NativeCameraRig_getVec3(JNIEnv * env,
         return jvec3;
     } catch (const std::string & err) {
         env->ReleaseStringUTFChars(key, char_key);
-        printJavaCallStack(env, err);
-        throw err;
+        return NULL;
     }
 }
 
@@ -301,8 +303,7 @@ Java_org_gearvrf_NativeCameraRig_getVec4(JNIEnv * env,
         return jvec4;
     } catch (const std::string & err) {
         env->ReleaseStringUTFChars(key, char_key);
-        printJavaCallStack(env, err);
-        throw err;
+        return NULL;
     }
 }
 

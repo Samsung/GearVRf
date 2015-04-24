@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "material.h"
-
 #include "util/gvr_jni.h"
 
 namespace gvr {
@@ -41,7 +40,7 @@ Java_org_gearvrf_NativeMaterial_getTexture(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key, jlong texture);
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMaterial_getFloat(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key);
 
@@ -136,16 +135,22 @@ Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
     env->ReleaseStringUTFChars(key, char_key);
 }
 
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMaterial_getFloat(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key) {
     std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
             Material>*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    jfloat material_float = material->getFloat(native_key);
     env->ReleaseStringUTFChars(key, char_key);
-    return material_float;
+    try {
+        jfloat value = material->getFloat(native_key);
+        jfloatArray result_float = env->NewFloatArray(1);
+        env->SetFloatArrayRegion(result_float, 0, 1, &value);
+        return result_float;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -166,12 +171,16 @@ Java_org_gearvrf_NativeMaterial_getVec2(JNIEnv * env,
             Material>*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec2 material_vec2 = material->getVec2(native_key);
-    jfloatArray jvec2 = env->NewFloatArray(2);
-    env->SetFloatArrayRegion(jvec2, 0, 2,
-            reinterpret_cast<jfloat*>(&material_vec2));
     env->ReleaseStringUTFChars(key, char_key);
-    return jvec2;
+    try {
+        glm::vec2 material_vec2 = material->getVec2(native_key);
+        jfloatArray jvec2 = env->NewFloatArray(2);
+        env->SetFloatArrayRegion(jvec2, 0, 2,
+            reinterpret_cast<jfloat*>(&material_vec2));
+        return jvec2;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -192,12 +201,16 @@ Java_org_gearvrf_NativeMaterial_getVec3(JNIEnv * env,
             Material>*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec3 material_vec3 = material->getVec3(native_key);
-    jfloatArray jvec3 = env->NewFloatArray(3);
-    env->SetFloatArrayRegion(jvec3, 0, 3,
-            reinterpret_cast<jfloat*>(&material_vec3));
     env->ReleaseStringUTFChars(key, char_key);
-    return jvec3;
+    try {
+        glm::vec3 material_vec3 = material->getVec3(native_key);
+        jfloatArray jvec3 = env->NewFloatArray(3);
+        env->SetFloatArrayRegion(jvec3, 0, 3,
+                reinterpret_cast<jfloat*>(&material_vec3));
+        return jvec3;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -219,12 +232,16 @@ Java_org_gearvrf_NativeMaterial_getVec4(JNIEnv * env,
             Material>*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec4 material_vec4 = material->getVec4(native_key);
-    jfloatArray jvec4 = env->NewFloatArray(4);
-    env->SetFloatArrayRegion(jvec4, 0, 4,
-            reinterpret_cast<jfloat*>(&material_vec4));
     env->ReleaseStringUTFChars(key, char_key);
-    return jvec4;
+    try {
+        glm::vec4 material_vec4 = material->getVec4(native_key);
+        jfloatArray jvec4 = env->NewFloatArray(4);
+        env->SetFloatArrayRegion(jvec4, 0, 4,
+                reinterpret_cast<jfloat*>(&material_vec4));
+        return jvec4;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL

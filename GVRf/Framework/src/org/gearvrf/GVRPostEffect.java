@@ -122,7 +122,11 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     public float getFloat(String key) {
-        return NativePostEffectData.getFloat(getPtr(), key);
+        float[] value = NativePostEffectData.getFloat(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value[0];
     }
 
     public void setFloat(String key, float value) {
@@ -130,7 +134,11 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     public float[] getVec2(String key) {
-        return NativePostEffectData.getVec2(getPtr(), key);
+        float[] value = NativePostEffectData.getVec2(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     public void setVec2(String key, float x, float y) {
@@ -138,7 +146,11 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     public float[] getVec3(String key) {
-        return NativePostEffectData.getVec3(getPtr(), key);
+        float[] value = NativePostEffectData.getVec3(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     public void setVec3(String key, float x, float y, float z) {
@@ -146,7 +158,11 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     public float[] getVec4(String key) {
-        return NativePostEffectData.getVec4(getPtr(), key);
+        float[] value = NativePostEffectData.getVec4(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     public void setVec4(String key, float x, float y, float z, float w) {
@@ -178,7 +194,7 @@ class NativePostEffectData {
     public static native void setTexture(long postEffectData, String key,
             long texture);
 
-    public static native float getFloat(long postEffectData, String key);
+    public static native float[] getFloat(long postEffectData, String key);
 
     public static native void setFloat(long postEffectData, String key,
             float value);
