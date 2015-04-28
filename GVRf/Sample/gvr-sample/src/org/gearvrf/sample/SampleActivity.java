@@ -13,17 +13,29 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.sample;
 
-import android.os.Bundle;
-
 import org.gearvrf.GVRActivity;
+import android.os.Bundle;
+import android.view.MotionEvent;
 
 public class SampleActivity extends GVRActivity {
+
+    SampleCubeScript script = new SampleCubeScript();
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setScript(new SampleCubeScript(), "gvr_note4.xml");
+        setScript(script, "gvr_note4.xml");
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            script.captureScreen(0, "screenshot_center.png");
+            script.captureScreen(1, "screenshot_left.png");
+            script.captureScreen(2, "screenshot_right.png");
+        }
+        return super.onTouchEvent(event);
     }
 }

@@ -23,6 +23,7 @@
 #include "AppLocal.h"
 #include "util/gvr_jni.h"
 #include "glm/glm.hpp"
+#include "objects/textures/render_texture.h"
 
 namespace gvr {
 
