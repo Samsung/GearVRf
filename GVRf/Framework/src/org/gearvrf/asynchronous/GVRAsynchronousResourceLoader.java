@@ -28,9 +28,12 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
+import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRShaders;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
@@ -250,6 +253,41 @@ public class GVRAsynchronousResourceLoader {
         });
     }
 
+    /**
+     * Load a (compressed or bitmapped) texture asynchronously.
+     * 
+     * This is the implementation of
+     * {@link GVRContext#loadFutureTexture(GVRAndroidResource, int, int)} - it
+     * will usually be more convenient to call that directly.
+     * 
+     * @param gvrContext
+     *            The GVRF context
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @param quality
+     *            The compressed texture {@link GVRCompressedTexture#mQuality
+     *            quality} parameter: should be one of
+     *            {@link GVRCompressedTexture#SPEED},
+     *            {@link GVRCompressedTexture#BALANCED}, or
+     *            {@link GVRCompressedTexture#QUALITY}, but other values are
+     *            'clamped' to one of the recognized values. Please note that
+     *            this (currently) only applies to compressed textures; normal
+     *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
+     *            quality parameter.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     */
     public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
             GVRAndroidResource resource, int priority, int quality) {
         FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
@@ -295,6 +333,27 @@ public class GVRAsynchronousResourceLoader {
         AsyncMesh.loadMesh(gvrContext, callback, resource, priority);
     }
 
+    /**
+     * Load a GL mesh asynchronously.
+     * 
+     * This is the implementation of
+     * {@link GVRContext#loadFutureMesh(GVRAndroidResource, int)} - it will
+     * usually be more convenient to call that directly.
+     * 
+     * @param gvrContext
+     *            The GVRF context
+     * @param resource
+     *            Basically, a stream containing a 3D model. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>.
+     * @return A {@link Future} that you can pass to
+     *         {@link GVRRenderData#setMesh(Future)}
+     */
     public static Future<GVRMesh> loadFutureMesh(GVRContext gvrContext,
             GVRAndroidResource resource, int priority) {
         FutureResource<GVRMesh> result = new FutureResource<GVRMesh>(resource);
@@ -329,7 +388,7 @@ public class GVRAsynchronousResourceLoader {
                     pending = false;
                     resource.notify();
                 }
-//                Log.d(TAG, "loaded(%s)", resource);
+                // Log.d(TAG, "loaded(%s)", resource);
             }
 
             @Override
