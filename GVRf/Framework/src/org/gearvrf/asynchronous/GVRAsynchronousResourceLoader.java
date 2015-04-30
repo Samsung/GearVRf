@@ -388,7 +388,6 @@ public class GVRAsynchronousResourceLoader {
                     pending = false;
                     resource.notify();
                 }
-                // Log.d(TAG, "loaded(%s)", resource);
             }
 
             @Override
