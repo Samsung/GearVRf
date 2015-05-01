@@ -97,6 +97,16 @@ public class GVRMaterial extends GVRHybridObject implements
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     5);
         }
+
+        public abstract static class Cubemap {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    6);
+        }
+
+        public abstract static class CubemapReflection {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    7);
+        }
     };
 
     /**

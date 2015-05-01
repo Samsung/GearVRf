@@ -66,7 +66,6 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
         glm::mat4 view_matrix = camera->getViewMatrix();
         glm::mat4 projection_matrix = camera->getProjectionMatrix();
-        glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
         std::vector < std::shared_ptr < PostEffectData >> post_effects =
                 camera->post_effect_data();
@@ -92,7 +91,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
             for (auto it = render_data_vector.begin();
                     it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, vp_matrix, camera->render_mask(),
+                renderRenderData(*it, view_matrix, projection_matrix, camera->render_mask(),
                         shader_manager);
             }
         } else {
@@ -108,7 +107,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
             for (auto it = render_data_vector.begin();
                     it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, vp_matrix, camera->render_mask(),
+                renderRenderData(*it, view_matrix, projection_matrix, camera->render_mask(),
                         shader_manager);
             }
 
@@ -187,7 +186,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 }
 
 void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
-        const glm::mat4& vp_matrix, int render_mask,
+		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
         std::shared_ptr<ShaderManager> shader_manager) {
     if (render_mask & render_data->render_mask()) {
         if (!render_data->cull_test()) {
@@ -207,7 +206,8 @@ void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
         if (render_data->mesh() != 0) {
             glm::mat4 model_matrix(
                     render_data->owner_object()->transform()->getModelMatrix());
-            glm::mat4 mvp_matrix(vp_matrix * model_matrix);
+            glm::mat4 mv_matrix(view_matrix * model_matrix);
+            glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
             try {
                 bool right = render_mask & RenderData::RenderMaskBit::Right;
                 switch (render_data->material()->shader_type()) {
@@ -234,6 +234,17 @@ void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
                 case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
                     shader_manager->getOESVerticalStereoShader()->render(
                             mvp_matrix, render_data, right);
+                    break;
+                case Material::ShaderType::CUBEMAP_SHADER:
+                    shader_manager->getCubemapShader()->render(
+                            model_matrix, mvp_matrix, render_data);
+                    break;
+                case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
+                    shader_manager->getCubemapReflectionShader()->render(
+                    		mv_matrix,
+                    		glm::inverseTranspose(mv_matrix),
+                    		glm::inverse(view_matrix),
+                            mvp_matrix, render_data);
                     break;
                 default:
                     shader_manager->getCustomShader(

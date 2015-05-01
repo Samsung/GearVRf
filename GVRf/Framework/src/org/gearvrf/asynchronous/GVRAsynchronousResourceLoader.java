@@ -30,6 +30,7 @@ import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
@@ -39,6 +40,7 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 /**
  * Internal API for asynchronous resource loading.
@@ -299,6 +301,44 @@ public class GVRAsynchronousResourceLoader {
     }
 
     /**
+     * Load a cube map texture asynchronously.
+     * 
+     * This is the implementation of
+     * {@link GVRContext#loadFutureCubemapTexture(GVRAndroidResource)} - it will
+     * usually be more convenient to call that directly.
+     * 
+     * @param gvrContext
+     *            The GVRF context
+     * @param resource
+     *            A steam containing a zip file which contains six bitmaps. The
+     *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
+     *            "posz.png", and "negz.png", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     */
+    public static Future<GVRTexture> loadFutureCubemapTexture(
+            GVRContext gvrContext, GVRAndroidResource resource, int priority) {
+        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
+                resource);
+
+        AsyncCubemapTexture.loadTexture(gvrContext, result.callback, resource,
+                priority);
+
+        return result;
+    }
+
+    /**
      * 
      * Load a GL mesh asynchronously.
      * 
@@ -386,7 +426,7 @@ public class GVRAsynchronousResourceLoader {
                 synchronized (resource) {
                     result = data;
                     pending = false;
-                    resource.notify();
+                    resource.notifyAll();
                 }
             }
 
@@ -395,7 +435,7 @@ public class GVRAsynchronousResourceLoader {
                 synchronized (resource) {
                     error = t;
                     pending = false;
-                    resource.notify();
+                    resource.notifyAll();
                 }
                 Log.d(TAG, "failed(%s), %s", resource, t);
             }

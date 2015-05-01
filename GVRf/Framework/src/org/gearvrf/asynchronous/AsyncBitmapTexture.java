@@ -71,7 +71,8 @@ abstract class AsyncBitmapTexture {
                 resource, priority);
     }
 
-    static void loadTexture(GVRContext gvrContext, CancelableCallback<GVRTexture> callback,
+    static void loadTexture(GVRContext gvrContext,
+            CancelableCallback<GVRTexture> callback,
             GVRAndroidResource resource, int priority) {
         Throttler.registerCallback(gvrContext, TEXTURE_CLASS, callback,
                 resource, priority);

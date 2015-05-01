@@ -38,6 +38,7 @@ import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.StaticLayout;
 import android.view.KeyEvent;
 
 /**
@@ -341,7 +342,11 @@ public abstract class GVRContext {
                 width * 0.5f, height * -0.5f, 0.0f };
         mesh.setVertices(vertices);
 
-        float[] texCoords = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
+        final float[] normals = { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f, 1.0f };
+        mesh.setNormals(normals);
+
+        final float[] texCoords = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
         mesh.setTexCoords(texCoords);
 
         char[] triangles = { 0, 1, 2, 1, 3, 2 };
@@ -487,6 +492,44 @@ public abstract class GVRContext {
                 resource.getStream(), false);
         resource.closeStream();
         return bitmap == null ? null : new GVRBitmapTexture(this, bitmap);
+    }
+
+    /**
+     * Loads a cube map texture synchronously.
+     * 
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the bitmap is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames.
+     * 
+     * @param resourceArray
+     *            An array containing six resources for six bitmaps. The order
+     *            of the bitmaps is important to the correctness of the cube map
+     *            texture. The six bitmaps should correspond to +x, -x, +y, -y,
+     *            +z, and -z faces of the cube map texture respectively.
+     * @return The cube map texture, or {@code null} if the length of
+     *         rsourceArray is not 6.
+     * 
+     * @since 1.6.9
+     */
+    public GVRCubemapTexture loadCubemapTexture(
+            GVRAndroidResource[] resourceArray) {
+
+        assertGLThread();
+
+        if (resourceArray.length != 6) {
+            return null;
+        }
+
+        Bitmap[] bitmapArray = new Bitmap[6];
+        for (int i = 0; i < 6; i++) {
+            bitmapArray[i] = GVRAsynchronousResourceLoader.decodeStream(
+                    resourceArray[i].getStream(), false);
+            resourceArray[i].closeStream();
+        }
+
+        return new GVRCubemapTexture(this, bitmapArray);
     }
 
     /**
@@ -1090,6 +1133,29 @@ public abstract class GVRContext {
             int priority, int quality) {
         return GVRAsynchronousResourceLoader.loadFutureTexture(this, resource,
                 priority, quality);
+    }
+
+    /**
+     * Simple, high-level method to load a cube map texture asynchronously, for
+     * use with {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
+     * 
+     * @param resource
+     *            A steam containing a zip file which contains six bitmaps. The
+     *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
+     *            "posz.png", and "negz.png", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @returnA {@link Future} that you can pass to methods like
+     *          {@link GVRShaders#setMainTexture(Future)}
+     * 
+     * @since 1.6.9
+     */
+    public Future<GVRTexture> loadFutureCubemapTexture(
+            GVRAndroidResource resource) {
+        return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(this,
+                resource, DEFAULT_PRIORITY);
     }
 
     /**

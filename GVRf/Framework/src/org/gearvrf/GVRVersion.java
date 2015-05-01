@@ -69,5 +69,10 @@ public class GVRVersion {
      */
     public static final String V_1_6_8 = "1.6.8";
 
-    public static final String CURRENT = V_1_6_8;
+    /**
+     * Add cube map texture support.
+     */
+    public static final String V_1_6_9 = "1.6.9";
+
+    public static final String CURRENT = V_1_6_9;
 }
