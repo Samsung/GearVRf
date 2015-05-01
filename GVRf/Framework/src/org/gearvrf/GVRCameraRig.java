@@ -15,6 +15,9 @@
 
 package org.gearvrf;
 
+import static org.gearvrf.utility.Preconditions.checkStringNotNullOrEmpty;
+import static org.gearvrf.utility.Preconditions.checkFloatNotNaNOrInfinity;
+
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {
     /** Ways to use the rotation sensor data. */
@@ -156,6 +159,8 @@ public class GVRCameraRig extends GVRComponent {
      *            The {@code float} value to map.
      */
     public void setFloat(String key, float value) {
+        checkStringNotNullOrEmpty("key", key);
+        checkFloatNotNaNOrInfinity("value", value);
         NativeCameraRig.setFloat(getPtr(), key, value);
     }
 
@@ -180,6 +185,7 @@ public class GVRCameraRig extends GVRComponent {
      *            'Y' component of vector.
      */
     public void setVec2(String key, float x, float y) {
+        checkStringNotNullOrEmpty("key", key);
         NativeCameraRig.setVec2(getPtr(), key, x, y);
     }
 
@@ -206,6 +212,7 @@ public class GVRCameraRig extends GVRComponent {
      *            'Z' component of vector.
      */
     public void setVec3(String key, float x, float y, float z) {
+        checkStringNotNullOrEmpty("key", key);
         NativeCameraRig.setVec3(getPtr(), key, x, y, z);
     }
 
@@ -234,6 +241,7 @@ public class GVRCameraRig extends GVRComponent {
      *            'W' component of vector.
      */
     public void setVec4(String key, float x, float y, float z, float w) {
+        checkStringNotNullOrEmpty("key", key);
         NativeCameraRig.setVec4(getPtr(), key, x, y, z, w);
     }
 
@@ -348,6 +356,7 @@ public class GVRCameraRig extends GVRComponent {
     public float[] getLookAt() {
         return NativeCameraRig.getLookAt(getPtr());
     }
+
 }
 
 class NativeCameraRig {
