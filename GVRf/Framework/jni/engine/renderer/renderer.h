@@ -60,6 +60,14 @@ public:
 
     static void renderCamera(std::shared_ptr<Scene> scene,
             std::shared_ptr<Camera> camera,
+            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+            std::shared_ptr<ShaderManager> shader_manager,
+            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
+            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
+            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+
+    static void renderCamera(std::shared_ptr<Scene> scene,
+            std::shared_ptr<Camera> camera,
             std::shared_ptr<RenderTexture> render_texture,
             std::shared_ptr<ShaderManager> shader_manager,
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,

@@ -34,6 +34,7 @@
 #include "shaders/shader_manager.h"
 #include "shaders/post_effect_shader_manager.h"
 #include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 
 namespace gvr {
 
@@ -171,6 +172,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
     glm::mat4 projection_matrix = camera->getProjectionMatrix(); //gun
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
+
     std::vector < std::shared_ptr < PostEffectData >> post_effects =
             camera->post_effect_data();
 
@@ -247,6 +249,109 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                 post_effect_shader_manager);
     }
 }
+
+void Renderer::renderCamera(std::shared_ptr<Scene> scene,
+        std::shared_ptr<Camera> camera,
+        int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+        std::shared_ptr<ShaderManager> shader_manager,
+        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
+        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
+        std::shared_ptr<RenderTexture> post_effect_render_texture_b) {
+    std::vector < std::shared_ptr < SceneObject >> scene_objects =
+            scene->getWholeSceneObjects();
+    std::vector < std::shared_ptr < RenderData >> render_data_vector;
+    for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
+        std::shared_ptr<RenderData> render_data = (*it)->render_data();
+        if (render_data != 0) {
+            if (render_data->material() != 0) {
+                render_data_vector.push_back(render_data);
+            }
+        }
+    }
+    std::sort(render_data_vector.begin(), render_data_vector.end(),
+            compareRenderData);
+
+    glm::mat4 view_matrix = camera->getViewMatrix();
+    glm::mat4 projection_matrix = camera->getProjectionMatrix();
+    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
+
+    std::vector < std::shared_ptr < PostEffectData >> post_effects =
+            camera->post_effect_data();
+
+    glEnable (GL_DEPTH_TEST);
+    glDepthFunc (GL_LEQUAL);
+    glEnable (GL_CULL_FACE);
+    glFrontFace (GL_CCW);
+    glCullFace (GL_BACK);
+    glEnable (GL_BLEND);
+    glBlendEquation (GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable (GL_POLYGON_OFFSET_FILL);
+
+    if (post_effects.size() == 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        glClearColor(camera->background_color_r(), camera->background_color_g(),
+                camera->background_color_b(), camera->background_color_a());
+
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+        for (auto it = render_data_vector.begin();
+                it != render_data_vector.end(); ++it) {
+            renderRenderData(*it, vp_matrix, camera->render_mask(),
+                    shader_manager);
+        }
+    }
+
+    else {
+        std::shared_ptr<RenderTexture> texture_render_texture =
+                post_effect_render_texture_a;
+        std::shared_ptr<RenderTexture> target_render_texture;
+
+        glBindFramebuffer(GL_FRAMEBUFFER,
+                texture_render_texture->getFrameBufferId());
+        glViewport(0, 0, texture_render_texture->width(),
+                texture_render_texture->height());
+
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+        for (auto it = render_data_vector.begin();
+                it != render_data_vector.end(); ++it) {
+            renderRenderData(*it, vp_matrix, camera->render_mask(),
+                    shader_manager);
+        }
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
+        for (int i = 0; i < post_effects.size() - 1; ++i) {
+            if (i % 2 == 0) {
+                texture_render_texture = post_effect_render_texture_a;
+                target_render_texture = post_effect_render_texture_b;
+            } else {
+                texture_render_texture = post_effect_render_texture_b;
+                target_render_texture = post_effect_render_texture_a;
+            }
+
+            glBindFramebuffer(GL_FRAMEBUFFER,
+                    target_render_texture->getFrameBufferId());
+            glViewport(0, 0, target_render_texture->width(),
+                    target_render_texture->height());
+
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            renderPostEffectData(texture_render_texture, post_effects[i],
+                    post_effect_shader_manager);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        renderPostEffectData(texture_render_texture, post_effects.back(),
+                post_effect_shader_manager);
+    }
+}
+
 
 void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
         const glm::mat4& vp_matrix, int render_mask,
