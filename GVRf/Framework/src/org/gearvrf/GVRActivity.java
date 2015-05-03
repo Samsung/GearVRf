@@ -134,8 +134,8 @@ public class GVRActivity extends VrActivity {
     private boolean isVrSupported() {
         if((Build.MODEL.contains("SM-N910")) || 
            (Build.MODEL.contains("SM-N916")) ||
-           (Build.MODEL.contains("SM-N920")) ||
-           (Build.MODEL.contains("SM-N925"))
+           (Build.MODEL.contains("SM-G920")) ||
+           (Build.MODEL.contains("SM-G925"))
            ) {
             return true;
         }
