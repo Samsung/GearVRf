@@ -59,7 +59,7 @@ class GVRSurfaceView extends GLSurfaceView implements
         setEGLContextClientVersion(3);
         setPreserveEGLContextOnPause(true);
         setEGLContextFactory(new GVRContextFactory());
-        setEGLConfigChooser(new GVRConfigChooser(8, 8, 8, 0, 0, 0));
+        setEGLConfigChooser(new GVRConfigChooser(8, 8, 8, 8, 24, 8));
         if (renderer != null) {
             renderer.setViewManager(viewManager);
             setRenderer(renderer);
