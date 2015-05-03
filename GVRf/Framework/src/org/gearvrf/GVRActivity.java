@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -119,12 +120,27 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            mGVRViewManager = new GVRViewManager(this, gvrScript,
-                    distortionDataFileName);
+            if(isVrSupported()) {
+                mGVRViewManager = new GVRViewManager(this, gvrScript, distortionDataFileName);
+            } else {
+                mGVRViewManager = new GVRMonoViewManager(this, gvrScript, distortionDataFileName);
+            }
         } else {
             throw new IllegalArgumentException(
                     "You can not set orientation to portrait for GVRF apps.");
         }
+    }
+    
+    private boolean isVrSupported() {
+        if((Build.MODEL.contains("SM-N910")) || 
+           (Build.MODEL.contains("SM-N916")) ||
+           (Build.MODEL.contains("SM-N920")) ||
+           (Build.MODEL.contains("SM-N925"))
+           ) {
+            return true;
+        }
+        
+        return false;
     }
 
     void drawFrame() {
