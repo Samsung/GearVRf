@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import static org.gearvrf.utility.Preconditions.checkStringNotNullOrEmpty;
+import static org.gearvrf.utility.Preconditions.checkFloatNotNaNOrInfinity;
 
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {
@@ -75,7 +77,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Set the {@link GVRCameraRigType type} of the camera rig.
-     *
+     * 
      * @param cameraRigType
      *            The rig {@link GVRCameraRigType type}.
      */
@@ -113,7 +115,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Sets the global default distance separating the left and right cameras.
-     *
+     * 
      * @param distance
      *            Global default separation.
      */
@@ -131,7 +133,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Set the distance separating the left and right cameras of the camera rig.
-     *
+     * 
      * @param distance
      *            Separation distance.
      */
@@ -150,13 +152,15 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map {@code value} to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map {@code value} to.
      * @param value
      *            The {@code float} value to map.
      */
     public void setFloat(String key, float value) {
+        checkStringNotNullOrEmpty("key", key);
+        checkFloatNotNaNOrInfinity("value", value);
         NativeCameraRig.setFloat(getPtr(), key, value);
     }
 
@@ -172,7 +176,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map a two-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -181,6 +185,7 @@ public class GVRCameraRig extends GVRComponent {
      *            'Y' component of vector.
      */
     public void setVec2(String key, float x, float y) {
+        checkStringNotNullOrEmpty("key", key);
         NativeCameraRig.setVec2(getPtr(), key, x, y);
     }
 
@@ -196,7 +201,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map a three-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -207,6 +212,7 @@ public class GVRCameraRig extends GVRComponent {
      *            'Z' component of vector.
      */
     public void setVec3(String key, float x, float y, float z) {
+        checkStringNotNullOrEmpty("key", key);
         NativeCameraRig.setVec3(getPtr(), key, x, y, z);
     }
 
@@ -222,7 +228,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Map a four-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -235,18 +241,18 @@ public class GVRCameraRig extends GVRComponent {
      *            'W' component of vector.
      */
     public void setVec4(String key, float x, float y, float z, float w) {
+        checkStringNotNullOrEmpty("key", key);
         NativeCameraRig.setVec4(getPtr(), key, x, y, z, w);
     }
 
     /**
      * Attach a {@link GVRCamera camera} as the left camera of the camera rig.
-     *
+     * 
      * @param camera
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachLeftCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null)
-        {
+        if (camera.getOwnerObject() == null) {
             throw new IllegalArgumentException("Owner object not set correctly");
         }
         NativeCameraRig.attachLeftCamera(getPtr(), camera.getPtr());
@@ -254,13 +260,12 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Attach a {@link GVRCamera camera} as the right camera of the camera rig.
-     *
+     * 
      * @param camera
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachRightCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null)
-        {
+        if (camera.getOwnerObject() == null) {
             throw new IllegalArgumentException("Owner object not set correctly");
         }
         NativeCameraRig.attachRightCamera(getPtr(), camera.getPtr());
@@ -304,7 +309,7 @@ public class GVRCameraRig extends GVRComponent {
      * should only be done in response to
      * {@link RotationSensorListener#onRotationSensor(long, float, float, float, float, float, float, float)
      * RotationSensorListener.onRotationSensor()}.
-     *
+     * 
      * @param timeStamp
      *            Clock-time when the data was received, in nanoseconds.
      * @param w
@@ -331,7 +336,7 @@ public class GVRCameraRig extends GVRComponent {
     /**
      * Predict what the orientation of the camera rig will be at {@code time}
      * based on the current rotation and angular velocity.
-     *
+     * 
      * @param time
      *            Time to predict orientation for, in seconds.
      * @see #setRotationSensorData(long, float, float, float, float, float,
@@ -344,13 +349,14 @@ public class GVRCameraRig extends GVRComponent {
     /**
      * The direction the camera rig is looking at. In other words, the direction
      * of the local -z axis.
-     *
+     * 
      * @return Array with 3 floats corresponding to a normalized direction
      *         vector. ([0] : x, [1] : y, [2] : z)
      */
     public float[] getLookAt() {
         return NativeCameraRig.getLookAt(getPtr());
     }
+
 }
 
 class NativeCameraRig {

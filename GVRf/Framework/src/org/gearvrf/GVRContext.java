@@ -1333,4 +1333,53 @@ public abstract class GVRContext {
     abstract GVRRenderBundle getRenderBundle();
 
     abstract GVRRecyclableObjectProtector getRecyclableObjectProtector();
+
+    /**
+     * Capture a 2D screenshot from the position in the middle of left eye and
+     * right eye.
+     * 
+     * The screenshot capture is done asynchronously -- the function does not
+     * return the result immediately. Instead, it registers a callback function
+     * and pass the result (when it is available) to the callback function. The
+     * callback will happen on a background thread: It will probably not be the
+     * same thread that calls this method, and it will not be either the GUI or
+     * the GL thread.
+     * 
+     * @param callback
+     *            Callback function to process the capture result. It may not be
+     *            none.
+     */
+    public abstract void captureScreenCenter(GVRScreenshotCallback callback);
+
+    /**
+     * Capture a 2D screenshot from the position of left eye.
+     * 
+     * The screenshot capture is done asynchronously -- the function does not
+     * return the result immediately. Instead, it registers a callback function
+     * and pass the result (when it is available) to the callback function. The
+     * callback will happen on a background thread: It will probably not be the
+     * same thread that calls this method, and it will not be either the GUI or
+     * the GL thread.
+     * 
+     * @param callback
+     *            Callback function to process the capture result. It may not be
+     *            none.
+     */
+    public abstract void captureScreenLeft(GVRScreenshotCallback callback);
+
+    /**
+     * Capture a 2D screenshot from the position of right eye.
+     * 
+     * The screenshot capture is done asynchronously -- the function does not
+     * return the result immediately. Instead, it registers a callback function
+     * and pass the result (when it is available) to the callback function. The
+     * callback will happen on a background thread: It will probably not be the
+     * same thread that calls this method, and it will not be either the GUI or
+     * the GL thread.
+     * 
+     * @param callback
+     *            Callback function to process the capture result. It may not be
+     *            none.
+     */
+    public abstract void captureScreenRight(GVRScreenshotCallback callback);
 }
