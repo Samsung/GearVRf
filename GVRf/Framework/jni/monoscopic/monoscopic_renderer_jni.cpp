@@ -9,7 +9,7 @@
 
 namespace gvr {
 extern "C" {
-void Java_org_gearvrf_NativeMonoRenderer_renderCamera(JNIEnv * env,
+void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
         jobject obj, jlong jscene, jlong jcamera,
         jint viewportX, jint viewportY, jint viewportWidth, jint viewportHeight,
         jlong jshader_manager, jlong jpost_effect_shader_manager,
@@ -18,7 +18,7 @@ void Java_org_gearvrf_NativeMonoRenderer_renderCamera(JNIEnv * env,
 
 }
 
-void Java_org_gearvrf_NativeMonoRenderer_renderCamera(JNIEnv * env,
+void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
         jobject obj, jlong jscene, jlong jcamera,
         jint viewportX, jint viewportY, jint viewportWidth, jint viewportHeight,
         jlong jshader_manager, jlong jpost_effect_shader_manager,

@@ -20,7 +20,7 @@ import android.opengl.GLSurfaceView.Renderer;
  * .
  */
 public class GVRSurfaceViewRenderer implements GLSurfaceView.Renderer {
-    private GVRMonoViewManager mViewManager = null;
+    private GVRMonoscopicViewManager mViewManager = null;
 
     /**
      * Constructs an empty GVRSurfaceViewRenderer
@@ -35,7 +35,7 @@ public class GVRSurfaceViewRenderer implements GLSurfaceView.Renderer {
      *            a {@link GVRViewManager} object to be used in
      *            {@link GVRSurfaceViewRenderer}
      */
-    public GVRSurfaceViewRenderer(GVRMonoViewManager viewManager) {
+    public GVRSurfaceViewRenderer(GVRMonoscopicViewManager viewManager) {
         mViewManager = viewManager;
     }
 
@@ -46,7 +46,7 @@ public class GVRSurfaceViewRenderer implements GLSurfaceView.Renderer {
      *            a {@link GVRViewManager} object to be used in
      *            {@link GVRSurfaceViewRenderer}
      */
-    public void setViewManager(GVRMonoViewManager viewManager) {
+    public void setViewManager(GVRMonoscopicViewManager viewManager) {
         mViewManager = viewManager;
     }
 

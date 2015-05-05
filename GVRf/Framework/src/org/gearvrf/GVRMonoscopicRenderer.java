@@ -8,7 +8,7 @@ import java.util.List;
  * <p>
  * Provides methods for rendering scenes
  */
-abstract class GVRMonoRenderer {
+abstract class GVRMonoscopicRenderer {
     /**
      * Renders the given scene for the specified camera into the supplied
      * texture.
@@ -30,7 +30,7 @@ abstract class GVRMonoRenderer {
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             GVRRenderBundle renderBundle) {
 
-        NativeMonoRenderer.renderCamera(scene.getPtr(), camera.getPtr(),
+        NativeMonoscopicRenderer.renderCamera(scene.getPtr(), camera.getPtr(),
                 viewportX, viewportY, viewportWidth, viewportHeight,
                 renderBundle.getMaterialShaderManager().getPtr(), 
                 renderBundle.getPostEffectShaderManager().getPtr(), 
@@ -39,7 +39,7 @@ abstract class GVRMonoRenderer {
     }
 }
 
-class NativeMonoRenderer {
+class NativeMonoscopicRenderer {
     public static native void renderCamera(long scene, long camera,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             long shaderManager,

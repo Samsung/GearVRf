@@ -123,7 +123,7 @@ public class GVRActivity extends VrActivity {
             if(isVrSupported()) {
                 mGVRViewManager = new GVRViewManager(this, gvrScript, distortionDataFileName);
             } else {
-                mGVRViewManager = new GVRMonoViewManager(this, gvrScript, distortionDataFileName);
+                mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript, distortionDataFileName);
             }
         } else {
             throw new IllegalArgumentException(

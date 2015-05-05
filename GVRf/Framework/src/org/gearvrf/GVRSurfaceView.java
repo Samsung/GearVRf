@@ -21,7 +21,7 @@ import android.view.SurfaceHolder;
  */
 class GVRSurfaceView extends GLSurfaceView implements
         android.view.Choreographer.FrameCallback {
-    private GVRMonoViewManager mViewManager = null;
+    private GVRMonoscopicViewManager mViewManager = null;
 
     /**
      * Constructs a GVRSurfaceView given by current GVR context without
@@ -44,7 +44,7 @@ class GVRSurfaceView extends GLSurfaceView implements
      *            a given {@link GVRViewManager} object to be used in
      *            {@link GVRSurfaceView}
      */
-    public GVRSurfaceView(Context context, GVRMonoViewManager viewManager,
+    public GVRSurfaceView(Context context, GVRMonoscopicViewManager viewManager,
             GVRSurfaceViewRenderer renderer) {
         super(context);
         mViewManager = viewManager;

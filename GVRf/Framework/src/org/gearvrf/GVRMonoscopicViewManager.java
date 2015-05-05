@@ -64,16 +64,16 @@ import android.view.KeyEvent;
  * {@link #onRotationSensor(long, float, float, float, float, float, float, float)
  * onRotationSensor()} to draw the scene graph properly.
  */
-class GVRMonoViewManager extends GVRViewManager {
+class GVRMonoscopicViewManager extends GVRViewManager {
 
-    private static final String TAG = Log.tag(GVRMonoViewManager.class);
+    private static final String TAG = Log.tag(GVRMonoscopicViewManager.class);
 
     private GVRSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
 
 
     /**
-     * Constructs GVRViewManager object with GVRScript which controls GL
+     * Constructs GVRMonoscopicViewManager object with GVRScript which controls GL
      * activities
      * 
      * @param gvrActivity
@@ -83,7 +83,7 @@ class GVRMonoViewManager extends GVRViewManager {
      * @param distortionDataFileName
      *            distortion filename under assets folder
      */
-    GVRMonoViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
+    GVRMonoscopicViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
             String distortionDataFileName) {
         super(gvrActivity, gvrScript, distortionDataFileName);
 
@@ -149,7 +149,7 @@ class GVRMonoViewManager extends GVRViewManager {
     protected void drawEyes() {
         //Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
-        GVRMonoRenderer.renderCamera(mMainScene, mMainScene.getMainCameraRig().getLeftCamera(),
+        GVRMonoscopicRenderer.renderCamera(mMainScene, mMainScene.getMainCameraRig().getLeftCamera(),
                 mViewportX, mViewportY, mViewportWidth, mViewportHeight, mRenderBundle);
         
     }
