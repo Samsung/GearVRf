@@ -16,7 +16,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class FutureWrapper<V> implements Future<V> {
 
-    private V value_ = null;
+    private final V value_;
 
     public FutureWrapper(V value) {
         value_ = value;

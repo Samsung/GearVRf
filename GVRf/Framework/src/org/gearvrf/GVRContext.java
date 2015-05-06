@@ -1345,9 +1345,15 @@ public abstract class GVRContext {
      * same thread that calls this method, and it will not be either the GUI or
      * the GL thread.
      * 
+     * Users should not start a {@code captureScreenCenter} until previous
+     * {@code captureScreenCenter} callback has returned. Starting a new
+     * {@code captureScreenCenter} before the previous
+     * {@code captureScreenCenter} callback returned may cause out of memory
+     * error.
+     * 
      * @param callback
      *            Callback function to process the capture result. It may not be
-     *            none.
+     *            {@code null}.
      */
     public abstract void captureScreenCenter(GVRScreenshotCallback callback);
 
@@ -1361,9 +1367,14 @@ public abstract class GVRContext {
      * same thread that calls this method, and it will not be either the GUI or
      * the GL thread.
      * 
+     * Users should not start a {@code captureScreenLeft} until previous
+     * {@code captureScreenLeft} callback has returned. Starting a new
+     * {@code captureScreenLeft} before the previous {@code captureScreenLeft}
+     * callback returned may cause out of memory error.
+     * 
      * @param callback
      *            Callback function to process the capture result. It may not be
-     *            none.
+     *            {@code null}.
      */
     public abstract void captureScreenLeft(GVRScreenshotCallback callback);
 
@@ -1377,9 +1388,14 @@ public abstract class GVRContext {
      * same thread that calls this method, and it will not be either the GUI or
      * the GL thread.
      * 
+     * Users should not start a {@code captureScreenRight} until previous
+     * {@code captureScreenRight} callback has returned. Starting a new
+     * {@code captureScreenRight} before the previous {@code captureScreenRight}
+     * callback returned may cause out of memory error.
+     * 
      * @param callback
      *            Callback function to process the capture result. It may not be
-     *            none.
+     *            {@code null}.
      */
     public abstract void captureScreenRight(GVRScreenshotCallback callback);
 
@@ -1395,9 +1411,16 @@ public abstract class GVRContext {
      * same thread that calls this method, and it will not be either the GUI or
      * the GL thread.
      * 
+     * Users should not start a {@code captureScreen3D} until previous
+     * {@code captureScreen3D} callback has returned. Starting a new
+     * {@code captureScreen3D} before the previous {@code captureScreen3D}
+     * callback returned may cause out of memory error.
+     * 
      * @param callback
      *            Callback function to process the capture result. It may not be
      *            {@code null}.
+     * 
+     * @since 1.6.8
      */
     public abstract void captureScreen3D(GVRScreenshot3DCallback callback);
 }

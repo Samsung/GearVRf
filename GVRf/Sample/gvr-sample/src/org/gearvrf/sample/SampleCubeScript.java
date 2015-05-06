@@ -33,6 +33,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScreenshot3DCallback;
 import org.gearvrf.GVRScreenshotCallback;
 import org.gearvrf.GVRScript;
+import org.gearvrf.utility.Threads;
 
 import android.graphics.Bitmap;
 import android.os.Environment;
@@ -171,26 +172,51 @@ public class SampleCubeScript extends GVRScript {
         }
     }
 
+    private boolean lastScreenshotLeftFinished = true;
+    private boolean lastScreenshotRightFinished = true;
+    private boolean lastScreenshotCenterFinished = true;
+    private boolean lastScreenshot3DFinished = true;
+
     // mode 0: center eye; mode 1: left eye; mode 2: right eye
-    public void captureScreen(int mode, String filename) {
-        switch (mode) {
-        case 0:
-            mGVRContext.captureScreenCenter(newScreenshotCallback(filename));
-            break;
-        case 1:
-            mGVRContext.captureScreenLeft(newScreenshotCallback(filename));
-            break;
-        case 2:
-            mGVRContext.captureScreenRight(newScreenshotCallback(filename));
-            break;
-        }
+    public void captureScreen(final int mode, final String filename) {
+        Threads.spawn(new Runnable() {
+            public void run() {
+                switch (mode) {
+                case 0:
+                    if (lastScreenshotLeftFinished) {
+                        mGVRContext.captureScreenCenter(newScreenshotCallback(
+                                filename, 0));
+                        lastScreenshotLeftFinished = false;
+                    }
+                    break;
+                case 1:
+                    if (lastScreenshotRightFinished) {
+                        mGVRContext.captureScreenLeft(newScreenshotCallback(
+                                filename, 1));
+                        lastScreenshotRightFinished = false;
+                    }
+                    break;
+                case 2:
+                    if (lastScreenshotCenterFinished) {
+                        mGVRContext.captureScreenRight(newScreenshotCallback(
+                                filename, 2));
+                        lastScreenshotCenterFinished = false;
+                    }
+                    break;
+                }
+            }
+        });
     }
 
     public void captureScreen3D(String filename) {
-        mGVRContext.captureScreen3D(newScreenshot3DCallback(filename));
+        if (lastScreenshot3DFinished) {
+            mGVRContext.captureScreen3D(newScreenshot3DCallback(filename));
+            lastScreenshot3DFinished = false;
+        }
     }
 
-    private GVRScreenshotCallback newScreenshotCallback(final String filename) {
+    private GVRScreenshotCallback newScreenshotCallback(final String filename,
+            final int mode) {
         return new GVRScreenshotCallback() {
 
             @Override
@@ -215,6 +241,19 @@ public class SampleCubeScript extends GVRScript {
                     }
                 } else {
                     Log.e("SampleActivity", "Returned Bitmap is null");
+                }
+
+                // enable next screenshot
+                switch (mode) {
+                case 0:
+                    lastScreenshotLeftFinished = true;
+                    break;
+                case 1:
+                    lastScreenshotRightFinished = true;
+                    break;
+                case 2:
+                    lastScreenshotCenterFinished = true;
+                    break;
                 }
             }
         };
@@ -252,6 +291,9 @@ public class SampleCubeScript extends GVRScript {
                 } else {
                     Log.e("SampleActivity", "Returned Bitmap List is empty");
                 }
+
+                // enable next screenshot
+                lastScreenshot3DFinished = true;
             }
         };
     }

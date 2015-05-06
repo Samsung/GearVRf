@@ -105,15 +105,15 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private GVRScreenshotCallback mScreenshotLeftCallback = null;
     private GVRScreenshotCallback mScreenshotRightCallback = null;
     private GVRScreenshot3DCallback mScreenshot3DCallback = null;
-    ByteBuffer readbackBuffer = null;
-    int readbackBufferWidth = 0, readbackBufferHeight = 0;
+    ByteBuffer mReadbackBuffer = null;
+    int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
 
     private native void renderCamera(long appPtr, long scene, long camera,
             long renderTexture, long shaderManager,
             long postEffectShaderManager, long postEffectRenderTextureA,
             long postEffectRenderTextureB);
 
-    private native void readRenderResult(long renderTexture,
+    private native void readRenderResultNative(long renderTexture,
             Object readbackBuffer);
 
     /**
@@ -295,6 +295,20 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         mScreenshot3DCallback = callback;
     }
 
+    private void readRenderResult() {
+        if (mReadbackBuffer == null) {
+            GVRRenderTexture renderTexture = mRenderBundle
+                    .getRightRenderTexture();
+            mReadbackBufferWidth = renderTexture.getWidth();
+            mReadbackBufferHeight = renderTexture.getHeight();
+            mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth
+                    * mReadbackBufferHeight * 4);
+            mReadbackBuffer.order(ByteOrder.nativeOrder());
+        }
+        readRenderResultNative(mRenderBundle.getPostEffectRenderTextureA()
+                .getPtr(), mReadbackBuffer);
+    }
+
     private Bitmap generateBitmap(final byte[] byteArray, final int width,
             final int height) {
         int[] pixels = new int[width * height];
@@ -315,10 +329,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     private void returnScreenshotToCaller(final GVRScreenshotCallback callback,
-            final ByteBuffer readbackBuffer, final int width, final int height) {
+            final int width, final int height) {
         // run the callback function in a background thread
-        final byte[] byteArray = Arrays.copyOf(readbackBuffer.array(),
-                readbackBuffer.array().length);
+        final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(),
+                mReadbackBuffer.array().length);
         Threads.spawn(new Runnable() {
             public void run() {
                 final Bitmap capturedBitmap = generateBitmap(byteArray, width,
@@ -329,18 +343,18 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     private void renderOneCameraAndAddToList(
-            final GVRPerspectiveCamera centerCamera, ByteBuffer readbackBuffer,
-            byte[][] byteArrays, int index) {
+            final GVRPerspectiveCamera centerCamera, byte[][] byteArrays,
+            int index) {
+
         renderCamera(mActivity.appPtr, mMainScene, centerCamera,
                 mRenderBundle.getRightRenderTexture(), mRenderBundle);
-        readRenderResult(mRenderBundle.getPostEffectRenderTextureA().getPtr(),
-                readbackBuffer);
-        byteArrays[index] = Arrays.copyOf(readbackBuffer.array(),
-                readbackBuffer.array().length);
+        readRenderResult();
+        byteArrays[index] = Arrays.copyOf(mReadbackBuffer.array(),
+                mReadbackBuffer.array().length);
     }
 
     private void renderSixCamerasAndReadback(final GVRCameraRig mainCameraRig,
-            ByteBuffer readbackBuffer, byte[][] byteArrays) {
+            byte[][] byteArrays) {
         if (byteArrays.length != 6) {
             throw new IllegalArgumentException("byteArrays length is not 6.");
         } else {
@@ -356,37 +370,31 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     .getTransform();
 
             int index = 0;
-            // render +x face (the one user is currently looking at)
+            // render +x face
             centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, readbackBuffer,
-                    byteArrays, index++);
+            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
 
             // render -x face
             centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, readbackBuffer,
-                    byteArrays, index++);
+            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
 
             // render +y face
             centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
             centerCameraTransform.rotateByAxis(90, 1, 0, 0);
-            renderOneCameraAndAddToList(centerCamera, readbackBuffer,
-                    byteArrays, index++);
+            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
 
             // render -y face
             centerCameraTransform.rotateByAxis(180, 1, 0, 0);
-            renderOneCameraAndAddToList(centerCamera, readbackBuffer,
-                    byteArrays, index++);
+            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
 
             // render +z face
             centerCameraTransform.rotateByAxis(90, 1, 0, 0);
             centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, readbackBuffer,
-                    byteArrays, index++);
+            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
 
             // render -z face
             centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, readbackBuffer,
-                    byteArrays, index++);
+            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
 
             centerCameraObject.detachCamera();
             mainCameraRig.getOwnerObject()
@@ -440,10 +448,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     }
 
                     callback.onScreenCaptured(bitmapArray);
-
-                    for (Bitmap bitmap : bitmapArray) {
-                        bitmap.recycle();
-                    }
                 }
             });
         }
@@ -454,25 +458,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
 
-            // if screenshot is enabled, initialize the readback buffer
-            if (mScreenshotCenterCallback != null
-                    || mScreenshotLeftCallback != null
-                    || mScreenshotRightCallback != null
-                    || mScreenshot3DCallback != null) {
-                if (readbackBuffer == null) {
-                    GVRRenderTexture renderTexture = mRenderBundle
-                            .getRightRenderTexture();
-                    readbackBufferWidth = renderTexture.getWidth();
-                    readbackBufferHeight = renderTexture.getHeight();
-                    readbackBuffer = ByteBuffer
-                            .allocateDirect(readbackBufferWidth
-                                    * readbackBufferHeight * 4);
-                    readbackBuffer.order(ByteOrder.nativeOrder());
-                }
-            } else {
-                readbackBuffer = null;
-            }
-
             if (eye == 1) {
                 mainCameraRig.predict(4.0f / 60.0f);
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
@@ -481,12 +466,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
                 // if mScreenshotRightCallback is not null, capture right eye
                 if (mScreenshotRightCallback != null) {
-                    readRenderResult(mRenderBundle
-                            .getPostEffectRenderTextureA().getPtr(),
-                            readbackBuffer);
+                    readRenderResult();
                     returnScreenshotToCaller(mScreenshotRightCallback,
-                            readbackBuffer, readbackBufferWidth,
-                            readbackBufferHeight);
+                            mReadbackBufferWidth, mReadbackBufferHeight);
                     mScreenshotRightCallback = null;
                 }
 
@@ -514,12 +496,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     mainCameraRig.getOwnerObject().removeChildObject(
                             centerCameraObject);
 
-                    readRenderResult(mRenderBundle
-                            .getPostEffectRenderTextureA().getPtr(),
-                            readbackBuffer);
+                    readRenderResult();
                     returnScreenshotToCaller(mScreenshotCenterCallback,
-                            readbackBuffer, readbackBufferWidth,
-                            readbackBufferHeight);
+                            mReadbackBufferWidth, mReadbackBufferHeight);
 
                     mScreenshotCenterCallback = null;
                 }
@@ -527,11 +506,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 // if mScreenshot3DCallback is not null, capture 3D screenshot
                 if (mScreenshot3DCallback != null) {
                     byte[][] byteArrays = new byte[6][];
-                    renderSixCamerasAndReadback(mainCameraRig, readbackBuffer,
-                            byteArrays);
+                    renderSixCamerasAndReadback(mainCameraRig, byteArrays);
                     returnScreenshot3DToCaller(mScreenshot3DCallback,
-                            byteArrays, readbackBufferWidth,
-                            readbackBufferHeight);
+                            byteArrays, mReadbackBufferWidth,
+                            mReadbackBufferHeight);
 
                     mScreenshot3DCallback = null;
                 }
@@ -542,14 +520,18 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
                 // if mScreenshotLeftCallback is not null, capture left eye
                 if (mScreenshotLeftCallback != null) {
-                    readRenderResult(mRenderBundle
-                            .getPostEffectRenderTextureA().getPtr(),
-                            readbackBuffer);
+                    readRenderResult();
                     returnScreenshotToCaller(mScreenshotLeftCallback,
-                            readbackBuffer, readbackBufferWidth,
-                            readbackBufferHeight);
+                            mReadbackBufferWidth, mReadbackBufferHeight);
 
                     mScreenshotLeftCallback = null;
+                }
+
+                if (mScreenshotLeftCallback == null
+                        && mScreenshotRightCallback == null
+                        && mScreenshotCenterCallback == null
+                        && mScreenshot3DCallback == null) {
+                    mReadbackBuffer = null;
                 }
 
                 mActivity.setCamera(leftCamera);
