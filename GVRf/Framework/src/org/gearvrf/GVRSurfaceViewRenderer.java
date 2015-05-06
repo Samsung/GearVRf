@@ -16,8 +16,7 @@ import android.opengl.GLSurfaceView.Renderer;
  * {@link Renderer#onSurfaceChanged(GL10, int, int)} really matters to you,
  * declare a class which {@code extends GVRSurfaceViewRenderer} and pass an
  * instance to
- * {@link GVRActivity#setScript(GVRScript, String, GVRSurfaceViewRenderer)}
- * .
+ * {@link GVRActivity#setScript(GVRScript, String, GVRSurfaceViewRenderer)} .
  */
 public class GVRSurfaceViewRenderer implements GLSurfaceView.Renderer {
     private GVRMonoscopicViewManager mViewManager = null;

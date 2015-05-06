@@ -4,14 +4,13 @@
 
 #include "../engine/renderer/renderer.h"
 
-
 #include "util/gvr_jni.h"
 
 namespace gvr {
 extern "C" {
 void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
-        jobject obj, jlong jscene, jlong jcamera,
-        jint viewportX, jint viewportY, jint viewportWidth, jint viewportHeight,
+        jobject obj, jlong jscene, jlong jcamera, jint viewportX,
+        jint viewportY, jint viewportWidth, jint viewportHeight,
         jlong jshader_manager, jlong jpost_effect_shader_manager,
         jlong jpost_effect_render_texture_a,
         jlong jpost_effect_render_texture_b);
@@ -19,8 +18,8 @@ void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
 }
 
 void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
-        jobject obj, jlong jscene, jlong jcamera,
-        jint viewportX, jint viewportY, jint viewportWidth, jint viewportHeight,
+        jobject obj, jlong jscene, jlong jcamera, jint viewportX,
+        jint viewportY, jint viewportWidth, jint viewportHeight,
         jlong jshader_manager, jlong jpost_effect_shader_manager,
         jlong jpost_effect_render_texture_a,
         jlong jpost_effect_render_texture_b) {
@@ -37,13 +36,10 @@ void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
     std::shared_ptr<RenderTexture> post_effect_render_texture_b =
             *reinterpret_cast<std::shared_ptr<RenderTexture>*>(jpost_effect_render_texture_b);
 
-    Renderer::renderCamera(scene, camera,
-    		viewportX, viewportY, viewportWidth, viewportHeight,
-    		shader_manager,
-            post_effect_shader_manager, post_effect_render_texture_a,
-            post_effect_render_texture_b);
+    Renderer::renderCamera(scene, camera, viewportX, viewportY, viewportWidth,
+            viewportHeight, shader_manager, post_effect_shader_manager,
+            post_effect_render_texture_a, post_effect_render_texture_b);
 
 }
-
 
 }

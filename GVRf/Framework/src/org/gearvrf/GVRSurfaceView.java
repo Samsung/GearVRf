@@ -44,7 +44,8 @@ class GVRSurfaceView extends GLSurfaceView implements
      *            a given {@link GVRViewManager} object to be used in
      *            {@link GVRSurfaceView}
      */
-    public GVRSurfaceView(Context context, GVRMonoscopicViewManager viewManager,
+    public GVRSurfaceView(Context context,
+            GVRMonoscopicViewManager viewManager,
             GVRSurfaceViewRenderer renderer) {
         super(context);
         mViewManager = viewManager;

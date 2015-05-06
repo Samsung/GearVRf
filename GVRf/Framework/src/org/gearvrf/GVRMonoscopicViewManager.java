@@ -15,21 +15,10 @@
 
 package org.gearvrf;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import org.gearvrf.GVRScript.SplashMode;
-import org.gearvrf.animation.GVRAnimation;
-import org.gearvrf.animation.GVROnFinish;
-import org.gearvrf.animation.GVROpacityAnimation;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
 
 import android.app.Activity;
 import android.util.DisplayMetrics;
-import android.view.KeyEvent;
 
 /*
  * This is the most important part of gvrf.

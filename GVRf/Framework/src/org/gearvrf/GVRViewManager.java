@@ -571,7 +571,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
      */
     protected interface FrameHandler {
         void beforeDrawEyes();
+
         void onDrawFrame();
+
         void afterDrawEyes();
     }
 
@@ -605,9 +607,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 firstFrame = null;
             }
         }
-        
+
         public void onDrawFrame() {
-            //Log.v(TAG, "firstFrame, onDrawFrame()");
+            // Log.v(TAG, "firstFrame, onDrawFrame()");
         }
 
         @Override
@@ -650,9 +652,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 }
             }
         }
-        
+
         public void onDrawFrame() {
-            //Log.v(TAG, "splashFrame, onDrawFrame()");
+            // Log.v(TAG, "splashFrame, onDrawFrame()");
 
             drawFrame(false);
         }
@@ -672,9 +674,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             GVRHybridObject.onStep();
             mScript.onStep();
         }
-        
+
         public void onDrawFrame() {
-            //Log.v(TAG, "normalFrame, onDrawFrame()");
+            // Log.v(TAG, "normalFrame, onDrawFrame()");
 
             drawFrame(true);
         }
@@ -690,7 +692,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         drawEyes();
         return currentTime;
     }
-     /**
+
+    /**
      * This is the code that needs to be executed before either eye is drawn.
      * 
      * @return Current time, from {@link GVRTime#getCurrentTime()}
