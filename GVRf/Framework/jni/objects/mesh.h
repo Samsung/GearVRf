@@ -51,8 +51,8 @@ public:
         triangles.swap(triangles_);
 
         if (vaoID_ != 0) {
-        	glDeleteVertexArrays(1, &vaoID_);
-        	vaoID_ = 0;
+            glDeleteVertexArrays(1, &vaoID_);
+            vaoID_ = 0;
         }
     }
 
@@ -219,6 +219,8 @@ public:
     }
 
     std::shared_ptr<Mesh> getBoundingBox() const;
+    float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location

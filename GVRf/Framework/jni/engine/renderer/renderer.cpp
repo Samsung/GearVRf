@@ -52,6 +52,12 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
     // bone/weight/joint and other assimp data, we will put general model conversion
     // on hold and do this kind of conversion fist
     if (scene->getSceneDirtyFlag()) {
+
+        glm::mat4 view_matrix = camera->getViewMatrix();
+        glm::mat4 proj_matrix = camera->getProjectionMatrix();
+        glm::mat4 cp_matrix = glm::mat4(proj_matrix * view_matrix);
+        vp_matrix = cp_matrix;
+
         std::vector < std::shared_ptr < SceneObject >> scene_objects =
                 scene->getWholeSceneObjects();
         std::vector < std::shared_ptr < RenderData >> render_data_vector;
@@ -59,17 +65,46 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
             std::shared_ptr<RenderData> render_data = (*it)->render_data();
             if (render_data != 0) {
                 if (render_data->material() != 0) {
-                    render_data_vector.push_back(render_data);
+                    // Check for frustum culling flag
+                    if(scene->get_frustum_culling())
+                    {
+                        // Frustum  Culling
+                        std::shared_ptr<Mesh> currentMesh = render_data->mesh();
+                        float* bounding_box_info = currentMesh->getBoundingBoxInfo();
+                        glm::mat4 model_matrix_tmp(render_data->owner_object()->transform()->getModelMatrix());
+                        glm::mat4 mvp_matrix_tmp( vp_matrix * model_matrix_tmp);
+
+                        // Frustum
+                        float frustum[6][4];
+
+                        // Matrix to array
+                        float mvp_matrix_array[16] = { 0.0 };
+                        const float *mat_to_array = (const float*) glm::value_ptr(mvp_matrix_tmp);
+                        for (int i = 0; i < 16; i++)
+                        {
+                            mvp_matrix_array[i] = mat_to_array[i];
+                        }
+
+                        // Build the frustum
+                        build_frustum(frustum, mvp_matrix_array);
+
+                        // Check for being inside or outside frustum
+                        bool is_inside = is_cube_in_frustum(frustum, bounding_box_info);
+
+                        // Only push those scene objects that are inside of the frustum
+                        if( is_inside )
+                        {
+                            render_data_vector.push_back(render_data);
+                        }
+                    }
+                    else
+                    {
+                        render_data_vector.push_back(render_data);
+                    }
                 }
             }
         }
-        std::sort(render_data_vector.begin(), render_data_vector.end(),
-                compareRenderData);
-
-        glm::mat4 view_matrix = camera->getViewMatrix();
-        glm::mat4 proj_matrix = camera->getProjectionMatrix();
-        glm::mat4 cp_matrix = glm::mat4(proj_matrix * view_matrix);
-        vp_matrix = cp_matrix;
+        std::sort(render_data_vector.begin(), render_data_vector.end(), compareRenderData);
 
         std::vector < std::shared_ptr < PostEffectData >> post_effects =
                 camera->post_effect_data();
@@ -145,6 +180,124 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         }
     } // flag checking
 }
+
+void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16])
+{
+    float t;
+
+    /* Extract the numbers for the RIGHT plane */
+    frustum[0][0] = mvp_matrix[ 3] - mvp_matrix[ 0];
+    frustum[0][1] = mvp_matrix[ 7] - mvp_matrix[ 4];
+    frustum[0][2] = mvp_matrix[11] - mvp_matrix[ 8];
+    frustum[0][3] = mvp_matrix[15] - mvp_matrix[12];
+
+    /* Normalize the result */
+    t = sqrt( frustum[0][0] * frustum[0][0] + frustum[0][1] * frustum[0][1] + frustum[0][2] * frustum[0][2] );
+    frustum[0][0] /= t;
+    frustum[0][1] /= t;
+    frustum[0][2] /= t;
+    frustum[0][3] /= t;
+
+    /* Extract the numbers for the LEFT plane */
+    frustum[1][0] = mvp_matrix[ 3] + mvp_matrix[ 0];
+    frustum[1][1] = mvp_matrix[ 7] + mvp_matrix[ 4];
+    frustum[1][2] = mvp_matrix[11] + mvp_matrix[ 8];
+    frustum[1][3] = mvp_matrix[15] + mvp_matrix[12];
+
+    /* Normalize the result */
+    t = sqrt( frustum[1][0] * frustum[1][0] + frustum[1][1] * frustum[1][1] + frustum[1][2] * frustum[1][2] );
+    frustum[1][0] /= t;
+    frustum[1][1] /= t;
+    frustum[1][2] /= t;
+    frustum[1][3] /= t;
+
+    /* Extract the BOTTOM plane */
+    frustum[2][0] = mvp_matrix[ 3] + mvp_matrix[ 1];
+    frustum[2][1] = mvp_matrix[ 7] + mvp_matrix[ 5];
+    frustum[2][2] = mvp_matrix[11] + mvp_matrix[ 9];
+    frustum[2][3] = mvp_matrix[15] + mvp_matrix[13];
+
+    /* Normalize the result */
+    t = sqrt( frustum[2][0] * frustum[2][0] + frustum[2][1] * frustum[2][1] + frustum[2][2] * frustum[2][2] );
+    frustum[2][0] /= t;
+    frustum[2][1] /= t;
+    frustum[2][2] /= t;
+    frustum[2][3] /= t;
+
+    /* Extract the TOP plane */
+    frustum[3][0] = mvp_matrix[ 3] - mvp_matrix[ 1];
+    frustum[3][1] = mvp_matrix[ 7] - mvp_matrix[ 5];
+    frustum[3][2] = mvp_matrix[11] - mvp_matrix[ 9];
+    frustum[3][3] = mvp_matrix[15] - mvp_matrix[13];
+
+    /* Normalize the result */
+    t = sqrt( frustum[3][0] * frustum[3][0] + frustum[3][1] * frustum[3][1] + frustum[3][2] * frustum[3][2] );
+    frustum[3][0] /= t;
+    frustum[3][1] /= t;
+    frustum[3][2] /= t;
+    frustum[3][3] /= t;
+
+    /* Extract the FAR plane */
+    frustum[4][0] = mvp_matrix[ 3] - mvp_matrix[ 2];
+    frustum[4][1] = mvp_matrix[ 7] - mvp_matrix[ 6];
+    frustum[4][2] = mvp_matrix[11] - mvp_matrix[10];
+    frustum[4][3] = mvp_matrix[15] - mvp_matrix[14];
+
+    /* Normalize the result */
+    t = sqrt( frustum[4][0] * frustum[4][0] + frustum[4][1] * frustum[4][1] + frustum[4][2] * frustum[4][2] );
+    frustum[4][0] /= t;
+    frustum[4][1] /= t;
+    frustum[4][2] /= t;
+    frustum[4][3] /= t;
+
+    /* Extract the NEAR plane */
+    frustum[5][0] = mvp_matrix[ 3] + mvp_matrix[ 2];
+    frustum[5][1] = mvp_matrix[ 7] + mvp_matrix[ 6];
+    frustum[5][2] = mvp_matrix[11] + mvp_matrix[10];
+    frustum[5][3] = mvp_matrix[15] + mvp_matrix[14];
+
+    /* Normalize the result */
+    t = sqrt( frustum[5][0] * frustum[5][0] + frustum[5][1] * frustum[5][1] + frustum[5][2] * frustum[5][2] );
+    frustum[5][0] /= t;
+    frustum[5][1] /= t;
+    frustum[5][2] /= t;
+    frustum[5][3] /= t;
+}
+
+
+bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
+{
+   int p;
+   float Xmin = vertex_limit[0];
+   float Ymin = vertex_limit[1];
+   float Zmin = vertex_limit[2];
+   float Xmax = vertex_limit[3];
+   float Ymax = vertex_limit[4];
+   float Zmax = vertex_limit[5];
+
+   for( p = 0; p < 6; p++ )
+   {
+      if( frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin) + frustum[p][2] * (Zmin) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmax) + frustum[p][1] * (Ymin) + frustum[p][2] * (Zmin) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmin) + frustum[p][1] * (Ymax) + frustum[p][2] * (Zmin) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax) + frustum[p][2] * (Zmin) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin) + frustum[p][2] * (Zmax) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmax) + frustum[p][1] * (Ymin) + frustum[p][2] * (Zmax) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmin) + frustum[p][1] * (Ymax) + frustum[p][2] * (Zmax) + frustum[p][3] > 0 )
+         continue;
+      if( frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax) + frustum[p][2] * (Zmax) + frustum[p][3] > 0 )
+         continue;
+      return false;
+   }
+   return true;
+}
+
 
 void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         std::shared_ptr<Camera> camera,

@@ -114,6 +114,50 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     return std::shared_ptr < Mesh > (mesh);
 }
 
+// an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
+float* Mesh::getBoundingBoxInfo() {
+
+    float* boundingBox = new float[6];
+
+    float min_x = std::numeric_limits<float>::infinity();
+    float max_x = -std::numeric_limits<float>::infinity();
+    float min_y = std::numeric_limits<float>::infinity();
+    float max_y = -std::numeric_limits<float>::infinity();
+    float min_z = std::numeric_limits<float>::infinity();
+    float max_z = -std::numeric_limits<float>::infinity();
+
+    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
+        if (it->x < min_x) {
+            min_x = it->x;
+        }
+        if (it->x > max_x) {
+            max_x = it->x;
+        }
+        if (it->y < min_y) {
+            min_y = it->y;
+        }
+        if (it->y > max_y) {
+            max_y = it->y;
+        }
+        if (it->z < min_z) {
+            min_z = it->z;
+        }
+        if (it->z > max_z) {
+            max_z = it->z;
+        }
+    }
+
+    boundingBox[0] = min_x;
+    boundingBox[1] = min_y;
+    boundingBox[2] = min_z;
+
+    boundingBox[3] = max_x;
+    boundingBox[4] = max_y;
+    boundingBox[5] = max_z;
+
+    return boundingBox;
+}
+
 // generate vertex array object
 void Mesh::generateVAO() {
 #if _GVRF_USE_GLES3_

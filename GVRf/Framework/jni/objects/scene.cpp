@@ -26,6 +26,7 @@ namespace gvr {
 Scene::Scene() :
         HybridObject(), scene_objects_(), main_camera_rig_() {
 	dirtyFlag_ = 0;
+	frustum_flag_ = false;
 }
 
 Scene::~Scene() {

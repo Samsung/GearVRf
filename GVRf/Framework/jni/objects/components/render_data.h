@@ -27,9 +27,9 @@
 #include "glm/glm.hpp"
 
 #include "objects/components/component.h"
+#include "objects/mesh.h"
 
 namespace gvr {
-class Mesh;
 class Material;
 
 class RenderData: public Component {

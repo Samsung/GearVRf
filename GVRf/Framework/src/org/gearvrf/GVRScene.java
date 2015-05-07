@@ -117,6 +117,13 @@ public class GVRScene extends GVRHybridObject {
         }
         return sceneObjects;
     }
+
+/**
+ * Sets the frustum culling for the {@link GVRScene}.
+ */
+    public void setFrustumCulling(boolean flag) {
+        NativeScene.setFrustumCulling(getPtr(), flag);
+    }
 }
 
 class NativeScene {
@@ -131,4 +138,6 @@ class NativeScene {
     public static native void setMainCameraRig(long scene, long cameraRig);
 
     public static native long[] getWholeSceneObjects(long scene);
+
+    public static native void setFrustumCulling(long scene, boolean flag);
 }
