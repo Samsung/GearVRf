@@ -143,34 +143,52 @@ public class GVRSceneObject extends GVRHybridObject {
      * that, say, {@code sceneObject2} and {@code sceneObject3} are using the
      * same mesh as {@code sceneObject1}, and will only load the mesh once.
      * 
-     * @param context
+     * @param gvrContext
+     *            current {@link GVRContext}.
+     * @param futureMesh
+     *            mesh of the object.
+     * @param futureTexture
+     *            texture of the object.
+     * 
+     * @since 1.6.8
+     */
+    public GVRSceneObject(GVRContext gvrContext, Future<GVRMesh> futureMesh,
+            Future<GVRTexture> futureTexture) {
+        this(gvrContext);
+
+        // Create the render data
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+
+        // Set the mesh
+        renderData.setMesh(futureMesh);
+
+        // Set the texture
+        GVRMaterial material = new GVRMaterial(gvrContext);
+        material.setMainTexture(futureTexture);
+        renderData.setMaterial(material);
+
+        // Attach the render data
+        attachRenderData(renderData);
+    }
+
+    /**
+     * Very high-level constructor that asynchronously loads the mesh and
+     * texture.
+     * 
+     * @param gvrContext
      *            current {@link GVRContext}.
      * @param mesh
      *            Basically, a stream containing a mesh file.
      * @param texture
      *            Basically, a stream containing a texture file. This can be
      *            either a compressed texture or a regular Android bitmap file.
-     *            
-     * @since 1.6.7            
+     * 
+     * @since 1.6.7
      */
-    public GVRSceneObject(GVRContext context, GVRAndroidResource mesh,
+    public GVRSceneObject(GVRContext gvrContext, GVRAndroidResource mesh,
             GVRAndroidResource texture) {
-        this(context);
-
-        // Create the render data
-        GVRRenderData renderData = new GVRRenderData(context);
-
-        // Set the mesh
-        renderData.setMesh(context.loadFutureMesh(mesh));
-
-        // Set the texture
-        Future<GVRTexture> futureTexture = context.loadFutureTexture(texture);
-        GVRMaterial material = new GVRMaterial(context);
-        material.setMainTexture(futureTexture);
-        renderData.setMaterial(material);
-
-        // Attach the render data
-        attachRenderData(renderData);
+        this(gvrContext, gvrContext.loadFutureMesh(mesh), gvrContext
+                .loadFutureTexture(texture));
     }
 
     /**

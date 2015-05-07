@@ -13,10 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
-import android.R.integer;
 
 /** Frame Buffer object. */
 public class GVRRenderTexture extends GVRTexture {
@@ -32,7 +29,7 @@ public class GVRRenderTexture extends GVRTexture {
      */
     public GVRRenderTexture(GVRContext gvrContext, int width, int height) {
         super(gvrContext, NativeRenderTexture.ctor(width, height));
-        
+
         mWidth = width;
         mHeight = height;
     }
@@ -55,7 +52,7 @@ public class GVRRenderTexture extends GVRTexture {
         super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
                 sampleCount));
         gvrContext.getRecyclableObjectProtector().addRecyclableObject(this);
-        
+
         mWidth = width;
         mHeight = height;
     }
@@ -63,19 +60,19 @@ public class GVRRenderTexture extends GVRTexture {
     GVRRenderTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
-    
+
     /**
      * Return the width of GVRRenderTexture (FBO)
      */
     public int getWidth() {
-    	return mWidth;
+        return mWidth;
     }
 
     /**
      * Return the height of GVRRenderTexture (FBO)
      */
     public int getHeight() {
-    	return mHeight;
+        return mHeight;
     }
 
     @Override
@@ -85,7 +82,7 @@ public class GVRRenderTexture extends GVRTexture {
         // deference thread to recycle() these.
         return false;
     }
-    
+
     private int mWidth, mHeight;
 }
 

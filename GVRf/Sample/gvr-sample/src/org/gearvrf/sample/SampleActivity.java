@@ -32,9 +32,10 @@ public class SampleActivity extends GVRActivity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
-            script.captureScreen(0, "screenshot_center.png");
-            script.captureScreen(1, "screenshot_left.png");
-            script.captureScreen(2, "screenshot_right.png");
+            script.captureScreen(0, "screenshot_center");
+            script.captureScreen(1, "screenshot_left");
+            script.captureScreen(2, "screenshot_right");
+            script.captureScreen3D("screenshot3d");
         }
         return super.onTouchEvent(event);
     }
