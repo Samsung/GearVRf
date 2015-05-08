@@ -46,7 +46,7 @@ public class GVRSurfaceViewRenderer implements GLSurfaceView.Renderer {
      * Constructs {@link GVRSurfaceViewRenderer} given by {@link GVRViewManager}
      * 
      * @param viewManager
-     *            a {@link GVRViewManager} object to be used in
+     *            a {@link GVRMonoscopicViewManager} object to be used in
      *            {@link GVRSurfaceViewRenderer}
      */
     public GVRSurfaceViewRenderer(GVRMonoscopicViewManager viewManager) {
@@ -54,10 +54,10 @@ public class GVRSurfaceViewRenderer implements GLSurfaceView.Renderer {
     }
 
     /**
-     * Sets {@link GVRViewManager} for the {@link GVRSurfaceViewRenderer}
+     * Sets {@link GVRMonoscopicViewManager} for the {@link GVRSurfaceViewRenderer}
      * 
      * @param viewManager
-     *            a {@link GVRViewManager} object to be used in
+     *            a {@link GVRMonoscopicViewManager} object to be used in
      *            {@link GVRSurfaceViewRenderer}
      */
     public void setViewManager(GVRMonoscopicViewManager viewManager) {

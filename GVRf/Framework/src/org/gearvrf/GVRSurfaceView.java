@@ -31,7 +31,7 @@ import android.view.SurfaceHolder;
  * This GVRSurfaceView class extends from {@link GLSurfaceView} which is used
  * for OpenGL rendering. In GVR, GVRSurfaceView acts the same way
  * {@link GLSurfaceView} does to render object and scene. GVRSurfaceView
- * requires a valid {@link GVRViewManager} which holds the main scene details to
+ * requires a valid {@link GVRMonoscopicViewManager} which holds the main scene details to
  * be rendered
  */
 class GVRSurfaceView extends GLSurfaceView implements
@@ -40,7 +40,7 @@ class GVRSurfaceView extends GLSurfaceView implements
 
     /**
      * Constructs a GVRSurfaceView given by current GVR context without
-     * GVRViewManager
+     * GVRMonoscopicViewManager
      * 
      * @param context
      *            current context
@@ -51,12 +51,12 @@ class GVRSurfaceView extends GLSurfaceView implements
 
     /**
      * Constructs a {@link GVRSurfaceView} given by current {@link GVRContext}
-     * with {@link GVRViewManager}
+     * with {@link GVRMonoscopicViewManager}
      * 
      * @param context
      *            current context
      * @param viewManager
-     *            a given {@link GVRViewManager} object to be used in
+     *            a given {@link GVRMonoscopicViewManager} object to be used in
      *            {@link GVRSurfaceView}
      */
     public GVRSurfaceView(Context context,

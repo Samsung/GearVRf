@@ -609,7 +609,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         }
 
         public void onDrawFrame() {
-            // Log.v(TAG, "firstFrame, onDrawFrame()");
         }
 
         @Override
