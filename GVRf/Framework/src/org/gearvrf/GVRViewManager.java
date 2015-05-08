@@ -75,31 +75,31 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     private static final String TAG = Log.tag(GVRViewManager.class);
 
-    private final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
+    protected final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
 
-    private final Object[] mFrameListenersLock = new Object[0];
-    private List<GVRDrawFrameListener> mFrameListeners = new ArrayList<GVRDrawFrameListener>();
+    protected final Object[] mFrameListenersLock = new Object[0];
+    protected List<GVRDrawFrameListener> mFrameListeners = new ArrayList<GVRDrawFrameListener>();
 
-    private final GVRScript mScript;
-    private final RotationSensor mRotationSensor;
+    protected GVRScript mScript;
+    protected RotationSensor mRotationSensor;
 
-    private SplashScreen mSplashScreen;
+    protected SplashScreen mSplashScreen;
 
-    private final GVRLensInfo mLensInfo;
-    private GVRRenderBundle mRenderBundle = null;
-    private GVRScene mMainScene = null;
-    private GVRScene mNextMainScene = null;
-    private Runnable mOnSwitchMainScene = null;
-    private GVRScene mSensoredScene = null;
+    protected GVRLensInfo mLensInfo;
+    protected GVRRenderBundle mRenderBundle = null;
+    protected GVRScene mMainScene = null;
+    protected GVRScene mNextMainScene = null;
+    protected Runnable mOnSwitchMainScene = null;
+    protected GVRScene mSensoredScene = null;
 
-    private long mPreviousTimeNanos = 0l;
-    private float mFrameTime = 0.0f;
-    private final List<Integer> mDownKeys = new ArrayList<Integer>();
+    protected long mPreviousTimeNanos = 0l;
+    protected float mFrameTime = 0.0f;
+    protected final List<Integer> mDownKeys = new ArrayList<Integer>();
 
-    private final GVRReferenceQueue mReferenceQueue = new GVRReferenceQueue();
-    private final GVRRecyclableObjectProtector mRecyclableObjectProtector = new GVRRecyclableObjectProtector();
+    protected final GVRReferenceQueue mReferenceQueue = new GVRReferenceQueue();
+    protected final GVRRecyclableObjectProtector mRecyclableObjectProtector = new GVRRecyclableObjectProtector();
     GVRActivity mActivity;
-    private int mCurrentEye;
+    protected int mCurrentEye;
 
     private GVRScreenshotCallback mScreenshotCenterCallback = null;
     private GVRScreenshotCallback mScreenshotLeftCallback = null;
@@ -569,8 +569,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
      * implementation instead of a state enum, we just call the handler
      * directly.
      */
-    private interface FrameHandler {
+    protected interface FrameHandler {
         void beforeDrawEyes();
+
+        void onDrawFrame();
 
         void afterDrawEyes();
     }
@@ -604,6 +606,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mFrameHandler = splashFrames;
                 firstFrame = null;
             }
+        }
+
+        public void onDrawFrame() {
         }
 
         @Override
@@ -647,6 +652,12 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
         }
 
+        public void onDrawFrame() {
+            // Log.v(TAG, "splashFrame, onDrawFrame()");
+
+            drawFrame(false);
+        }
+
         @Override
         public void afterDrawEyes() {
         }
@@ -663,11 +674,23 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             mScript.onStep();
         }
 
+        public void onDrawFrame() {
+            // Log.v(TAG, "normalFrame, onDrawFrame()");
+
+            drawFrame(true);
+        }
+
         @Override
         public void afterDrawEyes() {
             GVRNotifications.notifyAfterStep();
         }
     };
+
+    private long drawFrame(boolean onStep) {
+        long currentTime = doMemoryManagementAndPerFrameCallbacks();
+        drawEyes();
+        return currentTime;
+    }
 
     /**
      * This is the code that needs to be executed before either eye is drawn.
@@ -705,7 +728,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         return currentTime;
     }
 
-    private FrameHandler mFrameHandler = firstFrame;
+    protected void drawEyes() {
+    }
+
+    protected FrameHandler mFrameHandler = firstFrame;
 
     void closeSplashScreen() {
         if (mSplashScreen != null) {
