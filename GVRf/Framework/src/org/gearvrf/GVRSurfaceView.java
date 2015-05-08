@@ -12,6 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modifications copyright (c) 2015, Samsung Research America
+ */
+
 
 package org.gearvrf;
 
