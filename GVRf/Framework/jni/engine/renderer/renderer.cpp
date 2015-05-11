@@ -127,14 +127,14 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                 glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
                 glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-                renderPostEffectData(texture_render_texture, post_effects[i],
+                renderPostEffectData(camera, texture_render_texture, post_effects[i],
                         post_effect_shader_manager);
             }
 
             glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
             glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            renderPostEffectData(texture_render_texture, post_effects.back(),
+            renderPostEffectData(camera, texture_render_texture, post_effects.back(),
                     post_effect_shader_manager);
         }
     } // flag checking
@@ -265,7 +265,7 @@ void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
     }
 }
 
-void Renderer::renderPostEffectData(
+void Renderer::renderPostEffectData(std::shared_ptr<Camera> camera,
         std::shared_ptr<RenderTexture> render_texture,
         std::shared_ptr<PostEffectData> post_effect_data,
         std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager) {
@@ -287,7 +287,8 @@ void Renderer::renderPostEffectData(
             break;
         default:
             post_effect_shader_manager->getCustomPostEffectShader(
-                    post_effect_data->shader_type())->render(render_texture,
+                    post_effect_data->shader_type())->render(camera,
+                    render_texture,
                     post_effect_data,
                     post_effect_shader_manager->quad_vertices(),
                     post_effect_shader_manager->quad_uvs(),

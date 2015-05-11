@@ -30,6 +30,7 @@
 #include "glm/glm.hpp"
 
 #include "objects/recyclable_object.h"
+#include "objects/components/camera.h"
 
 namespace gvr {
 class GLProgram;
@@ -48,7 +49,8 @@ public:
     void addVec3Key(std::string variable_name, std::string key);
     void addVec4Key(std::string variable_name, std::string key);
     void addMat4Key(std::string variable_name, std::string key);
-    void render(std::shared_ptr<RenderTexture> render_texture,
+    void render(std::shared_ptr<Camera> camera,
+            std::shared_ptr<RenderTexture> render_texture,
             std::shared_ptr<PostEffectData> post_effect_data,
             std::vector<glm::vec3>& vertices,
             std::vector<glm::vec2>& tex_coords,
@@ -70,6 +72,7 @@ private:
     GLuint a_position_;
     GLuint a_tex_coord_;
     GLuint u_texture_;
+    GLuint u_projection_matrix_;
     std::map<int, std::string> texture_keys_;
     std::map<int, std::string> float_keys_;
     std::map<int, std::string> vec2_keys_;
