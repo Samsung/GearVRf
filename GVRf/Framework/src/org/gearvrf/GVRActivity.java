@@ -174,7 +174,6 @@ public class GVRActivity extends VrActivity {
 
     void setCamera(GVRCamera camera) {
         mCamera = camera;
-        camera.setOwnerObject(null); // ???
 
         nativeSetCamera(appPtr, camera.getNative());
     }
