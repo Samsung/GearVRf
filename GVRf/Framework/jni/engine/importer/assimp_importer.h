@@ -45,7 +45,7 @@ public:
         return assimp_importer_->GetScene()->mNumMeshes;
     }
 
-    std::shared_ptr<Mesh> getMesh(int index);
+    Mesh* getMesh(int index);
 
 private:
     Assimp::Importer* assimp_importer_;

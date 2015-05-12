@@ -39,20 +39,20 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
     jobject obj, jint target, jint internalFormat,
     jint width, jint height, jint imageSize, jbyteArray bytes) {
 
-jbyte* data = env->GetByteArrayElements(bytes, 0);
+    jbyte* data = env->GetByteArrayElements(bytes, 0);
 
-CompressedTexture* texture =
-new CompressedTexture(target, internalFormat, width, height, imageSize, data);
+    CompressedTexture* texture =
+            new CompressedTexture(target, internalFormat, width, height, imageSize, data);
 
-env->ReleaseByteArrayElements(bytes, data, 0);
+    env->ReleaseByteArrayElements(bytes, data, 0);
 
-return reinterpret_cast<jlong>(new std::shared_ptr<CompressedTexture>(texture));
+    return reinterpret_cast<jlong>(texture);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
     jobject obj, jint target) {
-return reinterpret_cast<jlong>(new std::shared_ptr<CompressedTexture>(new CompressedTexture(target)));
+    return reinterpret_cast<jlong>(new CompressedTexture(target));
 }
 
 }

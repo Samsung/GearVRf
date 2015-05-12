@@ -218,7 +218,7 @@ public:
         vec4_vectors_[key] = vector;
     }
 
-    std::shared_ptr<Mesh> getBoundingBox() const;
+    Mesh* getBoundingBox() const;
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location

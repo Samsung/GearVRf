@@ -23,7 +23,7 @@
 #include "objects/mesh.h"
 
 namespace gvr {
-std::shared_ptr<Mesh> AssimpImporter::getMesh(int index) {
+Mesh* AssimpImporter::getMesh(int index) {
     Mesh* mesh = new Mesh();
 
     aiMesh* ai_mesh = assimp_importer_->GetScene()->mMeshes[index];
@@ -66,6 +66,6 @@ std::shared_ptr<Mesh> AssimpImporter::getMesh(int index) {
     }
     mesh->set_triangles(std::move(triangles));
 
-    return std::shared_ptr < Mesh > (mesh);
+    return mesh;
 }
 }

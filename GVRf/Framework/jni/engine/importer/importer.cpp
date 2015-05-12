@@ -21,21 +21,21 @@
 #include "importer.h"
 
 namespace gvr {
-std::shared_ptr<AssimpImporter> Importer::readFileFromAssets(char* buffer,
+AssimpImporter* Importer::readFileFromAssets(char* buffer,
         long size) {
     Assimp::Importer* importer = new Assimp::Importer();
     importer->ReadFileFromMemory(buffer, size,
             aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
-    return std::shared_ptr < AssimpImporter > (new AssimpImporter(importer));
+    return new AssimpImporter(importer);
 }
 
-std::shared_ptr<AssimpImporter> Importer::readFileFromSDCard(std::string str) {
+AssimpImporter* Importer::readFileFromSDCard(std::string str) {
     Assimp::Importer* importer = new Assimp::Importer();
     const char* c_str = str.c_str();
     importer->ReadFile(str,
             aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
     importer->ReadFileFromMemory(c_str, str.size(),
             aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
-    return std::shared_ptr < AssimpImporter > (new AssimpImporter(importer));
+    return new AssimpImporter(importer);
 }
 }

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import org.gearvrf.utility.Colors;
@@ -30,20 +29,9 @@ import android.graphics.Color;
  * (stock or custom) GL shaders, applied after the scene graph has been
  * rendered.
  */
-public class GVRCamera extends GVRComponent {
+public abstract class GVRCamera extends GVRComponent {
     protected GVRCamera(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
-    }
-
-    static GVRCamera factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject object = wrapper(ptr);
-        return object == null ? new GVRCamera(gvrContext, ptr)
-                : (GVRCamera) object;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
     }
 
     /** Get the background color as an Android {@link Color} */
@@ -90,7 +78,7 @@ public class GVRCamera extends GVRComponent {
      *         inclusive.
      */
     public float getBackgroundColorR() {
-        return NativeCamera.getBackgroundColorR(getPtr());
+        return NativeCamera.getBackgroundColorR(getNative());
     }
 
     /**
@@ -102,7 +90,7 @@ public class GVRCamera extends GVRComponent {
      *            0; values {@literal > 1} are clamped to 1.
      */
     public void setBackgroundColorR(float r) {
-        NativeCamera.setBackgroundColorR(getPtr(), r);
+        NativeCamera.setBackgroundColorR(getNative(), r);
     }
 
     /**
@@ -110,7 +98,7 @@ public class GVRCamera extends GVRComponent {
      *         1, inclusive.
      */
     public float getBackgroundColorG() {
-        return NativeCamera.getBackgroundColorG(getPtr());
+        return NativeCamera.getBackgroundColorG(getNative());
     }
 
     /**
@@ -122,7 +110,7 @@ public class GVRCamera extends GVRComponent {
      *            0; values {@literal > 1} are clamped to 1.
      */
     public void setBackgroundColorG(float g) {
-        NativeCamera.setBackgroundColorG(getPtr(), g);
+        NativeCamera.setBackgroundColorG(getNative(), g);
     }
 
     /**
@@ -130,7 +118,7 @@ public class GVRCamera extends GVRComponent {
      *         inclusive.
      */
     public float getBackgroundColorB() {
-        return NativeCamera.getBackgroundColorB(getPtr());
+        return NativeCamera.getBackgroundColorB(getNative());
     }
 
     /**
@@ -142,7 +130,7 @@ public class GVRCamera extends GVRComponent {
      *            0; values {@literal > 1} are clamped to 1.
      */
     public void setBackgroundColorB(float b) {
-        NativeCamera.setBackgroundColorB(getPtr(), b);
+        NativeCamera.setBackgroundColorB(getNative(), b);
     }
 
     /**
@@ -150,7 +138,7 @@ public class GVRCamera extends GVRComponent {
      *         1, inclusive.
      */
     public float getBackgroundColorA() {
-        return NativeCamera.getBackgroundColorA(getPtr());
+        return NativeCamera.getBackgroundColorA(getNative());
     }
 
     /**
@@ -160,7 +148,7 @@ public class GVRCamera extends GVRComponent {
      *            Value of alpha component.
      */
     public void setBackgroundColorA(float a) {
-        NativeCamera.setBackgroundColorA(getPtr(), a);
+        NativeCamera.setBackgroundColorA(getNative(), a);
     }
 
     /**
@@ -170,7 +158,7 @@ public class GVRCamera extends GVRComponent {
      *         {@link GVRRenderData.GVRRenderMaskBit GVRRenderMaskBit}.
      */
     public int getRenderMask() {
-        return NativeCamera.getRenderMask(getPtr());
+        return NativeCamera.getRenderMask(getNative());
     }
 
     /**
@@ -181,7 +169,7 @@ public class GVRCamera extends GVRComponent {
      *            {@link GVRRenderData.GVRRenderMaskBit GVRRenderMaskBit}.
      */
     public void setRenderMask(int renderMask) {
-        NativeCamera.setRenderMask(getPtr(), renderMask);
+        NativeCamera.setRenderMask(getNative(), renderMask);
     }
 
     /**
@@ -197,7 +185,7 @@ public class GVRCamera extends GVRComponent {
      *            Post-effect to append to this camera's render chain
      */
     public void addPostEffect(GVRPostEffect postEffectData) {
-        NativeCamera.addPostEffect(getPtr(), postEffectData.getPtr());
+        NativeCamera.addPostEffect(getNative(), postEffectData.getNative());
     }
 
     /**
@@ -208,32 +196,32 @@ public class GVRCamera extends GVRComponent {
      *            Post-effect to remove.
      */
     public void removePostEffect(GVRPostEffect postEffectData) {
-        NativeCamera.removePostEffect(getPtr(), postEffectData.getPtr());
+        NativeCamera.removePostEffect(getNative(), postEffectData.getNative());
     }
 }
 
 class NativeCamera {
-    public static native float getBackgroundColorR(long camera);
+    static native float getBackgroundColorR(long camera);
 
-    public static native void setBackgroundColorR(long camera, float r);
+    static native void setBackgroundColorR(long camera, float r);
 
-    public static native float getBackgroundColorG(long camera);
+    static native float getBackgroundColorG(long camera);
 
-    public static native void setBackgroundColorG(long camera, float g);
+    static native void setBackgroundColorG(long camera, float g);
 
-    public static native float getBackgroundColorB(long camera);
+    static native float getBackgroundColorB(long camera);
 
-    public static native void setBackgroundColorB(long camera, float b);
+    static native void setBackgroundColorB(long camera, float b);
 
-    public static native float getBackgroundColorA(long camera);
+    static native float getBackgroundColorA(long camera);
 
-    public static native void setBackgroundColorA(long camera, float a);
+    static native void setBackgroundColorA(long camera, float a);
 
-    public static native int getRenderMask(long camera);
+    static native int getRenderMask(long camera);
 
-    public static native void setRenderMask(long camera, int renderMask);
+    static native void setRenderMask(long camera, int renderMask);
 
-    public static native void addPostEffect(long camera, long postEffectData);
+    static native void addPostEffect(long camera, long postEffectData);
 
-    public static native void removePostEffect(long camera, long postEffectData);
+    static native void removePostEffect(long camera, long postEffectData);
 }

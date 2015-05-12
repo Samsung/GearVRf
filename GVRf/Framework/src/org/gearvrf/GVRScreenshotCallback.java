@@ -19,7 +19,8 @@ import android.graphics.Bitmap;
 
 /**
  * Callback interface for asynchronous screenshot capture. The screenshot result
- * will be passed to the caller as the parameter of onScreenCaptures.
+ * will be passed to the caller as the parameter of
+ * {@link GVRScreenshotCallback#onScreenCaptured(Bitmap) onScreenCaptured().}
  */
 public interface GVRScreenshotCallback {
     /**

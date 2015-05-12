@@ -39,8 +39,8 @@ public:
     ColorBlendPostEffectShader();
     ~ColorBlendPostEffectShader();
     void recycle();
-    void render(std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<PostEffectData> post_effect_data,
+    void render(RenderTexture* render_texture,
+            PostEffectData* post_effect_data,
             std::vector<glm::vec3>& vertices,
             std::vector<glm::vec2>& tex_coords,
             std::vector<unsigned short>& triangles);

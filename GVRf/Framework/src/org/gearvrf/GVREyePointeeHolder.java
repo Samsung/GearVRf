@@ -13,9 +13,13 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+
+import android.util.LongSparseArray;
 
 /**
  * Holds any number of {@linkplain GVREyePointee 'eye pointees,'} which are
@@ -37,6 +41,19 @@ package org.gearvrf;
  * scene object that a holder is attached to.
  */
 public class GVREyePointeeHolder extends GVRComponent {
+
+    // private static final String TAG = Log.tag(GVREyePointeeHolder.class);
+
+    private static final LongSparseArray<WeakReference<GVREyePointeeHolder>> sEyePointeeHolders = new LongSparseArray<WeakReference<GVREyePointeeHolder>>();
+
+    private final List<GVREyePointee> pointees = new ArrayList<GVREyePointee>();
+
+    static GVREyePointeeHolder lookup(GVRContext gvrContext, long nativePointer) {
+        WeakReference<GVREyePointeeHolder> weakReference = sEyePointeeHolders
+                .get(nativePointer);
+        return weakReference == null ? null : weakReference.get();
+    }
+
     /**
      * Constructor
      * 
@@ -44,22 +61,19 @@ public class GVREyePointeeHolder extends GVRComponent {
      *            Current {@link GVRContext}
      */
     public GVREyePointeeHolder(GVRContext gvrContext) {
-        super(gvrContext, NativeEyePointeeHolder.ctor());
+        this(gvrContext, NativeEyePointeeHolder.ctor());
     }
 
-    private GVREyePointeeHolder(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
-    }
-
-    static GVREyePointeeHolder factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVREyePointeeHolder(gvrContext, ptr)
-                : (GVREyePointeeHolder) wrapper;
+    private GVREyePointeeHolder(GVRContext gvrContext, long nativePointer) {
+        super(gvrContext, nativePointer);
+        sEyePointeeHolders.put(nativePointer,
+                new WeakReference<GVREyePointeeHolder>(this));
     }
 
     @Override
-    protected final boolean registerWrapper() {
-        return true;
+    protected void destructor() {
+        sEyePointeeHolders.remove(getNative());
+        super.destructor();
     }
 
     /**
@@ -71,7 +85,7 @@ public class GVREyePointeeHolder extends GVRComponent {
      * @return true if enabled, false otherwise.
      */
     public boolean getEnable() {
-        return NativeEyePointeeHolder.getEnable(getPtr());
+        return NativeEyePointeeHolder.getEnable(getNative());
     }
 
     /**
@@ -84,7 +98,7 @@ public class GVREyePointeeHolder extends GVRComponent {
      *            whether this holder should be enabled.
      */
     public void setEnable(boolean enable) {
-        NativeEyePointeeHolder.setEnable(getPtr(), enable);
+        NativeEyePointeeHolder.setEnable(getNative(), enable);
     }
 
     /**
@@ -94,7 +108,7 @@ public class GVREyePointeeHolder extends GVRComponent {
      * 
      */
     public float[] getHit() {
-        return NativeEyePointeeHolder.getHit(getPtr());
+        return NativeEyePointeeHolder.getHit(getNative());
     }
 
     /**
@@ -105,7 +119,8 @@ public class GVREyePointeeHolder extends GVRComponent {
      * 
      */
     public void addPointee(GVREyePointee eyePointee) {
-        NativeEyePointeeHolder.addPointee(getPtr(), eyePointee.getPtr());
+        pointees.add(eyePointee);
+        NativeEyePointeeHolder.addPointee(getNative(), eyePointee.getNative());
     }
 
     /**
@@ -118,21 +133,22 @@ public class GVREyePointeeHolder extends GVRComponent {
      * 
      */
     public void removePointee(GVREyePointee eyePointee) {
-        NativeEyePointeeHolder.removePointee(getPtr(), eyePointee.getPtr());
+        pointees.remove(eyePointee);
+        NativeEyePointeeHolder.removePointee(getNative(),
+                eyePointee.getNative());
     }
 }
 
 class NativeEyePointeeHolder {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native boolean getEnable(long eyePointeeHolder);
+    static native boolean getEnable(long eyePointeeHolder);
 
-    public static native void setEnable(long eyePointeeHolder, boolean enable);
+    static native void setEnable(long eyePointeeHolder, boolean enable);
 
-    public static native float[] getHit(long eyePointeeHolder);
+    static native float[] getHit(long eyePointeeHolder);
 
-    public static native void addPointee(long eyePointeeHolder, long eyePointee);
+    static native void addPointee(long eyePointeeHolder, long eyePointee);
 
-    public static native void removePointee(long eyePointeeHolder,
-            long eyePointee);
+    static native void removePointee(long eyePointeeHolder, long eyePointee);
 }

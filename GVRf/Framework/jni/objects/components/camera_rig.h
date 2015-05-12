@@ -52,19 +52,11 @@ public:
         camera_rig_type_ = camera_rig_type;
     }
 
-    std::shared_ptr<Camera> left_camera() {
+    Camera* left_camera() const {
         return left_camera_;
     }
 
-    const std::shared_ptr<Camera>& left_camera() const {
-        return left_camera_;
-    }
-
-    std::shared_ptr<Camera> right_camera() {
-        return right_camera_;
-    }
-
-    const std::shared_ptr<Camera>& right_camera() const {
+    Camera* right_camera() const {
         return right_camera_;
     }
 
@@ -139,8 +131,8 @@ public:
         vec4s_[key] = vector;
     }
 
-    void attachLeftCamera(const std::shared_ptr<Camera>& left_camera);
-    void attachRightCamera(const std::shared_ptr<Camera>& right_camera);
+    void attachLeftCamera(Camera* const left_camera);
+    void attachRightCamera(Camera* const right_camera);
     void reset();
     void resetYaw();
     void resetYawPitch();
@@ -159,8 +151,8 @@ private:
     static const CameraRigType DEFAULT_CAMERA_RIG_TYPE = FREE;
     static const int MAX_BUFFER_SIZE = 4;
     CameraRigType camera_rig_type_;
-    std::shared_ptr<Camera> left_camera_;
-    std::shared_ptr<Camera> right_camera_;
+    Camera* left_camera_;
+    Camera* right_camera_;
     static float default_camera_separation_distance_;
     float camera_separation_distance_;
     std::map<std::string, float> floats_;

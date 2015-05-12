@@ -15,7 +15,10 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -37,6 +40,15 @@ import org.gearvrf.GVRMaterial.GVRShaderType.Unlit;
  * geometry, and a {@link GVRMaterial} that defines its surface.
  */
 public class GVRSceneObject extends GVRHybridObject {
+
+    private GVRTransform mTransform;
+    private GVRRenderData mRenderData;
+    private GVRCamera mCamera;
+    private GVRCameraRig mCameraRig;
+    private GVREyePointeeHolder mEyePointeeHolder;
+    private GVRSceneObject mParent;
+    private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
+
     /**
      * Constructs an empty scene object with a default {@link GVRTransform
      * transform}.
@@ -235,17 +247,6 @@ public class GVRSceneObject extends GVRHybridObject {
         super(gvrContext, ptr);
     }
 
-    static GVRSceneObject factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRSceneObject(gvrContext, ptr)
-                : (GVRSceneObject) wrapper;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
-    }
-
     /**
      * Get the (optional) name of the object.
      * 
@@ -253,7 +254,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         returned string will be empty.
      */
     public String getName() {
-        return NativeSceneObject.getName(getPtr());
+        return NativeSceneObject.getName(getNative());
     }
 
     /**
@@ -266,7 +267,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *            Name of the object.
      */
     public void setName(String name) {
-        NativeSceneObject.setName(getPtr(), name);
+        NativeSceneObject.setName(getNative(), name);
     }
 
     /**
@@ -276,7 +277,8 @@ public class GVRSceneObject extends GVRHybridObject {
      *            New transform.
      */
     void attachTransform(GVRTransform transform) {
-        NativeSceneObject.attachTransform(getPtr(), transform.getPtr());
+        mTransform = transform;
+        NativeSceneObject.attachTransform(getNative(), transform.getNative());
     }
 
     /**
@@ -284,8 +286,8 @@ public class GVRSceneObject extends GVRHybridObject {
      * object will have no transformations associated with it.
      */
     void detachTransform() {
-        NativeSceneObject.detachTransform(getPtr());
-        ;
+        mTransform = null;
+        NativeSceneObject.detachTransform(getNative());
     }
 
     /**
@@ -299,8 +301,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         currently attached to the object, returns {@code null}.
      */
     public GVRTransform getTransform() {
-        long ptr = NativeSceneObject.getTransform(getPtr());
-        return ptr == 0 ? null : GVRTransform.factory(getGVRContext(), ptr);
+        return mTransform;
     }
 
     /**
@@ -314,7 +315,9 @@ public class GVRSceneObject extends GVRHybridObject {
      *            New rendering data.
      */
     public void attachRenderData(GVRRenderData renderData) {
-        NativeSceneObject.attachRenderData(getPtr(), renderData.getPtr());
+        mRenderData = renderData;
+        renderData.setOwnerObject(this);
+        NativeSceneObject.attachRenderData(getNative(), renderData.getNative());
     }
 
     /**
@@ -323,7 +326,11 @@ public class GVRSceneObject extends GVRHybridObject {
      * An object with no {@link GVRRenderData} is not visible.
      */
     public void detachRenderData() {
-        NativeSceneObject.detachRenderData(getPtr());
+        if (mRenderData != null) {
+            mRenderData.setOwnerObject(null);
+        }
+        mRenderData = null;
+        NativeSceneObject.detachRenderData(getNative());
     }
 
     /**
@@ -333,8 +340,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         data is currently attached to the object, returns {@code null}.
      */
     public GVRRenderData getRenderData() {
-        long ptr = NativeSceneObject.getRenderData(getPtr());
-        return ptr == 0 ? null : GVRRenderData.factory(getGVRContext(), ptr);
+        return mRenderData;
     }
 
     /**
@@ -346,14 +352,20 @@ public class GVRSceneObject extends GVRHybridObject {
      *            New camera.
      */
     public void attachCamera(GVRCamera camera) {
-        NativeSceneObject.attachCamera(getPtr(), camera.getPtr());
+        mCamera = camera;
+        camera.setOwnerObject(this);
+        NativeSceneObject.attachCamera(getNative(), camera.getNative());
     }
 
     /**
      * Detach the object's current {@link GVRCamera camera}.
      */
     public void detachCamera() {
-        NativeSceneObject.detachCamera(getPtr());
+        if (mCamera != null) {
+            mCamera.setOwnerObject(null);
+        }
+        mCamera = null;
+        NativeSceneObject.detachCamera(getNative());
     }
 
     /**
@@ -363,12 +375,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         is currently attached, returns {@code null}.
      */
     public GVRCamera getCamera() {
-        long ptr = NativeSceneObject.getCamera(getPtr());
-        if (ptr == 0) {
-            return null;
-        } else {
-            return new GVRCamera(getGVRContext(), ptr);
-        }
+        return mCamera;
     }
 
     /**
@@ -381,14 +388,20 @@ public class GVRSceneObject extends GVRHybridObject {
      *            New camera rig.
      */
     public void attachCameraRig(GVRCameraRig cameraRig) {
-        NativeSceneObject.attachCameraRig(getPtr(), cameraRig.getPtr());
+        mCameraRig = cameraRig;
+        cameraRig.setOwnerObject(this);
+        NativeSceneObject.attachCameraRig(getNative(), cameraRig.getNative());
     }
 
     /**
      * Detach the object's current {@link GVRCameraRig camera rig}.
      */
     public void detachCameraRig() {
-        NativeSceneObject.detachCameraRig(getPtr());
+        if (mCameraRig != null) {
+            mCameraRig.setOwnerObject(null);
+        }
+        mCameraRig = null;
+        NativeSceneObject.detachCameraRig(getNative());
     }
 
     /**
@@ -398,8 +411,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         camera rig is currently attached, returns {@code null}.
      */
     public GVRCameraRig getCameraRig() {
-        long ptr = NativeSceneObject.getCameraRig(getPtr());
-        return ptr == 0 ? null : GVRCameraRig.factory(getGVRContext(), ptr);
+        return mCameraRig;
     }
 
     /**
@@ -412,15 +424,21 @@ public class GVRSceneObject extends GVRHybridObject {
      *            New {@link GVREyePointeeHolder}.
      */
     public void attachEyePointeeHolder(GVREyePointeeHolder eyePointeeHolder) {
-        NativeSceneObject.attachEyePointeeHolder(getPtr(),
-                eyePointeeHolder.getPtr());
+        mEyePointeeHolder = eyePointeeHolder;
+        eyePointeeHolder.setOwnerObject(this);
+        NativeSceneObject.attachEyePointeeHolder(getNative(),
+                eyePointeeHolder.getNative());
     }
 
     /**
      * Detach the object's current {@link GVREyePointeeHolder}.
      */
     public void detachEyePointeeHolder() {
-        NativeSceneObject.detachEyePointeeHolder(getPtr());
+        if (mEyePointeeHolder != null) {
+            mEyePointeeHolder.setOwnerObject(null);
+        }
+        mEyePointeeHolder = null;
+        NativeSceneObject.detachEyePointeeHolder(getNative());
     }
 
     /**
@@ -431,9 +449,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         {@code null}.
      */
     public GVREyePointeeHolder getEyePointeeHolder() {
-        long ptr = NativeSceneObject.getEyePointeeHolder(getPtr());
-        return ptr == 0 ? null : GVREyePointeeHolder.factory(getGVRContext(),
-                ptr);
+        return mEyePointeeHolder;
     }
 
     /**
@@ -446,9 +462,7 @@ public class GVRSceneObject extends GVRHybridObject {
      * @return The parent {@link GVRSceneObject} or {@code null}.
      */
     public GVRSceneObject getParent() {
-        long ptr = NativeSceneObject.getParent(getPtr());
-        return ptr == 0 || NativeHybridObject.getNativePointer(ptr) == 0 ? null
-                : GVRSceneObject.factory(getGVRContext(), ptr);
+        return mParent;
     }
 
     /**
@@ -459,7 +473,9 @@ public class GVRSceneObject extends GVRHybridObject {
      *            object.
      */
     public void addChildObject(GVRSceneObject child) {
-        NativeSceneObject.addChildObject(getPtr(), child.getPtr());
+        mChildren.add(child);
+        child.mParent = this;
+        NativeSceneObject.addChildObject(getNative(), child.getNative());
     }
 
     /**
@@ -470,7 +486,9 @@ public class GVRSceneObject extends GVRHybridObject {
      *            object.
      */
     public void removeChildObject(GVRSceneObject child) {
-        NativeSceneObject.removeChildObject(getPtr(), child.getPtr());
+        mChildren.remove(child);
+        child.mParent = null;
+        NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
 
     /**
@@ -480,7 +498,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         this object.
      */
     public int getChildrenCount() {
-        return NativeSceneObject.getChildrenCount(getPtr());
+        return mChildren.size();
     }
 
     /**
@@ -494,13 +512,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *         at that position.
      */
     public GVRSceneObject getChildByIndex(int index) {
-        long ptr = NativeSceneObject.getChildByIndex(getPtr(), index);
-        if (ptr == 0) {
-            throw new IndexOutOfBoundsException("Index: " + index
-                    + " Children count: " + getChildrenCount());
-        } else {
-            return GVRSceneObject.factory(getGVRContext(), ptr);
-        }
+        return mChildren.get(index);
     }
 
     /**
@@ -512,10 +524,35 @@ public class GVRSceneObject extends GVRHybridObject {
      * }
      * </pre>
      * 
-     * @return An {@link Iterable}, so you can use Java's enhanced for loop
+     * @return An {@link Iterable}, so you can use Java's enhanced for loop.
+     *         This {@code Iterable} gives you an {@link Iterator} that does not
+     *         support {@link Iterator#remove()}.
+     *         <p>
+     *         At some point, this might actually return a
+     *         {@code List<GVRSceneObject>}, but that would require either
+     *         creating an immutable copy or writing a lot of code to support
+     *         methods like {@link List#addAll(java.util.Collection)} and
+     *         {@link List#clear()} - for now, we just create a very
+     *         light-weight class that only supports iteration.
      */
     public Iterable<GVRSceneObject> children() {
         return new Children(this);
+    }
+
+    /**
+     * Get all the children, in a single list.
+     * 
+     * @return An un-modifiable list of this object's children.
+     * 
+     * @since 2.0.0
+     */
+    public List<GVRSceneObject> getChildren() {
+        return Collections.unmodifiableList(mChildren);
+    }
+
+    /** The internal list - do not make any changes! */
+    List<GVRSceneObject> rawGetChildren() {
+        return mChildren;
     }
 
     private static class Children implements Iterable<GVRSceneObject>,
@@ -548,57 +585,40 @@ public class GVRSceneObject extends GVRHybridObject {
         public void remove() {
             throw new UnsupportedOperationException();
         }
-
     }
 }
 
 class NativeSceneObject {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native String getName(long sceneObject);
+    static native String getName(long sceneObject);
 
-    public static native void setName(long sceneObject, String name);
+    static native void setName(long sceneObject, String name);
 
-    public static native void attachTransform(long sceneObject, long transform);
+    static native void attachTransform(long sceneObject, long transform);
 
-    public static native void detachTransform(long sceneObject);
+    static native void detachTransform(long sceneObject);
 
-    public static native long getTransform(long sceneObject);
+    static native void attachRenderData(long sceneObject, long renderData);
 
-    public static native void attachRenderData(long sceneObject, long renderData);
+    static native void detachRenderData(long sceneObject);
 
-    public static native void detachRenderData(long sceneObject);
+    static native void attachCamera(long sceneObject, long camera);
 
-    public static native long getRenderData(long sceneObject);
+    static native void detachCamera(long sceneObject);
 
-    public static native void attachCamera(long sceneObject, long camera);
+    static native void attachCameraRig(long sceneObject, long cameraRig);
 
-    public static native void detachCamera(long sceneObject);
+    static native void detachCameraRig(long sceneObject);
 
-    public static native long getCamera(long sceneObject);
-
-    public static native void attachCameraRig(long sceneObject, long cameraRig);
-
-    public static native void detachCameraRig(long sceneObject);
-
-    public static native long getCameraRig(long sceneObject);
-
-    public static native void attachEyePointeeHolder(long sceneObject,
+    static native void attachEyePointeeHolder(long sceneObject,
             long eyePointeeHolder);
 
-    public static native void detachEyePointeeHolder(long sceneObject);
+    static native void detachEyePointeeHolder(long sceneObject);
 
-    public static native long getEyePointeeHolder(long sceneObject);
+    static native long setParent(long sceneObject, long parent);
 
-    public static native long getParent(long sceneObject);
+    static native void addChildObject(long sceneObject, long child);
 
-    public static native long setParent(long sceneObject, long parent);
-
-    public static native void addChildObject(long sceneObject, long child);
-
-    public static native void removeChildObject(long sceneObject, long child);
-
-    public static native int getChildrenCount(long sceneObject);
-
-    public static native long getChildByIndex(long sceneObject, int index);
+    static native void removeChildObject(long sceneObject, long child);
 }

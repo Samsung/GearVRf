@@ -35,17 +35,16 @@ Java_org_gearvrf_NativeAssimpImporter_getMesh(JNIEnv * env,
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getNumberOfMeshes(
         JNIEnv * env, jobject obj, jlong jassimp_importer) {
-    std::shared_ptr<AssimpImporter> assimp_importer =
-            *reinterpret_cast<std::shared_ptr<AssimpImporter>*>(jassimp_importer);
+    AssimpImporter* assimp_importer =
+            reinterpret_cast<AssimpImporter*>(jassimp_importer);
     return assimp_importer->getNumberOfMeshes();
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMesh(JNIEnv * env,
         jobject obj, jlong jassimp_importer, jint index) {
-    std::shared_ptr<AssimpImporter> assimp_importer =
-            *reinterpret_cast<std::shared_ptr<AssimpImporter>*>(jassimp_importer);
-    std::shared_ptr<Mesh> mesh = assimp_importer->getMesh(index);
-    return reinterpret_cast<jlong>(new std::shared_ptr<Mesh>(mesh));
+    AssimpImporter* assimp_importer =
+            reinterpret_cast<AssimpImporter*>(jassimp_importer);
+    return reinterpret_cast<jlong>(assimp_importer->getMesh(index));
 }
 }

@@ -48,13 +48,13 @@ public:
     GVRViewManager( JNIEnv & jni_, jobject activityObject_);
     ~GVRViewManager();
     void renderCamera(OvrSceneView &ovr_scene,
-                        std::shared_ptr<Scene> scene,
-                        std::shared_ptr<Camera> camera,
-                        std::shared_ptr<RenderTexture> render_texture,
-                        std::shared_ptr<ShaderManager> shader_manager,
-                        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-                        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-                        std::shared_ptr<RenderTexture> post_effect_render_texture_b,
+                        Scene* scene,
+                        Camera* camera,
+                        RenderTexture* render_texture,
+                        ShaderManager* shader_manager,
+                        PostEffectShaderManager* post_effect_shader_manager,
+                        RenderTexture* post_effect_render_texture_a,
+                        RenderTexture* post_effect_render_texture_b,
                         glm::mat4 mvp);
 
     glm::mat4 mvp_matrix;

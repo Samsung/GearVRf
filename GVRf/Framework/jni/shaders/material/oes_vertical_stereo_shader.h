@@ -41,8 +41,7 @@ public:
     OESVerticalStereoShader();
     ~OESVerticalStereoShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data, bool right);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, bool right);
 
 private:
     OESVerticalStereoShader(

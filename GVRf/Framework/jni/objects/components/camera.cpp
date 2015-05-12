@@ -23,6 +23,7 @@
 #include "glm/gtc/matrix_inverse.hpp"
 
 #include "objects/scene_object.h"
+#include "util/gvr_log.h"
 
 namespace gvr {
 Camera::Camera() :
@@ -33,18 +34,18 @@ Camera::Camera() :
 Camera::~Camera() {
 }
 
-void Camera::addPostEffect(std::shared_ptr<PostEffectData> post_effect) {
+void Camera::addPostEffect(PostEffectData* post_effect) {
     post_effect_data_.push_back(post_effect);
 }
 
-void Camera::removePostEffect(std::shared_ptr<PostEffectData> post_effect) {
+void Camera::removePostEffect(PostEffectData* post_effect) {
     post_effect_data_.erase(
             std::remove(post_effect_data_.begin(), post_effect_data_.end(),
                     post_effect), post_effect_data_.end());
 }
 
 glm::mat4 Camera::getViewMatrix() {
-    if (owner_object().get() == 0) {
+    if (owner_object() == 0) {
         std::string error = "Camera::getViewMatrix() : camera not attached.";
         throw error;
     }
@@ -52,8 +53,9 @@ glm::mat4 Camera::getViewMatrix() {
 }
 
 glm::mat4 Camera::getCenterViewMatrix() {
-    if (owner_object().get() == 0) {
+    if (owner_object() == 0) {
         std::string error = "Camera::getCenterViewMatrix() : camera not attached.";
+        LOGE("%s at %s:%d", error.c_str(), __FILE__, __LINE__);
         throw error;
     }
     return glm::affineInverse(owner_object()->parent()->transform()->getModelMatrix());

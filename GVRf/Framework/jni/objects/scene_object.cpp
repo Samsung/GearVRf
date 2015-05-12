@@ -34,12 +34,11 @@ SceneObject::SceneObject() :
 SceneObject::~SceneObject() {
 }
 
-void SceneObject::attachTransform(const std::shared_ptr<SceneObject>& self,
-        const std::shared_ptr<Transform>& transform) {
+void SceneObject::attachTransform(SceneObject* self, Transform* transform) {
     if (transform_) {
         detachTransform();
     }
-    std::shared_ptr<SceneObject> owner_object(transform->owner_object());
+    SceneObject* owner_object(transform->owner_object());
     if (owner_object) {
         owner_object->detachRenderData();
     }
@@ -50,16 +49,15 @@ void SceneObject::attachTransform(const std::shared_ptr<SceneObject>& self,
 void SceneObject::detachTransform() {
     if (transform_) {
         transform_->removeOwnerObject();
-        transform_.reset();
+        transform_ = NULL;
     }
 }
 
-void SceneObject::attachRenderData(const std::shared_ptr<SceneObject>& self,
-        const std::shared_ptr<RenderData>& render_data) {
+void SceneObject::attachRenderData(SceneObject* self, RenderData* render_data) {
     if (render_data_) {
         detachRenderData();
     }
-    std::shared_ptr<SceneObject> owner_object(render_data->owner_object());
+    SceneObject* owner_object(render_data->owner_object());
     if (owner_object) {
         owner_object->detachRenderData();
     }
@@ -70,16 +68,15 @@ void SceneObject::attachRenderData(const std::shared_ptr<SceneObject>& self,
 void SceneObject::detachRenderData() {
     if (render_data_) {
         render_data_->removeOwnerObject();
-        render_data_.reset();
+        render_data_ = NULL;
     }
 }
 
-void SceneObject::attachCamera(const std::shared_ptr<SceneObject>& self,
-        const std::shared_ptr<Camera>& camera) {
+void SceneObject::attachCamera(SceneObject* self, Camera* camera) {
     if (camera_) {
         detachCamera();
     }
-    std::shared_ptr<SceneObject> owner_object(camera->owner_object());
+    SceneObject* owner_object(camera->owner_object());
     if (owner_object) {
         owner_object->detachCamera();
     }
@@ -90,16 +87,15 @@ void SceneObject::attachCamera(const std::shared_ptr<SceneObject>& self,
 void SceneObject::detachCamera() {
     if (camera_) {
         camera_->removeOwnerObject();
-        camera_.reset();
+        camera_ = NULL;
     }
 }
 
-void SceneObject::attachCameraRig(const std::shared_ptr<SceneObject>& self,
-        const std::shared_ptr<CameraRig>& camera_rig) {
+void SceneObject::attachCameraRig(SceneObject* self, CameraRig* camera_rig) {
     if (camera_rig_) {
         detachCameraRig();
     }
-    std::shared_ptr<SceneObject> owner_object(camera_rig->owner_object());
+    SceneObject* owner_object(camera_rig->owner_object());
     if (owner_object) {
         owner_object->detachCameraRig();
     }
@@ -110,17 +106,17 @@ void SceneObject::attachCameraRig(const std::shared_ptr<SceneObject>& self,
 void SceneObject::detachCameraRig() {
     if (camera_rig_) {
         camera_rig_->removeOwnerObject();
-        camera_rig_.reset();
+        camera_rig_ = NULL;
     }
 }
 
 void SceneObject::attachEyePointeeHolder(
-        const std::shared_ptr<SceneObject>& self,
-        const std::shared_ptr<EyePointeeHolder>& eye_pointee_holder) {
+        SceneObject* self,
+        EyePointeeHolder* eye_pointee_holder) {
     if (eye_pointee_holder_) {
         detachEyePointeeHolder();
     }
-    std::shared_ptr<SceneObject> owner_object(
+    SceneObject* owner_object(
             eye_pointee_holder->owner_object());
     if (owner_object) {
         owner_object->detachEyePointeeHolder();
@@ -132,14 +128,12 @@ void SceneObject::attachEyePointeeHolder(
 void SceneObject::detachEyePointeeHolder() {
     if (eye_pointee_holder_) {
         eye_pointee_holder_->removeOwnerObject();
-        eye_pointee_holder_.reset();
+        eye_pointee_holder_ = NULL;
     }
 }
 
-void SceneObject::addChildObject(std::shared_ptr<SceneObject> self,
-        std::shared_ptr<SceneObject> child) {
-    for (std::shared_ptr < SceneObject > parent = parent_.lock(); parent;
-            parent = parent->parent_.lock()) {
+void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
+    for (SceneObject* parent = parent_; parent; parent = parent->parent_) {
         if (child == parent) {
             std::string error =
                     "SceneObject::addChildObject() : cycle of scene objects is not allowed.";
@@ -152,11 +146,11 @@ void SceneObject::addChildObject(std::shared_ptr<SceneObject> self,
     child->transform()->invalidate();
 }
 
-void SceneObject::removeChildObject(std::shared_ptr<SceneObject> child) {
-    if (child->parent_.lock().get() == this) {
+void SceneObject::removeChildObject(SceneObject* child) {
+    if (child->parent_ == this) {
         children_.erase(std::remove(children_.begin(), children_.end(), child),
                 children_.end());
-        child->parent_.reset();
+        child->parent_ = NULL;
     }
 }
 
@@ -164,7 +158,7 @@ int SceneObject::getChildrenCount() const {
     return children_.size();
 }
 
-const std::shared_ptr<SceneObject>& SceneObject::getChildByIndex(int index) {
+SceneObject* SceneObject::getChildByIndex(int index) {
     if (index < children_.size()) {
         return children_[index];
     } else {

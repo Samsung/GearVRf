@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Colors;
@@ -65,6 +67,9 @@ import android.graphics.Color;
 public class GVRMaterial extends GVRHybridObject implements
         GVRShaders<GVRMaterialShaderId> {
 
+    private GVRMaterialShaderId shaderId;
+    final private Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
+
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
 
@@ -114,12 +119,13 @@ public class GVRMaterial extends GVRHybridObject implements
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
-     * @param shaderType
+     * @param shaderId
      *            Id of a {@linkplain GVRShaderType stock} or
      *            {@linkplain GVRMaterialShaderManager custom} shader.
      */
-    public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderType) {
-        super(gvrContext, NativeMaterial.ctor(shaderType.ID));
+    public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
+        super(gvrContext, NativeMaterial.ctor(shaderId.ID));
+        this.shaderId = shaderId;
     }
 
     /**
@@ -138,8 +144,7 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public GVRMaterialShaderId getShaderType() {
-        final int shaderType = NativeMaterial.getShaderType(getPtr());
-        return GVRMaterialShaderId.get(shaderType);
+        return shaderId;
     }
 
     /**
@@ -149,7 +154,8 @@ public class GVRMaterial extends GVRHybridObject implements
      *            The new shader id.
      */
     public void setShaderType(GVRMaterialShaderId shaderId) {
-        NativeMaterial.setShaderType(getPtr(), shaderId.ID);
+        this.shaderId = shaderId;
+        NativeMaterial.setShaderType(getNative(), shaderId.ID);
     }
 
     public GVRTexture getMainTexture() {
@@ -269,18 +275,14 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public GVRTexture getTexture(String key) {
-        long ptr = NativeMaterial.getTexture(getPtr(), key);
-        if (ptr == 0) {
-            return null;
-        } else {
-            return GVRTexture.factory(getGVRContext(), ptr);
-        }
+        return textures.get(key);
     }
 
     public void setTexture(String key, GVRTexture texture) {
         checkStringNotNullOrEmpty("key", key);
         checkNotNull("texture", texture);
-        NativeMaterial.setTexture(getPtr(), key, texture.getPtr());
+        textures.put(key, texture);
+        NativeMaterial.setTexture(getNative(), key, texture.getNative());
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
@@ -298,40 +300,40 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public float getFloat(String key) {
-        return NativeMaterial.getFloat(getPtr(), key);
+        return NativeMaterial.getFloat(getNative(), key);
     }
 
     public void setFloat(String key, float value) {
         checkStringNotNullOrEmpty("key", key);
         checkFloatNotNaNOrInfinity("value", value);
-        NativeMaterial.setFloat(getPtr(), key, value);
+        NativeMaterial.setFloat(getNative(), key, value);
     }
 
     public float[] getVec2(String key) {
-        return NativeMaterial.getVec2(getPtr(), key);
+        return NativeMaterial.getVec2(getNative(), key);
     }
 
     public void setVec2(String key, float x, float y) {
         checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setVec2(getPtr(), key, x, y);
+        NativeMaterial.setVec2(getNative(), key, x, y);
     }
 
     public float[] getVec3(String key) {
-        return NativeMaterial.getVec3(getPtr(), key);
+        return NativeMaterial.getVec3(getNative(), key);
     }
 
     public void setVec3(String key, float x, float y, float z) {
         checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setVec3(getPtr(), key, x, y, z);
+        NativeMaterial.setVec3(getNative(), key, x, y, z);
     }
 
     public float[] getVec4(String key) {
-        return NativeMaterial.getVec4(getPtr(), key);
+        return NativeMaterial.getVec4(getNative(), key);
     }
 
     public void setVec4(String key, float x, float y, float z, float w) {
         checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setVec4(getPtr(), key, x, y, z, w);
+        NativeMaterial.setVec4(getNative(), key, x, y, z, w);
     }
 
     /**
@@ -344,44 +346,39 @@ public class GVRMaterial extends GVRHybridObject implements
             float x2, float y2, float z2, float w2, float x3, float y3,
             float z3, float w3, float x4, float y4, float z4, float w4) {
         checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setMat4(getPtr(), key, x1, y1, z1, w1, x2, y2, z2, w2,
+        NativeMaterial.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2, z2, w2,
                 x3, y3, z3, w3, x4, y4, z4, w4);
     }
 
 }
 
 class NativeMaterial {
-    public static native long ctor(int shaderType);
+    static native long ctor(int shaderType);
 
-    public static native int getShaderType(long material);
+    static native void setShaderType(long material, long shaderType);
 
-    public static native void setShaderType(long material, long shaderType);
+    static native void setTexture(long material, String key, long texture);
 
-    public static native long getTexture(long material, String key);
+    static native float getFloat(long material, String key);
 
-    public static native void setTexture(long material, String key, long texture);
+    static native void setFloat(long material, String key, float value);
 
-    public static native float getFloat(long material, String key);
+    static native float[] getVec2(long material, String key);
 
-    public static native void setFloat(long material, String key, float value);
+    static native void setVec2(long material, String key, float x, float y);
 
-    public static native float[] getVec2(long material, String key);
+    static native float[] getVec3(long material, String key);
 
-    public static native void setVec2(long material, String key, float x,
-            float y);
+    static native void setVec3(long material, String key, float x, float y,
+            float z);
 
-    public static native float[] getVec3(long material, String key);
+    static native float[] getVec4(long material, String key);
 
-    public static native void setVec3(long material, String key, float x,
-            float y, float z);
+    static native void setVec4(long material, String key, float x, float y,
+            float z, float w);
 
-    public static native float[] getVec4(long material, String key);
-
-    public static native void setVec4(long material, String key, float x,
-            float y, float z, float w);
-
-    public static native void setMat4(long material, String key, float x1,
-            float y1, float z1, float w1, float x2, float y2, float z2,
-            float w2, float x3, float y3, float z3, float w3, float x4,
-            float y4, float z4, float w4);
+    static native void setMat4(long material, String key, float x1, float y1,
+            float z1, float w1, float x2, float y2, float z2, float w2,
+            float x3, float y3, float z3, float w3, float x4, float y4,
+            float z4, float w4);
 }

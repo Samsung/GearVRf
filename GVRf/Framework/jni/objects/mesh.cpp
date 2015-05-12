@@ -30,7 +30,7 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
+Mesh* Mesh::getBoundingBox() const {
     Mesh* mesh = new Mesh();
     float min_x = std::numeric_limits<float>::infinity();
     float max_x = -std::numeric_limits<float>::infinity();
@@ -111,7 +111,7 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     mesh->triangles_.push_back(6);
     mesh->triangles_.push_back(7);
 
-    return std::shared_ptr < Mesh > (mesh);
+    return mesh;
 }
 
 // generate vertex array object

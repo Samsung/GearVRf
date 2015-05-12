@@ -36,14 +36,13 @@ private:
     ~Picker();
 
 public:
-    static std::vector<std::shared_ptr<EyePointeeHolder>> pickScene(
-            const std::shared_ptr<Scene>& scene);
-    static std::vector<std::shared_ptr<EyePointeeHolder>> pickScene(
-            const std::shared_ptr<Scene>& scene, float ox, float oy, float oz,
+    static std::vector<EyePointeeHolder*> pickScene(Scene* scene);
+    static std::vector<EyePointeeHolder*> pickScene(
+            Scene* scene, float ox, float oy, float oz,
             float dx, float dy, float dz);
     static float pickSceneObject(
-            const std::shared_ptr<SceneObject>& scene_object,
-            const std::shared_ptr<CameraRig>& camera_rig);
+            const SceneObject* scene_object,
+            const CameraRig* camera_rig);
 };
 
 }

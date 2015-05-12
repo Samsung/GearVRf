@@ -114,8 +114,8 @@ public interface GVRShaders<ID> {
      *            A future texture, from one of the the
      *            {@link GVRContext#loadFutureTexture(GVRAndroidResource)}
      *            methods
-     *            
-     * @since 1.6.7            
+     * 
+     * @since 1.6.7
      */
     public void setMainTexture(Future<GVRTexture> texture);
 
@@ -162,8 +162,8 @@ public interface GVRShaders<ID> {
      *            Name of the shader uniform to bind the texture to.
      * @param texture
      *            The {@link GVRTexture texture} to bind.
-     *            
-     * @since 1.6.7            
+     * 
+     * @since 1.6.7
      */
     public void setTexture(String key, Future<GVRTexture> texture);
 
@@ -261,9 +261,7 @@ public interface GVRShaders<ID> {
      * @param key
      *            Name of the shader uniform to bind the data to.
      */
-    public void setMat4(String key,
-            float x1, float y1, float z1, float w1,
-            float x2, float y2, float z2, float w2,
-            float x3, float y3, float z3, float w3,
-            float x4, float y4, float z4, float w4);
+    public void setMat4(String key, float x1, float y1, float z1, float w1,
+            float x2, float y2, float z2, float w2, float x3, float y3,
+            float z3, float w3, float x4, float y4, float z4, float w4);
 }

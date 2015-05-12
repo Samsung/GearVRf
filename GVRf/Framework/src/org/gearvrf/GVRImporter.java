@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import java.io.IOException;
@@ -44,6 +43,7 @@ class GVRImporter {
      * @return An instance of {@link GVRAssimpImporter} or {@code null} if the
      *         file does not exist (or cannot be read)
      */
+    @SuppressWarnings("resource")
     static GVRAssimpImporter readFileFromAssets(GVRContext gvrContext,
             String filename) {
         long nativeValue = NativeImporter.readFileFromAssets(gvrContext
@@ -54,11 +54,13 @@ class GVRImporter {
 
     static GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
             int resourceId) {
-        return readFileFromResources(gvrContext, new GVRAndroidResource(gvrContext, resourceId));
+        return readFileFromResources(gvrContext, new GVRAndroidResource(
+                gvrContext, resourceId));
     }
 
     /** @since 1.6.2 */
-    static GVRAssimpImporter readFileFromResources(GVRContext gvrContext, GVRAndroidResource resource){
+    static GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
+            GVRAndroidResource resource) {
         try {
             byte[] bytes;
             InputStream stream = resource.getStream();
@@ -75,7 +77,7 @@ class GVRImporter {
             return null;
         }
     }
-    
+
     /**
      * Imports a 3D model from a file on the device's SD card. The application
      * must have read permission for the directory containing the file.

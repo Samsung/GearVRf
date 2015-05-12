@@ -34,28 +34,20 @@ Java_org_gearvrf_NativeShaderManager_addCustomShader(
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeShaderManager_getCustomShader(
         JNIEnv * env, jobject obj, jlong jshader_manager, jint id);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeShaderManager_equals(JNIEnv * env,
-        jobject obj, jlong jshader_manager, jlong jother);
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeShaderManager_delete(JNIEnv * env,
-        jobject obj, jlong jshader_manager);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeShaderManager_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<ShaderManager>(
-            new ShaderManager()));
+    return reinterpret_cast<jlong>(new ShaderManager());
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeShaderManager_addCustomShader(
         JNIEnv * env, jobject obj, jlong jshader_manager, jstring vertex_shader,
         jstring fragment_shader) {
-    std::shared_ptr<ShaderManager> shader_manager =
-            *reinterpret_cast<std::shared_ptr<ShaderManager>*>(jshader_manager);
+    ShaderManager* shader_manager =
+            reinterpret_cast<ShaderManager*>(jshader_manager);
     const char *vertex_str = env->GetStringUTFChars(vertex_shader, 0);
     std::string native_vertex_shader = std::string(vertex_str);
     const char *fragment_str = env->GetStringUTFChars(fragment_shader, 0);
@@ -72,32 +64,13 @@ Java_org_gearvrf_NativeShaderManager_addCustomShader(
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeShaderManager_getCustomShader(
         JNIEnv * env, jobject obj, jlong jshader_manager, jint id) {
-    std::shared_ptr<ShaderManager> shader_manager =
-            *reinterpret_cast<std::shared_ptr<ShaderManager>*>(jshader_manager);
+    ShaderManager* shader_manager =
+            reinterpret_cast<ShaderManager*>(jshader_manager);
     try {
-        std::shared_ptr<CustomShader> custom_shader =
-                shader_manager->getCustomShader(id);
-        return reinterpret_cast<jlong>(new std::shared_ptr<CustomShader>(
-                custom_shader));
+        return reinterpret_cast<jlong>(shader_manager->getCustomShader(id));
     } catch (char const *e) {
         return 0;
     }
-}
-
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeShaderManager_equals(JNIEnv * env,
-        jobject obj, jlong jshader_manager, jlong jother) {
-    std::shared_ptr<ShaderManager> shader_manager =
-            *reinterpret_cast<std::shared_ptr<ShaderManager>*>(jshader_manager);
-    std::shared_ptr<ShaderManager> other = *reinterpret_cast<std::shared_ptr<
-            ShaderManager>*>(jother);
-    return shader_manager.get() == other.get();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeShaderManager_delete(JNIEnv * env,
-        jobject obj, jlong jshader_manager) {
-    delete reinterpret_cast<std::shared_ptr<ShaderManager>*>(jshader_manager);
 }
 
 }

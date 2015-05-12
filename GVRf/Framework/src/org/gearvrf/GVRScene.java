@@ -15,10 +15,21 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
+import org.gearvrf.utility.Log;
 
 /** The scene graph */
 public class GVRScene extends GVRHybridObject {
+    @SuppressWarnings("unused")
+    private static final String TAG = Log.tag(GVRScene.class);
+
+    private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
+    private GVRCameraRig mMainCameraRig;
+
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -54,17 +65,6 @@ public class GVRScene extends GVRHybridObject {
         super(gvrContext, ptr);
     }
 
-    static GVRScene factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRScene(gvrContext, ptr)
-                : (GVRScene) wrapper;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
-    }
-
     /**
      * Add an {@linkplain GVRSceneObject scene object}
      * 
@@ -72,7 +72,8 @@ public class GVRScene extends GVRHybridObject {
      *            The {@linkplain GVRSceneObject scene object} to add.
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
-        NativeScene.addSceneObject(getPtr(), sceneObject.getPtr());
+        mSceneObjects.add(sceneObject);
+        NativeScene.addSceneObject(getNative(), sceneObject.getNative());
     }
 
     /**
@@ -82,7 +83,20 @@ public class GVRScene extends GVRHybridObject {
      *            The {@linkplain GVRSceneObject scene object} to remove.
      */
     public void removeSceneObject(GVRSceneObject sceneObject) {
-        NativeScene.removeSceneObject(getPtr(), sceneObject.getPtr());
+        mSceneObjects.remove(sceneObject);
+        NativeScene.removeSceneObject(getNative(), sceneObject.getNative());
+    }
+
+    /**
+     * The top-level scene objects.
+     * 
+     * @return A read-only list containing all the 'root' scene objects (those
+     *         that were added directly to the scene).
+     * 
+     * @since 2.0.0
+     */
+    public List<GVRSceneObject> getSceneObjects() {
+        return Collections.unmodifiableList(mSceneObjects);
     }
 
     /**
@@ -90,8 +104,7 @@ public class GVRScene extends GVRHybridObject {
      *         on the screen.
      */
     public GVRCameraRig getMainCameraRig() {
-        long ptr = NativeScene.getMainCameraRig(getPtr());
-        return ptr == 0 ? null : GVRCameraRig.factory(getGVRContext(), ptr);
+        return mMainCameraRig;
     }
 
     /**
@@ -102,7 +115,8 @@ public class GVRScene extends GVRHybridObject {
      *            The {@link GVRCameraRig camera rig} to render with.
      */
     public void setMainCameraRig(GVRCameraRig cameraRig) {
-        NativeScene.setMainCameraRig(getPtr(), cameraRig.getPtr());
+        mMainCameraRig = cameraRig;
+        NativeScene.setMainCameraRig(getNative(), cameraRig.getNative());
     }
 
     /**
@@ -110,25 +124,28 @@ public class GVRScene extends GVRHybridObject {
      *         array.
      */
     public GVRSceneObject[] getWholeSceneObjects() {
-        long[] ptrs = NativeScene.getWholeSceneObjects(getPtr());
-        GVRSceneObject[] sceneObjects = new GVRSceneObject[ptrs.length];
-        for (int i = 0; i < ptrs.length; ++i) {
-            sceneObjects[i] = GVRSceneObject.factory(getGVRContext(), ptrs[i]);
+        List<GVRSceneObject> list = new ArrayList<GVRSceneObject>(mSceneObjects);
+        for (GVRSceneObject child : mSceneObjects) {
+            addChildren(list, child);
         }
-        return sceneObjects;
+        return list.toArray(new GVRSceneObject[list.size()]);
+    }
+
+    private void addChildren(List<GVRSceneObject> list,
+            GVRSceneObject sceneObject) {
+        for (GVRSceneObject child : sceneObject.rawGetChildren()) {
+            list.add(child);
+            addChildren(list, child);
+        }
     }
 }
 
 class NativeScene {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native void addSceneObject(long scene, long sceneObject);
+    static native void addSceneObject(long scene, long sceneObject);
 
-    public static native void removeSceneObject(long scene, long sceneObject);
+    static native void removeSceneObject(long scene, long sceneObject);
 
-    public static native long getMainCameraRig(long scene);
-
-    public static native void setMainCameraRig(long scene, long cameraRig);
-
-    public static native long[] getWholeSceneObjects(long scene);
+    static native void setMainCameraRig(long scene, long cameraRig);
 }

@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.gearvrf.utility.Log;
+
 /**
  * Finds the scene objects you are pointing to.
  * 
@@ -34,6 +36,8 @@ import java.util.List;
  * pointee holder to a scene object.
  */
 public class GVRPicker {
+    private static final String TAG = Log.tag(GVRPicker.class);
+
     private GVRPicker() {
     }
 
@@ -102,13 +106,16 @@ public class GVRPicker {
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene,
             float ox, float oy, float oz, float dx, float dy, float dz) {
         synchronized (scene) {
-            long[] ptrs = NativePicker.pickScene(scene.getPtr(), ox, oy, oz,
+            long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz,
                     dx, dy, dz);
             GVREyePointeeHolder[] eyePointeeHolders = new GVREyePointeeHolder[ptrs.length];
             GVRContext gvrContext = scene.getGVRContext();
             for (int i = 0, length = ptrs.length; i < length; ++i) {
-                eyePointeeHolders[i] = GVREyePointeeHolder.factory(gvrContext,
+                Log.d(TAG, "pickScene(): ptrs[%d] = %x", i, ptrs[i]);
+                eyePointeeHolders[i] = GVREyePointeeHolder.lookup(gvrContext,
                         ptrs[i]);
+                Log.d(TAG, "pickScene(): eyePointeeHolders[%d] = %s", i,
+                        eyePointeeHolders[i]);
             }
             return eyePointeeHolders;
         }
@@ -167,8 +174,8 @@ public class GVRPicker {
      */
     public static final float pickSceneObject(GVRSceneObject sceneObject,
             GVRCameraRig cameraRig) {
-        return NativePicker.pickSceneObject(sceneObject.getPtr(),
-                cameraRig.getPtr());
+        return NativePicker.pickSceneObject(sceneObject.getNative(),
+                cameraRig.getNative());
     }
 
     /**
@@ -233,12 +240,12 @@ public class GVRPicker {
         synchronized (scene) {
             GVRContext gvrContext = scene.getGVRContext();
 
-            long[] pointers = NativePicker.pickScene(scene.getPtr(), ox, oy,
+            long[] pointers = NativePicker.pickScene(scene.getNative(), ox, oy,
                     oz, dx, dy, dz);
             List<GVRPickedObject> result = new ArrayList<GVRPickedObject>(
                     pointers.length);
             for (long pointer : pointers) {
-                GVREyePointeeHolder holder = GVREyePointeeHolder.factory(
+                GVREyePointeeHolder holder = GVREyePointeeHolder.lookup(
                         gvrContext, pointer);
                 result.add(new GVRPickedObject(holder));
             }
@@ -301,8 +308,8 @@ public class GVRPicker {
 }
 
 final class NativePicker {
-    public static native long[] pickScene(long scene, float ox, float oy,
-            float oz, float dx, float dy, float dz);
+    static native long[] pickScene(long scene, float ox, float oy, float oz,
+            float dx, float dy, float dz);
 
-    public static native float pickSceneObject(long sceneObject, long cameraRig);
+    static native float pickSceneObject(long sceneObject, long cameraRig);
 }

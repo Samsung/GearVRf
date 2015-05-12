@@ -443,6 +443,7 @@ public abstract class GVRContext {
      *             {@link #loadTexture(GVRAndroidResource)}
      * 
      */
+    @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(String fileName) {
 
         assertGLThread();
@@ -484,6 +485,7 @@ public abstract class GVRContext {
      * 
      * @since 1.6.5
      */
+    @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(GVRAndroidResource resource) {
 
         assertGLThread();
@@ -1394,11 +1396,7 @@ public abstract class GVRContext {
 
     private static final List<Runnable> sHandlers = new ArrayList<Runnable>();
 
-    abstract GVRReferenceQueue getReferenceQueue();
-
     abstract GVRRenderBundle getRenderBundle();
-
-    abstract GVRRecyclableObjectProtector getRecyclableObjectProtector();
 
     /**
      * Capture a 2D screenshot from the position in the middle of left eye and

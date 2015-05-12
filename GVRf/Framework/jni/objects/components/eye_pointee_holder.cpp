@@ -31,12 +31,11 @@ EyePointeeHolder::EyePointeeHolder() :
 EyePointeeHolder::~EyePointeeHolder() {
 }
 
-void EyePointeeHolder::addPointee(const std::shared_ptr<EyePointee>& pointee) {
+void EyePointeeHolder::addPointee(EyePointee* pointee) {
     pointees_.push_back(pointee);
 }
 
-void EyePointeeHolder::removePointee(
-        const std::shared_ptr<EyePointee>& pointee) {
+void EyePointeeHolder::removePointee(EyePointee* pointee) {
     pointees_.erase(std::remove(pointees_.begin(), pointees_.end(), pointee),
             pointees_.end());
 }

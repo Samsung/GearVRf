@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /**
  * An actual eye pointee.
@@ -32,6 +30,8 @@ package org.gearvrf;
  * tested against.
  */
 public class GVRMeshEyePointee extends GVREyePointee {
+    private GVRMesh mMesh;
+
     /**
      * Constructor.
      * 
@@ -46,7 +46,8 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      */
     public GVRMeshEyePointee(GVRContext gvrContext, GVRMesh mesh) {
-        super(gvrContext, NativeMeshEyePointee.ctor(mesh.getPtr()));
+        super(gvrContext, NativeMeshEyePointee.ctor(mesh.getNative()));
+        mMesh = mesh;
     }
 
     /**
@@ -56,8 +57,7 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      */
     public GVRMesh getMesh() {
-        return GVRMesh.factory(getGVRContext(),
-                NativeMeshEyePointee.getMesh(getPtr()));
+        return mMesh;
     }
 
     /**
@@ -68,14 +68,13 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      */
     public void setMesh(GVRMesh mesh) {
-        NativeMeshEyePointee.setMesh(getPtr(), mesh.getPtr());
+        mMesh = mesh;
+        NativeMeshEyePointee.setMesh(getNative(), mesh.getNative());
     }
 }
 
 class NativeMeshEyePointee {
-    public static native long ctor(long mesh);
+    static native long ctor(long mesh);
 
-    public static native long getMesh(long meshEyePointee);
-
-    public static native void setMesh(long meshEyePointee, long mesh);
+    static native void setMesh(long meshEyePointee, long mesh);
 }

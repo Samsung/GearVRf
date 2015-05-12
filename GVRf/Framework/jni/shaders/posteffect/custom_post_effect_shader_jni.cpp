@@ -60,8 +60,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addTextureKey(
         JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
         jstring variable_name, jstring key) {
-    std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader =
-            *reinterpret_cast<std::shared_ptr<CustomPostEffectShader>*>(jcustom_post_effect_shader);
+    CustomPostEffectShader* custom_post_effect_shader =
+            reinterpret_cast<CustomPostEffectShader*>(jcustom_post_effect_shader);
     const char* char_variable_name = env->GetStringUTFChars(variable_name, 0);
     std::string native_variable_name = std::string(char_variable_name);
     const char* char_key = env->GetStringUTFChars(key, 0);
@@ -75,8 +75,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addFloatKey(
         JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
         jstring variable_name, jstring key) {
-    std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader =
-            *reinterpret_cast<std::shared_ptr<CustomPostEffectShader>*>(jcustom_post_effect_shader);
+    CustomPostEffectShader* custom_post_effect_shader =
+            reinterpret_cast<CustomPostEffectShader*>(jcustom_post_effect_shader);
     const char* char_variable_name = env->GetStringUTFChars(variable_name, 0);
     std::string native_variable_name = std::string(char_variable_name);
     const char* char_key = env->GetStringUTFChars(key, 0);
@@ -90,8 +90,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addVec2Key(
         JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
         jstring variable_name, jstring key) {
-    std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader =
-            *reinterpret_cast<std::shared_ptr<CustomPostEffectShader>*>(jcustom_post_effect_shader);
+    CustomPostEffectShader* custom_post_effect_shader =
+            reinterpret_cast<CustomPostEffectShader*>(jcustom_post_effect_shader);
     const char* char_variable_name = env->GetStringUTFChars(variable_name, 0);
     std::string native_variable_name = std::string(char_variable_name);
     const char* char_key = env->GetStringUTFChars(key, 0);
@@ -105,8 +105,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addVec3Key(
         JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
         jstring variable_name, jstring key) {
-    std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader =
-            *reinterpret_cast<std::shared_ptr<CustomPostEffectShader>*>(jcustom_post_effect_shader);
+    CustomPostEffectShader* custom_post_effect_shader =
+            reinterpret_cast<CustomPostEffectShader*>(jcustom_post_effect_shader);
     const char* char_variable_name = env->GetStringUTFChars(variable_name, 0);
     std::string native_variable_name = std::string(char_variable_name);
     const char* char_key = env->GetStringUTFChars(key, 0);
@@ -120,8 +120,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addVec4Key(
         JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
         jstring variable_name, jstring key) {
-    std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader =
-            *reinterpret_cast<std::shared_ptr<CustomPostEffectShader>*>(jcustom_post_effect_shader);
+    CustomPostEffectShader* custom_post_effect_shader =
+            reinterpret_cast<CustomPostEffectShader*>(jcustom_post_effect_shader);
     const char* char_variable_name = env->GetStringUTFChars(variable_name, 0);
     std::string native_variable_name = std::string(char_variable_name);
     const char* char_key = env->GetStringUTFChars(key, 0);
@@ -135,8 +135,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addMat4Key(
         JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
         jstring variable_name, jstring key) {
-    std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader =
-            *reinterpret_cast<std::shared_ptr<CustomPostEffectShader>*>(jcustom_post_effect_shader);
+    CustomPostEffectShader* custom_post_effect_shader =
+            reinterpret_cast<CustomPostEffectShader*>(jcustom_post_effect_shader);
     const char* char_variable_name = env->GetStringUTFChars(variable_name, 0);
     std::string native_variable_name = std::string(char_variable_name);
     const char* char_key = env->GetStringUTFChars(key, 0);

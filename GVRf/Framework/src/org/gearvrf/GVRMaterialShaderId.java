@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import android.util.SparseArray;
@@ -46,6 +45,7 @@ public abstract class GVRMaterialShaderId {
 
     final int ID;
 
+    /** @deprecated Probably unnecessary ... */
     @SuppressWarnings("unchecked")
     protected final static <T extends GVRMaterialShaderId> T get(int id) {
         return (T) sIds.get(id);

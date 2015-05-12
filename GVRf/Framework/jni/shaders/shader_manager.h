@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Manages instances of shaders.
  ***************************************************************************/
@@ -38,81 +37,84 @@ namespace gvr {
 class ShaderManager: public HybridObject {
 public:
     ShaderManager() :
-            HybridObject(),
-            unlit_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
-            oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
-            cubemap_shader_(), cubemap_reflection_shader_(),
-            error_shader_(), latest_custom_shader_id_(
+            HybridObject(), unlit_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(), oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(), cubemap_shader_(), cubemap_reflection_shader_(), error_shader_(), latest_custom_shader_id_(
                     INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
     }
     ~ShaderManager() {
+        delete unlit_shader_;
+        delete unlit_horizontal_stereo_shader_;
+        delete unlit_vertical_stereo_shader_;
+        delete oes_shader_;
+        delete oes_horizontal_stereo_shader_;
+        delete oes_vertical_stereo_shader_;
+        delete cubemap_shader_;
+        delete cubemap_reflection_shader_;
+        delete error_shader_;
+        // We don't delete the custom shaders, as their Java owner-objects will do that for us.
     }
-    std::shared_ptr<UnlitShader> getUnlitShader() {
+    UnlitShader* getUnlitShader() {
         if (!unlit_shader_) {
-            unlit_shader_.reset(new UnlitShader());
+            unlit_shader_ = new UnlitShader();
         }
         return unlit_shader_;
     }
-    std::shared_ptr<UnlitHorizontalStereoShader> getUnlitHorizontalStereoShader() {
+    UnlitHorizontalStereoShader* getUnlitHorizontalStereoShader() {
         if (!unlit_horizontal_stereo_shader_) {
-            unlit_horizontal_stereo_shader_.reset(
-                    new UnlitHorizontalStereoShader());
+            unlit_horizontal_stereo_shader_ = new UnlitHorizontalStereoShader();
         }
         return unlit_horizontal_stereo_shader_;
     }
-    std::shared_ptr<UnlitVerticalStereoShader> getUnlitVerticalStereoShader() {
+    UnlitVerticalStereoShader* getUnlitVerticalStereoShader() {
         if (!unlit_vertical_stereo_shader_) {
-            unlit_vertical_stereo_shader_.reset(
-                    new UnlitVerticalStereoShader());
+            unlit_vertical_stereo_shader_ = new UnlitVerticalStereoShader();
         }
         return unlit_vertical_stereo_shader_;
     }
-    std::shared_ptr<OESShader> getOESShader() {
+    OESShader* getOESShader() {
         if (!oes_shader_) {
-            oes_shader_.reset(new OESShader());
+            oes_shader_ = new OESShader();
         }
         return oes_shader_;
     }
-    std::shared_ptr<OESHorizontalStereoShader> getOESHorizontalStereoShader() {
+    OESHorizontalStereoShader* getOESHorizontalStereoShader() {
         if (!oes_horizontal_stereo_shader_) {
-            oes_horizontal_stereo_shader_.reset(
-                    new OESHorizontalStereoShader());
+            oes_horizontal_stereo_shader_ = new OESHorizontalStereoShader();
         }
         return oes_horizontal_stereo_shader_;
     }
-    std::shared_ptr<OESVerticalStereoShader> getOESVerticalStereoShader() {
+    OESVerticalStereoShader* getOESVerticalStereoShader() {
         if (!oes_vertical_stereo_shader_) {
-            oes_vertical_stereo_shader_.reset(new OESVerticalStereoShader());
+            oes_vertical_stereo_shader_ = new OESVerticalStereoShader();
         }
         return oes_vertical_stereo_shader_;
     }
-    std::shared_ptr<CubemapShader> getCubemapShader() {
+    CubemapShader* getCubemapShader() {
         if (!cubemap_shader_) {
-        	cubemap_shader_.reset(new CubemapShader());
+            cubemap_shader_ = new CubemapShader();
         }
         return cubemap_shader_;
     }
-    std::shared_ptr<CubemapReflectionShader> getCubemapReflectionShader() {
+    CubemapReflectionShader* getCubemapReflectionShader() {
         if (!cubemap_reflection_shader_) {
-        	cubemap_reflection_shader_.reset(new CubemapReflectionShader());
+            cubemap_reflection_shader_ = new CubemapReflectionShader();
         }
         return cubemap_reflection_shader_;
     }
-    std::shared_ptr<ErrorShader> getErrorShader() {
+    ErrorShader* getErrorShader() {
         if (!error_shader_) {
-            error_shader_.reset(new ErrorShader());
+            error_shader_ = new ErrorShader();
         }
         return error_shader_;
     }
     int addCustomShader(std::string vertex_shader,
             std::string fragment_shader) {
         int id = latest_custom_shader_id_++;
-        std::shared_ptr<CustomShader> custom_shader(
+        CustomShader* custom_shader(
                 new CustomShader(vertex_shader, fragment_shader));
         custom_shaders_[id] = custom_shader;
         return id;
     }
-    std::shared_ptr<CustomShader> getCustomShader(int id) {
+    CustomShader* getCustomShader(int id) {
         auto it = custom_shaders_.find(id);
         if (it != custom_shaders_.end()) {
             return it->second;
@@ -130,17 +132,17 @@ private:
 
 private:
     static const int INITIAL_CUSTOM_SHADER_INDEX = 1000;
-    std::shared_ptr<UnlitShader> unlit_shader_;
-    std::shared_ptr<UnlitHorizontalStereoShader> unlit_horizontal_stereo_shader_;
-    std::shared_ptr<UnlitVerticalStereoShader> unlit_vertical_stereo_shader_;
-    std::shared_ptr<OESShader> oes_shader_;
-    std::shared_ptr<OESHorizontalStereoShader> oes_horizontal_stereo_shader_;
-    std::shared_ptr<OESVerticalStereoShader> oes_vertical_stereo_shader_;
-    std::shared_ptr<CubemapShader> cubemap_shader_;
-    std::shared_ptr<CubemapReflectionShader> cubemap_reflection_shader_;
-    std::shared_ptr<ErrorShader> error_shader_;
+    UnlitShader* unlit_shader_;
+    UnlitHorizontalStereoShader* unlit_horizontal_stereo_shader_;
+    UnlitVerticalStereoShader* unlit_vertical_stereo_shader_;
+    OESShader* oes_shader_;
+    OESHorizontalStereoShader* oes_horizontal_stereo_shader_;
+    OESVerticalStereoShader* oes_vertical_stereo_shader_;
+    CubemapShader* cubemap_shader_;
+    CubemapReflectionShader* cubemap_reflection_shader_;
+    ErrorShader* error_shader_;
     int latest_custom_shader_id_;
-    std::map<int, std::shared_ptr<CustomShader>> custom_shaders_;
+    std::map<int, CustomShader*> custom_shaders_;
 };
 
 }

@@ -96,8 +96,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     protected float mFrameTime = 0.0f;
     protected final List<Integer> mDownKeys = new ArrayList<Integer>();
 
-    protected final GVRReferenceQueue mReferenceQueue = new GVRReferenceQueue();
-    protected final GVRRecyclableObjectProtector mRecyclableObjectProtector = new GVRRecyclableObjectProtector();
     GVRActivity mActivity;
     protected int mCurrentEye;
 
@@ -206,7 +204,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
      */
     void onDestroy() {
         Log.v(TAG, "onDestroy");
-        mReferenceQueue.onDestroy();
         mRotationSensor.onDestroy();
     }
 
@@ -243,12 +240,12 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private void renderCamera(long activity_ptr, GVRScene scene,
             GVRCamera camera, GVRRenderTexture renderTexture,
             GVRRenderBundle renderBundle) {
-        renderCamera(activity_ptr, scene.getPtr(), camera.getPtr(),
-                renderTexture.getPtr(), renderBundle.getMaterialShaderManager()
-                        .getPtr(), renderBundle.getPostEffectShaderManager()
-                        .getPtr(), renderBundle.getPostEffectRenderTextureA()
-                        .getPtr(), renderBundle.getPostEffectRenderTextureB()
-                        .getPtr());
+        renderCamera(activity_ptr, scene.getNative(), camera.getNative(),
+                renderTexture.getNative(), renderBundle
+                        .getMaterialShaderManager().getNative(), renderBundle
+                        .getPostEffectShaderManager().getNative(), renderBundle
+                        .getPostEffectRenderTextureA().getNative(),
+                renderBundle.getPostEffectRenderTextureB().getNative());
     }
 
     /**
@@ -306,7 +303,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             mReadbackBuffer.order(ByteOrder.nativeOrder());
         }
         readRenderResultNative(mRenderBundle.getPostEffectRenderTextureA()
-                .getPtr(), mReadbackBuffer);
+                .getNative(), mReadbackBuffer);
     }
 
     private Bitmap generateBitmap(final byte[] byteArray, final int width,
@@ -670,7 +667,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
             doMemoryManagementAndPerFrameCallbacks();
 
-            GVRHybridObject.onStep();
             mScript.onStep();
         }
 
@@ -698,12 +694,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
      * @return Current time, from {@link GVRTime#getCurrentTime()}
      */
     private long doMemoryManagementAndPerFrameCallbacks() {
-        /*
-         * Native heap memory, GPU memory management.
-         */
-        mReferenceQueue.clean();
-        mRecyclableObjectProtector.clean();
-
         long currentTime = GVRTime.getCurrentTime();
         mFrameTime = (currentTime - mPreviousTimeNanos) / 1e9f;
         mPreviousTimeNanos = currentTime;
@@ -735,7 +725,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     void closeSplashScreen() {
         if (mSplashScreen != null) {
-            mSplashScreen.close();
+            mSplashScreen.closeSplashScreen();
         }
     }
 
@@ -862,17 +852,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     @Override
-    GVRReferenceQueue getReferenceQueue() {
-        return mReferenceQueue;
-    }
-
-    @Override
     GVRRenderBundle getRenderBundle() {
         return mRenderBundle;
-    }
-
-    @Override
-    GVRRecyclableObjectProtector getRecyclableObjectProtector() {
-        return mRecyclableObjectProtector;
     }
 }

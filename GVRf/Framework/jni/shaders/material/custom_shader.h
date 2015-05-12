@@ -53,8 +53,7 @@ public:
     void addUniformVec3Key(std::string variable_name, std::string key);
     void addUniformVec4Key(std::string variable_name, std::string key);
     void addUniformMat4Key(std::string variable_name, std::string key);
-    void render(const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data, bool right);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, bool right);
     static int getGLTexture(int n);
 
 private:

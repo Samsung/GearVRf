@@ -75,103 +75,102 @@ Java_org_gearvrf_NativeOrthogonalCamera_setFarClippingDistance(
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<OrthogonalCamera>(
-            new OrthogonalCamera()));
+    return reinterpret_cast<jlong>(new OrthogonalCamera());
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_getLeftClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     return orthogonal_camera->left_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_setLeftClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat left) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     orthogonal_camera->set_near_clipping_distance(left);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_getRightClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     return orthogonal_camera->right_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_setRightClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat right) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     orthogonal_camera->set_right_clipping_distance(right);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_getBottomClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     return orthogonal_camera->bottom_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_setBottomClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat bottom) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     orthogonal_camera->set_bottom_clipping_distance(bottom);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_getTopClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     return orthogonal_camera->top_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_setTopClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat top) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     orthogonal_camera->set_top_clipping_distance(top);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_getNearClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     return orthogonal_camera->near_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_setNearClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat near) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     orthogonal_camera->set_near_clipping_distance(near);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_getFarClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     return orthogonal_camera->far_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeOrthogonalCamera_setFarClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat far) {
-    std::shared_ptr<OrthogonalCamera> orthogonal_camera =
-            *reinterpret_cast<std::shared_ptr<OrthogonalCamera>*>(jorthogonal_camera);
+    OrthogonalCamera* orthogonal_camera =
+            reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
     orthogonal_camera->set_far_clipping_distance(far);
 }
 }
