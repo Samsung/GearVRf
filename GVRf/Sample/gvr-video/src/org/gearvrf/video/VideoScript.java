@@ -410,10 +410,12 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/play-active.png"));
             mPlayPauseButton = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.7f, 0.7f), mInactivePause);
-            mPlayPauseButton.getRenderData().getMaterial().setTexture("active_play", mActivePlay);
+            mPlayPauseButton.getRenderData().getMaterial()
+                    .setTexture("active_play", mActivePlay);
             mPlayPauseButton.getRenderData().getMaterial()
                     .setTexture("inactive_play", mInactivePlay);
-            mPlayPauseButton.getRenderData().getMaterial().setTexture("active_pause", mActivePause);
+            mPlayPauseButton.getRenderData().getMaterial()
+                    .setTexture("active_pause", mActivePause);
             mPlayPauseButton.getRenderData().getMaterial()
                     .setTexture("inactive_pause", mInactivePause);
             mPlayPauseButton.getTransform().setPosition(0.0f, -0.8f, -8.0f);
@@ -435,8 +437,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/front-active.png"));
             mFrontButton = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.7f, 0.7f), mInactiveFront);
-            mFrontButton.getRenderData().getMaterial().setTexture("active_front", mActiveFront);
-            mFrontButton.getRenderData().getMaterial().setTexture("inactive_front", mInactiveFront);
+            mFrontButton.getRenderData().getMaterial()
+                    .setTexture("active_front", mActiveFront);
+            mFrontButton.getRenderData().getMaterial()
+                    .setTexture("inactive_front", mInactiveFront);
             mFrontButton.getTransform().setPosition(1.2f, -0.8f, -8.0f);
             mFrontButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -456,8 +460,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/back-active.png"));
             mBackButton = new GVRSceneObject(gvrContext, gvrContext.createQuad(
                     0.7f, 0.7f), mInactiveBack);
-            mBackButton.getRenderData().getMaterial().setTexture("active_back", mActiveBack);
-            mBackButton.getRenderData().getMaterial().setTexture("inactive_back", mInactiveBack);
+            mBackButton.getRenderData().getMaterial()
+                    .setTexture("active_back", mActiveBack);
+            mBackButton.getRenderData().getMaterial()
+                    .setTexture("inactive_back", mInactiveBack);
             mBackButton.getTransform().setPosition(-1.2f, -0.8f, -8.0f);
             mBackButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -476,8 +482,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/imaxselect.png"));
             mImaxButton = new GVRSceneObject(gvrContext, gvrContext.createQuad(
                     0.9f, 0.35f), mInactiveImax);
-            mImaxButton.getRenderData().getMaterial().setTexture("active_imax", mActiveImax);
-            mImaxButton.getRenderData().getMaterial().setTexture("inactive_imax", mInactiveImax);
+            mImaxButton.getRenderData().getMaterial()
+                    .setTexture("active_imax", mActiveImax);
+            mImaxButton.getRenderData().getMaterial()
+                    .setTexture("inactive_imax", mInactiveImax);
             mImaxButton.getTransform().setPosition(2.5f, -0.9f, -7.5f);
             mImaxButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -496,7 +504,8 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/selectionselect.png"));
             mSelectButton = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.9f, 0.35f), mInactiveSelect);
-            mSelectButton.getRenderData().getMaterial().setTexture("active_select", mActiveSelect);
+            mSelectButton.getRenderData().getMaterial()
+                    .setTexture("active_select", mActiveSelect);
             mSelectButton.getRenderData().getMaterial()
                     .setTexture("inactive_select", mInactiveSelect);
             mSelectButton.getTransform().setPosition(-2.5f, -0.9f, -7.5f);
@@ -586,8 +595,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "global/home-active.png"));
             mGlobalHome = new GVRSceneObject(gvrContext, gvrContext.createQuad(
                     3.775f, 1.875f), mInactiveHome);
-            mGlobalHome.getRenderData().getMaterial().setTexture("active_home", mActiveHome);
-            mGlobalHome.getRenderData().getMaterial().setTexture("inactive_home", mInactiveHome); 
+            mGlobalHome.getRenderData().getMaterial()
+                    .setTexture("active_home", mActiveHome);
+            mGlobalHome.getRenderData().getMaterial()
+                    .setTexture("inactive_home", mInactiveHome);
             mGlobalHome.getTransform().setPosition(0.0f, -2.0f, -15.0f);
             mGlobalHome.getRenderData().setDepthTest(false);
             mGlobalHome.getRenderData().setRenderingOrder(
@@ -1074,23 +1085,27 @@ public class VideoScript extends GVRScript {
         }
     }
 
-    public void onButtonDown() {
+    void onPause() {
+        mMediaPlayer.pause();
+    }
+
+    void onButtonDown() {
         mIsButtonDown = true;
     }
 
-    public void onLongButtonPress() {
+    void onLongButtonPress() {
         mIsLongButtonPressed = true;
     }
 
-    public void onTouchEvent(MotionEvent event) {
+    void onTouchEvent(MotionEvent event) {
         mIsTouched = true;
     }
 
-    public void onSingleTap(MotionEvent e) {
+    void onSingleTap(MotionEvent e) {
         mIsSingleTapped = true;
     }
 
-    public void setBatteryLevel(int level) {
+    void setBatteryLevel(int level) {
         mBatteryLevel = level;
     }
 
