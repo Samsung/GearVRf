@@ -52,9 +52,18 @@ public abstract class GVRHybridObject implements Closeable {
     /**
      * Close this object, releasing any native resources.
      * 
+     * Most objects will be automatically closed when Java's garbage collector
+     * detects that they are no longer being used: Explicitly closing an object
+     * that's still linked into the scene graph will almost certainly crash your
+     * GVRF app. You should only {@code close()} transient objects (especially
+     * those that use lots of memory, like large textures) that you
+     * <em>know</em> are no longer being used.
+     * 
+     * <p>
      * This method is {@code final} to protect the {@code close()} /
      * {@code finalize()} 'machinery' - if you need to run any code when a
-     * descendant is closed, override the {@link #destructor()} method.
+     * descendant is closed, override the ({@code protected})
+     * {@link #destructor()} method.
      * 
      * @since 2.0.0
      */
