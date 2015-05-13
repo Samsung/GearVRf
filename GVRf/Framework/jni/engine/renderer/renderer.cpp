@@ -185,7 +185,7 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16])
 {
     float t;
 
-    /* Extract the numbers for the RIGHT plane */
+    /* Extract the RIGHT plane */
     frustum[0][0] = mvp_matrix[ 3] - mvp_matrix[ 0];
     frustum[0][1] = mvp_matrix[ 7] - mvp_matrix[ 4];
     frustum[0][2] = mvp_matrix[11] - mvp_matrix[ 8];
@@ -198,7 +198,7 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16])
     frustum[0][2] /= t;
     frustum[0][3] /= t;
 
-    /* Extract the numbers for the LEFT plane */
+    /* Extract the LEFT plane */
     frustum[1][0] = mvp_matrix[ 3] + mvp_matrix[ 0];
     frustum[1][1] = mvp_matrix[ 7] + mvp_matrix[ 4];
     frustum[1][2] = mvp_matrix[11] + mvp_matrix[ 8];
@@ -275,7 +275,13 @@ bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
    float Ymax = vertex_limit[4];
    float Zmax = vertex_limit[5];
 
-   for( p = 0; p < 6; p++ )
+   // p = 0 -> RIGHT plane
+   // P = 1 -> LEFT plane
+   // P = 2 -> BOTTOM plane
+   // P = 3 -> TOP plane
+   // P = 4 -> FAR plane
+   // P = 5 -> NEAR plane
+   for( p = 0; p < 6; p++ )	// Checks if any of extreme edge is crossing any FRUSTUM plane
    {
       if( frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin) + frustum[p][2] * (Zmin) + frustum[p][3] > 0 )
          continue;
@@ -293,9 +299,9 @@ bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
          continue;
       if( frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax) + frustum[p][2] * (Zmax) + frustum[p][3] > 0 )
          continue;
-      return false;
+      return false;	// returns FALSE if the bounding box is outside of the FRUSTUM
    }
-   return true;
+   return true;	// returns TRUE if the bounding box is inside of the FRUSTUM
 }
 
 
