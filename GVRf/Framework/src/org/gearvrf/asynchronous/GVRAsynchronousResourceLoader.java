@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -40,7 +41,6 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 /**
  * Internal API for asynchronous resource loading.
@@ -319,21 +319,18 @@ public class GVRAsynchronousResourceLoader {
      * @param priority
      *            This request's priority. Please see the notes on asynchronous
      *            priorities in the <a href="package-summary.html#async">package
-     *            description</a>. Also, please note priorities only apply to
-     *            uncompressed textures (standard Android bitmap files, which
-     *            can take hundreds of milliseconds to load): compressed
-     *            textures load so quickly that they are not run through the
-     *            request scheduler.
+     *            description</a>.
      * @return A {@link Future} that you can pass to methods like
      *         {@link GVRShaders#setMainTexture(Future)}
      */
     public static Future<GVRTexture> loadFutureCubemapTexture(
-            GVRContext gvrContext, GVRAndroidResource resource, int priority) {
+            GVRContext gvrContext, GVRAndroidResource resource, int priority,
+            Map<String, Integer> faceIndexMap) {
         FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
                 resource);
 
         AsyncCubemapTexture.loadTexture(gvrContext, result.callback, resource,
-                priority);
+                priority, faceIndexMap);
 
         return result;
     }

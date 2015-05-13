@@ -23,7 +23,7 @@ import android.graphics.Bitmap;
 /** Cube map texture. */
 public class GVRCubemapTexture extends GVRTexture {
     /**
-     * Constructs a cube map texture using a pre-existing {@link Bitmap}s.
+     * Constructs a cube map texture using six pre-existing {@link Bitmap}s.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
@@ -37,7 +37,7 @@ public class GVRCubemapTexture extends GVRTexture {
      */
     public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray) {
         super(gvrContext, NativeCubemapTexture
-                .bitmapListConstructor(bitmapArray));
+                .bitmapArrayConstructor(bitmapArray));
     }
 
     /**
@@ -62,11 +62,7 @@ public class GVRCubemapTexture extends GVRTexture {
         }
     }
 
-    /**
-     * Internal map data structure. Public only for visible to
-     * {@code AsyncCubemapTexture}.
-     */
-    public static Map<String, Integer> faceIndexMap = new HashMap<String, Integer>(
+    final static Map<String, Integer> faceIndexMap = new HashMap<String, Integer>(
             6);
     static {
         faceIndexMap.put("posx.png", 0);
@@ -79,5 +75,5 @@ public class GVRCubemapTexture extends GVRTexture {
 }
 
 class NativeCubemapTexture {
-    static native long bitmapListConstructor(Bitmap[] bitmapArray);
+    static native long bitmapArrayConstructor(Bitmap[] bitmapArray);
 }

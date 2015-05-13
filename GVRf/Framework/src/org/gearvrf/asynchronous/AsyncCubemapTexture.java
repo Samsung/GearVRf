@@ -16,6 +16,7 @@
 package org.gearvrf.asynchronous;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -49,7 +50,8 @@ abstract class AsyncCubemapTexture {
 
     static void loadTexture(GVRContext gvrContext,
             CancelableCallback<GVRTexture> callback,
-            GVRAndroidResource resource, int priority) {
+            GVRAndroidResource resource, int priority, Map<String, Integer> map) {
+        faceIndexMap = map;
         Throttler.registerCallback(gvrContext, TEXTURE_CLASS, callback,
                 resource, priority);
     }
@@ -60,7 +62,7 @@ abstract class AsyncCubemapTexture {
 
     private static final String TAG = Log.tag(AsyncCubemapTexture.class);
 
-    private static final Class<? extends GVRHybridObject> TEXTURE_CLASS = GVRTexture.class;
+    private static final Class<? extends GVRHybridObject> TEXTURE_CLASS = GVRCubemapTexture.class;
 
     /*
      * Asynchronous loader
@@ -94,8 +96,7 @@ abstract class AsyncCubemapTexture {
                 ZipEntry zipEntry = null;
                 while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                     String imageName = zipEntry.getName();
-                    Integer imageIndex = GVRCubemapTexture.faceIndexMap
-                            .get(imageName);
+                    Integer imageIndex = faceIndexMap.get(imageName);
                     if (imageIndex == null) {
                         throw new IllegalArgumentException("Name of image ("
                                 + imageName + ") is not set!");
@@ -132,4 +133,5 @@ abstract class AsyncCubemapTexture {
                 });
     }
 
+    private static Map<String, Integer> faceIndexMap;
 }

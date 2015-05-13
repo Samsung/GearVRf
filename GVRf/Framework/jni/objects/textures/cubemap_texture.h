@@ -32,13 +32,6 @@ class CubemapTexture: public Texture {
 public:
 	explicit CubemapTexture(JNIEnv* env, jobjectArray bitmapArray) :
 			Texture(new GLTexture(TARGET)) {
-		jint list_length = env->GetArrayLength(bitmapArray);
-		if (list_length != 6) {
-			std::string error =
-					"new CubemapTexture() failed! Input bitmapList's length is not 6.";
-			throw error;
-		}
-
 		glBindTexture(TARGET, gl_texture_->id());
 		for (int i = 0; i < 6; i++) {
 			jobject bitmap = env->GetObjectArrayElement(bitmapArray, i);

@@ -126,7 +126,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix, const glm::mat4
 	float opacity = render_data->material()->getFloat("opacity");
 
 	if (texture->getTarget() != GL_TEXTURE_CUBE_MAP) {
-		std::string error = "CubemapShader::render : texture with wrong target";
+		std::string error = "CubemapReflectionShader::render : texture with wrong target";
 		throw error;
 	}
 
@@ -175,7 +175,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix, const glm::mat4
 			mesh->triangles().data());
 #endif
 
-	checkGlError("CubemapShader::render");
+	checkGlError("CubemapReflectionShader::render");
 }
 
 }

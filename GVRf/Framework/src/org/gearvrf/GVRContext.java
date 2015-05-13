@@ -499,7 +499,7 @@ public abstract class GVRContext {
      * 
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
-     * the bitmap is quite tiny, you probably don't want to call this directly
+     * the cube map is quite tiny, you probably don't want to call this directly
      * from your {@link GVRScript#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames.
      * 
@@ -1147,7 +1147,7 @@ public abstract class GVRContext {
      *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
      *            "posz.png", and "negz.png", which can be changed by calling
      *            {@link GVRCubemapTexture#setFaceNames(String[])}.
-     * @returnA {@link Future} that you can pass to methods like
+     * @return A {@link Future} that you can pass to methods like
      *          {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.9
@@ -1155,7 +1155,7 @@ public abstract class GVRContext {
     public Future<GVRTexture> loadFutureCubemapTexture(
             GVRAndroidResource resource) {
         return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(this,
-                resource, DEFAULT_PRIORITY);
+                resource, DEFAULT_PRIORITY, GVRCubemapTexture.faceIndexMap);
     }
 
     /**
