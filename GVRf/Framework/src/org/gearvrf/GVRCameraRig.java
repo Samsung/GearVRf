@@ -15,8 +15,8 @@
 
 package org.gearvrf;
 
-import static org.gearvrf.utility.Preconditions.checkStringNotNullOrEmpty;
-import static org.gearvrf.utility.Preconditions.checkFloatNotNaNOrInfinity;
+import static org.gearvrf.utility.Assert.checkStringNotNullOrEmpty;
+import static org.gearvrf.utility.Assert.checkFloatNotNaNOrInfinity;
 
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {

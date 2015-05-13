@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Colors;
 import org.gearvrf.utility.Threads;
-import static org.gearvrf.utility.Preconditions.*;
+import static org.gearvrf.utility.Assert.*;
 
 import android.graphics.Color;
 

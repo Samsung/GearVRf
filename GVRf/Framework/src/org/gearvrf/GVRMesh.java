@@ -18,7 +18,7 @@ package org.gearvrf;
 import org.gearvrf.utility.Exceptions;
 
 import android.util.Log;
-import static org.gearvrf.utility.Preconditions.*;
+import static org.gearvrf.utility.Assert.*;
 
 /**
  * This is one of the key GVRF classes: It holds GL meshes.
