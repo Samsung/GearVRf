@@ -62,9 +62,9 @@ public class GVRCubeSceneObject extends GVRSceneObject {
         -SIZE,  SIZE,  SIZE,  // 15
 
         -SIZE,  SIZE,  SIZE,  // 16
-         SIZE,  SIZE, -SIZE,  // 17
+         SIZE,  SIZE,  SIZE,  // 17
         -SIZE,  SIZE, -SIZE,  // 18
-        -SIZE,  SIZE,  SIZE,  // 19
+         SIZE,  SIZE, -SIZE,  // 19
 
         -SIZE, -SIZE, -SIZE,  // 20
          SIZE, -SIZE, -SIZE,  // 21
@@ -82,12 +82,12 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     };
 
     private float[] texCoords = {
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 
+        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // front
+        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // right
+        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // back
+        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // left
+        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // top
+        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom
     };
 
     private char[] indices = {
