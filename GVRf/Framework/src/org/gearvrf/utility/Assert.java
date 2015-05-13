@@ -17,18 +17,20 @@ package org.gearvrf.utility;
 
 import android.text.TextUtils;
 
-public abstract class Preconditions {
-
-    /**
-     * The goal of this class is to improve the readability and to provide some
-     * common checking method to improve the robustness of GVRF. But in some
-     * cases, this may be a significant performance cost. Try to use and further
-     * extend this class carefully with concern on performance issue.
-     * 
-     * Actually, one purpose of this class may help us avoid from using
-     * GVRJniException which is not a proper way to throw/simulate an exception
-     * with JNI crash.
-     */
+/**
+ * The goal of this class is to improve the readability and to provide some
+ * common checking method to improve the robustness of GVRF.
+ * 
+ * Additionally, this class may help us avoid using {@link GVRJniException},
+ * which is (at best) a sort of fake exception-from-JNI.
+ * 
+ * <p>
+ * Obviously, all parameter checks add runtime cost. Try to use this class
+ * sparingly, on user-facing APIs that would otherwise crash: it's probably OK
+ * to return meaningless results on meaningless inputs; internal calls should
+ * generally rely on careful testing, not parameter checking.
+ */
+public abstract class Assert {
 
     /**
      * Check that the parameter is not {@code null}.
@@ -37,10 +39,10 @@ public abstract class Preconditions {
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
      * @param object
-     *            the parameter object can be any Java reference type, including
+     *            The parameter object can be any Java reference type, including
      *            arrays.
      * @throws IllegalArgumentException
-     *             if the object is null pointer.
+     *             If the object is null pointer.
      */
     public static void checkNotNull(String parameterName, Object object) {
         if (object == null) {
@@ -50,8 +52,7 @@ public abstract class Preconditions {
     }
 
     /**
-     * This function is to ensure that any input string value is not null or
-     * empty
+     * Check that the parameter string is not null or empty
      * 
      * @param value
      *            String value to be checked.
@@ -70,14 +71,379 @@ public abstract class Preconditions {
     }
 
     /**
-     * This function is to ensure that the length of input array is legal
-     * according to the expected components' number.
+     * Check that the parameter array has exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, int actualLength,
+            int expectedLength) {
+        if (actualLength != expectedLength) {
+            throw Exceptions.IllegalArgument(
+                    "Array %s should have %d elements, not %d", parameterName,
+                    expectedLength, actualLength);
+        }
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, boolean[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, char[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, byte[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, short[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, int[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, long[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, float[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, double[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has
+     * exactly the right number of elements.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param expectedLength
+     *            The expected array length
+     */
+    public static void checkArrayLength(String parameterName, Object[] array,
+            int expectedLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, expectedLength);
+    }
+
+    /**
+     * Check that the parameter array has at least as many elements as it
+     * should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            int actualLength, int minimumLength) {
+        if (actualLength < minimumLength) {
+            throw Exceptions
+                    .IllegalArgument(
+                            "Array %s should have at least %d elements, but it only has %d",
+                            parameterName, minimumLength, actualLength);
+        }
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            boolean[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            char[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            byte[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            short[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            int[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            long[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            float[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            double[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check that the parameter array is non-{@code null} and that it has at
+     * least as many elements as it should.
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param actualLength
+     *            The actual array length
+     * @param minimumLength
+     *            The minimum array length
+     */
+    public static void checkMinimumArrayLength(String parameterName,
+            Object[] array, int minimumLength) {
+        checkNotNull(parameterName, array);
+        checkArrayLength(parameterName, array.length, minimumLength);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
      * 
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
      * @param dataLength
-     *            Length of array data.
+     *            Array parameter length
      * @param expectedComponents
      *            Expected number of components.
      * @throws IllegalArgumentException
@@ -93,6 +459,195 @@ public abstract class Preconditions {
                             parameterName, expectedComponents,
                             expectedComponents, dataLength);
         }
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            boolean[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            char[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            byte[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            short[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            int[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            long[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            float[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            double[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
+    }
+
+    /**
+     * Check arrays of tuples: is the array length a multiple of the tuple size?
+     * 
+     * @param parameterName
+     *            The name of the user-supplied parameter that we are validating
+     *            so that the user can easily find the error in their code.
+     * @param array
+     *            Array of tuples
+     * @param expectedComponents
+     *            Expected number of components.
+     * @throws IllegalArgumentException
+     *             If the dataLength is zero or not divisible by the expected
+     *             number.
+     */
+    public static void checkDivisibleDataLength(String parameterName,
+            Object[] array, int expectedComponents) {
+        checkNotNull(parameterName, array);
+        checkDivisibleDataLength(parameterName, array.length,
+                expectedComponents);
     }
 
     /**
@@ -116,7 +671,9 @@ public abstract class Preconditions {
     }
 
     /**
-     * This is checkNotNaN for only single float.
+     * In common shader cases, NaN makes little sense. Correspondingly, GVRF is
+     * going to use Float.NaN as illegal flag in many cases. Therefore, we need
+     * a function to check if there is any setX that is using NaN as input.
      * 
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
