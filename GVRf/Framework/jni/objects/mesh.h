@@ -37,7 +37,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vaoID_(
-                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1) {
+                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1), boundingBoxInfo_(NULL) {
     }
 
     ~Mesh() {
@@ -219,7 +219,10 @@ public:
     }
 
     std::shared_ptr<Mesh> getBoundingBox() const;
-    float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+    float* getBoundingBoxInfo() // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+    {
+    	return boundingBoxInfo_;
+    }
 
 
     // /////////////////////////////////////////////////
@@ -301,6 +304,7 @@ private:
     GLuint vertexLoc_;
     GLuint normalLoc_;
     GLuint texCoordLoc_;
+    float* boundingBoxInfo_;
 };
 }
 #endif
