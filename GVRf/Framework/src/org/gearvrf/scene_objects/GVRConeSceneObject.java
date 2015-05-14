@@ -23,8 +23,8 @@ import org.gearvrf.GVRMesh;
 public class GVRConeSceneObject extends GVRSceneObject {
 
     private static final String TAG = "GVRConeSceneObject";
-    private static final int NUM_STACKS = 180;
-    private static final int NUM_SLICES = 360;
+    private static final int NUM_STACKS = 2;
+    private static final int NUM_SLICES = 36;
     private static final float BASE_RADIUS = 0.5f;
     private static final float TOP_RADIUS = 0.0f;
     private static final float HEIGHT = 1.0f;
