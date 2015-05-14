@@ -37,7 +37,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vaoID_(
-                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1), boundingBoxInfo_(NULL) {
+                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1) {
     }
 
     ~Mesh() {
@@ -219,9 +219,9 @@ public:
     }
 
     std::shared_ptr<Mesh> getBoundingBox() const;
-    float* getBoundingBoxInfo() // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+    std::vector<float>& getBoundingBoxInfo() // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
     {
-    	return boundingBoxInfo_;
+        return bounding_box_info_;
     }
 
 
@@ -290,6 +290,7 @@ private:
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
     std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
     std::vector<unsigned short> triangles_;
+    std::vector<float> bounding_box_info_;
 
     // add location slot map
     std::map<int, std::string> attribute_float_keys_;
@@ -304,7 +305,6 @@ private:
     GLuint vertexLoc_;
     GLuint normalLoc_;
     GLuint texCoordLoc_;
-    float* boundingBoxInfo_;
 };
 }
 #endif

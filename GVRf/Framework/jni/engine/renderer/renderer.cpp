@@ -51,8 +51,9 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
     // This is not right way to do data conversion. However since GVRF doesn't support
     // bone/weight/joint and other assimp data, we will put general model conversion
     // on hold and do this kind of conversion fist
-    if (scene->getSceneDirtyFlag()) {
-
+    
+    if (scene->getSceneDirtyFlag())
+    {
         glm::mat4 view_matrix = camera->getViewMatrix();
         glm::mat4 proj_matrix = camera->getProjectionMatrix();
         glm::mat4 cp_matrix = glm::mat4(proj_matrix * view_matrix);
@@ -61,16 +62,20 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         std::vector < std::shared_ptr < SceneObject >> scene_objects =
                 scene->getWholeSceneObjects();
         std::vector < std::shared_ptr < RenderData >> render_data_vector;
-        for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
+
+        for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it)
+        {
             std::shared_ptr<RenderData> render_data = (*it)->render_data();
-            if (render_data != 0) {
-                if (render_data->material() != 0) {
+            if (render_data != 0)
+            {
+                if (render_data->material() != 0)
+                {
                     // Check for frustum culling flag
                     if(scene->get_frustum_culling())
                     {
-                        // Frustum  Culling
+                        // Frustum culling setup
                         std::shared_ptr<Mesh> currentMesh = render_data->mesh();
-                        float* bounding_box_info = currentMesh->getBoundingBoxInfo();
+                        std::vector<float> bounding_box_info = currentMesh->getBoundingBoxInfo();
                         glm::mat4 model_matrix_tmp(render_data->owner_object()->transform()->getModelMatrix());
                         glm::mat4 mvp_matrix_tmp( vp_matrix * model_matrix_tmp);
 
@@ -79,31 +84,74 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
                         // Matrix to array
                         float mvp_matrix_array[16] = { 0.0 };
+
                         const float *mat_to_array = (const float*) glm::value_ptr(mvp_matrix_tmp);
-                        for (int i = 0; i < 16; i++)
-                        {
-                            mvp_matrix_array[i] = mat_to_array[i];
-                        }
+                        memcpy(mvp_matrix_array, mat_to_array, sizeof(float)*16);
 
                         // Build the frustum
                         build_frustum(frustum, mvp_matrix_array);
-
                         // Check for being inside or outside frustum
                         bool is_inside = is_cube_in_frustum(frustum, bounding_box_info);
-
                         // Only push those scene objects that are inside of the frustum
-                        if( is_inside )
+                        if(is_inside)
                         {
-                            render_data_vector.push_back(render_data);
+                            (*it)->set_in_frustum();
+                            bool visible = (*it)->visible();
+
+                            //If visibility flag was set by an earlier occlusion query,
+                            //turn visibility on for the object
+                            if(visible)
+                                render_data_vector.push_back(render_data);
+#if _GVRF_USE_GLES3_
+                            if (render_data->material() != 0)
+                            {
+                                if(scene->get_occlusion_culling())
+                                {
+                                    //Setup basic bounding box and material
+                                    std::shared_ptr<RenderData> bounding_box_render_data(new RenderData());
+                                    std::shared_ptr<Mesh> bounding_box_mesh = render_data->mesh()->getBoundingBox();
+                                    std::shared_ptr<Material> bounding_box_material(new Material(Material::ShaderType::UNLIT_SHADER));
+                                    bounding_box_render_data->set_mesh(bounding_box_mesh);
+
+                                    //If a previous query is active, do not issue a new query.
+                                    //This avoids overloading the GPU with too many queries
+                                    //Queries may span multiple frames
+
+                                    bool is_query_issued = (*it)->is_query_issued();
+                                    if(!is_query_issued)
+                                    {
+                                        GLuint *query = (*it)->get_occlusion_array();
+
+                                        glDepthMask(GL_FALSE);
+                                        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+                                        //Issue the query only with a bounding box
+                                        glBeginQuery(GL_ANY_SAMPLES_PASSED, query[0]);
+                                        shader_manager->getBoundingBoxShader()->render(mvp_matrix_tmp, bounding_box_render_data);
+                                        glEndQuery(GL_ANY_SAMPLES_PASSED);
+                                        (*it)->set_query_issued(true);
+
+                                        glDepthMask(GL_TRUE);
+                                        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                                    }
+                                }
+                            }
+#endif
+                        }
+                        else
+                        {
+                            (*it)->set_in_frustum(false);
                         }
                     }
                     else
                     {
+                        //No occlusion or frustum tests enabled
                         render_data_vector.push_back(render_data);
                     }
                 }
             }
         }
+
         std::sort(render_data_vector.begin(), render_data_vector.end(), compareRenderData);
 
         std::vector < std::shared_ptr < PostEffectData >> post_effects =
@@ -123,7 +171,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         GLint curFBO;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curFBO);
 
-        if (forceNoPostEffect || post_effects.size() == 0) {
+        if (forceNoPostEffect || post_effects.size() == 0)
+        {
             glClearColor(camera->background_color_r(), camera->background_color_g(),
                     camera->background_color_b(), camera->background_color_a());
 
@@ -135,7 +184,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                         shader_manager);
             }
         }
-        else {
+        else
+        {
             std::shared_ptr<RenderTexture> texture_render_texture =
                     post_effect_render_texture_a;
             std::shared_ptr<RenderTexture> target_render_texture;
@@ -178,14 +228,52 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
             renderPostEffectData(texture_render_texture, post_effects.back(),
                     post_effect_shader_manager);
         }
+
+#if _GVRF_USE_GLES3_
+        if(scene->get_occlusion_culling())
+        {
+            for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it)
+            {
+                std::shared_ptr<RenderData> render_data = (*it)->render_data();
+                if (render_data != 0)
+                {
+                    if( render_data->material() != 0)
+                    {
+                        //If a query was issued on an earlier or same frame and if results are
+                        //available, then update the same. If results are unavailable, do nothing
+                        if((*it)->in_frustum() && (*it)->is_query_issued())
+                        {
+                            GLuint query_result = GL_FALSE;
+                            GLuint *query = (*it)->get_occlusion_array();
+                            glGetQueryObjectuiv(query[0], GL_QUERY_RESULT_AVAILABLE, &query_result);
+
+                            if(query_result)
+                            {
+                                GLuint pixel_count;
+                                glGetQueryObjectuiv(query[0], GL_QUERY_RESULT, &pixel_count);
+                                if(pixel_count==0)
+                                    (*it)->set_visible(false);
+                                else
+                                    (*it)->set_visible(true);
+
+                                (*it)->set_query_issued(false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+#endif
+
     } // flag checking
 }
+
 
 void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16])
 {
     float t;
 
-    /* Extract the RIGHT plane */
+    /* Extract the numbers for the RIGHT plane */
     frustum[0][0] = mvp_matrix[ 3] - mvp_matrix[ 0];
     frustum[0][1] = mvp_matrix[ 7] - mvp_matrix[ 4];
     frustum[0][2] = mvp_matrix[11] - mvp_matrix[ 8];
@@ -198,7 +286,7 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16])
     frustum[0][2] /= t;
     frustum[0][3] /= t;
 
-    /* Extract the LEFT plane */
+    /* Extract the numbers for the LEFT plane */
     frustum[1][0] = mvp_matrix[ 3] + mvp_matrix[ 0];
     frustum[1][1] = mvp_matrix[ 7] + mvp_matrix[ 4];
     frustum[1][2] = mvp_matrix[11] + mvp_matrix[ 8];
@@ -265,7 +353,7 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16])
 }
 
 
-bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
+bool Renderer::is_cube_in_frustum( float frustum[6][4], std::vector<float>& vertex_limit)
 {
    int p;
    float Xmin = vertex_limit[0];
@@ -275,13 +363,7 @@ bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
    float Ymax = vertex_limit[4];
    float Zmax = vertex_limit[5];
 
-   // p = 0 -> RIGHT plane
-   // P = 1 -> LEFT plane
-   // P = 2 -> BOTTOM plane
-   // P = 3 -> TOP plane
-   // P = 4 -> FAR plane
-   // P = 5 -> NEAR plane
-   for( p = 0; p < 6; p++ )	// Checks if any of extreme edge is crossing any FRUSTUM plane
+   for( p = 0; p < 6; p++ )
    {
       if( frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin) + frustum[p][2] * (Zmin) + frustum[p][3] > 0 )
          continue;
@@ -299,112 +381,9 @@ bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
          continue;
       if( frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax) + frustum[p][2] * (Zmax) + frustum[p][3] > 0 )
          continue;
-      return false;	// returns FALSE if the bounding box is outside of the FRUSTUM
+      return false;
    }
-   return true;	// returns TRUE if the bounding box is inside of the FRUSTUM
-}
-
-
-void Renderer::renderCamera(std::shared_ptr<Scene> scene,
-        std::shared_ptr<Camera> camera,
-        std::shared_ptr<RenderTexture> render_texture,
-        std::shared_ptr<ShaderManager> shader_manager,
-        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_b) {
-    std::vector < std::shared_ptr < SceneObject >> scene_objects =
-            scene->getWholeSceneObjects();
-    std::vector < std::shared_ptr < RenderData >> render_data_vector;
-    for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
-        std::shared_ptr<RenderData> render_data = (*it)->render_data();
-        if (render_data != 0) {
-            if (render_data->material() != 0) {
-                render_data_vector.push_back(render_data);
-            }
-        }
-    }
-    std::sort(render_data_vector.begin(), render_data_vector.end(),
-            compareRenderData);
-
-    glm::mat4 view_matrix = camera->getViewMatrix();
-    glm::mat4 projection_matrix = camera->getProjectionMatrix(); //gun
-    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
-
-    std::vector < std::shared_ptr < PostEffectData >> post_effects =
-            camera->post_effect_data();
-
-    glEnable (GL_DEPTH_TEST);
-    glDepthFunc (GL_LEQUAL);
-    glEnable (GL_CULL_FACE);
-    glFrontFace (GL_CCW);
-    glCullFace (GL_BACK);
-    glEnable (GL_BLEND);
-    glBlendEquation (GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable (GL_POLYGON_OFFSET_FILL);
-
-    if (post_effects.size() == 0) {
-        glBindFramebuffer(GL_FRAMEBUFFER, render_texture->getFrameBufferId());
-        glViewport(0, 0, render_texture->width(), render_texture->height());
-        glClearColor(camera->background_color_r(), camera->background_color_g(),
-                camera->background_color_b(), camera->background_color_a());
-
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-        for (auto it = render_data_vector.begin();
-                it != render_data_vector.end(); ++it) {
-            renderRenderData(*it, vp_matrix, camera->render_mask(),
-                    shader_manager);
-        }
-    }
-
-    else {
-        std::shared_ptr<RenderTexture> texture_render_texture =
-                post_effect_render_texture_a;
-        std::shared_ptr<RenderTexture> target_render_texture;
-
-        glBindFramebuffer(GL_FRAMEBUFFER,
-                texture_render_texture->getFrameBufferId());
-        glViewport(0, 0, texture_render_texture->width(),
-                texture_render_texture->height());
-
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-        for (auto it = render_data_vector.begin();
-                it != render_data_vector.end(); ++it) {
-            renderRenderData(*it, vp_matrix, camera->render_mask(),
-                    shader_manager);
-        }
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-
-        for (int i = 0; i < post_effects.size() - 1; ++i) {
-            if (i % 2 == 0) {
-                texture_render_texture = post_effect_render_texture_a;
-                target_render_texture = post_effect_render_texture_b;
-            } else {
-                texture_render_texture = post_effect_render_texture_b;
-                target_render_texture = post_effect_render_texture_a;
-            }
-
-            glBindFramebuffer(GL_FRAMEBUFFER,
-                    target_render_texture->getFrameBufferId());
-            glViewport(0, 0, target_render_texture->width(),
-                    target_render_texture->height());
-
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            renderPostEffectData(texture_render_texture, post_effects[i],
-                    post_effect_shader_manager);
-        }
-
-        glBindFramebuffer(GL_FRAMEBUFFER, render_texture->getFrameBufferId());
-        glViewport(0, 0, render_texture->width(), render_texture->height());
-
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        renderPostEffectData(texture_render_texture, post_effects.back(),
-                post_effect_shader_manager);
-    }
+   return true;
 }
 
 void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
@@ -518,8 +497,6 @@ void Renderer::renderPostEffectData(
     } catch (std::string error) {
         LOGE("Error detected in Renderer::renderPostEffectData; error : %s",
                 error.c_str());
+        }
     }
-}
-
-
 }

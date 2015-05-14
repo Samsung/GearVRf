@@ -32,10 +32,6 @@
 namespace gvr {
 std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     Mesh* mesh = new Mesh();
-
-    // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
-    mesh->boundingBoxInfo_ = new float[6];
-
     float min_x = std::numeric_limits<float>::infinity();
     float max_x = -std::numeric_limits<float>::infinity();
     float min_y = std::numeric_limits<float>::infinity();
@@ -64,13 +60,12 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
         }
     }
 
-    mesh->boundingBoxInfo_[0] = min_x;
-    mesh->boundingBoxInfo_[1] = min_y;
-    mesh->boundingBoxInfo_[2] = min_z;
-
-    mesh->boundingBoxInfo_[3] = max_x;
-    mesh->boundingBoxInfo_[4] = max_y;
-    mesh->boundingBoxInfo_[5] = max_z;
+    mesh->bounding_box_info_.push_back(min_x);
+    mesh->bounding_box_info_.push_back(min_y);
+    mesh->bounding_box_info_.push_back(min_z);
+    mesh->bounding_box_info_.push_back(max_x);
+    mesh->bounding_box_info_.push_back(max_y);
+    mesh->bounding_box_info_.push_back(max_z);
 
     mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
     mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
