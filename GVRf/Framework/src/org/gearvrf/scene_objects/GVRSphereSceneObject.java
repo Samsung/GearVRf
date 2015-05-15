@@ -23,13 +23,18 @@ import org.gearvrf.GVRMesh;
 public class GVRSphereSceneObject extends GVRSceneObject {
 
     private static final String TAG = "GVRSphereSceneObject";
-    private static final int NUM_STACKS = 180;
-    private static final int NUM_SLICES = 360;
+    private static final int NUM_STACKS = 18;
+    private static final int NUM_SLICES = 36;
 
     private float[] vertices;
     private float[] normals;
     private float[] texCoords;
     private char[] indices;
+
+    private int vertexCount = 0;
+    private int texCoordCount = 0;
+    private char indexCount = 0;
+    private char triangleCount = 0;
 
     /**
      * Constructs a sphere scene object.
@@ -54,126 +59,209 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     }
 
     private void generateSphere(int numStacks, int numSlices) {
-        int numVertices = numStacks * numSlices;
+        int capNumVertices = 3 * numSlices;
+        int bodyNumVertices = 4 * numSlices * numStacks;
+        int numVertices = (2 * capNumVertices) + bodyNumVertices;
+        int numTriangles = (2 * capNumVertices) + (6 * numSlices * numStacks);
+
         vertices = new float[3*numVertices];
         normals = new float[3*numVertices];
         texCoords = new float[2*numVertices];
-        indices = new char[numVertices];
-        float[] x = new float[4];
-        float[] y = new float[4];
-        float[] z = new float[4];
-        float[] s = new float[4];
-        float[] t = new float[4];
-        float[] nx = new float[4];
-        float[] ny = new float[4];
-        float[] nz = new float[4];
-        int vertexCount = 0;
-        int texCoordCount = 0;
+        indices = new char[numTriangles];
 
-        for(int theta = 0; theta < numStacks; theta++) {
-            float theta1 = ((float)(theta)/numStacks)*(float)Math.PI;
-            float theta2 = ((float)(theta+1)/numStacks)*(float)Math.PI;
-            float t0 = 1.0f - ((float)(theta)/numStacks);
-            float t1 = 1.0f - ((float)(theta+1)/numStacks);
+        // bottom cap
+        createCap(0, numStacks, numSlices, false);
 
-            for(int phi = 0; phi < numSlices; phi++) {
-                float phi1 = ((float)(phi)/numSlices)*2.0f*(float)Math.PI;
-                float phi2 = ((float)(phi+1)/numSlices)*2.0f*(float)Math.PI;
-                float s0 = 1.0f - ((float)(phi)/numSlices);
-                float s1 = 1.0f - ((float)(phi+1)/numSlices);
+        // body
+        createBody(numStacks, numSlices);
+
+        // top cap
+        createCap(numStacks, numStacks, numSlices, true);
+    }
+
+    private void createCap(int stack, int numStacks, int numSlices, boolean top) {
+
+        float stackPercentage0;
+        float stackPercentage1;
+
+        if(top) {
+            stackPercentage0 = ((float)(stack-1)/numStacks);
+            stackPercentage1 = ((float)(stack)/numStacks);
+
+        } else {
+            stackPercentage0 = ((float)(stack)/numStacks);
+            stackPercentage1 = ((float)(stack+1)/numStacks);
+        }
+
+        float theta1 = stackPercentage0 * (float)Math.PI;
+        float theta2 = stackPercentage1 * (float)Math.PI;
+        float t0 = 1.0f - stackPercentage0;
+        float t1 = 1.0f - stackPercentage1;
+
+        for(int slice = 0; slice < numSlices; slice++) {
+            float slicePercentage0 = ((float)(slice)/numSlices);
+            float slicePercentage1 = ((float)(slice+1)/numSlices);
+            float phi1 = slicePercentage0*2.0f*(float)Math.PI;
+            float phi2 = slicePercentage1*2.0f*(float)Math.PI;
+            float s0 = slicePercentage0;
+            float s1 = slicePercentage1;
+            float s2 = (s0 + s1) / 2.0f;
+
+            float x0 = (float)(Math.sin(theta1) * Math.cos(phi1));
+            float y0 = (float)(Math.sin(theta1) * Math.sin(phi1));
+            float z0 = (float)(Math.cos(theta1));
+
+            float x1 = (float)(Math.sin(theta1) * Math.cos(phi2));
+            float y1 = (float)(Math.sin(theta1) * Math.sin(phi2));
+            float z1 = (float)(Math.cos(theta1));
+
+            float x2 = (float)(Math.sin(theta2) * Math.cos(phi1));
+            float y2 = (float)(Math.sin(theta2) * Math.sin(phi1));
+            float z2 = (float)(Math.cos(theta2));
+            
+            vertices[vertexCount+0] = x0;
+            vertices[vertexCount+1] = y0;
+            vertices[vertexCount+2] = z0;
+
+            vertices[vertexCount+3] = x1;
+            vertices[vertexCount+4] = y1;
+            vertices[vertexCount+5] = z1;
+
+            vertices[vertexCount+6] = x2;
+            vertices[vertexCount+7] = y2;
+            vertices[vertexCount+8] = z2;
+
+            normals[vertexCount+0] = x0;
+            normals[vertexCount+1] = y0;
+            normals[vertexCount+2] = z0;
+
+            normals[vertexCount+3] = x1;
+            normals[vertexCount+4] = y1;
+            normals[vertexCount+5] = z1;
+
+            normals[vertexCount+6] = x2;
+            normals[vertexCount+7] = y2;
+            normals[vertexCount+8] = z2;
+
+            texCoords[texCoordCount+0] = s0;
+            texCoords[texCoordCount+1] = t0;
+            texCoords[texCoordCount+2] = s1;
+            texCoords[texCoordCount+3] = t0;
+            texCoords[texCoordCount+4] = s2;
+            texCoords[texCoordCount+5] = t1;
+
+            if(top) {
+                indices[indexCount+0] = (char)(triangleCount+1);
+                indices[indexCount+1] = (char)(triangleCount+0);
+                indices[indexCount+2] = (char)(triangleCount+2);
+            } else {
+                indices[indexCount+0] = (char)(triangleCount+0);
+                indices[indexCount+1] = (char)(triangleCount+1);
+                indices[indexCount+2] = (char)(triangleCount+2);
+            }
+
+            vertexCount += 9;
+            texCoordCount += 6;
+            indexCount += 3;
+            triangleCount += 3;
+        }
+
+    }
+
+    private void createBody(int numStacks, int numSlices) {
+        for(int stack = 1; stack < numStacks-1; stack++) {
+            float stackPercentage0 = ((float)(stack)/numStacks);
+            float stackPercentage1 = ((float)(stack+1)/numStacks);
+
+            float theta1 = stackPercentage0 * (float)Math.PI;
+            float theta2 = stackPercentage1 * (float)Math.PI;
+            float t0 = 1.0f - stackPercentage0;
+            float t1 = 1.0f - stackPercentage1;
+
+            for(int slice = 0; slice < numSlices; slice++) {
+                float slicePercentage0 = ((float)(slice)/numSlices);
+                float slicePercentage1 = ((float)(slice+1)/numSlices);
+                float phi1 = slicePercentage0*2.0f*(float)Math.PI;
+                float phi2 = slicePercentage1*2.0f*(float)Math.PI;
+                float s0 = slicePercentage0;
+                float s1 = slicePercentage1;
 
                 //   2-----3
                 //   |     |
                 //   0-----1
-                x[0] = (float)(Math.sin(theta1) * Math.cos(phi2));
-                y[0] = (float)(Math.sin(theta1) * Math.sin(phi2));
-                z[0] = (float)(Math.cos(theta1));
-                nx[0] = (float)(Math.sin(theta1) * Math.cos(phi2));
-                ny[0] = (float)(Math.sin(theta1) * Math.sin(phi2));
-                nz[0] = (float)(Math.cos(theta1));
-                s[0] = s0; t[0] = t1;
+                float x0 = (float)(Math.sin(theta1) * Math.cos(phi1));
+                float y0 = (float)(Math.sin(theta1) * Math.sin(phi1));
+                float z0 = (float)(Math.cos(theta1));
 
-                x[1] = (float)(Math.sin(theta2) * Math.cos(phi2));
-                y[1] = (float)(Math.sin(theta2) * Math.sin(phi2));
-                z[1] = (float)(Math.cos(theta2));
-                nx[1] = (float)(Math.sin(theta2) * Math.cos(phi2));
-                ny[1] = (float)(Math.sin(theta2) * Math.sin(phi2));
-                nz[1] = (float)(Math.cos(theta2));
-                s[1] = s1; t[1] = t1;
+                float x1 = (float)(Math.sin(theta1) * Math.cos(phi2));
+                float y1 = (float)(Math.sin(theta1) * Math.sin(phi2));
+                float z1 = (float)(Math.cos(theta1));
 
-                x[2] = (float)(Math.sin(theta1) * Math.cos(phi1));
-                y[2] = (float)(Math.sin(theta1) * Math.sin(phi1));
-                z[2] = (float)(Math.cos(theta1));
-                nx[2] = (float)(Math.sin(theta1) * Math.cos(phi1));
-                ny[2] = (float)(Math.sin(theta1) * Math.sin(phi1));
-                nz[2] = (float)(Math.cos(theta1));
-                s[2] = s0; t[2] = t0;
+                float x2 = (float)(Math.sin(theta2) * Math.cos(phi1));
+                float y2 = (float)(Math.sin(theta2) * Math.sin(phi1));
+                float z2 = (float)(Math.cos(theta2));
 
-                x[3] = (float)(Math.sin(theta2) * Math.cos(phi1));
-                y[3] = (float)(Math.sin(theta2) * Math.sin(phi1));
-                z[3] = (float)(Math.cos(theta2));
-                nx[3] = (float)(Math.sin(theta2) * Math.cos(phi1));
-                ny[3] = (float)(Math.sin(theta2) * Math.sin(phi1));
-                nz[3] = (float)(Math.cos(theta2));
-                s[3] = s1; t[3] = t0;
+                float x3 = (float)(Math.sin(theta2) * Math.cos(phi2));
+                float y3 = (float)(Math.sin(theta2) * Math.sin(phi2));
+                float z3 = (float)(Math.cos(theta2));
 
-                if(theta == 0) { // top
-                    // 3, 0, 1
-                    vertices[vertexCount+0] = x[3]; vertices[vertexCount+1] = y[3]; vertices[vertexCount+2] = z[3];
-                    normals[vertexCount+0] = nx[3]; normals[vertexCount+1] = ny[3]; normals[vertexCount+2] = nz[3];
-                    texCoords[texCoordCount+0] =  s[3]; texCoords[texCoordCount+1] =  t[3];
+                vertices[vertexCount+0] = x0;
+                vertices[vertexCount+1] = y0;
+                vertices[vertexCount+2] = z0;
 
-                    vertices[vertexCount+3] = x[0]; vertices[vertexCount+4] = y[0]; vertices[vertexCount+5] = z[0];
-                    normals[vertexCount+3] = nx[0]; normals[vertexCount+4] = ny[0]; normals[vertexCount+5] = nz[0];
-                    texCoords[texCoordCount+2] =  s[0]; texCoords[texCoordCount+3] =  t[0];
+                vertices[vertexCount+3] = x1;
+                vertices[vertexCount+4] = y1;
+                vertices[vertexCount+5] = z1;
 
-                    vertices[vertexCount+6] = x[1]; vertices[vertexCount+7] = y[1]; vertices[vertexCount+8] = z[1];
-                    normals[vertexCount+6] = nx[1]; normals[vertexCount+7] = ny[1]; normals[vertexCount+8] = nz[1];
-                    texCoords[texCoordCount+4] =  s[1]; texCoords[texCoordCount+5] =  t[1];
-                    vertexCount += 9;
-                    texCoordCount += 6;
-                } else if(theta+1 == numStacks) { // bottom
-                    // 0, 3, 2
-                    vertices[vertexCount+3] = x[0]; vertices[vertexCount+4] = y[0]; vertices[vertexCount+5] = z[0];
-                    normals[vertexCount+3] = nx[0]; normals[vertexCount+4] = ny[0]; normals[vertexCount+5] = nz[0];
-                    texCoords[texCoordCount+0] =  s[0]; texCoords[texCoordCount+1] =  t[0];
-                    vertices[vertexCount+0] = x[3]; vertices[vertexCount+1] = y[3]; vertices[vertexCount+2] = z[3];
-                    normals[vertexCount+0] = nx[3]; normals[vertexCount+1] = ny[3]; normals[vertexCount+2] = nz[3];
-                    texCoords[texCoordCount+2] =  s[3]; texCoords[texCoordCount+3] =  t[3];
-                    vertices[vertexCount+6] = x[2]; vertices[vertexCount+7] = y[2]; vertices[vertexCount+8] = z[2];
-                    normals[vertexCount+6] = nx[2]; normals[vertexCount+7] = ny[2]; normals[vertexCount+8] = nz[2];
-                    texCoords[texCoordCount+4] =  s[2]; texCoords[texCoordCount+5] =  t[2];
-                    vertexCount += 9;
-                    texCoordCount += 6;
-                } else {
-                    // 0, 1, 2
-                    // 2, 1, 3
-                    vertices[vertexCount+0] = x[0]; vertices[vertexCount+1] = y[0]; vertices[vertexCount+2] = z[0];
-                    normals[vertexCount+0] = nx[0]; normals[vertexCount+1] = ny[0]; normals[vertexCount+2] = nz[0];
-                    texCoords[texCoordCount+0] =  s[0]; texCoords[texCoordCount+1] =  t[0];
-                    vertices[vertexCount+3] = x[1]; vertices[vertexCount+4] = y[1]; vertices[vertexCount+5] = z[1];
-                    normals[vertexCount+3] = nx[1]; normals[vertexCount+4] = ny[1]; normals[vertexCount+5] = nz[1];
-                    texCoords[texCoordCount+2] =  s[1]; texCoords[texCoordCount+3] =  t[1];
-                    vertices[vertexCount+6] = x[2]; vertices[vertexCount+7] = y[2]; vertices[vertexCount+8] = z[2];
-                    normals[vertexCount+6] = nx[2]; normals[vertexCount+7] = ny[2]; normals[vertexCount+8] = nz[2];
-                    texCoords[texCoordCount+4] =  s[2]; texCoords[texCoordCount+5] =  t[2];
-                    vertices[vertexCount+9] = x[2]; vertices[vertexCount+10] = y[2]; vertices[vertexCount+11] = z[2];
-                    normals[vertexCount+9] = nx[2]; normals[vertexCount+10] = ny[2]; normals[vertexCount+11] = nz[2];
-                    texCoords[texCoordCount+6] =  s[2]; texCoords[texCoordCount+7] =  t[2];
-                    vertices[vertexCount+12] = x[1]; vertices[vertexCount+13] = y[1]; vertices[vertexCount+14] = z[1];
-                    normals[vertexCount+12] = nx[1]; normals[vertexCount+13] = ny[1]; normals[vertexCount+14] = nz[1];
-                    texCoords[texCoordCount+8] =  s[1]; texCoords[texCoordCount+9] =  t[1];
-                    vertices[vertexCount+15] = x[3]; vertices[vertexCount+16] = y[3]; vertices[vertexCount+17] = z[3];
-                    normals[vertexCount+15] = nx[3]; normals[vertexCount+16] = ny[3]; normals[vertexCount+17] = nz[3];
-                    texCoords[texCoordCount+10] =  s[3]; texCoords[texCoordCount+11] =  t[3];
-                    vertexCount += 18;
-                    texCoordCount += 12;
-                }
+                vertices[vertexCount+6] = x2;
+                vertices[vertexCount+7] = y2;
+                vertices[vertexCount+8] = z2;
+
+                vertices[vertexCount+9] = x3;
+                vertices[vertexCount+10] = y3;
+                vertices[vertexCount+11] = z3;
+
+                normals[vertexCount+0] = x0;
+                normals[vertexCount+1] = y0;
+                normals[vertexCount+2] = z0;
+
+                normals[vertexCount+3] = x1;
+                normals[vertexCount+4] = y1;
+                normals[vertexCount+5] = z1;
+
+                normals[vertexCount+6] = x2;
+                normals[vertexCount+7] = y2;
+                normals[vertexCount+8] = z2;
+
+                normals[vertexCount+9] = x3;
+                normals[vertexCount+10] = y3;
+                normals[vertexCount+11] = z3;
+
+                texCoords[texCoordCount+0] = s0; 
+                texCoords[texCoordCount+1] = t0;
+                texCoords[texCoordCount+2] = s1; 
+                texCoords[texCoordCount+3] = t0;
+                texCoords[texCoordCount+4] = s0; 
+                texCoords[texCoordCount+5] = t1;
+                texCoords[texCoordCount+6] = s1; 
+                texCoords[texCoordCount+7] = t1;
+
+                // 0, 1, 2
+                // 2, 1, 3
+                indices[indexCount+0] = (char) (triangleCount+0);
+                indices[indexCount+1] = (char) (triangleCount+1);
+                indices[indexCount+2] = (char) (triangleCount+2);
+                indices[indexCount+3] = (char) (triangleCount+2);
+                indices[indexCount+4] = (char) (triangleCount+1);
+                indices[indexCount+5] = (char) (triangleCount+3);
+
+                vertexCount += 12;
+                texCoordCount += 8;
+                indexCount += 6;
+                triangleCount += 4;
             }
         }
-        android.util.Log.d(TAG, "vertexCount = " + vertexCount);
-        android.util.Log.d(TAG, "numVertices = " + numVertices);
-
+        
     }
 
 }

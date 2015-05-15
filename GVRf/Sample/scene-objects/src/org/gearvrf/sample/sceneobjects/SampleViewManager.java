@@ -23,11 +23,13 @@ import org.gearvrf.animation.GVRRotationByAxisAnimation;
 import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
+import org.gearvrf.scene_objects.GVRSphereSceneObject;
 
 public class SampleViewManager extends GVRScript {
     private GVRContext mGVRContext;
     private GVRCylinderSceneObject cylinderObject;
     private GVRConeSceneObject coneObject;
+    private GVRSphereSceneObject sphereObject;
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -53,6 +55,7 @@ public class SampleViewManager extends GVRScript {
         GVRCubeSceneObject cubeObject = new GVRCubeSceneObject(gvrContext);
         cylinderObject = new GVRCylinderSceneObject(gvrContext);
         coneObject = new GVRConeSceneObject(gvrContext);
+        sphereObject = new GVRSphereSceneObject(gvrContext);
 
         Future<GVRTexture> futureTexture = gvrContext.loadFutureTexture(new GVRAndroidResource(gvrContext, R.drawable.gearvr_logo));
         GVRMaterial material = new GVRMaterial(gvrContext);
@@ -60,12 +63,14 @@ public class SampleViewManager extends GVRScript {
         cubeObject.getRenderData().setMaterial(material);
         cylinderObject.getRenderData().setMaterial(material);
         coneObject.getRenderData().setMaterial(material);
+        sphereObject.getRenderData().setMaterial(material);
 
         // set the scene object position
         quadObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         cubeObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
         cylinderObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         coneObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
+        sphereObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
 
         GVRAnimation animation = new GVRRotationByAxisAnimation(cylinderObject, 50, -3600, 0, 1, 0);
         animation.setRepeatCount(GVRRepeatMode.REPEATED).setRepeatCount(-1);
@@ -78,7 +83,8 @@ public class SampleViewManager extends GVRScript {
         //scene.addSceneObject(quadObject);
         //scene.addSceneObject(cubeObject);
         //scene.addSceneObject(cylinderObject);
-        scene.addSceneObject(coneObject);
+        //scene.addSceneObject(coneObject);
+        scene.addSceneObject(sphereObject);
 
     }
     
@@ -96,7 +102,7 @@ public class SampleViewManager extends GVRScript {
 
     @Override
     public void onStep() {
-        //coneObject.getTransform().setRotationByAxis(mYAngle, 0.0f, 1.0f, 0.0f);
-        coneObject.getTransform().setRotationByAxis(mXAngle, 1.0f, 0.0f, 0.0f);
+        sphereObject.getTransform().setRotationByAxis(mYAngle, 0.0f, 1.0f, 0.0f);
+        sphereObject.getTransform().setRotationByAxis(mXAngle, 1.0f, 0.0f, 0.0f);
     }
 }
