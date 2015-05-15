@@ -52,7 +52,24 @@ private:
 public:
     static void renderCamera(std::shared_ptr<Scene> scene,
             std::shared_ptr<Camera> camera,
+            int framebufferId,
+            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+            std::shared_ptr<ShaderManager> shader_manager,
+            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
+            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
+            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+
+    static void renderCamera(std::shared_ptr<Scene> scene,
+            std::shared_ptr<Camera> camera,
             std::shared_ptr<RenderTexture> render_texture,
+            std::shared_ptr<ShaderManager> shader_manager,
+            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
+            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
+            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+
+    static void renderCamera(std::shared_ptr<Scene> scene,
+            std::shared_ptr<Camera> camera,
+            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             std::shared_ptr<ShaderManager> shader_manager,
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
             std::shared_ptr<RenderTexture> post_effect_render_texture_a,
@@ -71,7 +88,7 @@ private:
     static void renderRenderData(std::shared_ptr<RenderData> render_data,
             const glm::mat4& vp_matrix, int render_mask,
             std::shared_ptr<ShaderManager> shader_manager);
-    static void renderPostEffectData(
+    static void renderPostEffectData(std::shared_ptr<Camera> camera,
             std::shared_ptr<RenderTexture> render_texture,
             std::shared_ptr<PostEffectData> post_effect_data,
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager);

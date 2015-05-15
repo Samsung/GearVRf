@@ -51,7 +51,7 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
 			activity->viewManager->mvp_matrix);
 }
 
-void Java_org_gearvrf_GVRViewManager_readRenderResult(JNIEnv * jni,
+void Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * jni,
 		jclass clazz, jlong jrender_texture, jobject jreadback_buffer) {
 
 	uint8_t *pReadbackBuffer = (uint8_t *) jni->GetDirectBufferAddress(

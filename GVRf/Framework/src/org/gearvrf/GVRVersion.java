@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import java.util.concurrent.Future;
+
 /** GVRF version strings. */
 public class GVRVersion {
     /** Final HQ version. */
@@ -55,5 +57,17 @@ public class GVRVersion {
     /** Simpler asynch */
     public static final String V_1_6_7 = "1.6.7";
 
-    public static final String CURRENT = V_1_6_7;
+    /**
+     * Add API ({@link GVRContext#captureScreen3D(GVRScreenshot3DCallback)}) to
+     * capture 3D screenshot.
+     * 
+     * Add high-level {@link GVRSceneObject#GVRSceneObject(GVRContext,
+     * Future<GVRMesh>, Future<GVRTexture>)} constructor.
+     * 
+     * Add {@link FutureWrapper} to generate required Future<T> for the new
+     * constructor.
+     */
+    public static final String V_1_6_8 = "1.6.8";
+
+    public static final String CURRENT = V_1_6_8;
 }

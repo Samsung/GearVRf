@@ -36,6 +36,8 @@ CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
     checkGlError("glGetAttribLocation");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     checkGlError("glGetUniformLocation");
+    u_projection_matrix_ = glGetUniformLocation(program_->id(), "u_projection_matrix");
+    checkGlError("glGetUniformLocation");
 
     vaoID_ = 0;
 
@@ -92,7 +94,7 @@ void CustomPostEffectShader::addMat4Key(std::string variable_name,
     mat4_keys_[location] = key;
 }
 
-void CustomPostEffectShader::render(
+void CustomPostEffectShader::render(std::shared_ptr<Camera> camera,
         std::shared_ptr<RenderTexture> render_texture,
         std::shared_ptr<PostEffectData> post_effect_data,
         std::vector<glm::vec3>& vertices, std::vector<glm::vec2>& tex_coords,
@@ -135,6 +137,11 @@ void CustomPostEffectShader::render(
         glActiveTexture(getGLTexture(texture_index));
         glBindTexture(GL_TEXTURE_2D, render_texture->getId());
         glUniform1i(u_texture_, texture_index++);
+    }
+
+    if (u_projection_matrix_ != -1) {
+        glm::mat4 view = camera->getViewMatrix();
+        glUniformMatrix4fv(u_projection_matrix_, 1, GL_TRUE, glm::value_ptr(view));
     }
 
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
@@ -193,6 +200,11 @@ void CustomPostEffectShader::render(
         glActiveTexture(getGLTexture(texture_index));
         glBindTexture(GL_TEXTURE_2D, render_texture->getId());
         glUniform1i(u_texture_, texture_index++);
+    }
+
+    if (u_projection_matrix_ != -1) {
+        glm::mat4 view = camera->getViewMatrix();
+        glUniformMatrix4fv(u_projection_matrix_, 1, GL_TRUE, glm::value_ptr(view));
     }
 
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {

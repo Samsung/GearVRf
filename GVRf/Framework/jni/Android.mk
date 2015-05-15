@@ -27,8 +27,12 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-include ../../ovr_mobile_sdk/VRLib/import_vrlib.mk
-include ../../ovr_mobile_sdk/VRLib/cflags.mk
+ifndef OVR_MOBILE_SDK
+	OVR_MOBILE_SDK=../../ovr_mobile_sdk
+endif
+
+include $(OVR_MOBILE_SDK)/VRLib/import_vrlib.mk
+include $(OVR_MOBILE_SDK)/VRLib/cflags.mk
 
 LOCAL_MODULE := gvrf
 
@@ -76,6 +80,8 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/textures/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/oculus/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/monoscopic/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/sensor/ksensor/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)

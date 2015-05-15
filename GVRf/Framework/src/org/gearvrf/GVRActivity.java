@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -48,7 +49,8 @@ public class GVRActivity extends VrActivity {
         System.loadLibrary("gvrf");
     }
 
-    public static native long nativeSetAppInterface(VrActivity act, String fromPackageName, String commandString, String uriString);
+    public static native long nativeSetAppInterface(VrActivity act,
+            String fromPackageName, String commandString, String uriString);
 
     static native void nativeSetCamera(long appPtr, long camera);
 
@@ -69,7 +71,8 @@ public class GVRActivity extends VrActivity {
         String fromPackageNameString = VrLib.getPackageStringFromIntent(intent);
         String uriString = VrLib.getUriStringFromIntent(intent);
 
-        appPtr = nativeSetAppInterface(this, fromPackageNameString, commandString, uriString);
+        appPtr = nativeSetAppInterface(this, fromPackageNameString,
+                commandString, uriString);
     }
 
     @Override
@@ -119,12 +122,28 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            mGVRViewManager = new GVRViewManager(this, gvrScript,
-                    distortionDataFileName);
+            if (isVrSupported()) {
+                mGVRViewManager = new GVRViewManager(this, gvrScript,
+                        distortionDataFileName);
+            } else {
+                mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript,
+                        distortionDataFileName);
+            }
         } else {
             throw new IllegalArgumentException(
                     "You can not set orientation to portrait for GVRF apps.");
         }
+    }
+
+    private boolean isVrSupported() {
+        if ((Build.MODEL.contains("SM-N910"))
+                || (Build.MODEL.contains("SM-N916"))
+                || (Build.MODEL.contains("SM-G920"))
+                || (Build.MODEL.contains("SM-G925"))) {
+            return true;
+        }
+
+        return false;
     }
 
     void drawFrame() {
