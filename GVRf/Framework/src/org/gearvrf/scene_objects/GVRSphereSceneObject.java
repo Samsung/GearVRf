@@ -151,12 +151,12 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             texCoords[texCoordCount+5] = t1;
 
             if(top) {
-                indices[indexCount+0] = (char)(triangleCount+1);
-                indices[indexCount+1] = (char)(triangleCount+0);
+                indices[indexCount+0] = (char)(triangleCount+0);
+                indices[indexCount+1] = (char)(triangleCount+1); 
                 indices[indexCount+2] = (char)(triangleCount+2);
             } else {
-                indices[indexCount+0] = (char)(triangleCount+0);
-                indices[indexCount+1] = (char)(triangleCount+1);
+                indices[indexCount+0] = (char)(triangleCount+1);
+                indices[indexCount+1] = (char)(triangleCount+0);
                 indices[indexCount+2] = (char)(triangleCount+2);
             }
 
