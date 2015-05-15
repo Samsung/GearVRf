@@ -89,8 +89,8 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             stackPercentage1 = ((float)(stack)/numStacks);
 
         } else {
-            stackPercentage0 = ((float)(stack)/numStacks);
-            stackPercentage1 = ((float)(stack+1)/numStacks);
+            stackPercentage0 = ((float)(stack+1)/numStacks);
+            stackPercentage1 = ((float)(stack)/numStacks);
         }
 
         float theta1 = stackPercentage0 * (float)Math.PI;
