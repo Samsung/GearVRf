@@ -86,7 +86,7 @@ public:
 
 private:
     static void renderRenderData(std::shared_ptr<RenderData> render_data,
-            const glm::mat4& vp_matrix, int render_mask,
+    		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
             std::shared_ptr<ShaderManager> shader_manager);
     static void renderPostEffectData(std::shared_ptr<Camera> camera,
             std::shared_ptr<RenderTexture> render_texture,

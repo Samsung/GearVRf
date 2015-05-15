@@ -30,13 +30,19 @@
 #include "shaders/material/unlit_horizontal_stereo_shader.h"
 #include "shaders/material/unlit_shader.h"
 #include "shaders/material/unlit_vertical_stereo_shader.h"
+#include "shaders/material/cubemap_shader.h"
+#include "shaders/material/cubemap_reflection_shader.h"
 #include "util/gvr_log.h"
 
 namespace gvr {
 class ShaderManager: public HybridObject {
 public:
     ShaderManager() :
-            HybridObject(), unlit_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(), oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(), error_shader_(), latest_custom_shader_id_(
+            HybridObject(),
+            unlit_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
+            oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
+            cubemap_shader_(), cubemap_reflection_shader_(),
+            error_shader_(), latest_custom_shader_id_(
                     INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
     }
     ~ShaderManager() {
@@ -80,6 +86,18 @@ public:
         }
         return oes_vertical_stereo_shader_;
     }
+    std::shared_ptr<CubemapShader> getCubemapShader() {
+        if (!cubemap_shader_) {
+        	cubemap_shader_.reset(new CubemapShader());
+        }
+        return cubemap_shader_;
+    }
+    std::shared_ptr<CubemapReflectionShader> getCubemapReflectionShader() {
+        if (!cubemap_reflection_shader_) {
+        	cubemap_reflection_shader_.reset(new CubemapReflectionShader());
+        }
+        return cubemap_reflection_shader_;
+    }
     std::shared_ptr<ErrorShader> getErrorShader() {
         if (!error_shader_) {
             error_shader_.reset(new ErrorShader());
@@ -118,6 +136,8 @@ private:
     std::shared_ptr<OESShader> oes_shader_;
     std::shared_ptr<OESHorizontalStereoShader> oes_horizontal_stereo_shader_;
     std::shared_ptr<OESVerticalStereoShader> oes_vertical_stereo_shader_;
+    std::shared_ptr<CubemapShader> cubemap_shader_;
+    std::shared_ptr<CubemapReflectionShader> cubemap_reflection_shader_;
     std::shared_ptr<ErrorShader> error_shader_;
     int latest_custom_shader_id_;
     std::map<int, std::shared_ptr<CustomShader>> custom_shaders_;

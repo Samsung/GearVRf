@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -30,6 +31,7 @@ import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
@@ -299,6 +301,41 @@ public class GVRAsynchronousResourceLoader {
     }
 
     /**
+     * Load a cube map texture asynchronously.
+     * 
+     * This is the implementation of
+     * {@link GVRContext#loadFutureCubemapTexture(GVRAndroidResource)} - it will
+     * usually be more convenient to call that directly.
+     * 
+     * @param gvrContext
+     *            The GVRF context
+     * @param resource
+     *            A steam containing a zip file which contains six bitmaps. The
+     *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
+     *            "posz.png", and "negz.png", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     */
+    public static Future<GVRTexture> loadFutureCubemapTexture(
+            GVRContext gvrContext, GVRAndroidResource resource, int priority,
+            Map<String, Integer> faceIndexMap) {
+        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
+                resource);
+
+        AsyncCubemapTexture.loadTexture(gvrContext, result.callback, resource,
+                priority, faceIndexMap);
+
+        return result;
+    }
+
+    /**
      * 
      * Load a GL mesh asynchronously.
      * 
@@ -386,7 +423,7 @@ public class GVRAsynchronousResourceLoader {
                 synchronized (resource) {
                     result = data;
                     pending = false;
-                    resource.notify();
+                    resource.notifyAll();
                 }
             }
 
@@ -395,7 +432,7 @@ public class GVRAsynchronousResourceLoader {
                 synchronized (resource) {
                     error = t;
                     pending = false;
-                    resource.notify();
+                    resource.notifyAll();
                 }
                 Log.d(TAG, "failed(%s), %s", resource, t);
             }
