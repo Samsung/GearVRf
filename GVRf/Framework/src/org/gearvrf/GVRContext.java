@@ -15,8 +15,10 @@
 
 package org.gearvrf;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -351,7 +353,81 @@ public abstract class GVRContext {
     }
 
     /**
-     * Loads file placed in the assets folder, as a {@link Bitmap}.
+     * Loads a 3D model file as a {@code GVRScene}.
+     * 
+     * This method and the
+     * {@linkplain #loadModel(String)} are both capable of loading 
+     * a 3D model file with all its components. The {@linkplain #loadScene(String)}
+     * method is the best choices for loading a 3D model resources as a {@code GVRScene}
+     * and the {@linkplain #loadModel(String)} is the best choice
+     * when trying to load 3D model as a {@code GVRSceneObject} 
+     * 
+     * @param fileName
+     *            The name of a file placed in asset or res folder. The asset
+     *            and res directory may contain an arbitrarily complex tree of
+     *            sub directories; the file name can specify any location in or
+     *            under the assets and res directory.
+     */
+    public void loadScene(String fileName)
+    {
+        GVRAssimpImporter assimpImporter = null;
+        try {
+            assimpImporter = GVRImporter.readFileFromResources(this, new GVRAndroidResource(this, fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //Default bitmap for objects whose texture are not present or there is some texture error
+        Bitmap defaultBitmap = GVRAsynchronousResourceLoader.decodeStream((new GVRAndroidResource(this, R.drawable.__default_bitmap__)).getStream(), false);
+        
+        //Scene
+        GVRScene completeScene = assimpImporter.loadScene(defaultBitmap, this);
+        
+        // Sets the main scene with the model
+        this.setMainScene(completeScene);
+    }
+
+    /**
+     * Loads a 3D model file.as a {@code GVRSceneObject}.
+     * 
+     * This method and the {@linkplain #loadScene(String)} are both capable of loading 
+     * a 3D model file with all its components. {@linkplain #loadModel(String)} 
+     * methods is the best choice when trying to load 3D model resource as a 
+     * {@code GVRSceneObject} and the {@linkplain #loadScene(String)} method is the 
+     * best choices for loading a 3D model resources as a part of the {@code GVRScene}.
+     * 
+     * @param fileName
+     *            The name of a file placed in asset or res folder. The asset
+     *            and res directory may contain an arbitrarily complex tree of
+     *            sub directories; the file name can specify any location in or
+     *            under the assets and res directory.
+     * 
+     * @return The 3D model as a {@code GVRSceneObject}.
+     */
+    public GVRSceneObject loadModel(String fileName)
+    {
+        GVRAssimpImporter assimpImporter = null; 
+        try {
+            assimpImporter = GVRImporter.readFileFromResources(this, new GVRAndroidResource(this, fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //Default bitmap for objects whose texture are not present or there is some texture error
+        Bitmap defaultBitmap = GVRAsynchronousResourceLoader.decodeStream((new GVRAndroidResource(this, R.drawable.__default_bitmap__)).getStream(), false);
+        
+        //Scene
+        GVRScene completeScene = assimpImporter.loadScene(defaultBitmap, this);
+
+        GVRSceneObject sceneAsSceneObject = new GVRSceneObject(this);
+        GVRSceneObject[] wholeSceneObjects = completeScene.getWholeSceneObjects();
+        for (GVRSceneObject sceneObject:wholeSceneObjects)
+        {
+            sceneAsSceneObject.addChildObject(sceneObject);
+        }
+        return sceneAsSceneObject;
+    }
+
+    /**
+     * Loads file placed in the assets or resource folder, as a {@link Bitmap}.
      * 
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
@@ -366,10 +442,10 @@ public abstract class GVRContext {
      * more control over the image size.
      * 
      * @param fileName
-     *            The name of a file, relative to the assets directory. The
+     *            The name of a file, relative to the assets or res directory. The
      *            assets directory may contain an arbitrarily complex tree of
      *            subdirectories; the file name can specify any location in or
-     *            under the assets directory.
+     *            under the assets or res directory.
      * @return The file as a bitmap, or {@code null} if file path does not exist
      *         or the file can not be decoded into a Bitmap.
      */
@@ -377,23 +453,35 @@ public abstract class GVRContext {
         if (fileName == null) {
             throw new IllegalArgumentException("File name should not be null.");
         }
-        InputStream stream = null;
-        Bitmap bitmap = null;
+        GVRAndroidResource resource = null;
         try {
+            String tempFileName = "";
             try {
-                stream = mContext.getAssets().open(fileName);
-                return bitmap = BitmapFactory.decodeStream(stream);
-            } finally {
-                if (stream != null) {
-                    stream.close();
-                }
+            	if (fileName.indexOf(".") > 0)
+            	{
+            		tempFileName = fileName.substring(0, fileName.indexOf("."));
+            	}
+            	else
+            	{
+            		tempFileName = fileName;
+            	}
+                Class res = R.drawable.class;
+                Field field = res.getField(tempFileName);
+                int drawableId = field.getInt(null);
+                resource = new GVRAndroidResource(this, drawableId);
             }
+            catch (Exception e) {
+                // Failure to get drawable id.
+            	resource = new GVRAndroidResource(this, fileName);
+            }            
+    
         } catch (IOException e) {
             e.printStackTrace();
-            // Don't discard a valid Bitmap because of an IO error closing the
-            // file!
-            return bitmap;
+            return GVRAsynchronousResourceLoader.decodeStream((new GVRAndroidResource(this, R.drawable.__default_bitmap__)).getStream(), false);
         }
+        Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(resource.getStream(), false);
+        resource.closeStream();
+        return bitmap;
     }
 
     /**

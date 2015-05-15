@@ -51,8 +51,8 @@ public:
         triangles.swap(triangles_);
 
         if (vaoID_ != 0) {
-        	glDeleteVertexArrays(1, &vaoID_);
-        	vaoID_ = 0;
+            glDeleteVertexArrays(1, &vaoID_);
+            vaoID_ = 0;
         }
     }
 
@@ -270,6 +270,17 @@ public:
         return vaoID_;
     }
 
+    // setter for switching between GL_CLAMP_TO_EDGE and GL_REPEAT
+    void setTextureRepeatFlag(bool value) {
+        texture_repeat_ = value;
+    }
+
+    // getter for switching between GL_CLAMP_TO_EDGE and GL_REPEAT
+    const bool getTextureRepeatFlag() {
+        return  texture_repeat_;
+    }
+
+
 private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
@@ -299,6 +310,10 @@ private:
     GLuint vertexLoc_;
     GLuint normalLoc_;
     GLuint texCoordLoc_;
+
+    // boolean flag for switching from GL_CLAMP_TO_EDGE to GL_REPEAT 
+    // when texture coordinates are greater than 1.
+    bool texture_repeat_ = false;
 };
 }
 #endif

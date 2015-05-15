@@ -16,6 +16,8 @@
 
 package org.gearvrf;
 
+import android.graphics.Bitmap;
+
 /**
  * Provides access to the {@link GVRMesh meshes} contained in 3D models that
  * have been imported with {@link GVRImporter}.
@@ -31,7 +33,15 @@ class GVRAssimpImporter extends GVRHybridObject {
     int getNumberOfMeshes() {
         return NativeAssimpImporter.getNumberOfMeshes(getPtr());
     }
-
+    
+    /**
+     * @return The GVRScene with the specified  3D model as a part of it.
+     */
+    GVRScene loadScene(Bitmap defaultBitmap, GVRContext gvrContext)
+    {
+        return new GVRScene(getGVRContext(), NativeAssimpImporter.loadScene(getPtr(), defaultBitmap, gvrContext));
+    }
+    
     /**
      * Retrieves a specific mesh from the imported 3D model.
      * 
@@ -47,6 +57,6 @@ class GVRAssimpImporter extends GVRHybridObject {
 
 class NativeAssimpImporter {
     static native int getNumberOfMeshes(long assimpImporter);
-
+    static native long loadScene(long assimpImporter, Bitmap defaultBitmap, GVRContext gvrContext);
     static native long getMesh(long assimpImporter, int index);
 }

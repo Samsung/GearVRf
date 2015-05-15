@@ -31,14 +31,14 @@
 namespace gvr {
 class BaseTexture: public Texture {
 public:
-    explicit BaseTexture(JNIEnv* env, jobject bitmap) :
-            Texture(new GLTexture(TARGET)) {
+    explicit BaseTexture(JNIEnv* env, jobject bitmap, bool repeat_flag=false) :
+            Texture(new GLTexture(TARGET, repeat_flag)) {
         AndroidBitmapInfo info;
         void *pixels;
         int ret;
         if(bitmap == NULL){
-        	std::string error = "new BaseTexture() failed! Input bitmap is NULL.";
-        	throw error;
+            std::string error = "new BaseTexture() failed! Input bitmap is NULL.";
+            throw error;
         }
         if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
             std::string error = "AndroidBitmap_getInfo () failed! error = "
@@ -55,6 +55,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info.width, info.height, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     explicit BaseTexture(int width, int height, const unsigned char* pixels) :
@@ -62,6 +63,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                 GL_UNSIGNED_BYTE, pixels);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     explicit BaseTexture() : Texture(new GLTexture(TARGET)) {
@@ -72,6 +74,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,
                 GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
         return (glGetError() == 0) ? 1 : 0;
     }
 

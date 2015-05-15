@@ -21,15 +21,37 @@
 #ifndef ASSIMP_SCENE_H_
 #define ASSIMP_SCENE_H_
 
+#include <android/bitmap.h>
 #include <memory>
+#include <vector>
+#include <string>
+#include <map>
 
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-
+#include "objects/components/perspective_camera.h"
+#include "objects/components/camera_rig.h"
+#include "objects/textures/base_texture.h"
+#include "objects/components/transform.h"
+#include "objects/components/component.h"
+#include "objects/components/camera.h"
 #include "objects/hybrid_object.h"
-
+#include "objects/scene_object.h"
+#include "assimp/Importer.hpp"
+#include "objects/material.h"
+#include "assimp/material.h"
+#include "objects/scene.h"
+#include "assimp/scene.h"
+#include "util/gvr_log.h"
+#include "glm/glm.hpp"
 namespace gvr {
 class Mesh;
+class Scene;
+class SceneObject;
+class Material;
+class PerspectiveCamera;
+class Camera;
+class CameraRig;
+class RenderData;
+class BaseTexture;
 
 class AssimpImporter: public HybridObject {
 public:
@@ -44,7 +66,10 @@ public:
     unsigned int getNumberOfMeshes() {
         return assimp_importer_->GetScene()->mNumMeshes;
     }
-
+    void scene_recursion(aiNode* assimp_node, const aiScene* assimp_scene, std::shared_ptr<Scene> 
+gvr_scene_pointer, JNIEnv * env, jobject default_bitmap, jobject gvr_context, jmethodID 
+method_ID, aiMatrix4x4 accumulated_transform);
+    std::shared_ptr<Scene> load_scene(JNIEnv* env, jobject obj, jobject bitmap, jobject gvr_context);
     std::shared_ptr<Mesh> getMesh(int index);
 
 private:

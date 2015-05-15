@@ -26,13 +26,19 @@
 namespace gvr {
 class GLTexture {
 public:
-    explicit GLTexture(GLenum target) :
+    explicit GLTexture(GLenum target, bool repeat_flag = false) :
             target_(target) {
         glGenTextures(1, &id_);
         glBindTexture(target, id_);
-        glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        if(repeat_flag) {
+            glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        } 
+        else {
+            glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        }
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(target, 0);
     }

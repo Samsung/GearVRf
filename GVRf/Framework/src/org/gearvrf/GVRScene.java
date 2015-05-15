@@ -50,7 +50,7 @@ public class GVRScene extends GVRHybridObject {
         setMainCameraRig(cameraRig);
     }
 
-    private GVRScene(GVRContext gvrContext, long ptr) {
+    GVRScene(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
 
