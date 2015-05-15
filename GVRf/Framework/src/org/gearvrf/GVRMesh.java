@@ -15,10 +15,9 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.Exceptions;
+import static org.gearvrf.utility.Assert.*;
 
-import android.util.Log;
-import static org.gearvrf.utility.Preconditions.*;
+import org.gearvrf.utility.Exceptions;
 
 /**
  * This is one of the key GVRF classes: It holds GL meshes.
@@ -153,8 +152,7 @@ public class GVRMesh extends GVRHybridObject {
      *            Array containing the packed triangle index data.
      */
     public void setTriangles(char[] triangles) {
-        checkNotNull("triangles", triangles);
-        checkDivisibleDataLength("triangles", triangles.length, 3);
+        checkDivisibleDataLength("triangles", triangles, 3);
         NativeMesh.setTriangles(getPtr(), triangles);
     }
 
@@ -286,16 +284,14 @@ public class GVRMesh extends GVRHybridObject {
     private void checkValidFloatVector(String keyName, String key,
             String vectorName, float[] vector, int expectedComponents) {
         checkStringNotNullOrEmpty(keyName, key);
-        checkNotNull(vectorName, vector);
-        checkDivisibleDataLength(vectorName, vector.length, expectedComponents);
+        checkDivisibleDataLength(vectorName, vector, expectedComponents);
         checkVectorLengthWithVertices(vectorName, vector.length,
                 expectedComponents);
     }
 
     private void checkValidFloatArray(String parameterName, float[] data,
             int expectedComponents) {
-        checkNotNull(parameterName, data);
-        checkDivisibleDataLength(parameterName, data.length, expectedComponents);
+        checkDivisibleDataLength(parameterName, data, expectedComponents);
     }
 
     private void checkVectorLengthWithVertices(String parameterName,
