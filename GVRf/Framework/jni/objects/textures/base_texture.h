@@ -54,7 +54,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info.width, info.height, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
+        glGenerateMipmap(GL_TEXTURE_2D);
         AndroidBitmap_unlockPixels(env, bitmap);
     }
 
@@ -63,6 +63,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                 GL_UNSIGNED_BYTE, pixels);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     explicit BaseTexture() : Texture(new GLTexture(TARGET)) {
@@ -73,6 +74,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,
                 GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
         return (glGetError() == 0) ? 1 : 0;
     }
 

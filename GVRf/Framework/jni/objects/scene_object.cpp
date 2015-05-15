@@ -28,10 +28,20 @@
 
 namespace gvr {
 SceneObject::SceneObject() :
-        HybridObject(), name_(""), transform_(), render_data_(), camera_(), camera_rig_(), eye_pointee_holder_(), parent_(), children_() {
+        HybridObject(), name_(""), transform_(), render_data_(), camera_(), camera_rig_(), eye_pointee_holder_(), parent_(),
+        children_(), visible_(false), in_frustum_(false), query_currently_issued_(false) {
+
+    // Occlusion query setup
+#if _GVRF_USE_GLES3_
+    queries_ = new GLuint[1];
+    glGenQueries(1, queries_);
+#endif
 }
 
 SceneObject::~SceneObject() {
+#if _GVRF_USE_GLES3_
+    delete queries_;
+#endif
 }
 
 void SceneObject::attachTransform(const std::shared_ptr<SceneObject>& self,

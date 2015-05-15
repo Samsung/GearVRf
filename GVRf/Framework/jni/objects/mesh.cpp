@@ -60,6 +60,13 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
         }
     }
 
+    mesh->bounding_box_info_.push_back(min_x);
+    mesh->bounding_box_info_.push_back(min_y);
+    mesh->bounding_box_info_.push_back(min_z);
+    mesh->bounding_box_info_.push_back(max_x);
+    mesh->bounding_box_info_.push_back(max_y);
+    mesh->bounding_box_info_.push_back(max_z);
+
     mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
     mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
     mesh->vertices_.push_back(glm::vec3(min_x, max_y, min_z));

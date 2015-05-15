@@ -51,6 +51,12 @@ public:
     int getSceneDirtyFlag() { return 1 || dirtyFlag_;  /* force to be true */}
     void setSceneDirtyFlag(int dirtyBits) { dirtyFlag_ |= dirtyBits; }
 
+    void set_frustum_culling( bool frustum_flag){ frustum_flag_ = frustum_flag; }
+    bool get_frustum_culling(){ return frustum_flag_; }
+
+    void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
+    bool get_occlusion_culling(){ return occlusion_flag_; }
+
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -62,6 +68,9 @@ private:
     std::shared_ptr<CameraRig> main_camera_rig_;
 
     int dirtyFlag_;
+    bool frustum_flag_;
+    bool occlusion_flag_;
+
 };
 
 }

@@ -44,6 +44,12 @@ Java_org_gearvrf_NativeScene_setMainCameraRig(JNIEnv * env,
 JNIEXPORT jlongArray JNICALL
 Java_org_gearvrf_NativeScene_getWholeSceneObjects(JNIEnv * env,
         jobject obj, jlong jscene);
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag);
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag);
 }
 ;
 
@@ -109,4 +115,19 @@ Java_org_gearvrf_NativeScene_getWholeSceneObjects(JNIEnv * env,
     return jscene_objects;
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag) {
+    std::shared_ptr<Scene> scene =
+            *reinterpret_cast<std::shared_ptr<Scene>*>(jscene);
+    scene->set_frustum_culling(static_cast<bool>(flag));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag) {
+    std::shared_ptr<Scene> scene =
+            *reinterpret_cast<std::shared_ptr<Scene>*>(jscene);
+    scene->set_occlusion_culling(static_cast<bool>(flag));
+}
 }
