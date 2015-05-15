@@ -23,10 +23,10 @@ import org.gearvrf.GVRMesh;
 public class GVRCylinderSceneObject extends GVRSceneObject {
 
     private static final String TAG = "GVRCylinderSceneObject";
-    private static final int NUM_STACKS = 4;
+    private static final int NUM_STACKS = 2;
     private static final int NUM_SLICES = 36;
     private static final float BASE_RADIUS = 0.5f;
-    private static final float TOP_RADIUS = 0.25f;
+    private static final float TOP_RADIUS = 0.5f;
     private static final float HEIGHT = 1.0f;
 
     private float[] vertices;
@@ -39,15 +39,17 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     private int triangleCount = 0;
 
     /**
-     * Constructs a cylinder scene object.
+     * Constructs a cylinder scene object with a height of 1, radius of 0.5,2
+     * stacks, and 36 slices.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
      */
     public GVRCylinderSceneObject(GVRContext gvrContext) {
         super(gvrContext);
-        
-        generateCylinder(BASE_RADIUS, TOP_RADIUS, HEIGHT, NUM_STACKS, NUM_SLICES);
+
+        generateCylinder(BASE_RADIUS, TOP_RADIUS, HEIGHT, NUM_STACKS,
+                NUM_SLICES);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -76,9 +78,25 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      * @param numSlices
      *            number of quads around to make the cylinder.
      */
-    public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius, float topRadius, float height, int numStacks, int numSlices) {
+    public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
+            float topRadius, float height, int numStacks, int numSlices) {
         super(gvrContext);
-    	generateCylinder(bottomRadius, topRadius, height, numStacks, numSlices);
+        // assert height, numStacks, numSlices > 0
+        if (height <= 0 || numStacks <= 0 || numSlices <= 0) {
+            throw new IllegalArgumentException(
+                    "height, numStacks, and numSlices must be > 0.  Values passed were: height="
+                            + height + ", numStacks=" + numStacks
+                            + ", numSlices=" + numSlices);
+        }
+
+        // assert numCaps > 0
+        if (bottomRadius <= 0 && topRadius <= 0) {
+            throw new IllegalArgumentException(
+                    "bottomRadius and topRadius must be >= 0 and at least one of bottomRadius or topRadius must be > 0.  Values passed were: bottomRadius="
+                            + bottomRadius + ", topRadius=" + topRadius);
+        }
+
+        generateCylinder(bottomRadius, topRadius, height, numStacks, numSlices);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -91,100 +109,103 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         renderData.setMesh(mesh);
     }
 
-    private void generateCylinder(float bottomRadius, float topRadius, float height, int numStacks, int numSlices) {
-        // assert height, numStacks, numSlices > 0
-        
+    private void generateCylinder(float bottomRadius, float topRadius,
+            float height, int numStacks, int numSlices) {
+
         int numCaps = 2;
-        if(bottomRadius == 0) {
+        if (bottomRadius == 0) {
             numCaps--;
         }
-        
-        if(topRadius == 0) {
+
+        if (topRadius == 0) {
             numCaps--;
         }
-        
-        // assert numCaps > 0
+
         int capNumVertices = 3 * numSlices;
         int bodyNumVertices = 4 * numSlices * numStacks;
         int numVertices = (numCaps * capNumVertices) + bodyNumVertices;
-        int numTriangles = (numCaps * capNumVertices) + (6 * numSlices * numStacks);
+        int numTriangles = (numCaps * capNumVertices)
+                + (6 * numSlices * numStacks);
         float halfHeight = height / 2.0f;
 
-        vertices = new float[3*numVertices];
-        normals = new float[3*numVertices];
-        texCoords = new float[2*numVertices];
+        vertices = new float[3 * numVertices];
+        normals = new float[3 * numVertices];
+        texCoords = new float[2 * numVertices];
         indices = new char[numTriangles];
 
         // top cap
         // 3 * numSlices
-        if(topRadius > 0) {
+        if (topRadius > 0) {
             createCap(topRadius, halfHeight, numSlices, 1.0f);
         }
 
         // cylinder body
         // 4 * numSlices * numStacks
         createBody(bottomRadius, topRadius, height, numStacks, numSlices);
-        
+
         // bottom cap
         // 3 * numSlices
-        if(bottomRadius > 0) {
+        if (bottomRadius > 0) {
             createCap(bottomRadius, -halfHeight, numSlices, -1.0f);
         }
-        
+
     }
 
-    private void createCap(float radius, float height, int numSlices, float normalDir) {
-        for(int slice = 0; slice < numSlices; slice++) {
-            float theta0 = ((float)(slice)/numSlices)*2.0f*(float)Math.PI;
-            float theta1 = ((float)(slice+1)/numSlices)*2.0f*(float)Math.PI;
+    private void createCap(float radius, float height, int numSlices,
+            float normalDir) {
+        for (int slice = 0; slice < numSlices; slice++) {
+            float theta0 = ((float) (slice) / numSlices) * 2.0f
+                    * (float) Math.PI;
+            float theta1 = ((float) (slice + 1) / numSlices) * 2.0f
+                    * (float) Math.PI;
 
             float y = height;
-            float x0 = radius * (float)Math.cos(theta0);
-            float z0 = radius * (float)Math.sin(theta0);
-            float x1 = radius * (float)Math.cos(theta1);
-            float z1 = radius * (float)Math.sin(theta1);
+            float x0 = radius * (float) Math.cos(theta0);
+            float z0 = radius * (float) Math.sin(theta0);
+            float x1 = radius * (float) Math.cos(theta1);
+            float z1 = radius * (float) Math.sin(theta1);
 
-            float s0 = 1.0f - ((float)(slice)/numSlices);
-            float s1 = 1.0f - ((float)(slice+1)/numSlices);
+            float s0 = 1.0f - ((float) (slice) / numSlices);
+            float s1 = 1.0f - ((float) (slice + 1) / numSlices);
             float s2 = (s0 + s1) / 2.0f;
 
-            vertices[vertexCount+0] = x0;
-            vertices[vertexCount+1] = y;
-            vertices[vertexCount+2] = z0;
-            vertices[vertexCount+3] = x1;
-            vertices[vertexCount+4] = y;
-            vertices[vertexCount+5] = z1;
-            vertices[vertexCount+6] = 0.0f;
-            vertices[vertexCount+7] = y;
-            vertices[vertexCount+8] = 0.0f;
+            vertices[vertexCount + 0] = x0;
+            vertices[vertexCount + 1] = y;
+            vertices[vertexCount + 2] = z0;
+            vertices[vertexCount + 3] = x1;
+            vertices[vertexCount + 4] = y;
+            vertices[vertexCount + 5] = z1;
+            vertices[vertexCount + 6] = 0.0f;
+            vertices[vertexCount + 7] = y;
+            vertices[vertexCount + 8] = 0.0f;
 
-            normals[vertexCount+0] = 0.0f;
-            normals[vertexCount+1] = normalDir; 
-            normals[vertexCount+2] = 0.0f;
-            normals[vertexCount+3] = 0.0f;
-            normals[vertexCount+4] = normalDir; 
-            normals[vertexCount+5] = 0.0f;
-            normals[vertexCount+6] = 0.0f;
-            normals[vertexCount+7] = normalDir; 
-            normals[vertexCount+8] = 0.0f;
+            normals[vertexCount + 0] = 0.0f;
+            normals[vertexCount + 1] = normalDir;
+            normals[vertexCount + 2] = 0.0f;
+            normals[vertexCount + 3] = 0.0f;
+            normals[vertexCount + 4] = normalDir;
+            normals[vertexCount + 5] = 0.0f;
+            normals[vertexCount + 6] = 0.0f;
+            normals[vertexCount + 7] = normalDir;
+            normals[vertexCount + 8] = 0.0f;
 
-            texCoords[texCoordCount+0] = s0;
-            texCoords[texCoordCount+1] = 0.0f;
+            texCoords[texCoordCount + 0] = s0;
+            texCoords[texCoordCount + 1] = 0.0f;
 
-            texCoords[texCoordCount+2] = s1;
-            texCoords[texCoordCount+3] = 0.0f;
+            texCoords[texCoordCount + 2] = s1;
+            texCoords[texCoordCount + 3] = 0.0f;
 
-            texCoords[texCoordCount+4] = s2;
-            texCoords[texCoordCount+5] = 1.0f;
+            texCoords[texCoordCount + 4] = s2;
+            texCoords[texCoordCount + 5] = 1.0f;
 
-            if(normalDir > 0) {
-                indices[indexCount+0] = (char)(triangleCount+1);
-                indices[indexCount+1] = (char)(triangleCount+0);
-                indices[indexCount+2] = (char)(triangleCount+2);
+            if (normalDir > 0) {
+                indices[indexCount + 0] = (char) (triangleCount + 1);
+                indices[indexCount + 1] = (char) (triangleCount + 0);
+                indices[indexCount + 2] = (char) (triangleCount + 2);
             } else {
-                indices[indexCount+0] = (char)(triangleCount+0);
-                indices[indexCount+1] = (char)(triangleCount+1);
-                indices[indexCount+2] = (char)(triangleCount+2);
+                indices[indexCount + 0] = (char) (triangleCount + 0);
+                indices[indexCount + 1] = (char) (triangleCount + 1);
+                indices[indexCount + 2] = (char) (triangleCount + 2);
             }
 
             vertexCount += 9;
@@ -212,18 +233,22 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 float slicePercentage1 = ((float)(slice+1)/numSlices);
                 float theta0 = slicePercentage0*2.0f*(float)Math.PI;
                 float theta1 = slicePercentage1*2.0f*(float)Math.PI;
+                float cosTheta0 = (float)Math.cos(theta0);
+                float sinTheta0 = (float)Math.sin(theta0);
+                float cosTheta1 = (float)Math.cos(theta1);
+                float sinTheta1 = (float)Math.sin(theta1);
 
                 float radius = (bottomRadius - (difference * stackPercentage0));
-                float x0 = radius * (float)Math.cos(theta0);
-                float z0 = -radius * (float)Math.sin(theta0);
-                float x1 = radius * (float)Math.cos(theta1);
-                float z1 = -radius * (float)Math.sin(theta1);
+                float x0 = radius * cosTheta0;
+                float z0 = -radius * sinTheta0;
+                float x1 = radius * cosTheta1;
+                float z1 = -radius * sinTheta1;
 
                 radius = (bottomRadius - (difference * stackPercentage1));
-                float x2 = radius * (float)Math.cos(theta0);
-                float z2 = -radius * (float)Math.sin(theta0);
-                float x3 = radius * (float)Math.cos(theta1);
-                float z3 = -radius * (float)Math.sin(theta1);
+                float x2 = radius * cosTheta0;
+                float z2 = -radius * sinTheta0;
+                float x3 = radius * cosTheta1;
+                float z3 = -radius * sinTheta1;
 
                 float s0 = slicePercentage0;
                 float s1 = slicePercentage1;
@@ -247,8 +272,8 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 // calculate normal
                 float length = (float) Math.sqrt(difference*difference + height*height);
                 float ratio = height / length;
-                float nx = (float) (ratio * Math.sin(theta0));
-                float ny = (float) (ratio * Math.cos(theta0));
+                float nx = (float) (ratio * sinTheta0);
+                float ny = (float) (ratio * cosTheta0);
                 float nz = difference / length;
                 normals[vertexCount+0] = nx; 
                 normals[vertexCount+1] = ny; 
@@ -290,6 +315,4 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             }
         }
     }
-
- }
-
+}

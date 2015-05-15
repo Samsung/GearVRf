@@ -40,86 +40,82 @@ public class GVRCubeSceneObject extends GVRSceneObject {
      //
     private static final float SIZE = 0.5f;
 
-    private float[] vertices = {
-        -SIZE, -SIZE,  SIZE,  //  0
-         SIZE, -SIZE,  SIZE,  //  1 
-        -SIZE,  SIZE,  SIZE,  //  2
-         SIZE,  SIZE,  SIZE,  //  3
+    private float[] vertices = { -SIZE, -SIZE, SIZE, // 0
+            SIZE, -SIZE, SIZE, // 1
+            -SIZE, SIZE, SIZE, // 2
+            SIZE, SIZE, SIZE, // 3
 
-         SIZE, -SIZE,  SIZE,  //  4
-         SIZE, -SIZE, -SIZE,  //  5 
-         SIZE,  SIZE,  SIZE,  //  6
-         SIZE,  SIZE, -SIZE,  //  7
+            SIZE, -SIZE, SIZE, // 4
+            SIZE, -SIZE, -SIZE, // 5
+            SIZE, SIZE, SIZE, // 6
+            SIZE, SIZE, -SIZE, // 7
 
-         SIZE, -SIZE, -SIZE,  //  8
-        -SIZE, -SIZE, -SIZE,  //  9
-         SIZE,  SIZE, -SIZE,  // 10
-        -SIZE,  SIZE, -SIZE,  // 11
+            SIZE, -SIZE, -SIZE, // 8
+            -SIZE, -SIZE, -SIZE, // 9
+            SIZE, SIZE, -SIZE, // 10
+            -SIZE, SIZE, -SIZE, // 11
 
-        -SIZE, -SIZE, -SIZE,  // 12
-        -SIZE, -SIZE,  SIZE,  // 13
-        -SIZE,  SIZE, -SIZE,  // 14
-        -SIZE,  SIZE,  SIZE,  // 15
+            -SIZE, -SIZE, -SIZE, // 12
+            -SIZE, -SIZE, SIZE, // 13
+            -SIZE, SIZE, -SIZE, // 14
+            -SIZE, SIZE, SIZE, // 15
 
-        -SIZE,  SIZE,  SIZE,  // 16
-         SIZE,  SIZE,  SIZE,  // 17
-        -SIZE,  SIZE, -SIZE,  // 18
-         SIZE,  SIZE, -SIZE,  // 19
+            -SIZE, SIZE, SIZE, // 16
+            SIZE, SIZE, SIZE, // 17
+            -SIZE, SIZE, -SIZE, // 18
+            SIZE, SIZE, -SIZE, // 19
 
-        -SIZE, -SIZE, -SIZE,  // 20
-         SIZE, -SIZE, -SIZE,  // 21
-        -SIZE, -SIZE,  SIZE,  // 22
-         SIZE, -SIZE,  SIZE,  // 23
+            -SIZE, -SIZE, -SIZE, // 20
+            SIZE, -SIZE, -SIZE, // 21
+            -SIZE, -SIZE, SIZE, // 22
+            SIZE, -SIZE, SIZE, // 23
     };
 
-    private float[] normals = { 
-         0.0f,  0.0f, -1.0f, 0.0f,  0.0f, -1.0f, 0.0f,  0.0f, -1.0f, 0.0f,  0.0f, -1.0f,
-         1.0f,  0.0f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,  0.0f,  0.0f,
-         0.0f,  0.0f,  1.0f, 0.0f,  0.0f,  1.0f, 0.0f,  0.0f,  1.0f, 0.0f,  0.0f,  1.0f,
-        -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-         0.0f,  1.0f,  1.0f, 0.0f,  1.0f,  1.0f, 0.0f,  1.0f,  1.0f, 0.0f,  1.0f,  1.0f,
-         0.0f, -1.0f,  0.0f, 0.0f, -1.0f,  0.0f, 0.0f, -1.0f,  0.0f, 0.0f, -1.0f,  0.0f
+    private float[] normals = { 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f };
+
+    private float[] texCoords = { 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+            0.0f, // front
+            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // right
+            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // back
+            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // left
+            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // top
+            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom
     };
 
-    private float[] texCoords = {
-        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // front
-        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // right
-        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // back
-        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // left
-        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // top
-        0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom
+    private char[] indices = { 0, 1, 2, // front
+            2, 1, 3,
+
+            4, 5, 6, // right
+            6, 5, 7,
+
+            8, 9, 10, // back
+            10, 9, 11,
+
+            12, 13, 14, // left
+            14, 13, 15, //
+
+            16, 17, 18, // top
+            18, 17, 19, //
+
+            20, 21, 22, // bottom
+            22, 21, 23 //
     };
-
-    private char[] indices = {
-         0,  1,  2,  // front
-         2,  1,  3,  
-
-         4,  5,  6,  // right
-         6,  5,  7,  
-
-         8,  9, 10,  // back
-         10, 9, 11,  
-
-        12, 13, 14,  // left
-        14, 13, 15,  // 
-
-        16, 17, 18,  // top
-        18, 17, 19,  // 
-
-        20, 21, 22,  // bottom 
-        22, 21, 23   // 
-    };
-
 
     /**
-     * Constructs a cube scene object.
+     * Constructs a cube scene object with each side of length 1.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
      */
     public GVRCubeSceneObject(GVRContext gvrContext) {
         super(gvrContext);
-        
+
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
         mesh.setNormals(normals);
@@ -132,4 +128,3 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     }
 
 }
-

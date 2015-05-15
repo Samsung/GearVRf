@@ -29,10 +29,18 @@ public class GVRConeSceneObject extends GVRSceneObject {
     private static final float TOP_RADIUS = 0.0f;
     private static final float HEIGHT = 1.0f;
 
+    /**
+     * Constructs a cone scene object with a height of 1, and a radius of 0.5.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     */
     public GVRConeSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
-        GVRCylinderSceneObject cylinder = new GVRCylinderSceneObject(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, NUM_STACKS, NUM_SLICES);
+        GVRCylinderSceneObject cylinder = new GVRCylinderSceneObject(
+                gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, NUM_STACKS,
+                NUM_SLICES);
 
         GVRMesh mesh = cylinder.getRenderData().getMesh();
         GVRRenderData renderData = new GVRRenderData(gvrContext);
@@ -40,7 +48,4 @@ public class GVRConeSceneObject extends GVRSceneObject {
         renderData.setMesh(mesh);
     }
 
-
 }
-
- 
