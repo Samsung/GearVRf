@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Containing data about how to render an object.
  ***************************************************************************/
@@ -24,6 +23,7 @@
 #include <memory>
 #include <vector>
 
+#include "gl/gl_program.h"
 #include "glm/glm.hpp"
 
 #include "objects/components/component.h"
@@ -47,7 +47,7 @@ public:
                     DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), cull_test_(true), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
-                    true) {
+                    true), draw_mode_(GL_TRIANGLES) {
     }
 
     ~RenderData() {
@@ -141,6 +141,14 @@ public:
         alpha_blend_ = alpha_blend;
     }
 
+    GLenum draw_mode() const {
+        return draw_mode_;
+    }
+
+    void set_draw_mode(GLenum draw_mode) {
+        draw_mode_ = draw_mode;
+    }
+
 private:
     RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -160,6 +168,7 @@ private:
     float offset_units_;
     bool depth_test_;
     bool alpha_blend_;
+    GLenum draw_mode_;
 };
 
 inline bool compareRenderData(std::shared_ptr<RenderData> i,

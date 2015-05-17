@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a texture without light.
  ***************************************************************************/
@@ -98,14 +97,15 @@ void UnlitShader::render(const glm::mat4& mvp_matrix,
     glUseProgram(program_->id());
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
     glBindVertexArray(mesh->getVAOId());
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
+    glDrawElements(render_data->draw_mode(), mesh->triangles().size(),
+            GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 #else
     glUseProgram(program_->id());
@@ -128,7 +128,7 @@ void UnlitShader::render(const glm::mat4& mvp_matrix,
 
     glUniform1f(u_opacity_, opacity);
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->triangles().size(), GL_UNSIGNED_SHORT,
             mesh->triangles().data());
 #endif
 
