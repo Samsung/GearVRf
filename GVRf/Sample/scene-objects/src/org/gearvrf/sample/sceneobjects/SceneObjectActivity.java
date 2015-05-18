@@ -64,23 +64,24 @@ public class SceneObjectActivity extends GVRActivity {
                 mViewManager.setYAngle(0.0f);
                 mViewManager.onTap();
             }
+
+            float xdifference = lastX - event.getX();
+            if (Math.abs(xdifference) > 10) {
+                xangle = lastXAngle + xdifference / 10;
+                mViewManager.setXAngle(1.0f);
+                lastX = event.getX();
+                lastXAngle = xangle;
+            }
+
+            float ydifference = lastY - event.getY();
+            if (Math.abs(ydifference) > 10) {
+                yangle = lastYAngle + ydifference / 10;
+                mViewManager.setYAngle(1.0f);
+                lastY = event.getY();
+                lastYAngle = yangle;
+            }
         }
 
-        float xdifference = lastX - event.getX();
-        if (Math.abs(xdifference) > 10) {
-            xangle = lastXAngle + xdifference / 10;
-            mViewManager.setXAngle(1.0f);
-            lastX = event.getX();
-            lastXAngle = xangle;
-        }
-
-        float ydifference = lastY - event.getY();
-        if (Math.abs(ydifference) > 10) {
-            yangle = lastYAngle + ydifference / 10;
-            mViewManager.setYAngle(1.0f);
-            lastY = event.getY();
-            lastYAngle = yangle;
-        }
         return true;
     }
 }
