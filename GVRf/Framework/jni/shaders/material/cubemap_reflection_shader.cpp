@@ -62,120 +62,123 @@
 // (http://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping)
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-		"attribute vec3 a_normal;\n"
-		"uniform mat4 u_mv;\n"
-		"uniform mat4 u_mv_it;\n"
-		"uniform mat4 u_mvp;\n"
-		"uniform mat4 u_view_i;\n"
-		"varying vec3 v_tex_coord;\n"
-		"void main() {\n"
-		"  vec4 v_viewspace_position_vec4 = u_mv * a_position;\n"
-		"  vec3 v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
-		"  vec3 v_viewspace_normal = (u_mv_it * vec4(a_normal, 1.0f)).xyz;\n"
-		"  vec3 v_reflected_position = reflect(v_viewspace_position, normalize(v_viewspace_normal));\n"
-		"  v_tex_coord = (u_view_i * vec4(v_reflected_position, 1.0f)).xyz;\n"
-		"  v_tex_coord.z = -v_tex_coord.z;\n"
-		"  gl_Position = u_mvp * a_position;\n"
-		"}\n";
+static const char VERTEX_SHADER[] =
+        "attribute vec4 a_position;\n"
+                "attribute vec3 a_normal;\n"
+                "uniform mat4 u_mv;\n"
+                "uniform mat4 u_mv_it;\n"
+                "uniform mat4 u_mvp;\n"
+                "uniform mat4 u_view_i;\n"
+                "varying vec3 v_tex_coord;\n"
+                "void main() {\n"
+                "  vec4 v_viewspace_position_vec4 = u_mv * a_position;\n"
+                "  vec3 v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
+                "  vec3 v_viewspace_normal = (u_mv_it * vec4(a_normal, 1.0f)).xyz;\n"
+                "  vec3 v_reflected_position = reflect(v_viewspace_position, normalize(v_viewspace_normal));\n"
+                "  v_tex_coord = (u_view_i * vec4(v_reflected_position, 1.0f)).xyz;\n"
+                "  v_tex_coord.z = -v_tex_coord.z;\n"
+                "  gl_Position = u_mvp * a_position;\n"
+                "}\n";
 
 static const char FRAGMENT_SHADER[] =
-		"precision highp float;\n"
-				"uniform samplerCube u_texture;\n"
-				"uniform vec3 u_color;\n"
-				"uniform float u_opacity;\n"
-				"varying vec3 v_tex_coord;\n"
-				"void main()\n"
-				"{\n"
-				"  vec4 color = textureCube(u_texture, v_tex_coord.xyz);\n"
-				"  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
-				"}\n";
+        "precision highp float;\n"
+                "uniform samplerCube u_texture;\n"
+                "uniform vec3 u_color;\n"
+                "uniform float u_opacity;\n"
+                "varying vec3 v_tex_coord;\n"
+                "void main()\n"
+                "{\n"
+                "  vec4 color = textureCube(u_texture, v_tex_coord.xyz);\n"
+                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+                "}\n";
 
 CubemapReflectionShader::CubemapReflectionShader() :
-		program_(0), a_position_(0), a_normal_(0), u_mv_(0), u_mv_it_(0), u_mvp_(0), u_view_i_(0), u_texture_(0), u_color_(
-				0), u_opacity_(0) {
-	program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-	a_position_ = glGetAttribLocation(program_->id(), "a_position");
-	a_normal_ = glGetAttribLocation(program_->id(), "a_normal");
-	u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
-	u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
-	u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
-	u_view_i_ = glGetUniformLocation(program_->id(), "u_view_i");
-	u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
-	u_color_ = glGetUniformLocation(program_->id(), "u_color");
-	u_opacity_ = glGetUniformLocation(program_->id(), "u_opacity");
+        program_(0), a_position_(0), a_normal_(0), u_mv_(0), u_mv_it_(0), u_mvp_(
+                0), u_view_i_(0), u_texture_(0), u_color_(0), u_opacity_(0) {
+    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+    a_position_ = glGetAttribLocation(program_->id(), "a_position");
+    a_normal_ = glGetAttribLocation(program_->id(), "a_normal");
+    u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
+    u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
+    u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+    u_view_i_ = glGetUniformLocation(program_->id(), "u_view_i");
+    u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
+    u_color_ = glGetUniformLocation(program_->id(), "u_color");
+    u_opacity_ = glGetUniformLocation(program_->id(), "u_opacity");
 }
 
 CubemapReflectionShader::~CubemapReflectionShader() {
-	if (program_ != 0) {
-		recycle();
-	}
+    if (program_ != 0) {
+        recycle();
+    }
 }
 
 void CubemapReflectionShader::recycle() {
-	delete program_;
-	program_ = 0;
+    delete program_;
+    program_ = 0;
 }
 
-void CubemapReflectionShader::render(const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
-		const glm::mat4& view_invers_matrix, const glm::mat4& mvp_matrix, std::shared_ptr<RenderData> render_data) {
-	std::shared_ptr<Mesh> mesh = render_data->mesh();
-	std::shared_ptr<Texture> texture = render_data->material()->getTexture(
-			"main_texture");
-	glm::vec3 color = render_data->material()->getVec3("color");
-	float opacity = render_data->material()->getFloat("opacity");
+void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
+        const glm::mat4& mv_it_matrix, const glm::mat4& view_invers_matrix,
+        const glm::mat4& mvp_matrix, RenderData* render_data) {
+    Mesh* mesh = render_data->mesh();
+    Texture* texture = render_data->material()->getTexture("main_texture");
+    glm::vec3 color = render_data->material()->getVec3("color");
+    float opacity = render_data->material()->getFloat("opacity");
 
-	if (texture->getTarget() != GL_TEXTURE_CUBE_MAP) {
-		std::string error = "CubemapReflectionShader::render : texture with wrong target";
-		throw error;
-	}
+    if (texture->getTarget() != GL_TEXTURE_CUBE_MAP) {
+        std::string error =
+                "CubemapReflectionShader::render : texture with wrong target";
+        throw error;
+    }
 
 #if _GVRF_USE_GLES3_
-	mesh->setVertexLoc(a_position_);
-	mesh->setNormalLoc(a_normal_);
-	mesh->generateVAO();
+    mesh->setVertexLoc(a_position_);
+    mesh->setNormalLoc(a_normal_);
+    mesh->generateVAO();
 
-	glUseProgram(program_->id());
+    glUseProgram(program_->id());
 
-	glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
-	glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
-	glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-	glUniformMatrix4fv(u_view_i_, 1, GL_FALSE, glm::value_ptr(view_invers_matrix));
-	glActiveTexture (GL_TEXTURE0);
-	glBindTexture(texture->getTarget(), texture->getId());
-	glUniform1i(u_texture_, 0);
-	glUniform3f(u_color_, color.r, color.g, color.b);
-	glUniform1f(u_opacity_, opacity);
+    glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
+    glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_view_i_, 1, GL_FALSE,
+            glm::value_ptr(view_invers_matrix));
+    glActiveTexture (GL_TEXTURE0);
+    glBindTexture(texture->getTarget(), texture->getId());
+    glUniform1i(u_texture_, 0);
+    glUniform3f(u_color_, color.r, color.g, color.b);
+    glUniform1f(u_opacity_, opacity);
 
-	glBindVertexArray(mesh->getVAOId());
-	glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-			0);
-	glBindVertexArray(0);
+    glBindVertexArray(mesh->getVAOId());
+    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+            0);
+    glBindVertexArray(0);
 #else
-	glUseProgram(program_->id());
+    glUseProgram(program_->id());
 
-	glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0,
-			mesh->vertices().data());
-	glEnableVertexAttribArray(a_position_);
+    glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0,
+            mesh->vertices().data());
+    glEnableVertexAttribArray(a_position_);
 
-	glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
-	glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
-	glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-	glUniformMatrix4fv(u_view_i_, 1, GL_FALSE, glm::value_ptr(view_invers_matrix));
+    glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
+    glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_view_i_, 1, GL_FALSE, glm::value_ptr(view_invers_matrix));
 
-	glActiveTexture (GL_TEXTURE0);
-	glBindTexture(texture->getTarget(), texture->getId());
-	glUniform1i(u_texture_, 0);
+    glActiveTexture (GL_TEXTURE0);
+    glBindTexture(texture->getTarget(), texture->getId());
+    glUniform1i(u_texture_, 0);
 
-	glUniform3f(u_color_, color.r, color.g, color.b);
+    glUniform3f(u_color_, color.r, color.g, color.b);
 
-	glUniform1f(u_opacity_, opacity);
+    glUniform1f(u_opacity_, opacity);
 
-	glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-			mesh->triangles().data());
+    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+            mesh->triangles().data());
 #endif
 
-	checkGlError("CubemapReflectionShader::render");
+    checkGlError("CubemapReflectionShader::render");
 }
 
 }
