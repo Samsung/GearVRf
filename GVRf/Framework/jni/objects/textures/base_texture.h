@@ -50,11 +50,12 @@ public:
                     + ret;
             throw error;
         }
-        AndroidBitmap_unlockPixels(env, bitmap);
 
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info.width, info.height, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+        AndroidBitmap_unlockPixels(env, bitmap);
     }
 
     explicit BaseTexture(int width, int height, const unsigned char* pixels) :
