@@ -96,7 +96,7 @@ private:
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager);
 
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
-    static bool is_cube_in_frustum( float frustum[6][4], std::vector<float>& vertex_limit);
+    static bool is_cube_in_frustum( float frustum[6][4], float *vertex_limit);
 
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);

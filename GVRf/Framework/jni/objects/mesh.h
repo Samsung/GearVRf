@@ -219,10 +219,7 @@ public:
     }
 
     std::shared_ptr<Mesh> getBoundingBox() const;
-    std::vector<float>& getBoundingBoxInfo() // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
-    {
-        return bounding_box_info_;
-    }
+    float* getBoundingBoxInfo() const; // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
 
 
     // /////////////////////////////////////////////////
@@ -290,7 +287,6 @@ private:
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
     std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
     std::vector<unsigned short> triangles_;
-    std::vector<float> bounding_box_info_;
 
     // add location slot map
     std::map<int, std::string> attribute_float_keys_;

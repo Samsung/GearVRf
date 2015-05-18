@@ -32,40 +32,13 @@
 namespace gvr {
 std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     Mesh* mesh = new Mesh();
-    float min_x = std::numeric_limits<float>::infinity();
-    float max_x = -std::numeric_limits<float>::infinity();
-    float min_y = std::numeric_limits<float>::infinity();
-    float max_y = -std::numeric_limits<float>::infinity();
-    float min_z = std::numeric_limits<float>::infinity();
-    float max_z = -std::numeric_limits<float>::infinity();
-
-    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
-        if (it->x < min_x) {
-            min_x = it->x;
-        }
-        if (it->x > max_x) {
-            max_x = it->x;
-        }
-        if (it->y < min_y) {
-            min_y = it->y;
-        }
-        if (it->y > max_y) {
-            max_y = it->y;
-        }
-        if (it->z < min_z) {
-            min_z = it->z;
-        }
-        if (it->z > max_z) {
-            max_z = it->z;
-        }
-    }
-
-    mesh->bounding_box_info_.push_back(min_x);
-    mesh->bounding_box_info_.push_back(min_y);
-    mesh->bounding_box_info_.push_back(min_z);
-    mesh->bounding_box_info_.push_back(max_x);
-    mesh->bounding_box_info_.push_back(max_y);
-    mesh->bounding_box_info_.push_back(max_z);
+    float* bounding_box_info = this->getBoundingBoxInfo();
+    float min_x = bounding_box_info[0];
+    float max_x = bounding_box_info[3];
+    float min_y = bounding_box_info[1];
+    float max_y = bounding_box_info[4];
+    float min_z = bounding_box_info[2];
+    float max_z = bounding_box_info[5];
 
     mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
     mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
@@ -119,6 +92,49 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     mesh->triangles_.push_back(7);
 
     return std::shared_ptr < Mesh > (mesh);
+}
+
+// an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
+float* Mesh::getBoundingBoxInfo() const {
+    float* bounding_box_info_ = new float[6];
+
+    float min_x = std::numeric_limits<float>::infinity();
+    float max_x = -std::numeric_limits<float>::infinity();
+    float min_y = std::numeric_limits<float>::infinity();
+    float max_y = -std::numeric_limits<float>::infinity();
+    float min_z = std::numeric_limits<float>::infinity();
+    float max_z = -std::numeric_limits<float>::infinity();
+
+    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
+        if (it->x < min_x) {
+            min_x = it->x;
+        }
+        if (it->x > max_x) {
+            max_x = it->x;
+        }
+        if (it->y < min_y) {
+            min_y = it->y;
+        }
+        if (it->y > max_y) {
+            max_y = it->y;
+        }
+        if (it->z < min_z) {
+            min_z = it->z;
+        }
+        if (it->z > max_z) {
+            max_z = it->z;
+        }
+    }
+
+    bounding_box_info_[0] = min_x;
+    bounding_box_info_[1] = min_y;
+    bounding_box_info_[2] = min_z;
+
+    bounding_box_info_[3] = max_x;
+    bounding_box_info_[4] = max_y;
+    bounding_box_info_[5] = max_z;
+
+    return bounding_box_info_;
 }
 
 // generate vertex array object
