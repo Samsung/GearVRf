@@ -342,8 +342,7 @@ public class GVRRenderData extends GVRComponent {
                 && drawMode != GL_TRIANGLES && drawMode != GL_TRIANGLE_STRIP
                 && drawMode != GL_TRIANGLE_FAN) {
             throw new IllegalArgumentException(
-                    "drawMode must be one of GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN, GL_TRIANGLE_STRIP.  Value passed was: "
-                            + drawMode);
+                    "drawMode must be one of GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN, GL_TRIANGLE_STRIP.");
         }
         NativeRenderData.setDrawMode(getPtr(), drawMode);
     }

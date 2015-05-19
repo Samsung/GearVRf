@@ -97,7 +97,7 @@ void UnlitShader::render(const glm::mat4& mvp_matrix,
     glUseProgram(program_->id());
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glActiveTexture (GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
