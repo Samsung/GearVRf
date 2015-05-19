@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GearVRApp</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="stress_mode">false</string>
+    <string name="title_activity_stress_menu">Stress Menu Activity</string>
+    <string name="title_activity_render_camera">Render Camera</string>
+    <string name="title_activity_gvr_scenes_object">Scene Objects</string>
+    <string name="title_activity_render_distortion">Render Distortion</string>
+
+    <string name="platform_activity">Platform Activity</string>
+
+    <string
+            name="exit_to_home"
+            description="Title for Exit to Oculus Home prompt"
+            project="vr-lib"
+            >Exit to Oculus Home?</string>
+    <string
+            name="yes"
+            description="positive response in prompts"
+            project="vr-lib"
+            >Yes</string>
+    <string
+            name="no"
+            description="negative response in prompts"
+            project="vr-lib"
+            >No</string>
+
+</resources>

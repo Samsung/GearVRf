@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lens name="S5">
+    <distortion k0="1.0" k1="0.125" k2="0.125" k3="0.0" disparity="-0.05" distortion-scale="0.97"/>
+    <metric lens-separation-distance="0.062"/>
+    <scene fov-y="95.0" camera-separation-distance="0.062" fbo-width="960" fbo-height="1080"/>
+</lens>
