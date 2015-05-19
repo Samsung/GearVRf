@@ -54,6 +54,26 @@ public:
         	glDeleteVertexArrays(1, &vaoID_);
         	vaoID_ = 0;
         }
+
+	    if (triangle_vboID_!=0) {
+	    	glDeleteBuffers(1,&triangle_vboID_);
+	    	triangle_vboID_ = 0;
+	    }
+
+	    if (vert_vboID_!=0) {
+			glDeleteBuffers(1,&vert_vboID_);
+			vert_vboID_ = 0;
+	    }
+
+	    if (norm_vboID_!=0) {
+			glDeleteBuffers(1,&norm_vboID_);
+			norm_vboID_ = 0;
+	    }
+
+	    if (tex_vboID_!=0) {
+			glDeleteBuffers(1,&tex_vboID_);
+			tex_vboID_ = 0;
+	    }
     }
 
     std::vector<glm::vec3>& vertices() {
@@ -272,6 +292,42 @@ public:
         return vaoID_;
     }
 
+    void cleanUp() {
+		std::vector<glm::vec3> vertices;
+		vertices.swap(vertices_);
+		std::vector<glm::vec3> normals;
+		normals.swap(normals_);
+		std::vector<glm::vec2> tex_coords;
+		tex_coords.swap(tex_coords_);
+		std::vector<unsigned short> triangles;
+		triangles.swap(triangles_);
+
+		if (vaoID_ != 0) {
+			glDeleteVertexArrays(1, &vaoID_);
+			vaoID_ = 0;
+		}
+
+	    if (triangle_vboID_!=0) {
+	    	glDeleteBuffers(1,&triangle_vboID_);
+	    	triangle_vboID_ = 0;
+	    }
+
+	    if (vert_vboID_!=0) {
+			glDeleteBuffers(1,&vert_vboID_);
+			vert_vboID_ = 0;
+	    }
+
+	    if (norm_vboID_!=0) {
+			glDeleteBuffers(1,&norm_vboID_);
+			norm_vboID_ = 0;
+	    }
+
+	    if (tex_vboID_!=0) {
+			glDeleteBuffers(1,&tex_vboID_);
+			tex_vboID_ = 0;
+	    }
+    }
+
 private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
@@ -296,6 +352,7 @@ private:
 
     // add vertex array object and VBO
     GLuint vaoID_;
+    GLuint triangle_vboID_, vert_vboID_, norm_vboID_, tex_vboID_;
 
     // attribute locations
     GLuint vertexLoc_;

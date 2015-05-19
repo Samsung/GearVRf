@@ -169,6 +169,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                                         //Delete the generated bounding box mesh
                                         bounding_box_mesh->cleanUp();
                                     }
+                                    //Delete the generated bounding box mesh
+                                    bounding_box_mesh->cleanUp();
                                 }
                             }
 #endif

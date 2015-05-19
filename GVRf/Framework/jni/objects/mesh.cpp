@@ -165,14 +165,14 @@ void Mesh::generateVAO() {
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
 
-    glGenBuffers(1, &tmpID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tmpID);
+    glGenBuffers(1, &triangle_vboID_);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*triangles_.size(), &triangles_[0], GL_STATIC_DRAW);
 
     if (vertices_.size())
     {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
+        glGenBuffers(1, &vert_vboID_);
+        glBindBuffer(GL_ARRAY_BUFFER, vert_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices_.size(), &vertices_[0], GL_STATIC_DRAW);
         glEnableVertexAttribArray(getVertexLoc());
         glVertexAttribPointer(getVertexLoc(), 3, GL_FLOAT, 0, 0, 0);
@@ -180,8 +180,8 @@ void Mesh::generateVAO() {
 
     if (normals_.size())
     {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
+        glGenBuffers(1, &norm_vboID_);
+        glBindBuffer(GL_ARRAY_BUFFER, norm_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*normals_.size(), &normals_[0], GL_STATIC_DRAW);
         glEnableVertexAttribArray(getNormalLoc());
         glVertexAttribPointer(getNormalLoc(), 3, GL_FLOAT, 0, 0, 0);
@@ -189,8 +189,8 @@ void Mesh::generateVAO() {
 
     if (tex_coords_.size())
     {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
+        glGenBuffers(1, &tex_vboID_);
+        glBindBuffer(GL_ARRAY_BUFFER, tex_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*tex_coords_.size(), &tex_coords_[0], GL_STATIC_DRAW);
         glEnableVertexAttribArray(getTexCoordLoc());
         glVertexAttribPointer(getTexCoordLoc(), 2, GL_FLOAT, 0, 0, 0);

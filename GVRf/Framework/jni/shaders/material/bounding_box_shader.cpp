@@ -39,7 +39,7 @@ static const char VERTEX_SHADER[] =
 static const char FRAGMENT_SHADER[] =
         "precision mediump  float;\n"
         "void main() {\n"
-        "gl_FragColor =  vec4(0.23, 1.0, 0.08, 1.0);\n"
+        "gl_FragColor =  vec4(0.0, 1.0, 0.0, 0.0);\n"
         "}\n";
 
 BoundingBoxShader::BoundingBoxShader() :
