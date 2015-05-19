@@ -53,8 +53,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
     if (scene->getSceneDirtyFlag()) {
 
         glm::mat4 view_matrix = camera->getViewMatrix();
-        glm::mat4 proj_matrix = camera->getProjectionMatrix();
-        glm::mat4 vp_matrix = glm::mat4(proj_matrix * view_matrix);
+        glm::mat4 projection_matrix = camera->getProjectionMatrix();
+        glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
         std::vector < std::shared_ptr < SceneObject >> scene_objects =
                 scene->getWholeSceneObjects();
@@ -206,16 +206,16 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         if (post_effects.size() == 0) {
             glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
             glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
             glClearColor(camera->background_color_r(),
                     camera->background_color_g(), camera->background_color_b(),
                     camera->background_color_a());
-
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
             for (auto it = render_data_vector.begin();
                     it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, view_matrix, proj_matrix, camera->render_mask(),
-                        shader_manager);
+                renderRenderData(*it, view_matrix, projection_matrix,
+                        camera->render_mask(), shader_manager);
             }
         } else {
             std::shared_ptr<RenderTexture> texture_render_texture =
@@ -226,12 +226,16 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                     texture_render_texture->getFrameBufferId());
             glViewport(0, 0, texture_render_texture->width(),
                     texture_render_texture->height());
+
+            glClearColor(camera->background_color_r(),
+                    camera->background_color_g(), camera->background_color_b(),
+                    camera->background_color_a());
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
             for (auto it = render_data_vector.begin();
                     it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, view_matrix, proj_matrix, camera->render_mask(),
-                        shader_manager);
+                renderRenderData(*it, view_matrix, projection_matrix,
+                        camera->render_mask(), shader_manager);
             }
 
             glDisable(GL_DEPTH_TEST);
@@ -249,15 +253,15 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                 glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
                 glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-                renderPostEffectData(camera, texture_render_texture, post_effects[i],
-                        post_effect_shader_manager);
+                renderPostEffectData(camera, texture_render_texture,
+                        post_effects[i], post_effect_shader_manager);
             }
 
             glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
             glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            renderPostEffectData(camera, texture_render_texture, post_effects.back(),
-                    post_effect_shader_manager);
+            renderPostEffectData(camera, texture_render_texture,
+                    post_effects.back(), post_effect_shader_manager);
         }
 
     } // flag checking
@@ -428,8 +432,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 }
 
 void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
-		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
-        std::shared_ptr<ShaderManager> shader_manager) {
+        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+        int render_mask, std::shared_ptr<ShaderManager> shader_manager) {
     if (render_mask & render_data->render_mask()) {
         if (!render_data->cull_test()) {
             glDisable (GL_CULL_FACE);
@@ -478,15 +482,13 @@ void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
                             mvp_matrix, render_data, right);
                     break;
                 case Material::ShaderType::CUBEMAP_SHADER:
-                    shader_manager->getCubemapShader()->render(
-                            model_matrix, mvp_matrix, render_data);
+                    shader_manager->getCubemapShader()->render(model_matrix,
+                            mvp_matrix, render_data);
                     break;
                 case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
                     shader_manager->getCubemapReflectionShader()->render(
-                    		mv_matrix,
-                    		glm::inverseTranspose(mv_matrix),
-                    		glm::inverse(view_matrix),
-                            mvp_matrix, render_data);
+                            mv_matrix, glm::inverseTranspose(mv_matrix),
+                            glm::inverse(view_matrix), mvp_matrix, render_data);
                     break;
                 default:
                     shader_manager->getCustomShader(
@@ -541,8 +543,7 @@ void Renderer::renderPostEffectData(std::shared_ptr<Camera> camera,
         default:
             post_effect_shader_manager->getCustomPostEffectShader(
                     post_effect_data->shader_type())->render(camera,
-                    render_texture,
-                    post_effect_data,
+                    render_texture, post_effect_data,
                     post_effect_shader_manager->quad_vertices(),
                     post_effect_shader_manager->quad_uvs(),
                     post_effect_shader_manager->quad_triangles());

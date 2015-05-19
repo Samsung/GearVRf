@@ -49,6 +49,8 @@ import android.graphics.Paint;
  */
 public class GVRConsole extends GVRPostEffect {
 
+//    private static final String TAG = Log.tag(GVRConsole.class);
+
     /**
      * Specify where the message(s) are displayed. You pass an {@code EyeMode}
      * value to {@linkplain GVRConsole#GVRConsole(GVRContext, EyeMode) the
@@ -95,8 +97,31 @@ public class GVRConsole extends GVRPostEffect {
      *            {@link #setEyeMode(EyeMode)}
      */
     public GVRConsole(GVRContext gvrContext, EyeMode startMode) {
+        this(gvrContext, startMode, gvrContext.getMainScene());
+    }
+
+    /**
+     * Create a console, specifying the initial eye mode and the
+     * {@link GVRScene} to attach it to.
+     * 
+     * This overload is useful when you are using
+     * {@link GVRContext#getNextMainScene()} and creating your debug console in
+     * {@link GVRScript#onInit(GVRContext)}.
+     * 
+     * @param gvrContext
+     *            The GVR context.
+     * @param startMode
+     *            The initial eye mode; you can change this <i>via</i>
+     *            {@link #setEyeMode(EyeMode)}
+     * @param gvrScene
+     *            The {@link GVRScene} to attach the console to; this is useful
+     *            when you want to attach the console to the
+     *            {@linkplain GVRContext#getNextMainScene() next main scene.}
+     */
+    public GVRConsole(GVRContext gvrContext, EyeMode startMode,
+            GVRScene gvrScene) {
         super(gvrContext, getShaderId(gvrContext));
-        setEyeMode(startMode);
+        setEyeMode(startMode, gvrScene.getMainCameraRig());
         setMainTexture();
 
         setTextColor(DEFAULT_COLOR);
@@ -189,12 +214,14 @@ public class GVRConsole extends GVRPostEffect {
      *            Left, right, both, or neither.
      */
     public void setEyeMode(EyeMode newMode) {
+        setEyeMode(newMode, getGVRContext().getMainScene().getMainCameraRig());
+    }
+
+    private void setEyeMode(EyeMode newMode, GVRCameraRig cameraRig) {
         eyeMode = newMode;
 
-        GVRCameraRig cameraRig = getGVRContext().getMainScene()
-                .getMainCameraRig();
-        GVRCamera leftCamera = cameraRig.getLeftCamera(), rightCamera = cameraRig
-                .getRightCamera();
+        GVRCamera leftCamera = cameraRig.getLeftCamera();
+        GVRCamera rightCamera = cameraRig.getRightCamera();
 
         // Remove from both (even if not present) add back later
         leftCamera.removePostEffect(this);
@@ -209,7 +236,7 @@ public class GVRConsole extends GVRPostEffect {
     }
 
     private static void log(String TAG, String pattern, Object... parameters) {
-//        Log.d(TAG, pattern, parameters);
+        // Log.d(TAG, pattern, parameters);
     }
 
     private void updateHUD() {
