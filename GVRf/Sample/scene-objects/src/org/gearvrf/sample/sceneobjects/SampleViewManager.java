@@ -37,6 +37,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.GVRRotationByAxisAnimation;
+import org.gearvrf.scene_objects.GVRCameraSceneObject;
 import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
@@ -48,7 +49,7 @@ public class SampleViewManager extends GVRScript {
 
     private int currentObject = 0;
     private GVRActivity mActivity;
-    
+
     SampleViewManager(GVRActivity activity) {
         mActivity = activity;
     }
@@ -72,6 +73,9 @@ public class SampleViewManager extends GVRScript {
                 gvrContext);
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
         GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);
+        GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
+                gvrContext, 8.0f, 4.0f,
+                ((SceneObjectActivity) mActivity).getCamera());
 
         objectList.add(quadObject);
         objectList.add(cubeObject);
@@ -79,9 +83,10 @@ public class SampleViewManager extends GVRScript {
         objectList.add(cylinderObject);
         objectList.add(coneObject);
         objectList.add(webViewObject);
-        
+        objectList.add(cameraObject);
+
         // turn all objects off, except the first one
-        for(int i=1; i<objectList.size(); i++) {
+        for (int i = 1; i < objectList.size(); i++) {
             objectList.get(i).getRenderData().setRenderMask(0);
         }
 
@@ -101,14 +106,7 @@ public class SampleViewManager extends GVRScript {
         cylinderObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         coneObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         sphereObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
-
-        // GVRAnimation animation = new
-        // GVRRotationByAxisAnimation(cylinderObject, 50, -3600, 0, 1, 0);
-        // animation.setRepeatCount(GVRRepeatMode.REPEATED).setRepeatCount(-1);
-        // animation.start(gvrContext.getAnimationEngine());
-        // cubeObject.getTransform().setRotationByAxis(45.0f, 1.0f, 0.0f, 0.0f);
-
-        // cylinderObject.getRenderData().setCullTest(false);
+        cameraObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
 
         // add the scene objects to the scene graph
         scene.addSceneObject(quadObject);
@@ -117,16 +115,18 @@ public class SampleViewManager extends GVRScript {
         scene.addSceneObject(cylinderObject);
         scene.addSceneObject(coneObject);
         scene.addSceneObject(webViewObject);
+        scene.addSceneObject(cameraObject);
 
     }
-    
+
     private GVRWebViewSceneObject createWebViewObject(GVRContext gvrContext) {
-        WebView webView = ((SceneObjectActivity)mActivity).getWebView();
-        GVRWebViewSceneObject webObject = new GVRWebViewSceneObject(gvrContext, 8.0f, 4.0f, webView);
+        WebView webView = ((SceneObjectActivity) mActivity).getWebView();
+        GVRWebViewSceneObject webObject = new GVRWebViewSceneObject(gvrContext,
+                8.0f, 4.0f, webView);
         webObject.setName("web view object");
         webObject.getRenderData().getMaterial().setOpacity(1.0f);
-        webObject.getTransform().setPosition(0.0f,  0.0f, -4.0f);
-        
+        webObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
+
         return webObject;
     }
 
