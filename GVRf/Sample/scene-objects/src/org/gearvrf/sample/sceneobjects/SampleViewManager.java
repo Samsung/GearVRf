@@ -21,6 +21,7 @@ import java.util.concurrent.Future;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.webkit.WebView;
 
@@ -42,6 +43,8 @@ import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
+import org.gearvrf.scene_objects.GVRVideoSceneObject;
+import org.gearvrf.scene_objects.GVRVideoSceneObject.GVRVideoType;
 import org.gearvrf.scene_objects.GVRWebViewSceneObject;
 
 public class SampleViewManager extends GVRScript {
@@ -76,6 +79,7 @@ public class SampleViewManager extends GVRScript {
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
                 gvrContext, 8.0f, 4.0f,
                 ((SceneObjectActivity) mActivity).getCamera());
+        GVRVideoSceneObject videoObject = createVideoObject(gvrContext);
 
         objectList.add(quadObject);
         objectList.add(cubeObject);
@@ -84,6 +88,7 @@ public class SampleViewManager extends GVRScript {
         objectList.add(coneObject);
         objectList.add(webViewObject);
         objectList.add(cameraObject);
+        objectList.add(videoObject);
 
         // turn all objects off, except the first one
         for (int i = 1; i < objectList.size(); i++) {
@@ -107,6 +112,7 @@ public class SampleViewManager extends GVRScript {
         coneObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         sphereObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
         cameraObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
+        videoObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
 
         // add the scene objects to the scene graph
         scene.addSceneObject(quadObject);
@@ -116,7 +122,17 @@ public class SampleViewManager extends GVRScript {
         scene.addSceneObject(coneObject);
         scene.addSceneObject(webViewObject);
         scene.addSceneObject(cameraObject);
+        scene.addSceneObject(videoObject);
 
+    }
+
+    private GVRVideoSceneObject createVideoObject(GVRContext gvrContext) {
+        MediaPlayer mediaPlayer = MediaPlayer.create(gvrContext.getContext(),
+                R.drawable.tron);
+        GVRVideoSceneObject video = new GVRVideoSceneObject(gvrContext, 8.0f,
+                4.0f, mediaPlayer, GVRVideoType.MONO);
+        video.setName("video");
+        return video;
     }
 
     private GVRWebViewSceneObject createWebViewObject(GVRContext gvrContext) {
@@ -143,7 +159,12 @@ public class SampleViewManager extends GVRScript {
 
     public void onTap() {
 
-        objectList.get(currentObject).getRenderData().setRenderMask(0);
+        GVRSceneObject object = objectList.get(currentObject);
+        object.getRenderData().setRenderMask(0);
+        if (object instanceof GVRVideoSceneObject) {
+            GVRVideoSceneObject video = (GVRVideoSceneObject) object;
+            video.getMediaPlayer().stop();
+        }
 
         currentObject++;
         int totalObjects = objectList.size();
@@ -151,12 +172,15 @@ public class SampleViewManager extends GVRScript {
             currentObject = 0;
         }
 
-        objectList
-                .get(currentObject)
-                .getRenderData()
-                .setRenderMask(
-                        GVRRenderData.GVRRenderMaskBit.Left
-                                | GVRRenderData.GVRRenderMaskBit.Right);
+        object = objectList.get(currentObject);
+        if (object instanceof GVRVideoSceneObject) {
+            GVRVideoSceneObject video = (GVRVideoSceneObject) object;
+            video.getMediaPlayer().start();
+        }
+        
+        object.getRenderData().setRenderMask(
+                GVRRenderData.GVRRenderMaskBit.Left
+                        | GVRRenderData.GVRRenderMaskBit.Right);
 
     }
 
