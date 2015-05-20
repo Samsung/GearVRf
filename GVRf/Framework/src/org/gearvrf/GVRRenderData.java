@@ -16,7 +16,7 @@
 package org.gearvrf;
 
 import java.util.concurrent.Future;
-
+import static android.opengl.GLES30.*;
 import org.gearvrf.utility.Threads;
 
 /**
@@ -323,6 +323,30 @@ public class GVRRenderData extends GVRComponent {
     public void setAlphaBlend(boolean alphaBlend) {
         NativeRenderData.setAlphaBlend(getPtr(), alphaBlend);
     }
+
+    /**
+     * @return The OpenGL draw mode (e.g. GL_TRIANGLES).
+     */
+    public int getDrawMode() {
+        return NativeRenderData.getDrawMode(getPtr());
+    }
+
+    /**
+     * Set the draw mode for this mesh. Default is GL_TRIANGLES.
+     * 
+     * @param drawMode
+     */
+    public void setDrawMode(int drawMode) {
+        if (drawMode != GL_POINTS && drawMode != GL_LINES
+                && drawMode != GL_LINE_STRIP && drawMode != GL_LINE_LOOP
+                && drawMode != GL_TRIANGLES && drawMode != GL_TRIANGLE_STRIP
+                && drawMode != GL_TRIANGLE_FAN) {
+            throw new IllegalArgumentException(
+                    "drawMode must be one of GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN, GL_TRIANGLE_STRIP.");
+        }
+        NativeRenderData.setDrawMode(getPtr(), drawMode);
+    }
+
 }
 
 class NativeRenderData {
@@ -369,4 +393,9 @@ class NativeRenderData {
     public static native boolean getAlphaBlend(long renderData);
 
     public static native void setAlphaBlend(long renderData, boolean alphaBlend);
+
+    public static native int getDrawMode(long renderData);
+
+    public static native void setDrawMode(long renderData, int draw_mode);
+
 }
