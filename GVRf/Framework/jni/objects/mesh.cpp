@@ -32,33 +32,13 @@
 namespace gvr {
 std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     Mesh* mesh = new Mesh();
-    float min_x = std::numeric_limits<float>::infinity();
-    float max_x = -std::numeric_limits<float>::infinity();
-    float min_y = std::numeric_limits<float>::infinity();
-    float max_y = -std::numeric_limits<float>::infinity();
-    float min_z = std::numeric_limits<float>::infinity();
-    float max_z = -std::numeric_limits<float>::infinity();
-
-    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
-        if (it->x < min_x) {
-            min_x = it->x;
-        }
-        if (it->x > max_x) {
-            max_x = it->x;
-        }
-        if (it->y < min_y) {
-            min_y = it->y;
-        }
-        if (it->y > max_y) {
-            max_y = it->y;
-        }
-        if (it->z < min_z) {
-            min_z = it->z;
-        }
-        if (it->z > max_z) {
-            max_z = it->z;
-        }
-    }
+    float* bounding_box_info = this->getBoundingBoxInfo();
+    float min_x = bounding_box_info[0];
+    float max_x = bounding_box_info[3];
+    float min_y = bounding_box_info[1];
+    float max_y = bounding_box_info[4];
+    float min_z = bounding_box_info[2];
+    float max_z = bounding_box_info[5];
 
     mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
     mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
@@ -114,6 +94,49 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     return std::shared_ptr < Mesh > (mesh);
 }
 
+// an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
+float* Mesh::getBoundingBoxInfo() const {
+    float* bounding_box_info_ = new float[6];
+
+    float min_x = std::numeric_limits<float>::infinity();
+    float max_x = -std::numeric_limits<float>::infinity();
+    float min_y = std::numeric_limits<float>::infinity();
+    float max_y = -std::numeric_limits<float>::infinity();
+    float min_z = std::numeric_limits<float>::infinity();
+    float max_z = -std::numeric_limits<float>::infinity();
+
+    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
+        if (it->x < min_x) {
+            min_x = it->x;
+        }
+        if (it->x > max_x) {
+            max_x = it->x;
+        }
+        if (it->y < min_y) {
+            min_y = it->y;
+        }
+        if (it->y > max_y) {
+            max_y = it->y;
+        }
+        if (it->z < min_z) {
+            min_z = it->z;
+        }
+        if (it->z > max_z) {
+            max_z = it->z;
+        }
+    }
+
+    bounding_box_info_[0] = min_x;
+    bounding_box_info_[1] = min_y;
+    bounding_box_info_[2] = min_z;
+
+    bounding_box_info_[3] = max_x;
+    bounding_box_info_[4] = max_y;
+    bounding_box_info_[5] = max_z;
+
+    return bounding_box_info_;
+}
+
 // generate vertex array object
 void Mesh::generateVAO() {
 #if _GVRF_USE_GLES3_
@@ -142,14 +165,14 @@ void Mesh::generateVAO() {
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
 
-    glGenBuffers(1, &tmpID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tmpID);
+    glGenBuffers(1, &triangle_vboID_);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*triangles_.size(), &triangles_[0], GL_STATIC_DRAW);
 
     if (vertices_.size())
     {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
+        glGenBuffers(1, &vert_vboID_);
+        glBindBuffer(GL_ARRAY_BUFFER, vert_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices_.size(), &vertices_[0], GL_STATIC_DRAW);
         glEnableVertexAttribArray(getVertexLoc());
         glVertexAttribPointer(getVertexLoc(), 3, GL_FLOAT, 0, 0, 0);
@@ -157,8 +180,8 @@ void Mesh::generateVAO() {
 
     if (normals_.size())
     {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
+        glGenBuffers(1, &norm_vboID_);
+        glBindBuffer(GL_ARRAY_BUFFER, norm_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*normals_.size(), &normals_[0], GL_STATIC_DRAW);
         glEnableVertexAttribArray(getNormalLoc());
         glVertexAttribPointer(getNormalLoc(), 3, GL_FLOAT, 0, 0, 0);
@@ -166,8 +189,8 @@ void Mesh::generateVAO() {
 
     if (tex_coords_.size())
     {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
+        glGenBuffers(1, &tex_vboID_);
+        glBindBuffer(GL_ARRAY_BUFFER, tex_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*tex_coords_.size(), &tex_coords_[0], GL_STATIC_DRAW);
         glEnableVertexAttribArray(getTexCoordLoc());
         glVertexAttribPointer(getTexCoordLoc(), 2, GL_FLOAT, 0, 0, 0);

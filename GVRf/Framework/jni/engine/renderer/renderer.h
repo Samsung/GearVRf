@@ -34,6 +34,8 @@
 #include "glm/glm.hpp"
 
 #include "objects/eye_type.h"
+#include "objects/mesh.h"
+#include "gl/gl_program.h"
 
 namespace gvr {
 class Camera;
@@ -92,6 +94,9 @@ private:
             std::shared_ptr<RenderTexture> render_texture,
             std::shared_ptr<PostEffectData> post_effect_data,
             std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager);
+
+    static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
+    static bool is_cube_in_frustum( float frustum[6][4], float *vertex_limit);
 
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);

@@ -22,6 +22,7 @@
 #define SHADER_MANAGER_H_
 
 #include "objects/hybrid_object.h"
+#include "shaders/material/bounding_box_shader.h"
 #include "shaders/material/custom_shader.h"
 #include "shaders/material/error_shader.h"
 #include "shaders/material/oes_horizontal_stereo_shader.h"
@@ -39,7 +40,7 @@ class ShaderManager: public HybridObject {
 public:
     ShaderManager() :
             HybridObject(),
-            unlit_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
+            unlit_shader_(), bounding_box_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
             oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
             cubemap_shader_(), cubemap_reflection_shader_(),
             error_shader_(), latest_custom_shader_id_(
@@ -52,6 +53,12 @@ public:
             unlit_shader_.reset(new UnlitShader());
         }
         return unlit_shader_;
+    }
+    std::shared_ptr<BoundingBoxShader> getBoundingBoxShader() {
+        if (!bounding_box_shader_) {
+            bounding_box_shader_.reset(new BoundingBoxShader());
+        }
+        return bounding_box_shader_;
     }
     std::shared_ptr<UnlitHorizontalStereoShader> getUnlitHorizontalStereoShader() {
         if (!unlit_horizontal_stereo_shader_) {
@@ -131,6 +138,7 @@ private:
 private:
     static const int INITIAL_CUSTOM_SHADER_INDEX = 1000;
     std::shared_ptr<UnlitShader> unlit_shader_;
+    std::shared_ptr<BoundingBoxShader> bounding_box_shader_;
     std::shared_ptr<UnlitHorizontalStereoShader> unlit_horizontal_stereo_shader_;
     std::shared_ptr<UnlitVerticalStereoShader> unlit_vertical_stereo_shader_;
     std::shared_ptr<OESShader> oes_shader_;

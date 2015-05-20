@@ -27,6 +27,7 @@
 
 #include "objects/hybrid_object.h"
 #include "objects/components/transform.h"
+#include "util/gvr_gl.h"
 
 namespace gvr {
 class Camera;
@@ -45,6 +46,27 @@ public:
 
     void set_name(std::string name) {
         name_ = name;
+    }
+
+    void set_in_frustum(bool in_frustum=true) {
+            in_frustum_ = in_frustum;
+    }
+
+    bool in_frustum()   const {
+        return in_frustum_;
+    }
+
+    void set_visible(bool visibility);
+    bool visible()  const {
+        return visible_;
+    }
+
+    void set_query_issued(bool issued=true) {
+        query_currently_issued_ = issued;
+    }
+
+    bool is_query_issued() {
+        return query_currently_issued_;
     }
 
     void attachTransform(const std::shared_ptr<SceneObject>& self,
@@ -100,6 +122,7 @@ public:
     void removeChildObject(std::shared_ptr<SceneObject> child);
     int getChildrenCount() const;
     const std::shared_ptr<SceneObject>& getChildByIndex(int index);
+    GLuint *get_occlusion_array(){ return queries_;}
 
 private:
     SceneObject(const SceneObject& scene_object);
@@ -116,6 +139,15 @@ private:
     std::shared_ptr<EyePointeeHolder> eye_pointee_holder_;
     std::weak_ptr<SceneObject> parent_;
     std::vector<std::shared_ptr<SceneObject>> children_;
+
+    //Flags to check for visibility of a node and
+    //whether there are any pending occlusion queries on it
+    const int check_frames_ = 12;
+    int vis_count_;
+    bool visible_;
+    bool in_frustum_;
+    bool query_currently_issued_;
+    GLuint *queries_;
 };
 
 }
