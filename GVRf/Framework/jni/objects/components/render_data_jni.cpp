@@ -101,6 +101,14 @@ Java_org_gearvrf_NativeRenderData_getAlphaBlend(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
         jobject obj, jlong jrender_data, jboolean alpha_blend);
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getDrawMode(
+        JNIEnv * env, jobject obj, jlong jrender_data);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setDrawMode(
+        JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode);
 }
 ;
 
@@ -278,4 +286,23 @@ Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
             RenderData>*>(jrender_data);
     render_data->set_alpha_blend(static_cast<bool>(alpha_blend));
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setDrawMode(
+        JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode) {
+    std::shared_ptr<RenderData> render_data = *reinterpret_cast<std::shared_ptr<
+            RenderData>*>(jrender_data);
+    render_data->set_draw_mode(draw_mode);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getDrawMode(
+        JNIEnv * env, jobject obj, jlong jrender_data) {
+    std::shared_ptr<RenderData> render_data = *reinterpret_cast<std::shared_ptr<
+            RenderData>*>(jrender_data);
+    return render_data->draw_mode();
+}
+
+
+
 }
