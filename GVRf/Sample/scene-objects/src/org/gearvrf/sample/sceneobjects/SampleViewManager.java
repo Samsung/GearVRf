@@ -22,6 +22,7 @@ import java.util.concurrent.Future;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.webkit.WebView;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
@@ -40,11 +41,17 @@ import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
+import org.gearvrf.scene_objects.GVRWebViewSceneObject;
 
 public class SampleViewManager extends GVRScript {
     private List<GVRSceneObject> objectList = new ArrayList<GVRSceneObject>();
 
     private int currentObject = 0;
+    private GVRActivity mActivity;
+    
+    SampleViewManager(GVRActivity activity) {
+        mActivity = activity;
+    }
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -64,12 +71,14 @@ public class SampleViewManager extends GVRScript {
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
                 gvrContext);
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
+        GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);
 
         objectList.add(quadObject);
         objectList.add(cubeObject);
         objectList.add(sphereObject);
         objectList.add(cylinderObject);
         objectList.add(coneObject);
+        objectList.add(webViewObject);
         
         // turn all objects off, except the first one
         for(int i=1; i<objectList.size(); i++) {
@@ -107,7 +116,18 @@ public class SampleViewManager extends GVRScript {
         scene.addSceneObject(sphereObject);
         scene.addSceneObject(cylinderObject);
         scene.addSceneObject(coneObject);
+        scene.addSceneObject(webViewObject);
 
+    }
+    
+    private GVRWebViewSceneObject createWebViewObject(GVRContext gvrContext) {
+        WebView webView = ((SceneObjectActivity)mActivity).getWebView();
+        GVRWebViewSceneObject webObject = new GVRWebViewSceneObject(gvrContext, 8.0f, 4.0f, webView);
+        webObject.setName("web view object");
+        webObject.getRenderData().getMaterial().setOpacity(1.0f);
+        webObject.getTransform().setPosition(0.0f,  0.0f, -4.0f);
+        
+        return webObject;
     }
 
     private float mYAngle = 0;
