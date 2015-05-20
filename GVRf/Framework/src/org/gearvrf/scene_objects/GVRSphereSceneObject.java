@@ -160,12 +160,12 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             texCoords[texCoordCount + 5] = t1;
 
             if (top) {
-                indices[indexCount + 0] = (char) (triangleCount + 0);
-                indices[indexCount + 1] = (char) (triangleCount + 1);
-                indices[indexCount + 2] = (char) (triangleCount + 2);
-            } else {
                 indices[indexCount + 0] = (char) (triangleCount + 1);
                 indices[indexCount + 1] = (char) (triangleCount + 0);
+                indices[indexCount + 2] = (char) (triangleCount + 2);
+            } else {
+                indices[indexCount + 0] = (char) (triangleCount + 0);
+                indices[indexCount + 1] = (char) (triangleCount + 1);
                 indices[indexCount + 2] = (char) (triangleCount + 2);
             }
 
@@ -204,7 +204,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 float sinPhi2 = (float) Math.sin(phi2);
 
                 // 2-----3
-                // | |
+                // |     |
                 // 0-----1
                 float x0 = sinTheta1 * cosPhi1;
                 float y0 = sinTheta1 * sinPhi1;
@@ -266,11 +266,11 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 // 0, 1, 2
                 // 2, 1, 3
                 indices[indexCount + 0] = (char) (triangleCount + 0);
-                indices[indexCount + 1] = (char) (triangleCount + 1);
-                indices[indexCount + 2] = (char) (triangleCount + 2);
+                indices[indexCount + 1] = (char) (triangleCount + 2);
+                indices[indexCount + 2] = (char) (triangleCount + 1);
                 indices[indexCount + 3] = (char) (triangleCount + 2);
-                indices[indexCount + 4] = (char) (triangleCount + 1);
-                indices[indexCount + 5] = (char) (triangleCount + 3);
+                indices[indexCount + 4] = (char) (triangleCount + 3);
+                indices[indexCount + 5] = (char) (triangleCount + 1);
 
                 vertexCount += 12;
                 texCoordCount += 8;
