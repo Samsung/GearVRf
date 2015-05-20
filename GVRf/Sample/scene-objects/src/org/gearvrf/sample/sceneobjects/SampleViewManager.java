@@ -51,9 +51,9 @@ public class SampleViewManager extends GVRScript {
     private List<GVRSceneObject> objectList = new ArrayList<GVRSceneObject>();
 
     private int currentObject = 0;
-    private GVRActivity mActivity;
+    private SceneObjectActivity mActivity;
 
-    SampleViewManager(GVRActivity activity) {
+    SampleViewManager(SceneObjectActivity activity) {
         mActivity = activity;
     }
 
@@ -77,8 +77,7 @@ public class SampleViewManager extends GVRScript {
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
         GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
-                gvrContext, 8.0f, 4.0f,
-                ((SceneObjectActivity) mActivity).getCamera());
+                gvrContext, 8.0f, 4.0f, mActivity.getCamera());
         GVRVideoSceneObject videoObject = createVideoObject(gvrContext);
 
         objectList.add(quadObject);
@@ -91,7 +90,8 @@ public class SampleViewManager extends GVRScript {
         objectList.add(videoObject);
 
         // turn all objects off, except the first one
-        for (int i = 1; i < objectList.size(); i++) {
+        int listSize = objectList.size();
+        for (int i = 1; i < listSize; i++) {
             objectList.get(i).getRenderData().setRenderMask(0);
         }
 
@@ -136,7 +136,7 @@ public class SampleViewManager extends GVRScript {
     }
 
     private GVRWebViewSceneObject createWebViewObject(GVRContext gvrContext) {
-        WebView webView = ((SceneObjectActivity) mActivity).getWebView();
+        WebView webView = mActivity.getWebView();
         GVRWebViewSceneObject webObject = new GVRWebViewSceneObject(gvrContext,
                 8.0f, 4.0f, webView);
         webObject.setName("web view object");
@@ -177,7 +177,7 @@ public class SampleViewManager extends GVRScript {
             GVRVideoSceneObject video = (GVRVideoSceneObject) object;
             video.getMediaPlayer().start();
         }
-        
+
         object.getRenderData().setRenderMask(
                 GVRRenderData.GVRRenderMaskBit.Left
                         | GVRRenderData.GVRRenderMaskBit.Right);

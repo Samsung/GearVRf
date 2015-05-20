@@ -70,12 +70,8 @@ public class SceneObjectActivity extends GVRActivity {
     }
 
     private boolean checkCameraHardware(Context context) {
-        if (context.getPackageManager().hasSystemFeature(
-                PackageManager.FEATURE_CAMERA)) {
-            return true;
-        } else {
-            return false;
-        }
+        return context.getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_CAMERA);
     }
 
     private void createCameraView() {
