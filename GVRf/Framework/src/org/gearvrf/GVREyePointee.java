@@ -13,22 +13,20 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /**
  * Super class of GVRMeshEyePointee.
  * 
  * An GVREyePointee is something that is being pointed at by a picking ray.
- * GVREyePointees are held by {@linkplain GVREyePointeeHolder eye pointee holders}.
- * Eye pointee holders are attached to {@link GVRSceneObject}s so they
+ * GVREyePointees are held by {@linkplain GVREyePointeeHolder eye pointee
+ * holders}. Eye pointee holders are attached to {@link GVRSceneObject}s so they
  * can be returned by the {@link GVRPicker}.
  * 
  * <p>
  * This bizarre little class only contains a constructor and was intended as a
- * sort of interface. The only actual {@link GVRMeshEyePointee} is
- * {@link GVREyePointeeHolder}.
+ * sort of interface. The only actual {@link GVREyePointee} is
+ * {@link GVRMeshEyePointee}.
  */
 
 public class GVREyePointee extends GVRHybridObject {
