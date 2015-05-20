@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "post_effect_data.h"
-
 #include "util/gvr_jni.h"
 
 namespace gvr {
@@ -41,7 +40,7 @@ Java_org_gearvrf_NativePostEffectData_getTexture(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativePostEffectData_setTexture(JNIEnv * env,
         jobject obj, jlong jpost_effect_data, jstring key, jlong jtexture);
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativePostEffectData_getFloat(JNIEnv * env,
         jobject obj, jlong jpost_effect_data, jstring key);
 
@@ -139,7 +138,7 @@ Java_org_gearvrf_NativePostEffectData_setTexture(JNIEnv * env,
     env->ReleaseStringUTFChars(key, char_key);
 }
 
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativePostEffectData_getFloat(JNIEnv * env,
         jobject obj, jlong jpost_effect_data, jstring key) {
     std::shared_ptr<PostEffectData> post_effect_data =
@@ -147,8 +146,14 @@ Java_org_gearvrf_NativePostEffectData_getFloat(JNIEnv * env,
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     env->ReleaseStringUTFChars(key, char_key);
-    return static_cast<jfloat>(post_effect_data->getFloat(native_key));
-
+    try {
+        jfloat value = post_effect_data->getFloat(native_key);
+        jfloatArray result_float = env->NewFloatArray(1);
+        env->SetFloatArrayRegion(result_float, 0, 1, &value);
+        return result_float;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -169,12 +174,16 @@ Java_org_gearvrf_NativePostEffectData_getVec2(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<PostEffectData>*>(jpost_effect_data);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec2 post_effect_data_vec2 = post_effect_data->getVec2(native_key);
-    jfloatArray jvec2 = env->NewFloatArray(2);
-    env->SetFloatArrayRegion(jvec2, 0, 2,
-            reinterpret_cast<jfloat*>(&post_effect_data_vec2));
     env->ReleaseStringUTFChars(key, char_key);
-    return jvec2;
+    try {
+        glm::vec2 post_effect_data_vec2 = post_effect_data->getVec2(native_key);
+        jfloatArray jvec2 = env->NewFloatArray(2);
+        env->SetFloatArrayRegion(jvec2, 0, 2,
+                reinterpret_cast<jfloat*>(&post_effect_data_vec2));
+        return jvec2;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -195,12 +204,16 @@ Java_org_gearvrf_NativePostEffectData_getVec3(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<PostEffectData>*>(jpost_effect_data);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec3 post_effect_data_vec3 = post_effect_data->getVec3(native_key);
-    jfloatArray jvec3 = env->NewFloatArray(3);
-    env->SetFloatArrayRegion(jvec3, 0, 3,
-            reinterpret_cast<jfloat*>(&post_effect_data_vec3));
     env->ReleaseStringUTFChars(key, char_key);
-    return jvec3;
+    try {
+        glm::vec3 post_effect_data_vec3 = post_effect_data->getVec3(native_key);
+        jfloatArray jvec3 = env->NewFloatArray(3);
+        env->SetFloatArrayRegion(jvec3, 0, 3,
+                reinterpret_cast<jfloat*>(&post_effect_data_vec3));
+        return jvec3;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -222,12 +235,16 @@ Java_org_gearvrf_NativePostEffectData_getVec4(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<PostEffectData>*>(jpost_effect_data);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    glm::vec4 post_effect_data_vec4 = post_effect_data->getVec4(native_key);
-    jfloatArray jvec4 = env->NewFloatArray(4);
-    env->SetFloatArrayRegion(jvec4, 0, 4,
-            reinterpret_cast<jfloat*>(&post_effect_data_vec4));
     env->ReleaseStringUTFChars(key, char_key);
-    return jvec4;
+    try {
+        glm::vec4 post_effect_data_vec4 = post_effect_data->getVec4(native_key);
+        jfloatArray jvec4 = env->NewFloatArray(4);
+        env->SetFloatArrayRegion(jvec4, 0, 4,
+                reinterpret_cast<jfloat*>(&post_effect_data_vec4));
+        return jvec4;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL

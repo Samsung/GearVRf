@@ -257,15 +257,18 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
-     * Set the (optional) name of the object.
+     * Set the (optional) name of the object. Scene object names are not needed:
+     * they are only for the application's convenience.
      * 
-     * Scene object names are not needed: they are only for the application's
-     * convenience.
-     * 
-     * @param name
-     *            Name of the object.
+     * @param name Name of the object.
+     * @throws IllegalArgumentException if input parameter is null or empty.
      */
     public void setName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            // the name is optional, but should be a correct string if to set
+            throw new IllegalArgumentException("Input parameter is null or empty.");
+        }
+
         NativeSceneObject.setName(getPtr(), name);
     }
 

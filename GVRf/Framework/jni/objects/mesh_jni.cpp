@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "mesh.h"
-
 #include "util/gvr_log.h"
 #include "util/gvr_jni.h"
 #include "android/asset_manager_jni.h"
@@ -219,12 +218,16 @@ Java_org_gearvrf_NativeMesh_getFloatVector(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<Mesh>*>(jmesh);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    std::vector<float>& float_vector = mesh->getFloatVector(native_key);
     env->ReleaseStringUTFChars(key, char_key);
-    jfloatArray jfloat_vector = env->NewFloatArray(float_vector.size());
-    env->SetFloatArrayRegion(jfloat_vector, 0, float_vector.size(),
-            reinterpret_cast<jfloat*>(float_vector.data()));
-    return jfloat_vector;
+    try {
+        std::vector<float>& float_vector = mesh->getFloatVector(native_key);
+        jfloatArray jfloat_vector = env->NewFloatArray(float_vector.size());
+        env->SetFloatArrayRegion(jfloat_vector, 0, float_vector.size(),
+                reinterpret_cast<jfloat*>(float_vector.data()));
+        return jfloat_vector;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -255,12 +258,16 @@ Java_org_gearvrf_NativeMesh_getVec2Vector(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<Mesh>*>(jmesh);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    std::vector<glm::vec2>& vec2_vector = mesh->getVec2Vector(native_key);
     env->ReleaseStringUTFChars(key, char_key);
-    jfloatArray jvec2_vector = env->NewFloatArray(vec2_vector.size() * 2);
-    env->SetFloatArrayRegion(jvec2_vector, 0, vec2_vector.size() * 2,
-            reinterpret_cast<jfloat*>(vec2_vector.data()));
-    return jvec2_vector;
+    try {
+        std::vector<glm::vec2>& vec2_vector = mesh->getVec2Vector(native_key);
+        jfloatArray jvec2_vector = env->NewFloatArray(vec2_vector.size() * 2);
+        env->SetFloatArrayRegion(jvec2_vector, 0, vec2_vector.size() * 2,
+                reinterpret_cast<jfloat*>(vec2_vector.data()));
+        return jvec2_vector;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -291,12 +298,16 @@ Java_org_gearvrf_NativeMesh_getVec3Vector(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<Mesh>*>(jmesh);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    std::vector<glm::vec3>& vec3_vector = mesh->getVec3Vector(native_key);
     env->ReleaseStringUTFChars(key, char_key);
-    jfloatArray jvec3_vector = env->NewFloatArray(vec3_vector.size() * 3);
-    env->SetFloatArrayRegion(jvec3_vector, 0, vec3_vector.size() * 3,
-            reinterpret_cast<jfloat*>(vec3_vector.data()));
-    return jvec3_vector;
+    try {
+        std::vector<glm::vec3>& vec3_vector = mesh->getVec3Vector(native_key);
+        jfloatArray jvec3_vector = env->NewFloatArray(vec3_vector.size() * 3);
+        env->SetFloatArrayRegion(jvec3_vector, 0, vec3_vector.size() * 3,
+                reinterpret_cast<jfloat*>(vec3_vector.data()));
+        return jvec3_vector;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL
@@ -327,12 +338,16 @@ Java_org_gearvrf_NativeMesh_getVec4Vector(JNIEnv * env,
             *reinterpret_cast<std::shared_ptr<Mesh>*>(jmesh);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    std::vector<glm::vec4>& vec4_vector = mesh->getVec4Vector(native_key);
     env->ReleaseStringUTFChars(key, char_key);
-    jfloatArray jvec4_vector = env->NewFloatArray(vec4_vector.size() * 4);
-    env->SetFloatArrayRegion(jvec4_vector, 0, vec4_vector.size() * 4,
-            reinterpret_cast<jfloat*>(vec4_vector.data()));
-    return jvec4_vector;
+    try {
+        std::vector<glm::vec4>& vec4_vector = mesh->getVec4Vector(native_key);
+        jfloatArray jvec4_vector = env->NewFloatArray(vec4_vector.size() * 4);
+        env->SetFloatArrayRegion(jvec4_vector, 0, vec4_vector.size() * 4,
+                reinterpret_cast<jfloat*>(vec4_vector.data()));
+        return jvec4_vector;
+    } catch (const std::string & err) {
+        return NULL;
+    }
 }
 
 JNIEXPORT void JNICALL

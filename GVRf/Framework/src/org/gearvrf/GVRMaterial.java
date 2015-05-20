@@ -298,7 +298,11 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public float getFloat(String key) {
-        return NativeMaterial.getFloat(getPtr(), key);
+        float[] value = NativeMaterial.getFloat(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value[0];
     }
 
     public void setFloat(String key, float value) {
@@ -308,7 +312,11 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public float[] getVec2(String key) {
-        return NativeMaterial.getVec2(getPtr(), key);
+        float[] value = NativeMaterial.getVec2(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     public void setVec2(String key, float x, float y) {
@@ -317,7 +325,11 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public float[] getVec3(String key) {
-        return NativeMaterial.getVec3(getPtr(), key);
+        float[] value = NativeMaterial.getVec3(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     public void setVec3(String key, float x, float y, float z) {
@@ -326,7 +338,11 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public float[] getVec4(String key) {
-        return NativeMaterial.getVec4(getPtr(), key);
+        float[] value = NativeMaterial.getVec4(getPtr(), key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key " + key + " not found");
+        }
+        return value;
     }
 
     public void setVec4(String key, float x, float y, float z, float w) {
@@ -361,7 +377,7 @@ class NativeMaterial {
 
     public static native void setTexture(long material, String key, long texture);
 
-    public static native float getFloat(long material, String key);
+    public static native float[] getFloat(long material, String key);
 
     public static native void setFloat(long material, String key, float value);
 
