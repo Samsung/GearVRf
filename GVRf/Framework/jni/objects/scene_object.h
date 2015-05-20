@@ -56,10 +56,7 @@ public:
         return in_frustum_;
     }
 
-    void set_visible(bool visibility=true) {
-        visible_ = visibility;
-    }
-
+    void set_visible(bool visibility);
     bool visible()  const {
         return visible_;
     }
@@ -145,6 +142,8 @@ private:
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it
+    const int check_frames_ = 12;
+    int vis_count_;
     bool visible_;
     bool in_frustum_;
     bool query_currently_issued_;

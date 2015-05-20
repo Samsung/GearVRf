@@ -29,7 +29,7 @@
 namespace gvr {
 SceneObject::SceneObject() :
         HybridObject(), name_(""), transform_(), render_data_(), camera_(), camera_rig_(), eye_pointee_holder_(), parent_(),
-        children_(), visible_(true), in_frustum_(false), query_currently_issued_(false) {
+        children_(), visible_(true), in_frustum_(false), query_currently_issued_(false), vis_count_(0) {
 
     // Occlusion query setup
 #if _GVRF_USE_GLES3_
@@ -181,6 +181,30 @@ const std::shared_ptr<SceneObject>& SceneObject::getChildByIndex(int index) {
         std::string error = "SceneObject::getChildByIndex() : Out of index.";
         throw error;
     }
+}
+
+void SceneObject::set_visible(bool visibility=true) {
+
+	//HACK
+	//If checked every frame, queries may return
+	//an inconsistent result when used with bounding boxes.
+
+	//We need to make sure that the object's visibility status is consistent before
+	//changing the status to avoid flickering artifacts.
+
+	if(visibility == true)
+		vis_count_++;
+	else
+		vis_count_--;
+
+	if(vis_count_>check_frames_) {
+		visible_ = true;
+		vis_count_= 0;
+	}
+	else if(vis_count_<(-1*check_frames_)) {
+		visible_ = false;
+		vis_count_= 0;
+	}
 }
 
 }
