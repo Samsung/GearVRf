@@ -214,7 +214,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
             for (auto it = render_data_vector.begin();
                     it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, view_matrix, projection_matrix, camera->render_mask(),
+                renderRenderData(*it, view_matrix, proj_matrix, camera->render_mask(),
                         shader_manager);
             }
         } else {
@@ -230,7 +230,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
             for (auto it = render_data_vector.begin();
                     it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, view_matrix, projection_matrix, camera->render_mask(),
+                renderRenderData(*it, view_matrix, proj_matrix, camera->render_mask(),
                         shader_manager);
             }
 
