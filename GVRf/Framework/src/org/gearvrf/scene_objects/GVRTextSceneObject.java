@@ -58,12 +58,7 @@ public class GVRTextSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      */
     public GVRTextSceneObject(GVRContext gvrContext) {
-        super(gvrContext);
-
-        createObject(gvrContext, quadWidth, quadHeight);
-        setTextColor(DEFAULT_COLOR);
-        setTextSize(1);
-        setString("TextSceneObject");
+        this(gvrContext, "TextSceneObject");
     }
 
 
@@ -79,9 +74,9 @@ public class GVRTextSceneObject extends GVRSceneObject {
         super(gvrContext);
 
         createObject(gvrContext, quadWidth, quadHeight);
+        setString(string);
         setTextColor(DEFAULT_COLOR);
         setTextSize(1);
-        setString(string);
     }
 
 
@@ -110,9 +105,9 @@ public class GVRTextSceneObject extends GVRSceneObject {
         createObject(gvrContext, objectWidth, objectHeight);
         textBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
         canvas = new Canvas(textBitmap);
+        setString(string);
         setTextColor(DEFAULT_COLOR);
         setTextSize(1);
-        setString(string);
     }
 
     private void createObject(GVRContext gvrContext,float width, float height) {
