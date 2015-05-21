@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Holds scene objects. Can be used by engines.
  ***************************************************************************/
@@ -24,8 +23,8 @@
 
 namespace gvr {
 Scene::Scene() :
-        HybridObject(), scene_objects_(), main_camera_rig_(),
-                frustum_flag_(false), dirtyFlag_(0), occlusion_flag_(false){
+        HybridObject(), scene_objects_(), main_camera_rig_(), frustum_flag_(
+                false), dirtyFlag_(0), occlusion_flag_(false) {
 }
 
 Scene::~Scene() {

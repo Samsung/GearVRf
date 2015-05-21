@@ -60,6 +60,8 @@ public class SolarViewManager extends GVRScript {
             }
         });
 
+        mainScene.setFrustumCulling(true);
+        
         mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
         mainScene.getMainCameraRig().getRightCamera()

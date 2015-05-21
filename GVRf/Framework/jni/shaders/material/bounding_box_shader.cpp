@@ -60,8 +60,13 @@ void BoundingBoxShader::recycle() {
 }
 
 void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
+<<<<<<< HEAD
         RenderData* render_data) {
     Mesh* mesh = render_data->mesh();
+=======
+        std::shared_ptr<RenderData> render_data) {
+    std::shared_ptr<Mesh> mesh = render_data->mesh();
+>>>>>>> Fixed frustum culling.
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
