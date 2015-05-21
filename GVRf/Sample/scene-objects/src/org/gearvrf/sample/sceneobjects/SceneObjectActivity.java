@@ -15,8 +15,15 @@
 
 package org.gearvrf.sample.sceneobjects;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import org.gearvrf.GVRActivity;
 
@@ -30,13 +37,82 @@ public class SceneObjectActivity extends GVRActivity {
     private float yangle = 0;
     private float xangle = 0;
     private long lastDownTime = 0;
+    private WebView webView;
+    private Camera camera;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mViewManager = new SampleViewManager();
+
+        createWebView();
+        createCameraView();
+
+        mViewManager = new SampleViewManager(this);
         setScript(mViewManager, "gvr_note4.xml");
+    }
+
+    private void createWebView() {
+        webView = new WebView(this);
+        webView.setInitialScale(100);
+        webView.measure(2000, 1000);
+        webView.layout(0, 0, 2000, 1000);
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webView.loadUrl("http://gearvrf.org");
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
+            }
+        });
+    }
+
+    private boolean checkCameraHardware(Context context) {
+        return context.getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_CAMERA);
+    }
+
+    private void createCameraView() {
+
+        if (!checkCameraHardware(this)) {
+            android.util.Log.d(TAG, "Camera hardware not available.");
+            return;
+        }
+
+        camera = null;
+
+        try {
+            camera = Camera.open();
+            if (camera != null) {
+                Parameters params = camera.getParameters();
+                params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                camera.setParameters(params);
+                camera.startPreview();
+            }
+        } catch (Exception exception) {
+            android.util.Log.d(TAG, "Camera not available or is in use");
+        }
+    }
+
+    WebView getWebView() {
+        return webView;
+    }
+
+    Camera getCamera() {
+        return camera;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mViewManager.onPause();
+        if (camera != null) {
+            camera.stopPreview();
+            camera.release();
+            camera = null;
+        }
     }
 
     @Override
@@ -58,7 +134,7 @@ public class SceneObjectActivity extends GVRActivity {
                     mViewManager.setYAngle(0.0f);
                     return true;
                 }
-                
+
                 // otherwise, pass it as a tap to the ViewManager
                 mViewManager.setXAngle(0.0f);
                 mViewManager.setYAngle(0.0f);
