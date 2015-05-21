@@ -146,6 +146,7 @@ public class GVRTextSceneObject extends GVRSceneObject {
     public void setTextColor(int color) {
         textColor = color;
         paint.setColor(textColor);
+        updateText();
     }
 
     /**
@@ -171,6 +172,7 @@ public class GVRTextSceneObject extends GVRSceneObject {
     public void setTextSize(float newSize) {
         textSize = newSize;
         paint.setTextSize(defaultTextSize * textSize * BASE_TEXT_SIZE);
+        updateText();
     }
 
     /**
