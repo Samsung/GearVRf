@@ -107,6 +107,7 @@ public class SceneObjectActivity extends GVRActivity {
     @Override
     public void onPause() {
         super.onPause();
+        mViewManager.onPause();
         if (camera != null) {
             camera.stopPreview();
             camera.release();

@@ -157,13 +157,21 @@ public class SampleViewManager extends GVRScript {
         mXAngle = angle;
     }
 
+    public void onPause() {
+        GVRSceneObject object = objectList.get(currentObject);
+        if (object instanceof GVRVideoSceneObject) {
+            GVRVideoSceneObject video = (GVRVideoSceneObject) object;
+            video.getMediaPlayer().pause();
+        }
+    }
+    
     public void onTap() {
 
         GVRSceneObject object = objectList.get(currentObject);
         object.getRenderData().setRenderMask(0);
         if (object instanceof GVRVideoSceneObject) {
             GVRVideoSceneObject video = (GVRVideoSceneObject) object;
-            video.getMediaPlayer().stop();
+            video.getMediaPlayer().pause();
         }
 
         currentObject++;
