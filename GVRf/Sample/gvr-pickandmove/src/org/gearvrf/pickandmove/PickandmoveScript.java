@@ -15,14 +15,14 @@
 
 package org.gearvrf.pickandmove;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Future;
 
-import org.apache.commons.math3.ml.distance.DistanceMeasure;
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
@@ -45,12 +45,23 @@ public class PickandmoveScript extends GVRScript {
     private static final float SCALE_FACTOR = 2.0f;
     private GVRContext mGVRContext = null;
     private GVRScene scene = null;
+    private List<GVRSceneObject> mObjects = new ArrayList<GVRSceneObject>();
 
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
 
         scene = mGVRContext.getNextMainScene();
+
+        // head-tracking pointer
+        GVRSceneObject headTracker = new GVRSceneObject(gvrContext,
+                new FutureWrapper<GVRMesh>(gvrContext.createQuad(0.1f, 0.1f)),
+                gvrContext.loadFutureTexture(new GVRAndroidResource(
+                        mGVRContext, R.drawable.headtrackingpointer)));
+        headTracker.getTransform().setPosition(0.0f, 0.0f, -1.0f);
+        headTracker.getRenderData().setDepthTest(false);
+        headTracker.getRenderData().setRenderingOrder(100000);
+        scene.getMainCameraRig().getOwnerObject().addChildObject(headTracker);
 
         FutureWrapper<GVRMesh> futureQuadMesh = new FutureWrapper<GVRMesh>(
                 gvrContext.createQuad(CUBE_WIDTH, CUBE_WIDTH));
@@ -64,12 +75,12 @@ public class PickandmoveScript extends GVRScript {
         cubemapMaterial.setMainTexture(futureCubemapTexture);
 
         // surrounding cube
-        GVRSceneObject mFrontFace = new GVRSceneObject(gvrContext,
+        GVRSceneObject frontFace = new GVRSceneObject(gvrContext,
                 futureQuadMesh, futureCubemapTexture);
-        mFrontFace.getRenderData().setMaterial(cubemapMaterial);
-        mFrontFace.setName("front");
-        scene.addSceneObject(mFrontFace);
-        mFrontFace.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.5f);
+        frontFace.getRenderData().setMaterial(cubemapMaterial);
+        frontFace.setName("front");
+        scene.addSceneObject(frontFace);
+        frontFace.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.5f);
 
         GVRSceneObject backFace = new GVRSceneObject(gvrContext,
                 futureQuadMesh, futureCubemapTexture);
@@ -125,6 +136,7 @@ public class PickandmoveScript extends GVRScript {
         sphere.getRenderData().setMaterial(cubemapReflectionMaterial);
         sphere.setName("sphere");
         scene.addSceneObject(sphere);
+        mObjects.add(sphere);
         sphere.getTransform()
                 .setScale(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
         sphere.getTransform().setPosition(0.0f, 0.0f, -OBJECT_POSITION);
@@ -135,9 +147,31 @@ public class PickandmoveScript extends GVRScript {
         }
     }
 
+    private static float LOOKAT_COLOR_MASK_R = 1.0f;
+    private static float LOOKAT_COLOR_MASK_G = 0.8f;
+    private static float LOOKAT_COLOR_MASK_B = 0.8f;
+    private static float PICKED_COLOR_MASK_R = 1.0f;
+    private static float PICKED_COLOR_MASK_G = 0.5f;
+    private static float PICKED_COLOR_MASK_B = 0.5f;
+
     @Override
     public void onStep() {
         FPSCounter.tick();
+
+        if (attachedObject == null) {
+            for (GVRSceneObject object : mObjects) {
+                object.getRenderData().getMaterial().setColor(1.0f, 1.0f, 1.0f);
+            }
+            for (GVREyePointeeHolder eyePointeeHolder : GVRPicker
+                    .pickScene(mGVRContext.getMainScene())) {
+                eyePointeeHolder
+                        .getOwnerObject()
+                        .getRenderData()
+                        .getMaterial()
+                        .setColor(LOOKAT_COLOR_MASK_R, LOOKAT_COLOR_MASK_G,
+                                LOOKAT_COLOR_MASK_B);
+            }
+        }
     }
 
     private GVRSceneObject attachedObject = null;
@@ -168,6 +202,12 @@ public class PickandmoveScript extends GVRScript {
                             .pickScene(mGVRContext.getMainScene())) {
                         attachedObject = eyePointeeHolder.getOwnerObject();
                         cameraRigObject.addChildObject(attachedObject);
+                        attachedObject
+                                .getRenderData()
+                                .getMaterial()
+                                .setColor(PICKED_COLOR_MASK_R,
+                                        PICKED_COLOR_MASK_G,
+                                        PICKED_COLOR_MASK_B);
                         break;
                     }
                 }
