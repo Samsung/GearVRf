@@ -27,6 +27,7 @@ import org.gearvrf.GVRTexture;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff.Mode;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -348,6 +349,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private void refresh() {
         try {
             Canvas canvas = mSurface.lockCanvas(null);
+            canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
             mTextViewContainer.draw(canvas);
             mSurface.unlockCanvasAndPost(canvas);
         } catch (Surface.OutOfResourcesException t) {
