@@ -16,17 +16,18 @@
 package org.gearvrf.scene_objects;
 
 import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRSceneObject;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 
 
 public class GVRTextSceneObject extends GVRSceneObject {
@@ -72,7 +73,6 @@ public class GVRTextSceneObject extends GVRSceneObject {
      */
     public GVRTextSceneObject(GVRContext gvrContext, String string) {
         super(gvrContext);
-
         createObject(gvrContext, quadWidth, quadHeight);
         setString(string);
         setTextColor(DEFAULT_COLOR);
@@ -169,6 +169,30 @@ public class GVRTextSceneObject extends GVRSceneObject {
         paint.setTextSize(defaultTextSize * textSize * BASE_TEXT_SIZE);
         updateText();
     }
+    
+    /**
+     * Get the current text alignment. By default, it is Align.LEFT.
+     * 
+     * @return The current text alignment.
+     */
+    public Align getTextAlign() {
+        return paint.getTextAlign();
+    }
+    
+    
+    /**
+     * Set the text alignment.
+     * 
+     * @param newAlign
+     *            The new text alignment. It can be one of Align.LEFT, Align.RIGHT, Align.CENTER
+     *            By default, it is Align.CENTER;
+     */
+    public void setTextAlign(Align newAlign){
+    	paint.setTextAlign(newAlign);
+    	updateText();
+    }
+    
+    
 
     /**
      * Get the current text string.
@@ -191,8 +215,8 @@ public class GVRTextSceneObject extends GVRSceneObject {
     }
 
     private void updateText() {
-        textBitmap.eraseColor(Color.TRANSPARENT);
-        canvas.drawText(textString, 0, paint.getFontSpacing(), paint);
+        textBitmap.eraseColor(Color.YELLOW);
+//        canvas.drawText(textString, 0, paint.getFontSpacing(), paint);
         setMainTexture();
     }
 
