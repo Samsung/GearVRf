@@ -29,7 +29,7 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-Mesh* Mesh::getBoundingBox() const {
+Mesh* Mesh::getBoundingBox() {
     Mesh* mesh = new Mesh();
     float min_x = bounding_box_info_[0];
     float max_x = bounding_box_info_[3];
