@@ -24,8 +24,8 @@ import org.gearvrf.GVRMesh;
 public class GVRCylinderSceneObject extends GVRSceneObject {
 
     private static final String TAG = "GVRCylinderSceneObject";
-    private static final int NUM_STACKS = 10;
-    private static final int NUM_SLICES = 36;
+    private static final int STACK_NUMBER = 10;
+    private static final int SLICE_NUMBER = 36;
     private static final float BASE_RADIUS = 0.5f;
     private static final float TOP_RADIUS = 0.5f;
     private static final float HEIGHT = 1.0f;
@@ -49,8 +49,8 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     public GVRCylinderSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
-        generateCylinder(BASE_RADIUS, TOP_RADIUS, HEIGHT, NUM_STACKS,
-                NUM_SLICES);
+        generateCylinder(BASE_RADIUS, TOP_RADIUS, HEIGHT, STACK_NUMBER,
+                SLICE_NUMBER);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -74,20 +74,20 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            radius for the top of the cylinder
      * @param height
      *            height of the cylinder
-     * @param numStacks
+     * @param stackNumber
      *            number of quads high to make the cylinder.
-     * @param numSlices
+     * @param sliceNumber
      *            number of quads around to make the cylinder.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
-            float topRadius, float height, int numStacks, int numSlices) {
+            float topRadius, float height, int stackNumber, int sliceNumber) {
         super(gvrContext);
         // assert height, numStacks, numSlices > 0
-        if (height <= 0 || numStacks <= 0 || numSlices <= 0) {
+        if (height <= 0 || stackNumber <= 0 || sliceNumber <= 0) {
             throw new IllegalArgumentException(
                     "height, numStacks, and numSlices must be > 0.  Values passed were: height="
-                            + height + ", numStacks=" + numStacks
-                            + ", numSlices=" + numSlices);
+                            + height + ", numStacks=" + stackNumber
+                            + ", numSlices=" + sliceNumber);
         }
 
         // assert numCaps > 0
@@ -97,7 +97,8 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                             + bottomRadius + ", topRadius=" + topRadius);
         }
 
-        generateCylinder(bottomRadius, topRadius, height, numStacks, numSlices);
+        generateCylinder(bottomRadius, topRadius, height, stackNumber,
+                sliceNumber);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -111,54 +112,52 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     }
 
     private void generateCylinder(float bottomRadius, float topRadius,
-            float height, int numStacks, int numSlices) {
+            float height, int stackNumber, int sliceNumber) {
 
-        int numCaps = 2;
+        int capNumber = 2;
         if (bottomRadius == 0) {
-            numCaps--;
+            capNumber--;
         }
 
         if (topRadius == 0) {
-            numCaps--;
+            capNumber--;
         }
 
-        int capNumVertices = 3 * numSlices;
-        int bodyNumVertices = 4 * numSlices * numStacks;
-        int numVertices = (numCaps * capNumVertices) + bodyNumVertices;
-        int numTriangles = (numCaps * capNumVertices)
-                + (6 * numSlices * numStacks);
+        int capVertexNumber = 3 * sliceNumber;
+        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
+        int vertexNumber = (capNumber * capVertexNumber) + bodyVertexNumber;
+        int triangleNumber = (capNumber * capVertexNumber)
+                + (6 * sliceNumber * stackNumber);
         float halfHeight = height / 2.0f;
 
-        vertices = new float[3 * numVertices];
-        normals = new float[3 * numVertices];
-        texCoords = new float[2 * numVertices];
-        indices = new char[numTriangles];
+        vertices = new float[3 * vertexNumber];
+        normals = new float[3 * vertexNumber];
+        texCoords = new float[2 * triangleNumber];
+        indices = new char[triangleNumber];
 
         // top cap
         // 3 * numSlices
         if (topRadius > 0) {
-            createCap(topRadius, halfHeight, numSlices, 1.0f);
+            createCap(topRadius, halfHeight, sliceNumber, 1.0f);
         }
 
         // cylinder body
         // 4 * numSlices * numStacks
-        createBody(bottomRadius, topRadius, height, numStacks, numSlices);
+        createBody(bottomRadius, topRadius, height, stackNumber, sliceNumber);
 
         // bottom cap
         // 3 * numSlices
         if (bottomRadius > 0) {
-            createCap(bottomRadius, -halfHeight, numSlices, -1.0f);
+            createCap(bottomRadius, -halfHeight, sliceNumber, -1.0f);
         }
 
     }
 
-    private void createCap(float radius, float height, int numSlices,
-            float normalDir) {
-        for (int slice = 0; slice < numSlices; slice++) {
-            float theta0 = ((float) (slice) / numSlices) * 2.0f
-                    * (float) Math.PI;
-            float theta1 = ((float) (slice + 1) / numSlices) * 2.0f
-                    * (float) Math.PI;
+    private void createCap(float radius, float height, int sliceNumber,
+            float normalDirection) {
+        for (int slice = 0; slice < sliceNumber; slice++) {
+            double theta0 = ((slice) / sliceNumber) * 2.0 * Math.PI;
+            double theta1 = ((slice + 1) / sliceNumber) * 2.0 * Math.PI;
 
             float y = height;
             float x0 = radius * (float) Math.cos(theta0);
@@ -166,8 +165,8 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             float x1 = radius * (float) Math.cos(theta1);
             float z1 = radius * (float) Math.sin(theta1);
 
-            float s0 = 1.0f - ((float) (slice) / numSlices);
-            float s1 = 1.0f - ((float) (slice + 1) / numSlices);
+            float s0 = 1.0f - ((float) (slice) / sliceNumber);
+            float s1 = 1.0f - ((float) (slice + 1) / sliceNumber);
             float s2 = (s0 + s1) / 2.0f;
 
             vertices[vertexCount + 0] = x0;
@@ -181,13 +180,13 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             vertices[vertexCount + 8] = 0.0f;
 
             normals[vertexCount + 0] = 0.0f;
-            normals[vertexCount + 1] = normalDir;
+            normals[vertexCount + 1] = normalDirection;
             normals[vertexCount + 2] = 0.0f;
             normals[vertexCount + 3] = 0.0f;
-            normals[vertexCount + 4] = normalDir;
+            normals[vertexCount + 4] = normalDirection;
             normals[vertexCount + 5] = 0.0f;
             normals[vertexCount + 6] = 0.0f;
-            normals[vertexCount + 7] = normalDir;
+            normals[vertexCount + 7] = normalDirection;
             normals[vertexCount + 8] = 0.0f;
 
             texCoords[texCoordCount + 0] = s0;
@@ -199,7 +198,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             texCoords[texCoordCount + 4] = s2;
             texCoords[texCoordCount + 5] = 1.0f;
 
-            if (normalDir > 0) {
+            if (normalDirection > 0) {
                 indices[indexCount + 0] = (char) (triangleCount + 1);
                 indices[indexCount + 1] = (char) (triangleCount + 0);
                 indices[indexCount + 2] = (char) (triangleCount + 2);
@@ -217,27 +216,28 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     }
 
     private void createBody(float bottomRadius, float topRadius, float height,
-            int numStacks, int numSlices) {
+            int stackNumber, int sliceNumber) {
         float difference = bottomRadius - topRadius;
         float halfHeight = height / 2.0f;
 
-        for (int stack = 0; stack < numStacks; stack++) {
+        for (int stack = 0; stack < stackNumber; stack++) {
 
             int initVertexCount = vertexCount;
 
-            float stackPercentage0 = ((float) (stack) / numStacks);
-            float stackPercentage1 = ((float) (stack + 1) / numStacks);
+            float stackPercentage0 = ((float) (stack) / stackNumber);
+            float stackPercentage1 = ((float) (stack + 1) / stackNumber);
 
             float t0 = 1.0f - stackPercentage0;
             float t1 = 1.0f - stackPercentage1;
             float y0 = -halfHeight + (stackPercentage0 * height);
             float y1 = -halfHeight + (stackPercentage1 * height);
 
-            for (int slice = 0; slice < numSlices; slice++) {
-                float slicePercentage0 = ((float) (slice) / numSlices);
-                float slicePercentage1 = ((float) (slice + 1) / numSlices);
-                float theta0 = slicePercentage0 * 2.0f * (float) Math.PI;
-                float theta1 = slicePercentage1 * 2.0f * (float) Math.PI;
+            float nx, ny, nz;
+            for (int slice = 0; slice < sliceNumber; slice++) {
+                float slicePercentage0 = ((float) (slice) / sliceNumber);
+                float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+                double theta0 = slicePercentage0 * 2.0 * Math.PI;
+                double theta1 = slicePercentage1 * 2.0 * Math.PI;
                 float cosTheta0 = (float) Math.cos(theta0);
                 float sinTheta0 = (float) Math.sin(theta0);
                 float cosTheta1 = (float) Math.cos(theta1);
@@ -275,14 +275,13 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 vertices[vertexCount + 11] = z3;
 
                 // calculate normal
-
                 Vector3D v1 = new Vector3D(x1 - x0, 0, z1 - z0);
                 Vector3D v2 = new Vector3D(x2 - x0, y1 - y0, z2 - z0);
                 Vector3D v3 = v1.crossProduct(v2).normalize();
 
-                float nx = (float) v3.getX();
-                float ny = (float) v3.getY();
-                float nz = (float) v3.getZ();
+                nx = (float) v3.getX();
+                ny = (float) v3.getY();
+                nz = (float) v3.getZ();
                 normals[vertexCount + 0] = nx;
                 normals[vertexCount + 1] = ny;
                 normals[vertexCount + 2] = nz;
@@ -323,47 +322,66 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             }
 
             for (int i = initVertexCount; i < vertexCount - 12; i += 12) {
-                Vector3D v1 = new Vector3D(normals[i + 3], normals[i + 4], normals[i + 5]);
-                Vector3D v2 = new Vector3D(normals[i + 12], normals[i + 13], normals[i + 14]);
+                Vector3D v1 = new Vector3D(normals[i + 3], normals[i + 4],
+                        normals[i + 5]);
+                Vector3D v2 = new Vector3D(normals[i + 12], normals[i + 13],
+                        normals[i + 14]);
                 Vector3D v3 = v1.add(v2).normalize();
-                normals[i + 3] = (float)v3.getX();
-                normals[i + 4] = (float)v3.getY();
-                normals[i + 5] = (float)v3.getZ();
-                normals[i + 12] = (float)v3.getX();
-                normals[i + 13] = (float)v3.getY();
-                normals[i + 14] = (float)v3.getZ();
+                nx = (float) v3.getX();
+                ny = (float) v3.getY();
+                nz = (float) v3.getZ();
+                normals[i + 3] = nx;
+                normals[i + 4] = ny;
+                normals[i + 5] = nz;
+                normals[i + 12] = nx;
+                normals[i + 13] = ny;
+                normals[i + 14] = nz;
 
-                v1 = new Vector3D(normals[i + 9], normals[i + 10], normals[i + 11]);
-                v2 = new Vector3D(normals[i + 18], normals[i + 19], normals[i + 20]);
+                v1 = new Vector3D(normals[i + 9], normals[i + 10],
+                        normals[i + 11]);
+                v2 = new Vector3D(normals[i + 18], normals[i + 19],
+                        normals[i + 20]);
                 v3 = v1.add(v2).normalize();
-                normals[i + 9] = (float)v3.getX();
-                normals[i + 10] = (float)v3.getY();
-                normals[i + 11] = (float)v3.getZ();
-                normals[i + 18] = (float)v3.getX();
-                normals[i + 19] = (float)v3.getY();
-                normals[i + 20] = (float)v3.getZ();
+                nx = (float) v3.getX();
+                ny = (float) v3.getY();
+                nz = (float) v3.getZ();
+                normals[i + 9] = nx;
+                normals[i + 10] = ny;
+                normals[i + 11] = nz;
+                normals[i + 18] = nx;
+                normals[i + 19] = ny;
+                normals[i + 20] = nz;
             }
-            int ia = vertexCount - 12;
-            Vector3D v1 = new Vector3D(normals[ia + 3], normals[ia + 4], normals[ia + 5]);
-            int ib = initVertexCount;
-            Vector3D v2 = new Vector3D(normals[ib + 0], normals[ib + 1], normals[ib + 2]);
+            int i1 = vertexCount - 12;
+            Vector3D v1 = new Vector3D(normals[i1 + 3], normals[i1 + 4],
+                    normals[i1 + 5]);
+            int i2 = initVertexCount;
+            Vector3D v2 = new Vector3D(normals[i2 + 0], normals[i2 + 1],
+                    normals[i2 + 2]);
             Vector3D v3 = v1.add(v2).normalize();
-            normals[ia + 3] = (float)v3.getX();
-            normals[ia + 4] = (float)v3.getY();
-            normals[ia + 5] = (float)v3.getZ();
-            normals[ib + 0] = (float)v3.getX();
-            normals[ib + 1] = (float)v3.getY();
-            normals[ib + 2] = (float)v3.getZ();
+            nx = (float) v3.getX();
+            ny = (float) v3.getY();
+            nz = (float) v3.getZ();
+            normals[i1 + 3] = nx;
+            normals[i1 + 4] = ny;
+            normals[i1 + 5] = nz;
+            normals[i2 + 0] = nx;
+            normals[i2 + 1] = ny;
+            normals[i2 + 2] = nz;
 
-            v1 = new Vector3D(normals[ia + 9], normals[ia + 10], normals[ia + 11]);
-            v2 = new Vector3D(normals[ib + 6], normals[ib + 7], normals[ib + 8]);
+            v1 = new Vector3D(normals[i1 + 9], normals[i1 + 10],
+                    normals[i1 + 11]);
+            v2 = new Vector3D(normals[i2 + 6], normals[i2 + 7], normals[i2 + 8]);
             v3 = v1.add(v2).normalize();
-            normals[ia + 9] = (float)v3.getX();
-            normals[ia + 10] = (float)v3.getY();
-            normals[ia + 11] = (float)v3.getZ();
-            normals[ib + 6] = (float)v3.getX();
-            normals[ib + 7] = (float)v3.getY();
-            normals[ib + 8] = (float)v3.getZ();
+            nx = (float) v3.getX();
+            ny = (float) v3.getY();
+            nz = (float) v3.getZ();
+            normals[i1 + 9] = nx;
+            normals[i1 + 10] = ny;
+            normals[i1 + 11] = nz;
+            normals[i2 + 6] = nx;
+            normals[i2 + 7] = ny;
+            normals[i2 + 8] = nz;
         }
     }
 }

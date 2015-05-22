@@ -23,8 +23,8 @@ import org.gearvrf.GVRMesh;
 public class GVRSphereSceneObject extends GVRSceneObject {
 
     private static final String TAG = "GVRSphereSceneObject";
-    private static final int NUM_STACKS = 18;
-    private static final int NUM_SLICES = 36;
+    private static final int STACK_NUMBER = 18;
+    private static final int SLICE_NUMBER = 36;
 
     private float[] vertices;
     private float[] normals;
@@ -46,7 +46,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     public GVRSphereSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
-        generateSphere(NUM_STACKS, NUM_SLICES);
+        generateSphere(STACK_NUMBER, SLICE_NUMBER);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -59,55 +59,57 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         renderData.setMesh(mesh);
     }
 
-    private void generateSphere(int numStacks, int numSlices) {
-        int capNumVertices = 3 * numSlices;
-        int bodyNumVertices = 4 * numSlices * numStacks;
-        int numVertices = (2 * capNumVertices) + bodyNumVertices;
-        int numTriangles = (2 * capNumVertices) + (6 * numSlices * numStacks);
+    private void generateSphere(int stackNumber, int sliceNumber) {
+        int capVertexNumber = 3 * sliceNumber;
+        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
+        int vertexNumber = (2 * capVertexNumber) + bodyVertexNumber;
+        int triangleNumber = (2 * capVertexNumber)
+                + (6 * sliceNumber * stackNumber);
 
-        vertices = new float[3 * numVertices];
-        normals = new float[3 * numVertices];
-        texCoords = new float[2 * numVertices];
-        indices = new char[numTriangles];
+        vertices = new float[3 * vertexNumber];
+        normals = new float[3 * vertexNumber];
+        texCoords = new float[2 * vertexNumber];
+        indices = new char[triangleNumber];
 
         // bottom cap
-        createCap(0, numStacks, numSlices, false);
+        createCap(0, stackNumber, sliceNumber, false);
 
         // body
-        createBody(numStacks, numSlices);
+        createBody(stackNumber, sliceNumber);
 
         // top cap
-        createCap(numStacks, numStacks, numSlices, true);
+        createCap(stackNumber, stackNumber, sliceNumber, true);
     }
 
-    private void createCap(int stack, int numStacks, int numSlices, boolean top) {
+    private void createCap(int stack, int stackNumber, int sliceNumber,
+            boolean top) {
 
         float stackPercentage0;
         float stackPercentage1;
 
         if (top) {
-            stackPercentage0 = ((float) (stack - 1) / numStacks);
-            stackPercentage1 = ((float) (stack) / numStacks);
+            stackPercentage0 = ((float) (stack - 1) / stackNumber);
+            stackPercentage1 = ((float) (stack) / stackNumber);
 
         } else {
-            stackPercentage0 = ((float) (stack + 1) / numStacks);
-            stackPercentage1 = ((float) (stack) / numStacks);
+            stackPercentage0 = ((float) (stack + 1) / stackNumber);
+            stackPercentage1 = ((float) (stack) / stackNumber);
         }
 
         float t0 = 1.0f - stackPercentage0;
         float t1 = 1.0f - stackPercentage1;
-        float theta1 = stackPercentage0 * (float) Math.PI;
-        float theta2 = stackPercentage1 * (float) Math.PI;
+        double theta1 = stackPercentage0 * Math.PI;
+        double theta2 = stackPercentage1 * Math.PI;
         float cosTheta1 = (float) Math.cos(theta1);
         float sinTheta1 = (float) Math.sin(theta1);
         float cosTheta2 = (float) Math.cos(theta2);
         float sinTheta2 = (float) Math.sin(theta2);
 
-        for (int slice = 0; slice < numSlices; slice++) {
-            float slicePercentage0 = ((float) (slice) / numSlices);
-            float slicePercentage1 = ((float) (slice + 1) / numSlices);
-            float phi1 = slicePercentage0 * 2.0f * (float) Math.PI;
-            float phi2 = slicePercentage1 * 2.0f * (float) Math.PI;
+        for (int slice = 0; slice < sliceNumber; slice++) {
+            float slicePercentage0 = ((float) (slice) / sliceNumber);
+            float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+            double phi1 = slicePercentage0 * 2.0 * Math.PI;
+            double phi2 = slicePercentage1 * 2.0 * Math.PI;
             float s0 = slicePercentage0;
             float s1 = slicePercentage1;
             float s2 = (s0 + s1) / 2.0f;
@@ -177,25 +179,25 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
     }
 
-    private void createBody(int numStacks, int numSlices) {
-        for (int stack = 1; stack < numStacks - 1; stack++) {
-            float stackPercentage0 = ((float) (stack) / numStacks);
-            float stackPercentage1 = ((float) (stack + 1) / numStacks);
+    private void createBody(int stackNumber, int sliceNumber) {
+        for (int stack = 1; stack < stackNumber - 1; stack++) {
+            float stackPercentage0 = ((float) (stack) / stackNumber);
+            float stackPercentage1 = ((float) (stack + 1) / stackNumber);
 
             float t0 = 1.0f - stackPercentage0;
             float t1 = 1.0f - stackPercentage1;
-            float theta1 = stackPercentage0 * (float) Math.PI;
-            float theta2 = stackPercentage1 * (float) Math.PI;
+            double theta1 = stackPercentage0 * Math.PI;
+            double theta2 = stackPercentage1 * Math.PI;
             float cosTheta1 = (float) Math.cos(theta1);
             float sinTheta1 = (float) Math.sin(theta1);
             float cosTheta2 = (float) Math.cos(theta2);
             float sinTheta2 = (float) Math.sin(theta2);
 
-            for (int slice = 0; slice < numSlices; slice++) {
-                float slicePercentage0 = ((float) (slice) / numSlices);
-                float slicePercentage1 = ((float) (slice + 1) / numSlices);
-                float phi1 = slicePercentage0 * 2.0f * (float) Math.PI;
-                float phi2 = slicePercentage1 * 2.0f * (float) Math.PI;
+            for (int slice = 0; slice < sliceNumber; slice++) {
+                float slicePercentage0 = ((float) (slice) / sliceNumber);
+                float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+                double phi1 = slicePercentage0 * 2.0 * Math.PI;
+                double phi2 = slicePercentage1 * 2.0 * Math.PI;
                 float s0 = slicePercentage0;
                 float s1 = slicePercentage1;
                 float cosPhi1 = (float) Math.cos(phi1);
