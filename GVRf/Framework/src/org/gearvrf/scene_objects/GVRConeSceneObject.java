@@ -15,14 +15,17 @@
 
 package org.gearvrf.scene_objects;
 
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.utility.Log;
 
 public class GVRConeSceneObject extends GVRSceneObject {
 
-    private static final String TAG = "GVRConeSceneObject";
+    @SuppressWarnings("unused")
+    private static final String TAG = Log.tag(GVRConeSceneObject.class);
+    
     private static final int STACK_NUMBER = 10;
     private static final int SLICE_NUMBER = 36;
     private static final float BASE_RADIUS = 0.5f;
@@ -38,6 +41,7 @@ public class GVRConeSceneObject extends GVRSceneObject {
     public GVRConeSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
+        @SuppressWarnings("resource")
         GVRCylinderSceneObject cylinder = new GVRCylinderSceneObject(
                 gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, STACK_NUMBER,
                 SLICE_NUMBER);

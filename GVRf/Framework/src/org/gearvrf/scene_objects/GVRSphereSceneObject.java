@@ -19,10 +19,13 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.utility.Log;
 
 public class GVRSphereSceneObject extends GVRSceneObject {
 
-    private static final String TAG = "GVRSphereSceneObject";
+    @SuppressWarnings("unused")
+    private static final String TAG = Log.tag(GVRSphereSceneObject.class);
+
     private static final int STACK_NUMBER = 18;
     private static final int SLICE_NUMBER = 36;
 
@@ -206,7 +209,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 double sinPhi2 = Math.sin(phi2);
 
                 // 2-----3
-                // |     |
+                // | |
                 // 0-----1
                 float x0 = (float) (sinTheta1 * cosPhi1);
                 float y0 = (float) (sinTheta1 * sinPhi1);
