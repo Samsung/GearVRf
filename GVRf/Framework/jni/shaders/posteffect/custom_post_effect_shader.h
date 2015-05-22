@@ -73,6 +73,7 @@ private:
     GLuint a_tex_coord_;
     GLuint u_texture_;
     GLuint u_projection_matrix_;
+    GLuint u_right_eye_;
     std::map<int, std::string> texture_keys_;
     std::map<int, std::string> float_keys_;
     std::map<int, std::string> vec2_keys_;
