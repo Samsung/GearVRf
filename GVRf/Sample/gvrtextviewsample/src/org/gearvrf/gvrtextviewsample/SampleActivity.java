@@ -13,49 +13,18 @@
  * limitations under the License.
  */
 
-package org.gearvrf.simplesample;
+package org.gearvrf.gvrtextviewsample;
 
 import org.gearvrf.GVRActivity;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 public class SampleActivity extends GVRActivity {
 
-    private TextView mTextView;
-    private LinearLayout mTextViewWrapper;
-	
 	@Override
-    protected void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
-        setTextView();
-        setScript(new SampleViewManager(this), "gvr_note4.xml");
-    }
-    
-	private void setTextView(){
-		mTextView = new TextView(this);
-		mTextView.setLayoutParams(new LayoutParams(2000,1000));		
-		mTextView.measure(2000, 1000);
-//		mTextView.layout(0, 0, 2000, 1000);
-		mTextView.setText("asodfjaoidjfioajfioajwofijaoiefjaoiwejfiojaodfjiuwajedofkjeaoiwjfoiawjfoiaerhgfuiawjfeoiaerjhgroajegoijoifjaeroighaiujfojaeoirghoawjefoijawgfjaeoirghjoiawjgfoiueahrgoiajweoigfharjojfgaoiejhgoiawjgoijaeroigjawoijgieaurjgfoaejgiuoajfoiajergoijaoijoigrjoagrjoei");
-		mTextView.setBackgroundColor(Color.TRANSPARENT);
-		mTextView.setTextColor(Color.RED);
-		mTextView.setVisibility(View.VISIBLE);
-		mTextViewWrapper = new LinearLayout(this);
-		//mTextViewWrapper.setLayoutParams(new LayoutParams(2000,1000));		
-		mTextViewWrapper.addView(mTextView);
-		mTextViewWrapper.measure(2000, 1000);
-		mTextViewWrapper.layout(0, 0, 2000, 1000);
-		mTextViewWrapper.setBackgroundColor(Color.CYAN);
-		mTextViewWrapper.setVisibility(View.VISIBLE);
+	protected void onCreate(Bundle icicle) {
+		super.onCreate(icicle);
+		setScript(new SampleViewManager(this), "gvr_note4.xml");
 	}
-    
-	
-	LinearLayout getTextView(){
-		return mTextViewWrapper;
-	}
+
 }

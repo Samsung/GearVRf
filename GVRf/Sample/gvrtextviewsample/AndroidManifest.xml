@@ -14,7 +14,7 @@
  */-->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.gearvrf.simplesample"
+    package="org.gearvrf.gvrtextviewsample"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -29,7 +29,7 @@
         android:theme="@style/AppTheme" >
         <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/>
         <activity
-            android:name="org.gearvrf.simplesample.SampleActivity"
+            android:name="org.gearvrf.gvrtextviewsample.SampleActivity"
             android:screenOrientation="landscape"
             android:label="@string/app_name" >
             <intent-filter>
