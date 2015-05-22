@@ -31,7 +31,7 @@ public class SampleViewManager extends GVRScript {
     GVRConsole console;
     SampleActivity mActivity;
     boolean init = false;
-    private final String[] strs = new String[] { "good", "verygood",
+    private final String[] strings = new String[] { "good", "verygood",
             "veryverygood", "veryverygood", "veryveryverygood" };
     private final int[] colors = new int[] { Color.BLUE, Color.BLACK,
             Color.GREEN, Color.WHITE, Color.MAGENTA };
@@ -60,12 +60,12 @@ public class SampleViewManager extends GVRScript {
     public void onStep() {
         counter++;
         if (counter % 50 == 0) {
-            int curState = (counter / 50) % 5;
-            Log.d("change", "change to state " + curState);
-            sceneObject.setText(strs[curState]);
-            sceneObject.setTextColor(colors[curState]);
-            sceneObject.setTextSize(textSize * curState * 0.5f);
-            Log.d("change", "change to state end" + curState);
+            int currentState = (counter / 50) % 5;
+            Log.d("change", "change to state " + currentState);
+            sceneObject.setText(strings[currentState]);
+            sceneObject.setTextColor(colors[currentState]);
+            sceneObject.setTextSize(textSize * currentState * 0.5f);
+            Log.d("change", "change to state end " + currentState);
         }
     }
 

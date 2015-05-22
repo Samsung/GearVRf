@@ -27,7 +27,6 @@ import org.gearvrf.GVRTexture;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -38,18 +37,20 @@ import android.webkit.WebView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class GVRTextViewSceneObject extends GVRSceneObject implements
-        GVRDrawFrameListener {
+public class GVRTextViewSceneObject extends GVRSceneObject {
     private static final int REFRESH_INTERVAL = 30; // frames
+
+    private static final int DEFAULT_WIDTH = 2000;
+    private static final int DEFAULT_HEIGHT = 1000;
+    private static final float DEFAULT_QUAD_WIDTH = 2.0f;
+    private static final float DEFAULT_QUAD_HEIGHT = 2.0f;
+    private static final String DEFAULT_TEXT = "";
 
     private final Surface mSurface;
     private final SurfaceTexture mSurfaceTexture;
     private final LinearLayout mTextViewContainer;
     private final TextView mTextView;
-    private static int DEFAULT_WIDTH = 2000;
-    private static int DEFAULT_HEIGHT = 1000;
-    private static float DEFAULT_QUAD_WIDTH = 2.0f;
-    private static float DEFAULT_QUAD_HEIGHT = 2.0f;
+
     private int mCount = 0;
 
     /**
@@ -58,9 +59,15 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      * @param gvrContext
      *            current {@link GVRContext}
      * @param mesh
-     *            a {@link GVRMesh} - see
+     *            A {@link GVRMesh} - see
      *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
-     *            and {@link GVRContext#createQuad(float, float)}
+     *            and {@link GVRContext#createQuad(float, float)}.
+     * 
+     *            Please note that this mesh controls the size of your scene
+     *            object, and it is independent of the size of the internal
+     *            {@code TextView}: a large mismatch between the scene object's
+     *            size and the view's size will result in 'spidery' or 'blocky'
+     *            text.
      * @param gvrActivity
      *            a {@link GVRActivity}
      * @param viewWidth
@@ -68,11 +75,11 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      * @param viewHeight
      *            Height of the {@link TextView}
      * @param text
-     *            {@link String} to show on the textView
+     *            {@link CharSequence} to show on the textView
      */
-
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh,
-            GVRActivity gvrActivity, int viewWidth, int viewHeight, String text) {
+            GVRActivity gvrActivity, int viewWidth, int viewHeight,
+            CharSequence text) {
         super(gvrContext, mesh);
         mTextView = new TextView(gvrActivity);
         mTextView.setLayoutParams(new LayoutParams(viewWidth, viewHeight));
@@ -85,7 +92,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
         mTextViewContainer.measure(viewWidth, viewHeight);
         mTextViewContainer.layout(0, 0, viewWidth, viewHeight);
         mTextViewContainer.setVisibility(View.VISIBLE);
-        gvrContext.registerDrawFrameListener(this);
+        gvrContext.registerDrawFrameListener(mFrameListener);
         GVRTexture texture = new GVRExternalTexture(gvrContext);
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
@@ -105,20 +112,25 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      * @param gvrActivity
      *            a {@link GVRActivity}
      * @param width
-     *            width for createQuad to get a new {@link GVRMesh}
+     *            Scene object height, in GVRF scene graph units.
+     * 
+     *            Please note that your scene object's size, is independent of
+     *            the size of the internal {@code TextView}: a large mismatch
+     *            between the scene object's size and the view's size will
+     *            result in 'spidery' or 'blocky' text.
+     * 
      * @param height
-     *            height for createQuad to get a new {@link GVRMesh}
+     *            Scene object's width, in GVRF scene graph units.
      * @param viewWidth
      *            Width of the {@link TextView}
      * @param viewHeight
      *            Height of the {@link TextView}
      * @param text
-     *            {@link String} to show on the textView
+     *            {@link CharSequence} to show on the textView
      */
-
     public GVRTextViewSceneObject(GVRContext gvrContext,
             GVRActivity gvrActivity, float width, float height, int viewWidth,
-            int viewHeight, String text) {
+            int viewHeight, CharSequence text) {
         this(gvrContext, gvrContext.createQuad(width, height), gvrActivity,
                 viewWidth, viewHeight, text);
     }
@@ -133,14 +145,19 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      *            a {@link GVRMesh} - see
      *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
+     * 
+     *            Please note that this mesh controls the size of your scene
+     *            object, and it is independent of the size of the internal
+     *            {@code TextView}: a large mismatch between the scene object's
+     *            size and the view's size will result in 'spidery' or 'blocky'
+     *            text.
      * @param gvrActivity
      *            a {@link GVRActivity}
      * @param text
-     *            {@link String} to show on the textView
+     *            {@link CharSequence} to show on the textView
      */
-
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh,
-            GVRActivity gvrActivity, String text) {
+            GVRActivity gvrActivity, CharSequence text) {
         this(gvrContext, mesh, gvrActivity, DEFAULT_WIDTH, DEFAULT_HEIGHT, text);
     }
 
@@ -153,15 +170,21 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      * @param gvrActivity
      *            a {@link GVRActivity}
      * @param width
-     *            width for createQuad to get a new {@link GVRMesh}
+     *            Scene object height, in GVRF scene graph units.
+     * 
+     *            Please note that your scene object's size, is independent of
+     *            the size of the internal {@code TextView}: a large mismatch
+     *            between the scene object's size and the view's size will
+     *            result in 'spidery' or 'blocky' text.
+     * 
      * @param height
-     *            height for createQuad to get a new {@link GVRMesh}
+     *            Scene object's width, in GVRF scene graph units.
      * @param text
-     *            {@link String} to show on the textView
+     *            {@link CharSequence} to show on the textView
      */
-
     public GVRTextViewSceneObject(GVRContext gvrContext,
-            GVRActivity gvrActivity, float width, float height, String text) {
+            GVRActivity gvrActivity, float width, float height,
+            CharSequence text) {
         this(gvrContext, gvrContext.createQuad(width, height), gvrActivity,
                 text);
     }
@@ -176,11 +199,10 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      * @param gvrActivity
      *            a {@link GVRActivity}
      * @param text
-     *            {@link String} to show on the textView
+     *            {@link CharSequence} to show on the textView
      */
-
     public GVRTextViewSceneObject(GVRContext gvrContext,
-            GVRActivity gvrActivity, String text) {
+            GVRActivity gvrActivity, CharSequence text) {
         this(gvrContext, gvrActivity, DEFAULT_QUAD_WIDTH, DEFAULT_QUAD_HEIGHT,
                 text);
     }
@@ -188,7 +210,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with both view's default height and width and quad's default height and
-     * width. And the default text of this TextView will be "Hello World!"
+     * width. The initial text will be the private {@code DEFAULT_TEXT}
+     * constant, or {@code ""}.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
@@ -196,7 +219,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
      *            a {@link GVRActivity}
      */
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRActivity gvrActivity) {
-        this(gvrContext, gvrActivity, "Hello World!");
+        this(gvrContext, gvrActivity, DEFAULT_TEXT);
     }
 
     /**
@@ -230,13 +253,34 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
     }
 
     /**
-     * Set the text string to be displayed.
+     * Set the text to be displayed.
      * 
-     * @param string
-     *            The new text string to be displayed.
+     * @param text
+     *            The new text to be displayed.
      */
-    public void setText(String str) {
-        mTextView.setText(str);
+    public void setText(CharSequence text) {
+        mTextView.setText(text);
+    }
+
+    /**
+     * Get the current text.
+     * 
+     * @return The text that is currently displayed.
+     */
+    public CharSequence getText() {
+        return mTextView.getText();
+    }
+
+    /**
+     * Get the current text, as a {@code String}.
+     * 
+     * This is a convenience function, 100% equivalent to {@link #getText()}
+     * {@code .toString()}
+     * 
+     * @return The text that is currently displayed.
+     */
+    public String getTextString() {
+        return getText().toString();
     }
 
     /**
@@ -251,49 +295,54 @@ public class GVRTextViewSceneObject extends GVRSceneObject implements
     }
 
     /**
-     * Set the view's background with resource drawable.
+     * Set the view's background {@code Drawable}.
      * 
      * @param drawable
-     *            The view's background.
+     *            The view's background. {@code null} will clear any current
+     *            background {@code Drawable}.
      */
     public void setBackGround(Drawable drawable) {
         mTextViewContainer.setBackground(drawable);
     }
 
     /**
-     * Get the current text string.
+     * Get the view's background {@code Drawable}, if any.
      * 
-     * @return The current text string that is being displayed.
+     * @param drawable
+     *            The view's background; may be {@code null}.
      */
-    public String getText() {
-        return mTextView.getText().toString();
+    public Drawable getBackGround() {
+        return mTextViewContainer.getBackground();
     }
 
     /**
-     * Set the current view's gravity.
+     * Set the view's gravity.
      * 
      * @param gravity
-     *            The gravity of this TextView;
+     *            The gravity of the internal TextView
      */
     public void setGravity(int gravity) {
         mTextView.setGravity(gravity);
     }
 
     /**
-     * This is actually a callback for GVRDrawFrameListener. It shouldn't get
-     * called from app side. The only reason for this to be public is for
-     * inheritance.
+     * Get the view's gravity.
      * 
-     * @param Current
-     *            frame time.
+     * @return The gravity of the internal TextView
      */
-    @Override
-    public void onDrawFrame(float frameTime) {
-        if (++mCount > REFRESH_INTERVAL) {
-            refresh();
-            mCount = 0;
-        }
+    public int getGravity() {
+        return mTextView.getGravity();
     }
+
+    private final GVRDrawFrameListener mFrameListener = new GVRDrawFrameListener() {
+        @Override
+        public void onDrawFrame(float frameTime) {
+            if (++mCount > REFRESH_INTERVAL) {
+                refresh();
+                mCount = 0;
+            }
+        }
+    };
 
     /** Draws the {@link WebView} onto {@link #mSurfaceTexture} */
     private void refresh() {
