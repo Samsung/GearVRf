@@ -32,7 +32,6 @@ import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
-import org.gearvrf.scene_objects.GVRTextSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObject.GVRVideoType;
@@ -70,14 +69,12 @@ public class SampleViewManager extends GVRScript {
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
                 gvrContext);
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
-        GVRTextSceneObject textObject = new GVRTextSceneObject(gvrContext,
-                "Hello World!");
         GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
                 gvrContext, 8.0f, 4.0f, mActivity.getCamera());
         GVRVideoSceneObject videoObject = createVideoObject(gvrContext);
         GVRTextViewSceneObject textViewSceneObject = new GVRTextViewSceneObject(
-                gvrContext, mActivity);
+                gvrContext, mActivity, "Hello World!");
         textViewSceneObject.setGravity(Gravity.CENTER);
         textViewSceneObject
                 .setTextSize(textViewSceneObject.getTextSize() * 1.5f);
@@ -86,7 +83,6 @@ public class SampleViewManager extends GVRScript {
         objectList.add(sphereObject);
         objectList.add(cylinderObject);
         objectList.add(coneObject);
-        objectList.add(textObject);
         objectList.add(webViewObject);
         objectList.add(cameraObject);
         objectList.add(videoObject);
@@ -113,18 +109,17 @@ public class SampleViewManager extends GVRScript {
         cubeObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
         cylinderObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         coneObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
-        textObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
         sphereObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
         cameraObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
         videoObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
         textViewSceneObject.getTransform().setPosition(0.0f, 0.0f, -2.0f);
+        
         // add the scene objects to the scene graph
         scene.addSceneObject(quadObject);
         scene.addSceneObject(cubeObject);
         scene.addSceneObject(sphereObject);
         scene.addSceneObject(cylinderObject);
         scene.addSceneObject(coneObject);
-        scene.addSceneObject(textObject);
         scene.addSceneObject(webViewObject);
         scene.addSceneObject(cameraObject);
         scene.addSceneObject(videoObject);
