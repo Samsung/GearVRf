@@ -42,9 +42,7 @@ if (env->GetArrayLength(bitmapArray) != 6) {
 	throw error;
 }
 try {
-	jlong res_texture = reinterpret_cast<jlong>(new std::shared_ptr<
-			CubemapTexture>(new CubemapTexture(env, bitmapArray)));
-	return res_texture;
+    return reinterpret_cast<jlong>(new CubemapTexture(env, bitmapArray));
 } catch (const std::string &err) {
 	printJavaCallStack(env, err);
 	throw err;
