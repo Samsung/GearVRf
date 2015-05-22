@@ -111,8 +111,8 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
 }
 
 void CustomShader::render(const glm::mat4& mvp_matrix,
-        std::shared_ptr<RenderData> render_data, bool right) {
-    std::shared_ptr<Mesh> mesh = render_data->mesh();
+        RenderData* render_data, bool right) {
+    Mesh* mesh = render_data->mesh();
 
 #if _GVRF_USE_GLES3_
     glUseProgram(program_->id());
@@ -173,7 +173,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix,
     for(auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it)
     {
         glActiveTexture(getGLTexture(texture_index));
-        std::shared_ptr<Texture> texture = render_data->material()->getTexture(it->second);
+        Texture* texture = render_data->material()->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
@@ -238,7 +238,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix,
 
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
-        std::shared_ptr<Texture> texture = render_data->material()->getTexture(
+        Texture* texture = render_data->material()->getTexture(
                 it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);

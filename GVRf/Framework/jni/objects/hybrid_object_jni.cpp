@@ -23,47 +23,12 @@ extern "C" {
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeHybridObject_delete(JNIEnv * env,
         jobject obj, jlong jhybrid_object);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeHybridObject_equals(JNIEnv * env,
-        jobject obj, jlong jhybrid_object, jlong jother);
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeHybridObject_getUseCount(JNIEnv * env,
-        jobject obj, jlong jhybrid_object);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeHybridObject_getNativePointer(
-        JNIEnv * env, jobject obj, jlong jhybrid_object);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeHybridObject_delete(JNIEnv * env,
         jobject obj, jlong jhybrid_object) {
-    delete reinterpret_cast<std::shared_ptr<HybridObject>*>(jhybrid_object);
-}
-
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeHybridObject_equals(JNIEnv * env,
-        jobject obj, jlong jhybrid_object, jlong jother) {
-    std::shared_ptr<HybridObject> hybrid_object =
-            *reinterpret_cast<std::shared_ptr<HybridObject>*>(jhybrid_object);
-    std::shared_ptr<HybridObject> other = *reinterpret_cast<std::shared_ptr<
-            HybridObject>*>(jother);
-    return static_cast<jboolean>(hybrid_object.get() == other.get());
-}
-
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeHybridObject_getUseCount(JNIEnv * env,
-        jobject obj, jlong jhybrid_object) {
-    std::weak_ptr<HybridObject> hybrid_object(
-            *reinterpret_cast<std::shared_ptr<HybridObject>*>(jhybrid_object));
-    return hybrid_object.use_count();
-}
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeHybridObject_getNativePointer(
-        JNIEnv* env, jobject obj, jlong jhybrid_object) {
-    std::shared_ptr<HybridObject> hybrid_object =
-            *reinterpret_cast<std::shared_ptr<HybridObject>*>(jhybrid_object);
-    return reinterpret_cast<jlong>(hybrid_object.get());
+    delete reinterpret_cast<HybridObject*>(jhybrid_object);
 }
 }
 

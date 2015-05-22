@@ -38,13 +38,13 @@ CameraRig::CameraRig() :
 CameraRig::~CameraRig() {
 }
 
-void CameraRig::attachLeftCamera(const std::shared_ptr<Camera>& left_camera) {
+void CameraRig::attachLeftCamera(Camera* const left_camera) {
     left_camera->owner_object()->transform()->set_position(
             -camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
     left_camera_ = left_camera;
 }
 
-void CameraRig::attachRightCamera(const std::shared_ptr<Camera>& right_camera) {
+void CameraRig::attachRightCamera(Camera* const right_camera) {
     right_camera->owner_object()->transform()->set_position(
             camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
     right_camera_ = right_camera;

@@ -38,9 +38,7 @@ void Java_org_gearvrf_GVRActivity_nativeSetCamera(
         JNIEnv * jni, jclass clazz, jlong appPtr, jlong jcamera )
 {
     GVRActivity *activity = (GVRActivity*)((App *)appPtr)->GetAppInterface();
-    //LOG("GVRActivity::setCamera ");
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     activity->camera = camera;
 }
 

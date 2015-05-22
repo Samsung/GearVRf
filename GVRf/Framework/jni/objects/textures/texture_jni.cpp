@@ -33,8 +33,7 @@ Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
         jlong jtexture) {
-    std::shared_ptr<Texture> texture =
-            *reinterpret_cast<std::shared_ptr<Texture>*>(jtexture);
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
     return texture->getId();
 }
 

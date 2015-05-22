@@ -40,8 +40,7 @@ Java_org_gearvrf_NativeCustomCamera_setProjectionMatrix(
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCustomCamera_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<CustomCamera>(
-            new CustomCamera()));
+    return reinterpret_cast<jlong>(new CustomCamera());
 }
 
 JNIEXPORT void JNICALL
@@ -50,8 +49,7 @@ Java_org_gearvrf_NativeCustomCamera_setProjectionMatrix(
         jfloat z1, jfloat w1, jfloat x2, jfloat y2, jfloat z2, jfloat w2,
         jfloat x3, jfloat y3, jfloat z3, jfloat w3, jfloat x4, jfloat y4,
         jfloat z4, jfloat w4) {
-    std::shared_ptr<CustomCamera> custom_camera =
-            *reinterpret_cast<std::shared_ptr<CustomCamera>*>(jcustom_camera);
+    CustomCamera* custom_camera = reinterpret_cast<CustomCamera*>(jcustom_camera);
     glm::mat4 mat(x1, y1, z1, w1, x2, y2, z2, w2, x3, y3, z3, w3, x4, y4, z4,
             w4);
     custom_camera->set_projection_matrix(mat);

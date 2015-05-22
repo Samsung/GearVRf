@@ -28,6 +28,9 @@ import org.gearvrf.utility.Threads;
  */
 public class GVRRenderData extends GVRComponent {
 
+    private GVRMesh mMesh;
+    private GVRMaterial mMaterial;
+
     /**
      * Rendering hints.
      * 
@@ -88,23 +91,11 @@ public class GVRRenderData extends GVRComponent {
         super(gvrContext, ptr);
     }
 
-    static GVRRenderData factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRRenderData(gvrContext, ptr)
-                : (GVRRenderData) wrapper;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
-    }
-
     /**
      * @return The {@link GVRMesh mesh} being rendered.
      */
     public GVRMesh getMesh() {
-        long ptr = NativeRenderData.getMesh(getPtr());
-        return ptr == 0 ? null : GVRMesh.factory(getGVRContext(), ptr);
+        return mMesh;
     }
 
     /**
@@ -114,7 +105,8 @@ public class GVRRenderData extends GVRComponent {
      *            The mesh to be rendered.
      */
     public void setMesh(GVRMesh mesh) {
-        NativeRenderData.setMesh(getPtr(), mesh.getPtr());
+        mMesh = mesh;
+        NativeRenderData.setMesh(getNative(), mesh.getNative());
     }
 
     /**
@@ -149,8 +141,7 @@ public class GVRRenderData extends GVRComponent {
      *         being rendered with.
      */
     public GVRMaterial getMaterial() {
-        long ptr = NativeRenderData.getMaterial(getPtr());
-        return ptr == 0 ? null : new GVRMaterial(getGVRContext(), ptr);
+        return mMaterial;
     }
 
     /**
@@ -160,7 +151,8 @@ public class GVRRenderData extends GVRComponent {
      *            The {@link GVRMaterial material} for rendering.
      */
     public void setMaterial(GVRMaterial material) {
-        NativeRenderData.setMaterial(getPtr(), material.getPtr());
+        mMaterial = material;
+        NativeRenderData.setMaterial(getNative(), material.getNative());
     }
 
     /**
@@ -170,7 +162,7 @@ public class GVRRenderData extends GVRComponent {
      * @see GVRRenderMaskBit
      */
     public int getRenderMask() {
-        return NativeRenderData.getRenderMask(getPtr());
+        return NativeRenderData.getRenderMask(getNative());
     }
 
     /**
@@ -181,7 +173,7 @@ public class GVRRenderData extends GVRComponent {
      * @see GVRRenderMaskBit
      */
     public void setRenderMask(int renderMask) {
-        NativeRenderData.setRenderMask(getPtr(), renderMask);
+        NativeRenderData.setRenderMask(getNative(), renderMask);
     }
 
     /**
@@ -189,7 +181,7 @@ public class GVRRenderData extends GVRComponent {
      * @see GVRRenderingOrder
      */
     public int getRenderingOrder() {
-        return NativeRenderData.getRenderingOrder(getPtr());
+        return NativeRenderData.getRenderingOrder(getNative());
     }
 
     /**
@@ -199,7 +191,7 @@ public class GVRRenderData extends GVRComponent {
      *            See {@link GVRRenderingOrder}
      */
     public void setRenderingOrder(int renderingOrder) {
-        NativeRenderData.setRenderingOrder(getPtr(), renderingOrder);
+        NativeRenderData.setRenderingOrder(getNative(), renderingOrder);
     }
 
     /**
@@ -207,7 +199,7 @@ public class GVRRenderData extends GVRComponent {
      *         not.
      */
     public boolean getCullTest() {
-        return NativeRenderData.getCullTest(getPtr());
+        return NativeRenderData.getCullTest(getNative());
     }
 
     /**
@@ -218,7 +210,7 @@ public class GVRRenderData extends GVRComponent {
      *            {@code false} if not.
      */
     public void setCullTest(boolean cullTest) {
-        NativeRenderData.setCullTest(getPtr(), cullTest);
+        NativeRenderData.setCullTest(getNative(), cullTest);
     }
 
     /**
@@ -226,7 +218,7 @@ public class GVRRenderData extends GVRComponent {
      *         {@code false} if not.
      */
     public boolean getOffset() {
-        return NativeRenderData.getOffset(getPtr());
+        return NativeRenderData.getOffset(getNative());
     }
 
     /**
@@ -237,7 +229,7 @@ public class GVRRenderData extends GVRComponent {
      *            enabled, {@code false} if not.
      */
     public void setOffset(boolean offset) {
-        NativeRenderData.setOffset(getPtr(), offset);
+        NativeRenderData.setOffset(getNative(), offset);
     }
 
     /**
@@ -246,7 +238,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public float getOffsetFactor() {
-        return NativeRenderData.getOffsetFactor(getPtr());
+        return NativeRenderData.getOffsetFactor(getNative());
     }
 
     /**
@@ -260,7 +252,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public void setOffsetFactor(float offsetFactor) {
-        NativeRenderData.setOffsetFactor(getPtr(), offsetFactor);
+        NativeRenderData.setOffsetFactor(getNative(), offsetFactor);
     }
 
     /**
@@ -269,7 +261,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public float getOffsetUnits() {
-        return NativeRenderData.getOffsetUnits(getPtr());
+        return NativeRenderData.getOffsetUnits(getNative());
     }
 
     /**
@@ -283,7 +275,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public void setOffsetUnits(float offsetUnits) {
-        NativeRenderData.setOffsetUnits(getPtr(), offsetUnits);
+        NativeRenderData.setOffsetUnits(getNative(), offsetUnits);
     }
 
     /**
@@ -291,7 +283,7 @@ public class GVRRenderData extends GVRComponent {
      *         if not.
      */
     public boolean getDepthTest() {
-        return NativeRenderData.getDepthTest(getPtr());
+        return NativeRenderData.getDepthTest(getNative());
     }
 
     /**
@@ -302,7 +294,7 @@ public class GVRRenderData extends GVRComponent {
      *            {@code false} if not.
      */
     public void setDepthTest(boolean depthTest) {
-        NativeRenderData.setDepthTest(getPtr(), depthTest);
+        NativeRenderData.setDepthTest(getNative(), depthTest);
     }
 
     /**
@@ -310,7 +302,7 @@ public class GVRRenderData extends GVRComponent {
      *         not.
      */
     public boolean getAlphaBlend() {
-        return NativeRenderData.getAlphaBlend(getPtr());
+        return NativeRenderData.getAlphaBlend(getNative());
     }
 
     /**
@@ -321,14 +313,14 @@ public class GVRRenderData extends GVRComponent {
      *            {@code false} if not.
      */
     public void setAlphaBlend(boolean alphaBlend) {
-        NativeRenderData.setAlphaBlend(getPtr(), alphaBlend);
+        NativeRenderData.setAlphaBlend(getNative(), alphaBlend);
     }
 
     /**
      * @return The OpenGL draw mode (e.g. GL_TRIANGLES).
      */
     public int getDrawMode() {
-        return NativeRenderData.getDrawMode(getPtr());
+        return NativeRenderData.getDrawMode(getNative());
     }
 
     /**
@@ -344,53 +336,47 @@ public class GVRRenderData extends GVRComponent {
             throw new IllegalArgumentException(
                     "drawMode must be one of GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN, GL_TRIANGLE_STRIP.");
         }
-        NativeRenderData.setDrawMode(getPtr(), drawMode);
+        NativeRenderData.setDrawMode(getNative(), drawMode);
     }
 
 }
 
 class NativeRenderData {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native long getMesh(long renderData);
+    static native void setMesh(long renderData, long mesh);
 
-    public static native void setMesh(long renderData, long mesh);
+    static native void setMaterial(long renderData, long material);
 
-    public static native long getMaterial(long renderData);
+    static native int getRenderMask(long renderData);
 
-    public static native void setMaterial(long renderData, long material);
+    static native void setRenderMask(long renderData, int renderMask);
 
-    public static native int getRenderMask(long renderData);
+    static native int getRenderingOrder(long renderData);
 
-    public static native void setRenderMask(long renderData, int renderMask);
+    static native void setRenderingOrder(long renderData, int renderingOrder);
 
-    public static native int getRenderingOrder(long renderData);
+    static native boolean getCullTest(long renderData);
 
-    public static native void setRenderingOrder(long renderData,
-            int renderingOrder);
+    static native void setCullTest(long renderData, boolean cullTest);
 
-    public static native boolean getCullTest(long renderData);
+    static native boolean getOffset(long renderData);
 
-    public static native void setCullTest(long renderData, boolean cullTest);
+    static native void setOffset(long renderData, boolean offset);
 
-    public static native boolean getOffset(long renderData);
+    static native float getOffsetFactor(long renderData);
 
-    public static native void setOffset(long renderData, boolean offset);
+    static native void setOffsetFactor(long renderData, float offsetFactor);
 
-    public static native float getOffsetFactor(long renderData);
+    static native float getOffsetUnits(long renderData);
 
-    public static native void setOffsetFactor(long renderData,
-            float offsetFactor);
+    static native void setOffsetUnits(long renderData, float offsetUnits);
 
-    public static native float getOffsetUnits(long renderData);
+    static native boolean getDepthTest(long renderData);
 
-    public static native void setOffsetUnits(long renderData, float offsetUnits);
+    static native void setDepthTest(long renderData, boolean depthTest);
 
-    public static native boolean getDepthTest(long renderData);
-
-    public static native void setDepthTest(long renderData, boolean depthTest);
-
-    public static native boolean getAlphaBlend(long renderData);
+    static native boolean getAlphaBlend(long renderData);
 
     public static native void setAlphaBlend(long renderData, boolean alphaBlend);
 

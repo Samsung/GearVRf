@@ -54,8 +54,8 @@ public:
         hit_ = hit;
     }
 
-    void addPointee(const std::shared_ptr<EyePointee>& pointee);
-    void removePointee(const std::shared_ptr<EyePointee>& pointee);
+    void addPointee(EyePointee* pointee);
+    void removePointee(EyePointee* pointee);
     EyePointData isPointed(const glm::mat4& view_matrix);
     EyePointData isPointed(const glm::mat4& view_matrix, float ox, float oy,
             float oz, float dx, float dy, float dz);
@@ -69,7 +69,7 @@ private:
 private:
     bool enable_;
     glm::vec3 hit_;
-    std::vector<std::shared_ptr<EyePointee>> pointees_;
+    std::vector<EyePointee*> pointees_;
 };
 
 }

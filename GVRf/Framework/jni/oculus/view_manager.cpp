@@ -30,20 +30,16 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
 		jlong jpost_effect_render_texture_b) {
 	GVRActivity *activity = (GVRActivity*) ((App *) appPtr)->GetAppInterface();
 
-	std::shared_ptr<Scene> scene =
-			*reinterpret_cast<std::shared_ptr<Scene>*>(jscene);
-	std::shared_ptr<Camera> camera =
-			*reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
-	std::shared_ptr<RenderTexture> render_texture =
-			*reinterpret_cast<std::shared_ptr<RenderTexture>*>(jrender_texture);
-	std::shared_ptr<ShaderManager> shader_manager =
-			*reinterpret_cast<std::shared_ptr<ShaderManager>*>(jshader_manager);
-	std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager =
-			*reinterpret_cast<std::shared_ptr<PostEffectShaderManager>*>(jpost_effect_shader_manager);
-	std::shared_ptr<RenderTexture> post_effect_render_texture_a =
-			*reinterpret_cast<std::shared_ptr<RenderTexture>*>(jpost_effect_render_texture_a);
-	std::shared_ptr<RenderTexture> post_effect_render_texture_b =
-			*reinterpret_cast<std::shared_ptr<RenderTexture>*>(jpost_effect_render_texture_b);
+	Scene* scene = reinterpret_cast<Scene*>(jscene);
+	Camera* camera = reinterpret_cast<Camera*>(jcamera);
+	RenderTexture* render_texture = reinterpret_cast<RenderTexture*>(jrender_texture);
+	ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
+	PostEffectShaderManager* post_effect_shader_manager =
+			reinterpret_cast<PostEffectShaderManager*>(jpost_effect_shader_manager);
+	RenderTexture* post_effect_render_texture_a =
+			reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_a);
+	RenderTexture* post_effect_render_texture_b =
+			reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_b);
 
 	activity->viewManager->renderCamera(activity->Scene, scene, camera,
 			render_texture, shader_manager, post_effect_shader_manager,
@@ -56,8 +52,7 @@ void Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * jni,
 
 	uint8_t *pReadbackBuffer = (uint8_t *) jni->GetDirectBufferAddress(
 			jreadback_buffer);
-	std::shared_ptr<RenderTexture> render_texture =
-			*reinterpret_cast<std::shared_ptr<RenderTexture>*>(jrender_texture);
+	RenderTexture* render_texture = reinterpret_cast<RenderTexture*>(jrender_texture);
 	int width = render_texture->width();
 	int height = render_texture->height();
 
@@ -102,12 +97,13 @@ GVRViewManager::~GVRViewManager() {
 }
 
 void GVRViewManager::renderCamera(OvrSceneView &ovr_scene,
-		std::shared_ptr<Scene> scene, std::shared_ptr<Camera> camera,
-		std::shared_ptr<RenderTexture> render_texture,
-		std::shared_ptr<ShaderManager> shader_manager,
-		std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-		std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-		std::shared_ptr<RenderTexture> post_effect_render_texture_b,
+		Scene* scene,
+		Camera* camera,
+		RenderTexture* render_texture,
+		ShaderManager* shader_manager,
+		PostEffectShaderManager* post_effect_shader_manager,
+		RenderTexture* post_effect_render_texture_a,
+		RenderTexture* post_effect_render_texture_b,
 		glm::mat4 mvp) {
 #ifdef GVRF_FBO_FPS
 	// starting to collect rendering time

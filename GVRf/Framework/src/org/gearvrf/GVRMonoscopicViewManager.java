@@ -15,8 +15,6 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.Log;
-
 import android.app.Activity;
 import android.util.DisplayMetrics;
 
@@ -55,15 +53,14 @@ import android.util.DisplayMetrics;
  */
 class GVRMonoscopicViewManager extends GVRViewManager {
 
-    private static final String TAG = Log.tag(GVRMonoscopicViewManager.class);
+//    private static final String TAG = Log.tag(GVRMonoscopicViewManager.class);
 
     private GVRSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
 
-
     /**
-     * Constructs GVRMonoscopicViewManager object with GVRScript which controls GL
-     * activities
+     * Constructs GVRMonoscopicViewManager object with GVRScript which controls
+     * GL activities
      * 
      * @param gvrActivity
      *            Current activity object
@@ -81,7 +78,7 @@ class GVRMonoscopicViewManager extends GVRViewManager {
          */
         GVRXMLParser xmlParser = new GVRXMLParser(gvrActivity.getAssets(),
                 distortionDataFileName);
-        
+
         mView = new GVRSurfaceView(gvrActivity, this, null);
         gvrActivity.setContentView(mView);
 
@@ -102,10 +99,10 @@ class GVRMonoscopicViewManager extends GVRViewManager {
         GVRPerspectiveCamera.setDefaultFovY(xmlParser.getFovY());
         int fboWidth = xmlParser.getFBOWidth();
         int fboHeight = xmlParser.getFBOHeight();
-        if(fboWidth <= 0) {
+        if (fboWidth <= 0) {
             fboWidth = screenWidthPixels;
         }
-        if(fboHeight <=0) {
+        if (fboHeight <= 0) {
             fboHeight = screenHeightPixels;
         }
         float aspect = (float) fboWidth / (float) fboHeight;
@@ -114,13 +111,13 @@ class GVRMonoscopicViewManager extends GVRViewManager {
         mViewportY = 0;
         mViewportWidth = fboWidth;
         mViewportHeight = fboHeight;
-        if(fboWidth != screenWidthPixels) {
-            mViewportX = (screenWidthPixels / 2) - (fboWidth /2);
-        }        
-        if(fboHeight != screenHeightPixels) {
+        if (fboWidth != screenWidthPixels) {
+            mViewportX = (screenWidthPixels / 2) - (fboWidth / 2);
+        }
+        if (fboHeight != screenHeightPixels) {
             mViewportY = (screenHeightPixels / 2) - (fboHeight / 2);
         }
-        
+
     }
 
     /*
@@ -128,7 +125,7 @@ class GVRMonoscopicViewManager extends GVRViewManager {
      */
     @Override
     void onDrawFrame() {
-        //Log.v(TAG, "onDrawFrame");
+        // Log.v(TAG, "onDrawFrame");
         mFrameHandler.beforeDrawEyes();
         mFrameHandler.onDrawFrame();
         mFrameHandler.afterDrawEyes();
@@ -136,11 +133,12 @@ class GVRMonoscopicViewManager extends GVRViewManager {
 
     @Override
     protected void drawEyes() {
-        //Log.d(TAG, "drawEyes()");
+        // Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
-        GVRMonoscopicRenderer.renderCamera(mMainScene, mMainScene.getMainCameraRig().getLeftCamera(),
-                mViewportX, mViewportY, mViewportWidth, mViewportHeight, mRenderBundle);
-        
+        GVRMonoscopicRenderer.renderCamera(mMainScene, mMainScene
+                .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
+                mViewportWidth, mViewportHeight, mRenderBundle);
+
     }
 
 }

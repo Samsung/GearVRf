@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Picks scene object in a scene.
  ***************************************************************************/
@@ -40,15 +39,12 @@ Picker::Picker() {
 Picker::~Picker() {
 }
 
-std::vector<std::shared_ptr<EyePointeeHolder>> Picker::pickScene(
-        const std::shared_ptr<Scene>& scene, float ox, float oy, float oz,
-        float dx, float dy, float dz) {
-    std::vector < std::shared_ptr < SceneObject >> scene_objects =
-            scene->getWholeSceneObjects();
-    std::vector < std::shared_ptr < EyePointeeHolder >> eye_pointee_holders;
+std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
+        float oy, float oz, float dx, float dy, float dz) {
+    std::vector<SceneObject*> scene_objects = scene->getWholeSceneObjects();
+    std::vector<EyePointeeHolder*> eye_pointee_holders;
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
-        std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
-                (*it)->eye_pointee_holder();
+        EyePointeeHolder* eye_pointee_holder = (*it)->eye_pointee_holder();
         if (eye_pointee_holder != 0 && eye_pointee_holder->enable()) {
             eye_pointee_holders.push_back(eye_pointee_holder);
         }
@@ -74,26 +70,26 @@ std::vector<std::shared_ptr<EyePointeeHolder>> Picker::pickScene(
     std::sort(picked_holder_data.begin(), picked_holder_data.end(),
             compareEyePointeeHolderData);
 
-    std::vector < std::shared_ptr < EyePointeeHolder >> picked_holders;
+    std::vector<EyePointeeHolder*> picked_holders;
     for (auto it = picked_holder_data.begin(); it != picked_holder_data.end();
             ++it) {
-        picked_holders.push_back(it->eye_pointee_holder());
+        EyePointeeHolder* holder = it->eye_pointee_holder();
+        picked_holders.push_back(holder);
     }
 
     return picked_holders;
 }
 
-std::vector<std::shared_ptr<EyePointeeHolder>> Picker::pickScene(
-        const std::shared_ptr<Scene>& scene) {
+std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene) {
     return Picker::pickScene(scene, 0, 0, 0, 0, 0, -1.0f);
 }
 
-float Picker::pickSceneObject(const std::shared_ptr<SceneObject>& scene_object,
-        const std::shared_ptr<CameraRig>& camera_rig) {
+float Picker::pickSceneObject(const SceneObject* scene_object,
+        const CameraRig* camera_rig) {
     glm::mat4 view_matrix = glm::affineInverse(
             camera_rig->owner_object()->transform()->getModelMatrix());
     if (scene_object->eye_pointee_holder() != 0) {
-        std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
+        EyePointeeHolder* eye_pointee_holder =
                 scene_object->eye_pointee_holder();
         if (eye_pointee_holder->enable()) {
             EyePointData data = eye_pointee_holder->isPointed(view_matrix);

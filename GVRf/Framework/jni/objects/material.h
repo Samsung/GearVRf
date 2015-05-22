@@ -67,7 +67,7 @@ public:
         shader_type_ = shader_type;
     }
 
-    const std::shared_ptr<Texture>& getTexture(std::string key) {
+    Texture* getTexture(std::string key) const {
         auto it = textures_.find(key);
         if (it != textures_.end()) {
             return it->second;
@@ -78,7 +78,7 @@ public:
         }
     }
 
-    void setTexture(std::string key, const std::shared_ptr<Texture> texture) {
+    void setTexture(std::string key, Texture* texture) {
         textures_[key] = texture;
     }
 
@@ -159,7 +159,7 @@ private:
 
 private:
     ShaderType shader_type_;
-    std::map<std::string, std::shared_ptr<Texture>> textures_;
+    std::map<std::string, Texture*> textures_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec2> vec2s_;
     std::map<std::string, glm::vec3> vec3s_;

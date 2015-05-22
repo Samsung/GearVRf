@@ -51,7 +51,6 @@ public class GVRRenderTexture extends GVRTexture {
             int sampleCount) {
         super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
                 sampleCount));
-        gvrContext.getRecyclableObjectProtector().addRecyclableObject(this);
 
         mWidth = width;
         mHeight = height;
@@ -75,19 +74,11 @@ public class GVRRenderTexture extends GVRTexture {
         return mHeight;
     }
 
-    @Override
-    protected boolean registerWrapper() {
-        // Render textures are only manipulated within the Java code; we never
-        // have long-lived native references to them, and we don't want the
-        // deference thread to recycle() these.
-        return false;
-    }
-
     private int mWidth, mHeight;
 }
 
 class NativeRenderTexture {
-    public static native long ctor(int width, int height);
+    static native long ctor(int width, int height);
 
-    public static native long ctorMSAA(int width, int height, int sampleCount);
+    static native long ctorMSAA(int width, int height, int sampleCount);
 }

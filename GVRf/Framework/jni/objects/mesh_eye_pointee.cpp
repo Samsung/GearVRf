@@ -29,8 +29,8 @@
 #include "util/gvr_log.h"
 
 namespace gvr {
-MeshEyePointee::MeshEyePointee(std::shared_ptr<Mesh>&& mesh) :
-        EyePointee(), mesh_(std::move(mesh)) {
+MeshEyePointee::MeshEyePointee(Mesh* mesh) :
+        EyePointee(), mesh_(mesh) {
 }
 
 MeshEyePointee::~MeshEyePointee() {

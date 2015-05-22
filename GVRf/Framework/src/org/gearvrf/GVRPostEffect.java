@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Threads;
@@ -30,6 +32,8 @@ import org.gearvrf.utility.Threads;
  */
 public class GVRPostEffect extends GVRHybridObject implements
         GVRShaders<GVRPostEffectShaderId> {
+
+    private final Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
 
     /** Selectors for pre-built post effect shaders. */
     public abstract static class GVRPostEffectShaderType {
@@ -68,7 +72,7 @@ public class GVRPostEffect extends GVRHybridObject implements
 
     /** @return The post-effect shader id */
     public GVRPostEffectShaderId getShaderType() {
-        final int shaderType = NativePostEffectData.getShaderType(getPtr());
+        final int shaderType = NativePostEffectData.getShaderType(getNative());
         return GVRPostEffectShaderId.get(shaderType);
     }
 
@@ -79,7 +83,7 @@ public class GVRPostEffect extends GVRHybridObject implements
      *            The new shader.
      */
     public void setShaderType(GVRPostEffectShaderId shaderId) {
-        NativePostEffectData.setShaderType(getPtr(), shaderId.ID);
+        NativePostEffectData.setShaderType(getNative(), shaderId.ID);
     }
 
     public GVRTexture getMainTexture() {
@@ -95,16 +99,12 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     public GVRTexture getTexture(String key) {
-        long ptr = NativePostEffectData.getTexture(getPtr(), key);
-        if (ptr == 0) {
-            return null;
-        } else {
-            return GVRTexture.factory(getGVRContext(), ptr);
-        }
+        return textures.get(key);
     }
 
     public void setTexture(String key, GVRTexture texture) {
-        NativePostEffectData.setTexture(getPtr(), key, texture.getPtr());
+        textures.put(key, texture);
+        NativePostEffectData.setTexture(getNative(), key, texture.getNative());
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
@@ -122,85 +122,74 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     public float getFloat(String key) {
-        return NativePostEffectData.getFloat(getPtr(), key);
+        return NativePostEffectData.getFloat(getNative(), key);
     }
 
     public void setFloat(String key, float value) {
-        NativePostEffectData.setFloat(getPtr(), key, value);
+        NativePostEffectData.setFloat(getNative(), key, value);
     }
 
     public float[] getVec2(String key) {
-        return NativePostEffectData.getVec2(getPtr(), key);
+        return NativePostEffectData.getVec2(getNative(), key);
     }
 
     public void setVec2(String key, float x, float y) {
-        NativePostEffectData.setVec2(getPtr(), key, x, y);
+        NativePostEffectData.setVec2(getNative(), key, x, y);
     }
 
     public float[] getVec3(String key) {
-        return NativePostEffectData.getVec3(getPtr(), key);
+        return NativePostEffectData.getVec3(getNative(), key);
     }
 
     public void setVec3(String key, float x, float y, float z) {
-        NativePostEffectData.setVec3(getPtr(), key, x, y, z);
+        NativePostEffectData.setVec3(getNative(), key, x, y, z);
     }
 
     public float[] getVec4(String key) {
-        return NativePostEffectData.getVec4(getPtr(), key);
+        return NativePostEffectData.getVec4(getNative(), key);
     }
 
     public void setVec4(String key, float x, float y, float z, float w) {
-        NativePostEffectData.setVec4(getPtr(), key, x, y, z, w);
+        NativePostEffectData.setVec4(getNative(), key, x, y, z, w);
     }
 
-    public void setMat4(String key,
-            float x1, float y1, float z1, float w1,
-            float x2, float y2, float z2, float w2,
-            float x3, float y3, float z3, float w3,
-            float x4, float y4, float z4, float w4) {
-        NativePostEffectData.setMat4(getPtr(), key,
-                x1, y1, z1, w1,
-                x2, y2, z2, w2,
-                x3, y3, z3, w3,
-                x4, y4, z4, w4);
+    public void setMat4(String key, float x1, float y1, float z1, float w1,
+            float x2, float y2, float z2, float w2, float x3, float y3,
+            float z3, float w3, float x4, float y4, float z4, float w4) {
+        NativePostEffectData.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2,
+                z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 }
 
 class NativePostEffectData {
-    public static native long ctor(int shaderType);
+    static native long ctor(int shaderType);
 
-    public static native int getShaderType(long postEffectData);
+    static native int getShaderType(long postEffectData);
 
-    public static native void setShaderType(long postEffectData, long shaderType);
+    static native void setShaderType(long postEffectData, long shaderType);
 
-    public static native long getTexture(long postEffectData, String key);
+    static native void setTexture(long postEffectData, String key, long texture);
 
-    public static native void setTexture(long postEffectData, String key,
-            long texture);
+    static native float getFloat(long postEffectData, String key);
 
-    public static native float getFloat(long postEffectData, String key);
+    static native void setFloat(long postEffectData, String key, float value);
 
-    public static native void setFloat(long postEffectData, String key,
-            float value);
+    static native float[] getVec2(long postEffectData, String key);
 
-    public static native float[] getVec2(long postEffectData, String key);
+    static native void setVec2(long postEffectData, String key, float x, float y);
 
-    public static native void setVec2(long postEffectData, String key, float x,
-            float y);
+    static native float[] getVec3(long postEffectData, String key);
 
-    public static native float[] getVec3(long postEffectData, String key);
-
-    public static native void setVec3(long postEffectData, String key, float x,
+    static native void setVec3(long postEffectData, String key, float x,
             float y, float z);
 
-    public static native float[] getVec4(long postEffectData, String key);
+    static native float[] getVec4(long postEffectData, String key);
 
-    public static native void setVec4(long postEffectData, String key, float x,
+    static native void setVec4(long postEffectData, String key, float x,
             float y, float z, float w);
 
-    public static native void setMat4(long postEffectData, String key,
-            float x1, float y1, float z1, float w1,
-            float x2, float y2, float z2, float w2,
-            float x3, float y3, float z3, float w3,
-            float x4, float y4, float z4, float w4);
+    static native void setMat4(long postEffectData, String key, float x1,
+            float y1, float z1, float w1, float x2, float y2, float z2,
+            float w2, float x3, float y3, float z3, float w3, float x4,
+            float y4, float z4, float w4);
 }

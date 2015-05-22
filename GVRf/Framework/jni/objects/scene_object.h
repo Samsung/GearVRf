@@ -69,59 +69,54 @@ public:
         return query_currently_issued_;
     }
 
-    void attachTransform(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<Transform>& transform);
+    void attachTransform(SceneObject* self, Transform* transform);
     void detachTransform();
 
-    std::shared_ptr<Transform> transform() const {
+    Transform* transform() const {
         return transform_;
     }
 
-    void attachRenderData(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<RenderData>& render_data);
+    void attachRenderData(SceneObject* self, RenderData* render_data);
     void detachRenderData();
 
-    std::shared_ptr<RenderData> render_data() const {
+    RenderData* render_data() const {
         return render_data_;
     }
 
-    void attachCamera(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<Camera>& camera);
+    void attachCamera(SceneObject* self, Camera* camera);
     void detachCamera();
 
-    std::shared_ptr<Camera> camera() const {
+    Camera* camera() const {
         return camera_;
     }
 
-    void attachCameraRig(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<CameraRig>& camera_rig);
+    void attachCameraRig(SceneObject* self, CameraRig* camera_rig);
     void detachCameraRig();
 
-    std::shared_ptr<CameraRig> camera_rig() const {
+    CameraRig* camera_rig() const {
         return camera_rig_;
     }
 
-    void attachEyePointeeHolder(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<EyePointeeHolder>& eye_pointee_holder);
+    void attachEyePointeeHolder(SceneObject* self,
+            EyePointeeHolder* eye_pointee_holder);
     void detachEyePointeeHolder();
 
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder() const {
+    EyePointeeHolder* eye_pointee_holder() const {
         return eye_pointee_holder_;
     }
 
-    std::shared_ptr<SceneObject> parent() const {
-        return parent_.lock();
+    SceneObject* parent() const {
+        return parent_;
     }
 
-    std::vector<std::shared_ptr<SceneObject>> children() const {
+    const std::vector<SceneObject*>& children() const {
         return children_;
     }
 
-    void addChildObject(std::shared_ptr<SceneObject> self,
-            std::shared_ptr<SceneObject> child);
-    void removeChildObject(std::shared_ptr<SceneObject> child);
+    void addChildObject(SceneObject* self, SceneObject* child);
+    void removeChildObject(SceneObject* child);
     int getChildrenCount() const;
-    const std::shared_ptr<SceneObject>& getChildByIndex(int index);
+    SceneObject* getChildByIndex(int index);
     GLuint *get_occlusion_array(){ return queries_;}
 
 private:
@@ -132,13 +127,13 @@ private:
 
 private:
     std::string name_;
-    std::shared_ptr<Transform> transform_;
-    std::shared_ptr<RenderData> render_data_;
-    std::shared_ptr<Camera> camera_;
-    std::shared_ptr<CameraRig> camera_rig_;
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder_;
-    std::weak_ptr<SceneObject> parent_;
-    std::vector<std::shared_ptr<SceneObject>> children_;
+        Transform* transform_;
+        RenderData* render_data_;
+        Camera* camera_;
+        CameraRig* camera_rig_;
+        EyePointeeHolder* eye_pointee_holder_;
+        SceneObject* parent_;
+        std::vector<SceneObject*> children_;
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it

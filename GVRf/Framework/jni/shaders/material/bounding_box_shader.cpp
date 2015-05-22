@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a bounding box for occlusion query.
  ***************************************************************************/
@@ -28,19 +27,19 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-static const char VERTEX_SHADER[] =
+static const char VERTEX_SHADER[] = //
         "precision highp  float;\n"
-        "attribute vec3 a_position;\n"
-        "uniform mat4 u_mvp;\n"
-        "void main() {\n"
-        "gl_Position = u_mvp * vec4(a_position, 1.0);\n"
-        "}\n";
+                "attribute vec3 a_position;\n"
+                "uniform mat4 u_mvp;\n"
+                "void main() {\n"
+                "gl_Position = u_mvp * vec4(a_position, 1.0);\n"
+                "}\n";
 
-static const char FRAGMENT_SHADER[] =
+static const char FRAGMENT_SHADER[] = //
         "precision mediump  float;\n"
-        "void main() {\n"
-        "gl_FragColor =  vec4(0.0, 1.0, 0.0, 0.0);\n"
-        "}\n";
+                "void main() {\n"
+                "gl_FragColor =  vec4(0.0, 1.0, 0.0, 0.0);\n"
+                "}\n";
 
 BoundingBoxShader::BoundingBoxShader() :
         program_(0), a_position_(0), u_mvp_(0) {
@@ -61,9 +60,8 @@ void BoundingBoxShader::recycle() {
 }
 
 void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
-        std::shared_ptr<RenderData> render_data) {
-    std::shared_ptr<Mesh> mesh = render_data->mesh();
-
+        RenderData* render_data) {
+    Mesh* mesh = render_data->mesh();
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
@@ -73,7 +71,8 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
 
     glBindVertexArray(mesh->getVAOId());
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+            0);
     glBindVertexArray(0);
 
 #else
@@ -81,7 +80,6 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
     glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0,
             mesh->vertices().data());
     glEnableVertexAttribArray(a_position_);
-
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,

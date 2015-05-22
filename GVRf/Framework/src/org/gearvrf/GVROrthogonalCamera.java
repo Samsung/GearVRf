@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /** A {@link GVRCamera camera} with an orthogonal projection. */
 public class GVROrthogonalCamera extends GVRCamera {
@@ -33,7 +31,7 @@ public class GVROrthogonalCamera extends GVRCamera {
      * @return Distance from the origin to the left clipping plane.
      */
     public float getLeftClippingDistance() {
-        return NativeOrthogonalCamera.getLeftClippingDistance(getPtr());
+        return NativeOrthogonalCamera.getLeftClippingDistance(getNative());
     }
 
     /**
@@ -43,14 +41,14 @@ public class GVROrthogonalCamera extends GVRCamera {
      *            Distance to the left clipping plane.
      */
     public void setLeftClippingDistance(float left) {
-        NativeOrthogonalCamera.setLeftClippingDistance(getPtr(), left);
+        NativeOrthogonalCamera.setLeftClippingDistance(getNative(), left);
     }
 
     /**
      * @return Distance from the origin to the right clipping plane.
      */
     public float getRightClippingDistance() {
-        return NativeOrthogonalCamera.getRightClippingDistance(getPtr());
+        return NativeOrthogonalCamera.getRightClippingDistance(getNative());
     }
 
     /**
@@ -60,14 +58,14 @@ public class GVROrthogonalCamera extends GVRCamera {
      *            Distance to the right clipping plane.
      */
     public void setRightClippingDistance(float right) {
-        NativeOrthogonalCamera.setRightClippingDistance(getPtr(), right);
+        NativeOrthogonalCamera.setRightClippingDistance(getNative(), right);
     }
 
     /**
      * @return Distance from the origin to the bottom clipping plane.
      */
     public float getBottomClippingDistance() {
-        return NativeOrthogonalCamera.getBottomClippingDistance(getPtr());
+        return NativeOrthogonalCamera.getBottomClippingDistance(getNative());
     }
 
     /**
@@ -77,14 +75,14 @@ public class GVROrthogonalCamera extends GVRCamera {
      *            Distance to the bottom clipping plane.
      */
     public void setBottomClippingDistance(float bottom) {
-        NativeOrthogonalCamera.setBottomClippingDistance(getPtr(), bottom);
+        NativeOrthogonalCamera.setBottomClippingDistance(getNative(), bottom);
     }
 
     /**
      * @return Distance from the origin to the top clipping plane.
      */
     public float getTopClippingDistance() {
-        return NativeOrthogonalCamera.getTopClippingDistance(getPtr());
+        return NativeOrthogonalCamera.getTopClippingDistance(getNative());
     }
 
     /**
@@ -94,14 +92,14 @@ public class GVROrthogonalCamera extends GVRCamera {
      *            Distance to the top clipping plane.
      */
     public void setTopClippingDistance(float top) {
-        NativeOrthogonalCamera.setTopClippingDistance(getPtr(), top);
+        NativeOrthogonalCamera.setTopClippingDistance(getNative(), top);
     }
 
     /**
      * @return Distance from the origin to the near clipping plane.
      */
     public float getNearClippingDistance() {
-        return NativeOrthogonalCamera.getNearClippingDistance(getPtr());
+        return NativeOrthogonalCamera.getNearClippingDistance(getNative());
     }
 
     /**
@@ -111,14 +109,14 @@ public class GVROrthogonalCamera extends GVRCamera {
      *            Distance to the near clipping plane.
      */
     public void setNearClippingDistance(float near) {
-        NativeOrthogonalCamera.setNearClippingDistance(getPtr(), near);
+        NativeOrthogonalCamera.setNearClippingDistance(getNative(), near);
     }
 
     /**
      * @return Distance from the origin to the far clipping plane.
      */
     public float getFarClippingDistance() {
-        return NativeOrthogonalCamera.getFarClippingDistance(getPtr());
+        return NativeOrthogonalCamera.getFarClippingDistance(getNative());
     }
 
     /**
@@ -128,35 +126,34 @@ public class GVROrthogonalCamera extends GVRCamera {
      *            Distance to the far clipping plane.
      */
     public void setFarClippingDistance(float far) {
-        NativeOrthogonalCamera.setFarClippingDistance(getPtr(), far);
+        NativeOrthogonalCamera.setFarClippingDistance(getNative(), far);
     }
 }
 
 class NativeOrthogonalCamera {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native float getLeftClippingDistance(long camera);
+    static native float getLeftClippingDistance(long camera);
 
-    public static native void setLeftClippingDistance(long camera, float left);
+    static native void setLeftClippingDistance(long camera, float left);
 
-    public static native float getRightClippingDistance(long camera);
+    static native float getRightClippingDistance(long camera);
 
-    public static native void setRightClippingDistance(long camera, float right);
+    static native void setRightClippingDistance(long camera, float right);
 
-    public static native float getBottomClippingDistance(long camera);
+    static native float getBottomClippingDistance(long camera);
 
-    public static native void setBottomClippingDistance(long camera,
-            float bottom);
+    static native void setBottomClippingDistance(long camera, float bottom);
 
-    public static native float getTopClippingDistance(long camera);
+    static native float getTopClippingDistance(long camera);
 
-    public static native void setTopClippingDistance(long camera, float top);
+    static native void setTopClippingDistance(long camera, float top);
 
-    public static native float getNearClippingDistance(long camera);
+    static native float getNearClippingDistance(long camera);
 
-    public static native void setNearClippingDistance(long camera, float near);
+    static native void setNearClippingDistance(long camera, float near);
 
-    public static native float getFarClippingDistance(long camera);
+    static native float getFarClippingDistance(long camera);
 
-    public static native void setFarClippingDistance(long camera, float far);
+    static native void setFarClippingDistance(long camera, float far);
 }

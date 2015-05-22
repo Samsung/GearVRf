@@ -53,27 +53,19 @@ public:
     ~RenderData() {
     }
 
-    std::shared_ptr<Mesh> mesh() {
+    Mesh* mesh() const {
         return mesh_;
     }
 
-    const std::shared_ptr<Mesh>& mesh() const {
-        return mesh_;
-    }
-
-    void set_mesh(const std::shared_ptr<Mesh>& mesh) {
+    void set_mesh(Mesh* mesh) {
         mesh_ = mesh;
     }
 
-    std::shared_ptr<Material> material() {
+    Material* material() const {
         return material_;
     }
 
-    const std::shared_ptr<Material>& material() const {
-        return material_;
-    }
-
-    void set_material(const std::shared_ptr<Material>& material) {
+    void set_material(Material* material) {
         material_ = material;
     }
 
@@ -158,8 +150,8 @@ private:
 private:
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
-    std::shared_ptr<Mesh> mesh_;
-    std::shared_ptr<Material> material_;
+    Mesh* mesh_;
+    Material* material_;
     int render_mask_;
     int rendering_order_;
     bool cull_test_;
@@ -171,8 +163,7 @@ private:
     GLenum draw_mode_;
 };
 
-inline bool compareRenderData(std::shared_ptr<RenderData> i,
-        std::shared_ptr<RenderData> j) {
+inline bool compareRenderData(RenderData* i, RenderData* j) {
     return i->rendering_order() < j->rendering_order();
 }
 

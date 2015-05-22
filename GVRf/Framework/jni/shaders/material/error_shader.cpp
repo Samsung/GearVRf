@@ -59,9 +59,8 @@ void ErrorShader::recycle() {
     program_ = 0;
 }
 
-void ErrorShader::render(const glm::mat4& mvp_matrix,
-        std::shared_ptr<RenderData> render_data) {
-    std::shared_ptr<Mesh> mesh = render_data->mesh();
+void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
+    Mesh* mesh = render_data->mesh();
     float r = 0.0f;
     float g = 1.0f;
     float b = 0.0f;

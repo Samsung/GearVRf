@@ -75,12 +75,12 @@ public:
         render_mask_ = render_mask;
     }
 
-    const std::vector<std::shared_ptr<PostEffectData>>& post_effect_data() const {
+    const std::vector<PostEffectData*>& post_effect_data() const {
         return post_effect_data_;
     }
 
-    void addPostEffect(std::shared_ptr<PostEffectData> post_effect);
-    void removePostEffect(std::shared_ptr<PostEffectData> post_effect);
+    void addPostEffect(PostEffectData* post_effect);
+    void removePostEffect(PostEffectData* post_effect);
     virtual glm::mat4 getProjectionMatrix() const = 0;
     glm::mat4 getViewMatrix();
     glm::mat4 getCenterViewMatrix();
@@ -97,7 +97,7 @@ private:
     float background_color_b_;
     float background_color_a_;
     int render_mask_;
-    std::vector<std::shared_ptr<PostEffectData>> post_effect_data_;
+    std::vector<PostEffectData*> post_effect_data_;
 };
 
 }

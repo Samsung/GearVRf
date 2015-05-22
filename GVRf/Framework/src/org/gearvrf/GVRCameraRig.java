@@ -15,11 +15,12 @@
 
 package org.gearvrf;
 
-import static org.gearvrf.utility.Assert.checkStringNotNullOrEmpty;
-import static org.gearvrf.utility.Assert.checkFloatNotNaNOrInfinity;
+import static org.gearvrf.utility.Assert.*;
 
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {
+    private GVRCamera leftCamera, rightCamera;
+
     /** Ways to use the rotation sensor data. */
     public abstract static class GVRCameraRigType {
         /** Rotates freely. Default. */
@@ -59,20 +60,9 @@ public class GVRCameraRig extends GVRComponent {
         super(gvrContext, ptr);
     }
 
-    static GVRCameraRig factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRCameraRig(gvrContext, ptr)
-                : (GVRCameraRig) wrapper;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
-    }
-
     /** @return The {@link GVRCameraRigType type} of the camera rig. */
     public int getCameraRigType() {
-        return NativeCameraRig.getCameraRigType(getPtr());
+        return NativeCameraRig.getCameraRigType(getNative());
     }
 
     /**
@@ -82,7 +72,7 @@ public class GVRCameraRig extends GVRComponent {
      *            The rig {@link GVRCameraRigType type}.
      */
     public void setCameraRigType(int cameraRigType) {
-        NativeCameraRig.setCameraRigType(getPtr(), cameraRigType);
+        NativeCameraRig.setCameraRigType(getNative(), cameraRigType);
     }
 
     /**
@@ -91,8 +81,7 @@ public class GVRCameraRig extends GVRComponent {
      *         not.
      */
     public GVRCamera getLeftCamera() {
-        long ptr = NativeCameraRig.getLeftCamera(getPtr());
-        return ptr == 0 ? null : GVRCamera.factory(getGVRContext(), ptr);
+        return leftCamera;
     }
 
     /**
@@ -101,8 +90,7 @@ public class GVRCameraRig extends GVRComponent {
      *         not.
      */
     public GVRCamera getRightCamera() {
-        long ptr = NativeCameraRig.getRightCamera(getPtr());
-        return ptr == 0 ? null : GVRCamera.factory(getGVRContext(), ptr);
+        return rightCamera;
     }
 
     /**
@@ -128,7 +116,7 @@ public class GVRCameraRig extends GVRComponent {
      *         rig.
      */
     public float getCameraSeparationDistance() {
-        return NativeCameraRig.getCameraSeparationDistance(getPtr());
+        return NativeCameraRig.getCameraSeparationDistance(getNative());
     }
 
     /**
@@ -138,7 +126,7 @@ public class GVRCameraRig extends GVRComponent {
      *            Separation distance.
      */
     public void setCameraSeparationDistance(float distance) {
-        NativeCameraRig.setCameraSeparationDistance(getPtr(), distance);
+        NativeCameraRig.setCameraSeparationDistance(getNative(), distance);
     }
 
     /**
@@ -147,7 +135,7 @@ public class GVRCameraRig extends GVRComponent {
      * @return The {@code float} value associated with {@code key}.
      */
     public float getFloat(String key) {
-        return NativeCameraRig.getFloat(getPtr(), key);
+        return NativeCameraRig.getFloat(getNative(), key);
     }
 
     /**
@@ -161,7 +149,7 @@ public class GVRCameraRig extends GVRComponent {
     public void setFloat(String key, float value) {
         checkStringNotNullOrEmpty("key", key);
         checkFloatNotNaNOrInfinity("value", value);
-        NativeCameraRig.setFloat(getPtr(), key, value);
+        NativeCameraRig.setFloat(getNative(), key, value);
     }
 
     /**
@@ -171,7 +159,7 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key}.
      */
     public float[] getVec2(String key) {
-        return NativeCameraRig.getVec2(getPtr(), key);
+        return NativeCameraRig.getVec2(getNative(), key);
     }
 
     /**
@@ -186,7 +174,7 @@ public class GVRCameraRig extends GVRComponent {
      */
     public void setVec2(String key, float x, float y) {
         checkStringNotNullOrEmpty("key", key);
-        NativeCameraRig.setVec2(getPtr(), key, x, y);
+        NativeCameraRig.setVec2(getNative(), key, x, y);
     }
 
     /**
@@ -196,7 +184,7 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key}.
      */
     public float[] getVec3(String key) {
-        return NativeCameraRig.getVec3(getPtr(), key);
+        return NativeCameraRig.getVec3(getNative(), key);
     }
 
     /**
@@ -213,7 +201,7 @@ public class GVRCameraRig extends GVRComponent {
      */
     public void setVec3(String key, float x, float y, float z) {
         checkStringNotNullOrEmpty("key", key);
-        NativeCameraRig.setVec3(getPtr(), key, x, y, z);
+        NativeCameraRig.setVec3(getNative(), key, x, y, z);
     }
 
     /**
@@ -223,7 +211,7 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key} .
      */
     public float[] getVec4(String key) {
-        return NativeCameraRig.getVec4(getPtr(), key);
+        return NativeCameraRig.getVec4(getNative(), key);
     }
 
     /**
@@ -242,7 +230,7 @@ public class GVRCameraRig extends GVRComponent {
      */
     public void setVec4(String key, float x, float y, float z, float w) {
         checkStringNotNullOrEmpty("key", key);
-        NativeCameraRig.setVec4(getPtr(), key, x, y, z, w);
+        NativeCameraRig.setVec4(getNative(), key, x, y, z, w);
     }
 
     /**
@@ -255,7 +243,8 @@ public class GVRCameraRig extends GVRComponent {
         if (camera.getOwnerObject() == null) {
             throw new IllegalArgumentException("Owner object not set correctly");
         }
-        NativeCameraRig.attachLeftCamera(getPtr(), camera.getPtr());
+        leftCamera = camera;
+        NativeCameraRig.attachLeftCamera(getNative(), camera.getNative());
     }
 
     /**
@@ -268,7 +257,8 @@ public class GVRCameraRig extends GVRComponent {
         if (camera.getOwnerObject() == null) {
             throw new IllegalArgumentException("Owner object not set correctly");
         }
-        NativeCameraRig.attachRightCamera(getPtr(), camera.getPtr());
+        rightCamera = camera;
+        NativeCameraRig.attachRightCamera(getNative(), camera.getNative());
     }
 
     /**
@@ -279,7 +269,7 @@ public class GVRCameraRig extends GVRComponent {
      * {@link #resetYawPitch()}.
      */
     public void reset() {
-        NativeCameraRig.reset(getPtr());
+        NativeCameraRig.reset(getNative());
     }
 
     /**
@@ -290,7 +280,7 @@ public class GVRCameraRig extends GVRComponent {
      * {@link #resetYawPitch()}.
      */
     public void resetYaw() {
-        NativeCameraRig.resetYaw(getPtr());
+        NativeCameraRig.resetYaw(getNative());
     }
 
     /**
@@ -301,7 +291,7 @@ public class GVRCameraRig extends GVRComponent {
      * {@link #resetYaw()}.
      */
     public void resetYawPitch() {
-        NativeCameraRig.resetYawPitch(getPtr());
+        NativeCameraRig.resetYawPitch(getNative());
     }
 
     /**
@@ -329,8 +319,8 @@ public class GVRCameraRig extends GVRComponent {
      */
     void setRotationSensorData(long timeStamp, float w, float x, float y,
             float z, float gyroX, float gyroY, float gyroZ) {
-        NativeCameraRig.setRotationSensorData(getPtr(), timeStamp, w, x, y, z,
-                gyroX, gyroY, gyroZ);
+        NativeCameraRig.setRotationSensorData(getNative(), timeStamp, w, x, y,
+                z, gyroX, gyroY, gyroZ);
     }
 
     /**
@@ -343,7 +333,7 @@ public class GVRCameraRig extends GVRComponent {
      *      float, float)
      */
     void predict(float time) {
-        NativeCameraRig.predict(getPtr(), time);
+        NativeCameraRig.predict(getNative(), time);
     }
 
     /**
@@ -354,7 +344,7 @@ public class GVRCameraRig extends GVRComponent {
      *         vector. ([0] : x, [1] : y, [2] : z)
      */
     public float[] getLookAt() {
-        return NativeCameraRig.getLookAt(getPtr());
+        return NativeCameraRig.getLookAt(getNative());
     }
 
 }
@@ -365,10 +355,6 @@ class NativeCameraRig {
     static native int getCameraRigType(long cameraRig);
 
     static native void setCameraRigType(long cameraRig, int cameraRigType);
-
-    static native long getLeftCamera(long cameraRig);
-
-    static native long getRightCamera(long cameraRig);
 
     static native float getDefaultCameraSeparationDistance();
 

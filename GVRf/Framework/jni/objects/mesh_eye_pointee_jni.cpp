@@ -27,9 +27,6 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMeshEyePointee_ctor(JNIEnv * env,
         jobject obj, jlong jmesh);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMeshEyePointee_getMesh(JNIEnv * env,
-        jobject obj, jlong jmesh_eye_pointee);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMeshEyePointee_setMesh(JNIEnv * env,
@@ -39,28 +36,16 @@ Java_org_gearvrf_NativeMeshEyePointee_setMesh(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMeshEyePointee_ctor(JNIEnv * env,
         jobject obj, jlong jmesh) {
-    std::shared_ptr<Mesh> mesh =
-            *reinterpret_cast<std::shared_ptr<Mesh>*>(jmesh);
-    return reinterpret_cast<jlong>(new std::shared_ptr<MeshEyePointee>(
-            new MeshEyePointee(std::move(mesh))));
-}
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMeshEyePointee_getMesh(JNIEnv * env,
-        jobject obj, jlong jmesh_eye_pointee) {
-    std::shared_ptr<MeshEyePointee> mesh_eye_pointee =
-            *reinterpret_cast<std::shared_ptr<MeshEyePointee>*>(jmesh_eye_pointee);
-    std::shared_ptr<Mesh> mesh = mesh_eye_pointee->mesh();
-    return reinterpret_cast<jlong>(new std::shared_ptr<Mesh>(mesh));
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    return reinterpret_cast<jlong>(new MeshEyePointee(mesh));
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMeshEyePointee_setMesh(JNIEnv * env,
         jobject obj, jlong jmesh_eye_pointee, jlong jmesh) {
-    std::shared_ptr<MeshEyePointee> mesh_eye_pointee =
-            *reinterpret_cast<std::shared_ptr<MeshEyePointee>*>(jmesh_eye_pointee);
-    std::shared_ptr<Mesh> mesh =
-            *reinterpret_cast<std::shared_ptr<Mesh>*>(jmesh);
+    MeshEyePointee* mesh_eye_pointee =
+            reinterpret_cast<MeshEyePointee*>(jmesh_eye_pointee);
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     mesh_eye_pointee->set_mesh(mesh);
 }
 

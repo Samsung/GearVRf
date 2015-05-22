@@ -40,7 +40,7 @@ public:
     void recycle();
     void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
     		const glm::mat4& view_invers_matrix, const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data);
+            RenderData* render_data);
 
 private:
     CubemapReflectionShader(const CubemapReflectionShader& cubemap_shader);

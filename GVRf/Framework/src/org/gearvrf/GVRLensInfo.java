@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /**
@@ -30,14 +29,19 @@ class GVRLensInfo {
     private final float mRealScreenHeightMeters;
 
     /**
-     * Constructs a GVRLensInfo object with distortion data which requires a valid, pre-processed
-     * GVRXMLParser object
+     * Constructs a GVRLensInfo object with distortion data which requires a
+     * valid, pre-processed GVRXMLParser object
      * 
-     * @param screenWidthPixels the screen width in pixels
-     * @param screenHeightPixels the screen height in pixels
-     * @param screenWidthMeters the screen width in meters
-     * @param screenHeightMeters the screen height in meters
-     * @param xmlParser other parameters holds in GVRXMLParser
+     * @param screenWidthPixels
+     *            the screen width in pixels
+     * @param screenHeightPixels
+     *            the screen height in pixels
+     * @param screenWidthMeters
+     *            the screen width in meters
+     * @param screenHeightMeters
+     *            the screen height in meters
+     * @param xmlParser
+     *            other parameters holds in GVRXMLParser
      */
     public GVRLensInfo(int screenWidthPixels, int screenHeightPixels,
             float screenWidthMeters, float screenHeightMeters,

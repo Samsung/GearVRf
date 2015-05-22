@@ -47,30 +47,27 @@ Java_org_gearvrf_NativeKSensor_close(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeKSensor_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<KSensor>(new KSensor()));
+    return reinterpret_cast<jlong>(new KSensor());
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeKSensor_update(JNIEnv * env,
         jobject obj, jlong jk_sensor) {
-    std::shared_ptr<KSensor> k_sensor = *reinterpret_cast<std::shared_ptr<
-            KSensor>*>(jk_sensor);
+    KSensor* k_sensor = reinterpret_cast<KSensor*>(jk_sensor);
     return k_sensor->update();
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeKSensor_getTimeStamp(
         JNIEnv * env, jobject obj, jlong jk_sensor) {
-    std::shared_ptr<KSensor> k_sensor = *reinterpret_cast<std::shared_ptr<
-            KSensor>*>(jk_sensor);
+    KSensor* k_sensor = reinterpret_cast<KSensor*>(jk_sensor);
     return k_sensor->getLatestTime();
 }
 
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeKSensor_getData(JNIEnv * env,
         jobject obj, jlong jk_sensor) {
-    std::shared_ptr<KSensor> k_sensor = *reinterpret_cast<std::shared_ptr<
-            KSensor>*>(jk_sensor);
+    KSensor* k_sensor = reinterpret_cast<KSensor*>(jk_sensor);
     Quaternion rotation = k_sensor->getSensorQuaternion();
     vec3 angular_velocity = k_sensor->getAngularVelocity();
 
@@ -91,8 +88,7 @@ Java_org_gearvrf_NativeKSensor_getData(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeKSensor_close(JNIEnv * env,
         jobject obj, jlong jk_sensor) {
-    std::shared_ptr<KSensor> k_sensor = *reinterpret_cast<std::shared_ptr<
-            KSensor>*>(jk_sensor);
+    KSensor* k_sensor = reinterpret_cast<KSensor*>(jk_sensor);
     k_sensor->closeSensor();
 }
 }

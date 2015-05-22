@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a bounding box for occlusion query.
  ***************************************************************************/
@@ -38,8 +37,7 @@ public:
     BoundingBoxShader();
     ~BoundingBoxShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
 
 private:
     BoundingBoxShader(const BoundingBoxShader& bounding_box_shader);

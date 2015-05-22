@@ -30,7 +30,7 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
+Mesh* Mesh::getBoundingBox() const {
     Mesh* mesh = new Mesh();
     float* bounding_box_info = this->getBoundingBoxInfo();
     float min_x = bounding_box_info[0];
@@ -91,7 +91,7 @@ std::shared_ptr<Mesh> Mesh::getBoundingBox() const {
     mesh->triangles_.push_back(6);
     mesh->triangles_.push_back(7);
 
-    return std::shared_ptr < Mesh > (mesh);
+    return mesh;
 }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values

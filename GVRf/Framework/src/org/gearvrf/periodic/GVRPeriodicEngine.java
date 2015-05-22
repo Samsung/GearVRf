@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.periodic;
 
 import java.util.PriorityQueue;
@@ -21,7 +20,6 @@ import java.util.PriorityQueue;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRScript;
-
 
 /**
  * Schedule {@linkplain Runnable runnables} to run on the GL thread at a future

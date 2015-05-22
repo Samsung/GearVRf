@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.animation;
 
 /** Optional on-finish callback, with options for controlling repetition */
