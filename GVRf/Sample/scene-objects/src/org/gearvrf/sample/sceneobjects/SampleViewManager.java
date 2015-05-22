@@ -19,15 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import android.app.Activity;
-import android.graphics.Color;
-import android.media.MediaPlayer;
-import android.os.Bundle;
-import android.webkit.WebView;
-
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRRenderData;
@@ -35,18 +27,20 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.animation.GVRAnimation;
-import org.gearvrf.animation.GVRRepeatMode;
-import org.gearvrf.animation.GVRRotationByAxisAnimation;
 import org.gearvrf.scene_objects.GVRCameraSceneObject;
 import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
+import org.gearvrf.scene_objects.GVRTextSceneObject;
+import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObject.GVRVideoType;
 import org.gearvrf.scene_objects.GVRWebViewSceneObject;
-import org.gearvrf.scene_objects.GVRTextSceneObject;
+
+import android.media.MediaPlayer;
+import android.view.Gravity;
+import android.webkit.WebView;
 
 public class SampleViewManager extends GVRScript {
     private List<GVRSceneObject> objectList = new ArrayList<GVRSceneObject>();
@@ -76,12 +70,17 @@ public class SampleViewManager extends GVRScript {
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
                 gvrContext);
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
-        GVRTextSceneObject textObject = new GVRTextSceneObject(gvrContext, "Hello World!");
+        GVRTextSceneObject textObject = new GVRTextSceneObject(gvrContext,
+                "Hello World!");
         GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
                 gvrContext, 8.0f, 4.0f, mActivity.getCamera());
         GVRVideoSceneObject videoObject = createVideoObject(gvrContext);
-
+        GVRTextViewSceneObject textViewSceneObject = new GVRTextViewSceneObject(
+                gvrContext, mActivity);
+        textViewSceneObject.setGravity(Gravity.CENTER);
+        textViewSceneObject
+                .setTextSize(textViewSceneObject.getTextSize() * 1.5f);
         objectList.add(quadObject);
         objectList.add(cubeObject);
         objectList.add(sphereObject);
@@ -91,6 +90,7 @@ public class SampleViewManager extends GVRScript {
         objectList.add(webViewObject);
         objectList.add(cameraObject);
         objectList.add(videoObject);
+        objectList.add(textViewSceneObject);
 
         // turn all objects off, except the first one
         int listSize = objectList.size();
@@ -117,7 +117,7 @@ public class SampleViewManager extends GVRScript {
         sphereObject.getTransform().setPosition(0.0f, -1.0f, -3.0f);
         cameraObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
         videoObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
-
+        textViewSceneObject.getTransform().setPosition(0.0f, 0.0f, -2.0f);
         // add the scene objects to the scene graph
         scene.addSceneObject(quadObject);
         scene.addSceneObject(cubeObject);
@@ -128,7 +128,7 @@ public class SampleViewManager extends GVRScript {
         scene.addSceneObject(webViewObject);
         scene.addSceneObject(cameraObject);
         scene.addSceneObject(videoObject);
-
+        scene.addSceneObject(textViewSceneObject);
     }
 
     private GVRVideoSceneObject createVideoObject(GVRContext gvrContext) {
@@ -169,7 +169,7 @@ public class SampleViewManager extends GVRScript {
             video.getMediaPlayer().pause();
         }
     }
-    
+
     public void onTap() {
 
         GVRSceneObject object = objectList.get(currentObject);
