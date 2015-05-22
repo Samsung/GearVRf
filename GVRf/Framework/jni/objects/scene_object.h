@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Objects in a scene.
  ***************************************************************************/
@@ -48,20 +47,20 @@ public:
         name_ = name;
     }
 
-    void set_in_frustum(bool in_frustum=true) {
-            in_frustum_ = in_frustum;
+    void set_in_frustum(bool in_frustum = true) {
+        in_frustum_ = in_frustum;
     }
 
-    bool in_frustum()   const {
+    bool in_frustum() const {
         return in_frustum_;
     }
 
     void set_visible(bool visibility);
-    bool visible()  const {
+    bool visible() const {
         return visible_;
     }
 
-    void set_query_issued(bool issued=true) {
+    void set_query_issued(bool issued = true) {
         query_currently_issued_ = issued;
     }
 

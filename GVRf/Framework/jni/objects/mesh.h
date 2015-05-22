@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * The mesh for rendering.
  ***************************************************************************/
@@ -37,7 +36,8 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vaoID_(
-                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1) {
+                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(
+                    false) {
     }
 
     ~Mesh() {
@@ -51,29 +51,29 @@ public:
         triangles.swap(triangles_);
 
         if (vaoID_ != 0) {
-        	glDeleteVertexArrays(1, &vaoID_);
-        	vaoID_ = 0;
+            glDeleteVertexArrays(1, &vaoID_);
+            vaoID_ = 0;
         }
 
-	    if (triangle_vboID_!=0) {
-	    	glDeleteBuffers(1,&triangle_vboID_);
-	    	triangle_vboID_ = 0;
-	    }
+        if (triangle_vboID_ != 0) {
+            glDeleteBuffers(1, &triangle_vboID_);
+            triangle_vboID_ = 0;
+        }
 
-	    if (vert_vboID_!=0) {
-			glDeleteBuffers(1,&vert_vboID_);
-			vert_vboID_ = 0;
-	    }
+        if (vert_vboID_ != 0) {
+            glDeleteBuffers(1, &vert_vboID_);
+            vert_vboID_ = 0;
+        }
 
-	    if (norm_vboID_!=0) {
-			glDeleteBuffers(1,&norm_vboID_);
-			norm_vboID_ = 0;
-	    }
+        if (norm_vboID_ != 0) {
+            glDeleteBuffers(1, &norm_vboID_);
+            norm_vboID_ = 0;
+        }
 
-	    if (tex_vboID_!=0) {
-			glDeleteBuffers(1,&tex_vboID_);
-			tex_vboID_ = 0;
-	    }
+        if (tex_vboID_ != 0) {
+            glDeleteBuffers(1, &tex_vboID_);
+            tex_vboID_ = 0;
+        }
     }
 
     std::vector<glm::vec3>& vertices() {
@@ -238,8 +238,8 @@ public:
         vec4_vectors_[key] = vector;
     }
 
-    Mesh* getBoundingBox() const;
-    float* getBoundingBoxInfo() const; // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+    Mesh* getBoundingBox();
+    const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
@@ -292,39 +292,43 @@ public:
     }
 
     void cleanUp() {
-		std::vector<glm::vec3> vertices;
-		vertices.swap(vertices_);
-		std::vector<glm::vec3> normals;
-		normals.swap(normals_);
-		std::vector<glm::vec2> tex_coords;
-		tex_coords.swap(tex_coords_);
-		std::vector<unsigned short> triangles;
-		triangles.swap(triangles_);
+        std::vector<glm::vec3> vertices;
+        vertices.swap(vertices_);
+        std::vector<glm::vec3> normals;
+        normals.swap(normals_);
+        std::vector<glm::vec2> tex_coords;
+        tex_coords.swap(tex_coords_);
+        std::vector<unsigned short> triangles;
+        triangles.swap(triangles_);
 
-		if (vaoID_ != 0) {
-			glDeleteVertexArrays(1, &vaoID_);
-			vaoID_ = 0;
-		}
+        if (vaoID_ != 0) {
+            glDeleteVertexArrays(1, &vaoID_);
+            vaoID_ = 0;
+        }
 
-	    if (triangle_vboID_!=0) {
-	    	glDeleteBuffers(1,&triangle_vboID_);
-	    	triangle_vboID_ = 0;
-	    }
+        if (triangle_vboID_ != 0) {
+            glDeleteBuffers(1, &triangle_vboID_);
+            triangle_vboID_ = 0;
+        }
 
-	    if (vert_vboID_!=0) {
-			glDeleteBuffers(1,&vert_vboID_);
-			vert_vboID_ = 0;
-	    }
+        if (vert_vboID_ != 0) {
+            glDeleteBuffers(1, &vert_vboID_);
+            vert_vboID_ = 0;
+        }
 
-	    if (norm_vboID_!=0) {
-			glDeleteBuffers(1,&norm_vboID_);
-			norm_vboID_ = 0;
-	    }
+        if (norm_vboID_ != 0) {
+            glDeleteBuffers(1, &norm_vboID_);
+            norm_vboID_ = 0;
+        }
 
-	    if (tex_vboID_!=0) {
-			glDeleteBuffers(1,&tex_vboID_);
-			tex_vboID_ = 0;
-	    }
+        if (tex_vboID_ != 0) {
+            glDeleteBuffers(1, &tex_vboID_);
+            tex_vboID_ = 0;
+        }
+    }
+
+    GLuint getNumTriangles() {
+        return numTriangles_;
     }
 
 private:
@@ -357,6 +361,13 @@ private:
     GLuint vertexLoc_;
     GLuint normalLoc_;
     GLuint texCoordLoc_;
+
+    // triangle information
+    GLuint numTriangles_;
+
+    // bounding box info
+    bool have_bounding_box_;
+    float bounding_box_info_[6];
 };
 }
 #endif

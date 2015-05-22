@@ -95,8 +95,14 @@ private:
             PostEffectData* post_effect_data,
             PostEffectShaderManager* post_effect_shader_manager);
 
+    static void occlusion_cull(Scene* scene, std::vector <  SceneObject* > scene_objects);
+    static void frustum_cull(Scene* scene,
+        std::vector < SceneObject* > scene_objects,
+        std::vector < RenderData* >& render_data_vector,
+        glm::mat4 vp_matrix,
+        ShaderManager* shader_manager);
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
-    static bool is_cube_in_frustum( float frustum[6][4], float *vertex_limit);
+    static bool is_cube_in_frustum( float frustum[6][4], const float *vertex_limit);
 
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
