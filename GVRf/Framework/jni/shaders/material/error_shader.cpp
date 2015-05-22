@@ -68,14 +68,14 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
-    mesh->generateVAO();
+    mesh->generateVAO(render_data->material()->shader_type());
 
     glUseProgram(program_->id());
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glUniform4f(u_color_, r, g, b, a);
 
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(render_data->material()->shader_type()));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 #else

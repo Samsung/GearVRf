@@ -30,344 +30,322 @@
 #include "gl/gl_buffer.h"
 
 #include "objects/hybrid_object.h"
+#include "objects/material.h"
 
 namespace gvr {
 class Mesh: public HybridObject {
 public:
-    Mesh() :
-            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vaoID_(
-                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(
-                    false) {
-    }
+	Mesh() :
+			vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
+					-1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(
+					false) {
+	}
 
-    ~Mesh() {
-        std::vector<glm::vec3> vertices;
-        vertices.swap(vertices_);
-        std::vector<glm::vec3> normals;
-        normals.swap(normals_);
-        std::vector<glm::vec2> tex_coords;
-        tex_coords.swap(tex_coords_);
-        std::vector<unsigned short> triangles;
-        triangles.swap(triangles_);
+	~Mesh() {
+		cleanUp();
+	}
 
-        if (vaoID_ != 0) {
-            glDeleteVertexArrays(1, &vaoID_);
-            vaoID_ = 0;
-        }
+	void cleanUp() {
+		std::vector<glm::vec3> vertices;
+		vertices.swap(vertices_);
+		std::vector<glm::vec3> normals;
+		normals.swap(normals_);
+		std::vector<glm::vec2> tex_coords;
+		tex_coords.swap(tex_coords_);
+		std::vector<unsigned short> triangles;
+		triangles.swap(triangles_);
 
-        if (triangle_vboID_ != 0) {
-            glDeleteBuffers(1, &triangle_vboID_);
-            triangle_vboID_ = 0;
-        }
+		for (auto iterator = vaoID_map_.begin(); iterator != vaoID_map_.end();
+				iterator++) {
+			glDeleteVertexArrays(1, &(iterator->second));
+		}
+		vaoID_map_.clear();
 
-        if (vert_vboID_ != 0) {
-            glDeleteBuffers(1, &vert_vboID_);
-            vert_vboID_ = 0;
-        }
+		for (auto iterator = triangle_vboID_map_.begin(); iterator != triangle_vboID_map_.end();
+				iterator++) {
+			glDeleteBuffers(1, &(iterator->second));
+		}
+		triangle_vboID_map_.clear();
 
-        if (norm_vboID_ != 0) {
-            glDeleteBuffers(1, &norm_vboID_);
-            norm_vboID_ = 0;
-        }
+		for (auto iterator = vert_vboID_map_.begin(); iterator != vert_vboID_map_.end();
+				iterator++) {
+			glDeleteBuffers(1, &(iterator->second));
+		}
+		vert_vboID_map_.clear();
 
-        if (tex_vboID_ != 0) {
-            glDeleteBuffers(1, &tex_vboID_);
-            tex_vboID_ = 0;
-        }
-    }
+		for (auto iterator = norm_vboID_map_.begin(); iterator != norm_vboID_map_.end();
+				iterator++) {
+			glDeleteBuffers(1, &(iterator->second));
+		}
+		norm_vboID_map_.clear();
 
-    std::vector<glm::vec3>& vertices() {
-        return vertices_;
-    }
+		for (auto iterator = tex_vboID_map_.begin(); iterator != tex_vboID_map_.end();
+				iterator++) {
+			glDeleteBuffers(1, &(iterator->second));
+		}
+		tex_vboID_map_.clear();
+	}
 
-    const std::vector<glm::vec3>& vertices() const {
-        return vertices_;
-    }
+	std::vector<glm::vec3>& vertices() {
+		return vertices_;
+	}
 
-    void set_vertices(const std::vector<glm::vec3>& vertices) {
-        vertices_ = vertices;
-    }
+	const std::vector<glm::vec3>& vertices() const {
+		return vertices_;
+	}
 
-    void set_vertices(std::vector<glm::vec3>&& vertices) {
-        vertices_ = std::move(vertices);
-    }
+	void set_vertices(const std::vector<glm::vec3>& vertices) {
+		vertices_ = vertices;
+	}
 
-    std::vector<glm::vec3>& normals() {
-        return normals_;
-    }
+	void set_vertices(std::vector<glm::vec3>&& vertices) {
+		vertices_ = std::move(vertices);
+	}
 
-    const std::vector<glm::vec3>& normals() const {
-        return normals_;
-    }
+	std::vector<glm::vec3>& normals() {
+		return normals_;
+	}
 
-    void set_normals(const std::vector<glm::vec3>& normals) {
-        normals_ = normals;
-    }
+	const std::vector<glm::vec3>& normals() const {
+		return normals_;
+	}
 
-    void set_normals(std::vector<glm::vec3>&& normals) {
-        normals_ = std::move(normals);
-    }
+	void set_normals(const std::vector<glm::vec3>& normals) {
+		normals_ = normals;
+	}
 
-    std::vector<glm::vec2>& tex_coords() {
-        return tex_coords_;
-    }
+	void set_normals(std::vector<glm::vec3>&& normals) {
+		normals_ = std::move(normals);
+	}
 
-    const std::vector<glm::vec2>& tex_coords() const {
-        return tex_coords_;
-    }
+	std::vector<glm::vec2>& tex_coords() {
+		return tex_coords_;
+	}
 
-    void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
-        tex_coords_ = tex_coords;
-    }
+	const std::vector<glm::vec2>& tex_coords() const {
+		return tex_coords_;
+	}
 
-    void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
-        tex_coords_ = std::move(tex_coords);
-    }
+	void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
+		tex_coords_ = tex_coords;
+	}
 
-    std::vector<unsigned short>& triangles() {
-        return triangles_;
-    }
+	void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
+		tex_coords_ = std::move(tex_coords);
+	}
 
-    const std::vector<unsigned short>& triangles() const {
-        return triangles_;
-    }
+	std::vector<unsigned short>& triangles() {
+		return triangles_;
+	}
 
-    void set_triangles(const std::vector<unsigned short>& triangles) {
-        triangles_ = triangles;
-    }
+	const std::vector<unsigned short>& triangles() const {
+		return triangles_;
+	}
 
-    void set_triangles(std::vector<unsigned short>&& triangles) {
-        triangles_ = std::move(triangles);
-    }
+	void set_triangles(const std::vector<unsigned short>& triangles) {
+		triangles_ = triangles;
+	}
 
-    std::vector<float>& getFloatVector(std::string key) {
-        auto it = float_vectors_.find(key);
-        if (it != float_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getFloatVector() : " + key
-                    + " not found";
-            throw error;
-        }
-    }
+	void set_triangles(std::vector<unsigned short>&& triangles) {
+		triangles_ = std::move(triangles);
+	}
 
-    const std::vector<float>& getFloatVector(std::string key) const {
-        auto it = float_vectors_.find(key);
-        if (it != float_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getFloatVector() : " + key
-                    + " not found";
-            throw error;
-        }
-    }
+	std::vector<float>& getFloatVector(std::string key) {
+		auto it = float_vectors_.find(key);
+		if (it != float_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getFloatVector() : " + key
+					+ " not found";
+			throw error;
+		}
+	}
 
-    void setFloatVector(std::string key, const std::vector<float>& vector) {
-        float_vectors_[key] = vector;
-    }
+	const std::vector<float>& getFloatVector(std::string key) const {
+		auto it = float_vectors_.find(key);
+		if (it != float_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getFloatVector() : " + key
+					+ " not found";
+			throw error;
+		}
+	}
 
-    std::vector<glm::vec2>& getVec2Vector(std::string key) {
-        auto it = vec2_vectors_.find(key);
-        if (it != vec2_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec2Vector() : " + key + " not found";
-            throw error;
-        }
-    }
+	void setFloatVector(std::string key, const std::vector<float>& vector) {
+		float_vectors_[key] = vector;
+	}
 
-    const std::vector<glm::vec2>& getVec2Vector(std::string key) const {
-        auto it = vec2_vectors_.find(key);
-        if (it != vec2_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec2Vector() : " + key + " not found";
-            throw error;
-        }
-    }
+	std::vector<glm::vec2>& getVec2Vector(std::string key) {
+		auto it = vec2_vectors_.find(key);
+		if (it != vec2_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getVec2Vector() : " + key + " not found";
+			throw error;
+		}
+	}
 
-    void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
-        vec2_vectors_[key] = vector;
-    }
+	const std::vector<glm::vec2>& getVec2Vector(std::string key) const {
+		auto it = vec2_vectors_.find(key);
+		if (it != vec2_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getVec2Vector() : " + key + " not found";
+			throw error;
+		}
+	}
 
-    std::vector<glm::vec3>& getVec3Vector(std::string key) {
-        auto it = vec3_vectors_.find(key);
-        if (it != vec3_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec3Vector() : " + key + " not found";
-            throw error;
-        }
-    }
+	void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
+		vec2_vectors_[key] = vector;
+	}
 
-    const std::vector<glm::vec3>& getVec3Vector(std::string key) const {
-        auto it = vec3_vectors_.find(key);
-        if (it != vec3_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec3Vector() : " + key + " not found";
-            throw error;
-        }
-    }
+	std::vector<glm::vec3>& getVec3Vector(std::string key) {
+		auto it = vec3_vectors_.find(key);
+		if (it != vec3_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getVec3Vector() : " + key + " not found";
+			throw error;
+		}
+	}
 
-    void setVec3Vector(std::string key, const std::vector<glm::vec3>& vector) {
-        vec3_vectors_[key] = vector;
-    }
+	const std::vector<glm::vec3>& getVec3Vector(std::string key) const {
+		auto it = vec3_vectors_.find(key);
+		if (it != vec3_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getVec3Vector() : " + key + " not found";
+			throw error;
+		}
+	}
 
-    std::vector<glm::vec4>& getVec4Vector(std::string key) {
-        auto it = vec4_vectors_.find(key);
-        if (it != vec4_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec4Vector() : " + key + " not found";
-            throw error;
-        }
-    }
+	void setVec3Vector(std::string key, const std::vector<glm::vec3>& vector) {
+		vec3_vectors_[key] = vector;
+	}
 
-    const std::vector<glm::vec4>& getVec4Vector(std::string key) const {
-        auto it = vec4_vectors_.find(key);
-        if (it != vec4_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec4Vector() : " + key + " not found";
-            throw error;
-        }
-    }
+	std::vector<glm::vec4>& getVec4Vector(std::string key) {
+		auto it = vec4_vectors_.find(key);
+		if (it != vec4_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getVec4Vector() : " + key + " not found";
+			throw error;
+		}
+	}
 
-    void setVec4Vector(std::string key, const std::vector<glm::vec4>& vector) {
-        vec4_vectors_[key] = vector;
-    }
+	const std::vector<glm::vec4>& getVec4Vector(std::string key) const {
+		auto it = vec4_vectors_.find(key);
+		if (it != vec4_vectors_.end()) {
+			return it->second;
+		} else {
+			std::string error = "Mesh::getVec4Vector() : " + key + " not found";
+			throw error;
+		}
+	}
 
-    Mesh* getBoundingBox();
-    const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+	void setVec4Vector(std::string key, const std::vector<glm::vec4>& vector) {
+		vec4_vectors_[key] = vector;
+	}
 
-    // /////////////////////////////////////////////////
-    //  code for vertex attribute location
+	Mesh* getBoundingBox();
+	const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
 
-    void setVertexLoc(GLuint loc) {
-        vertexLoc_ = loc;
-    }
+	// /////////////////////////////////////////////////
+	//  code for vertex attribute location
 
-    const GLuint getVertexLoc() const {
-        return vertexLoc_;
-    }
+	void setVertexLoc(GLuint loc) {
+		vertexLoc_ = loc;
+	}
 
-    void setNormalLoc(GLuint loc) {
-        normalLoc_ = loc;
-    }
+	const GLuint getVertexLoc() const {
+		return vertexLoc_;
+	}
 
-    const GLuint getNormalLoc() const {
-        return normalLoc_;
-    }
+	void setNormalLoc(GLuint loc) {
+		normalLoc_ = loc;
+	}
 
-    void setTexCoordLoc(GLuint loc) {
-        texCoordLoc_ = loc;
-    }
+	const GLuint getNormalLoc() const {
+		return normalLoc_;
+	}
 
-    const GLuint getTexCoordLoc() const {
-        return texCoordLoc_;
-    }
+	void setTexCoordLoc(GLuint loc) {
+		texCoordLoc_ = loc;
+	}
 
-    void setVertexAttribLocF(GLuint location, std::string key) {
-        attribute_float_keys_[location] = key;
-    }
+	const GLuint getTexCoordLoc() const {
+		return texCoordLoc_;
+	}
 
-    void setVertexAttribLocV2(GLuint location, std::string key) {
-        attribute_vec2_keys_[location] = key;
-    }
+	void setVertexAttribLocF(GLuint location, std::string key) {
+		attribute_float_keys_[location] = key;
+	}
 
-    void setVertexAttribLocV3(GLuint location, std::string key) {
-        attribute_vec3_keys_[location] = key;
-    }
+	void setVertexAttribLocV2(GLuint location, std::string key) {
+		attribute_vec2_keys_[location] = key;
+	}
 
-    void setVertexAttribLocV4(GLuint location, std::string key) {
-        attribute_vec4_keys_[location] = key;
-    }
+	void setVertexAttribLocV3(GLuint location, std::string key) {
+		attribute_vec3_keys_[location] = key;
+	}
 
-    // generate VAO
-    void generateVAO();
+	void setVertexAttribLocV4(GLuint location, std::string key) {
+		attribute_vec4_keys_[location] = key;
+	}
 
-    const GLuint getVAOId() const {
-        return vaoID_;
-    }
+	// generate VAO
+	void generateVAO(Material::ShaderType key);
 
-    void cleanUp() {
-        std::vector<glm::vec3> vertices;
-        vertices.swap(vertices_);
-        std::vector<glm::vec3> normals;
-        normals.swap(normals_);
-        std::vector<glm::vec2> tex_coords;
-        tex_coords.swap(tex_coords_);
-        std::vector<unsigned short> triangles;
-        triangles.swap(triangles_);
+	const GLuint getVAOId(Material::ShaderType key) const {
+		auto iterator = vaoID_map_.find(key);
+		return iterator != vaoID_map_.end() ? iterator->second : 0;
+	}
 
-        if (vaoID_ != 0) {
-            glDeleteVertexArrays(1, &vaoID_);
-            vaoID_ = 0;
-        }
-
-        if (triangle_vboID_ != 0) {
-            glDeleteBuffers(1, &triangle_vboID_);
-            triangle_vboID_ = 0;
-        }
-
-        if (vert_vboID_ != 0) {
-            glDeleteBuffers(1, &vert_vboID_);
-            vert_vboID_ = 0;
-        }
-
-        if (norm_vboID_ != 0) {
-            glDeleteBuffers(1, &norm_vboID_);
-            norm_vboID_ = 0;
-        }
-
-        if (tex_vboID_ != 0) {
-            glDeleteBuffers(1, &tex_vboID_);
-            tex_vboID_ = 0;
-        }
-    }
-
-    GLuint getNumTriangles() {
-        return numTriangles_;
-    }
+	GLuint getNumTriangles() {
+		return numTriangles_;
+	}
 
 private:
-    Mesh(const Mesh& mesh);
-    Mesh(Mesh&& mesh);
-    Mesh& operator=(const Mesh& mesh);
-    Mesh& operator=(Mesh&& mesh);
+	Mesh(const Mesh& mesh);
+	Mesh(Mesh&& mesh);
+	Mesh& operator=(const Mesh& mesh);
+	Mesh& operator=(Mesh&& mesh);
 
 private:
-    std::vector<glm::vec3> vertices_;
-    std::vector<glm::vec3> normals_;
-    std::vector<glm::vec2> tex_coords_;
-    std::map<std::string, std::vector<float>> float_vectors_;
-    std::map<std::string, std::vector<glm::vec2>> vec2_vectors_;
-    std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
-    std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
-    std::vector<unsigned short> triangles_;
+	std::vector<glm::vec3> vertices_;
+	std::vector<glm::vec3> normals_;
+	std::vector<glm::vec2> tex_coords_;
+	std::map<std::string, std::vector<float>> float_vectors_;
+	std::map<std::string, std::vector<glm::vec2>> vec2_vectors_;
+	std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
+	std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
+	std::vector<unsigned short> triangles_;
 
-    // add location slot map
-    std::map<int, std::string> attribute_float_keys_;
-    std::map<int, std::string> attribute_vec2_keys_;
-    std::map<int, std::string> attribute_vec3_keys_;
-    std::map<int, std::string> attribute_vec4_keys_;
+	// add location slot map
+	std::map<int, std::string> attribute_float_keys_;
+	std::map<int, std::string> attribute_vec2_keys_;
+	std::map<int, std::string> attribute_vec3_keys_;
+	std::map<int, std::string> attribute_vec4_keys_;
 
-    // add vertex array object and VBO
-    GLuint vaoID_;
-    GLuint triangle_vboID_, vert_vboID_, norm_vboID_, tex_vboID_;
+	// add vertex array object and VBO
+	std::map<Material::ShaderType, GLuint> vaoID_map_;
+	std::map<Material::ShaderType, GLuint> triangle_vboID_map_;
+	std::map<Material::ShaderType, GLuint> vert_vboID_map_;
+	std::map<Material::ShaderType, GLuint> norm_vboID_map_;
+	std::map<Material::ShaderType, GLuint> tex_vboID_map_;
 
-    // attribute locations
-    GLuint vertexLoc_;
-    GLuint normalLoc_;
-    GLuint texCoordLoc_;
+	// attribute locations
+	GLuint vertexLoc_;
+	GLuint normalLoc_;
+	GLuint texCoordLoc_;
 
-    // triangle information
-    GLuint numTriangles_;
+	// triangle information
+	GLuint numTriangles_;
 
-    // bounding box info
-    bool have_bounding_box_;
-    float bounding_box_info_[6];
+	// bounding box info
+	bool have_bounding_box_;
+	float bounding_box_info_[6];
 };
 }
 #endif

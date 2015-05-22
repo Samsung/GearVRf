@@ -152,7 +152,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix,
         mesh->setVertexAttribLocV4(it->first, it->second);
     }
 
-    mesh->generateVAO();  // setup VAO
+    mesh->generateVAO(render_data->material()->shader_type());  // setup VAO
 
     ///////////// uniform /////////
     for(auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end(); ++it)
@@ -202,7 +202,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix,
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(render_data->material()->shader_type()));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 #else

@@ -136,7 +136,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
     mesh->setNormalLoc(a_normal_);
-    mesh->generateVAO();
+    mesh->generateVAO(Material::CUBEMAP_REFLECTION_SHADER);
 
     glUseProgram(program_->id());
 
@@ -151,7 +151,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(Material::CUBEMAP_REFLECTION_SHADER));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

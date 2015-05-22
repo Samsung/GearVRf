@@ -91,7 +91,7 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
     mesh->setTexCoordLoc(a_tex_coord_);
-    mesh->generateVAO();
+    mesh->generateVAO(Material::UNLIT_VERTICAL_STEREO_SHADER);
 
     glUseProgram(program_->id());
 
@@ -103,7 +103,7 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, right ? 1 : 0);
 
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(Material::UNLIT_VERTICAL_STEREO_SHADER));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 #else
