@@ -21,10 +21,10 @@ import android.os.Bundle;
 
 public class SampleActivity extends GVRActivity {
 
-	@Override
-	protected void onCreate(Bundle icicle) {
-		super.onCreate(icicle);
-		setScript(new SampleViewManager(this), "gvr_note4.xml");
-	}
+    @Override
+    protected void onCreate(Bundle icicle) {
+        super.onCreate(icicle);
+        setScript(new SampleViewManager(this), "gvr_note4.xml");
+    }
 
 }

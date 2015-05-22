@@ -26,47 +26,47 @@ import android.widget.LinearLayout;
 
 public class SampleViewManager extends GVRScript {
 
-	GVRTextViewSceneObject sceneObject;
-	LinearLayout mTextView;
-	GVRConsole console;
-	SampleActivity mActivity;
-	boolean init = false;
-	private final String[] strs = new String[] { "good", "verygood",
-			"veryverygood", "veryverygood", "veryveryverygood" };
-	private final int[] colors = new int[] { Color.BLUE, Color.BLACK,
-			Color.GREEN, Color.WHITE, Color.MAGENTA };
-	private float textSize = 0.0f;
-	private int counter = 0;
+    GVRTextViewSceneObject sceneObject;
+    LinearLayout mTextView;
+    GVRConsole console;
+    SampleActivity mActivity;
+    boolean init = false;
+    private final String[] strs = new String[] { "good", "verygood",
+            "veryverygood", "veryverygood", "veryveryverygood" };
+    private final int[] colors = new int[] { Color.BLUE, Color.BLACK,
+            Color.GREEN, Color.WHITE, Color.MAGENTA };
+    private float textSize = 0.0f;
+    private int counter = 0;
 
-	SampleViewManager(SampleActivity activity) {
-		mActivity = activity;
-	}
+    SampleViewManager(SampleActivity activity) {
+        mActivity = activity;
+    }
 
-	@Override
-	public void onInit(GVRContext gvrContext) {
-		sceneObject = new GVRTextViewSceneObject(gvrContext, mActivity);
-		textSize = sceneObject.getTextSize();
+    @Override
+    public void onInit(GVRContext gvrContext) {
+        sceneObject = new GVRTextViewSceneObject(gvrContext, mActivity);
+        textSize = sceneObject.getTextSize();
 
-		// set the scene object position
-		sceneObject.getTransform().setPosition(0.0f, 0.0f, -2.0f);
+        // set the scene object position
+        sceneObject.getTransform().setPosition(0.0f, 0.0f, -2.0f);
 
-		// add the scene object to the scene graph
-		gvrContext.getNextMainScene().getMainCameraRig().getOwnerObject()
-				.addChildObject(sceneObject);
+        // add the scene object to the scene graph
+        gvrContext.getNextMainScene().getMainCameraRig().getOwnerObject()
+                .addChildObject(sceneObject);
 
-	}
+    }
 
-	@Override
-	public void onStep() {
-		counter++;
-		if (counter % 50 == 0) {
-			int curState = (counter / 50) % 5;
-			Log.d("change", "change to state " + curState);
-			sceneObject.setText(strs[curState]);
-			sceneObject.setTextColor(colors[curState]);
-			sceneObject.setTextSize(textSize * curState * 0.5f);
-			Log.d("change", "change to state end" + curState);
-		}
-	}
+    @Override
+    public void onStep() {
+        counter++;
+        if (counter % 50 == 0) {
+            int curState = (counter / 50) % 5;
+            Log.d("change", "change to state " + curState);
+            sceneObject.setText(strs[curState]);
+            sceneObject.setTextColor(colors[curState]);
+            sceneObject.setTextSize(textSize * curState * 0.5f);
+            Log.d("change", "change to state end" + curState);
+        }
+    }
 
 }
