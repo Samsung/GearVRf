@@ -160,10 +160,10 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             double theta1 = ((slice + 1) / sliceNumber) * 2.0 * Math.PI;
 
             float y = height;
-            float x0 = radius * (float) Math.cos(theta0);
-            float z0 = radius * (float) Math.sin(theta0);
-            float x1 = radius * (float) Math.cos(theta1);
-            float z1 = radius * (float) Math.sin(theta1);
+            float x0 = (float) (radius * Math.cos(theta0));
+            float z0 = (float) (radius * Math.sin(theta0));
+            float x1 = (float) (radius * Math.cos(theta1));
+            float z1 = (float) (radius * Math.sin(theta1));
 
             float s0 = 1.0f - ((float) (slice) / sliceNumber);
             float s1 = 1.0f - ((float) (slice + 1) / sliceNumber);
@@ -238,22 +238,22 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
                 double theta0 = slicePercentage0 * 2.0 * Math.PI;
                 double theta1 = slicePercentage1 * 2.0 * Math.PI;
-                float cosTheta0 = (float) Math.cos(theta0);
-                float sinTheta0 = (float) Math.sin(theta0);
-                float cosTheta1 = (float) Math.cos(theta1);
-                float sinTheta1 = (float) Math.sin(theta1);
+                double cosTheta0 = Math.cos(theta0);
+                double sinTheta0 = Math.sin(theta0);
+                double cosTheta1 = Math.cos(theta1);
+                double sinTheta1 = Math.sin(theta1);
 
                 float radius = (bottomRadius - (difference * stackPercentage0));
-                float x0 = radius * cosTheta0;
-                float z0 = -radius * sinTheta0;
-                float x1 = radius * cosTheta1;
-                float z1 = -radius * sinTheta1;
+                float x0 = (float) (radius * cosTheta0);
+                float z0 = (float) (-radius * sinTheta0);
+                float x1 = (float) (radius * cosTheta1);
+                float z1 = (float) (-radius * sinTheta1);
 
                 radius = (bottomRadius - (difference * stackPercentage1));
-                float x2 = radius * cosTheta0;
-                float z2 = -radius * sinTheta0;
-                float x3 = radius * cosTheta1;
-                float z3 = -radius * sinTheta1;
+                float x2 = (float) (radius * cosTheta0);
+                float z2 = (float) (-radius * sinTheta0);
+                float x3 = (float) (radius * cosTheta1);
+                float z3 = (float) (-radius * sinTheta1);
 
                 float s0 = slicePercentage0;
                 float s1 = slicePercentage1;

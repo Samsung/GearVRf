@@ -100,10 +100,10 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         float t1 = 1.0f - stackPercentage1;
         double theta1 = stackPercentage0 * Math.PI;
         double theta2 = stackPercentage1 * Math.PI;
-        float cosTheta1 = (float) Math.cos(theta1);
-        float sinTheta1 = (float) Math.sin(theta1);
-        float cosTheta2 = (float) Math.cos(theta2);
-        float sinTheta2 = (float) Math.sin(theta2);
+        double cosTheta1 = Math.cos(theta1);
+        double sinTheta1 = Math.sin(theta1);
+        double cosTheta2 = Math.cos(theta2);
+        double sinTheta2 = Math.sin(theta2);
 
         for (int slice = 0; slice < sliceNumber; slice++) {
             float slicePercentage0 = ((float) (slice) / sliceNumber);
@@ -113,22 +113,22 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             float s0 = slicePercentage0;
             float s1 = slicePercentage1;
             float s2 = (s0 + s1) / 2.0f;
-            float cosPhi1 = (float) Math.cos(phi1);
-            float sinPhi1 = (float) Math.sin(phi1);
-            float cosPhi2 = (float) Math.cos(phi2);
-            float sinPhi2 = (float) Math.sin(phi2);
+            double cosPhi1 = Math.cos(phi1);
+            double sinPhi1 = Math.sin(phi1);
+            double cosPhi2 = Math.cos(phi2);
+            double sinPhi2 = Math.sin(phi2);
 
-            float x0 = sinTheta1 * cosPhi1;
-            float y0 = sinTheta1 * sinPhi1;
-            float z0 = cosTheta1;
+            float x0 = (float) (sinTheta1 * cosPhi1);
+            float y0 = (float) (sinTheta1 * sinPhi1);
+            float z0 = (float) cosTheta1;
 
-            float x1 = sinTheta1 * cosPhi2;
-            float y1 = sinTheta1 * sinPhi2;
-            float z1 = cosTheta1;
+            float x1 = (float) (sinTheta1 * cosPhi2);
+            float y1 = (float) (sinTheta1 * sinPhi2);
+            float z1 = (float) cosTheta1;
 
-            float x2 = sinTheta2 * cosPhi1;
-            float y2 = sinTheta2 * sinPhi1;
-            float z2 = cosTheta2;
+            float x2 = (float) (sinTheta2 * cosPhi1);
+            float y2 = (float) (sinTheta2 * sinPhi1);
+            float z2 = (float) cosTheta2;
 
             vertices[vertexCount + 0] = x0;
             vertices[vertexCount + 1] = y0;
@@ -188,10 +188,10 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             float t1 = 1.0f - stackPercentage1;
             double theta1 = stackPercentage0 * Math.PI;
             double theta2 = stackPercentage1 * Math.PI;
-            float cosTheta1 = (float) Math.cos(theta1);
-            float sinTheta1 = (float) Math.sin(theta1);
-            float cosTheta2 = (float) Math.cos(theta2);
-            float sinTheta2 = (float) Math.sin(theta2);
+            double cosTheta1 = Math.cos(theta1);
+            double sinTheta1 = Math.sin(theta1);
+            double cosTheta2 = Math.cos(theta2);
+            double sinTheta2 = Math.sin(theta2);
 
             for (int slice = 0; slice < sliceNumber; slice++) {
                 float slicePercentage0 = ((float) (slice) / sliceNumber);
@@ -200,29 +200,29 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 double phi2 = slicePercentage1 * 2.0 * Math.PI;
                 float s0 = slicePercentage0;
                 float s1 = slicePercentage1;
-                float cosPhi1 = (float) Math.cos(phi1);
-                float sinPhi1 = (float) Math.sin(phi1);
-                float cosPhi2 = (float) Math.cos(phi2);
-                float sinPhi2 = (float) Math.sin(phi2);
+                double cosPhi1 = Math.cos(phi1);
+                double sinPhi1 = Math.sin(phi1);
+                double cosPhi2 = Math.cos(phi2);
+                double sinPhi2 = Math.sin(phi2);
 
                 // 2-----3
                 // |     |
                 // 0-----1
-                float x0 = sinTheta1 * cosPhi1;
-                float y0 = sinTheta1 * sinPhi1;
-                float z0 = cosTheta1;
+                float x0 = (float) (sinTheta1 * cosPhi1);
+                float y0 = (float) (sinTheta1 * sinPhi1);
+                float z0 = (float) cosTheta1;
 
-                float x1 = sinTheta1 * cosPhi2;
-                float y1 = sinTheta1 * sinPhi2;
-                float z1 = cosTheta1;
+                float x1 = (float) (sinTheta1 * cosPhi2);
+                float y1 = (float) (sinTheta1 * sinPhi2);
+                float z1 = (float) cosTheta1;
 
-                float x2 = sinTheta2 * cosPhi1;
-                float y2 = sinTheta2 * sinPhi1;
-                float z2 = cosTheta2;
+                float x2 = (float) (sinTheta2 * cosPhi1);
+                float y2 = (float) (sinTheta2 * sinPhi1);
+                float z2 = (float) cosTheta2;
 
-                float x3 = sinTheta2 * cosPhi2;
-                float y3 = sinTheta2 * sinPhi2;
-                float z3 = cosTheta2;
+                float x3 = (float) (sinTheta2 * cosPhi2);
+                float y3 = (float) (sinTheta2 * sinPhi2);
+                float z3 = (float) cosTheta2;
 
                 vertices[vertexCount + 0] = x0;
                 vertices[vertexCount + 1] = y0;
