@@ -20,10 +20,13 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.utility.Log;
 
 public class GVRCylinderSceneObject extends GVRSceneObject {
 
-    private static final String TAG = "GVRCylinderSceneObject";
+    @SuppressWarnings("unused")
+    private static final String TAG = Log.tag(GVRCylinderSceneObject.class);
+
     private static final int STACK_NUMBER = 10;
     private static final int SLICE_NUMBER = 36;
     private static final float BASE_RADIUS = 0.5f;

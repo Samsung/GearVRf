@@ -72,7 +72,7 @@ public class GVRVersion {
      */
     public static final String V_1_6_9 = "1.6.9";
 
-    /*
+    /**
      * No more reference counting - Java objects control native objects'
      * lifecycles.
      */
