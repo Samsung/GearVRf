@@ -49,9 +49,9 @@ public:
     void addVec3Key(std::string variable_name, std::string key);
     void addVec4Key(std::string variable_name, std::string key);
     void addMat4Key(std::string variable_name, std::string key);
-    void render(std::shared_ptr<Camera> camera,
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<PostEffectData> post_effect_data,
+    void render(Camera* camera,
+            RenderTexture* render_texture,
+            PostEffectData* post_effect_data,
             std::vector<glm::vec3>& vertices,
             std::vector<glm::vec2>& tex_coords,
             std::vector<unsigned short>& triangles);

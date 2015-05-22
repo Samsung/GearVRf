@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages post-effect shaders, for modifying the texture holding the rendered
@@ -27,6 +29,8 @@ public class GVRPostEffectShaderManager extends
         implements
         GVRShaderManagers<GVRPostEffectMap, GVRCustomPostEffectShaderId> {
 
+    private final Map<GVRCustomPostEffectShaderId, GVRPostEffectMap> posteffects = new HashMap<GVRCustomPostEffectShaderId, GVRPostEffectMap>();
+
     GVRPostEffectShaderManager(GVRContext gvrContext) {
         super(gvrContext, NativePostEffectShaderManager.ctor());
     }
@@ -35,27 +39,36 @@ public class GVRPostEffectShaderManager extends
     public GVRCustomPostEffectShaderId addShader(String vertexShader,
             String fragmentShader) {
         final int shaderId = NativePostEffectShaderManager
-                .addCustomPostEffectShader(getPtr(), vertexShader,
+                .addCustomPostEffectShader(getNative(), vertexShader,
                         fragmentShader);
-        return new GVRCustomPostEffectShaderId(shaderId);
+        GVRCustomPostEffectShaderId result = new GVRCustomPostEffectShaderId(
+                shaderId);
+        posteffects.put(result, retrieveShaderMap(result));
+        return result;
     }
 
     @Override
     public GVRPostEffectMap getShaderMap(GVRCustomPostEffectShaderId id) {
+        return posteffects.get(id);
+    }
+
+    @SuppressWarnings("resource")
+    private GVRPostEffectMap retrieveShaderMap(GVRCustomPostEffectShaderId id) {
         long ptr = NativePostEffectShaderManager.getCustomPostEffectShader(
-                getPtr(), id.ID);
+                getNative(), id.ID);
         return ptr == 0 ? null : new GVRPostEffectMap(getGVRContext(), ptr);
     }
 
 }
 
 class NativePostEffectShaderManager {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native int addCustomPostEffectShader(
-            long postEffectShaderManager, String vertexShader,
-            String fragmentShader);
+    static native long delete(long postEffectShaderManager);
 
-    public static native long getCustomPostEffectShader(
-            long postEffectShaderManager, int id);
+    static native int addCustomPostEffectShader(long postEffectShaderManager,
+            String vertexShader, String fragmentShader);
+
+    static native long getCustomPostEffectShader(long postEffectShaderManager,
+            int id);
 }

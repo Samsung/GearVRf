@@ -52,48 +52,48 @@ private:
     Renderer();
 
 public:
-    static void renderCamera(std::shared_ptr<Scene> scene,
-            std::shared_ptr<Camera> camera,
+    static void renderCamera(Scene* scene,
+            Camera* camera,
             int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-            std::shared_ptr<ShaderManager> shader_manager,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
 
-    static void renderCamera(std::shared_ptr<Scene> scene,
-            std::shared_ptr<Camera> camera,
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<ShaderManager> shader_manager,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+    static void renderCamera(Scene* scene,
+            Camera* camera,
+            RenderTexture* render_texture,
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
 
-    static void renderCamera(std::shared_ptr<Scene> scene,
-            std::shared_ptr<Camera> camera,
+    static void renderCamera(Scene* scene,
+            Camera* camera,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-            std::shared_ptr<ShaderManager> shader_manager,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
 
-    static void renderCamera(std::shared_ptr<Scene> scene,
-            std::shared_ptr<Camera> camera,
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<ShaderManager> shader_manager,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b,
+    static void renderCamera(Scene* scene,
+            Camera* camera,
+            RenderTexture* render_texture,
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b,
             glm::mat4 vp_matrix);
 
 private:
-    static void renderRenderData(std::shared_ptr<RenderData> render_data,
+    static void renderRenderData(RenderData* render_data,
     		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
-            std::shared_ptr<ShaderManager> shader_manager);
-    static void renderPostEffectData(std::shared_ptr<Camera> camera,
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<PostEffectData> post_effect_data,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager);
+            ShaderManager* shader_manager);
+    static void renderPostEffectData(Camera* camera,
+            RenderTexture* render_texture,
+            PostEffectData* post_effect_data,
+            PostEffectShaderManager* post_effect_shader_manager);
 
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
     static bool is_cube_in_frustum( float frustum[6][4], float *vertex_limit);

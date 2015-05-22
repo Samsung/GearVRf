@@ -25,8 +25,7 @@ namespace gvr {
 
 class EyePointeeHolderData {
 public:
-    EyePointeeHolderData(std::shared_ptr<EyePointeeHolder> holder,
-            float distance) :
+    EyePointeeHolderData(EyePointeeHolder* holder, float distance) :
             eye_pointee_holder_(holder), distance_(distance) {
     }
 
@@ -39,7 +38,7 @@ public:
     ~EyePointeeHolderData() {
     }
 
-    const std::shared_ptr<EyePointeeHolder>& eye_pointee_holder() const {
+    EyePointeeHolder* eye_pointee_holder() const {
         return eye_pointee_holder_;
     }
 
@@ -61,7 +60,7 @@ private:
             const EyePointeeHolderData& eye_pointee_holder_data);
 
 private:
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder_;
+    EyePointeeHolder* eye_pointee_holder_;
     float distance_;
 };
 

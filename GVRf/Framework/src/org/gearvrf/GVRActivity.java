@@ -44,6 +44,7 @@ public class GVRActivity extends VrActivity {
     private static final String TAG = Log.tag(GVRActivity.class);
 
     private GVRViewManager mGVRViewManager = null;
+    private GVRCamera mCamera;
 
     static {
         System.loadLibrary("gvrf");
@@ -172,7 +173,9 @@ public class GVRActivity extends VrActivity {
     }
 
     void setCamera(GVRCamera camera) {
-        nativeSetCamera(appPtr, camera.getPtr());
+        mCamera = camera;
+
+        nativeSetCamera(appPtr, camera.getNative());
     }
 
     @Override

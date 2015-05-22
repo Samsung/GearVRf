@@ -28,9 +28,6 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
-        jobject obj, jobject bitmap);
-JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
         jobject obj, jobject asset_manager, jstring filename);
 JNIEXPORT jlong JNICALL
@@ -40,19 +37,6 @@ Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata);
 }
 ;
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
-        jobject obj, jobject bitmap) {
-    try {
-        jlong res_texture = reinterpret_cast<jlong>(new std::shared_ptr<
-                BaseTexture>(new BaseTexture(env, bitmap)));
-        return res_texture;
-    } catch (const std::string &err) {
-        printJavaCallStack(env, err);
-        throw err;
-    }
-}
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
@@ -85,21 +69,18 @@ Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
     int imgW = loader.pOutImage.width;
     int imgH = loader.pOutImage.height;
     unsigned char *pixels = loader.pOutImage.bits;
-    return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
-            new BaseTexture(imgW, imgH, pixels)));
+    return reinterpret_cast<jlong>(new BaseTexture(imgW, imgH, pixels));
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
-            new BaseTexture()));
+    return reinterpret_cast<jlong>(new BaseTexture());
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata) {
-    std::shared_ptr<BaseTexture> texture = *reinterpret_cast<std::shared_ptr<
-            BaseTexture>*>(jtexture);
+    BaseTexture* texture = reinterpret_cast<BaseTexture*>(jtexture);
     jbyte* data = env->GetByteArrayElements(jdata, 0);
     jboolean result = texture->update(width, height, data);
     env->ReleaseByteArrayElements(jdata, data, 0);

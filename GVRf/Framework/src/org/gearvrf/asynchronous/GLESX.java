@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import android.opengl.GLES30;

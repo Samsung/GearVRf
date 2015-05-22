@@ -36,15 +36,13 @@ Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env,
         jobject obj, jint width, jint height) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<RenderTexture>(
-            new RenderTexture(width, height)));
+    return reinterpret_cast<jlong>(new RenderTexture(width, height));
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env,
         jobject obj, jint width, jint height, jint sample_count) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<RenderTexture>(
-            new RenderTexture(width, height, sample_count)));
+    return reinterpret_cast<jlong>(new RenderTexture(width, height, sample_count));
 }
 
 }

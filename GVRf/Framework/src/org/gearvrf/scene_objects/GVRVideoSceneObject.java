@@ -15,6 +15,8 @@
 
 package org.gearvrf.scene_objects;
 
+import java.io.IOException;
+
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
@@ -76,6 +78,11 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             materialType = GVRShaderType.OESVerticalStereo.ID;
             break;
         default:
+            try {
+                texture.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             throw new IllegalArgumentException();
         }
         GVRMaterial material = new GVRMaterial(gvrContext, materialType);

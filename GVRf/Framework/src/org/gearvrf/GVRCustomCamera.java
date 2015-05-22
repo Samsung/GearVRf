@@ -13,11 +13,9 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
-
-/** A version of {@link GVRCamera} with a custom projection matrix.  */
+/** A version of {@link GVRCamera} with a custom projection matrix. */
 public class GVRCustomCamera extends GVRCamera {
     public GVRCustomCamera(GVRContext gvrContext) {
         super(gvrContext, NativeCustomCamera.ctor());
@@ -29,15 +27,15 @@ public class GVRCustomCamera extends GVRCamera {
     public void setProjectionMatrix(float x1, float y1, float z1, float w1,
             float x2, float y2, float z2, float w2, float x3, float y3,
             float z3, float w3, float x4, float y4, float z4, float w4) {
-        NativeCustomCamera.setProjectionMatrix(getPtr(), x1, y1, z1, w1, x2,
+        NativeCustomCamera.setProjectionMatrix(getNative(), x1, y1, z1, w1, x2,
                 y2, z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 }
 
 class NativeCustomCamera {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native void setProjectionMatrix(long ptr, float x1, float y1,
+    static native void setProjectionMatrix(long ptr, float x1, float y1,
             float z1, float w1, float x2, float y2, float z2, float w2,
             float x3, float y3, float z3, float w3, float x4, float y4,
             float z4, float w4);

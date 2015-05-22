@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /** A container for various services and pieces of data required for rendering. */

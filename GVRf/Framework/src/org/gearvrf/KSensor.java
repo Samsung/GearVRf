@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import java.util.TimerTask;
 
 /** Wrapper for GearVR rotation sensor. */
 class KSensor {
-    private final long mPtr = NativeKSensor.ctor();
+    private final long mNativePointer = NativeKSensor.ctor();
     private Timer mTimer = null;
     private final List<KSensorListener> mListeners = new ArrayList<KSensorListener>();
     private boolean mConnected = false;
@@ -53,17 +52,17 @@ class KSensor {
     }
 
     boolean update() {
-        return NativeKSensor.update(mPtr);
+        return NativeKSensor.update(mNativePointer);
     }
 
     void dispatchData() {
-        float[] data = NativeKSensor.getData(mPtr);
+        float[] data = NativeKSensor.getData(mNativePointer);
 
         synchronized (mListeners) {
             for (KSensorListener listener : mListeners) {
-                listener.onSensorChanged(NativeKSensor.getTimeStamp(mPtr),
-                        data[0], data[1], data[2], data[3], data[4], data[5],
-                        data[6]);
+                listener.onSensorChanged(
+                        NativeKSensor.getTimeStamp(mNativePointer), data[0],
+                        data[1], data[2], data[3], data[4], data[5], data[6]);
             }
         }
         if (!mConnected) {
@@ -93,7 +92,7 @@ class KSensor {
     void close() {
         mTimer.cancel();
         mTimer.purge();
-        NativeKSensor.close(mPtr);
+        NativeKSensor.close(mNativePointer);
     }
 }
 

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.animation;
 
 /** The three supported repeat modes. */
@@ -22,32 +21,30 @@ public abstract class GVRRepeatMode {
      * Run once.
      * 
      * This is the default: {@link GVRAnimation#setRepeatMode(int)
-     * setRepeatMode()} lets you specify either of the alternatives.
-     * Run-once will leave the animated property in the 'new' state, which
-     * is normally what you want: you use a run-once animation to smooth a
-     * transition.
+     * setRepeatMode()} lets you specify either of the alternatives. Run-once
+     * will leave the animated property in the 'new' state, which is normally
+     * what you want: you use a run-once animation to smooth a transition.
      */
     public static final int ONCE = 0;
     /**
      * Run repeatedly: start to finish; start to finish; and so on.
      * 
      * This will leave the animated property in the 'start' state. In some
-     * cases, this will be visually jarring; in others (like when you are
-     * doing a full 360 degree rotation) this will be exactly what you want.
+     * cases, this will be visually jarring; in others (like when you are doing
+     * a full 360 degree rotation) this will be exactly what you want.
      */
     public static final int REPEATED = 1;
     /**
-     * Run repeatedly: start to finish, finish to start; start to finish,
-     * finish to start; and so on.
+     * Run repeatedly: start to finish, finish to start; start to finish, finish
+     * to start; and so on.
      * 
-     * This is perfect for 'wiggle' or grow-shrink animations. Note that an
-     * odd {@linkplain GVRAnimation#setRepeatCount(int) repeat count}
-     * will leave the animated property in the 'new' state, just like
-     * {@linkplain #ONCE run-once} does; an even repeat count will leave the
-     * animated property in the 'start' state, just like
-     * {@linkplain #REPEATED repeated} does. The default repeat count is 2,
-     * so you don't have to explicitly set a repeat count to 'pulse' an
-     * object with a ping pong animation.
+     * This is perfect for 'wiggle' or grow-shrink animations. Note that an odd
+     * {@linkplain GVRAnimation#setRepeatCount(int) repeat count} will leave the
+     * animated property in the 'new' state, just like {@linkplain #ONCE
+     * run-once} does; an even repeat count will leave the animated property in
+     * the 'start' state, just like {@linkplain #REPEATED repeated} does. The
+     * default repeat count is 2, so you don't have to explicitly set a repeat
+     * count to 'pulse' an object with a ping pong animation.
      */
     public static final int PINGPONG = 2;
 

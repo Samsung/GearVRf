@@ -26,27 +26,27 @@
 
 
 #include "objects/hybrid_object.h"
+#include "components/camera_rig.h"
 
 namespace gvr {
-class CameraRig;
 class SceneObject;
 
 class Scene: public HybridObject {
 public:
     Scene();
     virtual ~Scene();
-    void addSceneObject(const std::shared_ptr<SceneObject>& scene_object);
-    void removeSceneObject(const std::shared_ptr<SceneObject>& scene_object);
-    const std::vector<std::shared_ptr<SceneObject>>& scene_objects() {
+    void addSceneObject(SceneObject* scene_object);
+    void removeSceneObject(SceneObject* scene_object);
+    const std::vector<SceneObject*>& scene_objects() {
         return scene_objects_;
     }
-    const std::shared_ptr<CameraRig>& main_camera_rig() {
+    const CameraRig* main_camera_rig() {
         return main_camera_rig_;
     }
-    void set_main_camera_rig(const std::shared_ptr<CameraRig>& camera_rig) {
+    void set_main_camera_rig(CameraRig* camera_rig) {
         main_camera_rig_ = camera_rig;
     }
-    std::vector<std::shared_ptr<SceneObject>> getWholeSceneObjects();
+    std::vector<SceneObject*> getWholeSceneObjects();
 
     int getSceneDirtyFlag() { return 1 || dirtyFlag_;  /* force to be true */}
     void setSceneDirtyFlag(int dirtyBits) { dirtyFlag_ |= dirtyBits; }
@@ -64,8 +64,8 @@ private:
     Scene& operator=(Scene&& scene);
 
 private:
-    std::vector<std::shared_ptr<SceneObject>> scene_objects_;
-    std::shared_ptr<CameraRig> main_camera_rig_;
+    std::vector<SceneObject*> scene_objects_;
+    CameraRig* main_camera_rig_;
 
     int dirtyFlag_;
     bool frustum_flag_;

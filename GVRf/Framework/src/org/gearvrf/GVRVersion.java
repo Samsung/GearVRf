@@ -15,8 +15,6 @@
 
 package org.gearvrf;
 
-import java.util.concurrent.Future;
-
 /** GVRF version strings. */
 public class GVRVersion {
     /** Final HQ version. */
@@ -74,5 +72,11 @@ public class GVRVersion {
      */
     public static final String V_1_6_9 = "1.6.9";
 
-    public static final String CURRENT = V_1_6_9;
+    /*
+     * No more reference counting - Java objects control native objects'
+     * lifecycles.
+     */
+    public static final String V_2_0_0 = "2.0.0";
+
+    public static final String CURRENT = V_2_0_0;
 }

@@ -109,15 +109,15 @@ void CubemapShader::recycle() {
 
 void CubemapShader::render(const glm::mat4& model_matrix,
 		const glm::mat4& mvp_matrix,
-		std::shared_ptr<RenderData> render_data) {
-	std::shared_ptr<Mesh> mesh = render_data->mesh();
-	std::shared_ptr<Texture> texture = render_data->material()->getTexture(
+		RenderData* render_data) {
+	Mesh* mesh = render_data->mesh();
+	Texture* texture = render_data->material()->getTexture(
 			"main_texture");
 	glm::vec3 color = render_data->material()->getVec3("color");
 	float opacity = render_data->material()->getFloat("opacity");
 
-	if (texture->getTarget() != GL_TEXTURE_CUBE_MAP) {
-		std::string error = "CubemapShader::render : texture with wrong target";
+    if (texture->getTarget() != GL_TEXTURE_CUBE_MAP) {
+        std::string error = "CubemapShader::render : texture with wrong target";
 		throw error;
 	}
 

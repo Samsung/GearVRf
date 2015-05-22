@@ -13,25 +13,12 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /** Wrapper for a GL texture. */
-public class GVRTexture extends GVRRecyclableObject {
+public class GVRTexture extends GVRHybridObject {
     protected GVRTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
-        gvrContext.getRecyclableObjectProtector().addRecyclableObject(this);
-    }
-
-    static GVRTexture factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRTexture(gvrContext, ptr)
-                : (GVRTexture) wrapper;
-    }
-
-    @Override
-    protected boolean registerWrapper() {
-        return true;
     }
 
     /**
@@ -40,10 +27,10 @@ public class GVRTexture extends GVRRecyclableObject {
      * @return The GL ID of the texture.
      */
     public int getId() {
-        return NativeTexture.getId(getPtr());
+        return NativeTexture.getId(getNative());
     }
 }
 
 class NativeTexture {
-    public static native int getId(long texture);
+    static native int getId(long texture);
 }

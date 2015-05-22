@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Things which can be attached to a scene object.
  ***************************************************************************/
@@ -34,23 +33,23 @@ public:
             HybridObject(), owner_object_() {
     }
 
-    Component(std::shared_ptr<SceneObject> owner_object) :
+    Component(SceneObject* owner_object) :
             owner_object_(owner_object) {
     }
 
     virtual ~Component() {
     }
 
-    std::shared_ptr<SceneObject> owner_object() const {
-        return owner_object_.lock();
+    SceneObject* owner_object() const {
+        return owner_object_;
     }
 
-    void set_owner_object(const std::shared_ptr<SceneObject>& owner_object) {
+    void set_owner_object(SceneObject* owner_object) {
         owner_object_ = owner_object;
     }
 
     void removeOwnerObject() {
-        owner_object_.reset();
+        owner_object_ = NULL;
     }
 
 private:
@@ -60,7 +59,7 @@ private:
     Component& operator=(Component&& component);
 
 private:
-    std::weak_ptr<SceneObject> owner_object_;
+    SceneObject* owner_object_;
 };
 
 }

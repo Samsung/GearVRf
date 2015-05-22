@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages custom shaders, for rendering scene objects.
@@ -25,6 +27,8 @@ public class GVRMaterialShaderManager extends
         GVRBaseShaderManager<GVRMaterialMap, GVRCustomMaterialShaderId>
         implements GVRShaderManagers<GVRMaterialMap, GVRCustomMaterialShaderId> {
 
+    private final Map<GVRCustomMaterialShaderId, GVRMaterialMap> materialMaps = new HashMap<GVRCustomMaterialShaderId, GVRMaterialMap>();
+
     GVRMaterialShaderManager(GVRContext gvrContext) {
         super(gvrContext, NativeShaderManager.ctor());
     }
@@ -32,14 +36,22 @@ public class GVRMaterialShaderManager extends
     @Override
     public GVRCustomMaterialShaderId addShader(String vertexShader,
             String fragmentShader) {
-        final int shaderId = NativeShaderManager.addCustomShader(getPtr(),
+        final int shaderId = NativeShaderManager.addCustomShader(getNative(),
                 vertexShader, fragmentShader);
-        return new GVRCustomMaterialShaderId(shaderId);
+        GVRCustomMaterialShaderId result = new GVRCustomMaterialShaderId(
+                shaderId);
+        materialMaps.put(result, retrieveShaderMap(result));
+        return result;
     }
 
     @Override
     public GVRMaterialMap getShaderMap(GVRCustomMaterialShaderId id) {
-        long ptr = NativeShaderManager.getCustomShader(getPtr(), id.ID);
+        return materialMaps.get(id);
+    }
+
+    @SuppressWarnings("resource")
+    private GVRMaterialMap retrieveShaderMap(GVRCustomMaterialShaderId id) {
+        long ptr = NativeShaderManager.getCustomShader(getNative(), id.ID);
         return ptr == 0 ? null : new GVRMaterialMap(getGVRContext(), ptr);
     }
 }

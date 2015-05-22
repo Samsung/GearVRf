@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import org.gearvrf.GVRAndroidResource;
@@ -40,8 +39,9 @@ abstract class AsyncMesh {
      * The API
      */
 
-    static void loadMesh(GVRContext gvrContext, CancelableCallback<GVRMesh> callback,
-            GVRAndroidResource resource, int priority) {
+    static void loadMesh(GVRContext gvrContext,
+            CancelableCallback<GVRMesh> callback, GVRAndroidResource resource,
+            int priority) {
         Throttler.registerCallback(gvrContext, MESH_CLASS, callback, resource,
                 priority);
     }

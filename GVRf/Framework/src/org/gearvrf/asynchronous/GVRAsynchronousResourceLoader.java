@@ -517,7 +517,7 @@ public class GVRAsynchronousResourceLoader {
      * An internal method, public only so that GVRContext can make cross-package
      * calls.
      * 
-     * A wrapper around
+     * A synchronous (blocking) wrapper around
      * {@link android.graphics.BitmapFactory#decodeStream(InputStream)
      * BitmapFactory.decodeStream} that uses an
      * {@link android.graphics.BitmapFactory.Options} <code>inTempStorage</code>

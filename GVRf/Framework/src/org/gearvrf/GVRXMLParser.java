@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import android.content.res.AssetManager;
@@ -50,7 +49,7 @@ class GVRXMLParser {
      * @param fileName
      *            the distortion file name under assets folder
      */
-    public GVRXMLParser(AssetManager assets, String fileName) {
+    GVRXMLParser(AssetManager assets, String fileName) {
         try {
             StringBuilder buf = new StringBuilder();
             InputStream is = assets.open(fileName);
@@ -122,7 +121,7 @@ class GVRXMLParser {
      * 
      * @return lens separation distance in float
      */
-    public float getLensSeparationDistance() {
+    float getLensSeparationDistance() {
         return mLensSeparationDistance;
     }
 
@@ -131,7 +130,7 @@ class GVRXMLParser {
      * 
      * @return fov-y in float
      */
-    public float getFovY() {
+    float getFovY() {
         return mFovY;
     }
 
@@ -140,7 +139,7 @@ class GVRXMLParser {
      * 
      * @return fbo-width in int
      */
-    public int getFBOWidth() {
+    int getFBOWidth() {
         return mFBOWidth;
     }
 
@@ -149,7 +148,7 @@ class GVRXMLParser {
      * 
      * @return fbo-height in int
      */
-    public int getFBOHeight() {
+    int getFBOHeight() {
         return mFBOHeight;
     }
 
@@ -158,7 +157,7 @@ class GVRXMLParser {
      * 
      * @return msaa in int
      */
-    public int getMSAA() {
+    int getMSAA() {
         return mMSAA;
     }
 }

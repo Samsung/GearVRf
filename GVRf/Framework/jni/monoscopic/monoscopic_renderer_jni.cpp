@@ -34,18 +34,15 @@ void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
         jlong jshader_manager, jlong jpost_effect_shader_manager,
         jlong jpost_effect_render_texture_a,
         jlong jpost_effect_render_texture_b) {
-    std::shared_ptr<Scene> scene =
-            *reinterpret_cast<std::shared_ptr<Scene>*>(jscene);
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
-    std::shared_ptr<ShaderManager> shader_manager =
-            *reinterpret_cast<std::shared_ptr<ShaderManager>*>(jshader_manager);
-    std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager =
-            *reinterpret_cast<std::shared_ptr<PostEffectShaderManager>*>(jpost_effect_shader_manager);
-    std::shared_ptr<RenderTexture> post_effect_render_texture_a =
-            *reinterpret_cast<std::shared_ptr<RenderTexture>*>(jpost_effect_render_texture_a);
-    std::shared_ptr<RenderTexture> post_effect_render_texture_b =
-            *reinterpret_cast<std::shared_ptr<RenderTexture>*>(jpost_effect_render_texture_b);
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
+    ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
+    PostEffectShaderManager* post_effect_shader_manager =
+            reinterpret_cast<PostEffectShaderManager*>(jpost_effect_shader_manager);
+    RenderTexture* post_effect_render_texture_a =
+            reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_a);
+    RenderTexture* post_effect_render_texture_b =
+            reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_b);
 
     Renderer::renderCamera(scene, camera, viewportX, viewportY, viewportWidth,
             viewportHeight, shader_manager, post_effect_shader_manager,

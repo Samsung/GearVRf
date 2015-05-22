@@ -66,8 +66,8 @@ void HorizontalFlipPostEffectShader::recycle() {
 }
 
 void HorizontalFlipPostEffectShader::render(
-        std::shared_ptr<RenderTexture> render_texture,
-        std::shared_ptr<PostEffectData> post_effect_data,
+        RenderTexture* render_texture,
+        PostEffectData* post_effect_data,
         std::vector<glm::vec3>& vertices, std::vector<glm::vec2>& tex_coords,
         std::vector<unsigned short>& triangles) {
     glUseProgram(program_->id());

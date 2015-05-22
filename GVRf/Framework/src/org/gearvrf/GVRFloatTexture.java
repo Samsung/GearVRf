@@ -46,7 +46,7 @@ public class GVRFloatTexture extends GVRTexture {
     public GVRFloatTexture(GVRContext gvrContext, int width, int height,
             float[] data) throws IllegalArgumentException {
         super(gvrContext, NativeFloatTexture.ctor());
-        NativeFloatTexture.update(getPtr(), width, height, data);
+        NativeFloatTexture.update(getNative(), width, height, data);
     }
 
     /**
@@ -81,7 +81,7 @@ public class GVRFloatTexture extends GVRTexture {
                 || data.length < height * width * 2) {
             throw new IllegalArgumentException();
         }
-        return NativeFloatTexture.update(getPtr(), width, height, data);
+        return NativeFloatTexture.update(getNative(), width, height, data);
     }
 }
 

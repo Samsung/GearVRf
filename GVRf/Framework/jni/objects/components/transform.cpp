@@ -38,8 +38,7 @@ Transform::~Transform() {
 void Transform::invalidate() {
     if (model_matrix_.isValid()) {
         model_matrix_.invalidate();
-        std::vector < std::shared_ptr
-                < SceneObject >> children(owner_object()->children());
+        std::vector<SceneObject*> children(owner_object()->children());
         for (auto it = children.begin(); it != children.end(); ++it) {
             (*it)->transform()->invalidate();
         }

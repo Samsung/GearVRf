@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a cube map texture without light.
  ***************************************************************************/
@@ -35,11 +34,11 @@ class RenderData;
 
 class CubemapShader: public RecyclableObject {
 public:
-	CubemapShader();
+    CubemapShader();
     ~CubemapShader();
     void recycle();
     void render(const glm::mat4& model_matrix, const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data);
+            RenderData* render_data);
 
 private:
     CubemapShader(const CubemapShader& cubemap_shader);

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import android.content.res.AssetManager;
@@ -33,7 +32,8 @@ public class GVRBitmapTexture extends GVRTexture {
      *            A non-null {@link Bitmap} instance.
      */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap) {
-        super(gvrContext, NativeBaseTexture.bitmapConstructor(bitmap));
+        super(gvrContext, NativeBaseTexture.bareConstructor());
+        update(bitmap);
     }
 
     /**
@@ -119,7 +119,8 @@ public class GVRBitmapTexture extends GVRTexture {
                 || grayscaleData.length < height * width) {
             throw new IllegalArgumentException();
         }
-        return NativeBaseTexture.update(getPtr(), width, height, grayscaleData);
+        return NativeBaseTexture.update(getNative(), width, height,
+                grayscaleData);
     }
 
     /**
@@ -151,8 +152,6 @@ public class GVRBitmapTexture extends GVRTexture {
 }
 
 class NativeBaseTexture {
-    static native long bitmapConstructor(Bitmap bitmap);
-
     static native long fileConstructor(AssetManager assetManager,
             String filename);
 

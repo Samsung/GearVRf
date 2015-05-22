@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /** A {@link GVRCamera camera} with a perspective projection. */
 public class GVRPerspectiveCamera extends GVRCamera {
@@ -68,7 +66,7 @@ public class GVRPerspectiveCamera extends GVRCamera {
      *         camera.
      */
     public float getNearClippingDistance() {
-        return NativePerspectiveCamera.getNearClippingDistance(getPtr());
+        return NativePerspectiveCamera.getNearClippingDistance(getNative());
     }
 
     /**
@@ -79,7 +77,7 @@ public class GVRPerspectiveCamera extends GVRCamera {
      *            Distance to the near clipping plane.
      */
     public void setNearClippingDistance(float near) {
-        NativePerspectiveCamera.setNearClippingDistance(getPtr(), near);
+        NativePerspectiveCamera.setNearClippingDistance(getNative(), near);
     }
 
     /**
@@ -87,7 +85,7 @@ public class GVRPerspectiveCamera extends GVRCamera {
      *         camera.
      */
     public float getFarClippingDistance() {
-        return NativePerspectiveCamera.getFarClippingDistance(getPtr());
+        return NativePerspectiveCamera.getFarClippingDistance(getNative());
     }
 
     /**
@@ -98,14 +96,14 @@ public class GVRPerspectiveCamera extends GVRCamera {
      *            Distance to the far clipping plane.
      */
     public void setFarClippingDistance(float far) {
-        NativePerspectiveCamera.setFarClippingDistance(getPtr(), far);
+        NativePerspectiveCamera.setFarClippingDistance(getNative(), far);
     }
 
     /**
      * @return The 'y' field of view, in degrees, for this camera.
      */
     public float getFovY() {
-        return NativePerspectiveCamera.getFovY(getPtr());
+        return NativePerspectiveCamera.getFovY(getNative());
     }
 
     /**
@@ -115,14 +113,14 @@ public class GVRPerspectiveCamera extends GVRCamera {
      *            The 'y' field of view, in degrees.
      */
     public void setFovY(float fovY) {
-        NativePerspectiveCamera.setFovY(getPtr(), fovY);
+        NativePerspectiveCamera.setFovY(getNative(), fovY);
     }
 
     /**
      * @return The aspect ratio (width/height) for this camera.
      */
     public float getAspectRatio() {
-        return NativePerspectiveCamera.getAspectRatio(getPtr());
+        return NativePerspectiveCamera.getAspectRatio(getNative());
     }
 
     /**
@@ -132,34 +130,34 @@ public class GVRPerspectiveCamera extends GVRCamera {
      *            The aspect ratio.
      */
     public void setAspectRatio(float aspectRatio) {
-        NativePerspectiveCamera.setAspectRatio(getPtr(), aspectRatio);
+        NativePerspectiveCamera.setAspectRatio(getNative(), aspectRatio);
     }
 }
 
 class NativePerspectiveCamera {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native float getDefaultFovY();
+    static native float getDefaultFovY();
 
-    public static native void setDefaultFovY(float fovY);
+    static native void setDefaultFovY(float fovY);
 
-    public static native float getDefaultAspectRatio();
+    static native float getDefaultAspectRatio();
 
-    public static native void setDefaultAspectRatio(float aspectRatio);
+    static native void setDefaultAspectRatio(float aspectRatio);
 
-    public static native float getNearClippingDistance(long camera);
+    static native float getNearClippingDistance(long camera);
 
-    public static native void setNearClippingDistance(long camera, float near);
+    static native void setNearClippingDistance(long camera, float near);
 
-    public static native float getFarClippingDistance(long camera);
+    static native float getFarClippingDistance(long camera);
 
-    public static native void setFarClippingDistance(long camera, float far);
+    static native void setFarClippingDistance(long camera, float far);
 
-    public static native float getFovY(long camera);
+    static native float getFovY(long camera);
 
-    public static native void setFovY(long camera, float fovY);
+    static native void setFovY(long camera, float fovY);
 
-    public static native float getAspectRatio(long camera);
+    static native float getAspectRatio(long camera);
 
-    public static native void setAspectRatio(long camera, float aspectRatio);
+    static native void setAspectRatio(long camera, float aspectRatio);
 }

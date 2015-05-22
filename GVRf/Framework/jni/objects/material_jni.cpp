@@ -27,16 +27,10 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMaterial_ctor(JNIEnv * env, jobject obj,
         jint shader_type);
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeMaterial_getShaderType(JNIEnv * env,
-        jobject obj, jlong jmaterial);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setShaderType(JNIEnv * env,
         jobject obj, jlong jmaterial, jint shader_type);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMaterial_getTexture(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
@@ -84,52 +78,22 @@ Java_org_gearvrf_NativeMaterial_setMat4(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMaterial_ctor(JNIEnv * env, jobject obj,
         jint shader_type) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<Material>(
-            new Material(static_cast<Material::ShaderType>(shader_type))));
-}
-
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeMaterial_getShaderType(JNIEnv * env,
-        jobject obj, jlong jmaterial) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
-    return static_cast<jint>(material->shader_type());
+    return reinterpret_cast<jlong>(new Material(static_cast<Material::ShaderType>(shader_type)));
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setShaderType(JNIEnv * env,
         jobject obj, jlong jmaterial, jint shader_type) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     return material->set_shader_type(
             static_cast<Material::ShaderType>(shader_type));
-}
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMaterial_getTexture(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
-    const char* char_key = env->GetStringUTFChars(key, 0);
-    std::string native_key = std::string(char_key);
-    try {
-        std::shared_ptr<Texture> texture = material->getTexture(native_key);
-        env->ReleaseStringUTFChars(key, char_key);
-        return reinterpret_cast<jlong>(new std::shared_ptr<Texture>(texture));
-    } catch (std::string e) {
-        LOGE("%s", e.c_str());
-        env->ReleaseStringUTFChars(key, char_key);
-        return 0;
-    }
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key, jlong jtexture) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
-    std::shared_ptr<Texture> texture =
-            *reinterpret_cast<std::shared_ptr<Texture>*>(jtexture);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     material->setTexture(native_key, texture);
@@ -139,8 +103,7 @@ Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeMaterial_getFloat(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     jfloat material_float = material->getFloat(native_key);
@@ -151,8 +114,7 @@ Java_org_gearvrf_NativeMaterial_getFloat(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setFloat(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key, jfloat value) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     material->setFloat(native_key, value);
@@ -162,8 +124,7 @@ Java_org_gearvrf_NativeMaterial_setFloat(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMaterial_getVec2(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     glm::vec2 material_vec2 = material->getVec2(native_key);
@@ -177,8 +138,7 @@ Java_org_gearvrf_NativeMaterial_getVec2(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setVec2(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     material->setVec2(native_key, glm::vec2(x, y));
@@ -188,8 +148,7 @@ Java_org_gearvrf_NativeMaterial_setVec2(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMaterial_getVec3(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     glm::vec3 material_vec3 = material->getVec3(native_key);
@@ -204,8 +163,7 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setVec3(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y,
         jfloat z) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     material->setVec3(native_key, glm::vec3(x, y, z));
@@ -215,8 +173,7 @@ Java_org_gearvrf_NativeMaterial_setVec3(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMaterial_getVec4(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     glm::vec4 material_vec4 = material->getVec4(native_key);
@@ -231,8 +188,7 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setVec4(JNIEnv * env,
         jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y, jfloat z,
         jfloat w) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     material->setVec4(native_key, glm::vec4(x, y, z, w));
@@ -245,8 +201,7 @@ Java_org_gearvrf_NativeMaterial_setMat4(JNIEnv * env,
         jfloat z1, jfloat w1, jfloat x2, jfloat y2, jfloat z2, jfloat w2,
         jfloat x3, jfloat y3, jfloat z3, jfloat w3, jfloat x4, jfloat y4,
         jfloat z4, jfloat w4) {
-    std::shared_ptr<Material> material = *reinterpret_cast<std::shared_ptr<
-            Material>*>(jmaterial);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     glm::mat4 mat(x1, y1, z1, w1, x2, y2, z2, w2, x3, y3, z3, w3, x4, y4, z4,

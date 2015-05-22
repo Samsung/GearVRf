@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Low-level utility code used in multiple GVRF packages. We can't keep you from
  * using this code in a GVRF application, but we <em>can</em> urge you not to: 

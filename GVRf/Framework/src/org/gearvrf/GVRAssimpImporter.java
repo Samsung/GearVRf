@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /**
@@ -21,6 +20,7 @@ package org.gearvrf;
  * have been imported with {@link GVRImporter}.
  */
 class GVRAssimpImporter extends GVRHybridObject {
+
     GVRAssimpImporter(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -29,7 +29,7 @@ class GVRAssimpImporter extends GVRHybridObject {
      * @return The number of meshes contained in the imported 3D model.
      */
     int getNumberOfMeshes() {
-        return NativeAssimpImporter.getNumberOfMeshes(getPtr());
+        return NativeAssimpImporter.getNumberOfMeshes(getNative());
     }
 
     /**
@@ -40,8 +40,8 @@ class GVRAssimpImporter extends GVRHybridObject {
      * @return The mesh, encapsulated as a {@link GVRMesh}.
      */
     GVRMesh getMesh(int index) {
-        return GVRMesh.factory(getGVRContext(),
-                NativeAssimpImporter.getMesh(getPtr(), index));
+        return new GVRMesh(getGVRContext(), NativeAssimpImporter.getMesh(
+                getNative(), index));
     }
 }
 

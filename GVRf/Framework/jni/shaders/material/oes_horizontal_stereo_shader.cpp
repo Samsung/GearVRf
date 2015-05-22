@@ -77,10 +77,9 @@ void OESHorizontalStereoShader::recycle() {
 }
 
 void OESHorizontalStereoShader::render(const glm::mat4& mvp_matrix,
-        std::shared_ptr<RenderData> render_data, bool right) {
-    std::shared_ptr<Mesh> mesh = render_data->mesh();
-    std::shared_ptr<Texture> texture = render_data->material()->getTexture(
-            "main_texture");
+        RenderData* render_data, bool right) {
+    Mesh* mesh = render_data->mesh();
+    Texture* texture = render_data->material()->getTexture("main_texture");
     glm::vec3 color = render_data->material()->getVec3("color");
     float opacity = render_data->material()->getFloat("opacity");
 

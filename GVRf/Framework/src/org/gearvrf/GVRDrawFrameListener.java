@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 /**
@@ -35,7 +34,8 @@ public interface GVRDrawFrameListener {
      * before {@link GVRScript#onStep()}.
      * 
      * @param frameTime
-     *            Seconds since the previous frame - see {@link GVRContext#getFrameTime()}
+     *            Seconds since the previous frame - see
+     *            {@link GVRContext#getFrameTime()}
      */
     public void onDrawFrame(float frameTime);
 }

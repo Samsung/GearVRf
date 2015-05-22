@@ -37,13 +37,12 @@
 
 namespace gvr {
 
-void Renderer::renderCamera(std::shared_ptr<Scene> scene,
-        std::shared_ptr<Camera> camera, int framebufferId, int viewportX,
-        int viewportY, int viewportWidth, int viewportHeight,
-        std::shared_ptr<ShaderManager> shader_manager,
-        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_b) {
+void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
+        int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+        ShaderManager* shader_manager,
+        PostEffectShaderManager* post_effect_shader_manager,
+        RenderTexture* post_effect_render_texture_a,
+        RenderTexture* post_effect_render_texture_b) {
     // there is no need to flat and sort every frame.
     // however let's keep it as is and assume we are not changed
     // This is not right way to do data conversion. However since GVRF doesn't support
@@ -56,9 +55,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         glm::mat4 projection_matrix = camera->getProjectionMatrix();
         glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
-        std::vector < std::shared_ptr < SceneObject >> scene_objects =
-                scene->getWholeSceneObjects();
-        std::vector < std::shared_ptr < RenderData >> render_data_vector;
+        std::vector<SceneObject*> scene_objects = scene->getWholeSceneObjects();
+        std::vector<RenderData*> render_data_vector;
 
 
 #if _GVRF_USE_GLES3_
@@ -66,7 +64,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         {
             for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it)
             {
-                std::shared_ptr<RenderData> render_data = (*it)->render_data();
+                RenderData* render_data = (*it)->render_data();
                 if (render_data != 0)
                 {
                     if( render_data->material() != 0)
@@ -100,14 +98,14 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
         for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it)
         {
-            std::shared_ptr<RenderData> render_data = (*it)->render_data();
+            RenderData* render_data = (*it)->render_data();
             if (render_data != 0) {
                 if (render_data->material() != 0) {
                     // Check for frustum culling flag
                     if(scene->get_frustum_culling())
                     {
                         // Frustum culling setup
-                        std::shared_ptr<Mesh> currentMesh = render_data->mesh();
+                        Mesh* currentMesh = render_data->mesh();
                         float* bounding_box_info = currentMesh->getBoundingBoxInfo();
                         glm::mat4 model_matrix_tmp(render_data->owner_object()->transform()->getModelMatrix());
                         glm::mat4 mvp_matrix_tmp( vp_matrix * model_matrix_tmp);
@@ -148,8 +146,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                                 	if(!is_query_issued)
                                 	{
 										//Setup basic bounding box and material
-										std::shared_ptr<RenderData> bounding_box_render_data(new RenderData());
-										std::shared_ptr<Mesh> bounding_box_mesh = render_data->mesh()->getBoundingBox();
+										RenderData* bounding_box_render_data(new RenderData());
+										Mesh* bounding_box_mesh = render_data->mesh()->getBoundingBox();
 										bounding_box_render_data->set_mesh(bounding_box_mesh);
 
                                         GLuint *query = (*it)->get_occlusion_array();
@@ -190,8 +188,7 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
         std::sort(render_data_vector.begin(), render_data_vector.end(),
                 compareRenderData);
 
-        std::vector < std::shared_ptr < PostEffectData >> post_effects =
-                camera->post_effect_data();
+        std::vector<PostEffectData*> post_effects = camera->post_effect_data();
 
         glEnable (GL_DEPTH_TEST);
         glDepthFunc (GL_LEQUAL);
@@ -218,9 +215,8 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
                         camera->render_mask(), shader_manager);
             }
         } else {
-            std::shared_ptr<RenderTexture> texture_render_texture =
-                    post_effect_render_texture_a;
-            std::shared_ptr<RenderTexture> target_render_texture;
+            RenderTexture* texture_render_texture = post_effect_render_texture_a;
+            RenderTexture* target_render_texture;
 
             glBindFramebuffer(GL_FRAMEBUFFER,
                     texture_render_texture->getFrameBufferId());
@@ -385,14 +381,11 @@ bool Renderer::is_cube_in_frustum( float frustum[6][4], float *vertex_limit)
    return true;
 }
 
-void Renderer::renderCamera(std::shared_ptr<Scene> scene,
-        std::shared_ptr<Camera> camera,
-        std::shared_ptr<RenderTexture> render_texture,
-        std::shared_ptr<ShaderManager> shader_manager,
-        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-        glm::mat4 vp_matrix) {
+void Renderer::renderCamera(Scene* scene, Camera* camera,
+        RenderTexture* render_texture, ShaderManager* shader_manager,
+        PostEffectShaderManager* post_effect_shader_manager,
+        RenderTexture* post_effect_render_texture_a,
+        RenderTexture* post_effect_render_texture_b, glm::mat4 vp_matrix) {
     GLint curFBO;
     GLint viewport[4];
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curFBO);
@@ -403,13 +396,11 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
             post_effect_render_texture_a, post_effect_render_texture_b);
 }
 
-void Renderer::renderCamera(std::shared_ptr<Scene> scene,
-        std::shared_ptr<Camera> camera,
-        std::shared_ptr<RenderTexture> render_texture,
-        std::shared_ptr<ShaderManager> shader_manager,
-        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_b) {
+void Renderer::renderCamera(Scene* scene, Camera* camera,
+        RenderTexture* render_texture, ShaderManager* shader_manager,
+        PostEffectShaderManager* post_effect_shader_manager,
+        RenderTexture* post_effect_render_texture_a,
+        RenderTexture* post_effect_render_texture_b) {
 
     renderCamera(scene, camera, render_texture->getFrameBufferId(), 0, 0,
             render_texture->width(), render_texture->height(), shader_manager,
@@ -418,22 +409,21 @@ void Renderer::renderCamera(std::shared_ptr<Scene> scene,
 
 }
 
-void Renderer::renderCamera(std::shared_ptr<Scene> scene,
-        std::shared_ptr<Camera> camera, int viewportX, int viewportY,
-        int viewportWidth, int viewportHeight,
-        std::shared_ptr<ShaderManager> shader_manager,
-        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-        std::shared_ptr<RenderTexture> post_effect_render_texture_b) {
+void Renderer::renderCamera(Scene* scene, Camera* camera, int viewportX,
+        int viewportY, int viewportWidth, int viewportHeight,
+        ShaderManager* shader_manager,
+        PostEffectShaderManager* post_effect_shader_manager,
+        RenderTexture* post_effect_render_texture_a,
+        RenderTexture* post_effect_render_texture_b) {
 
     renderCamera(scene, camera, 0, viewportX, viewportY, viewportWidth,
             viewportHeight, shader_manager, post_effect_shader_manager,
             post_effect_render_texture_a, post_effect_render_texture_b);
 }
 
-void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, std::shared_ptr<ShaderManager> shader_manager) {
+void Renderer::renderRenderData(RenderData* render_data,
+		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
+        ShaderManager* shader_manager) {
     if (render_mask & render_data->render_mask()) {
         if (!render_data->cull_test()) {
             glDisable (GL_CULL_FACE);
@@ -520,10 +510,10 @@ void Renderer::renderRenderData(std::shared_ptr<RenderData> render_data,
     }
 }
 
-void Renderer::renderPostEffectData(std::shared_ptr<Camera> camera,
-        std::shared_ptr<RenderTexture> render_texture,
-        std::shared_ptr<PostEffectData> post_effect_data,
-        std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager) {
+void Renderer::renderPostEffectData(Camera* camera,
+        RenderTexture* render_texture,
+        PostEffectData* post_effect_data,
+        PostEffectShaderManager* post_effect_shader_manager) {
     try {
         switch (post_effect_data->shader_type()) {
         case PostEffectData::ShaderType::COLOR_BLEND_SHADER:

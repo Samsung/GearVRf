@@ -53,7 +53,7 @@ Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
     char* buffer = (char*) malloc(sizeof(char) * size);
     AAsset_read(asset, buffer, size);
 
-    std::shared_ptr<AssimpImporter> assimp_scene = Importer::readFileFromAssets(
+    AssimpImporter* assimp_scene = Importer::readFileFromAssets(
             buffer, size);
 
     AAsset_close(asset);
@@ -62,8 +62,7 @@ Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
 
     env->ReleaseStringUTFChars(filename, native_string);
 
-    return reinterpret_cast<jlong>(new std::shared_ptr<AssimpImporter>(
-            assimp_scene));
+    return reinterpret_cast<jlong>(assimp_scene);
 }
 
 JNIEXPORT jlong JNICALL
@@ -72,13 +71,12 @@ Java_org_gearvrf_NativeImporter_readFromByteArray(JNIEnv * env,jobject obj,
     jbyte* data = env->GetByteArrayElements(bytes, 0);
     int length = static_cast<int>(env->GetArrayLength(bytes));
 
-    std::shared_ptr<AssimpImporter> assimp_scene = Importer::readFileFromAssets(
+    AssimpImporter* assimp_scene = Importer::readFileFromAssets(
             (char*)data, length);
 
     env->ReleaseByteArrayElements(bytes, data, 0);
 
-    return reinterpret_cast<jlong>(new std::shared_ptr<AssimpImporter>(
-            assimp_scene));
+    return reinterpret_cast<jlong>(assimp_scene);
 }
 
 JNIEXPORT jlong JNICALL
@@ -90,15 +88,13 @@ Java_org_gearvrf_NativeImporter_readFileFromSDCard(JNIEnv * env,
     std::string str((std::istreambuf_iterator<char>(ifs)),
             std::istreambuf_iterator<char>());
 
-    std::shared_ptr<AssimpImporter> assimp_scene = Importer::readFileFromSDCard(
-            str);
+    AssimpImporter* assimp_scene = Importer::readFileFromSDCard(str);
 
     ifs.close();
 
     env->ReleaseStringUTFChars(filename, native_string);
 
-    return reinterpret_cast<jlong>(new std::shared_ptr<AssimpImporter>(
-            assimp_scene));
+    return reinterpret_cast<jlong>(assimp_scene);
 }
 
 }

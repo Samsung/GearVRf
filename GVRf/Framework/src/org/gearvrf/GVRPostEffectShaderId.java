@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import android.util.SparseArray;
@@ -47,6 +46,7 @@ public abstract class GVRPostEffectShaderId {
     final int ID;
 
     @SuppressWarnings("unchecked")
+    /** @deprecated Probably unnecessary ... */
     protected final static <T extends GVRPostEffectShaderId> T get(int id) {
         return (T) sIds.get(id);
     }

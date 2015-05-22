@@ -31,12 +31,12 @@ public:
                         GVRActivity( JNIEnv & jni_, jobject activityObject_);
                         ~GVRActivity();
 
-    virtual void         ConfigureVrMode( ovrModeParms & modeParms );
+    virtual void        ConfigureVrMode( ovrModeParms & modeParms );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
     virtual void        OneTimeShutdown();
     virtual Matrix4f    DrawEyeView( const int eye, const float fovDegrees );
     virtual Matrix4f    Frame( VrFrame vrFrame );
-    virtual    void     NewIntent( const char * fromPackageName, const char * command, const char * uri );
+    virtual void        NewIntent( const char * fromPackageName, const char * command, const char * uri );
     virtual void        Command( const char * msg );
     virtual void        WindowCreated();
     void                InitSceneObject( );
@@ -49,34 +49,33 @@ public:
 
     OvrSceneView        Scene;
 
-    GVRViewManager  *viewManager;
+    GVRViewManager*     viewManager;
 
-
-    std::shared_ptr<Camera> camera;
+    Camera*             camera;
 private:
-    glm::mat4            mvp_matrix;
-    void                 SetMVPMatrix(glm::mat4 mvp){
+    glm::mat4           mvp_matrix;
+    void                SetMVPMatrix(glm::mat4 mvp){
         viewManager->mvp_matrix = mvp;
     }
 
-    JNIEnv *            UiJni;            // for use by the Java UI thread
+    JNIEnv*             UiJni;            // for use by the Java UI thread
     Matrix4f            GetEyeView( const int eye, const float fovDegrees ) const;
 
-    jobject              javaObject;
-    jclass               activityClass;    // must be looked up from main thread or FindClass() will fail
+    jobject             javaObject;
+    jclass              activityClass;    // must be looked up from main thread or FindClass() will fail
 
-    jmethodID            oneTimeInitMethodId;
-    jmethodID            oneTimeShutdownMethodId;
+    jmethodID           oneTimeInitMethodId;
+    jmethodID           oneTimeShutdownMethodId;
 
-    jmethodID            drawFrameMethodId;
+    jmethodID           drawFrameMethodId;
 
-    jmethodID            beforeDrawEyesMethodId;
-    jmethodID            drawEyeViewMethodId;
-    jmethodID            afterDrawEyesMethodId;
+    jmethodID           beforeDrawEyesMethodId;
+    jmethodID           drawEyeViewMethodId;
+    jmethodID           afterDrawEyesMethodId;
 
-    jclass               GetGlobalClassReference( const char * className ) const;
-    jmethodID            GetMethodID( const char * name, const char * signature );
-    jmethodID            GetStaticMethodID( jclass activityClass, const char * name, const char * signature );
+    jclass              GetGlobalClassReference( const char * className ) const;
+    jmethodID           GetMethodID( const char * name, const char * signature );
+    jmethodID           GetStaticMethodID( jclass activityClass, const char * name, const char * signature );
 };
 }
 #endif

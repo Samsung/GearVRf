@@ -40,8 +40,7 @@ public:
     OESShader();
     ~OESShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
 
 private:
     OESShader(const OESShader& oes_shader);

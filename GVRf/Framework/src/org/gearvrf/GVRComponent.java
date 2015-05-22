@@ -13,29 +13,36 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
+import org.gearvrf.utility.Exceptions;
 
 /**
  * Base class for classes that can be attached to a {@link GVRSceneObject scene
  * object}.
  */
 class GVRComponent extends GVRHybridObject {
+    // private static final String TAG = Log.tag(GVRComponent.class);
+
     GVRComponent(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
+
+    protected GVRSceneObject owner;
 
     /**
      * @return The {@link GVRSceneObject} this object is currently attached to.
      */
     public GVRSceneObject getOwnerObject() {
-        long ptr = NativeComponent.getOwnerObject(getPtr());
-        return ptr == 0 ? null : GVRSceneObject.factory(getGVRContext(),
-                NativeComponent.getOwnerObject(getPtr()));
-    }
-}
+        if (owner != null) {
+            return owner;
+        }
 
-class NativeComponent {
-    public static native long getOwnerObject(long component);
+        throw Exceptions.RuntimeAssertion("No Java owner: %s", getClass()
+                .getSimpleName());
+    }
+
+    protected void setOwnerObject(GVRSceneObject owner) {
+        this.owner = owner;
+    }
 }

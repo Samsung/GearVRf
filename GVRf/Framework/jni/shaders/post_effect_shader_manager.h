@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Manages instances of post effect shaders.
  ***************************************************************************/
@@ -53,20 +52,22 @@ public:
     }
 
     ~PostEffectShaderManager() {
+        delete color_blend_post_effect_shader_;
+        delete horizontal_flip_post_effect_shader_;
+        // We don't delete the custom shaders, as their Java owner-objects will do that for us.
     }
 
-    std::shared_ptr<ColorBlendPostEffectShader> getColorBlendPostEffectShader() {
+    ColorBlendPostEffectShader* getColorBlendPostEffectShader() {
         if (!color_blend_post_effect_shader_) {
-            color_blend_post_effect_shader_.reset(
-                    new ColorBlendPostEffectShader());
+            color_blend_post_effect_shader_ = new ColorBlendPostEffectShader();
         }
         return color_blend_post_effect_shader_;
     }
 
-    std::shared_ptr<HorizontalFlipPostEffectShader> getHorizontalFlipPostEffectShader() {
+    HorizontalFlipPostEffectShader* getHorizontalFlipPostEffectShader() {
         if (!horizontal_flip_post_effect_shader_) {
-            horizontal_flip_post_effect_shader_.reset(
-                    new HorizontalFlipPostEffectShader());
+            horizontal_flip_post_effect_shader_ =
+                    new HorizontalFlipPostEffectShader();
         }
         return horizontal_flip_post_effect_shader_;
     }
@@ -74,13 +75,13 @@ public:
     int addCustomPostEffectShader(std::string vertex_shader,
             std::string fragment_shader) {
         int id = latest_custom_shader_id_++;
-        std::shared_ptr<CustomPostEffectShader> custom_post_effect_shader(
-                new CustomPostEffectShader(vertex_shader, fragment_shader));
+        CustomPostEffectShader* custom_post_effect_shader =
+                new CustomPostEffectShader(vertex_shader, fragment_shader);
         custom_post_effect_shaders_[id] = custom_post_effect_shader;
         return id;
     }
 
-    std::shared_ptr<CustomPostEffectShader> getCustomPostEffectShader(int id) {
+    CustomPostEffectShader* getCustomPostEffectShader(int id) {
         auto it = custom_post_effect_shaders_.find(id);
         if (it != custom_post_effect_shaders_.end()) {
             return it->second;
@@ -114,10 +115,10 @@ private:
 
 private:
     static const int INITIAL_CUSTOM_SHADER_INDEX = 1000;
-    std::shared_ptr<ColorBlendPostEffectShader> color_blend_post_effect_shader_;
-    std::shared_ptr<HorizontalFlipPostEffectShader> horizontal_flip_post_effect_shader_;
+    ColorBlendPostEffectShader* color_blend_post_effect_shader_;
+    HorizontalFlipPostEffectShader* horizontal_flip_post_effect_shader_;
     int latest_custom_shader_id_;
-    std::map<int, std::shared_ptr<CustomPostEffectShader>> custom_post_effect_shaders_;
+    std::map<int, CustomPostEffectShader*> custom_post_effect_shaders_;
     std::vector<glm::vec3> quad_vertices_;
     std::vector<glm::vec2> quad_uvs_;
     std::vector<unsigned short> quad_triangles_;
