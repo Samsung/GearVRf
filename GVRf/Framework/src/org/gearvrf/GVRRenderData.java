@@ -35,6 +35,7 @@ public class GVRRenderData extends GVRComponent {
 
     private GVRMesh mMesh;
     private GVRMaterial mMaterial;
+    private GVRLight mLight;
 
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
@@ -282,6 +283,25 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
+     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is
+     *         being lit by.
+     */
+    public GVRLight getLight() {
+        return mLight;
+    }
+
+    /**
+     * Set the {@link GVRLight light} the mesh will be lit by.
+     * 
+     * @param light
+     *            The {@link GVRLight light} for rendering.
+     */
+    public void setLight(GVRLight light) {
+        mLight = light;
+        NativeRenderData.setLight(getNative(), light.getNative());
+    }
+
+    /**
      * Get the rendering options bit mask.
      * 
      * @return The rendering options bit mask.
@@ -473,6 +493,8 @@ class NativeRenderData {
     static native void setMesh(long renderData, long mesh);
 
     static native void setMaterial(long renderData, long material);
+    
+    static native void setLight(long renderData, long light);
 
     static native int getRenderMask(long renderData);
 

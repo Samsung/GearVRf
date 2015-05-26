@@ -43,7 +43,8 @@ public:
         OES_HORIZONTAL_STEREO_SHADER = 4,
         OES_VERTICAL_STEREO_SHADER = 5,
         CUBEMAP_SHADER = 6,
-        CUBEMAP_REFLECTION_SHADER = 7
+        CUBEMAP_REFLECTION_SHADER = 7,
+        LIT_SHADER = 8
     };
 
     explicit Material(ShaderType shader_type) :

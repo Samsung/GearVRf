@@ -39,6 +39,11 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
         jobject obj, jlong jrender_data, jlong jmaterial);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
+        jobject obj, jlong jrender_data, jlong jlight);
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -126,6 +131,14 @@ Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     Material* material = reinterpret_cast<Material*>(jmaterial);
     render_data->set_material(material);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
+        jobject obj, jlong jrender_data, jlong jlight) {
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    Light* light = reinterpret_cast<Light*>(jlight);
+    render_data->set_light(light);
 }
 
 JNIEXPORT jint JNICALL

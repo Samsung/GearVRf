@@ -546,6 +546,11 @@ void Renderer::renderRenderData(RenderData* render_data,
                             mv_matrix, glm::inverseTranspose(mv_matrix),
                             glm::inverse(view_matrix), mvp_matrix, render_data);
                     break;
+                case Material::ShaderType::LIT_SHADER:
+                    shader_manager->getLitShader()->render(
+                            mv_matrix, glm::inverseTranspose(mv_matrix),
+                            mvp_matrix, render_data);
+                    break;
                 default:
                     shader_manager->getCustomShader(
                             render_data->material()->shader_type())->render(
