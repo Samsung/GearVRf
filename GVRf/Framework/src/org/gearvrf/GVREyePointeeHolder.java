@@ -65,15 +65,55 @@ public class GVREyePointeeHolder extends GVRComponent {
     }
 
     private GVREyePointeeHolder(GVRContext gvrContext, long nativePointer) {
-        super(gvrContext, nativePointer);
+        super(gvrContext, nativePointer, sCleanup);
+        registerNativePointer(nativePointer);
+    }
+
+    /**
+     * Special constructor, for descendants that need to 'unregister' instances.
+     * 
+     * @param gvrContext
+     *            The current GVRF context
+     * @param nativePointer
+     *            The native pointer, returned by the native constructor
+     * @param cleanupHandlers
+     *            Cleanup handler(s).
+     * 
+     *            <p>
+     *            {@link GVREyePointeeHolder} uses a
+     *            {@link GVRHybridObject.CleanupHandlerListManager} to manage
+     *            the cleanup lists: if this parameter is a
+     *            {@code private static} class constant, there will be only one
+     *            {@code List} per class. Descendants that supply a {@code List}
+     *            and <em>also</em> have descendants that supply a {@code List}
+     *            should use a {@link CleanupHandlerListManager} of their own,
+     *            in the same way that this class does.
+     */
+    protected GVREyePointeeHolder(GVRContext gvrContext, long nativePointer,
+            List<NativeCleanupHandler> descendantsCleanupHandlerList) {
+        super(gvrContext, nativePointer, sConcatenations
+                .getUniqueConcatenation(descendantsCleanupHandlerList));
+        registerNativePointer(nativePointer);
+    }
+
+    private void registerNativePointer(long nativePointer) {
         sEyePointeeHolders.put(nativePointer,
                 new WeakReference<GVREyePointeeHolder>(this));
     }
 
-    @Override
-    protected void destructor() {
-        sEyePointeeHolders.remove(getNative());
-        super.destructor();
+    private final static List<NativeCleanupHandler> sCleanup;
+    private final static CleanupHandlerListManager sConcatenations;
+    static {
+        sCleanup = new ArrayList<NativeCleanupHandler>(1);
+        sCleanup.add(new NativeCleanupHandler() {
+
+            @Override
+            public void nativeCleanup(long nativePointer) {
+                sEyePointeeHolders.remove(nativePointer);
+            }
+        });
+
+        sConcatenations = new CleanupHandlerListManager(sCleanup);
     }
 
     /**
