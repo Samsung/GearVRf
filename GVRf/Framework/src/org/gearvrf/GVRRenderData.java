@@ -15,7 +15,11 @@
 
 package org.gearvrf;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import static android.opengl.GLES30.*;
 import org.gearvrf.utility.Threads;
 
@@ -30,6 +34,9 @@ public class GVRRenderData extends GVRComponent {
 
     private GVRMesh mMesh;
     private GVRMaterial mMaterial;
+
+    /** Just for {@link #getMeshEyePointee()} */
+    private Future<GVRMesh> mFutureMesh;
 
     /**
      * Rendering hints.
@@ -105,7 +112,10 @@ public class GVRRenderData extends GVRComponent {
      *            The mesh to be rendered.
      */
     public void setMesh(GVRMesh mesh) {
-        mMesh = mesh;
+        synchronized (this) {
+            mMesh = mesh;
+            mFutureMesh = null;
+        }
         NativeRenderData.setMesh(getNative(), mesh.getNative());
     }
 
@@ -123,6 +133,9 @@ public class GVRRenderData extends GVRComponent {
      * @since 1.6.7
      */
     public void setMesh(final Future<GVRMesh> mesh) {
+        synchronized (this) {
+            mFutureMesh = mesh;
+        }
         Threads.spawn(new Runnable() {
 
             @Override
@@ -134,6 +147,79 @@ public class GVRRenderData extends GVRComponent {
                 }
             }
         });
+    }
+
+    /**
+     * Return a {@code Future<GVREyePointee>} or {@code null}.
+     * 
+     * If you use {@link #setMesh(Future)}, trying to create a
+     * {@link GVRMeshEyePointee} in the 'normal' (synchronous) way will fail,
+     * because this {@link GVRRenderData} won't have a mesh yet. This method
+     * prevents that problem by returning an {@code Future} tied to the current
+     * mesh status:
+     * <ul>
+     * <li>If you have already set a mesh, you will get a {@code Future} with
+     * {@code get()} methods that return immediately.
+     * <li>If you are currently waiting on a {@code Future<GVRMesh>}, you will
+     * get a 'true' {@code Future} that waits for the {@code Future<GVRMesh>}.
+     * <li>If you have neither, you will get {@code null}.
+     * </ul>
+     * 
+     * @return Either a {@code Future<GVREyePointee>} or {@code null}.
+     */
+    public Future<GVREyePointee> getMeshEyePointee() {
+        synchronized (this) {
+            if (mMesh != null) {
+                // Return a non-blocking wrapper
+                return new FutureWrapper<GVREyePointee>(new GVRMeshEyePointee(
+                        mMesh));
+            } else if (mFutureMesh != null) {
+                // Return a true (blocking) Future, tied to the Future<GVRMesh>
+                return new FutureMeshEyePointee(mFutureMesh);
+            } else {
+                // No mesh
+                return null;
+            }
+        }
+    }
+
+    private static class FutureMeshEyePointee implements Future<GVREyePointee> {
+
+        private final Future<GVRMesh> mFutureMesh;
+
+        private FutureMeshEyePointee(Future<GVRMesh> futureMesh) {
+            mFutureMesh = futureMesh;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return isDone() ? false : mFutureMesh.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public GVRMeshEyePointee get() throws InterruptedException,
+                ExecutionException {
+            GVRMesh mesh = mFutureMesh.get();
+            return new GVRMeshEyePointee(mesh);
+        }
+
+        @Override
+        public GVRMeshEyePointee get(long timeout, TimeUnit unit)
+                throws InterruptedException, ExecutionException,
+                TimeoutException {
+            GVRMesh mesh = mFutureMesh.get(timeout, unit);
+            return new GVRMeshEyePointee(mesh);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return mFutureMesh.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return mFutureMesh.isDone();
+        }
     }
 
     /**

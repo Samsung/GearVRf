@@ -18,6 +18,9 @@ package org.gearvrf;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
+
+import org.gearvrf.utility.Threads;
 
 import android.util.LongSparseArray;
 
@@ -121,6 +124,37 @@ public class GVREyePointeeHolder extends GVRComponent {
     public void addPointee(GVREyePointee eyePointee) {
         pointees.add(eyePointee);
         NativeEyePointeeHolder.addPointee(getNative(), eyePointee.getNative());
+    }
+
+    /**
+     * Add a Future {@link GVREyePointee} to this holder
+     * 
+     * @param eyePointee
+     *            A Future {@link GVREyePointee}, probably from
+     *            {@link GVRRenderData#getMeshEyePointee()}
+     */
+    public void addPointee(final Future<GVREyePointee> eyePointee) {
+        // The Future<GVREyePointee> may well actually be a FutureWrapper, not a
+        // 'real' Future
+        if (eyePointee.isDone()) {
+            addFutureEyePointee(eyePointee);
+        } else {
+            Threads.spawn(new Runnable() {
+
+                @Override
+                public void run() {
+                    addFutureEyePointee(eyePointee);
+                }
+            });
+        }
+    }
+
+    private void addFutureEyePointee(Future<GVREyePointee> eyePointee) {
+        try {
+            addPointee(eyePointee.get());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

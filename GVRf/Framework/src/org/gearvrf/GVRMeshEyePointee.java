@@ -43,11 +43,23 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      * @param mesh
      *            The {@link GVRMesh} that the picking ray will test against.
-     * 
      */
     public GVRMeshEyePointee(GVRContext gvrContext, GVRMesh mesh) {
         super(gvrContext, NativeMeshEyePointee.ctor(mesh.getNative()));
         mMesh = mesh;
+    }
+
+    /**
+     * Simple constructor.
+     * 
+     * When the mesh is complicated, it will be cheaper - though less accurate -
+     * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
+     * 
+     * @param mesh
+     *            The {@link GVRMesh} that the picking ray will test against.
+     */
+    public GVRMeshEyePointee(GVRMesh mesh) {
+        this(mesh.getGVRContext(), mesh);
     }
 
     /**
