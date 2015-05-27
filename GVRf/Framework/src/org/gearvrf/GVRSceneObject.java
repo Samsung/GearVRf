@@ -243,10 +243,6 @@ public class GVRSceneObject extends GVRHybridObject {
         this(gvrContext, width, height, texture, STANDARD_SHADER);
     }
 
-    private GVRSceneObject(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
-    }
-
     /**
      * Get the (optional) name of the object.
      * 

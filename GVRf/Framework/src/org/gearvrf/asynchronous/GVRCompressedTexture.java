@@ -79,7 +79,6 @@ public class GVRCompressedTexture extends GVRTexture {
     }
 
     private void updateMinification() {
-        Log.d(TAG, "Entering updateMinification()");
         boolean rebound = true; // in 2 out of 3 branches ...
         if (mLevels > 1) {
             rebind();
@@ -96,7 +95,6 @@ public class GVRCompressedTexture extends GVRTexture {
         if (rebound) {
             unbind();
         }
-        Log.d(TAG, "Leaving updateMinification()");
     }
 
     private static int selectMipMapMinification(int quality) {
