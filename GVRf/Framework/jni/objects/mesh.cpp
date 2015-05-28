@@ -167,7 +167,7 @@ void Mesh::generateVAO(Material::ShaderType key) {
     }
 
     GLuint vaoID_ = 0;
-	GLuint triangle_vboID_, vert_vboID_, norm_vboID_, tex_vboID_;
+    GLuint triangle_vboID_, vert_vboID_, norm_vboID_, tex_vboID_;
 
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
@@ -251,10 +251,10 @@ void Mesh::generateVAO(Material::ShaderType key) {
     }
 
     vaoID_map_[key] = vaoID_;
-	triangle_vboID_map_[key] = triangle_vboID_;
-	vert_vboID_map_[key] = vert_vboID_;
-	norm_vboID_map_[key] = norm_vboID_;
-	tex_vboID_map_[key] = tex_vboID_;
+    triangle_vboID_map_[key] = triangle_vboID_;
+    vert_vboID_map_[key] = vert_vboID_;
+    norm_vboID_map_[key] = norm_vboID_;
+    tex_vboID_map_[key] = tex_vboID_;
 
     // done generation
     glBindVertexArray(0);
