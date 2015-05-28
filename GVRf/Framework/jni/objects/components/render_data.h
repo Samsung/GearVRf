@@ -71,11 +71,11 @@ public:
     }
 
     Light* light() const {
-    	return light_;
+        return light_;
     }
 
     void set_light(Light* light) {
-    	light_ = light;
+        light_ = light;
     }
 
     int render_mask() const {

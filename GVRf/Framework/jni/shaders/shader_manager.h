@@ -111,7 +111,7 @@ public:
     }
     LitShader* getLitShader() {
         if (!lit_shader_) {
-        	lit_shader_ = new LitShader();
+            lit_shader_ = new LitShader();
         }
         return lit_shader_;
     }

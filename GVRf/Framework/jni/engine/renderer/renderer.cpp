@@ -211,8 +211,8 @@ void Renderer::occlusion_cull(Scene* scene,
 
 void Renderer::frustum_cull(Scene* scene,
         std::vector<SceneObject*> scene_objects,
-        std::vector<RenderData* >& render_data_vector,
-        glm::mat4 vp_matrix, ShaderManager* shader_manager) {
+        std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
+        ShaderManager* shader_manager) {
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
 
         RenderData* render_data = (*it)->render_data();
@@ -229,12 +229,12 @@ void Renderer::frustum_cull(Scene* scene,
 
         // Frustum culling setup
         Mesh* currentMesh = render_data->mesh();
-        if(currentMesh == NULL) {
+        if (currentMesh == NULL) {
             continue;
         }
 
         const float* bounding_box_info = currentMesh->getBoundingBoxInfo();
-        if(bounding_box_info == NULL) {
+        if (bounding_box_info == NULL) {
             continue;
         }
 
@@ -284,10 +284,8 @@ void Renderer::frustum_cull(Scene* scene,
         bool is_query_issued = (*it)->is_query_issued();
         if (!is_query_issued) {
             //Setup basic bounding box and material
-            RenderData* bounding_box_render_data(
-                    new RenderData());
-            Mesh* bounding_box_mesh =
-                    render_data->mesh()->getBoundingBox();
+            RenderData* bounding_box_render_data(new RenderData());
+            Mesh* bounding_box_mesh = render_data->mesh()->getBoundingBox();
             bounding_box_render_data->set_mesh(bounding_box_mesh);
 
             GLuint *query = (*it)->get_occlusion_array();
@@ -406,7 +404,8 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16]) {
     frustum[5][3] /= t;
 }
 
-bool Renderer::is_cube_in_frustum(float frustum[6][4], const float *vertex_limit) {
+bool Renderer::is_cube_in_frustum(float frustum[6][4],
+        const float *vertex_limit) {
     int p;
     float Xmin = vertex_limit[0];
     float Ymin = vertex_limit[1];
@@ -486,8 +485,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int viewportX,
 }
 
 void Renderer::renderRenderData(RenderData* render_data,
-		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
-        ShaderManager* shader_manager) {
+        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+        int render_mask, ShaderManager* shader_manager) {
     if (render_mask & render_data->render_mask()) {
         if (!render_data->cull_test()) {
             glDisable (GL_CULL_FACE);
@@ -547,9 +546,9 @@ void Renderer::renderRenderData(RenderData* render_data,
                             glm::inverse(view_matrix), mvp_matrix, render_data);
                     break;
                 case Material::ShaderType::LIT_SHADER:
-                    shader_manager->getLitShader()->render(
-                            mv_matrix, glm::inverseTranspose(mv_matrix),
-                            mvp_matrix, render_data);
+                    shader_manager->getLitShader()->render(mv_matrix,
+                            glm::inverseTranspose(mv_matrix), mvp_matrix,
+                            render_data);
                     break;
                 default:
                     shader_manager->getCustomShader(
@@ -582,8 +581,7 @@ void Renderer::renderRenderData(RenderData* render_data,
 }
 
 void Renderer::renderPostEffectData(Camera* camera,
-        RenderTexture* render_texture,
-        PostEffectData* post_effect_data,
+        RenderTexture* render_texture, PostEffectData* post_effect_data,
         PostEffectShaderManager* post_effect_shader_manager) {
     try {
         switch (post_effect_data->shader_type()) {
