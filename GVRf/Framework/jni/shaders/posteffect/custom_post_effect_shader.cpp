@@ -22,6 +22,7 @@
 
 #include "gl/gl_program.h"
 #include "objects/post_effect_data.h"
+#include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
 #include "util/gvr_gl.h"
 
@@ -37,6 +38,8 @@ CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     checkGlError("glGetUniformLocation");
     u_projection_matrix_ = glGetUniformLocation(program_->id(), "u_projection_matrix");
+    checkGlError("glGetUniformLocation");
+    u_right_eye_ = glGetUniformLocation(program_->id(), "u_right_eye");
     checkGlError("glGetUniformLocation");
 
     vaoID_ = 0;
@@ -144,6 +147,11 @@ void CustomPostEffectShader::render(Camera* camera,
         glUniformMatrix4fv(u_projection_matrix_, 1, GL_TRUE, glm::value_ptr(view));
     }
 
+    if (u_right_eye_ != -1) {
+        bool right = camera->render_mask() & RenderData::RenderMaskBit::Right;
+        glUniform1i(u_right_eye_, right ? 1 : 0);
+    }
+
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
         Texture* texture = post_effect_data->getTexture(it->second);
@@ -204,6 +212,11 @@ void CustomPostEffectShader::render(Camera* camera,
     if (u_projection_matrix_ != -1) {
         glm::mat4 view = camera->getViewMatrix();
         glUniformMatrix4fv(u_projection_matrix_, 1, GL_TRUE, glm::value_ptr(view));
+    }
+
+    if (u_right_eye_ != -1) {
+        bool right = camera->render_mask() & RenderData::RenderMaskBit::Right;
+        glUniform1i(u_right_eye_, right ? 1 : 0);
     }
 
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
