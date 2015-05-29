@@ -39,9 +39,9 @@ public class SolarViewManager extends GVRScript {
     private GVRAnimationEngine mAnimationEngine;
 
     private GVRSceneObject asyncSceneObject(GVRContext context,
-            GVRAndroidResource meshResource, String textureName)
-            throws IOException {
-        return new GVRSceneObject(context, meshResource,
+            String textureName) throws IOException {
+        return new GVRSceneObject(context, //
+                new GVRAndroidResource(context, "sphere.obj"), //
                 new GVRAndroidResource(context, textureName));
     }
 
@@ -61,7 +61,7 @@ public class SolarViewManager extends GVRScript {
         });
 
         mainScene.setFrustumCulling(true);
-        
+
         mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
         mainScene.getMainCameraRig().getRightCamera()
@@ -76,11 +76,8 @@ public class SolarViewManager extends GVRScript {
         GVRSceneObject sunRotationObject = new GVRSceneObject(gvrContext);
         solarSystemObject.addChildObject(sunRotationObject);
 
-        GVRAndroidResource meshResource = new GVRAndroidResource(gvrContext,
-                "sphere.obj");
-
         GVRSceneObject sunMeshObject = asyncSceneObject(gvrContext,
-                meshResource, "sunmap.astc");
+                "sunmap.astc");
         sunMeshObject.getTransform().setPosition(0.0f, 0.0f, 0.0f);
         sunMeshObject.getTransform().setScale(10.0f, 10.0f, 10.0f);
         sunRotationObject.addChildObject(sunMeshObject);
@@ -93,7 +90,7 @@ public class SolarViewManager extends GVRScript {
         mercuryRevolutionObject.addChildObject(mercuryRotationObject);
 
         GVRSceneObject mercuryMeshObject = asyncSceneObject(gvrContext,
-                meshResource, "mercurymap.jpg");
+                "mercurymap.jpg");
         mercuryMeshObject.getTransform().setScale(0.3f, 0.3f, 0.3f);
         mercuryRotationObject.addChildObject(mercuryMeshObject);
 
@@ -105,7 +102,7 @@ public class SolarViewManager extends GVRScript {
         venusRevolutionObject.addChildObject(venusRotationObject);
 
         GVRSceneObject venusMeshObject = asyncSceneObject(gvrContext,
-                meshResource, "venusmap.jpg");
+                "venusmap.jpg");
         venusMeshObject.getTransform().setScale(0.8f, 0.8f, 0.8f);
         venusRotationObject.addChildObject(venusMeshObject);
 
@@ -117,7 +114,7 @@ public class SolarViewManager extends GVRScript {
         earthRevolutionObject.addChildObject(earthRotationObject);
 
         GVRSceneObject earthMeshObject = asyncSceneObject(gvrContext,
-                meshResource, "earthmap1k.jpg");
+                "earthmap1k.jpg");
         earthMeshObject.getTransform().setScale(1.0f, 1.0f, 1.0f);
         earthRotationObject.addChildObject(earthMeshObject);
 
@@ -135,7 +132,7 @@ public class SolarViewManager extends GVRScript {
         marsRevolutionObject.addChildObject(marsRotationObject);
 
         GVRSceneObject marsMeshObject = asyncSceneObject(gvrContext,
-                meshResource, "mars_1k_color.jpg");
+                "mars_1k_color.jpg");
         marsMeshObject.getTransform().setScale(0.6f, 0.6f, 0.6f);
         marsRotationObject.addChildObject(marsMeshObject);
 
