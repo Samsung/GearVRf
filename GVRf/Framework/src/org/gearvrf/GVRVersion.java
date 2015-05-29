@@ -78,5 +78,12 @@ public class GVRVersion {
      */
     public static final String V_2_0_0 = "2.0.0";
 
-    public static final String CURRENT = V_2_0_0;
+    /**
+     * Optimize memory management by getting rid of {@code finalize()} method.
+     * Add support for Future<{@link GVREyePointee}>s. Add
+     * {@link GVRContext#getActivity()}.
+     */
+    public static final String V_2_0_1 = "2.0.1";
+
+    public static final String CURRENT = V_2_0_1;
 }
