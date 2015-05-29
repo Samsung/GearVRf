@@ -427,6 +427,40 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Attach a default {@link GVREyePointeeHolder} to the object.
+     * 
+     * The default holder contains a single {@link GVRMeshEyePointee}, which
+     * refers to the {@linkplain GVRMesh mesh} in this scene object's
+     * {@linkplain GVRRenderData render data}. If you need anything more
+     * complicated (such as multiple meshes) use the
+     * {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder) explicit
+     * overload.} If another {@link GVREyePointeeHolder} is currently attached,
+     * it is replaced with the new one.
+     * 
+     * @return {@code true} if and only this scene object has render data
+     *         <em>and</em> you have called either
+     *         {@link GVRRenderData#setMesh(GVRMesh)} or
+     *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
+     */
+    public boolean attachEyePointeeHolder() {
+        GVRRenderData renderData = getRenderData();
+        if (renderData == null) {
+            return false;
+        }
+
+        Future<GVREyePointee> eyePointee = renderData.getMeshEyePointee();
+        if (eyePointee == null) {
+            return false;
+        }
+
+        GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
+                getGVRContext());
+        eyePointeeHolder.addPointee(eyePointee);
+        attachEyePointeeHolder(eyePointeeHolder);
+        return true;
+    }
+
+    /**
      * Detach the object's current {@link GVREyePointeeHolder}.
      */
     public void detachEyePointeeHolder() {

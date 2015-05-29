@@ -205,12 +205,7 @@ public class SampleViewManager extends GVRScript {
     }
 
     private void attachDefaultEyePointee(GVRSceneObject sceneObject) {
-        GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
-                mGVRContext);
-        GVRMeshEyePointee eyePointee = new GVRMeshEyePointee(mGVRContext,
-                sceneObject.getRenderData().getMesh());
-        eyePointeeHolder.addPointee(eyePointee);
-        sceneObject.attachEyePointeeHolder(eyePointeeHolder);
+        sceneObject.attachEyePointeeHolder();
     }
 
     private void attachBoundingBoxEyePointee(GVRSceneObject sceneObject) {
