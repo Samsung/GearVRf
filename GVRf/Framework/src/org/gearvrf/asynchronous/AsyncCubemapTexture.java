@@ -29,7 +29,6 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
-import org.gearvrf.utility.Log;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -60,7 +59,7 @@ abstract class AsyncCubemapTexture {
      * Static constants
      */
 
-    private static final String TAG = Log.tag(AsyncCubemapTexture.class);
+    // private static final String TAG = Log.tag(AsyncCubemapTexture.class);
 
     private static final Class<? extends GVRHybridObject> TEXTURE_CLASS = GVRCubemapTexture.class;
 
