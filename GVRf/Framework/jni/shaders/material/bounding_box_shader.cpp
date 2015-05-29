@@ -65,12 +65,12 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
-    mesh->generateVAO();
+    mesh->generateVAO(render_data->material()->shader_type());
 
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
 
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(render_data->material()->shader_type()));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

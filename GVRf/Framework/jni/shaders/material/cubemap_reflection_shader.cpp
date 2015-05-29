@@ -62,36 +62,37 @@
 // (http://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping)
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-		"attribute vec3 a_normal;\n"
-		"uniform mat4 u_mv;\n"
-		"uniform mat4 u_mv_it;\n"
-		"uniform mat4 u_mvp;\n"
-		"varying vec3 v_viewspace_position;\n"
-		"varying vec3 v_viewspace_normal;\n"
-		"void main() {\n"
-		"  vec4 v_viewspace_position_vec4 = u_mv * a_position;\n"
-		"  v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
-		"  v_viewspace_normal = (u_mv_it * vec4(a_normal, 1.0)).xyz;\n"
-		"  gl_Position = u_mvp * a_position;\n"
-		"}\n";
+static const char VERTEX_SHADER[] =
+        "attribute vec4 a_position;\n"
+                "attribute vec3 a_normal;\n"
+                "uniform mat4 u_mv;\n"
+                "uniform mat4 u_mv_it;\n"
+                "uniform mat4 u_mvp;\n"
+                "varying vec3 v_viewspace_position;\n"
+                "varying vec3 v_viewspace_normal;\n"
+                "void main() {\n"
+                "  vec4 v_viewspace_position_vec4 = u_mv * a_position;\n"
+                "  v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
+                "  v_viewspace_normal = (u_mv_it * vec4(a_normal, 1.0)).xyz;\n"
+                "  gl_Position = u_mvp * a_position;\n"
+                "}\n";
 
 static const char FRAGMENT_SHADER[] =
-		"precision highp float;\n"
-				"uniform samplerCube u_texture;\n"
-				"uniform vec3 u_color;\n"
-				"uniform float u_opacity;\n"
-				"uniform mat4 u_view_i;\n"
-				"varying vec3 v_viewspace_position;\n"
-				"varying vec3 v_viewspace_normal;\n"
-				"void main()\n"
-				"{\n"
-				"  vec3 v_reflected_position = reflect(v_viewspace_position, normalize(v_viewspace_normal));\n"
-				"  vec3 v_tex_coord = (u_view_i * vec4(v_reflected_position, 1.0)).xyz;\n"
-				"  v_tex_coord.z = -v_tex_coord.z;\n"
-				"  vec4 color = textureCube(u_texture, v_tex_coord.xyz);\n"
-				"  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
-				"}\n";
+        "precision highp float;\n"
+                "uniform samplerCube u_texture;\n"
+                "uniform vec3 u_color;\n"
+                "uniform float u_opacity;\n"
+                "uniform mat4 u_view_i;\n"
+                "varying vec3 v_viewspace_position;\n"
+                "varying vec3 v_viewspace_normal;\n"
+                "void main()\n"
+                "{\n"
+                "  vec3 v_reflected_position = reflect(v_viewspace_position, normalize(v_viewspace_normal));\n"
+                "  vec3 v_tex_coord = (u_view_i * vec4(v_reflected_position, 1.0)).xyz;\n"
+                "  v_tex_coord.z = -v_tex_coord.z;\n"
+                "  vec4 color = textureCube(u_texture, v_tex_coord.xyz);\n"
+                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+                "}\n";
 
 CubemapReflectionShader::CubemapReflectionShader() :
         program_(0), a_position_(0), a_normal_(0), u_mv_(0), u_mv_it_(0), u_mvp_(
@@ -136,7 +137,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
     mesh->setNormalLoc(a_normal_);
-    mesh->generateVAO();
+    mesh->generateVAO(Material::CUBEMAP_REFLECTION_SHADER);
 
     glUseProgram(program_->id());
 
@@ -151,7 +152,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(Material::CUBEMAP_REFLECTION_SHADER));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

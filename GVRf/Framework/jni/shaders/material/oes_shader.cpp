@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a GL_TEXTURE_EXTERNAL_OES texture.
  ***************************************************************************/
@@ -86,19 +85,20 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
     mesh->setTexCoordLoc(a_tex_coord_);
-    mesh->generateVAO();
+    mesh->generateVAO(Material::OES_SHADER);
 
     glUseProgram(program_->id());
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(mesh->getVAOId(Material::OES_SHADER));
+    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+            0);
     glBindVertexArray(0);
 #else
 

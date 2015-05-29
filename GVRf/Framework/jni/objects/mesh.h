@@ -30,17 +30,22 @@
 #include "gl/gl_buffer.h"
 
 #include "objects/hybrid_object.h"
+#include "objects/material.h"
 
 namespace gvr {
 class Mesh: public HybridObject {
 public:
     Mesh() :
-            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vaoID_(
-                    0), vertexLoc_(-1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(
+            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
+                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(
                     false) {
     }
 
     ~Mesh() {
+        cleanUp();
+    }
+
+    void cleanUp() {
         std::vector<glm::vec3> vertices;
         vertices.swap(vertices_);
         std::vector<glm::vec3> normals;
@@ -50,30 +55,35 @@ public:
         std::vector<unsigned short> triangles;
         triangles.swap(triangles_);
 
-        if (vaoID_ != 0) {
-            glDeleteVertexArrays(1, &vaoID_);
-            vaoID_ = 0;
+        for (auto iterator = vaoID_map_.begin(); iterator != vaoID_map_.end();
+                iterator++) {
+            glDeleteVertexArrays(1, &(iterator->second));
         }
+        vaoID_map_.clear();
 
-        if (triangle_vboID_ != 0) {
-            glDeleteBuffers(1, &triangle_vboID_);
-            triangle_vboID_ = 0;
+        for (auto iterator = triangle_vboID_map_.begin();
+                iterator != triangle_vboID_map_.end(); iterator++) {
+            glDeleteBuffers(1, &(iterator->second));
         }
+        triangle_vboID_map_.clear();
 
-        if (vert_vboID_ != 0) {
-            glDeleteBuffers(1, &vert_vboID_);
-            vert_vboID_ = 0;
+        for (auto iterator = vert_vboID_map_.begin();
+                iterator != vert_vboID_map_.end(); iterator++) {
+            glDeleteBuffers(1, &(iterator->second));
         }
+        vert_vboID_map_.clear();
 
-        if (norm_vboID_ != 0) {
-            glDeleteBuffers(1, &norm_vboID_);
-            norm_vboID_ = 0;
+        for (auto iterator = norm_vboID_map_.begin();
+                iterator != norm_vboID_map_.end(); iterator++) {
+            glDeleteBuffers(1, &(iterator->second));
         }
+        norm_vboID_map_.clear();
 
-        if (tex_vboID_ != 0) {
-            glDeleteBuffers(1, &tex_vboID_);
-            tex_vboID_ = 0;
+        for (auto iterator = tex_vboID_map_.begin();
+                iterator != tex_vboID_map_.end(); iterator++) {
+            glDeleteBuffers(1, &(iterator->second));
         }
+        tex_vboID_map_.clear();
     }
 
     std::vector<glm::vec3>& vertices() {
@@ -285,46 +295,11 @@ public:
     }
 
     // generate VAO
-    void generateVAO();
+    void generateVAO(Material::ShaderType key);
 
-    const GLuint getVAOId() const {
-        return vaoID_;
-    }
-
-    void cleanUp() {
-        std::vector<glm::vec3> vertices;
-        vertices.swap(vertices_);
-        std::vector<glm::vec3> normals;
-        normals.swap(normals_);
-        std::vector<glm::vec2> tex_coords;
-        tex_coords.swap(tex_coords_);
-        std::vector<unsigned short> triangles;
-        triangles.swap(triangles_);
-
-        if (vaoID_ != 0) {
-            glDeleteVertexArrays(1, &vaoID_);
-            vaoID_ = 0;
-        }
-
-        if (triangle_vboID_ != 0) {
-            glDeleteBuffers(1, &triangle_vboID_);
-            triangle_vboID_ = 0;
-        }
-
-        if (vert_vboID_ != 0) {
-            glDeleteBuffers(1, &vert_vboID_);
-            vert_vboID_ = 0;
-        }
-
-        if (norm_vboID_ != 0) {
-            glDeleteBuffers(1, &norm_vboID_);
-            norm_vboID_ = 0;
-        }
-
-        if (tex_vboID_ != 0) {
-            glDeleteBuffers(1, &tex_vboID_);
-            tex_vboID_ = 0;
-        }
+    const GLuint getVAOId(Material::ShaderType key) const {
+        auto iterator = vaoID_map_.find(key);
+        return iterator != vaoID_map_.end() ? iterator->second : 0;
     }
 
     GLuint getNumTriangles() {
@@ -354,8 +329,11 @@ private:
     std::map<int, std::string> attribute_vec4_keys_;
 
     // add vertex array object and VBO
-    GLuint vaoID_;
-    GLuint triangle_vboID_, vert_vboID_, norm_vboID_, tex_vboID_;
+    std::map<Material::ShaderType, GLuint> vaoID_map_;
+    std::map<Material::ShaderType, GLuint> triangle_vboID_map_;
+    std::map<Material::ShaderType, GLuint> vert_vboID_map_;
+    std::map<Material::ShaderType, GLuint> norm_vboID_map_;
+    std::map<Material::ShaderType, GLuint> tex_vboID_map_;
 
     // attribute locations
     GLuint vertexLoc_;

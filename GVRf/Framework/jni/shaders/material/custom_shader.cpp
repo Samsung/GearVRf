@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * A shader which an user can add in run-time.
  ***************************************************************************/
@@ -110,100 +109,95 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const glm::mat4& mvp_matrix,
-        RenderData* render_data, bool right) {
+void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
+        bool right) {
     Mesh* mesh = render_data->mesh();
 
 #if _GVRF_USE_GLES3_
     glUseProgram(program_->id());
 
-    if(a_position_ != -1)
-    {
+    if (a_position_ != -1) {
         mesh->setVertexLoc(a_position_);
     }
 
-    if(a_normal_ != -1)
-    {
+    if (a_normal_ != -1) {
         mesh->setNormalLoc(a_normal_);
     }
 
-    if(a_tex_coord_ != -1)
-    {
+    if (a_tex_coord_ != -1) {
         mesh->setTexCoordLoc(a_tex_coord_);
     }
 
-    for(auto it = attribute_float_keys_.begin(); it != attribute_float_keys_.end(); ++it)
-    {
+    for (auto it = attribute_float_keys_.begin();
+            it != attribute_float_keys_.end(); ++it) {
         mesh->setVertexAttribLocF(it->first, it->second);
     }
 
-    for(auto it = attribute_vec2_keys_.begin(); it != attribute_vec2_keys_.end(); ++it)
-    {
+    for (auto it = attribute_vec2_keys_.begin();
+            it != attribute_vec2_keys_.end(); ++it) {
         mesh->setVertexAttribLocV2(it->first, it->second);
     }
 
-    for(auto it = attribute_vec3_keys_.begin(); it != attribute_vec3_keys_.end(); ++it)
-    {
+    for (auto it = attribute_vec3_keys_.begin();
+            it != attribute_vec3_keys_.end(); ++it) {
         mesh->setVertexAttribLocV3(it->first, it->second);
     }
 
-    for(auto it = attribute_vec4_keys_.begin(); it != attribute_vec4_keys_.end(); ++it)
-    {
+    for (auto it = attribute_vec4_keys_.begin();
+            it != attribute_vec4_keys_.end(); ++it) {
         mesh->setVertexAttribLocV4(it->first, it->second);
     }
 
-    mesh->generateVAO();  // setup VAO
+    mesh->generateVAO(render_data->material()->shader_type());  // setup VAO
 
     ///////////// uniform /////////
-    for(auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end(); ++it)
-    {
+    for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();
+            ++it) {
         glUniform1f(it->first, render_data->material()->getFloat(it->second));
     }
 
-    if(u_mvp_ != -1)
-    {
+    if (u_mvp_ != -1) {
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     }
-    if(u_right_ != 0)
-    {
+    if (u_right_ != 0) {
         glUniform1i(u_right_, right ? 1 : 0);
     }
 
     int texture_index = 0;
-    for(auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it)
-    {
+    for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
         Texture* texture = render_data->material()->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
 
-    for(auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end(); ++it)
-    {
+    for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
+            ++it) {
         glm::vec2 v = render_data->material()->getVec2(it->second);
         glUniform2f(it->first, v.x, v.y);
     }
 
-    for(auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end(); ++it)
-    {
+    for (auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end();
+            ++it) {
         glm::vec3 v = render_data->material()->getVec3(it->second);
         glUniform3f(it->first, v.x, v.y, v.z);
     }
 
-    for(auto it = uniform_vec4_keys_.begin(); it != uniform_vec4_keys_.end(); ++it)
-    {
+    for (auto it = uniform_vec4_keys_.begin(); it != uniform_vec4_keys_.end();
+            ++it) {
         glm::vec4 v = render_data->material()->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
     }
 
-    for(auto it = uniform_mat4_keys_.begin(); it != uniform_mat4_keys_.end(); ++it)
-    {
+    for (auto it = uniform_mat4_keys_.begin(); it != uniform_mat4_keys_.end();
+            ++it) {
         glm::mat4 m = render_data->material()->getMat4(it->second);
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(mesh->getVAOId(render_data->material()->shader_type()));
+    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+            0);
     glBindVertexArray(0);
 #else
     glUseProgram(program_->id());
