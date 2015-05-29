@@ -16,6 +16,6 @@
 
 
 
-<lens name="N4">
-    <scene fov-y="90.0" camera-separation-distance="0.062" fbo-width="1024" fbo-height="1024" msaa="1"/>
+<lens name="S5">
+    <scene fov-y="95.0" camera-separation-distance="0.062" fbo-width="1024" fbo-height="1024"/>
 </lens>
