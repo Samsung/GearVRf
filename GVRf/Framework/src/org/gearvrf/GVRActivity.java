@@ -45,6 +45,7 @@ public class GVRActivity extends VrActivity {
 
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
+    private boolean forceMonoscopic = false;
 
     static {
         System.loadLibrary("gvrf");
@@ -123,7 +124,7 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            if (isVrSupported()) {
+            if (isVrSupported() && !forceMonoscopic) {
                 mGVRViewManager = new GVRViewManager(this, gvrScript,
                         distortionDataFileName);
             } else {
@@ -134,6 +135,24 @@ public class GVRActivity extends VrActivity {
             throw new IllegalArgumentException(
                     "You can not set orientation to portrait for GVRF apps.");
         }
+    }
+
+    /**
+     * Sets whether to force rendering to be single-eye, monoscopic view.
+     *
+     * @param force
+     *            If true, will create a GVRMonoscopicViewManager when {@linkplain setScript setScript()} is called.  If false, will proceed to auto-detect whether the device supports VR rendering and choose the appropriate ViewManager.
+     *
+     */
+    public void setForceMonoscopic(boolean force) {
+        forceMonoscopic = force;
+    }
+
+    /**
+     * Returns whether a monoscopic view will be created during {@linkplain setScript setScript()}.
+     */
+    public boolean getForceMonoscopic() {
+        return forceMonoscopic;
     }
 
     private boolean isVrSupported() {
