@@ -141,7 +141,7 @@ public class GVRActivity extends VrActivity {
      * Sets whether to force rendering to be single-eye, monoscopic view.
      *
      * @param force
-     *            If true, will create a GVRMonoscopicViewManager when {@linkplain setScript setScript()} is called.  If false, will proceed to auto-detect whether the device supports VR rendering and choose the appropriate ViewManager.
+     *            If true, will create a GVRMonoscopicViewManager when {@linkplain setScript setScript()} is called.  If false, will proceed to auto-detect whether the device supports VR rendering and choose the appropriate ViewManager.  This call will only an effect if it is called before {@linkplain setScript setScript()}.
      *
      */
     public void setForceMonoscopic(boolean force) {
