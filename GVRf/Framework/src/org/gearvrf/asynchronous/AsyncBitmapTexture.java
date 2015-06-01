@@ -471,7 +471,6 @@ abstract class AsyncBitmapTexture {
         public void getBounds(Options options) {
             BitmapFactory.decodeStream(stream, null, options);
         }
-
     }
 
     private static void setInSampleSize(Options options, int requestedWidth,
@@ -716,6 +715,9 @@ abstract class AsyncBitmapTexture {
 
         DecodeStreamHelper(InputStream stream) {
             mStream = stream;
+            if (mStream.markSupported()) {
+                mStream.mark(Integer.MAX_VALUE);
+            }
         }
 
         @Override
@@ -723,6 +725,7 @@ abstract class AsyncBitmapTexture {
                 int requestedHeight) {
             AsyncBitmapTexture.setInSampleSize(options, requestedWidth,
                     requestedHeight, new GetStreamBounds(mStream));
+            rewind();
         }
 
         @Override
@@ -734,7 +737,13 @@ abstract class AsyncBitmapTexture {
 
         @Override
         public void rewind() {
-            // Do nothing for plain InputStreams
+            if (mStream.markSupported()) {
+                try {
+                    mStream.reset();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         private final InputStream mStream;
