@@ -294,7 +294,9 @@ abstract class Throttler {
                 Class<? extends GVRHybridObject> outClass,
                 CancelableCallback<? extends GVRHybridObject> callback,
                 GVRAndroidResource request, int priority) {
-            Log.d(TAG, "registerCallback(%s, %s)", request, callback);
+            if (VERBOSE_SCHEDULING) {
+                Log.d(TAG, "registerCallback(%s, %s)", request, callback);
+            }
             if (RUNTIME_ASSERTIONS) {
                 if (request == null) {
                     throw Exceptions
@@ -312,6 +314,11 @@ abstract class Throttler {
                 PendingRequest pending = pendingRequests.get(request);
 
                 if (pending != null) {
+                    if (request == pending.request) {
+                        throw new IllegalArgumentException(
+                                "Tried to load the same GVRAndroidResource more than once - each async load call should use a new GVRAndroidResource");
+                    }
+
                     // There is already a request for this resource: add
                     // callback, and reschedule
 

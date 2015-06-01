@@ -600,10 +600,12 @@ abstract class AsyncBitmapTexture {
                 || requestedHeight == 0 //
                 || sampledWidth <= Math.abs(requestedWidth)
                 || sampledHeight <= Math.abs(requestedHeight)) {
-            Log.d(TAG,
-                    "Can't use slice decoder: sampledWidth = %.0f, requestedWidth = %d; sampledHeight = %.0f, requestedHeight = %d",
-                    sampledWidth, requestedWidth, sampledHeight,
-                    requestedHeight);
+            if (VERBOSE_DECODE) {
+                Log.d(TAG,
+                        "Can't use slice decoder: sampledWidth = %.0f, requestedWidth = %d; sampledHeight = %.0f, requestedHeight = %d",
+                        sampledWidth, requestedWidth, sampledHeight,
+                        requestedHeight);
+            }
             return shim.decode(options);
         }
 

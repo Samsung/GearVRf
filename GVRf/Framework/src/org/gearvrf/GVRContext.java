@@ -221,10 +221,24 @@ public abstract class GVRContext {
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
-     * 
      * @throws IllegalArgumentException
-     *             If either parameter is {@code null}
-     * 
+     *             If either parameter is {@code null} or if you 'abuse' request
+     *             consolidation by passing the same {@link GVRAndroidResource}
+     *             descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      * @since 1.6.2
      */
     public void loadMesh(MeshCallback callback,
@@ -281,8 +295,23 @@ public abstract class GVRContext {
      * 
      * @throws IllegalArgumentException
      *             If either {@code callback} or {@code resource} is
-     *             {@code null}, or if {@code priority} is out of range.
-     * 
+     *             {@code null}, or if {@code priority} is out of range - or if
+     *             you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      * @since 1.6.2
      */
     public void loadMesh(MeshCallback callback, GVRAndroidResource resource,
@@ -310,6 +339,24 @@ public abstract class GVRContext {
      *         {@link GVRRenderData#setMesh(Future)}
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource) {
         return loadFutureMesh(resource, DEFAULT_PRIORITY);
@@ -337,6 +384,24 @@ public abstract class GVRContext {
      *         {@link GVRRenderData#setMesh(Future)}
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource,
             int priority) {
@@ -633,6 +698,24 @@ public abstract class GVRContext {
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadBitmapTexture(BitmapTextureCallback callback,
             GVRAndroidResource resource) {
@@ -706,7 +789,23 @@ public abstract class GVRContext {
      * @throws IllegalArgumentException
      *             If {@code priority} {@literal <} {@link #LOWEST_PRIORITY} or
      *             {@literal >} {@link #HIGHEST_PRIORITY}, or either of the
-     *             other parameters is {@code null}
+     *             other parameters is {@code null} - or if you 'abuse' request
+     *             consolidation by passing the same {@link GVRAndroidResource}
+     *             descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadBitmapTexture(BitmapTextureCallback callback,
             GVRAndroidResource resource, int priority)
@@ -740,6 +839,24 @@ public abstract class GVRContext {
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadCompressedTexture(CompressedTextureCallback callback,
             GVRAndroidResource resource) {
@@ -772,6 +889,24 @@ public abstract class GVRContext {
      *            {@link GVRCompressedTexture#BALANCED}, or
      *            {@link GVRCompressedTexture#QUALITY}, but other values are
      *            'clamped' to one of the recognized values.
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadCompressedTexture(CompressedTextureCallback callback,
             GVRAndroidResource resource, int quality) {
@@ -842,6 +977,24 @@ public abstract class GVRContext {
      *            {@code GVRAndroidResource} here eliminates six overloads.
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource) {
@@ -917,6 +1070,24 @@ public abstract class GVRContext {
      *            request scheduler.
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, int priority) {
@@ -997,6 +1168,24 @@ public abstract class GVRContext {
      *            quality parameter.
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, int priority, int quality) {
@@ -1042,6 +1231,24 @@ public abstract class GVRContext {
      *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource) {
         return loadFutureTexture(resource, DEFAULT_PRIORITY);
@@ -1092,6 +1299,24 @@ public abstract class GVRContext {
      *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority) {
@@ -1151,6 +1376,24 @@ public abstract class GVRContext {
      *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.7
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority, int quality) {
@@ -1174,6 +1417,24 @@ public abstract class GVRContext {
      *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.9
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
      */
     public Future<GVRTexture> loadFutureCubemapTexture(
             GVRAndroidResource resource) {

@@ -292,8 +292,7 @@ public class GVRAsynchronousResourceLoader {
      */
     public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
             GVRAndroidResource resource, int priority, int quality) {
-        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
-                resource);
+        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
         loadTexture(gvrContext, result.callback, resource, priority, quality);
 
@@ -326,8 +325,7 @@ public class GVRAsynchronousResourceLoader {
     public static Future<GVRTexture> loadFutureCubemapTexture(
             GVRContext gvrContext, GVRAndroidResource resource, int priority,
             Map<String, Integer> faceIndexMap) {
-        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(
-                resource);
+        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
         AsyncCubemapTexture.loadTexture(gvrContext, result.callback, resource,
                 priority, faceIndexMap);
@@ -393,7 +391,7 @@ public class GVRAsynchronousResourceLoader {
      */
     public static Future<GVRMesh> loadFutureMesh(GVRContext gvrContext,
             GVRAndroidResource resource, int priority) {
-        FutureResource<GVRMesh> result = new FutureResource<GVRMesh>(resource);
+        FutureResource<GVRMesh> result = new FutureResource<GVRMesh>();
 
         loadMesh(gvrContext, result.callback, resource, priority);
 
@@ -405,36 +403,33 @@ public class GVRAsynchronousResourceLoader {
 
         private static final String TAG = Log.tag(FutureResource.class);
 
-        private final GVRAndroidResource resource;
+        /** Do all our synchronization on data private to this instance */
+        private final Object[] lock = new Object[0];
 
         private T result = null;
         private Throwable error = null;
         private boolean pending = true;
         private boolean canceled = false;
 
-        public FutureResource(GVRAndroidResource resource) {
-            this.resource = resource;
-        }
-
         private final CancelableCallback<T> callback = new CancelableCallback<T>() {
 
             @Override
             public void loaded(T data, GVRAndroidResource androidResource) {
-                synchronized (resource) {
+                synchronized (lock) {
                     result = data;
                     pending = false;
-                    resource.notifyAll();
+                    lock.notifyAll();
                 }
             }
 
             @Override
             public void failed(Throwable t, GVRAndroidResource androidResource) {
-                synchronized (resource) {
+                Log.d(TAG, "failed(%s), %s", androidResource, t);
+                synchronized (lock) {
                     error = t;
                     pending = false;
-                    resource.notifyAll();
+                    lock.notifyAll();
                 }
-                Log.d(TAG, "failed(%s), %s", resource, t);
             }
 
             @Override
@@ -462,9 +457,9 @@ public class GVRAsynchronousResourceLoader {
 
         private T get(long millis) throws InterruptedException,
                 ExecutionException {
-            synchronized (resource) {
+            synchronized (lock) {
                 if (pending) {
-                    resource.wait(millis);
+                    lock.wait(millis);
                 }
             }
             if (canceled) {

@@ -86,12 +86,7 @@ public class GVRAndroidResource {
      *             File doesn't exist, or can't be read.
      */
     public GVRAndroidResource(File file) throws FileNotFoundException {
-        stream = new MarkingFileInputStream(file);
-        debugState = DebugStates.OPEN;
-
-        filePath = file.getAbsolutePath();
-        resourceId = 0; // No R.whatever field will ever be 0
-        assetPath = null;
+        this(file.getAbsolutePath());
     }
 
     /**
@@ -179,6 +174,12 @@ public class GVRAndroidResource {
         return stream;
     }
 
+    /*
+     * TODO Should we somehow expose the CLOSED state? Return null or throw an
+     * exception from getStream()? Or is it enough for the calling code to fail,
+     * reading a closed stream?
+     */
+
     /**
      * Close the open stream.
      * 
@@ -192,7 +193,6 @@ public class GVRAndroidResource {
             debugState = DebugStates.CLOSED;
             stream.close();
         } catch (IOException e) {
-            // Auto-generated catch block
             e.printStackTrace();
         }
     }
