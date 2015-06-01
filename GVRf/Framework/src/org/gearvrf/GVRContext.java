@@ -54,7 +54,7 @@ import android.view.KeyEvent;
 public abstract class GVRContext {
     private static final String TAG = Log.tag(GVRContext.class);
 
-    private final Context mContext;
+    private final GVRActivity mContext;
 
     /*
      * Fields and constants
@@ -117,20 +117,41 @@ public abstract class GVRContext {
      * Methods
      */
 
-    GVRContext(Context context) {
-        mContext = context.getApplicationContext();
+    GVRContext(GVRActivity context) {
+        mContext = context;
     }
 
     /**
      * Get the Android {@link Context}, which provides access to system services
-     * and to your application's resources. This is <em>not</em> your
-     * {@link GVRActivity} implementation, but rather the
-     * {@linkplain Activity#getApplicationContext() application context,} which
-     * is usually an {@link Application}.
+     * and to your application's resources. Since version 2.0.1, this is
+     * actually your {@link GVRActivity} implementation, but you should probably
+     * use the new {@link #getActivity()} method, rather than casting this
+     * method to an {@code (Activity)} or {@code (GVRActivity)}.
      * 
      * @return An Android {@code Context}
      */
     public Context getContext() {
+        return mContext;
+    }
+
+    /**
+     * Get the Android {@link Activity} which launched your GVRF app.
+     * 
+     * An {@code Activity} is-a {@link Context} and so provides access to system
+     * services and to your application's resources; the {@code Activity} class
+     * also provides additional services, including
+     * {@link Activity#runOnUiThread(Runnable)}.
+     * 
+     * @return The {@link GVRActivity} which launched your GVRF app. The
+     *         {@link GVRActivity} class doesn't actually add much useful
+     *         functionality besides
+     *         {@link GVRActivity#setScript(GVRScript, String)}, but returning
+     *         the most-derived class here may prevent someone from having to
+     *         write {@code (GVRActivity) gvrContext.getActivity();}.
+     * 
+     * @since 2.0.1
+     */
+    public GVRActivity getActivity() {
         return mContext;
     }
 
@@ -341,11 +362,12 @@ public abstract class GVRContext {
                 width * 0.5f, height * -0.5f, 0.0f };
         mesh.setVertices(vertices);
 
-        final float[] normals = { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f, 1.0f };
+        final float[] normals = { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f, 1.0f };
         mesh.setNormals(normals);
 
-        final float[] texCoords = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
+        final float[] texCoords = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+                1.0f };
         mesh.setTexCoords(texCoords);
 
         char[] triangles = { 0, 1, 2, 1, 3, 2 };
@@ -1149,7 +1171,7 @@ public abstract class GVRContext {
      *            "posz.png", and "negz.png", which can be changed by calling
      *            {@link GVRCubemapTexture#setFaceNames(String[])}.
      * @return A {@link Future} that you can pass to methods like
-     *          {@link GVRShaders#setMainTexture(Future)}
+     *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.9
      */
