@@ -663,6 +663,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private final FrameHandler normalFrames = new FrameHandler() {
 
         public void beforeDrawEyes() {
+            mMainScene.resetStats();
+
             GVRNotifications.notifyBeforeStep();
 
             doMemoryManagementAndPerFrameCallbacks();
@@ -679,6 +681,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         @Override
         public void afterDrawEyes() {
             GVRNotifications.notifyAfterStep();
+            mMainScene.updateStats();
         }
     };
 

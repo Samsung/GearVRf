@@ -86,6 +86,8 @@ public class GVRConsole extends GVRPostEffect {
     private final Paint paint = new Paint();
     private final float defaultTextSize = paint.getTextSize();
     private GVRBitmapTexture texture = null;
+    private float textXOffset = 0.0f;
+    private float textYOffset = TOP_FUDGE;
 
     /**
      * Create a console, specifying the initial eye mode.
@@ -235,6 +237,55 @@ public class GVRConsole extends GVRPostEffect {
         }
     }
 
+    /**
+     * Clear the console of text
+     *
+     * Clear the console of any written text.
+     */
+    public void clear() {
+        lines.clear();
+    }
+
+    /**
+     * Sets an offset to use in the X direction when writing text.
+     *
+     * @param xoffset
+     *     Amount to offset in the X direction.
+     *
+     */
+    public void setXOffset(float xoffset) {
+        textXOffset = xoffset;
+    }
+
+    /**
+     * Sets an offset to use in the Y direction when writing text.
+     *
+     * @param yoffset
+     *     Amount to offset in the Y direction.
+     *
+     */
+    public void setYOffset(float yoffset) {
+        textYOffset = yoffset;
+    }
+
+    /**
+     * Get the X offset.
+     * 
+     * @return the text offset in the X direction
+     */
+    public float getXOffset() {
+        return textXOffset;
+    }
+
+    /**
+     * Get the Y offset.
+     * 
+     * @return the text offset in the Y direction
+     */
+    public float getYOffset() {
+        return textYOffset;
+    }
+
     private static void log(String TAG, String pattern, Object... parameters) {
         // Log.d(TAG, pattern, parameters);
     }
@@ -252,7 +303,7 @@ public class GVRConsole extends GVRPostEffect {
                 textHeight, rowsOnScreen, lines.size(), baseLine);
         int written = 0;
         for (String line : lines) {
-            canvas.drawText(line, 0, baseLine - textHeight + TOP_FUDGE, paint);
+            canvas.drawText(line, textXOffset, baseLine - textHeight + textYOffset, paint);
             written += 1;
             baseLine -= textHeight;
             if (baseLine < textHeight) {

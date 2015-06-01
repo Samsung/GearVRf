@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.utility.Log;
+import org.gearvrf.debug.GVRConsole;
 
 /** The scene graph */
 public class GVRScene extends GVRHybridObject {
@@ -152,6 +153,57 @@ public class GVRScene extends GVRHybridObject {
     public void setOcclusionQuery(boolean flag) {
         NativeScene.setOcclusionQuery(getNative(), flag);
     }
+
+    private GVRConsole mStatsConsole = null;
+    private boolean mStatsEnabled = false;
+
+    /**
+     * Returns whether displaying of stats is enabled for this scene.
+     * 
+     * @return whether displaying of stats is enabled for this scene.
+     */
+    public boolean getStatsEnabled() {
+        return mStatsEnabled;
+    }
+
+    /**
+     * Set whether to enable display of stats for this scene.
+     *
+     * @param enabled
+     *     Flag to indicate whether to enable display of stats.
+     */
+    public void setStatsEnabled(boolean enabled) {
+        mStatsEnabled = enabled;
+
+        if(enabled && mStatsConsole == null) {
+            mStatsConsole = new GVRConsole(getGVRContext(), GVRConsole.EyeMode.BOTH_EYES);
+            mStatsConsole.setXOffset(300.0f);
+            mStatsConsole.setYOffset(300.0f);
+        }
+
+        if(enabled && mStatsConsole != null) {
+            mStatsConsole.setEyeMode(GVRConsole.EyeMode.BOTH_EYES);
+        } else if(!enabled && mStatsConsole != null) {
+            mStatsConsole.setEyeMode(GVRConsole.EyeMode.NEITHER_EYE);
+        }
+    }
+
+    void resetStats() {
+        if(mStatsEnabled) {
+            mStatsConsole.clear();
+            NativeScene.resetStats(getPtr());
+        }
+    }
+
+    void updateStats() {
+        if(mStatsEnabled) {
+            int numberDrawCalls = NativeScene.getNumberDrawCalls(getPtr());
+            int numberTriangles = NativeScene.getNumberTriangles(getPtr());
+
+            mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
+            mStatsConsole.writeLine(" Triangles: %d", numberTriangles);
+        }
+    }
 }
 
 class NativeScene {
@@ -166,4 +218,8 @@ class NativeScene {
     public static native void setOcclusionQuery(long scene, boolean flag);
 
     static native void setMainCameraRig(long scene, long cameraRig);
+
+    public static native void resetStats(long scene);
+    public static native int getNumberDrawCalls(long scene);
+    public static native int getNumberTriangles(long scene);
 }

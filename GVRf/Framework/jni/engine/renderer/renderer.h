@@ -86,6 +86,11 @@ public:
             RenderTexture* post_effect_render_texture_b,
             glm::mat4 vp_matrix);
 
+    static void initializeStats();
+    static void resetStats();
+    static int getNumberDrawCalls();
+    static int getNumberTriangles();
+
 private:
     static void renderRenderData(RenderData* render_data,
     		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,

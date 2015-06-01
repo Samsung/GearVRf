@@ -43,6 +43,18 @@ Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
         jobject obj, jlong jscene, jboolean flag);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_resetStats(JNIEnv * env,
+        jobject obj, jlong jscene);
+
+JNIEXPORT int JNICALL
+Java_org_gearvrf_NativeScene_getNumberDrawCalls(JNIEnv * env,
+        jobject obj, jlong jscene);
+
+JNIEXPORT int JNICALL
+Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
+        jobject obj, jlong jscene);
 }
 ;
 
@@ -88,4 +100,29 @@ Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     scene->set_occlusion_culling(static_cast<bool>(flag));
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_resetStats(JNIEnv * env,
+        jobject obj, jlong jscene) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->resetStats();
+}
+
+
+JNIEXPORT int JNICALL
+Java_org_gearvrf_NativeScene_getNumberDrawCalls(JNIEnv * env,
+        jobject obj, jlong jscene) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    return scene->getNumberDrawCalls();
+}
+
+
+JNIEXPORT int JNICALL
+Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
+        jobject obj, jlong jscene) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->getNumberTriangles();
+}
+
+
 }

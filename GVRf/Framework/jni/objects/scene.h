@@ -27,6 +27,7 @@
 
 #include "objects/hybrid_object.h"
 #include "components/camera_rig.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 class SceneObject;
@@ -57,6 +58,10 @@ public:
     void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
     bool get_occlusion_culling(){ return occlusion_flag_; }
 
+    void resetStats() { if(!statsInitialized) { Renderer::initializeStats(); } Renderer::resetStats(); }
+    int getNumberDrawCalls() { return Renderer::getNumberDrawCalls(); }
+    int getNumberTriangles() { return Renderer::getNumberTriangles(); }
+
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -70,6 +75,7 @@ private:
     int dirtyFlag_;
     bool frustum_flag_;
     bool occlusion_flag_;
+    bool statsInitialized = false;
 
 };
 
