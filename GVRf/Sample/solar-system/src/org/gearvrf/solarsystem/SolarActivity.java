@@ -17,14 +17,34 @@
 package org.gearvrf.solarsystem;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
 
 import org.gearvrf.GVRActivity;
 
 public class SolarActivity extends GVRActivity {
-	
+
+    private SolarViewManager viewManager;
+    private long lastDownTime;
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setScript(new SolarViewManager(), "gvr_note4.xml");
+        viewManager = new SolarViewManager();
+        setScript(viewManager, "gvr_note4.xml");
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            lastDownTime = event.getDownTime();
+        }
+
+        if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+            if (event.getEventTime() - lastDownTime < 200) {
+                viewManager.onTap();
+            }
+        }
+        return true;
     }
 }
