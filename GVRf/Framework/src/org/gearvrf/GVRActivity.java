@@ -45,7 +45,7 @@ public class GVRActivity extends VrActivity {
 
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
-    private boolean forceMonoscopic = false;
+    private boolean mForceMonoscopic = false;
 
     static {
         System.loadLibrary("gvrf");
@@ -124,7 +124,7 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            if (isVrSupported() && !forceMonoscopic) {
+            if (isVrSupported() && !mForceMonoscopic) {
                 mGVRViewManager = new GVRViewManager(this, gvrScript,
                         distortionDataFileName);
             } else {
@@ -139,21 +139,28 @@ public class GVRActivity extends VrActivity {
 
     /**
      * Sets whether to force rendering to be single-eye, monoscopic view.
-     *
+     * 
      * @param force
-     *            If true, will create a GVRMonoscopicViewManager when {@linkplain setScript setScript()} is called.  If false, will proceed to auto-detect whether the device supports VR rendering and choose the appropriate ViewManager.  This call will only an effect if it is called before {@linkplain setScript setScript()}.
-     *
+     *            If true, will create a GVRMonoscopicViewManager when
+     *            {@linkplain setScript setScript()} is called. If false, will
+     *            proceed to auto-detect whether the device supports VR
+     *            rendering and choose the appropriate ViewManager. This call
+     *            will only an effect if it is called before
+     *            {@linkplain #setScript(GVRScript, String) setScript()}.
+     * 
      */
     public void setForceMonoscopic(boolean force) {
-        forceMonoscopic = force;
+        mForceMonoscopic = force;
     }
 
     /**
-     * Returns whether a monoscopic view was asked to be forced during {@linkplain setScript setScript()}.
+     * Returns whether a monoscopic view was asked to be forced during
+     * {@linkplain #setScript(GVRScript, String) setScript()}.
+     * 
      * @see setForceMonoscopic
      */
     public boolean getForceMonoscopic() {
-        return forceMonoscopic;
+        return mForceMonoscopic;
     }
 
     private boolean isVrSupported() {
