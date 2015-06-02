@@ -185,8 +185,9 @@ public class GVRScene extends GVRHybridObject {
         mStatsEnabled = pendingStats;
         if(mStatsEnabled && mStatsConsole == null) {
             mStatsConsole = new GVRConsole(getGVRContext(), GVRConsole.EyeMode.BOTH_EYES);
-            mStatsConsole.setXOffset(300.0f);
-            mStatsConsole.setYOffset(300.0f);
+            mStatsConsole.setCanvasWidthHeight(512, 512);
+            mStatsConsole.setXOffset(125.0f);
+            mStatsConsole.setYOffset(125.0f);
         }
 
         if(mStatsEnabled && mStatsConsole != null) {
