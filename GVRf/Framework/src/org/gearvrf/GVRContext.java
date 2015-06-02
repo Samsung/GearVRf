@@ -32,9 +32,9 @@ import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.ResourceCache;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -174,10 +174,17 @@ public abstract class GVRContext {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource) {
-        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource);
-        return assimpImporter.getMesh(0);
+        GVRMesh mesh = sMeshCache.get(androidResource);
+        if (mesh == null) {
+            GVRAssimpImporter assimpImporter = GVRImporter
+                    .readFileFromResources(this, androidResource);
+            mesh = assimpImporter.getMesh(0);
+            sMeshCache.put(androidResource, mesh);
+        }
+        return mesh;
     }
+
+    private final static ResourceCache<GVRMesh> sMeshCache = new ResourceCache<GVRMesh>();
 
     /**
      * Loads a mesh file, asynchronously, at a default priority.
@@ -524,8 +531,8 @@ public abstract class GVRContext {
      * @return The file as a texture, or {@code null} if file path does not
      *         exist or the file can not be decoded into a Bitmap.
      * 
-     * @deprecated We will remove this blocking function during Q3 of 2015. We
-     *             suggest that you switch to
+     * @deprecated We will remove this uncached, blocking function during Q3 of
+     *             2015. We suggest that you switch to
      *             {@link #loadTexture(GVRAndroidResource)}
      * 
      */
@@ -571,16 +578,25 @@ public abstract class GVRContext {
      * 
      * @since 1.6.5
      */
-    @SuppressWarnings("resource")
-    public GVRBitmapTexture loadTexture(GVRAndroidResource resource) {
+    public GVRTexture loadTexture(GVRAndroidResource resource) {
 
-        assertGLThread();
+        GVRTexture texture = sTextureCache.get(resource);
+        if (texture == null) {
+            assertGLThread();
 
-        Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
-                resource.getStream(), false);
-        resource.closeStream();
-        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap);
+            Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
+                    resource.getStream(), false);
+            resource.closeStream();
+            texture = bitmap == null ? null
+                    : new GVRBitmapTexture(this, bitmap);
+            if (texture != null) {
+                sTextureCache.put(resource, texture);
+            }
+        }
+        return texture;
     }
+
+    private final static ResourceCache<GVRTexture> sTextureCache = new ResourceCache<GVRTexture>();
 
     /**
      * Loads a cube map texture synchronously.
@@ -600,6 +616,10 @@ public abstract class GVRContext {
      *         rsourceArray is not 6.
      * 
      * @since 1.6.9
+     */
+    /*
+     * TODO Deprecate, and replace with an overload that takes a single
+     * GVRAndroidResource which specifies a zip file ... and caches result
      */
     public GVRCubemapTexture loadCubemapTexture(
             GVRAndroidResource[] resourceArray) {
@@ -810,8 +830,8 @@ public abstract class GVRContext {
     public void loadBitmapTexture(BitmapTextureCallback callback,
             GVRAndroidResource resource, int priority)
             throws IllegalArgumentException {
-        GVRAsynchronousResourceLoader.loadBitmapTexture(this, callback,
-                resource, priority);
+        GVRAsynchronousResourceLoader.loadBitmapTexture(this, sTextureCache,
+                callback, resource, priority);
     }
 
     /**
@@ -860,8 +880,8 @@ public abstract class GVRContext {
      */
     public void loadCompressedTexture(CompressedTextureCallback callback,
             GVRAndroidResource resource) {
-        GVRAsynchronousResourceLoader.loadCompressedTexture(this, callback,
-                resource);
+        GVRAsynchronousResourceLoader.loadCompressedTexture(this,
+                sTextureCache, callback, resource);
     }
 
     /**
@@ -910,8 +930,8 @@ public abstract class GVRContext {
      */
     public void loadCompressedTexture(CompressedTextureCallback callback,
             GVRAndroidResource resource, int quality) {
-        GVRAsynchronousResourceLoader.loadCompressedTexture(this, callback,
-                resource, quality);
+        GVRAsynchronousResourceLoader.loadCompressedTexture(this,
+                sTextureCache, callback, resource, quality);
     }
 
     /**
@@ -1189,8 +1209,8 @@ public abstract class GVRContext {
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, int priority, int quality) {
-        GVRAsynchronousResourceLoader.loadTexture(this, callback, resource,
-                priority, quality);
+        GVRAsynchronousResourceLoader.loadTexture(this, sTextureCache,
+                callback, resource, priority, quality);
     }
 
     /**
@@ -1397,8 +1417,8 @@ public abstract class GVRContext {
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority, int quality) {
-        return GVRAsynchronousResourceLoader.loadFutureTexture(this, resource,
-                priority, quality);
+        return GVRAsynchronousResourceLoader.loadFutureTexture(this,
+                sTextureCache, resource, priority, quality);
     }
 
     /**
@@ -1439,7 +1459,8 @@ public abstract class GVRContext {
     public Future<GVRTexture> loadFutureCubemapTexture(
             GVRAndroidResource resource) {
         return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(this,
-                resource, DEFAULT_PRIORITY, GVRCubemapTexture.faceIndexMap);
+                sTextureCache, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
     }
 
     /**
