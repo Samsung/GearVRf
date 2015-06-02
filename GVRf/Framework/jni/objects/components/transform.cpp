@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Containing data about how to position an object.
  ***************************************************************************/
@@ -42,6 +41,16 @@ void Transform::invalidate() {
         for (auto it = children.begin(); it != children.end(); ++it) {
             (*it)->transform()->invalidate();
         }
+    }
+    // scale rotation_ if needed to avoid overflow
+    static const float threshold = sqrt(FLT_MAX) / 2.0f;
+    static const float scale_factor = 0.5f / sqrt(FLT_MAX);
+    if (rotation_.w > threshold || rotation_.x > threshold
+            || rotation_.y > threshold || rotation_.z > threshold) {
+        rotation_.w *= scale_factor;
+        rotation_.x *= scale_factor;
+        rotation_.y *= scale_factor;
+        rotation_.z *= scale_factor;
     }
 }
 
