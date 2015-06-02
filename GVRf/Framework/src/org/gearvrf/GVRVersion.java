@@ -77,7 +77,7 @@ public class GVRVersion {
      * lifecycles.
      */
     public static final String V_2_0_0 = "2.0.0";
-
+    
     /**
      * Optimize memory management by getting rid of {@code finalize()} method.
      * Add support for Future<{@link GVREyePointee}>s. Add
