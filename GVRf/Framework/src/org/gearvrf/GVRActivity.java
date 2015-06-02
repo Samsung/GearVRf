@@ -149,7 +149,8 @@ public class GVRActivity extends VrActivity {
     }
 
     /**
-     * Returns whether a monoscopic view will be created during {@linkplain setScript setScript()}.
+     * Returns whether a monoscopic view was asked to be forced during {@linkplain setScript setScript()}.
+     * @see setForceMonoscopic
      */
     public boolean getForceMonoscopic() {
         return forceMonoscopic;
