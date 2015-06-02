@@ -156,6 +156,7 @@ public class GVRScene extends GVRHybridObject {
 
     private GVRConsole mStatsConsole = null;
     private boolean mStatsEnabled = false;
+    private boolean pendingStats = false;
 
     /**
      * Returns whether displaying of stats is enabled for this scene.
@@ -173,22 +174,30 @@ public class GVRScene extends GVRHybridObject {
      *     Flag to indicate whether to enable display of stats.
      */
     public void setStatsEnabled(boolean enabled) {
-        mStatsEnabled = enabled;
+        pendingStats = enabled;
+    }
 
-        if(enabled && mStatsConsole == null) {
+    void updateStatsEnabled() {
+        if(mStatsEnabled == pendingStats) {
+            return;
+        }
+
+        mStatsEnabled = pendingStats;
+        if(mStatsEnabled && mStatsConsole == null) {
             mStatsConsole = new GVRConsole(getGVRContext(), GVRConsole.EyeMode.BOTH_EYES);
             mStatsConsole.setXOffset(300.0f);
             mStatsConsole.setYOffset(300.0f);
         }
 
-        if(enabled && mStatsConsole != null) {
+        if(mStatsEnabled && mStatsConsole != null) {
             mStatsConsole.setEyeMode(GVRConsole.EyeMode.BOTH_EYES);
-        } else if(!enabled && mStatsConsole != null) {
+        } else if(!mStatsEnabled && mStatsConsole != null) {
             mStatsConsole.setEyeMode(GVRConsole.EyeMode.NEITHER_EYE);
         }
     }
 
     void resetStats() {
+        updateStatsEnabled();
         if(mStatsEnabled) {
             mStatsConsole.clear();
             NativeScene.resetStats(getPtr());
