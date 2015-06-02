@@ -121,7 +121,7 @@ JNIEXPORT int JNICALL
 Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
         jobject obj, jlong jscene) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
-    scene->getNumberTriangles();
+    return scene->getNumberTriangles();
 }
 
 
