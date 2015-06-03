@@ -58,9 +58,19 @@ public:
     void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
     bool get_occlusion_culling(){ return occlusion_flag_; }
 
-    void resetStats() { if(!statsInitialized) { Renderer::initializeStats(); statsInitialized = true; } Renderer::resetStats(); }
-    int getNumberDrawCalls() { return Renderer::getNumberDrawCalls(); }
-    int getNumberTriangles() { return Renderer::getNumberTriangles(); }
+    void resetStats() {
+        if (!statsInitialized) {
+            Renderer::initializeStats();
+            statsInitialized = true;
+        }
+        Renderer::resetStats();
+    }
+    int getNumberDrawCalls() {
+        return Renderer::getNumberDrawCalls();
+    }
+    int getNumberTriangles() {
+        return Renderer::getNumberTriangles();
+    }
 
 private:
     Scene(const Scene& scene);
