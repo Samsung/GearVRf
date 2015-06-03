@@ -145,7 +145,7 @@ public class GVRActivity extends VrActivity {
      *            {@linkplain setScript setScript()} is called. If false, will
      *            proceed to auto-detect whether the device supports VR
      *            rendering and choose the appropriate ViewManager. This call
-     *            will only an effect if it is called before
+     *            will only have an effect if it is called before
      *            {@linkplain #setScript(GVRScript, String) setScript()}.
      * 
      */
