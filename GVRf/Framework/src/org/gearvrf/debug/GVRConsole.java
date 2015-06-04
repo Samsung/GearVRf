@@ -80,12 +80,16 @@ public class GVRConsole extends GVRPostEffect {
     private float textSize;
 
     private final List<String> lines = new ArrayList<String>();
-    private final Bitmap HUD = Bitmap.createBitmap(HUD_WIDTH, HUD_HEIGHT,
+    private Bitmap HUD = Bitmap.createBitmap(HUD_WIDTH, HUD_HEIGHT,
             Config.ARGB_8888);
-    private final Canvas canvas = new Canvas(HUD);
+    private Canvas canvas = new Canvas(HUD);
     private final Paint paint = new Paint();
     private final float defaultTextSize = paint.getTextSize();
     private GVRBitmapTexture texture = null;
+    private float textXOffset = 0.0f;
+    private float textYOffset = TOP_FUDGE;
+    private int hudWidth = HUD_WIDTH;
+    private int hudHeight = HUD_HEIGHT;
 
     /**
      * Create a console, specifying the initial eye mode.
@@ -187,7 +191,7 @@ public class GVRConsole extends GVRPostEffect {
      */
     public void setTextSize(float newSize) {
         textSize = newSize;
-        paint.setTextSize(defaultTextSize * textSize * BASE_TEXT_SIZE);
+        paint.setTextSize(defaultTextSize * textSize);
     }
 
     /**
@@ -235,6 +239,92 @@ public class GVRConsole extends GVRPostEffect {
         }
     }
 
+    /**
+     * Clear the console of text
+     *
+     * Clear the console of any written text.
+     */
+    public void clear() {
+        lines.clear();
+    }
+
+    /**
+     * Sets an offset to use in the X direction when writing text.
+     *
+     * @param xoffset
+     *     Amount to offset in the X direction.
+     *
+     */
+    public void setXOffset(float xoffset) {
+        textXOffset = xoffset;
+    }
+
+    /**
+     * Sets an offset to use in the Y direction when writing text.
+     *
+     * @param yoffset
+     *     Amount to offset in the Y direction.
+     *
+     */
+    public void setYOffset(float yoffset) {
+        textYOffset = yoffset;
+    }
+
+    /**
+     * Get the X offset.
+     * 
+     * @return the text offset in the X direction
+     */
+    public float getXOffset() {
+        return textXOffset;
+    }
+
+    /**
+     * Get the Y offset.
+     * 
+     * @return the text offset in the Y direction
+     */
+    public float getYOffset() {
+        return textYOffset;
+    }
+
+    /**
+     * Sets the width and height of the canvas the text is drawn to.
+     *
+     * @param width
+     *     width of the new canvas.
+     *
+     * @param hegiht
+     *     hegiht of the new canvas.
+     *
+     */
+    public void setCanvasWidthHeight(int width, int height) {
+        hudWidth = width;
+        hudHeight = height;
+        HUD = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+        canvas = new Canvas(HUD);
+        texture = null;
+    }
+
+    /**
+     * Get the width of the text canvas.
+     * 
+     * @return the width of the text canvas.
+     */
+    public int getCanvasWidth() {
+        return hudWidth;
+    }
+
+    /**
+     * Get the height of the text canvas.
+     * 
+     * @return the height of the text canvas.
+     */
+    public int getCanvasHeight() {
+        return hudHeight;
+    }
+
+
     private static void log(String TAG, String pattern, Object... parameters) {
         // Log.d(TAG, pattern, parameters);
     }
@@ -244,15 +334,14 @@ public class GVRConsole extends GVRPostEffect {
 
         HUD.eraseColor(Color.TRANSPARENT);
         float textHeight = paint.getFontSpacing();
-        int rowsOnScreen = (int) (HUD_HEIGHT / textHeight);
-        float baseLine = HUD.getHeight()
-                - Math.max(0, rowsOnScreen - lines.size()) * textHeight;
+        int rowsOnScreen = (int) (hudHeight / textHeight);
+        float baseLine = hudHeight - Math.max(0, rowsOnScreen - lines.size()) * textHeight;
         log("updateHUD",
                 "textHeight = %.2f, rowsOnScreen = %d, lines.size() = %d, baseLine = %.2f",
                 textHeight, rowsOnScreen, lines.size(), baseLine);
         int written = 0;
         for (String line : lines) {
-            canvas.drawText(line, 0, baseLine - textHeight + TOP_FUDGE, paint);
+            canvas.drawText(line, textXOffset, baseLine - textHeight + textYOffset, paint);
             written += 1;
             baseLine -= textHeight;
             if (baseLine < textHeight) {
@@ -307,7 +396,6 @@ public class GVRConsole extends GVRPostEffect {
         });
     }
 
-    private static final float BASE_TEXT_SIZE = 3f;
     private static final int HUD_HEIGHT = 1024;
     private static final int HUD_WIDTH = 1024;
     private static final int DEFAULT_COLOR = Color.GREEN;

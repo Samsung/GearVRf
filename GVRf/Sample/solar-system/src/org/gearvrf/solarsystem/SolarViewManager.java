@@ -37,6 +37,7 @@ public class SolarViewManager extends GVRScript {
     private static final String TAG = Log.tag(SolarViewManager.class);
 
     private GVRAnimationEngine mAnimationEngine;
+    private GVRScene mMainScene;
 
     private GVRSceneObject asyncSceneObject(GVRContext context,
             String textureName) throws IOException {
@@ -49,7 +50,7 @@ public class SolarViewManager extends GVRScript {
     public void onInit(GVRContext gvrContext) throws IOException {
         mAnimationEngine = gvrContext.getAnimationEngine();
 
-        GVRScene mainScene = gvrContext.getNextMainScene(new Runnable() {
+        mMainScene = gvrContext.getNextMainScene(new Runnable() {
 
             @Override
             public void run() {
@@ -60,18 +61,18 @@ public class SolarViewManager extends GVRScript {
             }
         });
 
-        mainScene.setFrustumCulling(true);
-
-        mainScene.getMainCameraRig().getLeftCamera()
+        mMainScene.setFrustumCulling(true);
+        
+        mMainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-        mainScene.getMainCameraRig().getRightCamera()
+        mMainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        mainScene.getMainCameraRig().getOwnerObject().getTransform()
+        mMainScene.getMainCameraRig().getOwnerObject().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
         GVRSceneObject solarSystemObject = new GVRSceneObject(gvrContext);
-        mainScene.addSceneObject(solarSystemObject);
+        mMainScene.addSceneObject(solarSystemObject);
 
         GVRSceneObject sunRotationObject = new GVRSceneObject(gvrContext);
         solarSystemObject.addChildObject(sunRotationObject);
@@ -121,7 +122,7 @@ public class SolarViewManager extends GVRScript {
         GVRSceneObject moonRevolutionObject = new GVRSceneObject(gvrContext);
         moonRevolutionObject.getTransform().setPosition(4.0f, 0.0f, 0.0f);
         earthRevolutionObject.addChildObject(moonRevolutionObject);
-        moonRevolutionObject.addChildObject(mainScene.getMainCameraRig()
+        moonRevolutionObject.addChildObject(mMainScene.getMainCameraRig()
                 .getOwnerObject());
 
         GVRSceneObject marsRevolutionObject = new GVRSceneObject(gvrContext);
@@ -149,7 +150,7 @@ public class SolarViewManager extends GVRScript {
 
         counterClockwise(moonRevolutionObject, 60f);
 
-        clockwise(mainScene.getMainCameraRig().getOwnerObject().getTransform(),
+        clockwise(mMainScene.getMainCameraRig().getOwnerObject().getTransform(),
                 60f);
 
         counterClockwise(marsRevolutionObject, 1200f);
@@ -158,6 +159,12 @@ public class SolarViewManager extends GVRScript {
 
     @Override
     public void onStep() {
+    }
+
+    void onTap() {
+        // toggle whether stats are displayed.
+        boolean statsEnabled = mMainScene.getStatsEnabled();
+        mMainScene.setStatsEnabled(!statsEnabled);
     }
 
     private List<GVRAnimation> mAnimations = new ArrayList<GVRAnimation>();

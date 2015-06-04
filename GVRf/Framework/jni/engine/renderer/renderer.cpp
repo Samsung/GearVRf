@@ -37,8 +37,27 @@
 
 namespace gvr {
 
-static int numDrawCalls;
-static int numTriangles;
+static int numberDrawCalls;
+static int numberTriangles;
+
+void Renderer::initializeStats(){
+    // TODO: this function will be filled in once we add draw time stats
+}
+
+void Renderer::resetStats(){
+    numberDrawCalls = 0;
+    numberTriangles = 0;
+}
+
+int Renderer::getNumberDrawCalls(){
+    return numberDrawCalls;
+}
+
+int Renderer::getNumberTriangles(){
+    return numberTriangles;
+}
+
+
 
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
@@ -52,8 +71,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     // bone/weight/joint and other assimp data, we will put general model conversion
     // on hold and do this kind of conversion fist
 
-    numDrawCalls = 0;
-    numTriangles = 0;
+    numberDrawCalls = 0;
+    numberTriangles = 0;
 
     if (scene->getSceneDirtyFlag()) {
 
@@ -149,10 +168,6 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     } // flag checking
 
-    // TODO we'll expose getting these values in a pull-request for stats.
-    //      for now, comment them out.
-    //LOGD("numDrawCalls = %d\n", numDrawCalls);
-    //LOGD("numTriangles = %d\n", numTriangles);
 }
 
 void Renderer::occlusion_cull(Scene* scene,
@@ -489,8 +504,8 @@ void Renderer::renderRenderData(RenderData* render_data,
             glDisable (GL_BLEND);
         }
         if (render_data->mesh() != 0) {
-            numTriangles += render_data->mesh()->getNumTriangles();
-            numDrawCalls++;
+            numberTriangles += render_data->mesh()->getNumTriangles();
+            numberDrawCalls++;
             glm::mat4 model_matrix(
                     render_data->owner_object()->transform()->getModelMatrix());
             glm::mat4 mv_matrix(view_matrix * model_matrix);
