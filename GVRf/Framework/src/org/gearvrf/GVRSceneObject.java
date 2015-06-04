@@ -483,6 +483,42 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Simple, high-level API to enable or disable eye picking for this scene
+     * object.
+     * 
+     * The {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder) low-level
+     * API} gives you a lot of control over eye picking, but it does involve an
+     * awful lot of details. Since most apps are just going to use the
+     * {@linkplain #attachEyePointeeHolder() simple API} anyhow, this method
+     * (and {@link #getPickingEnabled()}) provides a simple boolean property.
+     * 
+     * @param enabled
+     *            Should eye picking 'see' this scene object?
+     * 
+     * @since 2.0.2
+     */
+    public void setPickingEnabled(boolean enabled) {
+        if (enabled != getPickingEnabled()) {
+            if (enabled) {
+                detachEyePointeeHolder();
+            } else {
+                attachEyePointeeHolder();
+            }
+        }
+    }
+
+    /**
+     * Is eye picking enabled for this scene object?
+     * 
+     * @return Whether eye picking can 'see' this scene object?
+     * 
+     * @since 2.0.2
+     */
+    public boolean getPickingEnabled() {
+        return mEyePointeeHolder != null;
+    }
+
+    /**
      * Get the {@linkplain GVRSceneObject parent object.}
      * 
      * If the object has been {@link #addChildObject(GVRSceneObject) added as a
