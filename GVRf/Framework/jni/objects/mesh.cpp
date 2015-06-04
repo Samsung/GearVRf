@@ -31,6 +31,9 @@
 namespace gvr {
 Mesh* Mesh::getBoundingBox() {
     Mesh* mesh = new Mesh();
+
+    getBoundingBoxInfo(); // Make sure bounding_box_info_ is valid
+
     float min_x = bounding_box_info_[0];
     float max_x = bounding_box_info_[3];
     float min_y = bounding_box_info_[1];
