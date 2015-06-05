@@ -23,6 +23,8 @@
 
 #include "GLES3/gl3.h"
 
+#include "engine/memory/gl_delete.h"
+
 #include "util/gvr_log.h"
 
 namespace gvr {
@@ -33,7 +35,7 @@ public:
     }
 
     ~GLProgram() {
-        glDeleteProgram(id_);
+        gl_delete.queueProgram(id_);
     }
 
     GLuint id() const {
@@ -64,7 +66,7 @@ public:
                                 buf);
                         free(buf);
                     }
-                    glDeleteShader(shader);
+                    gl_delete.queueShader(shader);
                     shader = 0;
                 }
             }
@@ -104,7 +106,7 @@ public:
                         free(buf);
                     }
                 }
-                glDeleteProgram(program);
+                gl_delete.queueProgram(program);
                 program = 0;
             }
         }

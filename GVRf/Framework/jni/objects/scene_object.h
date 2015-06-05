@@ -116,7 +116,9 @@ public:
     void removeChildObject(SceneObject* child);
     int getChildrenCount() const;
     SceneObject* getChildByIndex(int index);
-    GLuint *get_occlusion_array(){ return queries_;}
+    GLuint *get_occlusion_array() {
+        return queries_;
+    }
 
 private:
     SceneObject(const SceneObject& scene_object);
@@ -126,13 +128,13 @@ private:
 
 private:
     std::string name_;
-        Transform* transform_;
-        RenderData* render_data_;
-        Camera* camera_;
-        CameraRig* camera_rig_;
-        EyePointeeHolder* eye_pointee_holder_;
-        SceneObject* parent_;
-        std::vector<SceneObject*> children_;
+    Transform* transform_;
+    RenderData* render_data_;
+    Camera* camera_;
+    CameraRig* camera_rig_;
+    EyePointeeHolder* eye_pointee_holder_;
+    SceneObject* parent_;
+    std::vector<SceneObject*> children_;
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it
