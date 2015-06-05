@@ -67,31 +67,6 @@ public interface GVRShaders<ID> {
      * Bind a different {@link GVRTexture texture} to the {@code main_texture}
      * shader uniform.
      * 
-     * <p>
-     * <em>Note</em>: {@linkplain GVRTexture GVR textures} are reference
-     * counted. While you can freely change the texture associated with a
-     * {@link GVRMaterial} or a {@link GVRPostEffect}, a sequence like
-     * 
-     * <pre>
-     * GVRTexture currentTexture = material.getMainTexture();
-     * material.setMainTexture(otherTexture);
-     * // ...
-     * material.setMainTexture(currentTexture);
-     * </pre>
-     * 
-     * may not do what you expect. The {@code setMainTexture(otherTexture)} call
-     * will decrement the reference count on {@code currentTexture}: If the
-     * reference count goes to 0, the texture will be released, and the
-     * {@code setMainTexture(currentTexture)} call will leave the
-     * {@link GVRMaterial} invisible (or will break the {@link GVRPostEffect}).
-     * You can prevent this by adding a new reference
-     * 
-     * <pre>
-     * material.setTexture(&quot;any_name_you're_not_otherwise_using&quot;, currentTexture);
-     * </pre>
-     * 
-     * before you call {@code setMainTexture(otherTexture)}.
-     * 
      * @param texture
      *            The {@link GVRTexture} to bind.
      */
@@ -105,10 +80,6 @@ public interface GVRShaders<ID> {
      * {@code Future.get()} method; unless you are loading dozens of textures
      * asynchronously, the extra overhead should be modest compared to the cost
      * of loading a texture.
-     * 
-     * <p>
-     * Please see the notes on reference counting in the main
-     * {@link #setMainTexture(GVRTexture)} overload.
      * 
      * @param texture
      *            A future texture, from one of the the
@@ -132,11 +103,6 @@ public interface GVRShaders<ID> {
     /**
      * Bind a {@link GVRTexture texture} to the shader uniform {@code key}.
      * 
-     * <p>
-     * Note that this will increment the reference count of the new texture, and
-     * decrement the reference count of any current texture. See
-     * {@link #setMainTexture(GVRTexture)} for more details.
-     * 
      * @param key
      *            Name of the shader uniform to bind the texture to.
      * @param texture
@@ -152,11 +118,6 @@ public interface GVRShaders<ID> {
      * {@code Future.get()} method; unless you are loading dozens of textures
      * asynchronously, the extra overhead should be modest compared to the cost
      * of loading a texture.
-     * 
-     * <p>
-     * Note that this will increment the reference count of the new texture, and
-     * decrement the reference count of any current texture. See
-     * {@link #setMainTexture(GVRTexture)} for more details.
      * 
      * @param key
      *            Name of the shader uniform to bind the texture to.
