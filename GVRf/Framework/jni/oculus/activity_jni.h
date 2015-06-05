@@ -38,6 +38,7 @@ public:
     virtual Matrix4f    Frame( VrFrame vrFrame );
     virtual void        NewIntent( const char * fromPackageName, const char * command, const char * uri );
     virtual void        Command( const char * msg );
+    virtual bool        OnKeyEvent( const int keyCode, const KeyState::eKeyEventType eventType );
     virtual void        WindowCreated();
     void                InitSceneObject( );
 
@@ -72,6 +73,8 @@ private:
     jmethodID           beforeDrawEyesMethodId;
     jmethodID           drawEyeViewMethodId;
     jmethodID           afterDrawEyesMethodId;
+
+    jmethodID           onKeyEventNativeMethodId;
 
     jclass              GetGlobalClassReference( const char * className ) const;
     jmethodID           GetMethodID( const char * name, const char * signature );
