@@ -201,14 +201,14 @@ public class GVRScene extends GVRHybridObject {
         updateStatsEnabled();
         if(mStatsEnabled) {
             mStatsConsole.clear();
-            NativeScene.resetStats(getPtr());
+            NativeScene.resetStats(getNative());
         }
     }
 
     void updateStats() {
         if(mStatsEnabled) {
-            int numberDrawCalls = NativeScene.getNumberDrawCalls(getPtr());
-            int numberTriangles = NativeScene.getNumberTriangles(getPtr());
+            int numberDrawCalls = NativeScene.getNumberDrawCalls(getNative());
+            int numberTriangles = NativeScene.getNumberTriangles(getNative());
 
             mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
             mStatsConsole.writeLine(" Triangles: %d", numberTriangles);
