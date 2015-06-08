@@ -45,6 +45,7 @@ public:
 private:
 
     pthread_mutex_t mutex;
+    bool dirty = false;
 
     void lock() {
         pthread_mutex_lock(&mutex);
