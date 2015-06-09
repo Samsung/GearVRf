@@ -31,11 +31,11 @@ public:
                         GVRActivity( JNIEnv & jni_, jobject activityObject_);
                         ~GVRActivity();
 
-    virtual void        ConfigureVrMode( ovrModeParms & modeParms );
+    virtual void        Configure( ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
     virtual void        OneTimeShutdown();
-    virtual Matrix4f    DrawEyeView( const int eye, const float fovDegrees );
-    virtual Matrix4f    Frame( VrFrame vrFrame );
+    virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegrees );
+    virtual OVR::Matrix4f    Frame( OVR::VrFrame vrFrame );
     virtual void        NewIntent( const char * fromPackageName, const char * command, const char * uri );
     virtual void        Command( const char * msg );
     virtual bool        OnKeyEvent( const int keyCode, const KeyState::eKeyEventType eventType );
@@ -48,7 +48,7 @@ public:
     bool                forceScreenClear;
     bool                ModelLoaded;
 
-    OvrSceneView        Scene;
+    OVR::OvrSceneView        Scene;
 
     GVRViewManager*     viewManager;
 
@@ -60,7 +60,7 @@ private:
     }
 
     JNIEnv*             UiJni;            // for use by the Java UI thread
-    Matrix4f            GetEyeView( const int eye, const float fovDegrees ) const;
+    OVR::Matrix4f            GetEyeView( const int eye, const float fovDegrees ) const;
 
     jobject             javaObject;
     jclass              activityClass;    // must be looked up from main thread or FindClass() will fail

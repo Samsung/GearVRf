@@ -31,13 +31,24 @@ ifndef OVR_MOBILE_SDK
 	OVR_MOBILE_SDK=../../ovr_mobile_sdk
 endif
 
-include $(OVR_MOBILE_SDK)/VRLib/import_vrlib.mk
-include $(OVR_MOBILE_SDK)/VRLib/cflags.mk
+#include $(OVR_MOBILE_SDK)/VRLib/import_vrlib.mk
+#include $(OVR_MOBILE_SDK)/VRLib/cflags.mk
+include $(OVR_MOBILE_SDK)/cflags.mk
+#$(call import-module,$(OVR_MOBILE_SDK)/LibOVR/Projects/Android/jni)
+#$(call import-module,$(OVR_MOBILE_SDK)/VrApi/Projects/AndroidPrebuilt/jni)
+#$(call import-module,$(OVR_MOBILE_SDK)/VrAppFramework/Projects/Android/jni)
+
+
 
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrAppFramework/Src
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/LibOVR/Include
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/LibOVR/Src
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrApi/Include
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
