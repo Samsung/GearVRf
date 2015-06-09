@@ -328,6 +328,9 @@ abstract class Throttler {
                                 threadId(), pending, request);
                     }
                     threadLimiter.reschedule(pending);
+
+                    // No one will ever read this stream
+                    request.closeStream();
                 } else {
                     // There is no current request for this resource. Create a
                     // new PendingRequest, using a threadFactory to create the
