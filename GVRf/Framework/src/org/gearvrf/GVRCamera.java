@@ -15,6 +15,9 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.gearvrf.utility.Colors;
 
 import android.content.res.Resources;
@@ -30,6 +33,8 @@ import android.graphics.Color;
  * rendered.
  */
 public abstract class GVRCamera extends GVRComponent {
+    protected final List<GVRPostEffect> mPostEffects = new ArrayList<GVRPostEffect>();
+
     protected GVRCamera(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -185,6 +190,7 @@ public abstract class GVRCamera extends GVRComponent {
      *            Post-effect to append to this camera's render chain
      */
     public void addPostEffect(GVRPostEffect postEffectData) {
+        mPostEffects.add(postEffectData);
         NativeCamera.addPostEffect(getNative(), postEffectData.getNative());
     }
 
@@ -196,6 +202,10 @@ public abstract class GVRCamera extends GVRComponent {
      *            Post-effect to remove.
      */
     public void removePostEffect(GVRPostEffect postEffectData) {
+        // Remove ALL instances
+        do {
+        } while (mPostEffects.remove(postEffectData));
+        
         NativeCamera.removePostEffect(getNative(), postEffectData.getNative());
     }
 }
