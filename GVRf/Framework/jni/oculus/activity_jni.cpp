@@ -65,6 +65,8 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
     beforeDrawEyesMethodId = GetMethodID( "beforeDrawEyes", "()V" );
     drawEyeViewMethodId = GetMethodID( "onDrawEyeView", "(IF)V" );
     afterDrawEyesMethodId = GetMethodID( "afterDrawEyes", "()V" );
+
+    onKeyEventNativeMethodId = GetMethodID("onKeyEventNative", "(II)Z");
 }
 
 GVRActivity::~GVRActivity() {
@@ -253,5 +255,14 @@ void GVRActivity::InitSceneObject()
     Scene.LastHeadModelOffset = Vector3f( 0.0f, 0.0f, 0.0f );
 }
 
+bool GVRActivity::OnKeyEvent(const int keyCode,
+        const KeyState::eKeyEventType eventType) {
+
+    // 1: KeyState::KEY_EVENT_DOWN, 0: KeyState::KEY_EVENT_UP. Other information is lost from Oculus side.
+    int isDown = (eventType == KeyState::KEY_EVENT_DOWN) ? 1 : 0;
+
+    return app->GetVrJni()->CallBooleanMethod(javaObject,
+            onKeyEventNativeMethodId, keyCode, isDown);
+}
 
 }

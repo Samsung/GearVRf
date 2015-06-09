@@ -110,4 +110,18 @@ public class VideoActivity extends GVRActivity implements
         Log.v("", "onSwipe");
         return false;
     }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return false;
+    }
+    
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            onBackPressed();
+            return true;
+        }
+        return false;
+    }
 }
