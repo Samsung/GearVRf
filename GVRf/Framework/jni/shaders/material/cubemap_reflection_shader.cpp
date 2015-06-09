@@ -163,6 +163,10 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
             mesh->vertices().data());
     glEnableVertexAttribArray(a_position_);
 
+    glVertexAttribPointer(a_normal_, 3, GL_FLOAT, GL_FALSE, 0,
+            mesh->normals().data());
+    glEnableVertexAttribArray(a_normal_);
+
     glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
     glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
