@@ -23,6 +23,8 @@
 
 #include "GLES3/gl3.h"
 
+#include "engine/memory/gl_delete.h"
+
 namespace gvr {
 class GLTexture {
 public:
@@ -38,7 +40,7 @@ public:
     }
 
     ~GLTexture() {
-        glDeleteTextures(1, &id_);
+        gl_delete.queueTexture(id_);
     }
 
     GLuint id() const {

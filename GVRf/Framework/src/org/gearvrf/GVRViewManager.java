@@ -652,7 +652,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         public void onDrawFrame() {
             // Log.v(TAG, "splashFrame, onDrawFrame()");
 
-            drawFrame(false);
+            drawEyes();
         }
 
         @Override
@@ -675,7 +675,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         public void onDrawFrame() {
             // Log.v(TAG, "normalFrame, onDrawFrame()");
 
-            drawFrame(true);
+            drawEyes();
         }
 
         @Override
@@ -684,12 +684,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             mMainScene.updateStats();
         }
     };
-
-    private long drawFrame(boolean onStep) {
-        long currentTime = doMemoryManagementAndPerFrameCallbacks();
-        drawEyes();
-        return currentTime;
-    }
 
     /**
      * This is the code that needs to be executed before either eye is drawn.
@@ -718,6 +712,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
         }
 
+        NativeGLDelete.processQueues();
+        
         return currentTime;
     }
 

@@ -32,6 +32,8 @@
 #include "objects/hybrid_object.h"
 #include "objects/material.h"
 
+#include "engine/memory/gl_delete.h"
+
 namespace gvr {
 class Mesh: public HybridObject {
 public:
@@ -57,31 +59,31 @@ public:
 
         for (auto iterator = vaoID_map_.begin(); iterator != vaoID_map_.end();
                 iterator++) {
-            glDeleteVertexArrays(1, &(iterator->second));
+            gl_delete.queueVertexArray(iterator->second);
         }
         vaoID_map_.clear();
 
         for (auto iterator = triangle_vboID_map_.begin();
                 iterator != triangle_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         triangle_vboID_map_.clear();
 
         for (auto iterator = vert_vboID_map_.begin();
                 iterator != vert_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         vert_vboID_map_.clear();
 
         for (auto iterator = norm_vboID_map_.begin();
                 iterator != norm_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         norm_vboID_map_.clear();
 
         for (auto iterator = tex_vboID_map_.begin();
                 iterator != tex_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         tex_vboID_map_.clear();
     }

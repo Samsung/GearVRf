@@ -24,6 +24,7 @@
 #include "objects/post_effect_data.h"
 #include "objects/textures/render_texture.h"
 #include "util/gvr_gl.h"
+#include "engine/memory/gl_delete.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
@@ -55,7 +56,7 @@ HorizontalFlipPostEffectShader::~HorizontalFlipPostEffectShader() {
         recycle();
     }
     if (vaoID_ != 0) {
-    	glDeleteVertexArrays(1, &vaoID_);
+    	gl_delete.queueVertexArray(vaoID_);
     	vaoID_ = 0;
     }
 }
