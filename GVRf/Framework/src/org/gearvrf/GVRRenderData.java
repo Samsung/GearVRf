@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static android.opengl.GLES30.*;
+
 import org.gearvrf.utility.Threads;
 
 /**
@@ -165,17 +166,53 @@ public class GVRRenderData extends GVRComponent {
      * <li>If you have neither, you will get {@code null}.
      * </ul>
      * 
+     * <p>
+     * This overload will return a {@code Future<GVREyePointee>} that uses the
+     * mesh's bounding box; use the {@link #getMeshEyePointee(boolean)} overload
+     * if you would prefer to use the actual mesh. With complicated meshes, it's
+     * cheaper - though less accurate - to use the bounding box.
+     * 
      * @return Either a {@code Future<GVREyePointee>} or {@code null}.
      */
     public Future<GVREyePointee> getMeshEyePointee() {
+        return getMeshEyePointee(true);
+    }
+
+    /**
+     * Return a {@code Future<GVREyePointee>} or {@code null}.
+     * 
+     * If you use {@link #setMesh(Future)}, trying to create a
+     * {@link GVRMeshEyePointee} in the 'normal' (synchronous) way will fail,
+     * because this {@link GVRRenderData} won't have a mesh yet. This method
+     * prevents that problem by returning an {@code Future} tied to the current
+     * mesh status:
+     * <ul>
+     * <li>If you have already set a mesh, you will get a {@code Future} with
+     * {@code get()} methods that return immediately.
+     * <li>If you are currently waiting on a {@code Future<GVRMesh>}, you will
+     * get a 'true' {@code Future} that waits for the {@code Future<GVRMesh>}.
+     * <li>If you have neither, you will get {@code null}.
+     * </ul>
+     * 
+     * @param useBoundingBox
+     *            When {@code true}, will use {@link GVRMesh#getBoundingBox()};
+     *            when {@code false} will use {@code mesh} directly. With
+     *            complicated meshes, it's cheaper - though less accurate - to
+     *            use the bounding box.
+     * 
+     * @return Either a {@code Future<GVREyePointee>} or {@code null}.
+     */
+    public Future<GVREyePointee> getMeshEyePointee(boolean useBoundingBox) {
         synchronized (this) {
             if (mMesh != null) {
-                // Return a non-blocking wrapper
-                return new FutureWrapper<GVREyePointee>(new GVRMeshEyePointee(
-                        mMesh));
+                // Wrap an eye pointee around the mesh,
+                // return a non-blocking wrapper
+                GVRMeshEyePointee eyePointee = new GVRMeshEyePointee(mMesh,
+                        useBoundingBox);
+                return new FutureWrapper<GVREyePointee>(eyePointee);
             } else if (mFutureMesh != null) {
                 // Return a true (blocking) Future, tied to the Future<GVRMesh>
-                return new FutureMeshEyePointee(mFutureMesh);
+                return new FutureMeshEyePointee(mFutureMesh, useBoundingBox);
             } else {
                 // No mesh
                 return null;
@@ -186,9 +223,12 @@ public class GVRRenderData extends GVRComponent {
     private static class FutureMeshEyePointee implements Future<GVREyePointee> {
 
         private final Future<GVRMesh> mFutureMesh;
+        private final boolean mUseBoundingBox;
 
-        private FutureMeshEyePointee(Future<GVRMesh> futureMesh) {
+        private FutureMeshEyePointee(Future<GVRMesh> futureMesh,
+                boolean useBoundingBox) {
             mFutureMesh = futureMesh;
+            mUseBoundingBox = useBoundingBox;
         }
 
         @Override
@@ -200,7 +240,7 @@ public class GVRRenderData extends GVRComponent {
         public GVRMeshEyePointee get() throws InterruptedException,
                 ExecutionException {
             GVRMesh mesh = mFutureMesh.get();
-            return new GVRMeshEyePointee(mesh);
+            return new GVRMeshEyePointee(mesh, mUseBoundingBox);
         }
 
         @Override
@@ -208,7 +248,7 @@ public class GVRRenderData extends GVRComponent {
                 throws InterruptedException, ExecutionException,
                 TimeoutException {
             GVRMesh mesh = mFutureMesh.get(timeout, unit);
-            return new GVRMeshEyePointee(mesh);
+            return new GVRMeshEyePointee(mesh, mUseBoundingBox);
         }
 
         @Override
