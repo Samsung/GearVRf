@@ -159,9 +159,9 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     private void createCap(float radius, float height, int sliceNumber,
             float normalDirection) {
         for (int slice = 0; slice < sliceNumber; slice++) {
-            double theta0 = ((slice) / sliceNumber) * 2.0 * Math.PI;
-            double theta1 = ((slice + 1) / sliceNumber) * 2.0 * Math.PI;
-
+            double theta0 = ((double)(slice) / sliceNumber) * 2.0 * Math.PI;
+            double theta1 = ((double)(slice + 1) / sliceNumber) * 2.0 * Math.PI;
+            
             float y = height;
             float x0 = (float) (radius * Math.cos(theta0));
             float z0 = (float) (radius * Math.sin(theta0));
