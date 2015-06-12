@@ -26,6 +26,12 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_enable(JNIEnv * env, jobject obj, jlong jlight);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_disable(JNIEnv * env, jobject obj, jlong jlight);
+
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeLight_getFloat(JNIEnv * env,
         jobject obj, jlong jlight, jstring key);
@@ -56,6 +62,20 @@ Java_org_gearvrf_NativeLight_getVec4(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj) {
 return reinterpret_cast<jlong>(new Light());
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_enable(JNIEnv * env,
+    jobject obj, jlong jlight) {
+Light* light = reinterpret_cast<Light*>(jlight);
+light->enable();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_disable(JNIEnv * env,
+    jobject obj, jlong jlight) {
+Light* light = reinterpret_cast<Light*>(jlight);
+light->disable();
 }
 
 JNIEXPORT jfloat JNICALL

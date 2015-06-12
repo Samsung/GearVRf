@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 import static android.opengl.GLES30.*;
 
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.Threads;
 
 /**
@@ -283,8 +284,8 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
-     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is
-     *         being lit by.
+     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is being lit
+     *         by.
      */
     public GVRLight getLight() {
         return mLight;
@@ -297,8 +298,40 @@ public class GVRRenderData extends GVRComponent {
      *            The {@link GVRLight light} for rendering.
      */
     public void setLight(GVRLight light) {
+        if (mMaterial.getShaderType() != GVRShaderType.Texture.ID) {
+            throw new UnsupportedOperationException(
+                    "Only Texture shader can has light.");
+        }
         mLight = light;
         NativeRenderData.setLight(getNative(), light.getNative());
+    }
+
+    /**
+     * Enable lighting effect for the render_data. Note that it is different to
+     * GVRLight.enable(). GVRLight.enable turn on a light, while this method
+     * enable the lighting effect for the render_data. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     */
+    public void enableLight() {
+        if (mLight == null) {
+            throw new UnsupportedOperationException("No light is added yet.");
+        }
+        NativeRenderData.enableLight(getNative());
+    }
+
+    /**
+     * Disable lighting effect for the render_data. Note that it is different to
+     * GVRLight.disable(). GVRLight.disable turn off a light, while this method
+     * disable the lighting effect for the render_data. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     */
+    public void disableLight() {
+        if (mLight == null) {
+            throw new UnsupportedOperationException("No light is added yet.");
+        }
+        NativeRenderData.disableLight(getNative());
     }
 
     /**
@@ -493,8 +526,12 @@ class NativeRenderData {
     static native void setMesh(long renderData, long mesh);
 
     static native void setMaterial(long renderData, long material);
-    
+
     static native void setLight(long renderData, long light);
+
+    static native void enableLight(long renderData);
+
+    static native void disableLight(long renderData);
 
     static native int getRenderMask(long renderData);
 

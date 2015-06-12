@@ -175,6 +175,20 @@ public class GVRLight extends GVRHybridObject {
     public void setSpecularIntensity(float r, float g, float b, float a) {
         setVec4("specular_intensity", r, g, b, a);
     }
+    
+    /**
+     * Enable the light.
+     */
+    public void enable() {
+        NativeLight.enable(getNative());
+    }
+
+    /**
+     * Disable the light.
+     */
+    public void disable() {
+        NativeLight.disable(getNative());
+    }
 
     private float getFloat(String key) {
         return NativeLight.getFloat(getNative(), key);
@@ -207,18 +221,22 @@ public class GVRLight extends GVRHybridObject {
 
 class NativeLight {
     static native long ctor();
+    
+    static native void enable(long light);
+    
+    static native void disable(long light);
 
-    static native float getFloat(long material, String key);
+    static native float getFloat(long light, String key);
 
-    static native void setFloat(long material, String key, float value);
+    static native void setFloat(long light, String key, float value);
 
-    static native float[] getVec3(long material, String key);
+    static native float[] getVec3(long light, String key);
 
-    static native void setVec3(long material, String key, float x, float y,
+    static native void setVec3(long light, String key, float x, float y,
             float z);
 
-    static native float[] getVec4(long material, String key);
+    static native float[] getVec4(long light, String key);
 
-    static native void setVec4(long material, String key, float x, float y,
+    static native void setVec4(long light, String key, float x, float y,
             float z, float w);
 }

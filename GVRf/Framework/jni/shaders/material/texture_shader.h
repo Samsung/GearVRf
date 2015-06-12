@@ -17,8 +17,8 @@
  * Renders a texture with light.
  ***************************************************************************/
 
-#ifndef LIT_SHADER_H_
-#define LIT_SHADER_H_
+#ifndef TEXTURE_SHADER_H_
+#define TEXTURE_SHADER_H_
 
 #include <memory>
 
@@ -32,22 +32,31 @@ namespace gvr {
 class GLProgram;
 class RenderData;
 
-class LitShader: public RecyclableObject {
+class TextureShader: public RecyclableObject {
 public:
-    LitShader();
-    ~LitShader();
+    TextureShader();
+    ~TextureShader();
     void recycle();
     void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
             const glm::mat4& mvp_matrix, RenderData* render_data);
 
 private:
-    LitShader(const LitShader& lit_shader);
-    LitShader(LitShader&& lit_shader);
-    LitShader& operator=(const LitShader& lit_shader);
-    LitShader& operator=(LitShader&& lit_shader);
+    TextureShader(const TextureShader& texture_shader);
+    TextureShader(TextureShader&& texture_shader);
+    TextureShader& operator=(const TextureShader& texture_shader);
+    TextureShader& operator=(TextureShader&& texture_shader);
 
 private:
-    GLProgram* program_;
+    GLProgram* program_light_;
+    GLProgram* program_no_light_;
+
+    GLuint a_position_no_light_;
+    GLuint a_tex_coord_no_light_;
+    GLuint u_mvp_no_light_;
+    GLuint u_texture_no_light_;
+    GLuint u_color_no_light_;
+    GLuint u_opacity_no_light_;
+
     GLuint a_position_;
     GLuint a_tex_coord_;
     GLuint a_normal_;

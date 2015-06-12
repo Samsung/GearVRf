@@ -33,10 +33,22 @@ class Color;
 
 class Light: public HybridObject {
 public:
-    explicit Light() {
+    explicit Light() : enabled_(true) {
     }
 
     ~Light() {
+    }
+
+    bool enabled() {
+        return enabled_;
+    }
+
+    void enable() {
+        enabled_ = true;
+    }
+
+    void disable() {
+        enabled_ = false;
     }
 
     float getFloat(std::string key) {
@@ -87,6 +99,7 @@ private:
     Light& operator=(Light&& light);
 
 private:
+    bool enabled_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;

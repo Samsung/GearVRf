@@ -240,7 +240,7 @@ public abstract class GVRScript {
      * @since 1.6.4
      */
     public GVRMaterialShaderId getSplashShader(GVRContext gvrContext) {
-        return GVRMaterial.GVRShaderType.Unlit.ID;
+        return GVRMaterial.GVRShaderType.Texture.ID;
     }
 
     /**

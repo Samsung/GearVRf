@@ -73,49 +73,44 @@ public class GVRMaterial extends GVRHybridObject implements
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
 
-        public abstract static class Unlit {
+        public abstract static class UnlitHorizontalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     0);
         }
 
-        public abstract static class UnlitHorizontalStereo {
+        public abstract static class UnlitVerticalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     1);
         }
 
-        public abstract static class UnlitVerticalStereo {
+        public abstract static class OES {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     2);
         }
 
-        public abstract static class OES {
+        public abstract static class OESHorizontalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     3);
         }
 
-        public abstract static class OESHorizontalStereo {
+        public abstract static class OESVerticalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     4);
         }
 
-        public abstract static class OESVerticalStereo {
+        public abstract static class Cubemap {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     5);
         }
 
-        public abstract static class Cubemap {
+        public abstract static class CubemapReflection {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     6);
         }
 
-        public abstract static class CubemapReflection {
+        public abstract static class Texture {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     7);
-        }
-
-        public abstract static class Lit {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    8);
         }
     };
 
@@ -131,9 +126,9 @@ public class GVRMaterial extends GVRHybridObject implements
     public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
         super(gvrContext, NativeMaterial.ctor(shaderId.ID));
         this.shaderId = shaderId;
-        // if lit shader is used, set lighting coefficients to OpenGL default
+        // if texture shader is used, set lighting coefficients to OpenGL default
         // values
-        if (shaderId == GVRShaderType.Lit.ID) {
+        if (shaderId == GVRShaderType.Texture.ID) {
             setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
             setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
             setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -143,13 +138,13 @@ public class GVRMaterial extends GVRHybridObject implements
 
     /**
      * A convenience overload: builds a {@link GVRMaterial} that uses the most
-     * common stock shader, the {@linkplain GVRShaderType.Unlit 'unlit'} shader.
+     * common stock shader, the {@linkplain GVRShaderType.Texture 'texture'} shader.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
      */
     public GVRMaterial(GVRContext gvrContext) {
-        this(gvrContext, GVRShaderType.Unlit.ID);
+        this(gvrContext, GVRShaderType.Texture.ID);
     }
 
     GVRMaterial(GVRContext gvrContext, long ptr) {

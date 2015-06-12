@@ -17,6 +17,7 @@ package org.gearvrf.litshader;
 
 import org.gearvrf.GVRActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 
 public class LitshaderActivity extends GVRActivity {
 
@@ -26,5 +27,11 @@ public class LitshaderActivity extends GVRActivity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setScript(script, "gvr_note4.xml");
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        script.onTouchEvent(event);
+        return super.onTouchEvent(event);
     }
 }

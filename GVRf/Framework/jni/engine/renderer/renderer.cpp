@@ -512,10 +512,6 @@ void Renderer::renderRenderData(RenderData* render_data,
             try {
                 bool right = render_mask & RenderData::RenderMaskBit::Right;
                 switch (render_data->material()->shader_type()) {
-                case Material::ShaderType::UNLIT_SHADER:
-                    shader_manager->getUnlitShader()->render(mvp_matrix,
-                            render_data);
-                    break;
                 case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
                     shader_manager->getUnlitHorizontalStereoShader()->render(
                             mvp_matrix, render_data, right);
@@ -545,8 +541,8 @@ void Renderer::renderRenderData(RenderData* render_data,
                             mv_matrix, glm::inverseTranspose(mv_matrix),
                             glm::inverse(view_matrix), mvp_matrix, render_data);
                     break;
-                case Material::ShaderType::LIT_SHADER:
-                    shader_manager->getLitShader()->render(mv_matrix,
+                case Material::ShaderType::TEXTURE_SHADER:
+                    shader_manager->getTextureShader()->render(mv_matrix,
                             glm::inverseTranspose(mv_matrix), mvp_matrix,
                             render_data);
                     break;

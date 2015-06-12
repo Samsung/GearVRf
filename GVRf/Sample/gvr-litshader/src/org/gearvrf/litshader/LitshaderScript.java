@@ -28,7 +28,9 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 
+import android.R.bool;
 import android.util.Log;
+import android.view.MotionEvent;
 
 public class LitshaderScript extends GVRScript {
 
@@ -38,6 +40,8 @@ public class LitshaderScript extends GVRScript {
     private GVRLight mLight = null;
     private static final float LIGHT_Z = 100.0f;
     private static final float LIGHT_ROTATE_RADIUS = 100.0f;
+
+    GVRSceneObject rotateObject = null;
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -104,24 +108,30 @@ public class LitshaderScript extends GVRScript {
                 .loadFutureMesh(new GVRAndroidResource(mGVRContext,
                         R.raw.sphere));
         GVRMaterial litMaterial = new GVRMaterial(gvrContext,
-                GVRMaterial.GVRShaderType.Lit.ID);
-        litMaterial.setMainTexture(gvrContext.loadFutureTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.blank)));
-        litMaterial.setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
+                GVRMaterial.GVRShaderType.Texture.ID);
+        litMaterial.setMainTexture(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(mGVRContext,
+                        R.drawable.earthmap1k)));
+        litMaterial.setColor(0.5f, 0.5f, 0.5f);
+        litMaterial.setOpacity(1.0f);
+        litMaterial.setAmbientColor(1.0f, 1.0f, 1.0f, 1.0f);
         litMaterial.setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
         litMaterial.setSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
         litMaterial.setSpecularExponent(128.0f);
         mLight = new GVRLight(gvrContext);
         mLight.setPosition(LIGHT_ROTATE_RADIUS, 0.0f, LIGHT_Z);
-        mLight.setAmbientIntensity(0.2f, 0.2f, 0.2f, 1.0f);
+        mLight.setAmbientIntensity(0.5f, 0.5f, 0.5f, 1.0f);
         mLight.setDiffuseIntensity(0.8f, 0.8f, 0.8f, 1.0f);
-        mLight.setSpecularIntensity(1.0f, 1.0f, 0.0f, 1.0f);
+        mLight.setSpecularIntensity(1.0f, 0.5f, 0.5f, 1.0f);
 
         GVRSceneObject sphere = new GVRSceneObject(gvrContext,
-                futureSphereMesh, gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.blank)));
+                futureSphereMesh,
+                gvrContext.loadFutureTexture(new GVRAndroidResource(
+                        mGVRContext, R.drawable.earthmap1k)));
+        rotateObject = sphere;
         sphere.getRenderData().setMaterial(litMaterial);
         sphere.getRenderData().setLight(mLight);
+        sphere.getRenderData().enableLight();
         sphere.setName("sphere");
         scene.addSceneObject(sphere);
         sphere.getTransform()
@@ -134,7 +144,7 @@ public class LitshaderScript extends GVRScript {
     }
 
     private double theta = 0.0;
-    
+
     @Override
     public void onStep() {
         FPSCounter.tick();
@@ -142,6 +152,27 @@ public class LitshaderScript extends GVRScript {
         theta += 0.01;
         double sine = Math.cos(theta);
         double cosine = Math.sin(theta);
-        mLight.setPosition((float)sine * LIGHT_ROTATE_RADIUS, (float)cosine * LIGHT_ROTATE_RADIUS, LIGHT_Z);
+        mLight.setPosition((float) sine * LIGHT_ROTATE_RADIUS, (float) cosine
+                * LIGHT_ROTATE_RADIUS, LIGHT_Z);
+
+        if (rotateObject != null) {
+            rotateObject.getTransform().rotateByAxis(0.2f, 0.0f, 1.0f, 1.0f);
+        }
+    }
+
+    private boolean lightEnabled = true;
+
+    public void onTouchEvent(MotionEvent event) {
+        if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
+            if (rotateObject != null) {
+                if (lightEnabled) {
+                    rotateObject.getRenderData().disableLight();
+                    lightEnabled = false;
+                } else {
+                    rotateObject.getRenderData().enableLight();
+                    lightEnabled = true;
+                }
+            }
+        }
     }
 }

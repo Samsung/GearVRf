@@ -43,6 +43,14 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
         jobject obj, jlong jrender_data, jlong jlight);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
+        jobject obj, jlong jrender_data);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_disableLight(JNIEnv * env,
+        jobject obj, jlong jrender_data);
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -138,6 +146,20 @@ Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
 RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
 Light* light = reinterpret_cast<Light*>(jlight);
 render_data->set_light(light);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->enable_light();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_disableLight(JNIEnv * env,
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->disable_light();
 }
 
 JNIEXPORT jint JNICALL
