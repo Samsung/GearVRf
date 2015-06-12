@@ -99,8 +99,8 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             stackPercentage1 = ((float) (stack) / stackNumber);
         }
 
-        float t0 = 1.0f - stackPercentage0;
-        float t1 = 1.0f - stackPercentage1;
+        float t0 = stackPercentage0;
+        float t1 = stackPercentage1;
         double theta1 = stackPercentage0 * Math.PI;
         double theta2 = stackPercentage1 * Math.PI;
         double cosTheta1 = Math.cos(theta1);
@@ -187,8 +187,9 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             float stackPercentage0 = ((float) (stack) / stackNumber);
             float stackPercentage1 = ((float) (stack + 1) / stackNumber);
 
-            float t0 = 1.0f - stackPercentage0;
-            float t1 = 1.0f - stackPercentage1;
+            float t0 = stackPercentage0;
+            float t1 = stackPercentage1;
+            
             double theta1 = stackPercentage0 * Math.PI;
             double theta2 = stackPercentage1 * Math.PI;
             double cosTheta1 = Math.cos(theta1);
@@ -208,9 +209,6 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 double cosPhi2 = Math.cos(phi2);
                 double sinPhi2 = Math.sin(phi2);
 
-                // 2-----3
-                // | |
-                // 0-----1
                 float x0 = (float) (sinTheta1 * cosPhi1);
                 float y0 = (float) (sinTheta1 * sinPhi1);
                 float z0 = (float) cosTheta1;
@@ -268,8 +266,8 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 texCoords[texCoordCount + 6] = s1;
                 texCoords[texCoordCount + 7] = t1;
 
-                // 0, 1, 2
-                // 2, 1, 3
+                // 0, 2, 1
+                // 2, 3, 1
                 indices[indexCount + 0] = (char) (triangleCount + 0);
                 indices[indexCount + 1] = (char) (triangleCount + 2);
                 indices[indexCount + 2] = (char) (triangleCount + 1);
