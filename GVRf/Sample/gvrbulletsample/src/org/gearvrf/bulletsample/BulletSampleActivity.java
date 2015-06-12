@@ -9,7 +9,7 @@ public class BulletSampleActivity extends GVRActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setScript(new BulletSampleViewManager(this), "gvr_note4.xml");
+		setScript(new BulletSampleViewManager(), "gvr_note4.xml");
 	}
 
 }

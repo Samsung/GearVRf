@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.gearvrf.FutureWrapper;
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
@@ -30,17 +29,12 @@ import android.graphics.Color;
 public class BulletSampleViewManager extends GVRScript {
 
 	private GVRContext mGVRContext = null;
-	private GVRActivity mGVRActivity = null;
 
 	private Bullet mBullet = null;
 
 	private Map<RigidBody, GVRSceneObject> rigidBodiesSceneMap = new HashMap<RigidBody, GVRSceneObject>();
 
 	private static final float CUBE_MASS = 0.5f;
-
-	public BulletSampleViewManager(GVRActivity activity) {
-		mGVRActivity = activity;
-	}
 
 	@Override
 	public void onInit(GVRContext gvrContext) throws Throwable {
@@ -161,7 +155,7 @@ public class BulletSampleViewManager extends GVRScript {
 		try {
 			object = new GVRSceneObject(mGVRContext, futureMesh,
 					mGVRContext.loadFutureTexture(new GVRAndroidResource(
-							mGVRActivity, texture)));
+							mGVRContext, texture)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -205,7 +199,7 @@ public class BulletSampleViewManager extends GVRScript {
 	 * Bullet physics world and scene graph
 	 */
 	private void addSphere(GVRScene scene, float radius, float x, float y,
-			float z, float mass) throws Throwable {
+			float z, float mass) {
 		SphereShape sphereShape = new SphereShape(radius);
 		Geometry sphereGeometry = mBullet.createGeometry(sphereShape, mass,
 				new Vector3(0.0f, 0.0f, 0.0f));
