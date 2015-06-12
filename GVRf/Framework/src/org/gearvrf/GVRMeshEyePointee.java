@@ -33,7 +33,7 @@ public class GVRMeshEyePointee extends GVREyePointee {
     private GVRMesh mMesh;
 
     /**
-     * Constructor.
+     * Base constructor.
      * 
      * When the mesh is complicated, it will be cheaper - though less accurate -
      * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
@@ -60,6 +60,30 @@ public class GVRMeshEyePointee extends GVREyePointee {
      */
     public GVRMeshEyePointee(GVRMesh mesh) {
         this(mesh.getGVRContext(), mesh);
+    }
+
+    /**
+     * Constructor that can use the mesh's bounding box.
+     * 
+     * When the mesh is complicated, it will be cheaper - though less accurate -
+     * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
+     * 
+     * @param mesh
+     *            The {@link GVRMesh} that the picking ray will test against.
+     * @param useBoundingBox
+     *            When {@code true}, will use {@link GVRMesh#getBoundingBox()
+     *            mesh.getBoundingBox()}; when {@code false} will use
+     *            {@code mesh} directly.
+     */
+    /*
+     * TODO How much accuracy do we lose with bounding boxes?
+     * 
+     * Would it make sense for the useBoundingBox parameter to be a tri-state
+     * enum: mesh, box, box-then-mesh?
+     */
+    public GVRMeshEyePointee(GVRMesh mesh, boolean useBoundingBox) {
+        this(mesh.getGVRContext(), useBoundingBox ? mesh.getBoundingBox()
+                : mesh);
     }
 
     /**

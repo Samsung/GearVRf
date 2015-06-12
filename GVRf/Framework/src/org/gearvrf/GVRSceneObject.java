@@ -430,12 +430,12 @@ public class GVRSceneObject extends GVRHybridObject {
      * Attach a default {@link GVREyePointeeHolder} to the object.
      * 
      * The default holder contains a single {@link GVRMeshEyePointee}, which
-     * refers to the {@linkplain GVRMesh mesh} in this scene object's
-     * {@linkplain GVRRenderData render data}. If you need anything more
-     * complicated (such as multiple meshes) use the
-     * {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder) explicit
-     * overload.} If another {@link GVREyePointeeHolder} is currently attached,
-     * it is replaced with the new one.
+     * refers to the bounding box of the {@linkplain GVRMesh mesh} in this scene
+     * object's {@linkplain GVRRenderData render data}. If you need more control
+     * (multiple meshes, perhaps, or using the actual mesh instead of a bounding
+     * box) use the {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder)
+     * explicit overload.} If another {@link GVREyePointeeHolder} is currently
+     * attached, it is replaced with the new one.
      * 
      * @return {@code true} if and only this scene object has render data
      *         <em>and</em> you have called either
