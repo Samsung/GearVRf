@@ -84,6 +84,10 @@ Java_org_gearvrf_NativeSceneObject_addChildObject(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeSceneObject_removeChildObject(
         JNIEnv * env, jobject obj, jlong jscene_object, jlong jchild);
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_isColliding(
+        JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 ;
 
 JNIEXPORT jlong JNICALL
@@ -201,6 +205,14 @@ Java_org_gearvrf_NativeSceneObject_removeChildObject(
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     SceneObject* child = reinterpret_cast<SceneObject*>(jchild);
     scene_object->removeChildObject(child);
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_isColliding(
+        JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    SceneObject* other_object = reinterpret_cast<SceneObject*>(jother_object);
+    return scene_object->isColliding(other_object);
 }
 }
 

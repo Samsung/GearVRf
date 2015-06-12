@@ -558,6 +558,18 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Check if {@code otherObject} is colliding with this object.
+     * 
+     * @param otherObject
+     *            {@link GVRSceneObject Object} to check for collision with this
+     *            object.
+     * @return True if objects collide and False otherwise.
+     */
+    public boolean isColliding(GVRSceneObject otherObject) {
+        return NativeSceneObject.isColliding(getNative(), otherObject.getNative());
+    }
+
+    /**
      * Get the number of child objects.
      * 
      * @return Number of {@link GVRSceneObject objects} added as children of
@@ -687,4 +699,6 @@ class NativeSceneObject {
     static native void addChildObject(long sceneObject, long child);
 
     static native void removeChildObject(long sceneObject, long child);
+
+    static native boolean isColliding(long sceneObject, long otherObject);
 }

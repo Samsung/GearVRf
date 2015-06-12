@@ -30,6 +30,7 @@ public class GVRScene extends GVRHybridObject {
 
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
+    private String mStatMessage = "";
 
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
@@ -212,7 +213,20 @@ public class GVRScene extends GVRHybridObject {
 
             mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
             mStatsConsole.writeLine(" Triangles: %d", numberTriangles);
+            
+            if(mStatMessage!="")
+            	mStatsConsole.writeLine("%s", mStatMessage);
         }
+    }
+
+    /**
+     * Add an additional string to stats for this scene.
+     *
+     * @param msg
+     *     String to add to stats.
+     */
+    public void addStatMessage(String msg) {
+        mStatMessage = msg;
     }
 }
 

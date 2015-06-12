@@ -24,6 +24,7 @@
 #include "objects/components/eye_pointee_holder.h"
 #include "objects/components/render_data.h"
 #include "util/gvr_log.h"
+#include "mesh.h"
 
 namespace gvr {
 SceneObject::SceneObject() :
@@ -197,6 +198,29 @@ void SceneObject::set_visible(bool visibility = true) {
         visible_ = false;
         vis_count_ = 0;
     }
+}
+
+bool SceneObject::isColliding(SceneObject *scene_object) {
+
+    //Get the transformed bounding boxes in world coordinates and check if they intersect
+    //Transformation is done by the getTransformedBoundingBoxInfo method in the Mesh class
+
+    float thisobj_bbox[6], checkobj_bbox[6];
+
+    glm::mat4 thisobj_model_matrix = this->render_data()->owner_object()->transform()->getModelMatrix();
+    memcpy(thisobj_bbox, (this->render_data()->mesh()->getTransformedBoundingBoxInfo(&thisobj_model_matrix)), sizeof(float)*6);
+
+    glm::mat4 checkobj_model_matrix = scene_object->render_data()->owner_object()->transform()->getModelMatrix();
+    memcpy(checkobj_bbox, (scene_object->render_data()->mesh()->getTransformedBoundingBoxInfo(&checkobj_model_matrix)), sizeof(float)*6);
+
+    bool result =  (thisobj_bbox[3] > checkobj_bbox[0] &&
+        thisobj_bbox[0] < checkobj_bbox[3] &&
+        thisobj_bbox[4] > checkobj_bbox[1] &&
+        thisobj_bbox[1] < checkobj_bbox[4] &&
+        thisobj_bbox[5] > checkobj_bbox[2] &&
+        thisobj_bbox[2] < checkobj_bbox[5]);
+
+    return result;
 }
 
 }
