@@ -125,17 +125,8 @@ public class BulletSampleViewManager extends GVRScript {
     public void onStep() {
         mBullet.doSimulation(1.0f / 60.0f, 10);
         for (RigidBody body : rigidBodiesSceneMap.keySet()) {
-            if (body.geometry.shape.getType() == ShapeType.SPHERE_SHAPE_PROXYTYPE) {
-                rigidBodiesSceneMap
-                        .get(body)
-                        .getTransform()
-                        .setPosition(
-                                body.motionState.resultSimulation.originPoint.x,
-                                body.motionState.resultSimulation.originPoint.y,
-                                body.motionState.resultSimulation.originPoint.z);
-            }
-
-            if (body.geometry.shape.getType() == ShapeType.BOX_SHAPE_PROXYTYPE) {
+            if (body.geometry.shape.getType() == ShapeType.SPHERE_SHAPE_PROXYTYPE
+                    || body.geometry.shape.getType() == ShapeType.BOX_SHAPE_PROXYTYPE) {
                 rigidBodiesSceneMap
                         .get(body)
                         .getTransform()
