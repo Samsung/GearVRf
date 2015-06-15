@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.collisiondetection;
 
 import android.os.Bundle;

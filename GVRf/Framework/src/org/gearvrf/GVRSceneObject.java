@@ -563,10 +563,11 @@ public class GVRSceneObject extends GVRHybridObject {
      * @param otherObject
      *            {@link GVRSceneObject Object} to check for collision with this
      *            object.
-     * @return True if objects collide and False otherwise.
+     * @return {@code true) if objects collide, {@code false} otherwise
      */
     public boolean isColliding(GVRSceneObject otherObject) {
-        return NativeSceneObject.isColliding(getNative(), otherObject.getNative());
+        return NativeSceneObject.isColliding(getNative(),
+                otherObject.getNative());
     }
 
     /**

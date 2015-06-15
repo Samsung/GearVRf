@@ -30,7 +30,7 @@ public class GVRScene extends GVRHybridObject {
 
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
-    private String mStatMessage = "";
+    private StringBuffer mStatMessage;
 
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
@@ -170,63 +170,72 @@ public class GVRScene extends GVRHybridObject {
 
     /**
      * Set whether to enable display of stats for this scene.
-     *
+     * 
      * @param enabled
-     *     Flag to indicate whether to enable display of stats.
+     *            Flag to indicate whether to enable display of stats.
      */
     public void setStatsEnabled(boolean enabled) {
         pendingStats = enabled;
     }
 
     void updateStatsEnabled() {
-        if(mStatsEnabled == pendingStats) {
+        if (mStatsEnabled == pendingStats) {
             return;
         }
 
         mStatsEnabled = pendingStats;
-        if(mStatsEnabled && mStatsConsole == null) {
-            mStatsConsole = new GVRConsole(getGVRContext(), GVRConsole.EyeMode.BOTH_EYES);
+        if (mStatsEnabled && mStatsConsole == null) {
+            mStatsConsole = new GVRConsole(getGVRContext(),
+                    GVRConsole.EyeMode.BOTH_EYES);
             mStatsConsole.setCanvasWidthHeight(512, 512);
             mStatsConsole.setXOffset(125.0f);
             mStatsConsole.setYOffset(125.0f);
         }
 
-        if(mStatsEnabled && mStatsConsole != null) {
+        if (mStatsEnabled && mStatsConsole != null) {
             mStatsConsole.setEyeMode(GVRConsole.EyeMode.BOTH_EYES);
-        } else if(!mStatsEnabled && mStatsConsole != null) {
+        } else if (!mStatsEnabled && mStatsConsole != null) {
             mStatsConsole.setEyeMode(GVRConsole.EyeMode.NEITHER_EYE);
         }
     }
 
     void resetStats() {
         updateStatsEnabled();
-        if(mStatsEnabled) {
+        if (mStatsEnabled) {
             mStatsConsole.clear();
             NativeScene.resetStats(getNative());
         }
     }
 
     void updateStats() {
-        if(mStatsEnabled) {
+        if (mStatsEnabled) {
             int numberDrawCalls = NativeScene.getNumberDrawCalls(getNative());
             int numberTriangles = NativeScene.getNumberTriangles(getNative());
 
             mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
-            mStatsConsole.writeLine(" Triangles: %d", numberTriangles);
-            
-            if(mStatMessage!="")
-            	mStatsConsole.writeLine("%s", mStatMessage);
+            mStatsConsole.writeLine("Triangles: %d", numberTriangles);
+
+            if (mStatMessage.length() > 0)
+                mStatsConsole.writeLine("%s", mStatMessage.toString());
         }
     }
 
     /**
-     * Add an additional string to stats for this scene.
-     *
-     * @param msg
-     *     String to add to stats.
+     * Add an additional string to stats message for this scene.
+     * 
+     * @param message
+     *            String to add to stats message.
      */
-    public void addStatMessage(String msg) {
-        mStatMessage = msg;
+    public void addStatMessage(String message) {
+        mStatMessage = new StringBuffer(message);
+    }
+
+    /**
+     * Remove the stats message from this scene.
+     * 
+     */
+    public void killStatMessage() {
+        mStatMessage.delete(0, mStatMessage.length());
     }
 }
 
@@ -244,6 +253,8 @@ class NativeScene {
     static native void setMainCameraRig(long scene, long cameraRig);
 
     public static native void resetStats(long scene);
+
     public static native int getNumberDrawCalls(long scene);
+
     public static native int getNumberTriangles(long scene);
 }

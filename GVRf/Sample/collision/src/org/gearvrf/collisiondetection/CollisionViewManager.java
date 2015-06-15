@@ -29,19 +29,19 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.GVRRotationByAxisWithPivotAnimation;
-import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.utility.Log;
 
 public class CollisionViewManager extends GVRScript {
 
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(CollisionViewManager.class);
-    
+
     GVRSceneObject venusMeshObject;
     GVRSceneObject earthMeshObject;
-    
+
     private GVRAnimationEngine mAnimationEngine;
     private GVRScene mMainScene;
+    boolean statMessageActive = false;
 
     private GVRSceneObject asyncSceneObject(GVRContext context,
             String textureName) throws IOException {
@@ -66,7 +66,7 @@ public class CollisionViewManager extends GVRScript {
         });
 
         mMainScene.setFrustumCulling(true);
-        
+
         mMainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
         mMainScene.getMainCameraRig().getRightCamera()
@@ -85,8 +85,7 @@ public class CollisionViewManager extends GVRScript {
         GVRSceneObject venusRotationObject = new GVRSceneObject(gvrContext);
         venusRevolutionObject.addChildObject(venusRotationObject);
 
-        venusMeshObject = asyncSceneObject(gvrContext,
-                "venusmap.jpg");
+        venusMeshObject = asyncSceneObject(gvrContext, "venusmap.jpg");
         venusMeshObject.getTransform().setScale(0.8f, 0.8f, 0.8f);
         venusRotationObject.addChildObject(venusMeshObject);
 
@@ -97,8 +96,7 @@ public class CollisionViewManager extends GVRScript {
         GVRSceneObject earthRotationObject = new GVRSceneObject(gvrContext);
         earthRevolutionObject.addChildObject(earthRotationObject);
 
-        earthMeshObject = asyncSceneObject(gvrContext,
-                "earthmap1k.jpg");
+        earthMeshObject = asyncSceneObject(gvrContext, "earthmap1k.jpg");
         earthMeshObject.getTransform().setScale(1.0f, 1.0f, 1.0f);
         earthRotationObject.addChildObject(earthMeshObject);
 
@@ -114,17 +112,23 @@ public class CollisionViewManager extends GVRScript {
         counterClockwise(earthRevolutionObject, 30f);
         counterClockwise(earthRotationObject, 1.5f);
 
-        clockwise(mMainScene.getMainCameraRig().getOwnerObject().getTransform(),
+        clockwise(
+                mMainScene.getMainCameraRig().getOwnerObject().getTransform(),
                 60f);
     }
 
     @Override
     public void onStep() {
-        //If Earth and Venus collide, print a debug message
-        if(earthMeshObject.isColliding(venusMeshObject))
+        // If Earth and Venus collide, print a debug message
+        if (earthMeshObject.isColliding(venusMeshObject)) {
             mMainScene.addStatMessage("Collision Detected");
-        else
-            mMainScene.addStatMessage("");
+            statMessageActive = true;
+        } else {
+            if (statMessageActive) {
+                mMainScene.killStatMessage();
+                statMessageActive = false;
+            }
+        }
     }
 
     void onTap() {
