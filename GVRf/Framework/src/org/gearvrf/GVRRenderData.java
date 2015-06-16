@@ -95,6 +95,7 @@ public class GVRRenderData extends GVRComponent {
      */
     public GVRRenderData(GVRContext gvrContext) {
         super(gvrContext, NativeRenderData.ctor());
+        isLightEnabled = false;
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
@@ -304,6 +305,7 @@ public class GVRRenderData extends GVRComponent {
         }
         mLight = light;
         NativeRenderData.setLight(getNative(), light.getNative());
+        isLightEnabled = true;
     }
 
     /**
@@ -318,6 +320,7 @@ public class GVRRenderData extends GVRComponent {
             throw new UnsupportedOperationException("No light is added yet.");
         }
         NativeRenderData.enableLight(getNative());
+        isLightEnabled = true;
     }
 
     /**
@@ -332,6 +335,20 @@ public class GVRRenderData extends GVRComponent {
             throw new UnsupportedOperationException("No light is added yet.");
         }
         NativeRenderData.disableLight(getNative());
+        isLightEnabled = false;
+    }
+
+    /**
+     * Get the enable/disable status for the lighting effect. Note that it is
+     * different to enable/disable status of the light. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     * 
+     * @return true if lighting effect is enabled, false if lighting effect is
+     *         disabled.
+     */
+    public boolean isLightEnabled() {
+        return isLightEnabled;
     }
 
     /**
@@ -518,6 +535,7 @@ public class GVRRenderData extends GVRComponent {
         NativeRenderData.setDrawMode(getNative(), drawMode);
     }
 
+    private boolean isLightEnabled;
 }
 
 class NativeRenderData {

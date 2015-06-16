@@ -28,18 +28,17 @@ public class GVRLight extends GVRHybridObject {
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
+        isEnabled = true;
     }
 
     /**
      * Get the {@code light_pos} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code light_pos}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
+     * {@code light_pos}. With the {@linkplain GVRShaderType.Lit 'lit' shader,}
+     * this allows you to add an overlay color on top of the texture.
      * 
-     * @return The current {@code vec4 light_pos} as a three-element
-     *         array
+     * @return The current {@code vec4 light_pos} as a three-element array
      */
     public float[] getPosition() {
         return getVec3("position");
@@ -175,12 +174,13 @@ public class GVRLight extends GVRHybridObject {
     public void setSpecularIntensity(float r, float g, float b, float a) {
         setVec4("specular_intensity", r, g, b, a);
     }
-    
+
     /**
      * Enable the light.
      */
     public void enable() {
         NativeLight.enable(getNative());
+        isEnabled = true;
     }
 
     /**
@@ -188,6 +188,16 @@ public class GVRLight extends GVRHybridObject {
      */
     public void disable() {
         NativeLight.disable(getNative());
+        isEnabled = false;
+    }
+
+    /**
+     * Get the enable/disable status for the light.
+     * 
+     * @return true if light is enabled, false if light is disabled.
+     */
+    public boolean isEnabled() {
+        return isEnabled;
     }
 
     private float getFloat(String key) {
@@ -217,13 +227,15 @@ public class GVRLight extends GVRHybridObject {
         checkStringNotNullOrEmpty("key", key);
         NativeLight.setVec4(getNative(), key, x, y, z, w);
     }
+
+    private boolean isEnabled;
 }
 
 class NativeLight {
     static native long ctor();
-    
+
     static native void enable(long light);
-    
+
     static native void disable(long light);
 
     static native float getFloat(long light, String key);
@@ -232,8 +244,7 @@ class NativeLight {
 
     static native float[] getVec3(long light, String key);
 
-    static native void setVec3(long light, String key, float x, float y,
-            float z);
+    static native void setVec3(long light, String key, float x, float y, float z);
 
     static native float[] getVec4(long light, String key);
 
