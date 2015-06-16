@@ -179,6 +179,9 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, drawEyeViewMethodId, eye, fovDegrees );
 
+    if(eye == 1) {
+        jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
+    }
 
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix(); //gun
@@ -203,7 +206,7 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame vrFrame )
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
 
     // Player movement. use dummy Scene object to update data
-	OVR::Scene.UpdateViewMatrix( vrFrame );
+	//OVR::Scene.UpdateViewMatrix( vrFrame ); // XXX it seems we don't need this
 
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.
@@ -219,15 +222,15 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame vrFrame )
 
 	// Set the external velocity matrix so TimeWarp can smoothly rotate the
 	// view even if we are dropping frames.
-	app->GetFrameParms().ExternalVelocity = ovrMatrix4f_CalculateExternalVelocity( &view2, OVR::Scene.YawVelocity );
+	//app->GetFrameParms().ExternalVelocity = ovrMatrix4f_CalculateExternalVelocity( &view2, OVR::Scene.YawVelocity ); // XXX it seems we don't need this.
 
     //-------------------------------------------
     // Render the two eye views, each to a separate texture, and TimeWarp
     // to the screen.
     //-------------------------------------------
-    app->DrawEyeViews(view2);
+    //app->DrawEyeViews(view2);
 
-    jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
+    //jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );  // moved to DrawEyeView
 
     return view2;
 }
