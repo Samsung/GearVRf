@@ -146,14 +146,14 @@ const float* Mesh::getBoundingBoxInfo() {
     return bounding_box_info_;
 }
 
-float* Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat) {
+void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
+        float *transformed_bounding_box) {
 
     if (have_bounding_box_ == false)
         getBoundingBoxInfo();
 
     glm::mat4 M = *Mat;
     float a, b;
-    float *transformed_bounding_box = new float[6];
 
     //Inspired by Graphics Gems - TransBox.c
     //Transform the AABB to the correct position in world space
@@ -202,8 +202,6 @@ float* Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat) {
             transformed_bounding_box[5] += a;
         }
     }
-
-    return transformed_bounding_box;
 }
 
 // generate vertex array object

@@ -179,7 +179,7 @@ Java_org_gearvrf_NativeSceneObject_attachEyePointeeHolder(
         jlong jeye_pointee_holder) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     EyePointeeHolder* eye_pointee_holder =
-    reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
+            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
     scene_object->attachEyePointeeHolder(scene_object, eye_pointee_holder);
 }
 

@@ -29,8 +29,7 @@
 namespace gvr {
 SceneObject::SceneObject() :
         HybridObject(), name_(""), transform_(), render_data_(), camera_(), camera_rig_(), eye_pointee_holder_(), parent_(), children_(), visible_(
-                true), in_frustum_(false), query_currently_issued_(false), vis_count_(
-                0) {
+                true), in_frustum_(false), query_currently_issued_(false), vis_count_(0) {
 
     // Occlusion query setup
 #if _GVRF_USE_GLES3_
@@ -121,7 +120,8 @@ void SceneObject::detachCameraRig() {
     }
 }
 
-void SceneObject::attachEyePointeeHolder(SceneObject* self,
+void SceneObject::attachEyePointeeHolder(
+        SceneObject* self,
         EyePointeeHolder* eye_pointee_holder) {
     if (eye_pointee_holder_) {
         detachEyePointeeHolder();
@@ -204,19 +204,17 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
     //Get the transformed bounding boxes in world coordinates and check if they intersect
     //Transformation is done by the getTransformedBoundingBoxInfo method in the Mesh class
 
-    float *this_object_bounding_box, *check_object_bounding_box;
+    float this_object_bounding_box[6], check_object_bounding_box[6];
 
     glm::mat4 this_object_model_matrix =
             this->render_data()->owner_object()->transform()->getModelMatrix();
-    this_object_bounding_box =
-            this->render_data()->mesh()->getTransformedBoundingBoxInfo(
-                    &this_object_model_matrix);
+    this->render_data()->mesh()->getTransformedBoundingBoxInfo(
+            &this_object_model_matrix, this_object_bounding_box);
 
     glm::mat4 check_object_model_matrix =
             scene_object->render_data()->owner_object()->transform()->getModelMatrix();
-    check_object_bounding_box =
-            scene_object->render_data()->mesh()->getTransformedBoundingBoxInfo(
-                    &check_object_model_matrix);
+    scene_object->render_data()->mesh()->getTransformedBoundingBoxInfo(
+            &check_object_model_matrix, check_object_bounding_box);
 
     bool result = (this_object_bounding_box[3] > check_object_bounding_box[0]
             && this_object_bounding_box[0] < check_object_bounding_box[3]
@@ -225,8 +223,6 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
             && this_object_bounding_box[5] > check_object_bounding_box[2]
             && this_object_bounding_box[2] < check_object_bounding_box[5]);
 
-    delete this_object_bounding_box;
-    delete check_object_bounding_box;
     return result;
 }
 
