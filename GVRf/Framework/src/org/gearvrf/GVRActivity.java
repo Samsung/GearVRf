@@ -46,6 +46,7 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
+    long appPtr = 0;
 
     static {
         System.loadLibrary("gvrf");
@@ -75,6 +76,7 @@ public class GVRActivity extends VrActivity {
 
         setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString));
+        appPtr = getAppPtr();
     }
 
     @Override

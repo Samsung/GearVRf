@@ -20,6 +20,7 @@
 #include "glm/glm.hpp"
 #include "App.h"
 #include "ModelView.h"
+#include "Input.h"
 #include "view_manager.h"
 #include "../objects/components/camera.h"
 
@@ -31,14 +32,14 @@ public:
                         GVRActivity( JNIEnv & jni_, jobject activityObject_);
                         ~GVRActivity();
 
-    virtual void        Configure( ovrSettings & settings );
+    virtual void        Configure( OVR::ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
     virtual void        OneTimeShutdown();
     virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegrees );
     virtual OVR::Matrix4f    Frame( OVR::VrFrame vrFrame );
     virtual void        NewIntent( const char * fromPackageName, const char * command, const char * uri );
     virtual void        Command( const char * msg );
-    virtual bool        OnKeyEvent( const int keyCode, const KeyState::eKeyEventType eventType );
+    virtual bool        OnKeyEvent( const int keyCode, const int repeatCount, const OVR::KeyEventType eventType );
     virtual void        WindowCreated();
     void                InitSceneObject( );
 

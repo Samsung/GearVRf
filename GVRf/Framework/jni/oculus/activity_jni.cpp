@@ -113,7 +113,7 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
     return gc;
 }
 
-void GVRActivity::Configure( ovrSettings & settings )
+void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
     LOG( "GVRActivity::Configure");
     // leave it as the oculus defaults for now.
@@ -225,7 +225,7 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame vrFrame )
     // Render the two eye views, each to a separate texture, and TimeWarp
     // to the screen.
     //-------------------------------------------
-    app->DrawEyeViewsPostDistorted( view2);
+    app->DrawEyeViews(view2);
 
     jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
 
@@ -245,11 +245,11 @@ void GVRActivity::InitSceneObject()
     */
 }
 
-bool GVRActivity::OnKeyEvent(const int keyCode,
-        const KeyState::eKeyEventType eventType) {
+bool GVRActivity::OnKeyEvent(const int keyCode, const int repeatCode,
+        const OVR::KeyEventType eventType) {
 
     // 1: KeyState::KEY_EVENT_DOWN, 0: KeyState::KEY_EVENT_UP. Other information is lost from Oculus side.
-    int isDown = (eventType == KeyState::KEY_EVENT_DOWN) ? 1 : 0;
+    int isDown = (eventType == OVR::KEY_EVENT_DOWN) ? 1 : 0;
 
     return app->GetVrJni()->CallBooleanMethod(javaObject,
             onKeyEventNativeMethodId, keyCode, isDown);
