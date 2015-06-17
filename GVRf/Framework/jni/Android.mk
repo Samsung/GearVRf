@@ -129,6 +129,6 @@ LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 
 include $(BUILD_SHARED_LIBRARY)
 
-#$(call import-module,$(OVR_MOBILE_SDK)/LibOVR/Projects/Android/jni)
-#$(call import-module,$(OVR_MOBILE_SDK)/VrApi/Projects/AndroidPrebuilt/jni)
-#$(call import-module,$(OVR_MOBILE_SDK)/VrAppFramework/Projects/Android/jni)
+$(call import-module,LibOVR/Projects/Android/jni)
+$(call import-module,VrApi/Projects/AndroidPrebuilt/jni)
+$(call import-module,VrAppFramework/Projects/Android/jni)
