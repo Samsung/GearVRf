@@ -56,12 +56,12 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
          */
         MEDIUM,
         /*
-         * Frequency MEDIUM, means do refresh every 20 frames
+         * Frequency MEDIUM, means do refresh every 30 frames
          */
         LOW
     }
 
-    private static int sReferenceCounter = 0;
+    private static int sReferenceCounter = 0;// This is for load balancing.
     private boolean mFirstFrame;
     private boolean mIsChanged;
     private int mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
