@@ -29,9 +29,7 @@ import android.widget.LinearLayout;
 public class SampleViewManager extends GVRScript {
 
     GVRTextViewSceneObject sceneObject;
-    LinearLayout mTextView;
     SampleActivity mActivity;
-    boolean init = false;
     private final String[] strings = new String[] { "good", "verygood",
             "veryverygood", "veryverygood", "veryveryverygood" };
     private final int[] colors = new int[] { Color.RED, Color.YELLOW,
@@ -77,8 +75,6 @@ public class SampleViewManager extends GVRScript {
             sceneObject = textviews.get(viewIndex);
             int colorIndex = random.nextInt(5);
             sceneObject.setTextColor(colors[colorIndex]);
-//            int contentIndex = random.nextInt(5);
-//            sceneObject.setText(strings[contentIndex]);
         }
     }
 

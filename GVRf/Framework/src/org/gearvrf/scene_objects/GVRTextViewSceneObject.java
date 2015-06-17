@@ -48,15 +48,15 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      */
     public static enum IntervalFrequency {
         /*
-         * Frequency HIGH, means do refresh every 10 frames
+         * Frequency HIGH, means will do refresh every 10 frames
          */
         HIGH,
         /*
-         * Frequency MEDIUM, means do refresh every 20 frames
+         * Frequency MEDIUM, means will do refresh every 20 frames
          */
         MEDIUM,
         /*
-         * Frequency MEDIUM, means do refresh every 30 frames
+         * Frequency LOW, means will do refresh every 30 frames
          */
         LOW
     }
@@ -399,12 +399,12 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     public IntervalFrequency getRefreshFrequency() {
         switch (mRefreshInterval) {
-        case 10:
+        case HIGH_REFRESH_INTERVAL:
             return IntervalFrequency.HIGH;
-        case 20:
-            return IntervalFrequency.MEDIUM;
-        default:
+        case LOW_REFRESH_INTERVAL:
             return IntervalFrequency.LOW;
+        default:
+            return IntervalFrequency.MEDIUM;
         }
     }
 
