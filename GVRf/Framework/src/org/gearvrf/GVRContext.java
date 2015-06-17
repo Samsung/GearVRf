@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -34,10 +35,20 @@ import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
+import org.util.jassimp.AiMaterial;
+import org.util.jassimp.AiMaterial.PropertyKey;
+import org.util.jassimp.AiMatrix4f;
+import org.util.jassimp.AiNode;
+import org.util.jassimp.AiScene;
+import org.util.jassimp.AiTextureType;
+import org.util.jassimp.AiWrapperProvider;
+import org.util.jassimp.AiMaterial.Property;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.Matrix;
 import android.view.KeyEvent;
 
 /**
@@ -414,6 +425,164 @@ public abstract class GVRContext {
             int priority) {
         return GVRAsynchronousResourceLoader.loadFutureMesh(this, resource,
                 priority);
+    }
+
+    /**
+     * Simple, high-level method to load a scene as {@link GVRSceneObject} from
+     * 3D model.
+     * 
+     * @param resource
+     *            Basically, a stream containing a 3D model. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @return A {@link GVRSceneObject} that contains the meshes with textures
+     * 
+     * @throws IOException
+     */
+    public GVRSceneObject getAssimpModel(String fileName) throws IOException {
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                this, new GVRAndroidResource(this, fileName));
+
+        GVRSceneObject wholeSceneObject = new GVRSceneObject(this);
+
+        AiScene assimpScene = assimpImporter.getAssimpScene();
+
+        AiWrapperProvider<byte[], AiMatrix4f, byte[], AiNode, byte[]> wrapperProvider = new AiWrapperProvider<byte[], AiMatrix4f, byte[], AiNode, byte[]>() {
+
+            @Override
+            public byte[] wrapColor(ByteBuffer arg0, int arg1) {
+                byte[] colorBuffer = new byte[4];
+                arg0.get(colorBuffer, arg1, 4);
+                return colorBuffer;
+            }
+
+            @Override
+            public AiMatrix4f wrapMatrix4f(float[] arg0) {
+
+                AiMatrix4f transformMatrix = new AiMatrix4f(arg0);
+                return transformMatrix;
+            }
+
+            @Override
+            public byte[] wrapQuaternion(ByteBuffer arg0, int arg1) {
+                byte[] quaternion = new byte[4];
+                arg0.get(quaternion, arg1, 4);
+                return quaternion;
+            }
+
+            @Override
+            public AiNode wrapSceneNode(Object arg0, Object arg1, int[] arg2,
+                    String arg3) {
+
+                AiNode node = new AiNode(null, arg1, arg2, arg3);
+
+                return node;
+            }
+
+            @Override
+            public byte[] wrapVector3f(ByteBuffer arg0, int arg1, int arg2) {
+                byte[] warpedVector = new byte[arg2];
+                arg0.get(warpedVector, arg1, arg2);
+                return warpedVector;
+            }
+        };
+
+        AiNode rootNode = assimpScene.getSceneRoot(wrapperProvider);
+
+        AiMatrix4f rootNodeTransform = rootNode.getTransform(wrapperProvider);
+
+        List<AiNode> childrenNodes = rootNode.getChildren();
+
+        AiMatrix4f parentNodeTransform = rootNodeTransform;
+        float[] accumulatedTransform = new float[16];
+        try {
+            for (AiNode childNode : childrenNodes) {
+                AiMatrix4f childNodeTransform = childNode
+                        .getTransform(wrapperProvider);
+
+                Matrix.multiplyMM(accumulatedTransform, 0,
+                        childNodeTransform.m_data, 0,
+                        parentNodeTransform.m_data, 0);
+
+                float[] accumulatedTransformArray = this
+                        .decomposeTransformationMatrix(accumulatedTransform);
+
+                parentNodeTransform.m_data = childNodeTransform.m_data;
+
+                for (int i = 0; i < childNode.getNumMeshes(); i++) {
+                    GVRMesh mesh = this.getNodeMesh(new GVRAndroidResource(
+                            this, fileName), childNode.getName(), i);
+
+                    AiMaterial material = this.getMeshMaterial(
+                            new GVRAndroidResource(this, fileName),
+                            childNode.getName(), i);
+
+                    Property property = material.getProperty("$tex.file");
+                    if (property != null) {
+                        int textureIndex = property.getIndex();
+                        String texFileName = material.getTextureFile(
+                                AiTextureType.DIFFUSE, textureIndex);
+                        GVRTexture meshTexture = this
+                                .loadTexture(new GVRAndroidResource(this,
+                                        texFileName));
+
+                        GVRSceneObject sceneObject = new GVRSceneObject(this,
+                                mesh, meshTexture);
+
+                        // set the scene object position
+                        sceneObject.getTransform().setTransformation(
+                                accumulatedTransformArray);
+
+                        // add the scene object to the scene graph
+                        wholeSceneObject.addChildObject(sceneObject);
+
+                    } else {
+                        // Case of no texture. Might be color.
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Error while recursing the Scene Graph
+            e.printStackTrace();
+        }
+        return wholeSceneObject;
+    }
+
+    /**
+     * Retrieves the particular index mesh for the given node.
+     * 
+     * @return The mesh, encapsulated as a {@link GVRMesh}.
+     */
+    public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
+            String nodeName, int meshIndex) {
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                this, androidResource);
+        return assimpImporter.getNodeMesh(nodeName, meshIndex);
+    }
+
+    /**
+     * Retrieves the material for the mesh of the given node..
+     * 
+     * @return The material, encapsulated as a {@link AiMaterial}.
+     */
+    public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
+            String nodeName, int meshIndex) {
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                this, androidResource);
+        return assimpImporter.getMeshMaterial(nodeName, meshIndex);
+    }
+
+    /**
+     * Decomposes a transformation matrix into three components. Scale, Rotation
+     * (as a quaternion) and Position.
+     * 
+     * @return The array with ten float values representing, Scale[X, Y, Z],
+     *         Rotation[W, X, Y, Z] and Position[X, Y, Z].
+     */
+    public float[] decomposeTransformationMatrix(float[] transformationMatrix) {
+        return NativeAssimpImporter
+                .decomposeTransformationMatrix(transformationMatrix);
     }
 
     /**
