@@ -118,7 +118,6 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
     LOG( "GVRActivity::Configure");
     // leave it as the oculus defaults for now.
 }
-
 void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
 {
     LOG( "GVRActivity::OneTimeInit" );
@@ -199,14 +198,13 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 
 
 
-OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame vrFrame )
+OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
 {
+    LOGD("GVRActivity::Frame() was called");
+
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
-
-    // Player movement. use dummy Scene object to update data
-	//OVR::Scene.UpdateViewMatrix( vrFrame ); // XXX it seems we don't need this
 
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.
@@ -220,32 +218,11 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame vrFrame )
     view2.M[0][2] = vp_matrix[2][0]; view2.M[1][2] = vp_matrix[2][1]; view2.M[2][2] = vp_matrix[2][2]; view2.M[3][2] = vp_matrix[2][3];
     view2.M[0][3] = vp_matrix[3][0]; view2.M[1][3] = vp_matrix[3][1]; view2.M[2][3] = vp_matrix[3][2]; view2.M[3][3] = vp_matrix[3][3];
 
-	// Set the external velocity matrix so TimeWarp can smoothly rotate the
-	// view even if we are dropping frames.
-	//app->GetFrameParms().ExternalVelocity = ovrMatrix4f_CalculateExternalVelocity( &view2, OVR::Scene.YawVelocity ); // XXX it seems we don't need this.
-
-    //-------------------------------------------
-    // Render the two eye views, each to a separate texture, and TimeWarp
-    // to the screen.
-    //-------------------------------------------
-    //app->DrawEyeViews(view2);
-
-    //jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );  // moved to DrawEyeView
-
     return view2;
 }
 
 void GVRActivity::InitSceneObject()
 {
-    /*
-    Scene.YawOffset = -M_PI / 2;
-    Scene.Znear = 0.01f;
-    Scene.Zfar = 2000.0f;
-    // Set the initial player position
-    Scene.FootPos = Vector3f( 0.0f, 0.0f, 0.0f );
-    Scene.YawOffset = 0;
-    Scene.LastHeadModelOffset = Vector3f( 0.0f, 0.0f, 0.0f );
-    */
 }
 
 bool GVRActivity::OnKeyEvent(const int keyCode, const int repeatCode,
