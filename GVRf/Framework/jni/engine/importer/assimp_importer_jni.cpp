@@ -124,11 +124,6 @@ error:
     }
 
 end:
-    /*
-     * NOTE: this releases all memory used in the native domain.
-     * Ensure all data has been passed to java before!
-     */
-    aiReleaseImport(assimp_scene);
     return reinterpret_cast<jobject>(jassimp_scene);
 }
 
