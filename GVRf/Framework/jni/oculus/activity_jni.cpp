@@ -116,8 +116,11 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
     LOG( "GVRActivity::Configure");
-    // leave it as the oculus defaults for now.
+    settings.EyeBufferParms.multisamples = 2;
+    // leave the rest as default for now.
+    // TODO: take values specified in xml and set them here.
 }
+
 void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
 {
     LOG( "GVRActivity::OneTimeInit" );
