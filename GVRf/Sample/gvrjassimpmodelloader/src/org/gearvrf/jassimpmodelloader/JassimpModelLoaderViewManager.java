@@ -37,6 +37,8 @@ public class JassimpModelLoaderViewManager extends GVRScript {
 
         GVRSceneObject model = gvrContext.getAssimpModel("astro_boy.dae");
 
+        model.getTransform().setRotationByAxis(-90.0f, 0.0f, 0.0f, 1.0f);
+
         GVRScene scene = gvrContext.getNextMainScene();
 
         GVRCameraRig mainCameraRig = scene.getMainCameraRig();
