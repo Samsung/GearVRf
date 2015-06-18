@@ -4,7 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>LibOVR</project>
-		<project>VrApi</project>
 		<project>VrAppFramework</project>
 	</projects>
 	<buildSpec>
