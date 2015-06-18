@@ -28,7 +28,7 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
 		jlong jshader_manager, jlong jpost_effect_shader_manager,
 		jlong jpost_effect_render_texture_a,
 		jlong jpost_effect_render_texture_b) {
-	GVRActivity *activity = (GVRActivity*) ((App *) appPtr)->GetAppInterface();
+	GVRActivity *activity = (GVRActivity*) ((OVR::App *) appPtr)->GetAppInterface();
 
 	Scene* scene = reinterpret_cast<Scene*>(jscene);
 	Camera* camera = reinterpret_cast<Camera*>(jcamera);
@@ -96,7 +96,7 @@ GVRViewManager::~GVRViewManager() {
 	LOG("GVRViewManager::~GVRViewManager()");
 }
 
-void GVRViewManager::renderCamera(OvrSceneView &ovr_scene,
+void GVRViewManager::renderCamera(OVR::OvrSceneView &ovr_scene,
 		Scene* scene,
 		Camera* camera,
 		RenderTexture* render_texture,

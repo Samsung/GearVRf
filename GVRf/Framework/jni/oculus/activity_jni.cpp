@@ -16,7 +16,7 @@
 #include "activity_jni.h"
 #include <jni.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <VrApi/VrApi_Helpers.h>
+#include "VrApi_Helpers.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 
@@ -37,7 +37,7 @@ long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
 void Java_org_gearvrf_GVRActivity_nativeSetCamera(
         JNIEnv * jni, jclass clazz, jlong appPtr, jlong jcamera )
 {
-    GVRActivity *activity = (GVRActivity*)((App *)appPtr)->GetAppInterface();
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     activity->camera = camera;
 }
@@ -113,20 +113,12 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
     return gc;
 }
 
-void GVRActivity::ConfigureVrMode( ovrModeParms & modeParms )
+void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
-    LOG( "GVRActivity::ConfigureVrMode");
-
-    modeParms.CpuLevel = 2;
-    modeParms.GpuLevel = 2;
-
-    // Always use 2x MSAA for now
-    app->GetVrParms().multisamples = 2;
-
-    // Always use bilinear texture filtering.
-    app->GetVrParms().textureFilter = TEXTURE_FILTER_BILINEAR;
-
-    app->GetSwapParms().WarpProgram = WP_SIMPLE;
+    LOG( "GVRActivity::Configure");
+    settings.EyeBufferParms.multisamples = 2;
+    // leave the rest as default for now.
+    // TODO: take values specified in xml and set them here.
 }
 
 void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
@@ -165,17 +157,17 @@ void GVRActivity::WindowCreated(){
     //LOG( "GVRActivity::WindowCreated");
 }
 
-Matrix4f GVRActivity::GetEyeView( const int eye, const float fovDegrees ) const
+OVR::Matrix4f GVRActivity::GetEyeView( const int eye, const float fovDegrees ) const
 {
-    const Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye( eye, fovDegrees );
-    const Matrix4f viewMatrix = Scene.ViewMatrixForEye( eye );
+    const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye( eye, fovDegrees );
+    const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye( eye );
     return ( projectionMatrix * viewMatrix );
 
 }
 
-Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
+OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 {
-    const Matrix4f view = GetEyeView( eye, fovDegrees );
+    const OVR::Matrix4f view = GetEyeView( eye, fovDegrees );
 
 	// Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.
     mvp_matrix = glm::mat4(
@@ -189,12 +181,15 @@ Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, drawEyeViewMethodId, eye, fovDegrees );
 
+    if(eye == 1) {
+        jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
+    }
 
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix(); //gun
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
-    Matrix4f view2 = Matrix4f(
+    OVR::Matrix4f view2 = OVR::Matrix4f(
     		vp_matrix[0][0], vp_matrix[1][0], vp_matrix[2][0], vp_matrix[3][0],
             vp_matrix[0][1], vp_matrix[1][1], vp_matrix[2][1], vp_matrix[3][1],
             vp_matrix[0][2], vp_matrix[1][2], vp_matrix[2][2], vp_matrix[3][2],
@@ -206,16 +201,13 @@ Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 
 
 
-Matrix4f GVRActivity::Frame( const VrFrame vrFrame )
+OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
 {
+    LOGD("GVRActivity::Frame() was called");
+
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
-
-    // Get the current vrParms for the buffer resolution.
-    const EyeParms vrParms = app->GetEyeParms();
-    // Player movement. use dummy Scene object to update data
-	Scene.UpdateViewMatrix( vrFrame );
 
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.
@@ -229,37 +221,18 @@ Matrix4f GVRActivity::Frame( const VrFrame vrFrame )
     view2.M[0][2] = vp_matrix[2][0]; view2.M[1][2] = vp_matrix[2][1]; view2.M[2][2] = vp_matrix[2][2]; view2.M[3][2] = vp_matrix[2][3];
     view2.M[0][3] = vp_matrix[3][0]; view2.M[1][3] = vp_matrix[3][1]; view2.M[2][3] = vp_matrix[3][2]; view2.M[3][3] = vp_matrix[3][3];
 
-	// Set the external velocity matrix so TimeWarp can smoothly rotate the
-	// view even if we are dropping frames.
-	app->GetSwapParms().ExternalVelocity = CalculateExternalVelocity( &view2, Scene.YawVelocity );
-
-    //-------------------------------------------
-    // Render the two eye views, each to a separate texture, and TimeWarp
-    // to the screen.
-    //-------------------------------------------
-    app->DrawEyeViewsPostDistorted( view2);
-
-    jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
-
     return view2;
 }
 
 void GVRActivity::InitSceneObject()
 {
-    Scene.YawOffset = -M_PI / 2;
-    Scene.Znear = 0.01f;
-    Scene.Zfar = 2000.0f;
-    // Set the initial player position
-    Scene.FootPos = Vector3f( 0.0f, 0.0f, 0.0f );
-    Scene.YawOffset = 0;
-    Scene.LastHeadModelOffset = Vector3f( 0.0f, 0.0f, 0.0f );
 }
 
-bool GVRActivity::OnKeyEvent(const int keyCode,
-        const KeyState::eKeyEventType eventType) {
+bool GVRActivity::OnKeyEvent(const int keyCode, const int repeatCode,
+        const OVR::KeyEventType eventType) {
 
     // 1: KeyState::KEY_EVENT_DOWN, 0: KeyState::KEY_EVENT_UP. Other information is lost from Oculus side.
-    int isDown = (eventType == KeyState::KEY_EVENT_DOWN) ? 1 : 0;
+    int isDown = (eventType == OVR::KEY_EVENT_DOWN) ? 1 : 0;
 
     return app->GetVrJni()->CallBooleanMethod(javaObject,
             onKeyEventNativeMethodId, keyCode, isDown);

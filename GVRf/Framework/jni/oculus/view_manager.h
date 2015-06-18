@@ -47,7 +47,7 @@ class GVRViewManager
 public:
     GVRViewManager( JNIEnv & jni_, jobject activityObject_);
     ~GVRViewManager();
-    void renderCamera(OvrSceneView &ovr_scene,
+    void renderCamera(OVR::OvrSceneView &ovr_scene,
                         Scene* scene,
                         Camera* camera,
                         RenderTexture* render_texture,

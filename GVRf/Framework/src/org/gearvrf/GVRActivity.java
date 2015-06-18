@@ -27,8 +27,7 @@ import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.oculusvr.vrlib.VrActivity;
-import com.oculusvr.vrlib.VrLib;
+import com.oculus.vrappframework.VrActivity;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -47,6 +46,7 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
+    long appPtr = 0;
 
     static {
         System.loadLibrary("gvrf");
@@ -70,12 +70,13 @@ public class GVRActivity extends VrActivity {
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-        String commandString = VrLib.getCommandStringFromIntent(intent);
-        String fromPackageNameString = VrLib.getPackageStringFromIntent(intent);
-        String uriString = VrLib.getUriStringFromIntent(intent);
+        String commandString = VrActivity.getCommandStringFromIntent(intent);
+        String fromPackageNameString = VrActivity.getPackageStringFromIntent(intent);
+        String uriString = VrActivity.getUriStringFromIntent(intent);
 
-        appPtr = nativeSetAppInterface(this, fromPackageNameString,
-                commandString, uriString);
+        setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
+                commandString, uriString));
+        appPtr = getAppPtr();
     }
 
     @Override
@@ -203,7 +204,7 @@ public class GVRActivity extends VrActivity {
     void setCamera(GVRCamera camera) {
         mCamera = camera;
 
-        nativeSetCamera(appPtr, camera.getNative());
+        nativeSetCamera(getAppPtr(), camera.getNative());
     }
 
     @Override
