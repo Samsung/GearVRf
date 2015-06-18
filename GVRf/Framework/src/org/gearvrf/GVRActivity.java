@@ -46,7 +46,6 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
-    long appPtr = 0;
 
     static {
         System.loadLibrary("gvrf");
@@ -71,12 +70,12 @@ public class GVRActivity extends VrActivity {
 
         Intent intent = getIntent();
         String commandString = VrActivity.getCommandStringFromIntent(intent);
-        String fromPackageNameString = VrActivity.getPackageStringFromIntent(intent);
+        String fromPackageNameString = VrActivity
+                .getPackageStringFromIntent(intent);
         String uriString = VrActivity.getUriStringFromIntent(intent);
 
         setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString));
-        appPtr = getAppPtr();
     }
 
     @Override
@@ -237,11 +236,12 @@ public class GVRActivity extends VrActivity {
          */
         final int cKeyDown = 1;
 
-        int action = (eventType == cKeyDown) ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP;
+        int action = (eventType == cKeyDown) ? KeyEvent.ACTION_DOWN
+                : KeyEvent.ACTION_UP;
         KeyEvent event = new KeyEvent(action, keyCode);
 
-        return (action == KeyEvent.ACTION_DOWN) ? onKeyDown(keyCode, event) : onKeyUp(keyCode,
-                event);
+        return (action == KeyEvent.ACTION_DOWN) ? onKeyDown(keyCode, event)
+                : onKeyUp(keyCode, event);
     }
 
 }
