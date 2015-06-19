@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Contains a ai_scene of Assimp.
  ***************************************************************************/
@@ -79,14 +78,8 @@ public:
             jobject& new_instance);
     static bool get_field(JNIEnv *env, jobject object, const char* field_name,
             const char* signature, jobject& field);
-    static bool set_int_field(JNIEnv *env, jobject object,
-            const char* field_name, jint value);
-    static bool set_float_field(JNIEnv *env, jobject object,
-            const char* field_name, jfloat value);
     static bool set_object_field(JNIEnv *env, jobject object,
             const char* field_name, const char* signature, jobject value);
-    static bool get_static_field(JNIEnv *env, const char* class_name,
-            const char* field_name, const char* signature, jobject& field);
     static bool call(JNIEnv *env, jobject object, const char* type_name,
             const char* method_name, const char* signature,/* const*/
             jvalue* params);
@@ -96,10 +89,6 @@ public:
     static bool call_static_object(JNIEnv *env, const char* type_name,
             const char* method_name, const char* signature,/* const*/
             jvalue* params, jobject& return_value);
-    static bool copy_buffer(JNIEnv *env, jobject mesh, const char* buffer_name,
-            void* data, size_t size);
-    static bool copy_buffer_array(JNIEnv *env, jobject mesh,
-            const char* buffer_name, int index, void* data, size_t size);
     static bool load_meshes(JNIEnv *env, const aiScene* assimp_scene,
             jobject& scene);
     static bool load_scene_node(JNIEnv *env, const aiNode *node, jobject parent,
