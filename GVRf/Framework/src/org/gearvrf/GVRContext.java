@@ -36,7 +36,6 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
 import org.util.jassimp.AiMaterial;
-import org.util.jassimp.AiMaterial.PropertyKey;
 import org.util.jassimp.AiMatrix4f;
 import org.util.jassimp.AiNode;
 import org.util.jassimp.AiScene;
@@ -431,18 +430,21 @@ public abstract class GVRContext {
      * Simple, high-level method to load a scene as {@link GVRSceneObject} from
      * 3D model.
      * 
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param assetRelativeFilename
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     * 
      * @return A {@link GVRSceneObject} that contains the meshes with textures
      * 
      * @throws IOException
+     *             File does not exist or cannot be read
      */
-    public GVRSceneObject getAssimpModel(String fileName) throws IOException {
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename)
+            throws IOException {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, new GVRAndroidResource(this, fileName));
+                this, new GVRAndroidResource(this, assetRelativeFilename));
 
         GVRSceneObject wholeSceneObject = new GVRSceneObject(this);
 
@@ -511,24 +513,29 @@ public abstract class GVRContext {
                 parentNodeTransform.m_data = childNodeTransform.m_data;
 
                 for (int i = 0; i < childNode.getNumMeshes(); i++) {
-                    GVRMesh mesh = this.getNodeMesh(new GVRAndroidResource(
-                            this, fileName), childNode.getName(), i);
 
-                    AiMaterial material = this.getMeshMaterial(
-                            new GVRAndroidResource(this, fileName),
-                            childNode.getName(), i);
+                    FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
+                            this.getNodeMesh(new GVRAndroidResource(this,
+                                    assetRelativeFilename),
+                                    childNode.getName(), i));
+
+                    AiMaterial material = this
+                            .getMeshMaterial(new GVRAndroidResource(this,
+                                    assetRelativeFilename),
+                                    childNode.getName(), i);
 
                     Property property = material.getProperty("$tex.file");
                     if (property != null) {
                         int textureIndex = property.getIndex();
                         String texFileName = material.getTextureFile(
                                 AiTextureType.DIFFUSE, textureIndex);
-                        GVRTexture meshTexture = this
-                                .loadTexture(new GVRAndroidResource(this,
+
+                        Future<GVRTexture> futureMeshTexture = this
+                                .loadFutureTexture(new GVRAndroidResource(this,
                                         texFileName));
 
                         GVRSceneObject sceneObject = new GVRSceneObject(this,
-                                mesh, meshTexture);
+                                futureMesh, futureMeshTexture);
 
                         // set the scene object position
                         sceneObject.getTransform().setTransformation(
