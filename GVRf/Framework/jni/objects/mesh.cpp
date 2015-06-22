@@ -209,6 +209,10 @@ void Mesh::generateVAO(Material::ShaderType key) {
 #if _GVRF_USE_GLES3_
     GLuint tmpID;
 
+    if (vao_dirty_) {
+        deleteVaos();
+    }
+
     if (vaoID_map_.find(key) != vaoID_map_.end()) {
         // already initialized
         return;
@@ -322,6 +326,8 @@ void Mesh::generateVAO(Material::ShaderType key) {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    vao_dirty_ = false;
 #endif
 }
 
