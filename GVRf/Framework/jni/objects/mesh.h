@@ -57,6 +57,10 @@ public:
         std::vector<unsigned short> triangles;
         triangles.swap(triangles_);
 
+        deleteVaos();
+    }
+
+    void deleteVaos() {
         for (auto iterator = vaoID_map_.begin(); iterator != vaoID_map_.end();
                 iterator++) {
             gl_delete.queueVertexArray(iterator->second);
@@ -130,10 +134,12 @@ public:
 
     void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
         tex_coords_ = tex_coords;
+        vao_dirty_ = true;
     }
 
     void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
         tex_coords_ = std::move(tex_coords);
+        vao_dirty_ = true;
     }
 
     std::vector<unsigned short>& triangles() {
@@ -348,6 +354,8 @@ private:
     // bounding box info
     bool have_bounding_box_;
     float bounding_box_info_[6];
+
+    bool vao_dirty_;
 };
 }
 #endif
