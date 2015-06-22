@@ -24,6 +24,7 @@
 #include "objects/components/eye_pointee_holder.h"
 #include "objects/components/render_data.h"
 #include "util/gvr_log.h"
+#include "mesh.h"
 
 namespace gvr {
 SceneObject::SceneObject() :
@@ -125,8 +126,7 @@ void SceneObject::attachEyePointeeHolder(
     if (eye_pointee_holder_) {
         detachEyePointeeHolder();
     }
-    SceneObject* owner_object(
-            eye_pointee_holder->owner_object());
+    SceneObject* owner_object(eye_pointee_holder->owner_object());
     if (owner_object) {
         owner_object->detachEyePointeeHolder();
     }
@@ -197,6 +197,33 @@ void SceneObject::set_visible(bool visibility = true) {
         visible_ = false;
         vis_count_ = 0;
     }
+}
+
+bool SceneObject::isColliding(SceneObject *scene_object) {
+
+    //Get the transformed bounding boxes in world coordinates and check if they intersect
+    //Transformation is done by the getTransformedBoundingBoxInfo method in the Mesh class
+
+    float this_object_bounding_box[6], check_object_bounding_box[6];
+
+    glm::mat4 this_object_model_matrix =
+            this->render_data()->owner_object()->transform()->getModelMatrix();
+    this->render_data()->mesh()->getTransformedBoundingBoxInfo(
+            &this_object_model_matrix, this_object_bounding_box);
+
+    glm::mat4 check_object_model_matrix =
+            scene_object->render_data()->owner_object()->transform()->getModelMatrix();
+    scene_object->render_data()->mesh()->getTransformedBoundingBoxInfo(
+            &check_object_model_matrix, check_object_bounding_box);
+
+    bool result = (this_object_bounding_box[3] > check_object_bounding_box[0]
+            && this_object_bounding_box[0] < check_object_bounding_box[3]
+            && this_object_bounding_box[4] > check_object_bounding_box[1]
+            && this_object_bounding_box[1] < check_object_bounding_box[4]
+            && this_object_bounding_box[5] > check_object_bounding_box[2]
+            && this_object_bounding_box[2] < check_object_bounding_box[5]);
+
+    return result;
 }
 
 }

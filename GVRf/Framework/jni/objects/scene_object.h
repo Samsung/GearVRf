@@ -119,6 +119,7 @@ public:
     GLuint *get_occlusion_array() {
         return queries_;
     }
+    bool isColliding(SceneObject* scene_object);
 
 private:
     SceneObject(const SceneObject& scene_object);

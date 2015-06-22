@@ -252,6 +252,8 @@ public:
 
     Mesh* getBoundingBox();
     const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+    void getTransformedBoundingBoxInfo(glm::mat4 *M,
+            float *transformed_bounding_box); //Get Bounding box info transformed by matrix
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
