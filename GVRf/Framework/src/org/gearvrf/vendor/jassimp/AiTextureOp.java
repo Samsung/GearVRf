@@ -38,40 +38,59 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
-
-import java.util.Set;
+package org.gearvrf.vendor.jassimp;
 
 /**
- * Enumerates the types of geometric primitives supported by Assimp.
+ * Defines how the Nth texture of a specific type is combined with the result of
+ * all previous layers.
  * <p>
+ * 
+ * Example (left: key, right: value): <br>
+ * <code><pre>
+ *  DiffColor0     - gray
+ *  DiffTextureOp0 - aiTextureOpMultiply
+ *  DiffTexture0   - tex1.png
+ *  DiffTextureOp0 - aiTextureOpAdd
+ *  DiffTexture1   - tex2.png
+ * </pre></code>
+ * 
+ * Written as equation, the final diffuse term for a specific pixel would be:
+ * <code><pre>
+ *  diffFinal = DiffColor0 * sampleTex(DiffTexture0,UV0) + 
+ *     sampleTex(DiffTexture1,UV0) * diffContrib;
+ * </pre></code> where 'diffContrib' is the intensity of the incoming light for
+ * that pixel.
  */
-public enum AiPrimitiveType {
+public enum AiTextureOp {
     /**
-     * A point primitive.
+     * <code>T = T1 * T2</code>.
      */
-    POINT(0x1),
+    MULTIPLY(0x0),
 
     /**
-     * A line primitive.
+     * <code>T = T1 + T2</code>.
      */
-    LINE(0x2),
+    ADD(0x1),
 
     /**
-     * A triangular primitive.
+     * <code>T = T1 - T2</code>.
      */
-    TRIANGLE(0x4),
+    SUBTRACT(0x2),
 
     /**
-     * A higher-level polygon with more than 3 edges.
-     * <p>
-     * 
-     * A triangle is a polygon, but polygon in this context means
-     * "all polygons that are not triangles". The "Triangulate"-Step is provided
-     * for your convenience, it splits all polygons in triangles (which are much
-     * easier to handle).
+     * <code>T = T1 / T2</code>.
      */
-    POLYGON(0x8);
+    DIVIDE(0x3),
+
+    /**
+     * <code>T = (T1 + T2) - (T1 * T2)</code> .
+     */
+    SMOOTH_ADD(0x4),
+
+    /**
+     * <code>T = T1 + (T2-0.5)</code>.
+     */
+    SIGNED_ADD(0x5);
 
     /**
      * Utility method for converting from c/c++ based integer enums to java
@@ -81,18 +100,18 @@ public enum AiPrimitiveType {
      * This method is intended to be used from JNI and my change based on
      * implementation needs.
      * 
-     * @param set
-     *            the target set to fill
      * @param rawValue
      *            an integer based enum value (as defined by assimp)
+     * @return the enum value corresponding to rawValue
      */
-    static void fromRawValue(Set<AiPrimitiveType> set, int rawValue) {
-
-        for (AiPrimitiveType type : AiPrimitiveType.values()) {
-            if ((type.m_rawValue & rawValue) != 0) {
-                set.add(type);
+    static AiTextureOp fromRawValue(int rawValue) {
+        for (AiTextureOp type : AiTextureOp.values()) {
+            if (type.m_rawValue == rawValue) {
+                return type;
             }
         }
+
+        throw new IllegalArgumentException("unexptected raw value: " + rawValue);
     }
 
     /**
@@ -101,7 +120,7 @@ public enum AiPrimitiveType {
      * @param rawValue
      *            maps java enum to c/c++ integer enum values
      */
-    private AiPrimitiveType(int rawValue) {
+    private AiTextureOp(int rawValue) {
         m_rawValue = rawValue;
     }
 

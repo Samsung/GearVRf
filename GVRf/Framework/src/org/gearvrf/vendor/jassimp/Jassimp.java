@@ -38,7 +38,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
 
 import java.nio.ByteBuffer;
 import java.util.Set;

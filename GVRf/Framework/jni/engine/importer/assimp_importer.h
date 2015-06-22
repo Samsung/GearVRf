@@ -80,10 +80,10 @@ public:
             const char* signature, jobject& field);
     static bool set_object_field(JNIEnv *env, jobject object,
             const char* field_name, const char* signature, jobject value);
-    static bool call(JNIEnv *env, jobject object, const char* type_name,
+    static bool call_method(JNIEnv *env, jobject object, const char* type_name,
             const char* method_name, const char* signature,/* const*/
             jvalue* params);
-    static bool callv(JNIEnv *env, jobject object, const char* type_name,
+    static bool call_void_method(JNIEnv *env, jobject object, const char* type_name,
             const char* method_name, const char* signature,/* const*/
             jvalue* params);
     static bool call_static_object(JNIEnv *env, const char* type_name,

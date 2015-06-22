@@ -38,41 +38,50 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
 
 /**
- * Defines how the mapping coords for a texture are generated.
+ * The root structure of the imported data.
  * <p>
  * 
- * Real-time applications typically require full UV coordinates, so the use of
- * the {@link AiPostProcessSteps#GEN_UV_COORDS} step is highly recommended. It
- * generates proper UV channels for non-UV mapped objects, as long as an
- * accurate description how the mapping should look like (e.g spherical) is
- * given.
+ * Everything that was imported from the given file can be accessed from here.
+ * <p>
+ * Jassimp copies all data into "java memory" during import and frees resources
+ * allocated by native code after scene loading is completed. No special care
+ * has to be taken for freeing resources, unreferenced jassimp objects
+ * (including the scene itself) are eligible to garbage collection like any
+ * other java object.
  */
-public enum AiTextureMapping {
+public final class AiScene {
     /**
-     * The mapping coordinates are taken from an UV channel.
-     * 
-     * The #AI_MATKEY_UVWSRC key specifies from which UV channel the texture
-     * coordinates are to be taken from (remember, meshes can have more than one
-     * UV channel).
+     * Constructor.
      */
-    // aiTextureMapping_UV = 0x0,
-    //
-    // /** Spherical mapping */
-    // aiTextureMapping_SPHERE = 0x1,
-    //
-    // /** Cylindrical mapping */
-    // aiTextureMapping_CYLINDER = 0x2,
-    //
-    // /** Cubic mapping */
-    // aiTextureMapping_BOX = 0x3,
-    //
-    // /** Planar mapping */
-    // aiTextureMapping_PLANE = 0x4,
-    //
-    // /** Undefined mapping. Have fun. */
-    // aiTextureMapping_OTHER = 0x5,
+    AiScene() {
+        /* nothing to do */
+    }
 
+    /**
+     * Returns the scene graph root.
+     * 
+     * This method is part of the wrapped API (see {@link AiWrapperProvider} for
+     * details on wrappers).
+     * <p>
+     * 
+     * The built-in behavior is to return a {@link AiVector}.
+     * 
+     * @param wrapperProvider
+     *            the wrapper provider (used for type inference)
+     * @return the scene graph root
+     */
+    @SuppressWarnings("unchecked")
+    public <V3, M4, C, N, Q> N getSceneRoot(
+            AiWrapperProvider<V3, M4, C, N, Q> wrapperProvider) {
+
+        return (N) m_sceneRoot;
+    }
+
+    /**
+     * Scene graph root.
+     */
+    private Object m_sceneRoot;
 }

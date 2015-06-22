@@ -38,7 +38,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
 
 /**
  * Defines all shading modes supported by the library.

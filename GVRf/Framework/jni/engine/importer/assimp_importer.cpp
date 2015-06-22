@@ -172,7 +172,7 @@ bool AssimpImporter::set_object_field(JNIEnv *env, jobject object,
     return true;
 }
 
-bool AssimpImporter::call(JNIEnv *env, jobject object, const char* type_name,
+bool AssimpImporter::call_method(JNIEnv *env, jobject object, const char* type_name,
         const char* method_name, const char* signature,/* const*/
         jvalue* params) {
     jclass java_class = env->FindClass(type_name);
@@ -194,7 +194,7 @@ bool AssimpImporter::call(JNIEnv *env, jobject object, const char* type_name,
     return (bool) return_value;
 }
 
-bool AssimpImporter::callv(JNIEnv *env, jobject object, const char* type_name,
+bool AssimpImporter::call_void_method(JNIEnv *env, jobject object, const char* type_name,
         const char* method_name, const char* signature,/* const*/
         jvalue* params) {
     jclass java_class = env->FindClass(type_name);
@@ -247,7 +247,7 @@ bool AssimpImporter::load_scene_node(JNIEnv *env, const aiNode *assimp_node,
     wrap_matrix_params[0].l = jassimp_wrap_matrix;
     jobject jassimp_matrix;
 
-    if (!call_static_object(env, "org/util/jassimp/Jassimp", "wrapMatrix",
+    if (!call_static_object(env, "org/gearvrf/vendor/jassimp/Jassimp", "wrapMatrix",
             "([F)Ljava/lang/Object;", wrap_matrix_params, jassimp_matrix)) {
         return false;
     }
@@ -275,7 +275,7 @@ bool AssimpImporter::load_scene_node(JNIEnv *env, const aiNode *assimp_node,
     wrap_node_params[3].l = jassimp_node_name;
 
     jobject jassimp_node;
-    if (!call_static_object(env, "org/util/jassimp/Jassimp", "wrapSceneNode",
+    if (!call_static_object(env, "org/gearvrf/vendor/jassimp/Jassimp", "wrapSceneNode",
             "(Ljava/lang/Object;Ljava/lang/Object;[ILjava/lang/String;)Ljava/lang/Object;",
             wrap_node_params, jassimp_node)) {
         return false;
@@ -319,7 +319,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
             assimp_importer_->GetScene()->mMaterials[assimp_mesh->mMaterialIndex];
     jobject jassimp_material = NULL;
 
-    if (!create_instance(env, "org/util/jassimp/AiMaterial",
+    if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial",
             jassimp_material)) {
         return NULL;
     }
@@ -336,7 +336,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
         set_number_params[0].i = texture_type_index;
         set_number_params[1].i = total_textures;
 
-        if (!callv(env, jassimp_material, "org/util/jassimp/AiMaterial",
+        if (!call_void_method(env, jassimp_material, "org/gearvrf/vendor/jassimp/AiMaterial",
                 "setTextureNumber", "(II)V", set_number_params)) {
             return NULL;
         }
@@ -367,14 +367,14 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
                     ((float*) assimp_material_property->mData)[1];
             wrap_color_params[2].f =
                     ((float*) assimp_material_property->mData)[2];
-            if (!call_static_object(env, "org/util/jassimp/Jassimp",
+            if (!call_static_object(env, "org/gearvrf/vendor/jassimp/Jassimp",
                     "wrapColor3", "(FFF)Ljava/lang/Object;", wrap_color_params,
                     jassimp_data)) {
                 return NULL;
             }
 
             constructor_params[4].l = jassimp_data;
-            if (!create_instance(env, "org/util/jassimp/AiMaterial$Property",
+            if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
@@ -396,14 +396,14 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
                     ((float*) assimp_material_property->mData)[2];
             wrap_color_params[3].f =
                     ((float*) assimp_material_property->mData)[3];
-            if (!call_static_object(env, "org/util/jassimp/Jassimp",
+            if (!call_static_object(env, "org/gearvrf/vendor/jassimp/Jassimp",
                     "wrapColor4", "(FFFF)Ljava/lang/Object;", wrap_color_params,
                     jassimp_data)) {
                 return NULL;
             }
 
             constructor_params[4].l = jassimp_data;
-            if (!create_instance(env, "org/util/jassimp/AiMaterial$Property",
+            if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
@@ -421,7 +421,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
             }
 
             constructor_params[4].l = jassimp_data;
-            if (!create_instance(env, "org/util/jassimp/AiMaterial$Property",
+            if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
@@ -438,7 +438,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
             }
 
             constructor_params[4].l = jassimp_data;
-            if (!create_instance(env, "org/util/jassimp/AiMaterial$Property",
+            if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
@@ -449,7 +449,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
                     assimp_material_property->mData + 4);
 
             constructor_params[4].l = jassimp_data;
-            if (!create_instance(env, "org/util/jassimp/AiMaterial$Property",
+            if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
@@ -458,7 +458,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
             constructor_params[4].i = assimp_material_property->mDataLength;
 
             /* generic copy code, uses dump ByteBuffer on java side */
-            if (!create_instance(env, "org/util/jassimp/AiMaterial$Property",
+            if (!create_instance(env, "org/gearvrf/vendor/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIII)V", constructor_params,
                     jassimp_material_property)) {
                 return NULL;
@@ -499,7 +499,7 @@ jobject AssimpImporter::mesh_material(JNIEnv *env, int index) {
 
         jvalue add_properties_params[1];
         add_properties_params[0].l = jassimp_material_property;
-        if (!call(env, jassimp_properties, "java/util/Collection", "add",
+        if (!call_method(env, jassimp_properties, "java/util/Collection", "add",
                 "(Ljava/lang/Object;)Z", add_properties_params)) {
             return NULL;
         }

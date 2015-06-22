@@ -38,53 +38,75 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 /**
- * The root structure of the imported data.
+ * Enumerates the types of geometric primitives supported by Assimp.
  * <p>
- * 
- * Everything that was imported from the given file can be accessed from here.
- * <p>
- * Jassimp copies all data into "java memory" during import and frees resources
- * allocated by native code after scene loading is completed. No special care
- * has to be taken for freeing resources, unreferenced jassimp objects
- * (including the scene itself) are eligible to garbage collection like any
- * other java object.
  */
-public final class AiScene {
+public enum AiPrimitiveType {
     /**
-     * Constructor.
+     * A point primitive.
      */
-    AiScene() {
-        /* nothing to do */
-    }
+    POINT(0x1),
 
     /**
-     * Returns the scene graph root.
-     * 
-     * This method is part of the wrapped API (see {@link AiWrapperProvider} for
-     * details on wrappers).
+     * A line primitive.
+     */
+    LINE(0x2),
+
+    /**
+     * A triangular primitive.
+     */
+    TRIANGLE(0x4),
+
+    /**
+     * A higher-level polygon with more than 3 edges.
      * <p>
      * 
-     * The built-in behavior is to return a {@link AiVector}.
-     * 
-     * @param wrapperProvider
-     *            the wrapper provider (used for type inference)
-     * @return the scene graph root
+     * A triangle is a polygon, but polygon in this context means
+     * "all polygons that are not triangles". The "Triangulate"-Step is provided
+     * for your convenience, it splits all polygons in triangles (which are much
+     * easier to handle).
      */
-    @SuppressWarnings("unchecked")
-    public <V3, M4, C, N, Q> N getSceneRoot(
-            AiWrapperProvider<V3, M4, C, N, Q> wrapperProvider) {
+    POLYGON(0x8);
 
-        return (N) m_sceneRoot;
+    /**
+     * Utility method for converting from c/c++ based integer enums to java
+     * enums.
+     * <p>
+     * 
+     * This method is intended to be used from JNI and my change based on
+     * implementation needs.
+     * 
+     * @param set
+     *            the target set to fill
+     * @param rawValue
+     *            an integer based enum value (as defined by assimp)
+     */
+    static void fromRawValue(Set<AiPrimitiveType> set, int rawValue) {
+
+        for (AiPrimitiveType type : AiPrimitiveType.values()) {
+            if ((type.m_rawValue & rawValue) != 0) {
+                set.add(type);
+            }
+        }
     }
 
     /**
-     * Scene graph root.
+     * Constructor.
+     * 
+     * @param rawValue
+     *            maps java enum to c/c++ integer enum values
      */
-    private Object m_sceneRoot;
+    private AiPrimitiveType(int rawValue) {
+        m_rawValue = rawValue;
+    }
+
+    /**
+     * The mapped c/c++ integer enum value.
+     */
+    private final int m_rawValue;
 }

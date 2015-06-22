@@ -38,26 +38,54 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
+
+import java.nio.ByteBuffer;
 
 /**
- * Global configuration values (limits).
+ * Debug/utility methods.
  */
-public final class JassimpConfig {
-    /**
-     * Maximum number of vertex color sets.
-     */
-    public static final int MAX_NUMBER_COLORSETS = 8;
-
-    /**
-     * Maximum number of texture coordinate sets.
-     */
-    public static final int MAX_NUMBER_TEXCOORDS = 8;
+public final class JaiDebug {
 
     /**
      * Pure static class, no accessible constructor.
      */
-    private JassimpConfig() {
+    private JaiDebug() {
         /* nothing to do */
+    }
+
+    /**
+     * Dumps a single material property to stdout.
+     * 
+     * @param property
+     *            the property
+     */
+    public static void dumpMaterialProperty(AiMaterial.Property property) {
+        System.out.print(property.getKey() + " " + property.getSemantic() + " "
+                + property.getIndex() + ": ");
+        Object data = property.getData();
+
+        if (data instanceof ByteBuffer) {
+            ByteBuffer buf = (ByteBuffer) data;
+            for (int i = 0; i < buf.capacity(); i++) {
+                System.out.print(Integer.toHexString(buf.get(i) & 0xFF) + " ");
+            }
+
+            System.out.println();
+        } else {
+            System.out.println(data.toString());
+        }
+    }
+
+    /**
+     * Dumps all properties of a material to stdout.
+     * 
+     * @param material
+     *            the material
+     */
+    public static void dumpMaterial(AiMaterial material) {
+        for (AiMaterial.Property prop : material.getProperties()) {
+            dumpMaterialProperty(prop);
+        }
     }
 }

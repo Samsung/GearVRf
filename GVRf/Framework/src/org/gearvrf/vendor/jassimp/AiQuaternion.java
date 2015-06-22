@@ -38,18 +38,18 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
 
 import java.nio.ByteBuffer;
 
 /**
- * Wrapper for colors.
+ * Wrapper for a quaternion.
  * <p>
  * 
  * The wrapper is writable, i.e., changes performed via the set-methods will
- * modify the underlying mesh.
+ * modify the underlying mesh/animation.
  */
-public final class AiColor {
+public final class AiQuaternion {
     /**
      * Constructor.
      * 
@@ -58,91 +58,95 @@ public final class AiColor {
      * @param offset
      *            offset into buffer
      */
-    public AiColor(ByteBuffer buffer, int offset) {
+    public AiQuaternion(ByteBuffer buffer, int offset) {
+        if (null == buffer) {
+            throw new IllegalArgumentException("buffer may not be null");
+        }
+
         m_buffer = buffer;
         m_offset = offset;
     }
 
     /**
-     * Returns the red color component.
+     * Returns the x value.
      * 
-     * @return the red component
+     * @return the x value
      */
-    public float getRed() {
-        return m_buffer.getFloat(m_offset);
-    }
-
-    /**
-     * Returns the green color component.
-     * 
-     * @return the green component
-     */
-    public float getGreen() {
+    public float getX() {
         return m_buffer.getFloat(m_offset + 4);
     }
 
     /**
-     * Returns the blue color component.
+     * Returns the y value.
      * 
-     * @return the blue component
+     * @return the y value
      */
-    public float getBlue() {
+    public float getY() {
         return m_buffer.getFloat(m_offset + 8);
     }
 
     /**
-     * Returns the alpha color component.
+     * Returns the z value.
      * 
-     * @return the alpha component
+     * @return the z value
      */
-    public float getAlpha() {
+    public float getZ() {
         return m_buffer.getFloat(m_offset + 12);
     }
 
     /**
-     * Sets the red color component.
+     * Returns the w value.
      * 
-     * @param red
-     *            the new value
+     * @return the w value
      */
-    public void setRed(float red) {
-        m_buffer.putFloat(m_offset, red);
+    public float getW() {
+        return m_buffer.getFloat(m_offset);
     }
 
     /**
-     * Sets the green color component.
+     * Sets the x component.
      * 
-     * @param green
+     * @param x
      *            the new value
      */
-    public void setGreen(float green) {
-        m_buffer.putFloat(m_offset + 4, green);
+    public void setX(float x) {
+        m_buffer.putFloat(m_offset + 4, x);
     }
 
     /**
-     * Sets the blue color component.
+     * Sets the y component.
      * 
-     * @param blue
+     * @param y
      *            the new value
      */
-    public void setBlue(float blue) {
-        m_buffer.putFloat(m_offset + 8, blue);
+    public void setY(float y) {
+        m_buffer.putFloat(m_offset + 8, y);
     }
 
     /**
-     * Sets the alpha color component.
+     * Sets the z component.
      * 
-     * @param alpha
+     * @param z
      *            the new value
      */
-    public void setAlpha(float alpha) {
-        m_buffer.putFloat(m_offset + 12, alpha);
+    public void setZ(float z) {
+        m_buffer.putFloat(m_offset + 12, z);
+    }
+
+    /**
+     * Sets the z component.
+     * 
+     * @param w
+     *            the new value
+     */
+    public void setW(float w) {
+        m_buffer.putFloat(m_offset, w);
     }
 
     @Override
     public String toString() {
-        return "[" + getRed() + ", " + getGreen() + ", " + getBlue() + ", "
-                + getAlpha() + "]";
+        return "[" + getX() + ", " + getY() + ", " + getZ() + ", " + getW()
+                + "]";
     }
 
     /**

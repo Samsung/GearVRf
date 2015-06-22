@@ -38,42 +38,72 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
-
-import java.nio.ByteBuffer;
+package org.gearvrf.vendor.jassimp;
 
 /**
- * Wrapper provider using jassimp built in types.
+ * Defines how UV coordinates outside the [0...1] range are handled.
+ * <p>
+ * 
+ * Commonly refered to as 'wrapping mode'.
  */
-public final class AiBuiltInWrapperProvider implements
-        AiWrapperProvider<AiVector, AiMatrix4f, AiColor, AiNode, AiQuaternion> {
+public enum AiTextureMapMode {
+    /**
+     * A texture coordinate u|v is translated to u%1|v%1.
+     */
+    WRAP(0x0),
 
-    @Override
-    public AiVector wrapVector3f(ByteBuffer buffer, int offset,
-            int numComponents) {
+    /**
+     * Texture coordinates outside [0...1] are clamped to the nearest valid
+     * value.
+     */
+    CLAMP(0x1),
 
-        return new AiVector(buffer, offset, numComponents);
+    /**
+     * A texture coordinate u|v becomes u%1|v%1 if (u-(u%1))%2 is zero and
+     * 1-(u%1)|1-(v%1) otherwise.
+     */
+    MIRROR(0x2),
+
+    /**
+     * If the texture coordinates for a pixel are outside [0...1] the texture is
+     * not applied to that pixel.
+     */
+    DECAL(0x3);
+
+    /**
+     * Utility method for converting from c/c++ based integer enums to java
+     * enums.
+     * <p>
+     * 
+     * This method is intended to be used from JNI and my change based on
+     * implementation needs.
+     * 
+     * @param rawValue
+     *            an integer based enum value (as defined by assimp)
+     * @return the enum value corresponding to rawValue
+     */
+    static AiTextureMapMode fromRawValue(int rawValue) {
+        for (AiTextureMapMode type : AiTextureMapMode.values()) {
+            if (type.m_rawValue == rawValue) {
+                return type;
+            }
+        }
+
+        throw new IllegalArgumentException("unexptected raw value: " + rawValue);
     }
 
-    @Override
-    public AiMatrix4f wrapMatrix4f(float[] data) {
-        return new AiMatrix4f(data);
+    /**
+     * Constructor.
+     * 
+     * @param rawValue
+     *            maps java enum to c/c++ integer enum values
+     */
+    private AiTextureMapMode(int rawValue) {
+        m_rawValue = rawValue;
     }
 
-    @Override
-    public AiColor wrapColor(ByteBuffer buffer, int offset) {
-        return new AiColor(buffer, offset);
-    }
-
-    @Override
-    public AiNode wrapSceneNode(Object parent, Object matrix,
-            int[] meshReferences, String name) {
-
-        return new AiNode((AiNode) parent, matrix, meshReferences, name);
-    }
-
-    @Override
-    public AiQuaternion wrapQuaternion(ByteBuffer buffer, int offset) {
-        return new AiQuaternion(buffer, offset);
-    }
+    /**
+     * The mapped c/c++ integer enum value.
+     */
+    private final int m_rawValue;
 }

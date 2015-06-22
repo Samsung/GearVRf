@@ -38,54 +38,78 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
-
-import java.nio.ByteBuffer;
+package org.gearvrf.vendor.jassimp;
 
 /**
- * Debug/utility methods.
+ * Defines alpha-blend flags.
+ * <p>
+ * 
+ * If you're familiar with OpenGL or D3D, these flags aren't new to you. They
+ * define *how* the final color value of a pixel is computed, basing on the
+ * previous color at that pixel and the new color value from the material. The
+ * blend formula is: <br>
+ * <code>
+ *   SourceColor * SourceBlend + DestColor * DestBlend
+ * </code><br>
+ * where <code>DestColor</code> is the previous color in the framebuffer at this
+ * position and <code>SourceColor</code> is the material color before the
+ * transparency calculation.
  */
-public final class JaiDebug {
-
+public enum AiBlendMode {
     /**
-     * Pure static class, no accessible constructor.
-     */
-    private JaiDebug() {
-        /* nothing to do */
-    }
-
-    /**
-     * Dumps a single material property to stdout.
+     * Default blending.
+     * <p>
      * 
-     * @param property
-     *            the property
+     * Formula: <code>
+     * SourceColor*SourceAlpha + DestColor*(1-SourceAlpha)
+     * </code>
      */
-    public static void dumpMaterialProperty(AiMaterial.Property property) {
-        System.out.print(property.getKey() + " " + property.getSemantic() + " "
-                + property.getIndex() + ": ");
-        Object data = property.getData();
+    DEFAULT(0x0),
 
-        if (data instanceof ByteBuffer) {
-            ByteBuffer buf = (ByteBuffer) data;
-            for (int i = 0; i < buf.capacity(); i++) {
-                System.out.print(Integer.toHexString(buf.get(i) & 0xFF) + " ");
+    /**
+     * Additive blending.
+     * <p>
+     * 
+     * Formula: <code>
+     * SourceColor*1 + DestColor*1
+     * </code>
+     */
+    ADDITIVE(0x1);
+
+    /**
+     * Utility method for converting from c/c++ based integer enums to java
+     * enums.
+     * <p>
+     * 
+     * This method is intended to be used from JNI and my change based on
+     * implementation needs.
+     * 
+     * @param rawValue
+     *            an integer based enum value (as defined by assimp)
+     * @return the enum value corresponding to rawValue
+     */
+    static AiBlendMode fromRawValue(int rawValue) {
+        for (AiBlendMode type : AiBlendMode.values()) {
+            if (type.m_rawValue == rawValue) {
+                return type;
             }
-
-            System.out.println();
-        } else {
-            System.out.println(data.toString());
         }
+
+        throw new IllegalArgumentException("unexptected raw value: " + rawValue);
     }
 
     /**
-     * Dumps all properties of a material to stdout.
+     * Constructor.
      * 
-     * @param material
-     *            the material
+     * @param rawValue
+     *            maps java enum to c/c++ integer enum values
      */
-    public static void dumpMaterial(AiMaterial material) {
-        for (AiMaterial.Property prop : material.getProperties()) {
-            dumpMaterialProperty(prop);
-        }
+    private AiBlendMode(int rawValue) {
+        m_rawValue = rawValue;
     }
+
+    /**
+     * The mapped c/c++ integer enum value.
+     */
+    private final int m_rawValue;
 }

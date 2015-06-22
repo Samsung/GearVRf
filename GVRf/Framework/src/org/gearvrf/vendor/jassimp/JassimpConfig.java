@@ -38,78 +38,26 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.util.jassimp;
+package org.gearvrf.vendor.jassimp;
 
 /**
- * Defines alpha-blend flags.
- * <p>
- * 
- * If you're familiar with OpenGL or D3D, these flags aren't new to you. They
- * define *how* the final color value of a pixel is computed, basing on the
- * previous color at that pixel and the new color value from the material. The
- * blend formula is: <br>
- * <code>
- *   SourceColor * SourceBlend + DestColor * DestBlend
- * </code><br>
- * where <code>DestColor</code> is the previous color in the framebuffer at this
- * position and <code>SourceColor</code> is the material color before the
- * transparency calculation.
+ * Global configuration values (limits).
  */
-public enum AiBlendMode {
+public final class JassimpConfig {
     /**
-     * Default blending.
-     * <p>
-     * 
-     * Formula: <code>
-     * SourceColor*SourceAlpha + DestColor*(1-SourceAlpha)
-     * </code>
+     * Maximum number of vertex color sets.
      */
-    DEFAULT(0x0),
+    public static final int MAX_NUMBER_COLORSETS = 8;
 
     /**
-     * Additive blending.
-     * <p>
-     * 
-     * Formula: <code>
-     * SourceColor*1 + DestColor*1
-     * </code>
+     * Maximum number of texture coordinate sets.
      */
-    ADDITIVE(0x1);
+    public static final int MAX_NUMBER_TEXCOORDS = 8;
 
     /**
-     * Utility method for converting from c/c++ based integer enums to java
-     * enums.
-     * <p>
-     * 
-     * This method is intended to be used from JNI and my change based on
-     * implementation needs.
-     * 
-     * @param rawValue
-     *            an integer based enum value (as defined by assimp)
-     * @return the enum value corresponding to rawValue
+     * Pure static class, no accessible constructor.
      */
-    static AiBlendMode fromRawValue(int rawValue) {
-        for (AiBlendMode type : AiBlendMode.values()) {
-            if (type.m_rawValue == rawValue) {
-                return type;
-            }
-        }
-
-        throw new IllegalArgumentException("unexptected raw value: " + rawValue);
+    private JassimpConfig() {
+        /* nothing to do */
     }
-
-    /**
-     * Constructor.
-     * 
-     * @param rawValue
-     *            maps java enum to c/c++ integer enum values
-     */
-    private AiBlendMode(int rawValue) {
-        m_rawValue = rawValue;
-    }
-
-    /**
-     * The mapped c/c++ integer enum value.
-     */
-    private final int m_rawValue;
 }
