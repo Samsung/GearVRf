@@ -90,6 +90,10 @@ public:
     static void resetStats();
     static int getNumberDrawCalls();
     static int getNumberTriangles();
+    static float getDrawTime();
+    static void startGpuTimer(int eye);
+    static void stopGpuTimer(int eye);
+    static float getGpuTimerResult(int eye);
 
 private:
     static void renderRenderData(RenderData* render_data,

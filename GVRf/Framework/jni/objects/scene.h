@@ -65,11 +65,24 @@ public:
         }
         Renderer::resetStats();
     }
+
     int getNumberDrawCalls() {
         return Renderer::getNumberDrawCalls();
     }
+
     int getNumberTriangles() {
         return Renderer::getNumberTriangles();
+    }
+
+    float getDrawTime() {
+        return Renderer::getDrawTime();
+    }
+
+    void set_stats_enabled(bool enabled) {
+        statsEnabled = enabled;
+    }
+    bool get_stats_enabled() {
+        return statsEnabled;
     }
 
 private:
@@ -86,6 +99,7 @@ private:
     bool frustum_flag_;
     bool occlusion_flag_;
     bool statsInitialized = false;
+    bool statsEnabled = false;
 
 };
 

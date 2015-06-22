@@ -183,6 +183,8 @@ public class GVRScene extends GVRHybridObject {
         }
 
         mStatsEnabled = pendingStats;
+        NativeScene.setStatsEnabled(getNative(), mStatsEnabled);
+
         if(mStatsEnabled && mStatsConsole == null) {
             mStatsConsole = new GVRConsole(getGVRContext(), GVRConsole.EyeMode.BOTH_EYES);
             mStatsConsole.setCanvasWidthHeight(512, 512);
@@ -209,9 +211,11 @@ public class GVRScene extends GVRHybridObject {
         if(mStatsEnabled) {
             int numberDrawCalls = NativeScene.getNumberDrawCalls(getNative());
             int numberTriangles = NativeScene.getNumberTriangles(getNative());
+            float drawTime = NativeScene.getDrawTime(getNative());
 
             mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
             mStatsConsole.writeLine(" Triangles: %d", numberTriangles);
+            mStatsConsole.writeLine("Draw Time: %3.1fms", drawTime);
         }
     }
 }
@@ -232,4 +236,6 @@ class NativeScene {
     public static native void resetStats(long scene);
     public static native int getNumberDrawCalls(long scene);
     public static native int getNumberTriangles(long scene);
+    public static native float getDrawTime(long scene);
+    public static native void setStatsEnabled(long scene, boolean flag);
 }

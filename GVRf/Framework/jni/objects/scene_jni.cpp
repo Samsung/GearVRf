@@ -55,6 +55,14 @@ Java_org_gearvrf_NativeScene_getNumberDrawCalls(JNIEnv * env,
 JNIEXPORT int JNICALL
 Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
         jobject obj, jlong jscene);
+
+JNIEXPORT float JNICALL
+Java_org_gearvrf_NativeScene_getDrawTime(JNIEnv * env,
+        jobject obj, jlong jscene);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setStatsEnabled(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag);
 }
 ;
 
@@ -122,6 +130,20 @@ Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
         jobject obj, jlong jscene) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     return scene->getNumberTriangles();
+}
+
+JNIEXPORT float JNICALL
+Java_org_gearvrf_NativeScene_getDrawTime(JNIEnv * env,
+        jobject obj, jlong jscene) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    return scene->getDrawTime();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setStatsEnabled(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->set_stats_enabled(static_cast<bool>(flag));
 }
 
 

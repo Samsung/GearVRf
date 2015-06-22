@@ -217,9 +217,13 @@ abstract class AsyncBitmapTexture {
     private static void onGlInitialization() {
         if (glUninitialized) {
             int[] size = new int[] { -1 };
+            int errorCode = glGetError();
+            while(errorCode != GL_NO_ERROR) {
+                errorCode = glGetError();
+            }
             glGetIntegerv(GL_MAX_TEXTURE_SIZE, size, 0);
 
-            int errorCode = glGetError();
+            errorCode = glGetError();
             if (errorCode != GL_NO_ERROR) {
                 throw Exceptions.RuntimeAssertion(
                         "Error %d getting max texture size", errorCode);
