@@ -149,8 +149,9 @@ const float* Mesh::getBoundingBoxInfo() {
 void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
         float *transformed_bounding_box) {
 
-    if (have_bounding_box_ == false)
+    if (have_bounding_box_ == false) {
         getBoundingBoxInfo();
+    }
 
     glm::mat4 M = *Mat;
     float a, b;
@@ -202,6 +203,46 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
             transformed_bounding_box[5] += a;
         }
     }
+}
+
+// This gives us a really coarse bounding sphere given the already calcuated bounding box.  This won't be a tight-fitting sphere because it is based on the bounding box.  We can revisit this later if we decide we need a tighter sphere.
+const float *Mesh::getBoundingSphereInfo() {
+    if (have_bounding_box_ == false) {
+        getBoundingBoxInfo();
+    }
+
+    if (have_bounding_sphere_ == true) {
+        return bounding_sphere_info_;
+    }
+
+    // get the bounding box into nicely readable variables
+    float min_x = bounding_box_info_[0];
+    float max_x = bounding_box_info_[3];
+    float min_y = bounding_box_info_[1];
+    float max_y = bounding_box_info_[4];
+    float min_z = bounding_box_info_[2];
+    float max_z = bounding_box_info_[5];
+
+    // find center
+    float center_x = (min_x + max_x) / 2.0f;
+    float center_y = (min_y + max_y) / 2.0f;
+    float center_z = (min_z + max_z) / 2.0f;
+
+    // find radius
+    float x_squared = (min_x - center_x) * (min_x - center_x);
+    float y_squared = (min_y - center_y) * (min_y - center_y);
+    float z_squared = (min_z - center_z) * (min_z - center_z);
+    float radius = sqrtf(x_squared + y_squared + z_squared);
+
+    // assign the sphere
+    bounding_sphere_info_[0] = center_x;
+    bounding_sphere_info_[1] = center_y;
+    bounding_sphere_info_[2] = center_z;
+    bounding_sphere_info_[3] = radius;
+
+    have_bounding_sphere_ = true;
+
+    return bounding_sphere_info_;
 }
 
 // generate vertex array object

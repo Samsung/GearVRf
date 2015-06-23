@@ -39,8 +39,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
-                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(
-                    false) {
+                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(false), have_bounding_sphere_(false) {
     }
 
     ~Mesh() {
@@ -102,10 +101,12 @@ public:
 
     void set_vertices(const std::vector<glm::vec3>& vertices) {
         vertices_ = vertices;
+        getBoundingSphereInfo(); // calculate bounding sphere
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
         vertices_ = std::move(vertices);
+        getBoundingSphereInfo(); // calculate bounding sphere
     }
 
     std::vector<glm::vec3>& normals() {
@@ -260,6 +261,7 @@ public:
     const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
+    const float *getBoundingSphereInfo(); // Get bounding sphere based on the bounding box
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
@@ -356,6 +358,10 @@ private:
     // bounding box info
     bool have_bounding_box_;
     float bounding_box_info_[6];
+
+    // bounding sphere info
+    bool have_bounding_sphere_;
+    float bounding_sphere_info_[4]; // [0-2] center x,y,z; [3] radius
 
     bool vao_dirty_;
 };
