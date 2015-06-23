@@ -343,7 +343,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             final GVRPerspectiveCamera centerCamera, byte[][] byteArrays,
             int index) {
 
-        renderCamera(mActivity.appPtr, mMainScene, centerCamera,
+        renderCamera(mActivity.getAppPtr(), mMainScene, centerCamera,
                 mRenderBundle.getRightRenderTexture(), mRenderBundle);
         readRenderResult();
         byteArrays[index] = Arrays.copyOf(mReadbackBuffer.array(),
@@ -458,7 +458,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             if (eye == 1) {
                 mainCameraRig.predict(4.0f / 60.0f);
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
-                renderCamera(mActivity.appPtr, mMainScene, rightCamera,
+                renderCamera(mActivity.getAppPtr(), mMainScene, rightCamera,
                         mRenderBundle.getRightRenderTexture(), mRenderBundle);
 
                 // if mScreenshotRightCallback is not null, capture right eye
@@ -485,7 +485,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     mainCameraRig.getOwnerObject().addChildObject(
                             centerCameraObject);
 
-                    renderCamera(mActivity.appPtr, mMainScene, centerCamera,
+                    renderCamera(mActivity.getAppPtr(), mMainScene,
+                            centerCamera,
                             mRenderBundle.getRightRenderTexture(),
                             mRenderBundle);
 
@@ -512,7 +513,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 }
 
                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
-                renderCamera(mActivity.appPtr, mMainScene, leftCamera,
+                renderCamera(mActivity.getAppPtr(), mMainScene, leftCamera,
                         mRenderBundle.getLeftRenderTexture(), mRenderBundle);
 
                 // if mScreenshotLeftCallback is not null, capture left eye
@@ -652,7 +653,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         public void onDrawFrame() {
             // Log.v(TAG, "splashFrame, onDrawFrame()");
 
-            drawFrame(false);
+            drawEyes();
         }
 
         @Override
@@ -675,7 +676,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         public void onDrawFrame() {
             // Log.v(TAG, "normalFrame, onDrawFrame()");
 
-            drawFrame(true);
+            drawEyes();
         }
 
         @Override
@@ -684,12 +685,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             mMainScene.updateStats();
         }
     };
-
-    private long drawFrame(boolean onStep) {
-        long currentTime = doMemoryManagementAndPerFrameCallbacks();
-        drawEyes();
-        return currentTime;
-    }
 
     /**
      * This is the code that needs to be executed before either eye is drawn.
@@ -717,6 +712,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 }
             }
         }
+
+        NativeGLDelete.processQueues();
 
         return currentTime;
     }

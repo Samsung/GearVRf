@@ -27,6 +27,12 @@
 								</outputEntries>
 							</builder>
 							<tool id="com.android.gcc.compiler.106141745" name="Android GCC Compiler" superClass="com.android.gcc.compiler">
+								<option id="com.android.gcc.option.includePath.1906627573" superClass="com.android.gcc.option.includePath" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/VrAppFramework/Native_Source}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/VrApi/Native_Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/LibOVR/Native_Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/LibOVR/Native_Source}&quot;"/>
+								</option>
 								<inputType id="com.android.gcc.inputType.751354238" superClass="com.android.gcc.inputType"/>
 							</tool>
 						</toolChain>
@@ -36,7 +42,24 @@
 					</sourceEntries>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="LibOVR;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/LibOVR/Native_Include"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/LibOVR/Native_Source"/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="VrApi;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/VrApi/Native_Include"/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="VrAppFramework;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/VrAppFramework/Native_Source"/>
+					</externalSetting>
+				</externalSettings>
+			</storageModule>
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">

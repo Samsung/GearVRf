@@ -25,19 +25,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.*;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
-import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCubemapTexture;
-import org.gearvrf.GVRHybridObject;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRShaders;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 
 import android.graphics.Bitmap;
@@ -73,10 +66,13 @@ public class GVRAsynchronousResourceLoader {
      * 
      * This is the implementation of
      * {@link GVRContext#loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
-     * : it will usually be more convenient to call that directly.
+     * : it will usually be more convenient (and more efficient) to call that
+     * directly.
      * 
      * @param gvrContext
      *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
      * @param callback
      *            Asynchronous notifications
      * @param resource
@@ -86,9 +82,10 @@ public class GVRAsynchronousResourceLoader {
      *             {@code null}
      */
     public static void loadCompressedTexture(final GVRContext gvrContext,
+            ResourceCache<GVRTexture> textureCache,
             final CompressedTextureCallback callback,
             final GVRAndroidResource resource) throws IllegalArgumentException {
-        loadCompressedTexture(gvrContext, callback, resource,
+        loadCompressedTexture(gvrContext, textureCache, callback, resource,
                 GVRCompressedTexture.DEFAULT_QUALITY);
     }
 
@@ -97,10 +94,13 @@ public class GVRAsynchronousResourceLoader {
      * 
      * This is the implementation of
      * {@link GVRContext#loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
-     * : it will usually be more convenient to call that directly.
+     * : it will usually be more convenient (and more efficient) to call that
+     * directly.
      * 
      * @param gvrContext
      *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
      * @param callback
      *            Asynchronous notifications
      * @param resource
@@ -117,35 +117,51 @@ public class GVRAsynchronousResourceLoader {
      *             {@code null}
      */
     public static void loadCompressedTexture(final GVRContext gvrContext,
+            final ResourceCache<GVRTexture> textureCache,
             final CompressedTextureCallback callback,
             final GVRAndroidResource resource, final int quality)
             throws IllegalArgumentException {
         validateCallbackParameters(gvrContext, callback, resource);
 
-        // Load the bytes on a background thread
-        Threads.spawn(new Runnable() {
+        final GVRTexture cached = textureCache == null ? null : textureCache
+                .get(resource);
+        if (cached != null) {
+            gvrContext.runOnGlThread(new Runnable() {
 
-            @Override
-            public void run() {
-                try {
-                    final CompressedTexture compressedTexture = CompressedTexture
-                            .load(resource.getStream(), false);
-                    resource.closeStream();
-                    // Create texture on GL thread
-                    gvrContext.runOnGlThread(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            GVRTexture texture = compressedTexture.toTexture(
-                                    gvrContext, quality);
-                            callback.loaded(texture, resource);
-                        }
-                    });
-                } catch (Exception e) {
-                    callback.failed(e, resource);
+                @Override
+                public void run() {
+                    callback.loaded(cached, resource);
                 }
-            }
-        });
+            });
+        } else {
+            // Load the bytes on a background thread
+            Threads.spawn(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        final CompressedTexture compressedTexture = CompressedTexture
+                                .load(resource.getStream(), false);
+                        resource.closeStream();
+                        // Create texture on GL thread
+                        gvrContext.runOnGlThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                GVRTexture texture = compressedTexture
+                                        .toTexture(gvrContext, quality);
+                                if (textureCache != null) {
+                                    textureCache.put(resource, texture);
+                                }
+                                callback.loaded(texture, resource);
+                            }
+                        });
+                    } catch (Exception e) {
+                        callback.failed(e, resource);
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -153,10 +169,13 @@ public class GVRAsynchronousResourceLoader {
      * 
      * This is the implementation of
      * {@link GVRContext#loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource, int)}
-     * - it will usually be more convenient to call that directly.
+     * - it will usually be more convenient (and more efficient) to call that
+     * directly.
      * 
      * @param gvrContext
      *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
      * @param callback
      *            Asynchronous notifications
      * @param resource
@@ -172,13 +191,29 @@ public class GVRAsynchronousResourceLoader {
      *             parameters are {@code null}.
      */
     public static void loadBitmapTexture(GVRContext gvrContext,
-            BitmapTextureCallback callback, GVRAndroidResource resource,
-            int priority) throws IllegalArgumentException {
+            ResourceCache<GVRTexture> textureCache,
+            final BitmapTextureCallback callback,
+            final GVRAndroidResource resource, int priority)
+            throws IllegalArgumentException {
         validatePriorityCallbackParameters(gvrContext, callback, resource,
                 priority);
 
-        AsyncBitmapTexture
-                .loadTexture(gvrContext, callback, resource, priority);
+        final GVRTexture cached = textureCache == null ? null : textureCache
+                .get(resource);
+        if (cached != null) {
+            gvrContext.runOnGlThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    callback.loaded(cached, resource);
+                }
+            });
+        } else {
+            BitmapTextureCallback actualCallback = textureCache == null ? callback
+                    : ResourceCache.wrapCallback(textureCache, callback);
+            AsyncBitmapTexture.loadTexture(gvrContext, actualCallback,
+                    resource, priority);
+        }
     }
 
     /**
@@ -186,10 +221,13 @@ public class GVRAsynchronousResourceLoader {
      * 
      * This is the implementation of
      * {@link GVRContext#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
-     * - it will usually be more convenient to call that directly.
+     * - it will usually be more convenient (and more efficient) to call that
+     * directly.
      * 
      * @param gvrContext
      *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
      * @param callback
      *            Asynchronous notifications
      * @param resource
@@ -205,54 +243,72 @@ public class GVRAsynchronousResourceLoader {
      *             parameters are {@code null}.
      */
     public static void loadTexture(final GVRContext gvrContext,
+            final ResourceCache<GVRTexture> textureCache,
             final CancelableCallback<GVRTexture> callback,
             final GVRAndroidResource resource, final int priority,
             final int quality) {
         validateCallbackParameters(gvrContext, callback, resource);
 
-        // 'Sniff' out compressed textures on a thread from the thread-pool
-        Threads.spawn(new Runnable() {
+        final GVRTexture cached = textureCache == null ? null : textureCache
+                .get(resource);
+        if (cached != null) {
+            gvrContext.runOnGlThread(new Runnable() {
 
-            @Override
-            public void run() {
-                try {
-                    // Save stream position
-                    resource.mark();
-
-                    GVRCompressedTextureLoader loader;
-                    try {
-                        loader = CompressedTexture.sniff(resource.getStream());
-                    } finally {
-                        resource.reset();
-                    }
-
-                    if (loader != null) {
-                        // We have a compressed texture: proceed on this thread
-                        final CompressedTexture compressedTexture = CompressedTexture
-                                .parse(resource.getStream(), false, loader);
-                        resource.closeStream();
-
-                        // Create texture on GL thread
-                        gvrContext.runOnGlThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                GVRTexture texture = compressedTexture
-                                        .toTexture(gvrContext, quality);
-                                callback.loaded(texture, resource);
-                            }
-                        });
-                    } else {
-                        // We don't have a compressed texture: pass to
-                        // AsyncBitmapTexture code
-                        AsyncBitmapTexture.loadTexture(gvrContext, callback,
-                                resource, priority);
-                    }
-                } catch (Exception e) {
-                    callback.failed(e, resource);
+                @Override
+                public void run() {
+                    callback.loaded(cached, resource);
                 }
-            }
-        });
+            });
+        } else {
+            // 'Sniff' out compressed textures on a thread from the thread-pool
+            Threads.spawn(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        // Save stream position
+                        resource.mark();
+
+                        GVRCompressedTextureLoader loader;
+                        try {
+                            loader = CompressedTexture.sniff(resource
+                                    .getStream());
+                        } finally {
+                            resource.reset();
+                        }
+
+                        if (loader != null) {
+                            // We have a compressed texture: proceed on this
+                            // thread
+                            final CompressedTexture compressedTexture = CompressedTexture
+                                    .parse(resource.getStream(), false, loader);
+                            resource.closeStream();
+
+                            // Create texture on GL thread
+                            gvrContext.runOnGlThread(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    GVRTexture texture = compressedTexture
+                                            .toTexture(gvrContext, quality);
+                                    textureCache.put(resource, texture);
+                                    callback.loaded(texture, resource);
+                                }
+                            });
+                        } else {
+                            // We don't have a compressed texture: pass to
+                            // AsyncBitmapTexture code
+                            CancelableCallback<GVRTexture> actualCallback = textureCache == null ? callback
+                                    : textureCache.wrapCallback(callback);
+                            AsyncBitmapTexture.loadTexture(gvrContext,
+                                    actualCallback, resource, priority);
+                        }
+                    } catch (Exception e) {
+                        callback.failed(e, resource);
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -260,10 +316,13 @@ public class GVRAsynchronousResourceLoader {
      * 
      * This is the implementation of
      * {@link GVRContext#loadFutureTexture(GVRAndroidResource, int, int)} - it
-     * will usually be more convenient to call that directly.
+     * will usually be more convenient (and more efficient) to call that
+     * directly.
      * 
      * @param gvrContext
      *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
      * @param resource
      *            Basically, a stream containing a texture file. The
      *            {@link GVRAndroidResource} class has six constructors to
@@ -291,12 +350,20 @@ public class GVRAsynchronousResourceLoader {
      *         {@link GVRShaders#setMainTexture(Future)}
      */
     public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
+            ResourceCache<GVRTexture> textureCache,
             GVRAndroidResource resource, int priority, int quality) {
-        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
+        GVRTexture cached = textureCache == null ? null : textureCache
+                .get(resource);
+        if (cached != null) {
+            return new FutureWrapper<GVRTexture>(cached);
+        } else {
+            FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
-        loadTexture(gvrContext, result.callback, resource, priority, quality);
+            loadTexture(gvrContext, textureCache, result.callback, resource,
+                    priority, quality);
 
-        return result;
+            return result;
+        }
     }
 
     /**
@@ -304,10 +371,12 @@ public class GVRAsynchronousResourceLoader {
      * 
      * This is the implementation of
      * {@link GVRContext#loadFutureCubemapTexture(GVRAndroidResource)} - it will
-     * usually be more convenient to call that directly.
+     * usually be more convenient (and more efficient) to call that directly.
      * 
      * @param gvrContext
      *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
      * @param resource
      *            A steam containing a zip file which contains six bitmaps. The
      *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
@@ -323,14 +392,20 @@ public class GVRAsynchronousResourceLoader {
      *         {@link GVRShaders#setMainTexture(Future)}
      */
     public static Future<GVRTexture> loadFutureCubemapTexture(
-            GVRContext gvrContext, GVRAndroidResource resource, int priority,
+            GVRContext gvrContext, ResourceCache<GVRTexture> textureCache,
+            GVRAndroidResource resource, int priority,
             Map<String, Integer> faceIndexMap) {
-        FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
+        GVRTexture cached = textureCache.get(resource);
+        if (cached != null) {
+            return new FutureWrapper<GVRTexture>(cached);
+        } else {
+            FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
-        AsyncCubemapTexture.loadTexture(gvrContext, result.callback, resource,
-                priority, faceIndexMap);
+            AsyncCubemapTexture.loadTexture(gvrContext, result.callback,
+                    resource, priority, faceIndexMap);
 
-        return result;
+            return result;
+        }
     }
 
     /**
@@ -359,6 +434,8 @@ public class GVRAsynchronousResourceLoader {
      * 
      * @since 1.6.2
      */
+    // This method does not take a ResourceCache<GVRMeh> parameter because it
+    // (indirectly) calls GVRContext.loadMesh() which 'knows about' the cache
     public static void loadMesh(GVRContext gvrContext,
             CancelableCallback<GVRMesh> callback, GVRAndroidResource resource,
             int priority) {

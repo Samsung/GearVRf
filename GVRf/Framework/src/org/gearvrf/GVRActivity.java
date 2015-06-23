@@ -22,12 +22,12 @@ import android.content.pm.ActivityInfo;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Build;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.oculusvr.vrlib.VrActivity;
-import com.oculusvr.vrlib.VrLib;
+import com.oculus.vrappframework.VrActivity;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -69,12 +69,13 @@ public class GVRActivity extends VrActivity {
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-        String commandString = VrLib.getCommandStringFromIntent(intent);
-        String fromPackageNameString = VrLib.getPackageStringFromIntent(intent);
-        String uriString = VrLib.getUriStringFromIntent(intent);
+        String commandString = VrActivity.getCommandStringFromIntent(intent);
+        String fromPackageNameString = VrActivity
+                .getPackageStringFromIntent(intent);
+        String uriString = VrActivity.getUriStringFromIntent(intent);
 
-        appPtr = nativeSetAppInterface(this, fromPackageNameString,
-                commandString, uriString);
+        setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
+                commandString, uriString));
     }
 
     @Override
@@ -202,7 +203,7 @@ public class GVRActivity extends VrActivity {
     void setCamera(GVRCamera camera) {
         mCamera = camera;
 
-        nativeSetCamera(appPtr, camera.getNative());
+        nativeSetCamera(getAppPtr(), camera.getNative());
     }
 
     @Override
@@ -219,6 +220,28 @@ public class GVRActivity extends VrActivity {
         onTouchEvent(event);
 
         return handled;
+    }
+
+    boolean onKeyEventNative(int keyCode, int eventType) {
+
+        /*
+         * Currently VrLib does not call Java onKeyDown()/onKeyUp() in the
+         * Activity class. In stead, it calls VrAppInterface->OnKeyEvent if
+         * defined in the native side, to give a chance to the app before it
+         * intercepts. With this implementation, the developers can expect
+         * consistently their key event methods are called as usual in case they
+         * want to use the events. The parameter eventType matches with the
+         * native side. It can be more than two, DOWN and UP, if the native
+         * supports in the future.
+         */
+        final int cKeyDown = 1;
+
+        int action = (eventType == cKeyDown) ? KeyEvent.ACTION_DOWN
+                : KeyEvent.ACTION_UP;
+        KeyEvent event = new KeyEvent(action, keyCode);
+
+        return (action == KeyEvent.ACTION_DOWN) ? onKeyDown(keyCode, event)
+                : onKeyUp(keyCode, event);
     }
 
 }

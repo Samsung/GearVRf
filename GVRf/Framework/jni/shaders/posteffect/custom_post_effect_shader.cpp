@@ -25,6 +25,8 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
 #include "util/gvr_gl.h"
+#include "engine/memory/gl_delete.h"
+
 
 namespace gvr {
 CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
@@ -52,7 +54,7 @@ CustomPostEffectShader::~CustomPostEffectShader() {
     }
 
     if (vaoID_ != 0) {
-    	glDeleteVertexArrays(1, &vaoID_);
+    	gl_delete.queueVertexArray(vaoID_);
     	vaoID_ = 0;
     }
 }

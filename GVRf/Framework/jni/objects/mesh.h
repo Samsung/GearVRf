@@ -32,6 +32,8 @@
 #include "objects/hybrid_object.h"
 #include "objects/material.h"
 
+#include "engine/memory/gl_delete.h"
+
 namespace gvr {
 class Mesh: public HybridObject {
 public:
@@ -55,33 +57,37 @@ public:
         std::vector<unsigned short> triangles;
         triangles.swap(triangles_);
 
+        deleteVaos();
+    }
+
+    void deleteVaos() {
         for (auto iterator = vaoID_map_.begin(); iterator != vaoID_map_.end();
                 iterator++) {
-            glDeleteVertexArrays(1, &(iterator->second));
+            gl_delete.queueVertexArray(iterator->second);
         }
         vaoID_map_.clear();
 
         for (auto iterator = triangle_vboID_map_.begin();
                 iterator != triangle_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         triangle_vboID_map_.clear();
 
         for (auto iterator = vert_vboID_map_.begin();
                 iterator != vert_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         vert_vboID_map_.clear();
 
         for (auto iterator = norm_vboID_map_.begin();
                 iterator != norm_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         norm_vboID_map_.clear();
 
         for (auto iterator = tex_vboID_map_.begin();
                 iterator != tex_vboID_map_.end(); iterator++) {
-            glDeleteBuffers(1, &(iterator->second));
+            gl_delete.queueBuffer(iterator->second);
         }
         tex_vboID_map_.clear();
     }
@@ -128,10 +134,12 @@ public:
 
     void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
         tex_coords_ = tex_coords;
+        vao_dirty_ = true;
     }
 
     void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
         tex_coords_ = std::move(tex_coords);
+        vao_dirty_ = true;
     }
 
     std::vector<unsigned short>& triangles() {
@@ -250,6 +258,8 @@ public:
 
     Mesh* getBoundingBox();
     const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
+    void getTransformedBoundingBoxInfo(glm::mat4 *M,
+            float *transformed_bounding_box); //Get Bounding box info transformed by matrix
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
@@ -346,6 +356,8 @@ private:
     // bounding box info
     bool have_bounding_box_;
     float bounding_box_info_[6];
+
+    bool vao_dirty_;
 };
 }
 #endif

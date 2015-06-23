@@ -23,6 +23,8 @@
 
 #include "GLES3/gl3.h"
 
+#include "engine/memory/gl_delete.h"
+
 namespace gvr {
 class GLBuffer {
 public:
@@ -31,7 +33,7 @@ public:
     }
 
     ~GLBuffer() {
-        glDeleteBuffers(1, &id_);
+        gl_delete.queueBuffer(id_);
     }
 
     GLuint id() const {

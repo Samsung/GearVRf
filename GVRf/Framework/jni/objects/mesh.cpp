@@ -27,6 +27,7 @@
 #include "assimp/scene.h"
 #include "util/gvr_log.h"
 #include "util/gvr_gl.h"
+#include "glm/gtc/matrix_inverse.hpp"
 
 namespace gvr {
 Mesh* Mesh::getBoundingBox() {
@@ -145,10 +146,72 @@ const float* Mesh::getBoundingBoxInfo() {
     return bounding_box_info_;
 }
 
+void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
+        float *transformed_bounding_box) {
+
+    if (have_bounding_box_ == false)
+        getBoundingBoxInfo();
+
+    glm::mat4 M = *Mat;
+    float a, b;
+
+    //Inspired by Graphics Gems - TransBox.c
+    //Transform the AABB to the correct position in world space
+    //Generate a new AABB from the non axis aligned bounding box
+
+    transformed_bounding_box[0] = M[3].x;
+    transformed_bounding_box[3] = M[3].x;
+
+    transformed_bounding_box[1] = M[3].y;
+    transformed_bounding_box[4] = M[3].y;
+
+    transformed_bounding_box[2] = M[3].z;
+    transformed_bounding_box[5] = M[3].z;
+
+    for (int i = 0; i < 3; i++) {
+        //x coord
+        a = M[i].x * bounding_box_info_[0];
+        b = M[i].x * bounding_box_info_[3];
+        if (a < b) {
+            transformed_bounding_box[0] += a;
+            transformed_bounding_box[3] += b;
+        } else {
+            transformed_bounding_box[0] += b;
+            transformed_bounding_box[3] += a;
+        }
+
+        //y coord
+        a = M[i].y * bounding_box_info_[1];
+        b = M[i].y * bounding_box_info_[4];
+        if (a < b) {
+            transformed_bounding_box[1] += a;
+            transformed_bounding_box[4] += b;
+        } else {
+            transformed_bounding_box[1] += b;
+            transformed_bounding_box[4] += a;
+        }
+
+        //z coord
+        a = M[i].z * bounding_box_info_[2];
+        b = M[i].z * bounding_box_info_[5];
+        if (a < b) {
+            transformed_bounding_box[2] += a;
+            transformed_bounding_box[5] += b;
+        } else {
+            transformed_bounding_box[2] += b;
+            transformed_bounding_box[5] += a;
+        }
+    }
+}
+
 // generate vertex array object
 void Mesh::generateVAO(Material::ShaderType key) {
 #if _GVRF_USE_GLES3_
     GLuint tmpID;
+
+    if (vao_dirty_) {
+        deleteVaos();
+    }
 
     if (vaoID_map_.find(key) != vaoID_map_.end()) {
         // already initialized
@@ -263,6 +326,8 @@ void Mesh::generateVAO(Material::ShaderType key) {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    vao_dirty_ = false;
 #endif
 }
 

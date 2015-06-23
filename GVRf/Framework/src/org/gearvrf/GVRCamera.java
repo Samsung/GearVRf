@@ -15,6 +15,9 @@
 
 package org.gearvrf;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.gearvrf.utility.Colors;
 
 import android.content.res.Resources;
@@ -30,6 +33,20 @@ import android.graphics.Color;
  * rendered.
  */
 public abstract class GVRCamera extends GVRComponent {
+    /**
+     * We use a {@code Set}, not a {@code List}, because while
+     * {@link #addPostEffect(GVRPostEffect)} can add multiple copies of the same
+     * post-effect, {@link #removePostEffect(GVRPostEffect)} will remove all
+     * copies. Since this collection is used only to maintain a hard reference
+     * to the post-effects, there's no need to model the possible multiplicity
+     * ... and removing a single item from a {@code Set} is cheaper than
+     * removing all copies from a {@code List}.
+     * 
+     * We make the collection {@code private} because descendant classes have no
+     * APIs that care whether or not a particular post-effect is attached.
+     */
+    private final Set<GVRPostEffect> mPostEffects = new HashSet<GVRPostEffect>();
+
     protected GVRCamera(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -185,6 +202,7 @@ public abstract class GVRCamera extends GVRComponent {
      *            Post-effect to append to this camera's render chain
      */
     public void addPostEffect(GVRPostEffect postEffectData) {
+        mPostEffects.add(postEffectData);
         NativeCamera.addPostEffect(getNative(), postEffectData.getNative());
     }
 
@@ -196,6 +214,7 @@ public abstract class GVRCamera extends GVRComponent {
      *            Post-effect to remove.
      */
     public void removePostEffect(GVRPostEffect postEffectData) {
+        mPostEffects.remove(postEffectData);
         NativeCamera.removePostEffect(getNative(), postEffectData.getNative());
     }
 }

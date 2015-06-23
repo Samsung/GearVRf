@@ -430,12 +430,12 @@ public class GVRSceneObject extends GVRHybridObject {
      * Attach a default {@link GVREyePointeeHolder} to the object.
      * 
      * The default holder contains a single {@link GVRMeshEyePointee}, which
-     * refers to the {@linkplain GVRMesh mesh} in this scene object's
-     * {@linkplain GVRRenderData render data}. If you need anything more
-     * complicated (such as multiple meshes) use the
-     * {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder) explicit
-     * overload.} If another {@link GVREyePointeeHolder} is currently attached,
-     * it is replaced with the new one.
+     * refers to the bounding box of the {@linkplain GVRMesh mesh} in this scene
+     * object's {@linkplain GVRRenderData render data}. If you need more control
+     * (multiple meshes, perhaps, or using the actual mesh instead of a bounding
+     * box) use the {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder)
+     * explicit overload.} If another {@link GVREyePointeeHolder} is currently
+     * attached, it is replaced with the new one.
      * 
      * @return {@code true} if and only this scene object has render data
      *         <em>and</em> you have called either
@@ -483,6 +483,42 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Simple, high-level API to enable or disable eye picking for this scene
+     * object.
+     * 
+     * The {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder) low-level
+     * API} gives you a lot of control over eye picking, but it does involve an
+     * awful lot of details. Since most apps are just going to use the
+     * {@linkplain #attachEyePointeeHolder() simple API} anyhow, this method
+     * (and {@link #getPickingEnabled()}) provides a simple boolean property.
+     * 
+     * @param enabled
+     *            Should eye picking 'see' this scene object?
+     * 
+     * @since 2.0.2
+     */
+    public void setPickingEnabled(boolean enabled) {
+        if (enabled != getPickingEnabled()) {
+            if (enabled) {
+                attachEyePointeeHolder();
+            } else {
+                detachEyePointeeHolder();
+            }
+        }
+    }
+
+    /**
+     * Is eye picking enabled for this scene object?
+     * 
+     * @return Whether eye picking can 'see' this scene object?
+     * 
+     * @since 2.0.2
+     */
+    public boolean getPickingEnabled() {
+        return mEyePointeeHolder != null;
+    }
+
+    /**
      * Get the {@linkplain GVRSceneObject parent object.}
      * 
      * If the object has been {@link #addChildObject(GVRSceneObject) added as a
@@ -519,6 +555,19 @@ public class GVRSceneObject extends GVRHybridObject {
         mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
+    }
+
+    /**
+     * Check if {@code otherObject} is colliding with this object.
+     * 
+     * @param otherObject
+     *            {@link GVRSceneObject Object} to check for collision with this
+     *            object.
+     * @return {@code true) if objects collide, {@code false} otherwise
+     */
+    public boolean isColliding(GVRSceneObject otherObject) {
+        return NativeSceneObject.isColliding(getNative(),
+                otherObject.getNative());
     }
 
     /**
@@ -651,4 +700,6 @@ class NativeSceneObject {
     static native void addChildObject(long sceneObject, long child);
 
     static native void removeChildObject(long sceneObject, long child);
+
+    static native boolean isColliding(long sceneObject, long otherObject);
 }
