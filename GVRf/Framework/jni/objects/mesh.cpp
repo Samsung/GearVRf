@@ -207,11 +207,11 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 
 // This gives us a really coarse bounding sphere given the already calcuated bounding box.  This won't be a tight-fitting sphere because it is based on the bounding box.  We can revisit this later if we decide we need a tighter sphere.
 const float *Mesh::getBoundingSphereInfo() {
-    if (have_bounding_box_ == false) {
+    if (!have_bounding_box_) {
         getBoundingBoxInfo();
     }
 
-    if (have_bounding_sphere_ == true) {
+    if (have_bounding_sphere_) {
         return bounding_sphere_info_;
     }
 

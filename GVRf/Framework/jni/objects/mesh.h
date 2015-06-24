@@ -89,6 +89,8 @@ public:
             gl_delete.queueBuffer(iterator->second);
         }
         tex_vboID_map_.clear();
+        have_bounding_box_ = false;
+        have_bounding_sphere_ = false;
     }
 
     std::vector<glm::vec3>& vertices() {
