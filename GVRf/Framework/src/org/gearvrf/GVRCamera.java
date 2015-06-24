@@ -217,6 +217,43 @@ public abstract class GVRCamera extends GVRComponent {
         mPostEffects.remove(postEffectData);
         NativeCamera.removePostEffect(getNative(), postEffectData.getNative());
     }
+
+    /**
+     * Replace the current {@link GVRTransform transform} for owner object of
+     * the camera.
+     * 
+     * @param transform
+     *            New transform.
+     */
+    void attachTransform(GVRTransform transform) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().attachTransform(transform);
+        }
+    }
+
+    /**
+     * Remove the object's (owner object of camera) {@link GVRTransform
+     * transform}.
+     * 
+     */
+    void detachTransform() {
+        if (getOwnerObject() != null) {
+            getOwnerObject().detachTransform();
+        }
+    }
+
+    /**
+     * Get the {@link GVRTransform}.
+     * 
+     * 
+     * @return The current {@link GVRTransform transform} of owner object of
+     *         camera. Applying transform to owner object of camera moves it. If
+     *         no transform is currently attached to the object, returns
+     *         {@code null}.
+     */
+    public GVRTransform getTransform() {
+        return getOwnerObject().getTransform();
+    }
 }
 
 class NativeCamera {

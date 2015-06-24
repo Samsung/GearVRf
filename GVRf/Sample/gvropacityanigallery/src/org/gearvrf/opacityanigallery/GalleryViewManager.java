@@ -58,18 +58,18 @@ public class GalleryViewManager extends GVRScript {
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
-        
+
         mAnimationEngine = gvrContext.getAnimationEngine();
-        
+
         GVRScene mainScene = mGVRContext.getNextMainScene();
-        
+
         mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
         mainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        mainScene.getMainCameraRig().getOwnerObject()
-                .getTransform().setPosition(0.0f, 0.0f, 0.0f);
+        mainScene.getMainCameraRig().getTransform()
+                .setPosition(0.0f, 0.0f, 0.0f);
 
         GVRMesh sphereMesh = mGVRContext.loadMesh(new GVRAndroidResource(
                 mGVRContext, R.raw.sphere_mesh));
@@ -145,10 +145,8 @@ public class GalleryViewManager extends GVRScript {
         postEffect.setVec3("ratio_r", 0.393f, 0.769f, 0.189f);
         postEffect.setVec3("ratio_g", 0.349f, 0.686f, 0.168f);
         postEffect.setVec3("ratio_b", 0.272f, 0.534f, 0.131f);
-        mainScene.getMainCameraRig().getLeftCamera()
-                .addPostEffect(postEffect);
-        mainScene.getMainCameraRig().getRightCamera()
-                .addPostEffect(postEffect);
+        mainScene.getMainCameraRig().getLeftCamera().addPostEffect(postEffect);
+        mainScene.getMainCameraRig().getRightCamera().addPostEffect(postEffect);
 
     }
 

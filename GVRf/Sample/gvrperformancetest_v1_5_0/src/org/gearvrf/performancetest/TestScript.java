@@ -57,7 +57,7 @@ public class TestScript extends GVRScript {
         mMainScene = gvrContext.getNextMainScene();
 
         GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
-        
+
         GVRCamera leftCamera = mainCameraRig.getLeftCamera();
         GVRCamera rightCamera = mainCameraRig.getRightCamera();
 
@@ -70,8 +70,7 @@ public class TestScript extends GVRScript {
         rightCamera.setBackgroundColorG(0.2f);
         rightCamera.setBackgroundColorB(0.2f);
         rightCamera.setBackgroundColorA(1.0f);
-        mainCameraRig.getOwnerObject().getTransform()
-                .setPosition(0.0f, 0.0f, 0.0f);
+        mainCameraRig.getTransform().setPosition(0.0f, 0.0f, 0.0f);
         for (int i = 0; i < numberOfBunnies; ++i) {
 
             GVRSceneObject bunny = null;
@@ -104,7 +103,7 @@ public class TestScript extends GVRScript {
                     random.nextFloat() * 360.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
                     0.0f);
             bunny.getTransform().translate(0.0f, 0.0f, -10.0f);
-            mainCameraRig.getOwnerObject().addChildObject(bunny);
+            mainCameraRig.addChildObject(bunny);
 
             float x = random.nextFloat() - 0.5f;
             float y = random.nextFloat() - 0.5f;
