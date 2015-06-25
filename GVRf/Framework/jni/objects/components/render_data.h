@@ -42,10 +42,14 @@ public:
         Left = 0x1, Right = 0x2
     };
 
+    enum CullFace {
+    	CullBack = 0, CullFront, CullNone
+    };
+
     RenderData() :
             Component(), mesh_(0), material_(0), render_mask_(
                     DEFAULT_RENDER_MASK), rendering_order_(
-                    DEFAULT_RENDERING_ORDER), cull_test_(true), offset_(false), offset_factor_(
+                    DEFAULT_RENDERING_ORDER), cull_face_(DEFAULT_CULL_FACE), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), draw_mode_(GL_TRIANGLES) {
     }
@@ -85,12 +89,12 @@ public:
         rendering_order_ = rendering_order;
     }
 
-    bool cull_test() const {
-        return cull_test_;
+    bool cull_face() const {
+        return cull_face_;
     }
 
-    void set_cull_test(bool cull_test) {
-        cull_test_ = cull_test;
+    void set_cull_face(bool cull_face) {
+        cull_face_ = cull_face;
     }
 
     bool offset() const {
@@ -150,11 +154,12 @@ private:
 private:
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
+    static const int DEFAULT_CULL_FACE = CullBack;
     Mesh* mesh_;
     Material* material_;
     int render_mask_;
     int rendering_order_;
-    bool cull_test_;
+    int cull_face_;
     bool offset_;
     float offset_factor_;
     float offset_units_;

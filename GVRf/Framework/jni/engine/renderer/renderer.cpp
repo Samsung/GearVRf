@@ -489,9 +489,9 @@ void Renderer::renderRenderData(RenderData* render_data,
 		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
         ShaderManager* shader_manager) {
     if (render_mask & render_data->render_mask()) {
-        if (!render_data->cull_test()) {
-            glDisable (GL_CULL_FACE);
-        }
+
+    	set_face_culling(render_data->cull_face());
+
         if (render_data->offset()) {
             glEnable (GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(render_data->offset_factor(),
@@ -542,7 +542,7 @@ void Renderer::renderRenderData(RenderData* render_data,
                             mvp_matrix, render_data);
                     break;
                 case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                    shader_manager->getCubemapReflectionShader()->render(
+                	shader_manager->getCubemapReflectionShader()->render(
                             mv_matrix, glm::inverseTranspose(mv_matrix),
                             glm::inverse(view_matrix), mvp_matrix, render_data);
                     break;
@@ -561,9 +561,15 @@ void Renderer::renderRenderData(RenderData* render_data,
                         render_data);
             }
         }
-        if (!render_data->cull_test()) {
+
+        // Restoring to Default.
+        // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
+        // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
+        if (render_data->cull_face() != RenderData::CullBack) {
             glEnable (GL_CULL_FACE);
+            glCullFace(GL_BACK);
         }
+
         if (render_data->offset()) {
             glDisable (GL_POLYGON_OFFSET_FILL);
         }
@@ -609,6 +615,25 @@ void Renderer::renderPostEffectData(Camera* camera,
         LOGE("Error detected in Renderer::renderPostEffectData; error : %s",
                 error.c_str());
     }
+}
+
+void Renderer::set_face_culling(int cull_face) {
+	switch (cull_face) {
+			case RenderData::CullFront:
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_FRONT);
+			break;
+
+		case RenderData::CullNone:
+			glDisable(GL_CULL_FACE);
+			break;
+
+		// CullBack as Default
+		default:
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			break;
+	}
 }
 
 }

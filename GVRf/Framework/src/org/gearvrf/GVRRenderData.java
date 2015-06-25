@@ -84,6 +84,24 @@ public class GVRRenderData extends GVRComponent {
          */
         public static final int Right = 0x2;
     }
+    
+    public abstract static class GVRCullFaceEnum {
+    	/**
+    	 * Tell Graphics API to discard back faces.
+    	 * This value is assumed by default.
+    	 */
+    	public static final int Back = 0;
+    	
+    	/**
+    	 * Tell Graphics API to discard front faces.
+    	 */
+    	public static final int Front = 1;
+    	
+    	/**
+    	 * Tell Graphics API render both front and back faces.
+    	 */
+    	public static final int None = 2;
+    }
 
     /**
      * Constructor.
@@ -321,22 +339,23 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
-     * @return {@code true} if {@code GL_CULL_FACE} is enabled, {@code false} if
-     *         not.
+     * @return current face to be culled
+     *         	See {@link GVRCullFaceEnum}.
      */
-    public boolean getCullTest() {
-        return NativeRenderData.getCullTest(getNative());
+    public int getCullFace() {
+        return NativeRenderData.getCullFace(getNative());
     }
 
     /**
-     * Set the {@code GL_CULL_FACE} option
+     * Set the face to be culled 
      * 
-     * @param cullTest
-     *            {@code true} if {@code GL_CULL_FACE} should be enabled,
-     *            {@code false} if not.
+     * @param cullFace
+     *            {@code GVRCullFaceEnum.Back} Tells Graphics API to discard back faces,
+     *            {@code GVRCullFaceEnum.Front} Tells Graphics API to discard front faces,
+     *            {@code GVRCullFaceEnum.None} Tells Graphics API to not discard any face
      */
-    public void setCullTest(boolean cullTest) {
-        NativeRenderData.setCullTest(getNative(), cullTest);
+    public void setCullFace(int cullFace) {
+        NativeRenderData.setCullFace(getNative(), cullFace);
     }
 
     /**
@@ -482,9 +501,9 @@ class NativeRenderData {
 
     static native void setRenderingOrder(long renderData, int renderingOrder);
 
-    static native boolean getCullTest(long renderData);
+    static native int getCullFace(long renderData);
 
-    static native void setCullTest(long renderData, boolean cullTest);
+    static native void setCullFace(long renderData, int cullFace);
 
     static native boolean getOffset(long renderData);
 
