@@ -252,7 +252,10 @@ public abstract class GVRCamera extends GVRComponent {
      *         {@code null}.
      */
     public GVRTransform getTransform() {
-        return getOwnerObject().getTransform();
+        if (getOwnerObject() != null) {
+            return getOwnerObject().getTransform();
+        }
+        return null;
     }
 }
 

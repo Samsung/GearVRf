@@ -949,8 +949,8 @@ public class ViewerScript extends GVRScript {
         mReflectionMaterial.setVec3(ReflectionShader.EYE_KEY, eye[0], eye[1],
                 eye[2]);
 
-        List<GVRPickedObject> pickedObjects = GVRPicker.findObjects(
-                mGVRContext.getMainScene(), 0, 0, 0, 0, 0, -1.0f);
+        List<GVRPickedObject> pickedObjects = GVRPicker.findObjects(mGVRContext
+                .getMainScene());
         if (SelectionMode && pickedObjects.size() > 0) {
             GVRSceneObject pickedObject = pickedObjects.get(0).getHitObject();
             for (int i = 0; i < THUMBNAIL_NUM; ++i)

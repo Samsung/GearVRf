@@ -166,8 +166,8 @@ public class SampleViewManager extends GVRScript {
                             UNPICKED_COLOR_G, UNPICKED_COLOR_B,
                             UNPICKED_COLOR_A);
         }
-        for (GVRPickedObject pickedObject : GVRPicker.findObjects(
-                mGVRContext.getMainScene(), 0, 0, 0, 0, 0, -1.0f)) {
+        for (GVRPickedObject pickedObject : GVRPicker.findObjects(mGVRContext
+                .getMainScene())) {
             for (GVRSceneObject object : mObjects) {
                 if (pickedObject.getHitObject().equals(object)) {
                     object.getRenderData()

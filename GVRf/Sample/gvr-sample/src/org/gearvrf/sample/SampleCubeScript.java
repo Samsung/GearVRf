@@ -158,8 +158,8 @@ public class SampleCubeScript extends GVRScript {
         mFrontFace.getRenderData().getMaterial().setOpacity(1.0f);
         mFrontFace2.getRenderData().getMaterial().setOpacity(1.0f);
         mFrontFace3.getRenderData().getMaterial().setOpacity(1.0f);
-        for (GVRPickedObject pickedObject : GVRPicker.findObjects(
-                mGVRContext.getMainScene(), 0, 0, 0, 0, 0, -1.0f)) {
+        for (GVRPickedObject pickedObject : GVRPicker.findObjects(mGVRContext
+                .getMainScene())) {
             if (pickedObject.getHitObject().equals(mFrontFace)) {
                 mFrontFace.getRenderData().getMaterial().setOpacity(0.5f);
             }

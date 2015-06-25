@@ -163,8 +163,8 @@ public class PickandmoveScript extends GVRScript {
             for (GVRSceneObject object : mObjects) {
                 object.getRenderData().getMaterial().setColor(1.0f, 1.0f, 1.0f);
             }
-            for (GVRPickedObject pickedObject : GVRPicker.findObjects(
-                    mGVRContext.getMainScene(), 0, 0, 0, 0, 0, -1.0f)) {
+            for (GVRPickedObject pickedObject : GVRPicker
+                    .findObjects(mGVRContext.getMainScene())) {
                 pickedObject
                         .getHitObject()
                         .getRenderData()
@@ -198,8 +198,8 @@ public class PickandmoveScript extends GVRScript {
                     cameraRig.removeChildObject(attachedObject);
                     attachedObject = null;
                 } else {
-                    for (GVRPickedObject pickedObject : GVRPicker.findObjects(
-                            mGVRContext.getMainScene(), 0, 0, 0, 0, 0, -1.0f)) {
+                    for (GVRPickedObject pickedObject : GVRPicker
+                            .findObjects(mGVRContext.getMainScene())) {
                         attachedObject = pickedObject.getHitObject();
                         cameraRig.addChildObject(attachedObject);
                         attachedObject
