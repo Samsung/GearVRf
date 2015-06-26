@@ -32,7 +32,7 @@ public class OutlineScript extends GVRScript {
     private GVRContext mGVRContext = null;
     private GVRActivity mActivity = null;
     private GVRSceneObject mCube = null;
-    
+
     private static final float ROTATION_SPEED = 1.0f;
     private static final float SIZE = 0.5f;
 
@@ -40,7 +40,7 @@ public class OutlineScript extends GVRScript {
             SIZE, -SIZE, SIZE, // 1
             -SIZE, SIZE, SIZE, // 2
             SIZE, SIZE, SIZE, // 3
-            
+
             SIZE, -SIZE, SIZE, // 4
             SIZE, -SIZE, -SIZE, // 5
             SIZE, SIZE, SIZE, // 6
@@ -68,12 +68,12 @@ public class OutlineScript extends GVRScript {
     };
 
     // Smoothed Normals
-    private float[] normals = { -0.57735f, -0.57735f, 0.57735f, //0 
-    		0.57735f, -0.57735f, 0.57735f, // 1
-    		-0.57735f, 0.57735f, 0.57735f, // 2
-    		0.57735f, 0.57735f, 0.57735f, // 3
-    		0.57735f, -0.57735f, 0.57735f,  // 4
-    		0.57735f, -0.57735f, -0.57735f, // 5
+    private float[] normals = { -0.57735f, -0.57735f, 0.57735f, // 0
+            0.57735f, -0.57735f, 0.57735f, // 1
+            -0.57735f, 0.57735f, 0.57735f, // 2
+            0.57735f, 0.57735f, 0.57735f, // 3
+            0.57735f, -0.57735f, 0.57735f, // 4
+            0.57735f, -0.57735f, -0.57735f, // 5
             0.57735f, 0.57735f, 0.57735f, // 6
             0.57735f, 0.57735f, -0.57735f, // 7
             0.57735f, -0.57735f, -0.57735f, // 8
@@ -91,7 +91,7 @@ public class OutlineScript extends GVRScript {
             -0.57735f, -0.57735f, -0.57735f, // 20
             0.57735f, -0.57735f, -0.57735f, // 21
             -0.57735f, -0.57735f, 0.57735f, // 22
-            0.57735f, -0.57735f, 0.57735f }; //23
+            0.57735f, -0.57735f, 0.57735f }; // 23
 
     private float[] texCoords = { 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
             0.0f, // front
@@ -124,7 +124,7 @@ public class OutlineScript extends GVRScript {
     OutlineScript(GVRActivity activity) {
         mActivity = activity;
     }
-    
+
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
@@ -133,47 +133,52 @@ public class OutlineScript extends GVRScript {
         // Create Mesh Manually - We do so because we need smooth normals
         // ---------------------------------------------------------------
         GVRMesh cubeMesh = new GVRMesh(mGVRContext);
-        
+
         cubeMesh.setVertices(vertices);
-		cubeMesh.setTexCoords(texCoords);
-		cubeMesh.setNormals(normals);
-		cubeMesh.setTriangles(indices);
-		
-		mCube = new GVRSceneObject(mGVRContext, cubeMesh);
-		mCube.getTransform().setPosition(0.0f, 0.0f, -5.0f);
-		
+        cubeMesh.setTexCoords(texCoords);
+        cubeMesh.setNormals(normals);
+        cubeMesh.setTriangles(indices);
+
+        mCube = new GVRSceneObject(mGVRContext, cubeMesh);
+        mCube.getTransform().setPosition(0.0f, 0.0f, -5.0f);
+
         // Create Base Material Pass
-		// ---------------------------------------------------------------
-		OutlineShader outlineShader = new OutlineShader(mGVRContext);
-        GVRMaterial outlineMaterial = new GVRMaterial(mGVRContext, outlineShader.getShaderId());
-        
+        // ---------------------------------------------------------------
+        OutlineShader outlineShader = new OutlineShader(mGVRContext);
+        GVRMaterial outlineMaterial = new GVRMaterial(mGVRContext,
+                outlineShader.getShaderId());
+
         // Brown-ish outline color
-        outlineMaterial.setVec4(OutlineShader.COLOR_KEY, 0.4f,  0.1725f, 0.1725f, 1.0f);
+        outlineMaterial.setVec4(OutlineShader.COLOR_KEY, 0.4f, 0.1725f,
+                0.1725f, 1.0f);
         outlineMaterial.setFloat(OutlineShader.THICKNESS_KEY, 0.2f);
-        
-		// For outline we want to cull front faces
+
+        // For outline we want to cull front faces
         mCube.getRenderData().setMaterial(outlineMaterial);
-		mCube.getRenderData().setCullFace(GVRRenderData.GVRCullFaceEnum.Front);
-		
-		// Create Additional Pass
-		// ----------------------------------------------------------------
-		// load texture
-        GVRTexture texture = gvrContext.loadTexture(new GVRAndroidResource(mGVRContext, R.drawable.gearvr_logo));
-		
-		GVRMaterial material = new GVRMaterial(mGVRContext, GVRShaderType.Unlit.ID);
-		material.setMainTexture(texture);
-		
-        mCube.getRenderData().addPass(material, GVRRenderData.GVRCullFaceEnum.Back);
-        		
-		// Finally Add Cube to Scene
-		outlineScene.addSceneObject(mCube);
+        mCube.getRenderData().setCullFace(GVRRenderData.GVRCullFaceEnum.Front);
+
+        // Create Additional Pass
+        // ----------------------------------------------------------------
+        // load texture
+        GVRTexture texture = gvrContext.loadTexture(new GVRAndroidResource(
+                mGVRContext, R.drawable.gearvr_logo));
+
+        GVRMaterial material = new GVRMaterial(mGVRContext,
+                GVRShaderType.Unlit.ID);
+        material.setMainTexture(texture);
+
+        mCube.getRenderData().addPass(material,
+                GVRRenderData.GVRCullFaceEnum.Back);
+
+        // Finally Add Cube to Scene
+        outlineScene.addSceneObject(mCube);
     }
 
     @Override
     public void onStep() {
-    	if (mCube != null) {
-    		mCube.getTransform().rotateByAxis(ROTATION_SPEED, 1.0f, 1.0f, 0.0f);
-    	}
+        if (mCube != null) {
+            mCube.getTransform().rotateByAxis(ROTATION_SPEED, 1.0f, 1.0f, 0.0f);
+        }
     }
 
 }

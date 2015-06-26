@@ -71,7 +71,8 @@ void UnlitShader::recycle() {
     program_ = 0;
 }
 
-void UnlitShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material) {
+void UnlitShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
+        Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");

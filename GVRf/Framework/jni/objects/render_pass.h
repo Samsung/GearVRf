@@ -28,18 +28,18 @@ class Material;
 class RenderPass {
 public:
 
-	enum CullFace {
-	 	CullBack = 0, CullFront, CullNone
-	};
+    enum CullFace {
+        CullBack = 0, CullFront, CullNone
+    };
 
-	RenderPass() : material_(0), cull_face_(DEFAULT_CULL_FACE) {
-	}
+    RenderPass() :
+            material_(0), cull_face_(DEFAULT_CULL_FACE) {
+    }
 
-	RenderPass(Material* material, int cull_face) {
-		material_ = material;
-		cull_face_ = cull_face;
-	}
-
+    RenderPass(Material* material, int cull_face) {
+        material_ = material;
+        cull_face_ = cull_face;
+    }
 
     Material* material() const {
         return material_;
@@ -59,9 +59,9 @@ public:
 
 private:
 
-	 static const int DEFAULT_CULL_FACE = CullBack;
-	 Material* material_;
-	 int cull_face_;
+    static const int DEFAULT_CULL_FACE = CullBack;
+    Material* material_;
+    int cull_face_;
 };
 
 }

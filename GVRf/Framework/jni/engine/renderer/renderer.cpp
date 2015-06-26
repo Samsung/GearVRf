@@ -40,24 +40,22 @@ namespace gvr {
 static int numberDrawCalls;
 static int numberTriangles;
 
-void Renderer::initializeStats(){
+void Renderer::initializeStats() {
     // TODO: this function will be filled in once we add draw time stats
 }
 
-void Renderer::resetStats(){
+void Renderer::resetStats() {
     numberDrawCalls = 0;
     numberTriangles = 0;
 }
 
-int Renderer::getNumberDrawCalls(){
+int Renderer::getNumberDrawCalls() {
     return numberDrawCalls;
 }
 
-int Renderer::getNumberTriangles(){
+int Renderer::getNumberTriangles() {
     return numberTriangles;
 }
-
-
 
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
@@ -211,8 +209,8 @@ void Renderer::occlusion_cull(Scene* scene,
 
 void Renderer::frustum_cull(Scene* scene,
         std::vector<SceneObject*> scene_objects,
-        std::vector<RenderData* >& render_data_vector,
-        glm::mat4 vp_matrix, ShaderManager* shader_manager) {
+        std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
+        ShaderManager* shader_manager) {
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
 
         RenderData* render_data = (*it)->render_data();
@@ -229,12 +227,12 @@ void Renderer::frustum_cull(Scene* scene,
 
         // Frustum culling setup
         Mesh* currentMesh = render_data->mesh();
-        if(currentMesh == NULL) {
+        if (currentMesh == NULL) {
             continue;
         }
 
         const float* bounding_box_info = currentMesh->getBoundingBoxInfo();
-        if(bounding_box_info == NULL) {
+        if (bounding_box_info == NULL) {
             continue;
         }
 
@@ -284,10 +282,8 @@ void Renderer::frustum_cull(Scene* scene,
         bool is_query_issued = (*it)->is_query_issued();
         if (!is_query_issued) {
             //Setup basic bounding box and material
-            RenderData* bounding_box_render_data(
-                    new RenderData());
-            Mesh* bounding_box_mesh =
-                    render_data->mesh()->getBoundingBox();
+            RenderData* bounding_box_render_data(new RenderData());
+            Mesh* bounding_box_mesh = render_data->mesh()->getBoundingBox();
             bounding_box_render_data->set_mesh(bounding_box_mesh);
 
             GLuint *query = (*it)->get_occlusion_array();
@@ -299,7 +295,8 @@ void Renderer::frustum_cull(Scene* scene,
             //Issue the query only with a bounding box
             glBeginQuery(GL_ANY_SAMPLES_PASSED, query[0]);
             shader_manager->getBoundingBoxShader()->render(mvp_matrix_tmp,
-                    bounding_box_render_data, bounding_box_render_data->pass(0)->material());
+                    bounding_box_render_data,
+                    bounding_box_render_data->pass(0)->material());
             glEndQuery (GL_ANY_SAMPLES_PASSED);
             (*it)->set_query_issued(true);
 
@@ -406,7 +403,8 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16]) {
     frustum[5][3] /= t;
 }
 
-bool Renderer::is_cube_in_frustum(float frustum[6][4], const float *vertex_limit) {
+bool Renderer::is_cube_in_frustum(float frustum[6][4],
+        const float *vertex_limit) {
     int p;
     float Xmin = vertex_limit[0];
     float Ymin = vertex_limit[1];
@@ -486,11 +484,11 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int viewportX,
 }
 
 void Renderer::renderRenderData(RenderData* render_data,
-		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
-        ShaderManager* shader_manager) {
+        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+        int render_mask, ShaderManager* shader_manager) {
     if (render_mask & render_data->render_mask()) {
 
-    	if (render_data->offset()) {
+        if (render_data->offset()) {
             glEnable (GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(render_data->offset_factor(),
                     render_data->offset_units());
@@ -503,68 +501,71 @@ void Renderer::renderRenderData(RenderData* render_data,
         }
         if (render_data->mesh() != 0) {
             for (int curr_pass = 0; curr_pass < render_data->pass_count(); ++curr_pass) {
-            	numberTriangles += render_data->mesh()->getNumTriangles();
-				numberDrawCalls++;
+                numberTriangles += render_data->mesh()->getNumTriangles();
+                numberDrawCalls++;
 
-				set_face_culling(render_data->pass(curr_pass)->cull_face());
-				Material* curr_material = render_data->pass(curr_pass)->material();
+                set_face_culling(render_data->pass(curr_pass)->cull_face());
+                Material* curr_material = render_data->pass(curr_pass)->material();
 
-				if (curr_material != nullptr) {
-					glm::mat4 model_matrix(
-							render_data->owner_object()->transform()->getModelMatrix());
-					glm::mat4 mv_matrix(view_matrix * model_matrix);
-					glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
-					try {
-						bool right = render_mask & RenderData::RenderMaskBit::Right;
-						switch (curr_material->shader_type()) {
-						case Material::ShaderType::UNLIT_SHADER:
-							shader_manager->getUnlitShader()->render(mvp_matrix,
-									render_data, curr_material);
-							break;
-						case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
-							shader_manager->getUnlitHorizontalStereoShader()->render(
-									mvp_matrix, render_data, curr_material, right);
-							break;
-						case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
-							shader_manager->getUnlitVerticalStereoShader()->render(
-									mvp_matrix, render_data, curr_material, right);
-							break;
-						case Material::ShaderType::OES_SHADER:
-							shader_manager->getOESShader()->render(mvp_matrix,
-									render_data, curr_material);
-							break;
-						case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
-							shader_manager->getOESHorizontalStereoShader()->render(
-									mvp_matrix, render_data, curr_material, right);
-							break;
-						case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
-							shader_manager->getOESVerticalStereoShader()->render(
-									mvp_matrix, render_data, curr_material, right);
-							break;
-						case Material::ShaderType::CUBEMAP_SHADER:
-							shader_manager->getCubemapShader()->render(model_matrix,
-									mvp_matrix, render_data, curr_material);
-							break;
-						case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-							shader_manager->getCubemapReflectionShader()->render(
-									mv_matrix, glm::inverseTranspose(mv_matrix),
-									glm::inverse(view_matrix), mvp_matrix, render_data, curr_material);
-							break;
-						default:
-							shader_manager->getCustomShader(
-									curr_material->shader_type())->render(
-									mvp_matrix, render_data, curr_material, right);
-							break;
-						}
-					} catch (std::string error) {
-						LOGE(
-								"Error detected in Renderer::renderRenderData; name : %s, error : %s",
-								render_data->owner_object()->name().c_str(),
-								error.c_str());
-						shader_manager->getErrorShader()->render(mvp_matrix,
-								render_data);
-					}
-				}
+                if (curr_material != nullptr) {
+                    glm::mat4 model_matrix(render_data->owner_object()->transform()->getModelMatrix());
+                    glm::mat4 mv_matrix(view_matrix * model_matrix);
+                    glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
+                    try {
+                        bool right = render_mask & RenderData::RenderMaskBit::Right;
+                        switch (curr_material->shader_type()) {
+                        case Material::ShaderType::UNLIT_SHADER:
+                            shader_manager->getUnlitShader()->render(mvp_matrix,
+                                    render_data, curr_material);
+                            break;
+                        case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
+                            shader_manager->getUnlitHorizontalStereoShader()->render(
+                                    mvp_matrix, render_data, curr_material,
+                                    right);
+                            break;
+                        case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
+                            shader_manager->getUnlitVerticalStereoShader()->render(
+                                    mvp_matrix, render_data, curr_material,
+                                    right);
+                            break;
+                        case Material::ShaderType::OES_SHADER:
+                            shader_manager->getOESShader()->render(mvp_matrix,
+                                    render_data, curr_material);
+                            break;
+                        case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
+                            shader_manager->getOESHorizontalStereoShader()->render(
+                                    mvp_matrix, render_data, curr_material,
+                                    right);
+                            break;
+                        case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
+                            shader_manager->getOESVerticalStereoShader()->render(
+                                    mvp_matrix, render_data, curr_material,
+                                    right);
+                            break;
+                        case Material::ShaderType::CUBEMAP_SHADER:
+                            shader_manager->getCubemapShader()->render(
+                                    model_matrix, mvp_matrix, render_data,
+                                    curr_material);
+                            break;
+                        case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
+                            shader_manager->getCubemapReflectionShader()->render(
+                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                                    glm::inverse(view_matrix), mvp_matrix,
+                                    render_data, curr_material);
+                            break;
+                        default:
+                            shader_manager->getCustomShader(
+                                    curr_material->shader_type())->render(
+                                    mvp_matrix, render_data, curr_material,
+                                    right);
+                            break;
+                        }
+                    } catch (std::string error) {
+                        LOGE("Error detected in Renderer::renderRenderData; name : %s, error : %s", render_data->owner_object()->name().c_str(), error.c_str());
+                        shader_manager->getErrorShader()->render(mvp_matrix,
+                                render_data);
+                    }
+                }
             }
         }
 
@@ -573,7 +574,7 @@ void Renderer::renderRenderData(RenderData* render_data,
         // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
         if (render_data->cull_face() != RenderData::CullBack) {
             glEnable (GL_CULL_FACE);
-            glCullFace(GL_BACK);
+            glCullFace (GL_BACK);
         }
 
         if (render_data->offset()) {
@@ -589,8 +590,7 @@ void Renderer::renderRenderData(RenderData* render_data,
 }
 
 void Renderer::renderPostEffectData(Camera* camera,
-        RenderTexture* render_texture,
-        PostEffectData* post_effect_data,
+        RenderTexture* render_texture, PostEffectData* post_effect_data,
         PostEffectShaderManager* post_effect_shader_manager) {
     try {
         switch (post_effect_data->shader_type()) {
@@ -618,28 +618,28 @@ void Renderer::renderPostEffectData(Camera* camera,
             break;
         }
     } catch (std::string error) {
-        LOGE("Error detected in Renderer::renderPostEffectData; error : %s",
-                error.c_str());
+        LOGE(
+                "Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
     }
 }
 
 void Renderer::set_face_culling(int cull_face) {
-	switch (cull_face) {
-			case RenderData::CullFront:
-			glEnable(GL_CULL_FACE);
-			glCullFace(GL_FRONT);
-			break;
+    switch (cull_face) {
+    case RenderData::CullFront:
+        glEnable (GL_CULL_FACE);
+        glCullFace (GL_FRONT);
+        break;
 
-		case RenderData::CullNone:
-			glDisable(GL_CULL_FACE);
-			break;
+    case RenderData::CullNone:
+        glDisable(GL_CULL_FACE);
+        break;
 
-		// CullBack as Default
-		default:
-			glEnable(GL_CULL_FACE);
-			glCullFace(GL_BACK);
-			break;
-	}
+        // CullBack as Default
+    default:
+        glEnable(GL_CULL_FACE);
+        glCullFace (GL_BACK);
+        break;
+    }
 }
 
 }

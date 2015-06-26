@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * JNI
  ***************************************************************************/
@@ -38,7 +37,7 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
-		jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face);
+        jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
@@ -129,10 +128,10 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
-		jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face) {
-	RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-	Material* material = reinterpret_cast<Material*>(jmaterial);
-	render_data->add_pass(material, cull_face);
+        jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face) {
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
+    render_data->add_pass(material, cull_face);
 }
 
 JNIEXPORT void JNICALL
@@ -268,7 +267,5 @@ Java_org_gearvrf_NativeRenderData_getDrawMode(
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     return render_data->draw_mode();
 }
-
-
 
 }

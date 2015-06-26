@@ -44,25 +44,25 @@ public:
     };
 
     enum CullFace {
-    	CullBack = 0, CullFront, CullNone
+        CullBack = 0, CullFront, CullNone
     };
 
     RenderData() :
-            Component(), mesh_(0), render_mask_(DEFAULT_RENDER_MASK),
-            		rendering_order_(DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(0.0f),
-            		offset_units_(0.0f), depth_test_(true), alpha_blend_(
+            Component(), mesh_(0), render_mask_(DEFAULT_RENDER_MASK), rendering_order_(
+                    DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
+                    0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), draw_mode_(GL_TRIANGLES) {
 
-    	// Every Render Data must have at least one base pass.
-    	RenderPass* base_pass = new RenderPass();
-    	render_pass_list_.push_back(base_pass);
+        // Every Render Data must have at least one base pass.
+        RenderPass* base_pass = new RenderPass();
+        render_pass_list_.push_back(base_pass);
     }
 
     ~RenderData() {
-    	for (int i = 0; i < render_pass_list_.size(); ++i) {
-    		delete render_pass_list_[i];
-    	}
-    	render_pass_list_.clear();
+        for (int i = 0; i < render_pass_list_.size(); ++i) {
+            delete render_pass_list_[i];
+        }
+        render_pass_list_.clear();
     }
 
     Mesh* mesh() const {
@@ -74,25 +74,25 @@ public:
     }
 
     void add_pass(Material* material, int cull_face) {
-    	RenderPass* pass = new RenderPass(material, cull_face);
-    	render_pass_list_.push_back(pass);
+        RenderPass* pass = new RenderPass(material, cull_face);
+        render_pass_list_.push_back(pass);
     }
 
     const RenderPass* pass(int pass) const {
-    	if (pass >= 0 && pass < render_pass_list_.size()) {
-    		return render_pass_list_[pass];
-    	}
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            return render_pass_list_[pass];
+        }
 
-    	return nullptr;
+        return nullptr;
     }
 
     const int pass_count() const {
-    	return render_pass_list_.size();
+        return render_pass_list_.size();
     }
 
     Material* material(int pass) const {
         if (pass >= 0 && pass < render_pass_list_.size()) {
-        	return render_pass_list_[pass]->material();
+            return render_pass_list_[pass]->material();
         }
 
         return nullptr;
@@ -100,7 +100,7 @@ public:
 
     void set_material(Material* material, int pass) {
         if (pass >= 0 && pass < render_pass_list_.size()) {
-        	render_pass_list_[pass]->set_material(material);
+            render_pass_list_[pass]->set_material(material);
         }
     }
 
@@ -121,18 +121,18 @@ public:
     }
 
     bool cull_face(int pass = 0) const {
-    	if (pass >= 0 && pass < render_pass_list_.size()) {
-    		return render_pass_list_[pass]->cull_face();
-    	}
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            return render_pass_list_[pass]->cull_face();
+        }
 
-    	return nullptr;
-	}
+        return nullptr;
+    }
 
-	void set_cull_face(int cull_face, int pass) {
-		if (pass >= 0 && pass < render_pass_list_.size()) {
-			render_pass_list_[pass]->set_cull_face(cull_face);
-		}
-	}
+    void set_cull_face(int cull_face, int pass) {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            render_pass_list_[pass]->set_cull_face(cull_face);
+        }
+    }
 
     bool offset() const {
         return offset_;

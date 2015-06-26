@@ -79,8 +79,8 @@ void OESVerticalStereoShader::render(const glm::mat4& mvp_matrix,
         RenderData* render_data, Material* material, bool right) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
-	glm::vec3 color = material->getVec3("color");
-	float opacity = material->getFloat("opacity");
+    glm::vec3 color = material->getVec3("color");
+    float opacity = material->getFloat("opacity");
 
     if (texture->getTarget() != GL_TEXTURE_EXTERNAL_OES) {
         std::string error =
