@@ -34,13 +34,14 @@
 namespace gvr {
 class GLProgram;
 class RenderData;
+class Material;
 
 class OESShader: public RecyclableObject {
 public:
     OESShader();
     ~OESShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
 
 private:
     OESShader(const OESShader& oes_shader);

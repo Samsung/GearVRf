@@ -109,7 +109,7 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
+void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material,
         bool right) {
     Mesh* mesh = render_data->mesh();
 
@@ -148,12 +148,12 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
         mesh->setVertexAttribLocV4(it->first, it->second);
     }
 
-    mesh->generateVAO(render_data->material()->shader_type());  // setup VAO
+    mesh->generateVAO(material->shader_type());  // setup VAO
 
     ///////////// uniform /////////
     for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();
             ++it) {
-        glUniform1f(it->first, render_data->material()->getFloat(it->second));
+        glUniform1f(it->first, material->getFloat(it->second));
     }
 
     if (u_mvp_ != -1) {
@@ -166,36 +166,36 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
     int texture_index = 0;
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
-        Texture* texture = render_data->material()->getTexture(it->second);
+        Texture* texture = material->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
 
     for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
             ++it) {
-        glm::vec2 v = render_data->material()->getVec2(it->second);
+        glm::vec2 v = material->getVec2(it->second);
         glUniform2f(it->first, v.x, v.y);
     }
 
     for (auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end();
             ++it) {
-        glm::vec3 v = render_data->material()->getVec3(it->second);
+        glm::vec3 v = material->getVec3(it->second);
         glUniform3f(it->first, v.x, v.y, v.z);
     }
 
     for (auto it = uniform_vec4_keys_.begin(); it != uniform_vec4_keys_.end();
             ++it) {
-        glm::vec4 v = render_data->material()->getVec4(it->second);
+        glm::vec4 v = material->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
     }
 
     for (auto it = uniform_mat4_keys_.begin(); it != uniform_mat4_keys_.end();
             ++it) {
-        glm::mat4 m = render_data->material()->getMat4(it->second);
+        glm::mat4 m = material->getMat4(it->second);
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
-    glBindVertexArray(mesh->getVAOId(render_data->material()->shader_type()));
+    glBindVertexArray(mesh->getVAOId(material->shader_type()));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

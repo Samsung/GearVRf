@@ -15,8 +15,6 @@
 
 package org.gearvrf.gvroutlinesample;
 
-import java.io.IOException;
-
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
@@ -27,13 +25,10 @@ import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
-
-import android.util.Log;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 
 public class OutlineScript extends GVRScript {
 
-	private static final String TAG = "OutlineSample";
-	
     private GVRContext mGVRContext = null;
     private GVRActivity mActivity = null;
     private GVRSceneObject mCube = null;
@@ -45,7 +40,7 @@ public class OutlineScript extends GVRScript {
             SIZE, -SIZE, SIZE, // 1
             -SIZE, SIZE, SIZE, // 2
             SIZE, SIZE, SIZE, // 3
-
+            
             SIZE, -SIZE, SIZE, // 4
             SIZE, -SIZE, -SIZE, // 5
             SIZE, SIZE, SIZE, // 6
@@ -72,13 +67,31 @@ public class OutlineScript extends GVRScript {
             SIZE, -SIZE, SIZE, // 23
     };
 
-    private float[] normals = { 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-            0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f };
+    // Smoothed Normals
+    private float[] normals = { -0.57735f, -0.57735f, 0.57735f, //0 
+    		0.57735f, -0.57735f, 0.57735f, // 1
+    		-0.57735f, 0.57735f, 0.57735f, // 2
+    		0.57735f, 0.57735f, 0.57735f, // 3
+    		0.57735f, -0.57735f, 0.57735f,  // 4
+    		0.57735f, -0.57735f, -0.57735f, // 5
+            0.57735f, 0.57735f, 0.57735f, // 6
+            0.57735f, 0.57735f, -0.57735f, // 7
+            0.57735f, -0.57735f, -0.57735f, // 8
+            -0.57735f, -0.57735f, -0.57735f, // 9
+            0.57735f, 0.57735f, -0.57735f, // 10
+            -0.57735f, 0.57735f, -0.57735f, // 11
+            -0.57735f, -0.57735f, -0.57735f, // 12
+            -0.57735f, -0.57735f, 0.57735f, // 13
+            -0.57735f, 0.57735f, -0.57735f, // 14
+            -0.57735f, 0.57735f, 0.57735f, // 15
+            -0.57735f, 0.57735f, 0.57735f, // 16
+            0.57735f, 0.57735f, 0.57735f, // 17
+            -0.57735f, 0.57735f, -0.57735f, // 18
+            0.57735f, 0.57735f, -0.57735f, // 19
+            -0.57735f, -0.57735f, -0.57735f, // 20
+            0.57735f, -0.57735f, -0.57735f, // 21
+            -0.57735f, -0.57735f, 0.57735f, // 22
+            0.57735f, -0.57735f, 0.57735f }; //23
 
     private float[] texCoords = { 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
             0.0f, // front
@@ -117,43 +130,7 @@ public class OutlineScript extends GVRScript {
         mGVRContext = gvrContext;
         GVRScene outlineScene = gvrContext.getNextMainScene();
 
-        // load texture
-        GVRTexture texture = gvrContext.loadTexture(new GVRAndroidResource(
-                mGVRContext, R.drawable.gearvr_logo));
-
-        GVRMaterial material = new GVRMaterial(mGVRContext);
-        material.setMainTexture(texture);
-        
-        OutlineShader outlineShader = new OutlineShader(mGVRContext);
-        GVRMaterial outlineMaterial = new GVRMaterial(mGVRContext, outlineShader.getShaderId());
-        outlineMaterial.setVec4(OutlineShader.COLOR_KEY, 1.0f,  0.0f, 0.0f, 1.0f);
-        outlineMaterial.setFloat(OutlineShader.THICKNESS_KEY, 0.3f);
-        
-        // Loading Mesh from FBX
-        // ---------------------------------------------------------------
-        //GVRSceneObject cube = new GVRSceneObject(mGVRContext);
-        //GVRRenderData cubeRenderData = new GVRRenderData(mGVRContext);
-            
-        //GVRMesh fbxMesh = null;
-        //try
-        //{
-        //	GVRAndroidResource resource = new GVRAndroidResource(mGVRContext, "box_groups.fbx");
-        //	fbxMesh = mGVRContext.loadMesh(resource);
-        //}
-        //catch (IOException e)
-        //{
-        //	e.printStackTrace();
-        //    mActivity.finish();
-        //    Log.e(TAG, "Assets were not loaded. Stopping application!");
-        //}
-        
-        //cubeRenderData.setMesh(cubeMesh);
-        //cubeRenderData.setMaterial(material);
-        //cube.attachRenderData(cubeRenderData);
-        //outlineScene.addSceneObject(cube);
-        
-        
-        // Creating Mesh Manually
+        // Create Mesh Manually - We do so because we need smooth normals
         // ---------------------------------------------------------------
         GVRMesh cubeMesh = new GVRMesh(mGVRContext);
         
@@ -163,10 +140,32 @@ public class OutlineScript extends GVRScript {
 		cubeMesh.setTriangles(indices);
 		
 		mCube = new GVRSceneObject(mGVRContext, cubeMesh);
-		mCube.getRenderData().setMaterial(material);
-		//mCube.getRenderData().addPass(outlineMaterial);
+		mCube.getTransform().setPosition(0.0f, 0.0f, -5.0f);
 		
-		mCube.getTransform().setPosition(0.0f, 0.0f, -3.0f);
+        // Create Base Material Pass
+		// ---------------------------------------------------------------
+		OutlineShader outlineShader = new OutlineShader(mGVRContext);
+        GVRMaterial outlineMaterial = new GVRMaterial(mGVRContext, outlineShader.getShaderId());
+        
+        // Brown-ish outline color
+        outlineMaterial.setVec4(OutlineShader.COLOR_KEY, 0.4f,  0.1725f, 0.1725f, 1.0f);
+        outlineMaterial.setFloat(OutlineShader.THICKNESS_KEY, 0.2f);
+        
+		// For outline we want to cull front faces
+        mCube.getRenderData().setMaterial(outlineMaterial);
+		mCube.getRenderData().setCullFace(GVRRenderData.GVRCullFaceEnum.Front);
+		
+		// Create Additional Pass
+		// ----------------------------------------------------------------
+		// load texture
+        GVRTexture texture = gvrContext.loadTexture(new GVRAndroidResource(mGVRContext, R.drawable.gearvr_logo));
+		
+		GVRMaterial material = new GVRMaterial(mGVRContext, GVRShaderType.Unlit.ID);
+		material.setMainTexture(texture);
+		
+        mCube.getRenderData().addPass(material, GVRRenderData.GVRCullFaceEnum.Back);
+        		
+		// Finally Add Cube to Scene
 		outlineScene.addSceneObject(mCube);
     }
 

@@ -32,8 +32,7 @@ public class OutlineShader {
             + "uniform mat4 u_mvp;\n" //
             + "uniform float u_thickness;\n" //
             + "void main() {\n" //
-            + "  vec4 pos = u_mvp * a_position;\n" //
-            + "  pos.xyz += a_normal * u_thickness;\n" //
+            + "  vec4 pos = vec4(a_position.xyz + a_normal * u_thickness, 1.0);\n" //
             + "  gl_Position = u_mvp * pos;\n" //
             + "}\n";
 

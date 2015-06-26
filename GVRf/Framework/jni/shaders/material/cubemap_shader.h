@@ -31,6 +31,7 @@
 namespace gvr {
 class GLProgram;
 class RenderData;
+class Material;
 
 class CubemapShader: public RecyclableObject {
 public:
@@ -38,7 +39,7 @@ public:
     ~CubemapShader();
     void recycle();
     void render(const glm::mat4& model_matrix, const glm::mat4& mvp_matrix,
-            RenderData* render_data);
+            RenderData* render_data, Material* material);
 
 private:
     CubemapShader(const CubemapShader& cubemap_shader);

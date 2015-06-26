@@ -75,11 +75,11 @@ void UnlitVerticalStereoShader::recycle() {
 }
 
 void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
-        RenderData* render_data, bool right) {
+        RenderData* render_data, Material* material, bool right) {
     Mesh* mesh = render_data->mesh();
-    Texture* texture = render_data->material()->getTexture("main_texture");
-    glm::vec3 color = render_data->material()->getVec3("color");
-    float opacity = render_data->material()->getFloat("opacity");
+    Texture* texture = material->getTexture("main_texture");
+	glm::vec3 color = material->getVec3("color");
+	float opacity = material->getFloat("opacity");
 
     if (texture->getTarget() != GL_TEXTURE_2D) {
         std::string error =

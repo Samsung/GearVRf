@@ -27,6 +27,7 @@
 #include "glm/glm.hpp"
 
 #include "objects/components/component.h"
+#include "objects/render_pass.h"
 
 namespace gvr {
 class Mesh;
@@ -47,14 +48,21 @@ public:
     };
 
     RenderData() :
-            Component(), mesh_(0), material_(0), render_mask_(
-                    DEFAULT_RENDER_MASK), rendering_order_(
-                    DEFAULT_RENDERING_ORDER), cull_face_(DEFAULT_CULL_FACE), offset_(false), offset_factor_(
-                    0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
+            Component(), mesh_(0), render_mask_(DEFAULT_RENDER_MASK),
+            		rendering_order_(DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(0.0f),
+            		offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), draw_mode_(GL_TRIANGLES) {
+
+    	// Every Render Data must have at least one base pass.
+    	RenderPass* base_pass = new RenderPass();
+    	render_pass_list_.push_back(base_pass);
     }
 
     ~RenderData() {
+    	for (int i = 0; i < render_pass_list_.size(); ++i) {
+    		delete render_pass_list_[i];
+    	}
+    	render_pass_list_.clear();
     }
 
     Mesh* mesh() const {
@@ -65,12 +73,35 @@ public:
         mesh_ = mesh;
     }
 
-    Material* material() const {
-        return material_;
+    void add_pass(Material* material, int cull_face) {
+    	RenderPass* pass = new RenderPass(material, cull_face);
+    	render_pass_list_.push_back(pass);
     }
 
-    void set_material(Material* material) {
-        material_ = material;
+    const RenderPass* pass(int pass) const {
+    	if (pass >= 0 && pass < render_pass_list_.size()) {
+    		return render_pass_list_[pass];
+    	}
+
+    	return nullptr;
+    }
+
+    const int pass_count() const {
+    	return render_pass_list_.size();
+    }
+
+    Material* material(int pass) const {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+        	return render_pass_list_[pass]->material();
+        }
+
+        return nullptr;
+    }
+
+    void set_material(Material* material, int pass) {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+        	render_pass_list_[pass]->set_material(material);
+        }
     }
 
     int render_mask() const {
@@ -89,13 +120,19 @@ public:
         rendering_order_ = rendering_order;
     }
 
-    bool cull_face() const {
-        return cull_face_;
-    }
+    bool cull_face(int pass = 0) const {
+    	if (pass >= 0 && pass < render_pass_list_.size()) {
+    		return render_pass_list_[pass]->cull_face();
+    	}
 
-    void set_cull_face(bool cull_face) {
-        cull_face_ = cull_face;
-    }
+    	return nullptr;
+	}
+
+	void set_cull_face(int cull_face, int pass) {
+		if (pass >= 0 && pass < render_pass_list_.size()) {
+			render_pass_list_[pass]->set_cull_face(cull_face);
+		}
+	}
 
     bool offset() const {
         return offset_;
@@ -154,12 +191,10 @@ private:
 private:
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
-    static const int DEFAULT_CULL_FACE = CullBack;
     Mesh* mesh_;
-    Material* material_;
+    std::vector<RenderPass*> render_pass_list_;
     int render_mask_;
     int rendering_order_;
-    int cull_face_;
     bool offset_;
     float offset_factor_;
     float offset_units_;

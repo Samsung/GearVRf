@@ -279,7 +279,12 @@ public class GVRRenderData extends GVRComponent {
             return mFutureMesh.isDone();
         }
     }
-
+    
+    public void addPass(GVRMaterial material, int cullFace) {
+    	NativeRenderData.addPass(getNative(), material.getNative(), cullFace);
+    }
+    
+    
     /**
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
@@ -296,7 +301,21 @@ public class GVRRenderData extends GVRComponent {
      */
     public void setMaterial(GVRMaterial material) {
         mMaterial = material;
-        NativeRenderData.setMaterial(getNative(), material.getNative());
+        
+        // When no pass specified, set material to base pass {0}
+        NativeRenderData.setMaterial(getNative(), material.getNative(), 0);
+    }
+    
+    /**
+     * Set the {@link GVRMaterial material} the mesh will be rendered with.
+     * 
+     * @param material The {@link GVRMaterial material} for rendering.
+     * @param pass The rendering pass this material will be assigned to.
+     *            
+     */
+    public void setMaterial(GVRMaterial material, int pass) {
+        mMaterial = material;
+        NativeRenderData.setMaterial(getNative(), material.getNative(), pass);
     }
 
     /**
@@ -343,7 +362,17 @@ public class GVRRenderData extends GVRComponent {
      *         	See {@link GVRCullFaceEnum}.
      */
     public int getCullFace() {
-        return NativeRenderData.getCullFace(getNative());
+    	// Get cull face for base pass
+        return NativeRenderData.getCullFace(getNative(), 0);
+    }
+    
+    /**
+     * @param pass The rendering pass to query cull face state.
+     * @return current face to be culled
+     *         	See {@link GVRCullFaceEnum}.
+     */
+    public int getCullFace(int pass) {
+        return NativeRenderData.getCullFace(getNative(), pass);
     }
 
     /**
@@ -355,7 +384,21 @@ public class GVRRenderData extends GVRComponent {
      *            {@code GVRCullFaceEnum.None} Tells Graphics API to not discard any face
      */
     public void setCullFace(int cullFace) {
-        NativeRenderData.setCullFace(getNative(), cullFace);
+    	// Set cull face for base pass
+        NativeRenderData.setCullFace(getNative(), cullFace, 0);
+    }
+    
+    /**
+     * Set the face to be culled 
+     * 
+     * @param cullFace
+     *            {@code GVRCullFaceEnum.Back} Tells Graphics API to discard back faces,
+     *            {@code GVRCullFaceEnum.Front} Tells Graphics API to discard front faces,
+     *            {@code GVRCullFaceEnum.None} Tells Graphics API to not discard any face
+     * @param pass The rendering pass to set cull face state
+     */
+    public void setCullFace(int cullFace, int pass) {
+        NativeRenderData.setCullFace(getNative(), cullFace, pass);
     }
 
     /**
@@ -491,7 +534,9 @@ class NativeRenderData {
 
     static native void setMesh(long renderData, long mesh);
 
-    static native void setMaterial(long renderData, long material);
+    static native void addPass(long renderData, long material, int cullFace);
+    
+    static native void setMaterial(long renderData, long material, int pass);
 
     static native int getRenderMask(long renderData);
 
@@ -501,9 +546,9 @@ class NativeRenderData {
 
     static native void setRenderingOrder(long renderData, int renderingOrder);
 
-    static native int getCullFace(long renderData);
+    static native int getCullFace(long renderData, int pass);
 
-    static native void setCullFace(long renderData, int cullFace);
+    static native void setCullFace(long renderData, int cullFace, int pass);
 
     static native boolean getOffset(long renderData);
 

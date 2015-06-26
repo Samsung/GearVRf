@@ -13,48 +13,55 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
- * Renders a texture without light.
+ * Containing data about material and per pass configurations.             *
  ***************************************************************************/
 
-#ifndef UNLIT_SHADER_H_
-#define UNLIT_SHADER_H_
+#ifndef RENDER_PASS_H_
+#define RENDER_PASS_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/recyclable_object.h"
+#include <android/log.h>
 
 namespace gvr {
-class GLProgram;
-class RenderData;
 class Material;
 
-class UnlitShader: public RecyclableObject {
+class RenderPass {
 public:
-    UnlitShader();
-    ~UnlitShader();
-    void recycle();
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
+
+	enum CullFace {
+	 	CullBack = 0, CullFront, CullNone
+	};
+
+	RenderPass() : material_(0), cull_face_(DEFAULT_CULL_FACE) {
+	}
+
+	RenderPass(Material* material, int cull_face) {
+		material_ = material;
+		cull_face_ = cull_face;
+	}
+
+
+    Material* material() const {
+        return material_;
+    }
+
+    void set_material(Material* material) {
+        material_ = material;
+    }
+
+    bool cull_face() const {
+        return cull_face_;
+    }
+
+    void set_cull_face(int cull_face) {
+        cull_face_ = cull_face;
+    }
 
 private:
-    UnlitShader(const UnlitShader& unlit_shader);
-    UnlitShader(UnlitShader&& unlit_shader);
-    UnlitShader& operator=(const UnlitShader& unlit_shader);
-    UnlitShader& operator=(UnlitShader&& unlit_shader);
 
-private:
-    GLProgram* program_;
-    GLuint a_position_;
-    GLuint a_tex_coord_;
-    GLuint u_mvp_;
-    GLuint u_texture_;
-    GLuint u_color_;
-    GLuint u_opacity_;
+	 static const int DEFAULT_CULL_FACE = CullBack;
+	 Material* material_;
+	 int cull_face_;
 };
 
 }

@@ -60,17 +60,17 @@ void BoundingBoxShader::recycle() {
 }
 
 void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
-        RenderData* render_data) {
+        RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
-    mesh->generateVAO(render_data->material()->shader_type());
+    mesh->generateVAO(material->shader_type());
 
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
 
-    glBindVertexArray(mesh->getVAOId(render_data->material()->shader_type()));
+    glBindVertexArray(mesh->getVAOId(material->shader_type()));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
