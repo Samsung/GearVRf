@@ -85,22 +85,44 @@ public class GVRRenderData extends GVRComponent {
         public static final int Right = 0x2;
     }
 
-    public abstract static class GVRCullFaceEnum {
+    public static enum GVRCullFaceEnum {
         /**
          * Tell Graphics API to discard back faces. This value is assumed by
          * default.
          */
-        public static final int Back = 0;
+        Back(0),
 
         /**
          * Tell Graphics API to discard front faces.
          */
-        public static final int Front = 1;
+        Front(1),
 
         /**
          * Tell Graphics API render both front and back faces.
          */
-        public static final int None = 2;
+        None(2);
+        
+        private final int mValue;
+        
+        private GVRCullFaceEnum(int value) {
+            mValue = value;
+        }
+        
+        public static GVRCullFaceEnum fromInt(int value) {
+            switch (value) {
+            case 1:
+                return GVRCullFaceEnum.Front;
+                
+            case 2:
+                return GVRCullFaceEnum.None;
+                
+            default:
+                return GVRCullFaceEnum.Back;
+            }
+        }
+        public int getValue() {
+            return mValue;
+        }
     }
 
     /**
@@ -280,8 +302,8 @@ public class GVRRenderData extends GVRComponent {
         }
     }
 
-    public void addPass(GVRMaterial material, int cullFace) {
-        NativeRenderData.addPass(getNative(), material.getNative(), cullFace);
+    public void addPass(GVRMaterial material, GVRCullFaceEnum cullFace) {
+        NativeRenderData.addPass(getNative(), material.getNative(), cullFace.getValue());
     }
 
     /**
@@ -365,15 +387,14 @@ public class GVRRenderData extends GVRComponent {
      *         not.
      */
     public boolean getCullTest() {
-        return NativeRenderData.getCullFace(getNative(), 0) != GVRCullFaceEnum.None;
+        return getCullFace(0) != GVRCullFaceEnum.None;
     }
 
     /**
      * @return current face to be culled See {@link GVRCullFaceEnum}.
      */
-    public int getCullFace() {
-        // Get cull face for base pass
-        return NativeRenderData.getCullFace(getNative(), 0);
+    public GVRCullFaceEnum getCullFace() {
+        return getCullFace(0);
     }
 
     /**
@@ -381,8 +402,10 @@ public class GVRRenderData extends GVRComponent {
      *            The rendering pass index to query cull face state.
      * @return current face to be culled See {@link GVRCullFaceEnum}.
      */
-    public int getCullFace(int pass) {
-        return NativeRenderData.getCullFace(getNative(), pass);
+    public GVRCullFaceEnum getCullFace(int pass) {
+        int nativeCullFace = NativeRenderData.getCullFace(getNative(), 0);
+        GVRCullFaceEnum cullFace = GVRCullFaceEnum.fromInt(nativeCullFace);
+        return cullFace;
     }
 
     /**
@@ -397,9 +420,9 @@ public class GVRRenderData extends GVRComponent {
      */
     public void setCullTest(boolean cullTest) {
         if (cullTest) {
-            NativeRenderData.setCullFace(getNative(), GVRCullFaceEnum.Back, 0);
+            setCullFace(GVRCullFaceEnum.Back);
         } else {
-            NativeRenderData.setCullFace(getNative(), GVRCullFaceEnum.None, 0);
+            setCullFace(GVRCullFaceEnum.None);
         }
 
     }
@@ -413,9 +436,8 @@ public class GVRRenderData extends GVRComponent {
      *            to discard front faces, {@code GVRCullFaceEnum.None} Tells
      *            Graphics API to not discard any face
      */
-    public void setCullFace(int cullFace) {
-        // Set cull face for base pass
-        NativeRenderData.setCullFace(getNative(), cullFace, 0);
+    public void setCullFace(GVRCullFaceEnum cullFace) {
+        setCullFace(cullFace, 0);
     }
 
     /**
@@ -429,8 +451,8 @@ public class GVRRenderData extends GVRComponent {
      * @param pass
      *            The rendering pass to set cull face state
      */
-    public void setCullFace(int cullFace, int pass) {
-        NativeRenderData.setCullFace(getNative(), cullFace, pass);
+    public void setCullFace(GVRCullFaceEnum cullFace, int pass) {
+        NativeRenderData.setCullFace(getNative(), cullFace.getValue(), pass);
     }
 
     /**
