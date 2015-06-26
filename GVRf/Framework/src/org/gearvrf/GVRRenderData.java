@@ -358,6 +358,23 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
+     * @return {@code true} if {@code GL_CULL_FACE} is enabled, {@code false} if
+     *         not.
+     */
+    public boolean getCullTest() {
+        return NativeRenderData.getCullFace(getNative(), 0) != GVRCullFaceEnum.None;
+    }
+    
+    /**
+     * @param pass The rendering pass index to query cull test state.
+     * @return {@code true} if {@code GL_CULL_FACE} is enabled, {@code false} if
+     *         not.
+     */
+    public boolean getCullTest(int pass) {
+        return NativeRenderData.getCullFace(getNative(), pass) != GVRCullFaceEnum.None;
+    }
+    
+    /**
      * @return current face to be culled
      *         	See {@link GVRCullFaceEnum}.
      */
@@ -367,7 +384,7 @@ public class GVRRenderData extends GVRComponent {
     }
     
     /**
-     * @param pass The rendering pass to query cull face state.
+     * @param pass The rendering pass index to query cull face state.
      * @return current face to be culled
      *         	See {@link GVRCullFaceEnum}.
      */
@@ -375,6 +392,39 @@ public class GVRRenderData extends GVRComponent {
         return NativeRenderData.getCullFace(getNative(), pass);
     }
 
+    /**
+     * Set the {@code GL_CULL_FACE} option
+     * 
+     * @param cullTest
+     *            {@code true} if {@code GL_CULL_FACE} should be enabled,
+     *            {@code false} if not.
+     * @param pass 
+     */
+    public void setCullTest(boolean cullTest) {
+    	if (cullTest) {
+    		NativeRenderData.setCullFace(getNative(), GVRCullFaceEnum.Back, 0);
+    	} else {
+    		NativeRenderData.setCullFace(getNative(), GVRCullFaceEnum.None, 0);
+    	}
+    	
+    }
+    
+    /**
+     * Set the {@code GL_CULL_FACE} option
+     * 
+     * @param cullTest
+     *            {@code true} if {@code GL_CULL_FACE} should be enabled,
+     *            {@code false} if not.
+     * @param pass The rendering pass index to query cull test state.
+     */
+    public void setCullTest(boolean cullTest, int pass) {
+    	if (cullTest) {
+    		NativeRenderData.setCullFace(getNative(), GVRCullFaceEnum.Back, pass);
+    	} else {
+    		NativeRenderData.setCullFace(getNative(), GVRCullFaceEnum.None, pass);
+    	}
+    }
+        
     /**
      * Set the face to be culled 
      * 

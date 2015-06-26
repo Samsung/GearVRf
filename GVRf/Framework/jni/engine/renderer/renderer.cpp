@@ -502,10 +502,8 @@ void Renderer::renderRenderData(RenderData* render_data,
             glDisable (GL_BLEND);
         }
         if (render_data->mesh() != 0) {
-
             for (int curr_pass = 0; curr_pass < render_data->pass_count(); ++curr_pass) {
-
-				numberTriangles += render_data->mesh()->getNumTriangles();
+            	numberTriangles += render_data->mesh()->getNumTriangles();
 				numberDrawCalls++;
 
 				set_face_culling(render_data->pass(curr_pass)->cull_face());
