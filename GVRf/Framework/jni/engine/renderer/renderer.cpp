@@ -214,7 +214,7 @@ void Renderer::frustum_cull(Scene* scene,
         std::vector<RenderData* >& render_data_vector,
         glm::mat4 vp_matrix, ShaderManager* shader_manager) {
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
-
+        SceneObject *scene_object = (*it);
         RenderData* render_data = (*it)->render_data();
         if (render_data == 0 || render_data->material() == 0) {
             continue;
@@ -260,6 +260,24 @@ void Renderer::frustum_cull(Scene* scene,
         // Only push those scene objects that are inside of the frustum
         if (!is_inside) {
             (*it)->set_in_frustum(false);
+            continue;
+        }
+
+        // Transform the bounding sphere
+        const float *sphere_info = currentMesh->getBoundingSphereInfo();
+        glm::vec4 sphere_center(sphere_info[0], sphere_info[1], sphere_info[2], 1.0f);
+        glm::vec4 transformed_sphere_center = mvp_matrix_tmp * sphere_center;
+
+        // Calculate distance from camera
+        glm::vec3 camera_position = scene_object->camera_rig()->owner_object()->transform()->position();
+        glm::vec4 position(camera_position, 1.0f);
+        glm::vec4 difference = transformed_sphere_center - position;
+        float distance = glm::dot(difference, difference);
+        scene_object->setDistanceFromCamera(distance);
+        
+        // Check if this is the correct LOD level
+        if(!scene_object->inLODRange()) {
+            // not in range, don't add it to the list
             continue;
         }
 
