@@ -64,8 +64,8 @@ public class JassimpModelLoaderViewManager extends GVRScript {
         model.getTransform().setRotationByAxis(-180.0f, 0.0f, 0.0f, 1.0f);
 
         GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
-        mainCameraRig.getLeftCamera().setBackgroundColor(Color.WHITE);
-        mainCameraRig.getRightCamera().setBackgroundColor(Color.WHITE);
+        mainCameraRig.getLeftCamera().setBackgroundColor(Color.BLACK);
+        mainCameraRig.getRightCamera().setBackgroundColor(Color.BLACK);
         mainCameraRig.getOwnerObject().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
@@ -85,6 +85,12 @@ public class JassimpModelLoaderViewManager extends GVRScript {
 
     @Override
     public void onStep() {
+    }
+
+    void onTap() {
+        // toggle whether stats are displayed.
+        boolean statsEnabled = mMainScene.getStatsEnabled();
+        mMainScene.setStatsEnabled(!statsEnabled);
     }
 
     private List<GVRAnimation> mAnimations = new ArrayList<GVRAnimation>();

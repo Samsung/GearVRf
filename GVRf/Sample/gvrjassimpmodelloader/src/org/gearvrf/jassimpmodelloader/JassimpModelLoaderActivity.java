@@ -17,14 +17,33 @@
 package org.gearvrf.jassimpmodelloader;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
 
 import org.gearvrf.GVRActivity;
 
 public class JassimpModelLoaderActivity extends GVRActivity {
-	
+    private JassimpModelLoaderViewManager viewManager;
+    private long lastDownTime;
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setScript(new JassimpModelLoaderViewManager(), "gvr_note4.xml");
+        viewManager = new JassimpModelLoaderViewManager();
+        setScript(viewManager, "gvr_note4.xml");
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            lastDownTime = event.getDownTime();
+        }
+
+        if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+            if (event.getEventTime() - lastDownTime < 200) {
+                viewManager.onTap();
+            }
+        }
+        return true;
     }
 }
