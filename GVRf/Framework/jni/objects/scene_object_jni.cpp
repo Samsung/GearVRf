@@ -213,6 +213,28 @@ Java_org_gearvrf_NativeSceneObject_isColliding(
     SceneObject* other_object = reinterpret_cast<SceneObject*>(jother_object);
     return scene_object->isColliding(other_object);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeSceneObject_setLODRange(
+        JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    scene_object->setLODRange(min_range, max_range);
 }
 
+JNIEXPORT jfloat JNICALL
+Java_org_gearvrf_NativeSceneObject_getLODMinRange(
+        JNIEnv * env, jobject obj, jlong jscene_object) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    return scene_object->getLODMinRange();
 }
+
+JNIEXPORT jfloat JNICALL
+Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
+        JNIEnv * env, jobject obj, jlong jscene_object) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    return scene_object->getLODMaxRange();
+}
+
+} // extern "C"
+
+} // namespace gvr

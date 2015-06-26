@@ -121,6 +121,40 @@ public:
     }
     bool isColliding(SceneObject* scene_object);
 
+    void setLODRange(float minRange, float maxRange) {
+        lod_min_range_ = minRange * minRange;
+        lod_max_range_ = maxRange * maxRange;
+        using_lod_ = true;
+    }
+
+    float getLODMinRange() {
+        return lod_min_range_;
+    }
+
+    float getLODMaxRange() {
+        return lod_max_range_;
+    }
+
+    bool inLODRange() {
+        if(!using_lod_) {
+            return true;
+        }
+        if(distance_from_camera_ >= lod_min_range_ &&
+           distance_from_camera_ < lod_max_range_) {
+            return true;
+        }
+        return false;
+    }
+
+    void setDistanceFromCamera(float distance) {
+        distance_from_camera_;
+    }
+
+    float getDistanceFromCamera() { 
+        return distance_from_camera_; 
+    }
+             
+
 private:
     SceneObject(const SceneObject& scene_object);
     SceneObject(SceneObject&& scene_object);
@@ -136,6 +170,10 @@ private:
     EyePointeeHolder* eye_pointee_holder_;
     SceneObject* parent_;
     std::vector<SceneObject*> children_;
+    float lod_min_range_;
+    float lod_max_range_;
+    float distance_from_camera_;
+    bool using_lod_;
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it
