@@ -122,11 +122,11 @@ void CubemapReflectionShader::recycle() {
 
 void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
         const glm::mat4& mv_it_matrix, const glm::mat4& view_invers_matrix,
-        const glm::mat4& mvp_matrix, RenderData* render_data) {
+        const glm::mat4& mvp_matrix, RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
-    Texture* texture = render_data->material()->getTexture("main_texture");
-    glm::vec3 color = render_data->material()->getVec3("color");
-    float opacity = render_data->material()->getFloat("opacity");
+    Texture* texture = material->getTexture("main_texture");
+    glm::vec3 color = material->getVec3("color");
+    float opacity = material->getFloat("opacity");
 
     if (texture->getTarget() != GL_TEXTURE_CUBE_MAP) {
         std::string error =

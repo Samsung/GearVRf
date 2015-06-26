@@ -109,6 +109,8 @@ private:
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
     static bool is_cube_in_frustum( float frustum[6][4], const float *vertex_limit);
 
+    static void set_face_culling(int cull_face);
+
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);

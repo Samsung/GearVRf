@@ -32,13 +32,14 @@
 namespace gvr {
 class GLProgram;
 class RenderData;
+class Material;
 
 class UnlitShader: public RecyclableObject {
 public:
     UnlitShader();
     ~UnlitShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
 
 private:
     UnlitShader(const UnlitShader& unlit_shader);

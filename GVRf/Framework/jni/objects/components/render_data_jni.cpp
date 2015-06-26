@@ -37,8 +37,13 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
         jobject obj, jlong jrender_data, jlong jmesh);
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
+		jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face);
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmaterial);
+        jobject obj, jlong jrender_data, jlong jmaterial, jint pass);
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -53,13 +58,15 @@ Java_org_gearvrf_NativeRenderData_getRenderingOrder(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getCullTest(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getCullFace(JNIEnv * env,
+        jobject obj, jlong jrender_data, jint pass);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCullTest(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean cull_test);
+Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env,
+        jobject obj, jlong jrender_data, jint cull_face, jint pass);
+
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -121,11 +128,19 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
 }
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
+		jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face) {
+	RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+	Material* material = reinterpret_cast<Material*>(jmaterial);
+	render_data->add_pass(material, cull_face);
+}
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmaterial) {
+        jobject obj, jlong jrender_data, jlong jmaterial, jint pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     Material* material = reinterpret_cast<Material*>(jmaterial);
-    render_data->set_material(material);
+    render_data->set_material(material, pass);
 }
 
 JNIEXPORT jint JNICALL
@@ -156,18 +171,18 @@ Java_org_gearvrf_NativeRenderData_setRenderingOrder(
     render_data->set_rendering_order(rendering_order);
 }
 
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getCullTest(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getCullFace(JNIEnv * env,
+        jobject obj, jlong jrender_data, jint pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return static_cast<jboolean>(render_data->cull_test());
+    return static_cast<jint>(render_data->cull_face(pass));
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCullTest(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean cull_test) {
+Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env,
+        jobject obj, jlong jrender_data, jint cull_face, jint pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_cull_test(static_cast<bool>(cull_test));
+    render_data->set_cull_face(cull_face, pass);
 }
 
 JNIEXPORT jboolean JNICALL
