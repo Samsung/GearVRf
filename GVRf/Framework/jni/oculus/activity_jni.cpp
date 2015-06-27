@@ -21,11 +21,11 @@
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 static const bool canSwitchToOculusHeadTracking = true;
+static const char * app_settings_name = "org/gearvrf/utility/VrAppSettings";
 
 namespace gvr {
 
-extern "C"
-{
+extern "C" {
 
 long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
         JNIEnv * jni, jclass clazz, jobject activity,
@@ -33,6 +33,7 @@ long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
         jstring uriString)
 {
     return (new GVRActivity(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
+
 }
 
 void Java_org_gearvrf_GVRActivity_nativeSetCamera(
@@ -66,16 +67,20 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
     activityClass = GetGlobalClassReference( activityClassName );
+    vrAppSettingsClass = GetGlobalClassReference(app_settings_name);
 
-    oneTimeInitMethodId     = GetMethodID( "oneTimeInit", "()V" );
-    oneTimeShutdownMethodId = GetMethodID( "oneTimeShutDown", "()V" );
+    oneTimeInitMethodId = GetMethodID("oneTimeInit", "()V");
+    oneTimeShutdownMethodId = GetMethodID("oneTimeShutDown", "()V");
 
-    drawFrameMethodId      = GetMethodID( "drawFrame", "()V" );
-    beforeDrawEyesMethodId = GetMethodID( "beforeDrawEyes", "()V" );
-    drawEyeViewMethodId = GetMethodID( "onDrawEyeView", "(IF)V" );
-    afterDrawEyesMethodId = GetMethodID( "afterDrawEyes", "()V" );
+    drawFrameMethodId = GetMethodID("drawFrame", "()V");
+    beforeDrawEyesMethodId = GetMethodID("beforeDrawEyes", "()V");
+    drawEyeViewMethodId = GetMethodID("onDrawEyeView", "(IF)V");
+    afterDrawEyesMethodId = GetMethodID("afterDrawEyes", "()V");
 
     onKeyEventNativeMethodId = GetMethodID("onKeyEventNative", "(II)Z");
+    getAppSettingsMethodId = GetMethodID("getAppSettings",
+            "()Lorg/gearvrf/utility/VrAppSettings;");
+
 }
 
 GVRActivity::~GVRActivity() {
@@ -85,45 +90,132 @@ GVRActivity::~GVRActivity() {
     }
 }
 
-jmethodID GVRActivity::GetStaticMethodID( jclass clazz, const char * name, const char * signature )
-{
-    jmethodID mid = UiJni->GetStaticMethodID( clazz, name, signature );
-    if ( !mid )
-    {
-        FAIL( "couldn't get %s", name );
+jmethodID GVRActivity::GetStaticMethodID(jclass clazz, const char * name,
+        const char * signature) {
+    jmethodID mid = UiJni->GetStaticMethodID(clazz, name, signature);
+    if (!mid) {
+        FAIL( "couldn't get %s", name);
     }
     return mid;
 }
 
-jmethodID GVRActivity::GetMethodID( const char * name, const char * signature )
-{
-    jmethodID mid = UiJni->GetMethodID( activityClass, name, signature );
-    if ( !mid )
-    {
-        FAIL( "couldn't get %s", name );
+jmethodID GVRActivity::GetMethodID(const char * name, const char * signature) {
+    jmethodID mid = UiJni->GetMethodID(activityClass, name, signature);
+    if (!mid) {
+        FAIL( "couldn't get %s", name);
     }
     return mid;
 }
 
-
-jclass GVRActivity::GetGlobalClassReference( const char * className ) const
-{
+jclass GVRActivity::GetGlobalClassReference(const char * className) const {
     jclass lc = UiJni->FindClass(className);
-    if ( lc == 0 )
-    {
-        FAIL( "FindClass( %s ) failed", className );
+    if (lc == 0) {
+        FAIL( "FindClass( %s ) failed", className);
     }
     // Turn it into a global ref, so we can safely use it in the VR thread
-    jclass gc = (jclass)UiJni->NewGlobalRef( lc );
+    jclass gc = (jclass) UiJni->NewGlobalRef(lc);
 
-    UiJni->DeleteLocalRef( lc );
+    UiJni->DeleteLocalRef(lc);
 
     return gc;
 }
 
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
-    settings.EyeBufferParms.multisamples = 2;
+    LOG( "GVRActivity::Configure");
+    //General settings.
+    JNIEnv *env = app->GetVrJni();
+    jobject vrSettings = env->CallObjectMethod(javaObject,
+            getAppSettingsMethodId);
+    jint framebufferPixelsWide = env->GetIntField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "framebufferPixelsWide", "I"));
+    if (framebufferPixelsWide == -1) {
+        app->GetVrJni()->SetIntField(vrSettings,
+                env->GetFieldID(vrAppSettingsClass, "framebufferPixelsWide",
+                        "I"), settings.FramebufferPixelsWide);
+    } else {
+        settings.FramebufferPixelsWide = framebufferPixelsWide;
+    }
+    jint framebufferPixelsHigh = env->GetIntField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "framebufferPixelsHigh", "I"));
+    if (framebufferPixelsHigh == -1) {
+        env->SetIntField(vrSettings,
+                env->GetFieldID(vrAppSettingsClass, "framebufferPixelsHigh",
+                        "I"), settings.FramebufferPixelsHigh);
+    } else {
+        settings.FramebufferPixelsHigh = framebufferPixelsHigh;
+    }
+    settings.ShowLoadingIcon = env->GetBooleanField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "showLoadingIcon", "Z"));
+    settings.RenderMonoMode = env->GetBooleanField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "renderMonoMode", "Z"));
+    settings.UseSrgbFramebuffer = env->GetBooleanField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "useSrgbFramebuffer", "Z"));
+    settings.UseProtectedFramebuffer = env->GetBooleanField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "useProtectedFramebuffer",
+                    "Z"));
+    //Settings for EyeBufferParms.
+    jobject eyeParmsSettings = env->GetObjectField(vrSettings,
+            env->GetFieldID(vrAppSettingsClass, "eyeBufferParms",
+                    "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms;"));
+    jclass eyeParmsClass = env->GetObjectClass(eyeParmsSettings);
+    settings.EyeBufferParms.multisamples = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "multiSamples", "I"));
+    settings.EyeBufferParms.WidthScale = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "widthScale", "I"));
+    jint resolution = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolution", "I"));
+    if(resolution == -1){
+        env->SetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolution", "I"), settings.EyeBufferParms.resolution);
+    }else{
+        settings.EyeBufferParms.resolution = resolution;
+    }
+    jobject depthFormat = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "depthFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$DepthFormat;"));
+    jmethodID getValueID;
+    getValueID = env->GetMethodID(env->GetObjectClass(depthFormat),"getValue","()I");
+    int depthFormatValue = (int)env->CallIntMethod(depthFormat, getValueID);
+    switch(depthFormatValue){
+    case 0:
+        settings.EyeBufferParms.depthFormat = OVR::DEPTH_0;
+        break;
+    case 1:
+        settings.EyeBufferParms.depthFormat = OVR::DEPTH_16;
+        break;
+    case 2:
+        settings.EyeBufferParms.depthFormat = OVR::DEPTH_24;
+        break;
+    case 3:
+        settings.EyeBufferParms.depthFormat = OVR::DEPTH_24_STENCIL_8;
+        break;
+    default:
+        break;
+    }
+    jobject colorFormat = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "colorFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$VrAppSettings$EyeBufferParms$ColorFormat;"));
+    getValueID = env->GetMethodID(env->GetObjectClass(colorFormat),"getValue","()I");
+    int colorFormatValue = (int)env->CallIntMethod(colorFormat, getValueID);
+    switch(colorFormatValue){
+    case 0:
+        settings.EyeBufferParms.colorFormat = OVR::COLOR_565;
+        break;
+    case 1:
+        settings.EyeBufferParms.colorFormat = OVR::COLOR_5551;
+        break;
+    case 2:
+        settings.EyeBufferParms.colorFormat = OVR::COLOR_4444;
+        break;
+    case 3:
+        settings.EyeBufferParms.colorFormat = OVR::COLOR_8888;
+        break;
+    case 4:
+        settings.EyeBufferParms.colorFormat = OVR::COLOR_8888_sRGB;
+        break;
+    default:
+        break;
+    }
+    jobject textureFilter = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "textureFilter", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$VrAppSettings$EyeBufferParms$TextureFilter;"));
+
+
+
+
+
+
     // leave the rest as default for now.
     // TODO: take values specified in xml and set them here.
 }
@@ -131,55 +223,50 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
 void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
 {
     app->GetVrJni()->CallVoidMethod( javaObject, oneTimeInitMethodId );
-
     // Check if we already loaded the model through an intent
-    if ( !ModelLoaded )
-    {
+    if (!ModelLoaded) {
         InitSceneObject();
     }
 }
 
 void GVRActivity::OneTimeShutdown()
 {
-
-    app->GetVrJni()->CallVoidMethod( javaObject, oneTimeShutdownMethodId );
+    app->GetVrJni()->CallVoidMethod(javaObject, oneTimeShutdownMethodId);
 
     // Free GL resources
 }
 
-void GVRActivity::NewIntent( const char * fromPackageName, const char * command, const char * uri )
-{
-	InitSceneObject();
+void GVRActivity::NewIntent(const char * fromPackageName, const char * command,
+        const char * uri) {
+    InitSceneObject();
 }
 
-void GVRActivity::Command( const char * msg )
-{
+void GVRActivity::Command(const char * msg) {
     //LOG( "GVRActivity::Command %s", msg );
 }
 
-
-void GVRActivity::WindowCreated(){
+void GVRActivity::WindowCreated() {
     //LOG( "GVRActivity::WindowCreated");
 }
 
-OVR::Matrix4f GVRActivity::GetEyeView( const int eye, const float fovDegrees ) const
-{
-    const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye( eye, fovDegrees );
-    const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye( eye );
-    return ( projectionMatrix * viewMatrix );
+OVR::Matrix4f GVRActivity::GetEyeView(const int eye,
+        const float fovDegrees) const {
+    const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye(eye,
+            fovDegrees);
+    const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye(eye);
+    return (projectionMatrix * viewMatrix);
 
 }
 
-OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
-{
-    const OVR::Matrix4f view = GetEyeView( eye, fovDegrees );
+OVR::Matrix4f GVRActivity::DrawEyeView(const int eye, const float fovDegrees) {
+    const OVR::Matrix4f view = GetEyeView(eye, fovDegrees);
 
-	// Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.
-    mvp_matrix = glm::mat4(
-            view.M[0][0], view.M[1][0], view.M[2][0], view.M[3][0],
-            view.M[0][1], view.M[1][1], view.M[2][1], view.M[3][1],
-            view.M[0][2], view.M[1][2], view.M[2][2], view.M[3][2],
-            view.M[0][3], view.M[1][3], view.M[2][3], view.M[3][3]);
+    // Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.
+    mvp_matrix = glm::mat4(view.M[0][0], view.M[1][0], view.M[2][0],
+            view.M[3][0], view.M[0][1], view.M[1][1], view.M[2][1],
+            view.M[3][1], view.M[0][2], view.M[1][2], view.M[2][2],
+            view.M[3][2], view.M[0][3], view.M[1][3], view.M[2][3],
+            view.M[3][3]);
 
     SetMVPMatrix(mvp_matrix);
 
@@ -192,21 +279,21 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
     }
 
     JNIEnv* jni = app->GetVrJni();
-    jni->CallVoidMethod( javaObject, drawEyeViewMethodId, eye, fovDegrees );
+    jni->CallVoidMethod(javaObject, drawEyeViewMethodId, eye, fovDegrees);
 
-    if(eye == 1) {
-        jni->CallVoidMethod( javaObject, afterDrawEyesMethodId );
+    if (eye == 1) {
+        jni->CallVoidMethod(javaObject, afterDrawEyesMethodId);
     }
 
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix(); //gun
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
-    OVR::Matrix4f view2 = OVR::Matrix4f(
-    		vp_matrix[0][0], vp_matrix[1][0], vp_matrix[2][0], vp_matrix[3][0],
-            vp_matrix[0][1], vp_matrix[1][1], vp_matrix[2][1], vp_matrix[3][1],
-            vp_matrix[0][2], vp_matrix[1][2], vp_matrix[2][2], vp_matrix[3][2],
-            vp_matrix[0][3], vp_matrix[1][3], vp_matrix[2][3], vp_matrix[3][3]);
+    OVR::Matrix4f view2 = OVR::Matrix4f(vp_matrix[0][0], vp_matrix[1][0],
+            vp_matrix[2][0], vp_matrix[3][0], vp_matrix[0][1], vp_matrix[1][1],
+            vp_matrix[2][1], vp_matrix[3][1], vp_matrix[0][2], vp_matrix[1][2],
+            vp_matrix[2][2], vp_matrix[3][2], vp_matrix[0][3], vp_matrix[1][3],
+            vp_matrix[2][3], vp_matrix[3][3]);
 
     return view2;
 
@@ -215,8 +302,8 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
 {
     JNIEnv* jni = app->GetVrJni();
-    jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
-    jni->CallVoidMethod( javaObject, drawFrameMethodId );
+    jni->CallVoidMethod(javaObject, beforeDrawEyesMethodId);
+    jni->CallVoidMethod(javaObject, drawFrameMethodId);
 
     useOculusOrientationReading = canSwitchToOculusHeadTracking && vrFrame.DeviceStatus.DeviceIsDocked;
     if (useOculusOrientationReading && nullptr != cameraRig) {
@@ -232,16 +319,27 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
 
     ovrMatrix4f view2;
 
-    view2.M[0][0] = vp_matrix[0][0]; view2.M[1][0] = vp_matrix[0][1]; view2.M[2][0] = vp_matrix[0][2]; view2.M[3][0] = vp_matrix[0][3];
-    view2.M[0][1] = vp_matrix[1][0]; view2.M[1][1] = vp_matrix[1][1]; view2.M[2][1] = vp_matrix[1][2]; view2.M[3][1] = vp_matrix[1][3];
-    view2.M[0][2] = vp_matrix[2][0]; view2.M[1][2] = vp_matrix[2][1]; view2.M[2][2] = vp_matrix[2][2]; view2.M[3][2] = vp_matrix[2][3];
-    view2.M[0][3] = vp_matrix[3][0]; view2.M[1][3] = vp_matrix[3][1]; view2.M[2][3] = vp_matrix[3][2]; view2.M[3][3] = vp_matrix[3][3];
+    view2.M[0][0] = vp_matrix[0][0];
+    view2.M[1][0] = vp_matrix[0][1];
+    view2.M[2][0] = vp_matrix[0][2];
+    view2.M[3][0] = vp_matrix[0][3];
+    view2.M[0][1] = vp_matrix[1][0];
+    view2.M[1][1] = vp_matrix[1][1];
+    view2.M[2][1] = vp_matrix[1][2];
+    view2.M[3][1] = vp_matrix[1][3];
+    view2.M[0][2] = vp_matrix[2][0];
+    view2.M[1][2] = vp_matrix[2][1];
+    view2.M[2][2] = vp_matrix[2][2];
+    view2.M[3][2] = vp_matrix[2][3];
+    view2.M[0][3] = vp_matrix[3][0];
+    view2.M[1][3] = vp_matrix[3][1];
+    view2.M[2][3] = vp_matrix[3][2];
+    view2.M[3][3] = vp_matrix[3][3];
 
     return view2;
 }
 
-void GVRActivity::InitSceneObject()
-{
+void GVRActivity::InitSceneObject() {
 }
 
 bool GVRActivity::OnKeyEvent(const int keyCode, const int repeatCode,

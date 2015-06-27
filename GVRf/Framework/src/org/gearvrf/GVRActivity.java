@@ -16,12 +16,13 @@
 package org.gearvrf;
 
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.content.Intent;
-import android.os.Bundle;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
+import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Window;
@@ -46,6 +47,12 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
+<<<<<<< HEAD
+=======
+    long appPtr = 0;
+    
+    private VrAppSettings appSettings = null;
+>>>>>>> Initial app setting
 
     static {
         System.loadLibrary("gvrf");
@@ -71,12 +78,30 @@ public class GVRActivity extends VrActivity {
 
         Intent intent = getIntent();
         String commandString = VrActivity.getCommandStringFromIntent(intent);
+<<<<<<< HEAD
         String fromPackageNameString = VrActivity
                 .getPackageStringFromIntent(intent);
         String uriString = VrActivity.getUriStringFromIntent(intent);
 
         setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString));
+=======
+        String fromPackageNameString = VrActivity.getPackageStringFromIntent(intent);
+        String uriString = VrActivity.getUriStringFromIntent(intent);        
+        setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
+                commandString, uriString));
+        appPtr = getAppPtr();
+        onInitAppSettings();
+    }
+    
+    protected void onInitAppSettings(){
+        appSettings = new VrAppSettings();
+    }
+    
+    public VrAppSettings getAppSettings(){
+        Log.d("caonima","jinzhongzhao");
+        return appSettings;
+>>>>>>> Initial app setting
     }
 
     @Override
@@ -248,5 +273,5 @@ public class GVRActivity extends VrActivity {
         return (action == KeyEvent.ACTION_DOWN) ? onKeyDown(keyCode, event)
                 : onKeyUp(keyCode, event);
     }
-
+    
 }
