@@ -30,7 +30,6 @@ long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
         jstring fromPackageName, jstring commandString,
         jstring uriString)
 {
-    LOG("GVRActivity::nativeSetupAppInterface ");
     return (new GVRActivity(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
 }
 
@@ -70,7 +69,6 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
 }
 
 GVRActivity::~GVRActivity() {
-    LOG( "GVRActivity::~GVRActivity()");
     if ( javaObject != 0 )
     {
         UiJni->DeleteGlobalRef( javaObject );
@@ -115,7 +113,6 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
 
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
-    LOG( "GVRActivity::Configure");
     settings.EyeBufferParms.multisamples = 2;
     // leave the rest as default for now.
     // TODO: take values specified in xml and set them here.
@@ -123,7 +120,6 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
 
 void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
 {
-    LOG( "GVRActivity::OneTimeInit" );
     app->GetVrJni()->CallVoidMethod( javaObject, oneTimeInitMethodId );
 
     // Check if we already loaded the model through an intent
@@ -135,7 +131,6 @@ void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchInte
 
 void GVRActivity::OneTimeShutdown()
 {
-    LOG( "GVRActivity::OneTimeShutdown" );
 
     app->GetVrJni()->CallVoidMethod( javaObject, oneTimeShutdownMethodId );
 
@@ -203,8 +198,6 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 
 OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
 {
-    LOGD("GVRActivity::Frame() was called");
-
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
