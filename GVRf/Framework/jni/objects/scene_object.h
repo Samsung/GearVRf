@@ -147,7 +147,7 @@ public:
     }
 
     void setDistanceFromCamera(float distance) {
-        distance_from_camera_;
+        distance_from_camera_ = distance;
     }
 
     float getDistanceFromCamera() { 

@@ -87,8 +87,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         occlusion_cull(scene, scene_objects);
 
         // do frustum culling, if enabled
-        frustum_cull(scene, scene_objects, render_data_vector, vp_matrix,
-                shader_manager);
+        frustum_cull(scene, camera, scene_objects, render_data_vector, vp_matrix, shader_manager);
 
         // do sorting based on render order
         std::sort(render_data_vector.begin(), render_data_vector.end(),
@@ -209,13 +208,13 @@ void Renderer::occlusion_cull(Scene* scene,
 #endif
 }
 
-void Renderer::frustum_cull(Scene* scene,
+void Renderer::frustum_cull(Scene* scene, Camera *camera,
         std::vector<SceneObject*> scene_objects,
         std::vector<RenderData* >& render_data_vector,
         glm::mat4 vp_matrix, ShaderManager* shader_manager) {
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
         SceneObject *scene_object = (*it);
-        RenderData* render_data = (*it)->render_data();
+        RenderData* render_data = scene_object->render_data();
         if (render_data == 0 || render_data->material() == 0) {
             continue;
         }
@@ -259,7 +258,7 @@ void Renderer::frustum_cull(Scene* scene,
 
         // Only push those scene objects that are inside of the frustum
         if (!is_inside) {
-            (*it)->set_in_frustum(false);
+            scene_object->set_in_frustum(false);
             continue;
         }
 
@@ -269,7 +268,7 @@ void Renderer::frustum_cull(Scene* scene,
         glm::vec4 transformed_sphere_center = mvp_matrix_tmp * sphere_center;
 
         // Calculate distance from camera
-        glm::vec3 camera_position = scene_object->camera_rig()->owner_object()->transform()->position();
+        glm::vec3 camera_position = camera->owner_object()->transform()->position();
         glm::vec4 position(camera_position, 1.0f);
         glm::vec4 difference = transformed_sphere_center - position;
         float distance = glm::dot(difference, difference);
@@ -281,8 +280,8 @@ void Renderer::frustum_cull(Scene* scene,
             continue;
         }
 
-        (*it)->set_in_frustum();
-        bool visible = (*it)->visible();
+        scene_object->set_in_frustum();
+        bool visible = scene_object->visible();
 
         //If visibility flag was set by an earlier occlusion query,
         //turn visibility on for the object
@@ -299,7 +298,7 @@ void Renderer::frustum_cull(Scene* scene,
         //This avoids overloading the GPU with too many queries
         //Queries may span multiple frames
 
-        bool is_query_issued = (*it)->is_query_issued();
+        bool is_query_issued = scene_object->is_query_issued();
         if (!is_query_issued) {
             //Setup basic bounding box and material
             RenderData* bounding_box_render_data(
@@ -308,7 +307,7 @@ void Renderer::frustum_cull(Scene* scene,
                     render_data->mesh()->getBoundingBox();
             bounding_box_render_data->set_mesh(bounding_box_mesh);
 
-            GLuint *query = (*it)->get_occlusion_array();
+            GLuint *query = scene_object->get_occlusion_array();
 
             glDepthFunc (GL_LEQUAL);
             glEnable (GL_DEPTH_TEST);
@@ -319,7 +318,7 @@ void Renderer::frustum_cull(Scene* scene,
             shader_manager->getBoundingBoxShader()->render(mvp_matrix_tmp,
                     bounding_box_render_data);
             glEndQuery (GL_ANY_SAMPLES_PASSED);
-            (*it)->set_query_issued(true);
+            scene_object->set_query_issued(true);
 
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
