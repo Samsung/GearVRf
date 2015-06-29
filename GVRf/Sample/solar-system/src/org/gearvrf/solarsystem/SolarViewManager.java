@@ -122,8 +122,7 @@ public class SolarViewManager extends GVRScript {
         GVRSceneObject moonRevolutionObject = new GVRSceneObject(gvrContext);
         moonRevolutionObject.getTransform().setPosition(4.0f, 0.0f, 0.0f);
         earthRevolutionObject.addChildObject(moonRevolutionObject);
-        moonRevolutionObject.addChildObject(mMainScene.getMainCameraRig()
-                .getOwnerObject());
+        moonRevolutionObject.addChildComponent(mMainScene.getMainCameraRig());
 
         GVRSceneObject marsRevolutionObject = new GVRSceneObject(gvrContext);
         marsRevolutionObject.getTransform().setPosition(30.0f, 0.0f, 0.0f);

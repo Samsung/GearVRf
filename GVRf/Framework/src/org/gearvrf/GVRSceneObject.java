@@ -652,6 +652,36 @@ public class GVRSceneObject extends GVRHybridObject {
             throw new UnsupportedOperationException();
         }
     }
+
+    /**
+     * Add {@code childComponent} as a child of this object (owner object of the
+     * component is added as child). Adding a component will increase the
+     * {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * 
+     * @param childComponet
+     *            {@link GVRComponent Component} to add as a child of this
+     *            object.
+     */
+    public void addChildComponent(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            addChildObject(childComponent.getOwnerObject());
+        }
+    }
+
+    /**
+     * Remove {@code childComponent} as a child of this object (owner object of
+     * the component is removed as child). Removing a component will decrease
+     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} to remove as a child of this
+     *            object.
+     */
+    public void removeChildComponent(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            removeChildObject(childComponent.getOwnerObject());
+        }
+    }
 }
 
 class NativeSceneObject {

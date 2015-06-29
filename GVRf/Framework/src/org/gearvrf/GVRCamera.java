@@ -257,6 +257,46 @@ public abstract class GVRCamera extends GVRComponent {
         }
         return null;
     }
+
+    /**
+     * Add {@code child} as a child of this camera owner object.
+     * 
+     * @param child
+     *            {@link GVRSceneObject Object} to add as a child of this camera
+     *            owner object.
+     */
+    public void addChildObject(GVRSceneObject child) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().addChildObject(child);
+        }
+    }
+
+    /**
+     * Remove {@code child} as a child of this camera owner object.
+     * 
+     * @param child
+     *            {@link GVRSceneObject Object} to remove as a child of this
+     *            camera owner object.
+     */
+    public void removeChildObject(GVRSceneObject child) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().removeChildObject(child);
+        }
+    }
+
+    /**
+     * Get the number of child objects that belongs to owner object of this
+     * camera.
+     * 
+     * @return Number of {@link GVRSceneObject objects} added as children of
+     *         this camera owner object.
+     */
+    public int getChildrenCount() {
+        if (getOwnerObject() != null) {
+            return getOwnerObject().getChildrenCount();
+        }
+        return 0;
+    }
 }
 
 class NativeCamera {

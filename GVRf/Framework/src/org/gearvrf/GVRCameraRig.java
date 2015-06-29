@@ -392,7 +392,7 @@ public class GVRCameraRig extends GVRComponent {
      * 
      * @param child
      *            {@link GVRSceneObject Object} to add as a child of this camera
-     *            rig owner object..
+     *            rig owner object.
      */
     public void addChildObject(GVRSceneObject child) {
         if (getOwnerObject() != null) {
