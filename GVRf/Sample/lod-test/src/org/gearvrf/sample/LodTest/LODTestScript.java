@@ -52,12 +52,12 @@ public class LODTestScript extends GVRScript {
         
         GVRSphereSceneObject sphereMediumDensity = new GVRSphereSceneObject(gvrContext);
         setupObject(gvrContext, sphereMediumDensity, greenFutureTexture); 
-        sphereHighDensity.setLODRange(-5.0f, -7.0f);
+        sphereMediumDensity.setLODRange(-5.0f, -9.0f);
         scene.addSceneObject(sphereMediumDensity);
         
         GVRSphereSceneObject sphereLowDensity = new GVRSphereSceneObject(gvrContext);
         setupObject(gvrContext, sphereLowDensity, blueFutureTexture);   
-        sphereHighDensity.setLODRange(-7.0f, 10.0f);
+        sphereLowDensity.setLODRange(-9.0f, 13.0f);
         scene.addSceneObject(sphereLowDensity);
         
     }
