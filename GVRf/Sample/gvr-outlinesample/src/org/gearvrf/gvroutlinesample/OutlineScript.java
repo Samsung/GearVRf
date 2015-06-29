@@ -15,7 +15,6 @@
 
 package org.gearvrf.gvroutlinesample;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
@@ -29,9 +28,8 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 
 public class OutlineScript extends GVRScript {
 
-    private GVRContext mGVRContext = null;
-    private GVRActivity mActivity = null;
-    private GVRSceneObject mCube = null;
+    private GVRContext mGVRContext;
+    private GVRSceneObject mCube;
 
     private static final float ROTATION_SPEED = 1.0f;
     private static final float SIZE = 0.5f;
@@ -120,10 +118,6 @@ public class OutlineScript extends GVRScript {
             20, 21, 22, // bottom
             22, 21, 23 //
     };
-
-    OutlineScript(GVRActivity activity) {
-        mActivity = activity;
-    }
 
     @Override
     public void onInit(GVRContext gvrContext) {
