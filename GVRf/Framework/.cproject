@@ -5,23 +5,36 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.android.toolchain.gcc.1319470856" moduleId="org.eclipse.cdt.core.settings" name="Default">
 				<externalSettings/>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration artifactName="${ProjName}" buildProperties="" description="" id="com.android.toolchain.gcc.1319470856" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="com.android.toolchain.gcc.1319470856.350779559" name="/" resourcePath="">
-						<toolChain id="com.android.toolchain.gcc.727877471" name="Android GCC" superClass="com.android.toolchain.gcc">
-							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="com.android.targetPlatform.2145659213" isAbstract="false" superClass="com.android.targetPlatform"/>
-							<builder enableAutoBuild="true" id="com.android.builder.448966197" managedBuildOn="false" name="Android Builder.Default" superClass="com.android.builder"/>
-							<tool id="com.android.gcc.compiler.1714313203" name="Android GCC Compiler" superClass="com.android.gcc.compiler"/>
+						<toolChain id="com.android.toolchain.gcc.51438952" name="com.android.toolchain.gcc" superClass="com.android.toolchain.gcc">
+							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="com.android.targetPlatform.793391694" isAbstract="false" superClass="com.android.targetPlatform"/>
+							<builder arguments="-j16 OVR_DEBUG=0 NDK_DEBUG=0" cleanBuildTarget="clean" command="ndk-build" enableAutoBuild="true" id="com.android.builder.1067862335" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Android Builder" superClass="com.android.builder">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="obj"/>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="libs"/>
+								</outputEntries>
+							</builder>
+							<tool id="com.android.gcc.compiler.106141745" name="Android GCC Compiler" superClass="com.android.gcc.compiler">
+								<option id="com.android.gcc.option.includePath.1906627573" superClass="com.android.gcc.option.includePath" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/VrAppFramework/Native_Source}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/VrApi/Native_Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/LibOVR/Native_Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/LibOVR/Native_Source}&quot;"/>
+								</option>
+								<inputType id="com.android.gcc.inputType.751354238" superClass="com.android.gcc.inputType"/>
+							</tool>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
@@ -53,35 +66,16 @@
 		<project id="Framework.null.44160996" name="Framework"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope" versionNumber="1">
-		<resource resourceType="PROJECT" workspacePath="/Framework"/>
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.1080202993;cdt.managedbuild.tool.gnu.cross.c.compiler.1539830661;cdt.managedbuild.tool.gnu.c.compiler.input.69358424">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.350779559;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1454564551;cdt.managedbuild.tool.gnu.cpp.compiler.input.1981673851">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.350779559;com.android.gcc.compiler.658273962;com.android.gcc.inputType.1359428142">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.android.AndroidPerProjectProfile"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.350779559;cdt.managedbuild.tool.gnu.cross.c.compiler.1362817403;cdt.managedbuild.tool.gnu.c.compiler.input.1559630495">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.350779559;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1809177023;cdt.managedbuild.tool.gnu.cpp.compiler.input.450364632">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.350779559;cdt.managedbuild.tool.gnu.cross.c.compiler.757326075;cdt.managedbuild.tool.gnu.c.compiler.input.1870177279">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.1080202993;cdt.managedbuild.tool.gnu.cross.cpp.compiler.2064789169;cdt.managedbuild.tool.gnu.cpp.compiler.input.1111110668">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="com.android.toolchain.gcc.1319470856;com.android.toolchain.gcc.1319470856.350779559;com.android.gcc.compiler.106141745;com.android.gcc.inputType.751354238">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.android.AndroidPerProjectProfile"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/Framework"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
