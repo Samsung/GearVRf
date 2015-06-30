@@ -49,7 +49,35 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     public GVRSphereSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
-        generateSphere(STACK_NUMBER, SLICE_NUMBER);
+        generateSceneObject(gvrContext, STACK_NUMBER, SLICE_NUMBER);
+    }
+
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param stackNumber
+     *            The number of rows high.
+     * @param sliceNumber
+     *            The number of slices around the sphere.
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber) {
+        super(gvrContext);
+
+        // assert numStacks, numSlices > 0
+        if (stackNumber <= 0 || sliceNumber <= 0) {
+            throw new IllegalArgumentException(
+                    "numStacks, and numSlices must be > 0.  Values passed were: numStacks=" + stackNumber + ", numSlices=" + sliceNumber);
+        }
+
+
+        generateSceneObject(gvrContext, stackNumber, sliceNumber);
+    }
+
+    private void generateSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber) {
+        generateSphere(stackNumber, sliceNumber);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);

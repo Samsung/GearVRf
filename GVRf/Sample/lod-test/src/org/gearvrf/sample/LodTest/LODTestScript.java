@@ -17,6 +17,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
+import org.gearvrf.animation.GVRPositionAnimation;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.GVRTransformAnimation;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
@@ -50,14 +51,14 @@ public class LODTestScript extends GVRScript {
         sphereHighDensity.setLODRange(0.0f, -5.0f);
         scene.addSceneObject(sphereHighDensity);
         
-        GVRSphereSceneObject sphereMediumDensity = new GVRSphereSceneObject(gvrContext);
+        GVRSphereSceneObject sphereMediumDensity = new GVRSphereSceneObject(gvrContext, 9, 9);
         setupObject(gvrContext, sphereMediumDensity, greenFutureTexture); 
         sphereMediumDensity.setLODRange(-5.0f, -9.0f);
         scene.addSceneObject(sphereMediumDensity);
         
-        GVRSphereSceneObject sphereLowDensity = new GVRSphereSceneObject(gvrContext);
+        GVRSphereSceneObject sphereLowDensity = new GVRSphereSceneObject(gvrContext, 6, 6);
         setupObject(gvrContext, sphereLowDensity, blueFutureTexture);   
-        sphereLowDensity.setLODRange(-9.0f, 13.0f);
+        sphereLowDensity.setLODRange(-9.0f, Float.MAX_VALUE);
         scene.addSceneObject(sphereLowDensity);
         
     }
@@ -71,7 +72,7 @@ public class LODTestScript extends GVRScript {
     }
     
     private void setupAnimation(GVRSceneObject object) {
-        GVRAnimation animation = new TranslationAnimation(object, 2.0f, 0.0f, 0.0f, -10.0f);
+        GVRAnimation animation = new GVRPositionAnimation(object, 2.0f, 0.0f, 0.0f, -10.0f);
         animation.setRepeatMode(GVRRepeatMode.PINGPONG).setRepeatCount(-1);
         animations.add(animation);
     }
@@ -80,29 +81,4 @@ public class LODTestScript extends GVRScript {
     public void onStep() {
     }
     
-    public class TranslationAnimation extends GVRTransformAnimation {
-        float startx, starty, startz;
-        float deltax, deltay, deltaz;
-        GVRTransform transform;
-        
-        public TranslationAnimation(GVRSceneObject target, float duration, float targetx, float targety, float targetz) {
-            super(target, duration);
-            
-            transform = target.getTransform();
-            startx = transform.getPositionX();
-            starty = transform.getPositionY();
-            startz = transform.getPositionZ();
-            deltax = targetx - startx;
-            deltay = targety - starty;
-            deltaz = targetz - startz;
-        }
-
-        @Override
-        protected void animate(GVRHybridObject target, float ratio) {
-            transform.setPosition(startx + ratio * deltax,
-                                  starty + ratio * deltay,
-                                  startz + ratio * deltaz);
-            
-        }
-    }
 }
