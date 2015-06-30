@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.ArrayList;
 
 import static android.opengl.GLES30.*;
 
@@ -34,7 +35,7 @@ import org.gearvrf.utility.Threads;
 public class GVRRenderData extends GVRComponent {
 
     private GVRMesh mMesh;
-    private GVRMaterial mMaterial;
+    private ArrayList<GVRMaterial> mMaterialList;
 
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
@@ -133,10 +134,14 @@ public class GVRRenderData extends GVRComponent {
      */
     public GVRRenderData(GVRContext gvrContext) {
         super(gvrContext, NativeRenderData.ctor());
+        mMaterialList = new ArrayList<GVRMaterial>();
+        mMaterialList.add(new GVRMaterial(gvrContext));
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        mMaterialList = new ArrayList<GVRMaterial>();
+        mMaterialList.add(new GVRMaterial(gvrContext));
     }
 
     /**
@@ -302,7 +307,14 @@ public class GVRRenderData extends GVRComponent {
         }
     }
 
+    /**
+     * Create an additional pass for rendering. 
+     * 
+     * @param Set the {@link GVRMaterial material} this pass will be rendered with.
+     *            The {@link GVRMaterial material} for rendering.
+     */
     public void addPass(GVRMaterial material, GVRCullFaceEnum cullFace) {
+        mMaterialList.add(material);
         NativeRenderData.addPass(getNative(), material.getNative(), cullFace.getValue());
     }
 
@@ -311,7 +323,16 @@ public class GVRRenderData extends GVRComponent {
      *         being rendered with.
      */
     public GVRMaterial getMaterial() {
-        return mMaterial;
+        return getMaterial(0);
+    }
+    
+    /**
+     * @param The pass number to retrieve this material from.
+     * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
+     *         being rendered with.
+     */
+    public GVRMaterial getMaterial(int passIndex) {
+        return mMaterialList.get(passIndex);
     }
 
     /**
@@ -321,24 +342,22 @@ public class GVRRenderData extends GVRComponent {
      *            The {@link GVRMaterial material} for rendering.
      */
     public void setMaterial(GVRMaterial material) {
-        mMaterial = material;
-
-        // When no pass specified, set material to base pass {0}
+        mMaterialList.set(0, material);
         NativeRenderData.setMaterial(getNative(), material.getNative(), 0);
     }
 
     /**
-     * Set the {@link GVRMaterial material} the mesh will be rendered with.
+     * Set the {@link GVRMaterial material} this pass will be rendered with.
      * 
      * @param material
      *            The {@link GVRMaterial material} for rendering.
-     * @param pass
+     * @param passIndex
      *            The rendering pass this material will be assigned to.
      * 
      */
-    public void setMaterial(GVRMaterial material, int pass) {
-        mMaterial = material;
-        NativeRenderData.setMaterial(getNative(), material.getNative(), pass);
+    public void setMaterial(GVRMaterial material, int passIndex) {
+        mMaterialList.set(passIndex, material);
+        NativeRenderData.setMaterial(getNative(), material.getNative(), passIndex);
     }
 
     /**
