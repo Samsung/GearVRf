@@ -20,25 +20,18 @@
 #ifndef RENDER_PASS_H_
 #define RENDER_PASS_H_
 
-#include <android/log.h>
-
 namespace gvr {
 class Material;
 
 class RenderPass {
 public:
 
-    enum CullFace {
+    enum CullFace : int {
         CullBack = 0, CullFront, CullNone
     };
 
     RenderPass() :
             material_(0), cull_face_(DEFAULT_CULL_FACE) {
-    }
-
-    RenderPass(Material* material, int cull_face) {
-        material_ = material;
-        cull_face_ = cull_face;
     }
 
     Material* material() const {
@@ -49,7 +42,7 @@ public:
         material_ = material;
     }
 
-    bool cull_face() const {
+    int cull_face() const {
         return cull_face_;
     }
 

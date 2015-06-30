@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.ArrayList;
 
+import org.gearvrf.GVRRenderPass;
+import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+
+import android.util.Log;
 import static android.opengl.GLES30.*;
 
 import org.gearvrf.utility.Threads;
@@ -35,8 +39,9 @@ import org.gearvrf.utility.Threads;
 public class GVRRenderData extends GVRComponent {
 
     private GVRMesh mMesh;
-    private ArrayList<GVRMaterial> mMaterialList;
-
+    private ArrayList<GVRRenderPass> mRenderPassList;
+    private static final String TAG = "GearVRf";
+    
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
 
@@ -86,46 +91,6 @@ public class GVRRenderData extends GVRComponent {
         public static final int Right = 0x2;
     }
 
-    public static enum GVRCullFaceEnum {
-        /**
-         * Tell Graphics API to discard back faces. This value is assumed by
-         * default.
-         */
-        Back(0),
-
-        /**
-         * Tell Graphics API to discard front faces.
-         */
-        Front(1),
-
-        /**
-         * Tell Graphics API render both front and back faces.
-         */
-        None(2);
-        
-        private final int mValue;
-        
-        private GVRCullFaceEnum(int value) {
-            mValue = value;
-        }
-        
-        public static GVRCullFaceEnum fromInt(int value) {
-            switch (value) {
-            case 1:
-                return GVRCullFaceEnum.Front;
-                
-            case 2:
-                return GVRCullFaceEnum.None;
-                
-            default:
-                return GVRCullFaceEnum.Back;
-            }
-        }
-        public int getValue() {
-            return mValue;
-        }
-    }
-
     /**
      * Constructor.
      * 
@@ -134,14 +99,18 @@ public class GVRRenderData extends GVRComponent {
      */
     public GVRRenderData(GVRContext gvrContext) {
         super(gvrContext, NativeRenderData.ctor());
-        mMaterialList = new ArrayList<GVRMaterial>();
-        mMaterialList.add(new GVRMaterial(gvrContext));
+        
+        GVRRenderPass basePass = new GVRRenderPass(gvrContext);
+        mRenderPassList = new ArrayList<GVRRenderPass>();
+        mRenderPassList.add(basePass);
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
-        mMaterialList = new ArrayList<GVRMaterial>();
-        mMaterialList.add(new GVRMaterial(gvrContext));
+        
+        GVRRenderPass basePass = new GVRRenderPass(gvrContext);
+        mRenderPassList = new ArrayList<GVRRenderPass>();
+        mRenderPassList.add(basePass);
     }
 
     /**
@@ -308,16 +277,28 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
-     * Create an additional pass for rendering. 
-     * 
-     * @param Set the {@link GVRMaterial material} this pass will be rendered with.
-     *            The {@link GVRMaterial material} for rendering.
+     * Add a render {@link GVRRenderPass pass} to this RenderData.
+     * @param pass
      */
-    public void addPass(GVRMaterial material, GVRCullFaceEnum cullFace) {
-        mMaterialList.add(material);
-        NativeRenderData.addPass(getNative(), material.getNative(), cullFace.getValue());
+    public void addPass(GVRRenderPass pass) {
+        mRenderPassList.add(pass);
+        NativeRenderData.addPass(getNative(), pass.getNative());
     }
-
+    
+    /**
+     * Get a Rendering {@link GVRRenderPass Pass} for this Mesh
+     * @param passIndex The index of the RenderPass to get.
+     * @return
+     */
+    public GVRRenderPass getPass(int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            return mRenderPassList.get(passIndex);
+        } else {
+            Log.e(TAG, "Trying to get invalid pass. Pass " + passIndex + " was not created.");
+            return null;
+        }
+    }
+    
     /**
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
@@ -327,12 +308,17 @@ public class GVRRenderData extends GVRComponent {
     }
     
     /**
-     * @param The pass number to retrieve this material from.
+     * @param The {@link GVRRenderPass pass} index to retrieve material from.
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
      */
     public GVRMaterial getMaterial(int passIndex) {
-        return mMaterialList.get(passIndex);
+        if (passIndex < mRenderPassList.size()) {
+            return mRenderPassList.get(passIndex).getMaterial();
+        } else {
+            Log.e(TAG, "Trying to get material from invalid pass. Pass " + passIndex + " was not created.");
+            return null;
+        }
     }
 
     /**
@@ -342,8 +328,7 @@ public class GVRRenderData extends GVRComponent {
      *            The {@link GVRMaterial material} for rendering.
      */
     public void setMaterial(GVRMaterial material) {
-        mMaterialList.set(0, material);
-        NativeRenderData.setMaterial(getNative(), material.getNative(), 0);
+        setMaterial(material, 0);
     }
 
     /**
@@ -356,8 +341,13 @@ public class GVRRenderData extends GVRComponent {
      * 
      */
     public void setMaterial(GVRMaterial material, int passIndex) {
-        mMaterialList.set(passIndex, material);
-        NativeRenderData.setMaterial(getNative(), material.getNative(), passIndex);
+        if (passIndex < mRenderPassList.size()) {
+            mRenderPassList.get(passIndex).setMaterial(material);
+            NativeRenderData.setMaterial(getNative(), material.getNative(), passIndex);
+        } else {
+            Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
+        }
+        
     }
 
     /**
@@ -417,18 +407,21 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
-     * @param pass
+     * @param passIndex
      *            The rendering pass index to query cull face state.
      * @return current face to be culled See {@link GVRCullFaceEnum}.
      */
-    public GVRCullFaceEnum getCullFace(int pass) {
-        int nativeCullFace = NativeRenderData.getCullFace(getNative(), 0);
-        GVRCullFaceEnum cullFace = GVRCullFaceEnum.fromInt(nativeCullFace);
-        return cullFace;
+    public GVRCullFaceEnum getCullFace(int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            return mRenderPassList.get(passIndex).getCullFace();
+        } else {
+            Log.e(TAG, "Trying to get cull face from invalid pass. Pass " + passIndex + " was not created.");
+            return GVRCullFaceEnum.Back;
+        }
     }
 
     /**
-     * @deprecated Use {@code setCullFace(int cullFace)} instead.
+     * @deprecated Use {@code setCullFace(GVRCullFaceEnum cullFace)} instead.
      * @see #setCullFace(int cullFace)
      * Set the {@code GL_CULL_FACE} option
      * 
@@ -467,11 +460,16 @@ public class GVRRenderData extends GVRComponent {
      *            back faces, {@code GVRCullFaceEnum.Front} Tells Graphics API
      *            to discard front faces, {@code GVRCullFaceEnum.None} Tells
      *            Graphics API to not discard any face
-     * @param pass
+     * @param passIndex
      *            The rendering pass to set cull face state
      */
-    public void setCullFace(GVRCullFaceEnum cullFace, int pass) {
-        NativeRenderData.setCullFace(getNative(), cullFace.getValue(), pass);
+    public void setCullFace(GVRCullFaceEnum cullFace, int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            mRenderPassList.get(passIndex).setCullFace(cullFace);
+            NativeRenderData.setCullFace(getNative(), cullFace.getValue(), passIndex);
+        } else {
+            Log.e(TAG, "Trying to set cull face to a invalid pass. Pass " + passIndex + " was not created.");
+        }
     }
 
     /**
@@ -607,10 +605,10 @@ class NativeRenderData {
 
     static native void setMesh(long renderData, long mesh);
 
-    static native void addPass(long renderData, long material, int cullFace);
+    static native void addPass(long renderData, long renderPass);
 
     static native void setMaterial(long renderData, long material, int pass);
-
+    
     static native int getRenderMask(long renderData);
 
     static native void setRenderMask(long renderData, int renderMask);
@@ -619,10 +617,8 @@ class NativeRenderData {
 
     static native void setRenderingOrder(long renderData, int renderingOrder);
 
-    static native int getCullFace(long renderData, int pass);
-
     static native void setCullFace(long renderData, int cullFace, int pass);
-
+    
     static native boolean getOffset(long renderData);
 
     static native void setOffset(long renderData, boolean offset);

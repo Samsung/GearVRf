@@ -73,9 +73,8 @@ public:
         mesh_ = mesh;
     }
 
-    void add_pass(Material* material, int cull_face) {
-        RenderPass* pass = new RenderPass(material, cull_face);
-        render_pass_list_.push_back(pass);
+    void add_pass(RenderPass* render_pass) {
+        render_pass_list_.push_back(render_pass);
     }
 
     const RenderPass* pass(int pass) const {

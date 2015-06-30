@@ -37,7 +37,7 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
-        jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face);
+        jobject obj, jlong jrender_data, jlong jrender_pass);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
@@ -57,10 +57,6 @@ Java_org_gearvrf_NativeRenderData_getRenderingOrder(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order);
-
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeRenderData_getCullFace(JNIEnv * env,
-        jobject obj, jlong jrender_data, jint pass);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env,
@@ -128,10 +124,10 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
-        jobject obj, jlong jrender_data, jlong jmaterial, jint cull_face) {
+        jobject obj, jlong jrender_data, jlong jrender_pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    Material* material = reinterpret_cast<Material*>(jmaterial);
-    render_data->add_pass(material, static_cast<int>(cull_face));
+    RenderPass* render_pass = reinterpret_cast<RenderPass*>(jrender_pass);
+    render_data->add_pass(render_pass);
 }
 
 JNIEXPORT void JNICALL
@@ -168,13 +164,6 @@ Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     render_data->set_rendering_order(rendering_order);
-}
-
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeRenderData_getCullFace(JNIEnv * env,
-        jobject obj, jlong jrender_data, jint pass) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return static_cast<jint>(render_data->cull_face(static_cast<int>(pass)));
 }
 
 JNIEXPORT void JNICALL

@@ -18,13 +18,14 @@ package org.gearvrf.gvroutlinesample;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRRenderPass;
+import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
 
 public class OutlineScript extends GVRScript {
 
@@ -149,7 +150,7 @@ public class OutlineScript extends GVRScript {
 
         // For outline we want to cull front faces
         mCube.getRenderData().setMaterial(outlineMaterial);
-        mCube.getRenderData().setCullFace(GVRRenderData.GVRCullFaceEnum.Front);
+        mCube.getRenderData().setCullFace(GVRCullFaceEnum.Front);
 
         // Create Additional Pass
         // ----------------------------------------------------------------
@@ -161,9 +162,12 @@ public class OutlineScript extends GVRScript {
                 GVRShaderType.Unlit.ID);
         material.setMainTexture(texture);
 
-        mCube.getRenderData().addPass(material,
-                GVRRenderData.GVRCullFaceEnum.Back);
-
+        GVRRenderPass pass = new GVRRenderPass(mGVRContext);
+        pass.setMaterial(material);
+        pass.setCullFace(GVRCullFaceEnum.Back);
+        
+        mCube.getRenderData().addPass(pass);
+        
         // Finally Add Cube to Scene
         outlineScene.addSceneObject(mCube);
     }
@@ -171,7 +175,7 @@ public class OutlineScript extends GVRScript {
     @Override
     public void onStep() {
         if (mCube != null) {
-            mCube.getTransform().rotateByAxis(ROTATION_SPEED, 1.0f, 1.0f, 0.0f);
+            mCube.getTransform().rotateByAxis(ROTATION_SPEED, 0.7071f, 0.7071f, 0.0f);
         }
     }
 
