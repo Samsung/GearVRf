@@ -53,9 +53,7 @@ public:
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), draw_mode_(GL_TRIANGLES) {
 
-        // Every Render Data must have at least one base pass.
-        RenderPass* base_pass = new RenderPass();
-        render_pass_list_.push_back(base_pass);
+        // TODO: Make sure to always create a base pass. Right now it's guaranteed only on Java.
     }
 
     ~RenderData() {

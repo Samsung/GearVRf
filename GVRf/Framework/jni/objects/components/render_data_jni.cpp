@@ -39,10 +39,6 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
         jobject obj, jlong jrender_data, jlong jrender_pass);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmaterial, jint pass);
-
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -57,10 +53,6 @@ Java_org_gearvrf_NativeRenderData_getRenderingOrder(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order);
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env,
-        jobject obj, jlong jrender_data, jint cull_face, jint pass);
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
@@ -130,14 +122,6 @@ Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
     render_data->add_pass(render_pass);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmaterial, jint pass) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    Material* material = reinterpret_cast<Material*>(jmaterial);
-    render_data->set_material(material, static_cast<int>(pass));
-}
-
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
         jobject obj, jlong jrender_data) {
@@ -164,13 +148,6 @@ Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     render_data->set_rendering_order(rendering_order);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env,
-        jobject obj, jlong jrender_data, jint cull_face, jint pass) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_cull_face(static_cast<int>(cull_face), static_cast<int>(pass));
 }
 
 JNIEXPORT jboolean JNICALL

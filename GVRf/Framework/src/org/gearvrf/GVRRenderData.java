@@ -102,7 +102,7 @@ public class GVRRenderData extends GVRComponent {
         
         GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
-        mRenderPassList.add(basePass);
+        addPass(basePass);
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
@@ -110,7 +110,7 @@ public class GVRRenderData extends GVRComponent {
         
         GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
-        mRenderPassList.add(basePass);
+        addPass(basePass);
     }
 
     /**
@@ -343,7 +343,7 @@ public class GVRRenderData extends GVRComponent {
     public void setMaterial(GVRMaterial material, int passIndex) {
         if (passIndex < mRenderPassList.size()) {
             mRenderPassList.get(passIndex).setMaterial(material);
-            NativeRenderData.setMaterial(getNative(), material.getNative(), passIndex);
+            //NativeRenderData.setMaterial(getNative(), material.getNative(), passIndex);
         } else {
             Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
         }
@@ -466,7 +466,6 @@ public class GVRRenderData extends GVRComponent {
     public void setCullFace(GVRCullFaceEnum cullFace, int passIndex) {
         if (passIndex < mRenderPassList.size()) {
             mRenderPassList.get(passIndex).setCullFace(cullFace);
-            NativeRenderData.setCullFace(getNative(), cullFace.getValue(), passIndex);
         } else {
             Log.e(TAG, "Trying to set cull face to a invalid pass. Pass " + passIndex + " was not created.");
         }
@@ -606,8 +605,6 @@ class NativeRenderData {
     static native void setMesh(long renderData, long mesh);
 
     static native void addPass(long renderData, long renderPass);
-
-    static native void setMaterial(long renderData, long material, int pass);
     
     static native int getRenderMask(long renderData);
 
@@ -616,8 +613,6 @@ class NativeRenderData {
     static native int getRenderingOrder(long renderData);
 
     static native void setRenderingOrder(long renderData, int renderingOrder);
-
-    static native void setCullFace(long renderData, int cullFace, int pass);
     
     static native boolean getOffset(long renderData);
 
