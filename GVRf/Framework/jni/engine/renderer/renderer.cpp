@@ -272,6 +272,11 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         glm::vec4 position(camera_position, 1.0f);
         glm::vec4 difference = transformed_sphere_center - position;
         float distance = glm::dot(difference, difference);
+        // TODO going to store this distance in the scene_object
+        //      so that it can be used later when sorting objects.
+        //      That sorting will likely happen after this frustum
+        //      culling code completes.  The actual object sorting 
+        //      code will be in a future check-in.
         scene_object->setDistanceFromCamera(distance);
         
         // Check if this is the correct LOD level

@@ -87,7 +87,20 @@ Java_org_gearvrf_NativeSceneObject_removeChildObject(
 JNIEXPORT bool JNICALL
 Java_org_gearvrf_NativeSceneObject_isColliding(
         JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
-;
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeSceneObject_setLODRange(
+        JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range);
+
+JNIEXPORT jfloat JNICALL
+Java_org_gearvrf_NativeSceneObject_getLODMinRange(
+        JNIEnv * env, jobject obj, jlong jscene_object);
+
+JNIEXPORT jfloat JNICALL
+Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
+        JNIEnv * env, jobject obj, jlong jscene_object);
+
+
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeSceneObject_ctor(JNIEnv * env,

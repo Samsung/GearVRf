@@ -53,8 +53,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     }
 
     /**
-     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
-     * slices.
+     * Constructs a sphere scene object with a radius of 1 and of the given number of stacks and slices.
      * 
      * @param gvrContext
      *            current {@link GVRContext}

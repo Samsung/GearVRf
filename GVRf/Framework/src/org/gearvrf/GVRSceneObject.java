@@ -574,9 +574,9 @@ public class GVRSceneObject extends GVRHybridObject {
      * Sets the range of distances from the camera where this object will be shown.
      *
      * @param minRange
-     *      The closest distance to the camera rig in which this object should be shown.  Default value is 0.
+     *      The closest distance to the camera rig in which this object should be shown.
      * @param maxRange
-     *      The farthest distance to the camera rig in which this object should be shown.  Default value is Float.MAX_VALUE.
+     *      The farthest distance to the camera rig in which this object should be shown.
      */
     public void setLODRange(float minRange, float maxRange) {
         NativeSceneObject.setLODRange(getNative(), minRange, maxRange);
@@ -585,7 +585,7 @@ public class GVRSceneObject extends GVRHybridObject {
     /**
      * Get the minimum distance from the camera in which to show this object.
      * 
-     * @return the minimum distance from the camera in which to show this object.
+     * @return the minimum distance from the camera in which to show this object.  Default value is 0.
      */
     public float getLODMinRange() {
         return NativeSceneObject.getLODMinRange(getNative());
@@ -594,7 +594,7 @@ public class GVRSceneObject extends GVRHybridObject {
     /**
      * Get the maximum distance from the camera in which to show this object.
      * 
-     * @return the maximum distance from the camera in which to show this object.
+     * @return the maximum distance from the camera in which to show this object.  Default value is Float.MAX_VALUE.
      */
     public float getLODMaxRange() {
         return NativeSceneObject.getLODMaxRange(getNative());
