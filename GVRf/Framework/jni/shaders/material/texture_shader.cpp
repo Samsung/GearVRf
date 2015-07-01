@@ -227,6 +227,7 @@ void TextureShader::render(const glm::mat4& mv_matrix,
     } else {
         mesh->setVertexLoc(a_position_no_light_);
         mesh->setTexCoordLoc(a_tex_coord_no_light_);
+        mesh->setNormalLoc(-1);
         mesh->generateVAO(Material::TEXTURE_SHADER_NOLIGHT);
     }
 
