@@ -658,11 +658,11 @@ public class GVRSceneObject extends GVRHybridObject {
      * component is added as child). Adding a component will increase the
      * {@link getChildrenCount() getChildrenCount()} for this scene object.
      * 
-     * @param childComponet
+     * @param childComponent
      *            {@link GVRComponent Component} to add as a child of this
      *            object.
      */
-    public void addChildComponent(GVRComponent childComponent) {
+    public void addChildObject(GVRComponent childComponent) {
         if (childComponent.getOwnerObject() != null) {
             addChildObject(childComponent.getOwnerObject());
         }
@@ -677,7 +677,7 @@ public class GVRSceneObject extends GVRHybridObject {
      *            {@link GVRComponent Component} to remove as a child of this
      *            object.
      */
-    public void removeChildComponent(GVRComponent childComponent) {
+    public void removeChildObject(GVRComponent childComponent) {
         if (childComponent.getOwnerObject() != null) {
             removeChildObject(childComponent.getOwnerObject());
         }
