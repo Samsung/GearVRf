@@ -58,6 +58,9 @@ public class JassimpModelLoaderViewManager extends GVRScript {
             }
         });
 
+        // Apply frustum culling
+        mMainScene.setFrustumCulling(true);
+
         GVRSceneObject model = gvrContext.getAssimpModel("astro_boy.dae");
 
         model.getTransform().setPosition(0.0f, -5.0f, 0.0f);
