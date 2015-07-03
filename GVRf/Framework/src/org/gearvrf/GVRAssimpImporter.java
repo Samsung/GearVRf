@@ -91,7 +91,4 @@ class NativeAssimpImporter {
 
     static native AiMaterial getMeshMaterial(long assimpImporter,
             String nodeName, int meshIndex);
-
-    static native float[] decomposeTransformationMatrix(
-            float[] transformationMatrix);
 }

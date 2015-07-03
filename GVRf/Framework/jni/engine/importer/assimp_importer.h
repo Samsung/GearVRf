@@ -65,6 +65,7 @@ public:
     }
 
     Mesh* getMesh(int index);
+
     const aiScene* getAssimpScene() {
         return assimp_importer_->GetScene();
     }
@@ -89,19 +90,9 @@ public:
     static bool call_static_object(JNIEnv *env, const char* type_name,
             const char* method_name, const char* signature,/* const*/
             jvalue* params, jobject& return_value);
-    static bool load_meshes(JNIEnv *env, const aiScene* assimp_scene,
-            jobject& scene);
     static bool load_scene_node(JNIEnv *env, const aiNode *node, jobject parent,
             jobject* loaded_node = NULL);
     static bool load_scene_graph(JNIEnv *env, const aiScene* assimp_scene,
-            jobject& scene);
-    static bool load_materials(JNIEnv *env, const aiScene* assimp_scene,
-            jobject& scene);
-    static bool load_animations(JNIEnv *env, const aiScene* assimp_scene,
-            jobject& scene);
-    static bool load_lights(JNIEnv *env, const aiScene* assimp_scene,
-            jobject& scene);
-    static bool load_cameras(JNIEnv *env, const aiScene* assimp_scene,
             jobject& scene);
 
 private:

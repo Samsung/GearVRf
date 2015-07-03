@@ -39,9 +39,6 @@ Java_org_gearvrf_NativeAssimpImporter_getNodeMesh(JNIEnv * env,
 JNIEXPORT jobject JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMeshMaterial(JNIEnv * env,
         jobject obj, jlong jassimp_importer, jstring jnode_name, jint index);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeAssimpImporter_decomposeTransformationMatrix(JNIEnv * env,
-        jobject obj, jfloatArray jtransformation_matrix);
 }
 
 JNIEXPORT jint JNICALL
@@ -95,39 +92,5 @@ Java_org_gearvrf_NativeAssimpImporter_getMeshMaterial(JNIEnv * env,
     aiNode* current_node = root_node->FindNode(node_name);
     env->ReleaseStringUTFChars(jnode_name, node_name);
     return reinterpret_cast<jobject>(assimp_importer->mesh_material(env, current_node->mMeshes[index]));
-}
-
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeAssimpImporter_decomposeTransformationMatrix(JNIEnv * env,
-        jobject obj, jfloatArray jtransformation_matrix) {
-    jfloat* tm = env->GetFloatArrayElements(jtransformation_matrix,0); // Transformation Matrix
-    jfloatArray result;
-    result = env->NewFloatArray(10);
-    std::vector<float> data(10); // To store the decomposed matrix value
-    aiMatrix4x4 transform(tm[0], tm[1], tm[2], tm[3],
-                          tm[4], tm[5], tm[6], tm[7],
-                          tm[8], tm[9], tm[10], tm[11],
-                          tm[12], tm[13], tm[14], tm[15]);
-    aiVector3t<float> scaling;
-    aiQuaterniont<float> rotation;
-    aiVector3t<float> position;
-    transform.Decompose(scaling, rotation, position);
-    // Scale factors
-    data[0] = scaling.x;
-    data[1] = scaling.y;
-    data[2] = scaling.z;
-    // Rotation factors
-    data[3] = rotation.w;
-    data[4] = rotation.x;
-    data[5] = rotation.y;
-    data[6] = rotation.z;
-    // Position factors
-    data[7] = position.x;
-    data[8] = position.y;
-    data[9] = position.z;
-    env->SetFloatArrayRegion(result, 0, 10, &data[0]);
-    env->ReleaseFloatArrayElements(result, (jfloat *)tm, 0);
-    return result;
-
 }
 }

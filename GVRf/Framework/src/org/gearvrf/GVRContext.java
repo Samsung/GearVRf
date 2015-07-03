@@ -569,25 +569,10 @@ public abstract class GVRContext {
 
         AiNode rootNode = assimpScene.getSceneRoot(wrapperProvider);
 
-        AiMatrix4f rootNodeTransform = rootNode.getTransform(wrapperProvider);
-
         List<AiNode> childrenNodes = rootNode.getChildren();
 
-        AiMatrix4f parentNodeTransform = rootNodeTransform;
-        float[] accumulatedTransform = new float[16];
         try {
             for (AiNode childNode : childrenNodes) {
-                AiMatrix4f childNodeTransform = childNode
-                        .getTransform(wrapperProvider);
-
-                Matrix.multiplyMM(accumulatedTransform, 0,
-                        childNodeTransform.m_data, 0,
-                        parentNodeTransform.m_data, 0);
-
-                float[] accumulatedTransformArray = this
-                        .decomposeTransformationMatrix(accumulatedTransform);
-
-                parentNodeTransform.m_data = childNodeTransform.m_data;
 
                 for (int i = 0; i < childNode.getNumMeshes(); i++) {
 
@@ -613,10 +598,6 @@ public abstract class GVRContext {
 
                         GVRSceneObject sceneObject = new GVRSceneObject(this,
                                 futureMesh, futureMeshTexture);
-
-                        // set the scene object position
-                        sceneObject.getTransform().setTransformation(
-                                accumulatedTransformArray);
 
                         // add the scene object to the scene graph
                         wholeSceneObject.addChildObject(sceneObject);
@@ -655,18 +636,6 @@ public abstract class GVRContext {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
                 this, androidResource);
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
-    }
-
-    /**
-     * Decomposes a transformation matrix into three components. Scale, Rotation
-     * (as a quaternion) and Position.
-     * 
-     * @return The array with ten float values representing, Scale[X, Y, Z],
-     *         Rotation[W, X, Y, Z] and Position[X, Y, Z].
-     */
-    public float[] decomposeTransformationMatrix(float[] transformationMatrix) {
-        return NativeAssimpImporter
-                .decomposeTransformationMatrix(transformationMatrix);
     }
 
     /**
