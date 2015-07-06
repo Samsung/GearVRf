@@ -574,11 +574,19 @@ public class GVRSceneObject extends GVRHybridObject {
      * Sets the range of distances from the camera where this object will be shown.
      *
      * @param minRange
-     *      The closest distance to the camera rig in which this object should be shown.
+     *      The closest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
      * @param maxRange
-     *      The farthest distance to the camera rig in which this object should be shown.
+     *      The farthest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
      */
     public void setLODRange(float minRange, float maxRange) {
+        if (minRange < 0 || maxRange < 0) {
+            throw new IllegalArgumentException(
+                    "minRange and maxRange must be between 0 and Float.MAX_VALUE");
+        }
+        if (minRange > maxRange) {
+            throw new IllegalArgumentException(
+                    "minRange should be greater than maxRange");
+        }
         NativeSceneObject.setLODRange(getNative(), minRange, maxRange);
     }
 
