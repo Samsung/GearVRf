@@ -24,7 +24,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
-import org.gearvrf.GVRTransform;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRRepeatMode;
@@ -63,8 +62,13 @@ public class JassimpModelLoaderViewManager extends GVRScript {
 
         GVRSceneObject model = gvrContext.getAssimpModel("astro_boy.dae");
 
-        model.getTransform().setPosition(0.0f, -5.0f, 0.0f);
-        model.getTransform().setRotationByAxis(-180.0f, 0.0f, 0.0f, 1.0f);
+        ModelPosition modelPosition = new ModelPosition();
+
+        modelPosition.setPositio(0.0f, -4.0f, -5.0f);
+
+        model.getTransform().setPosition(modelPosition.x, modelPosition.y,
+                modelPosition.z);
+        model.getTransform().setRotationByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
 
         GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
         mainCameraRig.getLeftCamera().setBackgroundColor(Color.BLACK);
@@ -72,18 +76,9 @@ public class JassimpModelLoaderViewManager extends GVRScript {
         mainCameraRig.getOwnerObject().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
-        GVRSceneObject cameraRevolutionObject = new GVRSceneObject(gvrContext);
-        cameraRevolutionObject.getTransform().setPosition(4.0f, 0.0f, 0.0f);
-        cameraRevolutionObject.addChildObject(mMainScene.getMainCameraRig()
-                .getOwnerObject());
-
         mMainScene.addSceneObject(model);
 
-        counterClockwise(cameraRevolutionObject, 60f);
-
-        clockwise(
-                mMainScene.getMainCameraRig().getOwnerObject().getTransform(),
-                120f);
+        rotateModel(model, 60f, modelPosition);
     }
 
     @Override
@@ -103,18 +98,23 @@ public class JassimpModelLoaderViewManager extends GVRScript {
         mAnimations.add(animation);
     }
 
-    private void counterClockwise(GVRSceneObject object, float duration) {
+    private void rotateModel(GVRSceneObject model, float duration,
+            ModelPosition modelPosition) {
         setup(new GVRRotationByAxisWithPivotAnimation( //
-                object, duration, 360.0f, //
+                model, duration, -360.0f, //
                 0.0f, 1.0f, 0.0f, //
-                0.0f, 0.0f, 0.0f));
+                modelPosition.x, modelPosition.y, modelPosition.z));
     }
+}
 
-    private void clockwise(GVRTransform transform, float duration) {
-        setup(new GVRRotationByAxisWithPivotAnimation( //
-                transform, duration, -360.0f, //
-                0.0f, 1.0f, 0.0f, //
-                0.0f, 0.0f, 0.0f));
+class ModelPosition {
+    float x;
+    float y;
+    float z;
+
+    void setPositio(float x, float y, float z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
-
 }

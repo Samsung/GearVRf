@@ -396,58 +396,6 @@ public class GVRTransform extends GVRComponent {
         NativeTransform.rotateByAxisWithPivot(getNative(), angle, axisX, axisY,
                 axisZ, pivotX, pivotY, pivotZ);
     }
-
-    /**
-     * Set [X, Y, Z] current Scale.
-     * 
-     * and
-     * 
-     * Rotation (as a quaternion). Sets the transform's current rotation in
-     * quaternion terms. Overrides any previous rotations using
-     * {@link #rotate(float, float, float, float) rotate()},
-     * {@link #rotateByAxis(float, float, float, float) rotateByAxis()} , or
-     * {@link #rotateByAxisWithPivot(float, float, float, float, float, float, float)
-     * rotateByAxisWithPivot()} .
-     * 
-     * and
-     * 
-     * Absolute Position.
-     * 
-     * @param arrayScale3Rotation4Position3
-     *            [0] Scaling factor on the 'X' axis.
-     * @param arrayScale3Rotation4Position3
-     *            [1] Scaling factor on the 'Y' axis.
-     * @param arrayScale3Rotation4Position3
-     *            [2] Scaling factor on the 'Z' axis.
-     * @param arrayScale3Rotation4Position3
-     *            [3] 'W' component of the quaternion.
-     * @param arrayScale3Rotation4Position3
-     *            [4] 'X' component of the quaternion.
-     * @param arrayScale3Rotation4Position3
-     *            [5] 'Y' component of the quaternion.
-     * @param arrayScale3Rotation4Position3
-     *            [6] 'Z' component of the quaternion.
-     * @param arrayScale3Rotation4Position3
-     *            [7] 'X' component of the absolute position.
-     * @param arrayScale3Rotation4Position3
-     *            [8] 'Y' component of the absolute position.
-     * @param arrayScale3Rotation4Position3
-     *            [9] 'Z' component of the absolute position.
-     */
-    public void setTransformation(float[] arrayScale3Rotation4Position3) {
-        setScale(arrayScale3Rotation4Position3[0],
-                arrayScale3Rotation4Position3[1],
-                arrayScale3Rotation4Position3[2]);
-
-        setRotation(arrayScale3Rotation4Position3[3],
-                arrayScale3Rotation4Position3[4],
-                arrayScale3Rotation4Position3[5],
-                arrayScale3Rotation4Position3[6]);
-
-        setPosition(arrayScale3Rotation4Position3[7],
-                arrayScale3Rotation4Position3[8],
-                arrayScale3Rotation4Position3[9]);
-    }
 }
 
 class NativeTransform {
