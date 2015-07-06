@@ -585,7 +585,7 @@ public class GVRSceneObject extends GVRHybridObject {
         }
         if (minRange > maxRange) {
             throw new IllegalArgumentException(
-                    "minRange should be greater than maxRange");
+                    "minRange should not be greater than maxRange");
         }
         NativeSceneObject.setLODRange(getNative(), minRange, maxRange);
     }
