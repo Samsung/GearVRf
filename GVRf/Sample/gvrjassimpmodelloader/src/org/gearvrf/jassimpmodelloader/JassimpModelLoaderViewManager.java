@@ -64,7 +64,7 @@ public class JassimpModelLoaderViewManager extends GVRScript {
 
         ModelPosition modelPosition = new ModelPosition();
 
-        modelPosition.setPositio(0.0f, -4.0f, -5.0f);
+        modelPosition.setPosition(0.0f, -4.0f, -5.0f);
 
         model.getTransform().setPosition(modelPosition.x, modelPosition.y,
                 modelPosition.z);
@@ -112,7 +112,7 @@ class ModelPosition {
     float y;
     float z;
 
-    void setPositio(float x, float y, float z) {
+    void setPosition(float x, float y, float z) {
         this.x = x;
         this.y = y;
         this.z = z;
