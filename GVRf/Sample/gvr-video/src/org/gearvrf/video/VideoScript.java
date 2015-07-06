@@ -175,8 +175,7 @@ public class VideoScript extends GVRScript {
                     GVRRenderingOrder.OVERLAY);
             mHeadTracker.getRenderData().setDepthTest(false);
             mHeadTracker.getRenderData().setRenderingOrder(100000);
-            mainScene.getMainCameraRig().getOwnerObject()
-                    .addChildObject(mHeadTracker);
+            mainScene.getMainCameraRig().addChildObject(mHeadTracker);
 
             /*
              * FXGear Background
@@ -665,8 +664,7 @@ public class VideoScript extends GVRScript {
 
             mCameraSurfaceTexture = new SurfaceTexture(
                     passThroughTexture.getId());
-            mainScene.getMainCameraRig().getOwnerObject()
-                    .addChildObject(mPassThroughObject);
+            mainScene.getMainCameraRig().addChildObject(mPassThroughObject);
         } catch (IOException e) {
             e.printStackTrace();
             mActivity.finish();
@@ -1042,9 +1040,9 @@ public class VideoScript extends GVRScript {
             if (isLongButtonPressed) {
                 mIsGlobalMenuOn = true;
                 float yaw = mGVRContext.getMainScene().getMainCameraRig()
-                        .getOwnerObject().getTransform().getRotationYaw();
+                        .getTransform().getRotationYaw();
                 float pitch = mGVRContext.getMainScene().getMainCameraRig()
-                        .getOwnerObject().getTransform().getRotationPitch();
+                        .getTransform().getRotationPitch();
                 if (Math.abs(pitch) >= 90.0f) {
                     if (yaw > 0.0)
                         yaw = 180.0f - yaw;

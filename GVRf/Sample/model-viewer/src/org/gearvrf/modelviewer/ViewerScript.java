@@ -16,8 +16,10 @@
 package org.gearvrf.modelviewer;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.gearvrf.*;
+import org.gearvrf.GVRPicker.GVRPickedObject;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 
 import android.util.Log;
@@ -112,7 +114,7 @@ public class ViewerScript extends GVRScript {
         mPhongShader3 = new PhongShader3(mGVRContext);
 
         GVRScene mainScene = mGVRContext.getNextMainScene();
-        
+
         mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
         mainScene.getMainCameraRig().getRightCamera()
@@ -598,8 +600,7 @@ public class ViewerScript extends GVRScript {
             headTracker.getTransform().setPosition(0.0f, 0.0f, -EYE_TO_OBJECT);
             headTracker.getRenderData().setDepthTest(false);
             headTracker.getRenderData().setRenderingOrder(100000);
-            mainScene.getMainCameraRig().getOwnerObject()
-                    .addChildObject(headTracker);
+            mainScene.getMainCameraRig().addChildObject(headTracker);
         } catch (IOException e) {
             e.printStackTrace();
             mActivity.finish();
@@ -948,10 +949,10 @@ public class ViewerScript extends GVRScript {
         mReflectionMaterial.setVec3(ReflectionShader.EYE_KEY, eye[0], eye[1],
                 eye[2]);
 
-        GVREyePointeeHolder pickedHolders[] = GVRPicker.pickScene(mGVRContext
+        List<GVRPickedObject> pickedObjects = GVRPicker.findObjects(mGVRContext
                 .getMainScene());
-        if (SelectionMode && pickedHolders.length > 0) {
-            GVRSceneObject pickedObject = pickedHolders[0].getOwnerObject();
+        if (SelectionMode && pickedObjects.size() > 0) {
+            GVRSceneObject pickedObject = pickedObjects.get(0).getHitObject();
             for (int i = 0; i < THUMBNAIL_NUM; ++i)
                 if (ThumbnailObject[i].equals(pickedObject)) {
                     ThumbnailSelected = i;

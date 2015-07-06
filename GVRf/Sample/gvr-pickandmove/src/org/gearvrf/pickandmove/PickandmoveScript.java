@@ -33,6 +33,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.GVRPicker.GVRPickedObject;
 import org.gearvrf.pickandmove.R;
 
 import android.util.Log;
@@ -61,7 +62,7 @@ public class PickandmoveScript extends GVRScript {
         headTracker.getTransform().setPosition(0.0f, 0.0f, -1.0f);
         headTracker.getRenderData().setDepthTest(false);
         headTracker.getRenderData().setRenderingOrder(100000);
-        scene.getMainCameraRig().getOwnerObject().addChildObject(headTracker);
+        scene.getMainCameraRig().addChildObject(headTracker);
 
         FutureWrapper<GVRMesh> futureQuadMesh = new FutureWrapper<GVRMesh>(
                 gvrContext.createQuad(CUBE_WIDTH, CUBE_WIDTH));
@@ -162,10 +163,10 @@ public class PickandmoveScript extends GVRScript {
             for (GVRSceneObject object : mObjects) {
                 object.getRenderData().getMaterial().setColor(1.0f, 1.0f, 1.0f);
             }
-            for (GVREyePointeeHolder eyePointeeHolder : GVRPicker
-                    .pickScene(mGVRContext.getMainScene())) {
-                eyePointeeHolder
-                        .getOwnerObject()
+            for (GVRPickedObject pickedObject : GVRPicker
+                    .findObjects(mGVRContext.getMainScene())) {
+                pickedObject
+                        .getHitObject()
                         .getRenderData()
                         .getMaterial()
                         .setColor(LOOKAT_COLOR_MASK_R, LOOKAT_COLOR_MASK_G,
@@ -193,15 +194,14 @@ public class PickandmoveScript extends GVRScript {
         case MotionEvent.ACTION_UP:
             if (isOnClick) {
                 GVRCameraRig cameraRig = scene.getMainCameraRig();
-                GVRSceneObject cameraRigObject = cameraRig.getOwnerObject();
                 if (attachedObject != null) {
-                    cameraRigObject.removeChildObject(attachedObject);
+                    cameraRig.removeChildObject(attachedObject);
                     attachedObject = null;
                 } else {
-                    for (GVREyePointeeHolder eyePointeeHolder : GVRPicker
-                            .pickScene(mGVRContext.getMainScene())) {
-                        attachedObject = eyePointeeHolder.getOwnerObject();
-                        cameraRigObject.addChildObject(attachedObject);
+                    for (GVRPickedObject pickedObject : GVRPicker
+                            .findObjects(mGVRContext.getMainScene())) {
+                        attachedObject = pickedObject.getHitObject();
+                        cameraRig.addChildObject(attachedObject);
                         attachedObject
                                 .getRenderData()
                                 .getMaterial()

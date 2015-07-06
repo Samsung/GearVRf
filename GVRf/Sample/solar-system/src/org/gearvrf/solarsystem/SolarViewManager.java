@@ -62,13 +62,13 @@ public class SolarViewManager extends GVRScript {
         });
 
         mMainScene.setFrustumCulling(true);
-        
+
         mMainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
         mMainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        mMainScene.getMainCameraRig().getOwnerObject().getTransform()
+        mMainScene.getMainCameraRig().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
         GVRSceneObject solarSystemObject = new GVRSceneObject(gvrContext);
@@ -122,8 +122,7 @@ public class SolarViewManager extends GVRScript {
         GVRSceneObject moonRevolutionObject = new GVRSceneObject(gvrContext);
         moonRevolutionObject.getTransform().setPosition(4.0f, 0.0f, 0.0f);
         earthRevolutionObject.addChildObject(moonRevolutionObject);
-        moonRevolutionObject.addChildObject(mMainScene.getMainCameraRig()
-                .getOwnerObject());
+        moonRevolutionObject.addChildObject(mMainScene.getMainCameraRig());
 
         GVRSceneObject marsRevolutionObject = new GVRSceneObject(gvrContext);
         marsRevolutionObject.getTransform().setPosition(30.0f, 0.0f, 0.0f);
@@ -150,8 +149,7 @@ public class SolarViewManager extends GVRScript {
 
         counterClockwise(moonRevolutionObject, 60f);
 
-        clockwise(mMainScene.getMainCameraRig().getOwnerObject().getTransform(),
-                60f);
+        clockwise(mMainScene.getMainCameraRig().getTransform(), 60f);
 
         counterClockwise(marsRevolutionObject, 1200f);
         counterClockwise(marsRotationObject, 200f);

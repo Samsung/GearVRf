@@ -347,6 +347,85 @@ public class GVRCameraRig extends GVRComponent {
         return NativeCameraRig.getLookAt(getNative());
     }
 
+    /**
+     * Replace the current {@link GVRTransform transform} for owner object of
+     * the camera rig.
+     * 
+     * @param transform
+     *            New transform.
+     */
+    void attachTransform(GVRTransform transform) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().attachTransform(transform);
+        }
+    }
+
+    /**
+     * Remove the object's (owner object of camera rig) {@link GVRTransform
+     * transform}.
+     * 
+     */
+    void detachTransform() {
+        if (getOwnerObject() != null) {
+            getOwnerObject().detachTransform();
+        }
+    }
+
+    /**
+     * Get the {@link GVRTransform}.
+     * 
+     * 
+     * @return The current {@link GVRTransform transform} of owner object of
+     *         camera rig. Applying transform to owner object of camera rig
+     *         moves it. If no transform is currently attached to the object,
+     *         returns {@code null}.
+     */
+    public GVRTransform getTransform() {
+        if (getOwnerObject() != null) {
+            return getOwnerObject().getTransform();
+        }
+        return null;
+    }
+
+    /**
+     * Add {@code child} as a child of this camera rig owner object.
+     * 
+     * @param child
+     *            {@link GVRSceneObject Object} to add as a child of this camera
+     *            rig owner object.
+     */
+    public void addChildObject(GVRSceneObject child) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().addChildObject(child);
+        }
+    }
+
+    /**
+     * Remove {@code child} as a child of this camera rig owner object.
+     * 
+     * @param child
+     *            {@link GVRSceneObject Object} to remove as a child of this
+     *            camera rig owner object.
+     */
+    public void removeChildObject(GVRSceneObject child) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().removeChildObject(child);
+        }
+    }
+
+    /**
+     * Get the number of child objects that belongs to owner object of this
+     * camera rig.
+     * 
+     * @return Number of {@link GVRSceneObject objects} added as children of
+     *         this camera rig owner object.
+     */
+    public int getChildrenCount() {
+        if (getOwnerObject() != null) {
+            return getOwnerObject().getChildrenCount();
+        }
+        return 0;
+    }
 }
 
 class NativeCameraRig {
