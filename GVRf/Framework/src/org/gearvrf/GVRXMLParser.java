@@ -15,17 +15,22 @@
 
 package org.gearvrf;
 
-import android.content.res.AssetManager;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+
+import org.gearvrf.utility.VrAppSettings;
+import org.gearvrf.utility.VrAppSettings.EyeBufferParms.ColorFormat;
+import org.gearvrf.utility.VrAppSettings.EyeBufferParms.DepthFormat;
+import org.gearvrf.utility.VrAppSettings.EyeBufferParms.TextureFilter;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import android.content.res.AssetManager;
+import android.util.Log;
 
 /**
  * This class simply parses XML file for distortion stored in assets folder, and
@@ -49,7 +54,7 @@ class GVRXMLParser {
      * @param fileName
      *            the distortion file name under assets folder
      */
-    GVRXMLParser(AssetManager assets, String fileName) {
+    GVRXMLParser(AssetManager assets, String fileName, VrAppSettings settings) {
         try {
             StringBuilder buf = new StringBuilder();
             InputStream is = assets.open(fileName);
@@ -102,6 +107,82 @@ class GVRXMLParser {
                                 mMSAA = Integer.parseInt(xpp
                                         .getAttributeValue(i));
                             }
+                        } else if (tagName.equals("vr-app-settings")) {
+                            Log.d("XMLParse", tagName + "   " + attributeName);
+                            if(attributeName.equals("showLoadingIcon")){
+                                settings.setShowLoadingIcon(Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("renderMonoMode")){
+                                settings.setRenderMonoMode(Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("useSrgbFramebuffer")){
+                                settings.setUseSrgbFramebuffer(Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("useProtectedFramebuffer")){
+                                settings.setUseProtectedFramebuffer(Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("framebufferPixelsWide")){
+                                settings.setFramebufferPixelsWide(Integer.parseInt(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("framebufferPixelsHigh")){
+                                settings.setFramebufferPixelsHigh(Integer.parseInt(xpp.getAttributeValue(i)));
+                            }
+                        }else if(tagName.equals("mode-parms")){
+                            if(attributeName.equals("allowPowerSave")){
+                                settings.getModeParms().setAllowPowerSave(Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("resetWindowFullScreen")){
+                                settings.getModeParms().setResetWindowFullScreen(Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("cpuLevel")){
+                                settings.getModeParms().setCpuLevel(Integer.parseInt(xpp.getAttributeValue(i)));                                
+                            }else if(attributeName.equals("gpuLevel")){
+                                settings.getModeParms().setGpuLevel(Integer.parseInt(xpp.getAttributeValue(i)));
+                            }
+                        }else if(tagName.equals("eye-buffer-parms")){
+                            String attributeValue = xpp.getAttributeValue(i);
+                            if(attributeName.equals("depthFormat")){
+                                if(attributeValue.equals("DEPTH_0")){
+                                    settings.eyeBufferParms.setDepthFormat(DepthFormat.DEPTH_0);
+                                }else if(attributeValue.equals("DEPTH_16")){
+                                    settings.eyeBufferParms.setDepthFormat(DepthFormat.DEPTH_16);
+                                }else if(attributeValue.equals("DEPTH_24")){
+                                    settings.eyeBufferParms.setDepthFormat(DepthFormat.DEPTH_24);
+                                }else if(attributeValue.equals("DEPTH_24_STENCIL_8")){
+                                    settings.eyeBufferParms.setDepthFormat(DepthFormat.DEPTH_24_STENCIL_8);                                    
+                                }
+                            }else if(attributeName.equals("textureFilter")){
+                                if(attributeValue.equals("TEXTURE_FILTER_NEAREST")){
+                                    settings.eyeBufferParms.setTextureFilter(TextureFilter.TEXTURE_FILTER_NEAREST);
+                                }else if(attributeValue.equals("TEXTURE_FILTER_BILINEAR")){
+                                    settings.eyeBufferParms.setTextureFilter(TextureFilter.TEXTURE_FILTER_BILINEAR);
+                                }else if(attributeValue.equals("TEXTURE_FILTER_ANISO_2")){
+                                    settings.eyeBufferParms.setTextureFilter(TextureFilter.TEXTURE_FILTER_ANISO_2);
+                                }else if(attributeValue.equals("TEXTURE_FILTER_ANISO_4")){
+                                    settings.eyeBufferParms.setTextureFilter(TextureFilter.TEXTURE_FILTER_ANISO_4);
+                                }
+                            }else if(attributeName.equals("colorFormat")){
+                                if(attributeValue.equals("COLOR_565")){
+                                    settings.eyeBufferParms.setColorFormat(ColorFormat.COLOR_565);
+                                }else if(attributeValue.equals("COLOR_5551")){
+                                    settings.eyeBufferParms.setColorFormat(ColorFormat.COLOR_5551);
+                                }else if(attributeValue.equals("COLOR_4444")){
+                                    settings.eyeBufferParms.setColorFormat(ColorFormat.COLOR_4444);
+                                }else if(attributeValue.equals("COLOR_8888")){
+                                    settings.eyeBufferParms.setColorFormat(ColorFormat.COLOR_8888);
+                                }else if(attributeValue.equals("COLOR_8888_sRGB")){
+                                    settings.eyeBufferParms.setColorFormat(ColorFormat.COLOR_8888_sRGB);
+                                }
+                            }else if(attributeName.equals("multiSamples")){
+                                settings.eyeBufferParms.setMultiSamples(Integer.parseInt(attributeValue));
+                            }else if(attributeName.equals("widthScale")){
+                                settings.eyeBufferParms.setWidthScale(Integer.parseInt(attributeValue));
+                            }else if(attributeName.equals("resolution")){
+                                settings.eyeBufferParms.setResolution(Integer.parseInt(attributeValue));
+                            }
+                        }else if(tagName.equals("head-model-parms")){
+                            if(attributeName.equals("interpupillaryDistance")){
+                                settings.headModelParms.setInterpupillaryDistance(Float.parseFloat(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("eyeHeight")){
+                                settings.headModelParms.setEyeHeight(Float.parseFloat(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("headModelDepth")){
+                                settings.headModelParms.setHeadModelDepth(Float.parseFloat(xpp.getAttributeValue(i)));
+                            }else if(attributeName.equals("headModelHeight")){
+                                settings.headModelParms.setHeadModelHeight(Float.parseFloat(xpp.getAttributeValue(i)));
+                            }
                         }
                     }
                 } else if (eventType == XmlPullParser.END_TAG) {
@@ -113,6 +194,9 @@ class GVRXMLParser {
             e.printStackTrace();
         } catch (XmlPullParserException e) {
             e.printStackTrace();
+        } catch (IllegalArgumentException e){
+            e.printStackTrace();
+            throw e;
         }
     }
 

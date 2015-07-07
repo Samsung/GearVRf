@@ -122,7 +122,6 @@ jclass GVRActivity::GetGlobalClassReference(const char * className) const {
 
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
-    LOG( "GVRActivity::Configure");
     //General settings.
     JNIEnv *env = app->GetVrJni();
     jobject vrSettings = env->CallObjectMethod(javaObject,
@@ -147,13 +146,14 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
     }
     settings.ShowLoadingIcon = env->GetBooleanField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "showLoadingIcon", "Z"));
-    settings.RenderMonoMode = env->GetBooleanField(vrSettings,
-            env->GetFieldID(vrAppSettingsClass, "renderMonoMode", "Z"));
     settings.UseSrgbFramebuffer = env->GetBooleanField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "useSrgbFramebuffer", "Z"));
     settings.UseProtectedFramebuffer = env->GetBooleanField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "useProtectedFramebuffer",
                     "Z"));
+
+
+
     //Settings for EyeBufferParms.
     jobject eyeParmsSettings = env->GetObjectField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "eyeBufferParms",
@@ -187,7 +187,7 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
     default:
         break;
     }
-    jobject colorFormat = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "colorFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$VrAppSettings$EyeBufferParms$ColorFormat;"));
+    jobject colorFormat = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "colorFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$ColorFormat;"));
     getValueID = env->GetMethodID(env->GetObjectClass(colorFormat),"getValue","()I");
     int colorFormatValue = (int)env->CallIntMethod(colorFormat, getValueID);
     switch(colorFormatValue){
@@ -209,15 +209,66 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
     default:
         break;
     }
-    jobject textureFilter = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "textureFilter", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$VrAppSettings$EyeBufferParms$TextureFilter;"));
+    jobject textureFilter = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "textureFilter", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$TextureFilter;"));
+    getValueID = env->GetMethodID(env->GetObjectClass(textureFilter),"getValue","()I");
+    int textureFilterValue = (int)env->CallIntMethod(textureFilter, getValueID);
+    switch(textureFilterValue){
+    case 0:
+        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_NEAREST;
+        break;
+    case 1:
+        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_BILINEAR;
+        break;
+    case 2:
+        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_ANISO_2;
+        break;
+    case 3:
+        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_ANISO_4;
+        break;
+    default:
+        break;
+    }
 
+    //Settings for ModeParms
+    jobject modeParms = env->GetObjectField(vrSettings, env->GetFieldID(vrAppSettingsClass, "modeParms", "Lorg/gearvrf/utility/VrAppSettings$ModeParms;"));
+    jclass modeParmsClass = env->GetObjectClass(modeParms);
+    settings.ModeParms.AllowPowerSave = env->GetBooleanField(modeParms, env->GetFieldID(modeParmsClass, "allowPowerSave", "Z"));
+    settings.ModeParms.ResetWindowFullscreen = env->GetBooleanField(modeParms, env->GetFieldID(modeParmsClass, "resetWindowFullScreen","Z"));
+    settings.ModeParms.GpuLevel = env->GetIntField(modeParms, env->GetFieldID(modeParmsClass, "gpuLevel", "I"));
+    settings.ModeParms.CpuLevel = env->GetIntField(modeParms, env->GetFieldID(modeParmsClass, "cpuLevel", "I"));
 
-
-
-
-
-    // leave the rest as default for now.
-    // TODO: take values specified in xml and set them here.
+    // Settings for HeadModelParms
+    jobject headModelParms = env->GetObjectField(vrSettings, env->GetFieldID(vrAppSettingsClass, "headModelParms", "Lorg/gearvrf/utility/VrAppSettings$HeadModelParms;" ));
+    jclass headModelParmsClass = env->GetObjectClass(headModelParms);
+    float interpupillaryDistance = (float)env->GetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "interpupillaryDistance", "F"));
+    if(interpupillaryDistance != interpupillaryDistance){
+        //Value not set in Java side, current Value is NaN
+        //Need to copy the system settings to java side.
+        env->SetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "interpupillaryDistance", "F"), settings.HeadModelParms.InterpupillaryDistance);
+    }else{
+        settings.HeadModelParms.InterpupillaryDistance = interpupillaryDistance;
+    }
+    float eyeHeight = (float)env->GetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "eyeHeight", "F"));
+    if(eyeHeight != eyeHeight){
+        //same as interpupilaryDistance
+        env->SetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "eyeHeight", "F"), settings.HeadModelParms.EyeHeight);
+    }else{
+        settings.HeadModelParms.EyeHeight = eyeHeight;
+    }
+    float headModelDepth = (float)env->GetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "headModelDepth", "F"));
+    if(headModelDepth != headModelDepth){
+            //same as interpupilaryDistance
+        env->SetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "headModelDepth", "F"), settings.HeadModelParms.HeadModelDepth);
+    }else{
+        settings.HeadModelParms.HeadModelDepth = headModelDepth;
+    }
+    float headModelHeight = (float)env->GetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "headModelHeight", "F"));
+    if(headModelHeight != headModelHeight){
+            //same as interpupilaryDistance
+        env->SetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "headModelHeight", "F"), settings.HeadModelParms.HeadModelHeight);
+    }else{
+        settings.HeadModelParms.HeadModelHeight = headModelHeight;
+    }
 }
 
 void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )

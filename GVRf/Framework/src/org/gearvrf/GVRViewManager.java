@@ -126,7 +126,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
      *            distortion filename under assets folder
      */
     GVRViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
-            String distortionDataFileName) {
+            GVRXMLParser xmlParser) {
         super(gvrActivity);
 
         // Clear singletons and per-run data structures
@@ -148,9 +148,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         /*
          * Sets things with the numbers in the xml.
          */
-        GVRXMLParser xmlParser = new GVRXMLParser(gvrActivity.getAssets(),
-                distortionDataFileName);
-
         DisplayMetrics metrics = new DisplayMetrics();
         gvrActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 

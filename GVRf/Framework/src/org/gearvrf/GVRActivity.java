@@ -47,12 +47,7 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
-<<<<<<< HEAD
-=======
-    long appPtr = 0;
-    
-    private VrAppSettings appSettings = null;
->>>>>>> Initial app setting
+    private VrAppSettings mAppSettings;
 
     static {
         System.loadLibrary("gvrf");
@@ -73,35 +68,24 @@ public class GVRActivity extends VrActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
+        mAppSettings = new VrAppSettings();
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
         String commandString = VrActivity.getCommandStringFromIntent(intent);
-<<<<<<< HEAD
         String fromPackageNameString = VrActivity
                 .getPackageStringFromIntent(intent);
         String uriString = VrActivity.getUriStringFromIntent(intent);
 
         setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString));
-=======
-        String fromPackageNameString = VrActivity.getPackageStringFromIntent(intent);
-        String uriString = VrActivity.getUriStringFromIntent(intent);        
-        setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
-                commandString, uriString));
-        appPtr = getAppPtr();
-        onInitAppSettings();
     }
-    
-    protected void onInitAppSettings(){
-        appSettings = new VrAppSettings();
+
+    protected void onInitAppSettings(VrAppSettings appSettings) {
+
     }
-    
     public VrAppSettings getAppSettings(){
-        Log.d("caonima","jinzhongzhao");
-        return appSettings;
->>>>>>> Initial app setting
+        return mAppSettings;
     }
 
     @Override
@@ -151,12 +135,15 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            if (isVrSupported() && !mForceMonoscopic) {
-                mGVRViewManager = new GVRViewManager(this, gvrScript,
-                        distortionDataFileName);
+
+            GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
+                    distortionDataFileName, mAppSettings);
+            onInitAppSettings(mAppSettings);
+            if (isVrSupported() && !mAppSettings.isRenderMonoMode()) {
+                mGVRViewManager = new GVRViewManager(this, gvrScript, xmlParser);
             } else {
                 mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript,
-                        distortionDataFileName);
+                        xmlParser);
             }
         } else {
             throw new IllegalArgumentException(
@@ -177,7 +164,7 @@ public class GVRActivity extends VrActivity {
      * 
      */
     public void setForceMonoscopic(boolean force) {
-        mForceMonoscopic = force;
+        mAppSettings.setRenderMonoMode(force);
     }
 
     /**
@@ -187,7 +174,7 @@ public class GVRActivity extends VrActivity {
      * @see setForceMonoscopic
      */
     public boolean getForceMonoscopic() {
-        return mForceMonoscopic;
+        return mAppSettings.isRenderMonoMode();
     }
 
     private boolean isVrSupported() {
@@ -273,5 +260,5 @@ public class GVRActivity extends VrActivity {
         return (action == KeyEvent.ACTION_DOWN) ? onKeyDown(keyCode, event)
                 : onKeyUp(keyCode, event);
     }
-    
+
 }

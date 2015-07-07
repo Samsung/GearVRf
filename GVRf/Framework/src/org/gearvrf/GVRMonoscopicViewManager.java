@@ -53,7 +53,8 @@ import android.util.DisplayMetrics;
  */
 class GVRMonoscopicViewManager extends GVRViewManager {
 
-//    private static final String TAG = Log.tag(GVRMonoscopicViewManager.class);
+    // private static final String TAG =
+    // Log.tag(GVRMonoscopicViewManager.class);
 
     private GVRSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
@@ -70,14 +71,12 @@ class GVRMonoscopicViewManager extends GVRViewManager {
      *            distortion filename under assets folder
      */
     GVRMonoscopicViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
-            String distortionDataFileName) {
-        super(gvrActivity, gvrScript, distortionDataFileName);
+            GVRXMLParser xmlParser) {
+        super(gvrActivity, gvrScript, xmlParser);
 
         /*
          * Sets things with the numbers in the xml.
          */
-        GVRXMLParser xmlParser = new GVRXMLParser(gvrActivity.getAssets(),
-                distortionDataFileName);
 
         mView = new GVRSurfaceView(gvrActivity, this, null);
         gvrActivity.setContentView(mView);
