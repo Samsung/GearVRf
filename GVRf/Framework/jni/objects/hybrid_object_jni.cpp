@@ -28,9 +28,7 @@ Java_org_gearvrf_NativeHybridObject_delete(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeHybridObject_delete(JNIEnv * env,
         jobject obj, jlong jhybrid_object) {
-    HybridObject* hybrid_object = reinterpret_cast<HybridObject*>(jhybrid_object);
-    delete hybrid_object;
-    hybrid_object = nullptr;
+    delete reinterpret_cast<HybridObject*>(jhybrid_object);
 }
 }
 

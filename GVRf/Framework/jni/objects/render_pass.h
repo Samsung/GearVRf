@@ -20,10 +20,12 @@
 #ifndef RENDER_PASS_H_
 #define RENDER_PASS_H_
 
+#include "objects/hybrid_object.h"
+
 namespace gvr {
 class Material;
 
-class RenderPass {
+class RenderPass : public HybridObject {
 public:
 
     enum CullFace : int {
