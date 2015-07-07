@@ -28,7 +28,6 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 
-import android.R.bool;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -36,12 +35,12 @@ public class LitshaderScript extends GVRScript {
 
     private static final float CUBE_WIDTH = 20.0f;
     private static final float SCALE_FACTOR = 2.0f;
-    private GVRContext mGVRContext = null;
-    private GVRLight mLight = null;
+    private GVRContext mGVRContext;
+    private GVRLight mLight;
     private static final float LIGHT_Z = 100.0f;
     private static final float LIGHT_ROTATE_RADIUS = 100.0f;
 
-    GVRSceneObject rotateObject = null;
+    GVRSceneObject rotateObject;
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -124,19 +123,18 @@ public class LitshaderScript extends GVRScript {
         mLight.setDiffuseIntensity(0.8f, 0.8f, 0.8f, 1.0f);
         mLight.setSpecularIntensity(1.0f, 0.5f, 0.5f, 1.0f);
 
-        GVRSceneObject sphere = new GVRSceneObject(gvrContext,
-                futureSphereMesh,
+        rotateObject = new GVRSceneObject(gvrContext, futureSphereMesh,
                 gvrContext.loadFutureTexture(new GVRAndroidResource(
                         mGVRContext, R.drawable.earthmap1k)));
-        rotateObject = sphere;
-        sphere.getRenderData().setMaterial(litMaterial);
-        sphere.getRenderData().setLight(mLight);
-        sphere.getRenderData().enableLight();
-        sphere.setName("sphere");
-        scene.addSceneObject(sphere);
-        sphere.getTransform()
-                .setScale(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
-        sphere.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.25f);
+        rotateObject.getRenderData().setMaterial(litMaterial);
+        rotateObject.getRenderData().setLight(mLight);
+        rotateObject.getRenderData().enableLight();
+        rotateObject.setName("sphere");
+        scene.addSceneObject(rotateObject);
+        rotateObject.getTransform().setScale(SCALE_FACTOR, SCALE_FACTOR,
+                SCALE_FACTOR);
+        rotateObject.getTransform()
+                .setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.25f);
 
         for (GVRSceneObject so : scene.getWholeSceneObjects()) {
             Log.v("", "scene object name : " + so.getName());
