@@ -27,6 +27,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.scene_objects.GVRCubeSceneObject;
 
 import android.util.Log;
 
@@ -42,9 +43,6 @@ public class CubemapScript extends GVRScript {
 
         GVRScene scene = mGVRContext.getNextMainScene();
 
-        FutureWrapper<GVRMesh> futureQuadMesh = new FutureWrapper<GVRMesh>(
-                gvrContext.createQuad(CUBE_WIDTH, CUBE_WIDTH));
-        
 //        String[] imageNames = new String[6];
 //        imageNames[0] = "screenshot3d_0.png";
 //        imageNames[1] = "screenshot3d_1.png";
@@ -60,57 +58,69 @@ public class CubemapScript extends GVRScript {
                 .loadFutureCubemapTexture(new GVRAndroidResource(mGVRContext,
                         R.raw.beach));
 
+        //////////////////////////////////////////////////////
+        // create surrounding cube using GVRCubeSceneObject //
+        //////////////////////////////////////////////////////
         GVRMaterial cubemapMaterial = new GVRMaterial(gvrContext,
                 GVRMaterial.GVRShaderType.Cubemap.ID);
         cubemapMaterial.setMainTexture(futureCubemapTexture);
+        
+        GVRCubeSceneObject mCube = new GVRCubeSceneObject(gvrContext, false, cubemapMaterial);
+        mCube.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
+        scene.addSceneObject(mCube);
 
-        // surrounding cube
-        GVRSceneObject mFrontFace = new GVRSceneObject(gvrContext,
-                futureQuadMesh, futureCubemapTexture);
-        mFrontFace.getRenderData().setMaterial(cubemapMaterial);
-        mFrontFace.setName("front");
-        scene.addSceneObject(mFrontFace);
-        mFrontFace.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.5f);
-
-        GVRSceneObject backFace = new GVRSceneObject(gvrContext,
-                futureQuadMesh, futureCubemapTexture);
-        backFace.getRenderData().setMaterial(cubemapMaterial);
-        backFace.setName("back");
-        scene.addSceneObject(backFace);
-        backFace.getTransform().setPosition(0.0f, 0.0f, CUBE_WIDTH * 0.5f);
-        backFace.getTransform().rotateByAxis(180.0f, 0.0f, 1.0f, 0.0f);
-
-        GVRSceneObject leftFace = new GVRSceneObject(gvrContext,
-                futureQuadMesh, futureCubemapTexture);
-        leftFace.getRenderData().setMaterial(cubemapMaterial);
-        leftFace.setName("left");
-        scene.addSceneObject(leftFace);
-        leftFace.getTransform().setPosition(-CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
-        leftFace.getTransform().rotateByAxis(90.0f, 0.0f, 1.0f, 0.0f);
-
-        GVRSceneObject rightFace = new GVRSceneObject(gvrContext,
-                futureQuadMesh, futureCubemapTexture);
-        rightFace.getRenderData().setMaterial(cubemapMaterial);
-        rightFace.setName("right");
-        scene.addSceneObject(rightFace);
-        rightFace.getTransform().setPosition(CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
-        rightFace.getTransform().rotateByAxis(-90.0f, 0.0f, 1.0f, 0.0f);
-
-        GVRSceneObject topFace = new GVRSceneObject(gvrContext, futureQuadMesh,
-                futureCubemapTexture);
-        topFace.getRenderData().setMaterial(cubemapMaterial);
-        topFace.setName("top");
-        scene.addSceneObject(topFace);
-        topFace.getTransform().setPosition(0.0f, CUBE_WIDTH * 0.5f, 0.0f);
-        topFace.getTransform().rotateByAxis(90.0f, 1.0f, 0.0f, 0.0f);
-
-        GVRSceneObject bottomFace = new GVRSceneObject(gvrContext,
-                futureQuadMesh, futureCubemapTexture);
-        bottomFace.getRenderData().setMaterial(cubemapMaterial);
-        bottomFace.setName("bottom");
-        scene.addSceneObject(bottomFace);
-        bottomFace.getTransform().setPosition(0.0f, -CUBE_WIDTH * 0.5f, 0.0f);
-        bottomFace.getTransform().rotateByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
+//        ///////////////////////////////////////////////////////////////
+//        // create surrounding cube using six GVRSceneOjbects (quads) //
+//        ///////////////////////////////////////////////////////////////
+//        FutureWrapper<GVRMesh> futureQuadMesh = new FutureWrapper<GVRMesh>(
+//                gvrContext.createQuad(CUBE_WIDTH, CUBE_WIDTH));
+//        
+//        GVRSceneObject mFrontFace = new GVRSceneObject(gvrContext,
+//                futureQuadMesh, futureCubemapTexture);
+//        mFrontFace.getRenderData().setMaterial(cubemapMaterial);
+//        mFrontFace.setName("front");
+//        scene.addSceneObject(mFrontFace);
+//        mFrontFace.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.5f);
+//
+//        GVRSceneObject backFace = new GVRSceneObject(gvrContext,
+//                futureQuadMesh, futureCubemapTexture);
+//        backFace.getRenderData().setMaterial(cubemapMaterial);
+//        backFace.setName("back");
+//        scene.addSceneObject(backFace);
+//        backFace.getTransform().setPosition(0.0f, 0.0f, CUBE_WIDTH * 0.5f);
+//        backFace.getTransform().rotateByAxis(180.0f, 0.0f, 1.0f, 0.0f);
+//
+//        GVRSceneObject leftFace = new GVRSceneObject(gvrContext,
+//                futureQuadMesh, futureCubemapTexture);
+//        leftFace.getRenderData().setMaterial(cubemapMaterial);
+//        leftFace.setName("left");
+//        scene.addSceneObject(leftFace);
+//        leftFace.getTransform().setPosition(-CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
+//        leftFace.getTransform().rotateByAxis(90.0f, 0.0f, 1.0f, 0.0f);
+//
+//        GVRSceneObject rightFace = new GVRSceneObject(gvrContext,
+//                futureQuadMesh, futureCubemapTexture);
+//        rightFace.getRenderData().setMaterial(cubemapMaterial);
+//        rightFace.setName("right");
+//        scene.addSceneObject(rightFace);
+//        rightFace.getTransform().setPosition(CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
+//        rightFace.getTransform().rotateByAxis(-90.0f, 0.0f, 1.0f, 0.0f);
+//
+//        GVRSceneObject topFace = new GVRSceneObject(gvrContext, futureQuadMesh,
+//                futureCubemapTexture);
+//        topFace.getRenderData().setMaterial(cubemapMaterial);
+//        topFace.setName("top");
+//        scene.addSceneObject(topFace);
+//        topFace.getTransform().setPosition(0.0f, CUBE_WIDTH * 0.5f, 0.0f);
+//        topFace.getTransform().rotateByAxis(90.0f, 1.0f, 0.0f, 0.0f);
+//
+//        GVRSceneObject bottomFace = new GVRSceneObject(gvrContext,
+//                futureQuadMesh, futureCubemapTexture);
+//        bottomFace.getRenderData().setMaterial(cubemapMaterial);
+//        bottomFace.setName("bottom");
+//        scene.addSceneObject(bottomFace);
+//        bottomFace.getTransform().setPosition(0.0f, -CUBE_WIDTH * 0.5f, 0.0f);
+//        bottomFace.getTransform().rotateByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
 
         // reflective object
         Future<GVRMesh> futureSphereMesh = gvrContext

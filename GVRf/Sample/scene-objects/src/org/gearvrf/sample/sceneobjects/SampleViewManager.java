@@ -61,10 +61,14 @@ public class SampleViewManager extends GVRScript {
                 .loadFutureTexture(new GVRAndroidResource(gvrContext,
                         R.drawable.gearvr_logo));
 
+        // setup material
+        GVRMaterial material = new GVRMaterial(gvrContext);
+        material.setMainTexture(futureTexture);
+
         // create a scene object (this constructor creates a rectangular scene
         // object that uses the standard 'unlit' shader)
         GVRSceneObject quadObject = new GVRSceneObject(gvrContext, 4.0f, 2.0f);
-        GVRCubeSceneObject cubeObject = new GVRCubeSceneObject(gvrContext);
+        GVRCubeSceneObject cubeObject = new GVRCubeSceneObject(gvrContext, true, material);
         GVRSphereSceneObject sphereObject = new GVRSphereSceneObject(gvrContext);
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
                 gvrContext);
@@ -94,12 +98,8 @@ public class SampleViewManager extends GVRScript {
             objectList.get(i).getRenderData().setRenderMask(0);
         }
 
-        // setup material
-        GVRMaterial material = new GVRMaterial(gvrContext);
-        material.setMainTexture(futureTexture);
-
         quadObject.getRenderData().setMaterial(material);
-        cubeObject.getRenderData().setMaterial(material);
+        //cubeObject.getRenderData().setMaterial(material);
         sphereObject.getRenderData().setMaterial(material);
         cylinderObject.getRenderData().setMaterial(material);
         coneObject.getRenderData().setMaterial(material);
