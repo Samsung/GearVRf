@@ -35,6 +35,7 @@ import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
+import org.gearvrf.vendor.jassimp.AiColor;
 import org.gearvrf.vendor.jassimp.AiMaterial;
 import org.gearvrf.vendor.jassimp.AiMatrix4f;
 import org.gearvrf.vendor.jassimp.AiNode;
@@ -47,7 +48,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.opengl.Matrix;
 import android.view.KeyEvent;
 
 /**
@@ -450,7 +450,7 @@ public abstract class GVRContext {
 
         AiScene assimpScene = assimpImporter.getAssimpScene();
 
-        AiWrapperProvider<byte[], AiMatrix4f, byte[], AiNode, byte[]> wrapperProvider = new AiWrapperProvider<byte[], AiMatrix4f, byte[], AiNode, byte[]>() {
+        AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider = new AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]>() {
 
             /**
              * Wraps a RGBA color.
@@ -465,10 +465,9 @@ public abstract class GVRContext {
              * @return the wrapped color
              */
             @Override
-            public byte[] wrapColor(ByteBuffer buffer, int offset) {
-                byte[] colorBuffer = new byte[4];
-                buffer.get(colorBuffer, offset, 4);
-                return colorBuffer;
+            public AiColor wrapColor(ByteBuffer buffer, int offset) {
+                AiColor color = new AiColor(buffer, offset);
+                return color;
             }
 
             /**
@@ -573,7 +572,6 @@ public abstract class GVRContext {
 
         try {
             for (AiNode childNode : childrenNodes) {
-
                 for (int i = 0; i < childNode.getNumMeshes(); i++) {
 
                     FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
@@ -603,7 +601,77 @@ public abstract class GVRContext {
                         wholeSceneObject.addChildObject(sceneObject);
 
                     } else {
-                        // Case of no texture. Might be color.
+                        // The case when there is no texture
+                        // This block also takes care for the case when there
+                        // are no texture or color for the mesh as the methods
+                        // that are used for getting the colors of the material
+                        // returns a default when they are not present
+                        AiColor diffuseColor = material
+                                .getDiffuseColor(wrapperProvider);
+                        AiColor ambientColor = material
+                                .getAmbientColor(wrapperProvider);
+                        float opacity = material.getOpacity();
+
+                        final String DIFFUSE_COLOR_KEY = "diffuse_color";
+                        final String AMBIENT_COLOR_KEY = "ambient_color";
+                        final String COLOR_OPACITY_KEY = "opacity";
+
+                        final String VERTEX_SHADER = "attribute vec4 a_position;\n"
+                                + "uniform mat4 u_mvp;\n"
+                                + "void main() {\n"
+                                + "  gl_Position = u_mvp * a_position;\n"
+                                + "}\n";
+
+                        final String FRAGMENT_SHADER = "precision mediump float;\n"
+                                + "uniform vec4 diffuse_color;\n" //
+                                + "uniform vec4 ambient_color;\n"
+                                + "uniform float opacity;\n"
+                                + "void main() {\n" //
+                                + "  gl_FragColor = ( diffuse_color * opacity ) + ambient_color;\n"
+                                + "}\n";
+
+                        GVRCustomMaterialShaderId mShaderId;
+                        GVRMaterialMap mCustomShader = null;
+
+                        final GVRMaterialShaderManager shaderManager = this
+                                .getMaterialShaderManager();
+                        mShaderId = shaderManager.addShader(VERTEX_SHADER,
+                                FRAGMENT_SHADER);
+                        mCustomShader = shaderManager.getShaderMap(mShaderId);
+                        mCustomShader.addUniformVec4Key("diffuse_color",
+                                DIFFUSE_COLOR_KEY);
+                        mCustomShader.addUniformVec4Key("ambient_color",
+                                AMBIENT_COLOR_KEY);
+                        mCustomShader.addUniformFloatKey("opacity",
+                                COLOR_OPACITY_KEY);
+
+                        GVRMaterial meshMaterial = new GVRMaterial(this,
+                                mShaderId);
+
+                        meshMaterial
+                                .setVec4(DIFFUSE_COLOR_KEY,
+                                        diffuseColor.getRed(),
+                                        diffuseColor.getGreen(),
+                                        diffuseColor.getBlue(),
+                                        diffuseColor.getAlpha());
+
+                        meshMaterial
+                                .setVec4(AMBIENT_COLOR_KEY,
+                                        ambientColor.getRed(),
+                                        ambientColor.getGreen(),
+                                        ambientColor.getBlue(),
+                                        ambientColor.getAlpha());
+
+                        meshMaterial.setFloat(COLOR_OPACITY_KEY, opacity);
+
+                        GVRSceneObject sceneObject = new GVRSceneObject(this);
+                        GVRRenderData sceneObjectRenderData = new GVRRenderData(
+                                this);
+                        sceneObjectRenderData.setMesh(futureMesh);
+                        sceneObjectRenderData.setMaterial(meshMaterial);
+                        sceneObject.attachRenderData(sceneObjectRenderData);
+
+                        wholeSceneObject.addChildObject(sceneObject);
                     }
                 }
             }
