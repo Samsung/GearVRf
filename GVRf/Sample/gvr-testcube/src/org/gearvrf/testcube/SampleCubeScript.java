@@ -44,13 +44,13 @@ public class SampleCubeScript extends GVRScript {
                 6);
         futureTextureList.add(gvrContext
                 .loadFutureTexture(new GVRAndroidResource(mGVRContext,
-                        R.drawable.front)));
+                        R.drawable.back)));
         futureTextureList.add(gvrContext
                 .loadFutureTexture(new GVRAndroidResource(mGVRContext,
                         R.drawable.right)));
         futureTextureList.add(gvrContext
                 .loadFutureTexture(new GVRAndroidResource(mGVRContext,
-                        R.drawable.back)));
+                        R.drawable.front)));
         futureTextureList.add(gvrContext
                 .loadFutureTexture(new GVRAndroidResource(mGVRContext,
                         R.drawable.left)));

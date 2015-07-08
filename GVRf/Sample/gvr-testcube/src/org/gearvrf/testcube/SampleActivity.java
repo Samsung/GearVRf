@@ -17,7 +17,6 @@ package org.gearvrf.testcube;
 
 import org.gearvrf.GVRActivity;
 import android.os.Bundle;
-import android.view.MotionEvent;
 
 public class SampleActivity extends GVRActivity {
 

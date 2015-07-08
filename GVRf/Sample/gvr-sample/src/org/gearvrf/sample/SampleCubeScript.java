@@ -96,7 +96,7 @@ public class SampleCubeScript extends GVRScript {
         leftFace.getTransform().setPosition(-CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
         leftFace.getTransform().rotateByAxis(90.0f, 0.0f, 1.0f, 0.0f);
 
-//        leftFace.getRenderData().setRenderMask(GVRRenderMaskBit.Left);
+        leftFace.getRenderData().setRenderMask(GVRRenderMaskBit.Left);
 
         GVRSceneObject rightFace = new GVRSceneObject(gvrContext, futureMesh,
                 gvrContext.loadFutureTexture(new GVRAndroidResource(
@@ -106,7 +106,7 @@ public class SampleCubeScript extends GVRScript {
         rightFace.getTransform().setPosition(CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
         rightFace.getTransform().rotateByAxis(-90.0f, 0.0f, 1.0f, 0.0f);
 
-//        rightFace.getRenderData().setRenderMask(GVRRenderMaskBit.Right);
+        rightFace.getRenderData().setRenderMask(GVRRenderMaskBit.Right);
 
         GVRSceneObject topFace = new GVRSceneObject(gvrContext, futureMesh,
                 gvrContext.loadFutureTexture(new GVRAndroidResource(

@@ -46,6 +46,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     //    |  .......|.|     |  .......|.5     |  9......|.8
     //    | /       |/      | /       |/      | /       |/
     //    0---------1       ----------4       ----------
+    //       front             right              back
     //
     //     14----------      18--------19        ---------- 
     //     / .       /|      / .       /|      / .       /|
@@ -54,7 +55,12 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     //    | 12......|.|     |  .......|.|     | 20......|21
     //    | /       |/      | /       |/      | /       |/
     //   13---------        ----------        22-------23
+    //       left               top              bottom
+    //
     //@formatter:on
+    //
+    // (Note that these name are for outward facing. When looking from inside,
+    // "back" face is in front of you, and "front" face is behind you.)
 
     private static final float[] SIMPLE_VERTICES = { -SIZE, -SIZE, SIZE, // 0
             SIZE, -SIZE, SIZE, // 1
@@ -123,13 +129,22 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
             0.0f };
 
-    private static final float[] SIMPLE_TEXCOORDS = { 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+    private static final float[] SIMPLE_OUTWARD_TEXCOORDS = { 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, // front
             0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // right
             0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // back
             0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // left
             0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // top
-            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom
+            0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f  // bottom
+    };
+
+    private static final float[] SIMPLE_INWARD_TEXCOORDS = { 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, // front
+            1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // right
+            1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // back
+            1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // left
+            0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top
+            0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f  // bottom
     };
 
     private static final char[] SIMPLE_OUTWARD_INDICES = { 0, 1, 2, // front
@@ -290,12 +305,12 @@ public class GVRCubeSceneObject extends GVRSceneObject {
         if (facingOut) {
             mesh.setVertices(SIMPLE_VERTICES);
             mesh.setNormals(SIMPLE_OUTWARD_NORMALS);
-            mesh.setTexCoords(SIMPLE_TEXCOORDS);
+            mesh.setTexCoords(SIMPLE_OUTWARD_TEXCOORDS);
             mesh.setTriangles(SIMPLE_OUTWARD_INDICES);
         } else {
             mesh.setVertices(SIMPLE_VERTICES);
             mesh.setNormals(SIMPLE_INWARD_NORMALS);
-            mesh.setTexCoords(SIMPLE_TEXCOORDS);
+            mesh.setTexCoords(SIMPLE_INWARD_TEXCOORDS);
             mesh.setTriangles(SIMPLE_INWARD_INDICES);
         }
 
@@ -350,7 +365,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             for (int i = 0; i < 6; i++) {
                 meshes[i].setVertices(SIMPLE_VERTICES);
                 meshes[i].setNormals(SIMPLE_OUTWARD_NORMALS);
-                meshes[i].setTexCoords(SIMPLE_TEXCOORDS);
+                meshes[i].setTexCoords(SIMPLE_OUTWARD_TEXCOORDS);
                 children[i] = new GVRSceneObject(gvrContext,
                         new FutureWrapper<GVRMesh>(meshes[i]),
                         futureTextureList.get(i));
@@ -366,7 +381,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             for (int i = 0; i < 6; i++) {
                 meshes[i].setVertices(SIMPLE_VERTICES);
                 meshes[i].setNormals(SIMPLE_INWARD_NORMALS);
-                meshes[i].setTexCoords(SIMPLE_TEXCOORDS);
+                meshes[i].setTexCoords(SIMPLE_INWARD_TEXCOORDS);
                 children[i] = new GVRSceneObject(gvrContext,
                         new FutureWrapper<GVRMesh>(meshes[i]),
                         futureTextureList.get(i));

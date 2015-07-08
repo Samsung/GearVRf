@@ -160,63 +160,69 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         indices = new char[triangleNumber];
 
         // bottom cap
-        createCap(0, stackNumber, sliceNumber, false, facingOut);
+        createCap(stackNumber, sliceNumber, false, facingOut);
 
         // body
         createBody(stackNumber, sliceNumber, facingOut);
 
         // top cap
-        createCap(stackNumber, stackNumber, sliceNumber, true, facingOut);
+        createCap(stackNumber, sliceNumber, true, facingOut);
     }
 
-    private void createCap(int stack, int stackNumber, int sliceNumber,
-            boolean top, boolean facingOut) {
+    private void createCap(int stackNumber, int sliceNumber, boolean top,
+            boolean facingOut) {
 
         float stackPercentage0;
         float stackPercentage1;
 
-        if (top) {
-            stackPercentage0 = ((float) (stack - 1) / stackNumber);
-            stackPercentage1 = ((float) (stack) / stackNumber);
+        if (!top) {
+            stackPercentage0 = ((float) (stackNumber - 1) / stackNumber);
+            stackPercentage1 = 1.0f;
 
         } else {
-            stackPercentage0 = ((float) (stack + 1) / stackNumber);
-            stackPercentage1 = ((float) (stack) / stackNumber);
+            stackPercentage0 = (1.0f / stackNumber);
+            stackPercentage1 = 0.0f;
         }
 
         float t0 = stackPercentage0;
         float t1 = stackPercentage1;
-        double theta1 = stackPercentage0 * Math.PI;
-        double theta2 = stackPercentage1 * Math.PI;
+        double theta0 = stackPercentage0 * Math.PI;
+        double theta1 = stackPercentage1 * Math.PI;
+        double cosTheta0 = Math.cos(theta0);
+        double sinTheta0 = Math.sin(theta0);
         double cosTheta1 = Math.cos(theta1);
         double sinTheta1 = Math.sin(theta1);
-        double cosTheta2 = Math.cos(theta2);
-        double sinTheta2 = Math.sin(theta2);
 
         for (int slice = 0; slice < sliceNumber; slice++) {
             float slicePercentage0 = ((float) (slice) / sliceNumber);
             float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
-            double phi1 = slicePercentage0 * 2.0 * Math.PI;
-            double phi2 = slicePercentage1 * 2.0 * Math.PI;
-            float s0 = slicePercentage0;
-            float s1 = slicePercentage1;
+            double phi0 = slicePercentage0 * 2.0 * Math.PI;
+            double phi1 = slicePercentage1 * 2.0 * Math.PI;
+            float s0, s1;
+            if (facingOut) {
+                s0 = 1 - slicePercentage0;
+                s1 = 1 - slicePercentage1;
+            } else {
+                s0 = slicePercentage0;
+                s1 = slicePercentage1;
+            }
             float s2 = (s0 + s1) / 2.0f;
+            double cosPhi0 = Math.cos(phi0);
+            double sinPhi0 = Math.sin(phi0);
             double cosPhi1 = Math.cos(phi1);
             double sinPhi1 = Math.sin(phi1);
-            double cosPhi2 = Math.cos(phi2);
-            double sinPhi2 = Math.sin(phi2);
 
-            float x0 = (float) (sinTheta1 * cosPhi1);
-            float y0 = (float) (sinTheta1 * sinPhi1);
-            float z0 = (float) cosTheta1;
+            float x0 = (float) (sinTheta0 * cosPhi0);
+            float y0 = (float) cosTheta0;
+            float z0 = (float) (sinTheta0 * sinPhi0);
 
-            float x1 = (float) (sinTheta1 * cosPhi2);
-            float y1 = (float) (sinTheta1 * sinPhi2);
-            float z1 = (float) cosTheta1;
+            float x1 = (float) (sinTheta0 * cosPhi1);
+            float y1 = (float) cosTheta0;
+            float z1 = (float) (sinTheta0 * sinPhi1);
 
-            float x2 = (float) (sinTheta2 * cosPhi1);
-            float y2 = (float) (sinTheta2 * sinPhi1);
-            float z2 = (float) cosTheta2;
+            float x2 = (float) (sinTheta1 * cosPhi0);
+            float y2 = (float) cosTheta1;
+            float z2 = (float) (sinTheta1 * sinPhi0);
 
             vertices[vertexCount + 0] = x0;
             vertices[vertexCount + 1] = y0;
@@ -263,7 +269,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             texCoords[texCoordCount + 4] = s2;
             texCoords[texCoordCount + 5] = t1;
 
-            if (facingOut == top) {
+            if ((facingOut && top) || (!facingOut && !top)) {
                 indices[indexCount + 0] = (char) (triangleCount + 1);
                 indices[indexCount + 1] = (char) (triangleCount + 0);
                 indices[indexCount + 2] = (char) (triangleCount + 2);
@@ -289,40 +295,46 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             float t0 = stackPercentage0;
             float t1 = stackPercentage1;
 
-            double theta1 = stackPercentage0 * Math.PI;
-            double theta2 = stackPercentage1 * Math.PI;
+            double theta0 = stackPercentage0 * Math.PI;
+            double theta1 = stackPercentage1 * Math.PI;
+            double cosTheta0 = Math.cos(theta0);
+            double sinTheta0 = Math.sin(theta0);
             double cosTheta1 = Math.cos(theta1);
             double sinTheta1 = Math.sin(theta1);
-            double cosTheta2 = Math.cos(theta2);
-            double sinTheta2 = Math.sin(theta2);
 
             for (int slice = 0; slice < sliceNumber; slice++) {
                 float slicePercentage0 = ((float) (slice) / sliceNumber);
                 float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
-                double phi1 = slicePercentage0 * 2.0 * Math.PI;
-                double phi2 = slicePercentage1 * 2.0 * Math.PI;
-                float s0 = slicePercentage0;
-                float s1 = slicePercentage1;
+                double phi0 = slicePercentage0 * 2.0 * Math.PI;
+                double phi1 = slicePercentage1 * 2.0 * Math.PI;
+                float s0, s1;
+                if (facingOut) {
+                    s0 = 1 - slicePercentage0;
+                    s1 = 1 - slicePercentage1;
+                } else {
+                    s0 = slicePercentage0;
+                    s1 = slicePercentage1;
+                }
+                double cosPhi0 = Math.cos(phi0);
+                double sinPhi0 = Math.sin(phi0);
                 double cosPhi1 = Math.cos(phi1);
                 double sinPhi1 = Math.sin(phi1);
-                double cosPhi2 = Math.cos(phi2);
-                double sinPhi2 = Math.sin(phi2);
 
-                float x0 = (float) (sinTheta1 * cosPhi1);
-                float y0 = (float) (sinTheta1 * sinPhi1);
-                float z0 = (float) cosTheta1;
+                float x0 = (float) (sinTheta0 * cosPhi0);
+                float y0 = (float) cosTheta0;
+                float z0 = (float) (sinTheta0 * sinPhi0);
 
-                float x1 = (float) (sinTheta1 * cosPhi2);
-                float y1 = (float) (sinTheta1 * sinPhi2);
-                float z1 = (float) cosTheta1;
+                float x1 = (float) (sinTheta0 * cosPhi1);
+                float y1 = (float) cosTheta0;
+                float z1 = (float) (sinTheta0 * sinPhi1);
 
-                float x2 = (float) (sinTheta2 * cosPhi1);
-                float y2 = (float) (sinTheta2 * sinPhi1);
-                float z2 = (float) cosTheta2;
+                float x2 = (float) (sinTheta1 * cosPhi0);
+                float y2 = (float) cosTheta1;
+                float z2 = (float) (sinTheta1 * sinPhi0);
 
-                float x3 = (float) (sinTheta2 * cosPhi2);
-                float y3 = (float) (sinTheta2 * sinPhi2);
-                float z3 = (float) cosTheta2;
+                float x3 = (float) (sinTheta1 * cosPhi1);
+                float y3 = (float) cosTheta1;
+                float z3 = (float) (sinTheta1 * sinPhi1);
 
                 vertices[vertexCount + 0] = x0;
                 vertices[vertexCount + 1] = y0;
@@ -384,20 +396,21 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 texCoords[texCoordCount + 7] = t1;
 
                 // one quad looking from outside toward center
+                //
                 // @formatter:off
-                // 0---1
-                // |   |
-                // 2---3
+                //
+                //     s1 --> s0
+                //
+                // t0   1-----0
+                //  |   |     |
+                //  v   |     |
+                // t1   3-----2
+                //     
                 // @formatter:on
+                //
+                // Note that tex_coord t increase from top to bottom because the
+                // texture image is loaded upside down.
                 if (facingOut) {
-                    indices[indexCount + 0] = (char) (triangleCount + 0);
-                    indices[indexCount + 1] = (char) (triangleCount + 2);
-                    indices[indexCount + 2] = (char) (triangleCount + 1);
-
-                    indices[indexCount + 3] = (char) (triangleCount + 2);
-                    indices[indexCount + 4] = (char) (triangleCount + 3);
-                    indices[indexCount + 5] = (char) (triangleCount + 1);
-                } else {
                     indices[indexCount + 0] = (char) (triangleCount + 0);
                     indices[indexCount + 1] = (char) (triangleCount + 1);
                     indices[indexCount + 2] = (char) (triangleCount + 2);
@@ -405,6 +418,14 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                     indices[indexCount + 3] = (char) (triangleCount + 2);
                     indices[indexCount + 4] = (char) (triangleCount + 1);
                     indices[indexCount + 5] = (char) (triangleCount + 3);
+                } else {
+                    indices[indexCount + 0] = (char) (triangleCount + 0);
+                    indices[indexCount + 1] = (char) (triangleCount + 2);
+                    indices[indexCount + 2] = (char) (triangleCount + 1);
+
+                    indices[indexCount + 3] = (char) (triangleCount + 2);
+                    indices[indexCount + 4] = (char) (triangleCount + 3);
+                    indices[indexCount + 5] = (char) (triangleCount + 1);
                 }
 
                 vertexCount += 12;
