@@ -31,6 +31,7 @@
 namespace gvr {
 class Mesh;
 class Material;
+class Light;
 
 class RenderData: public Component {
 public:
@@ -43,7 +44,7 @@ public:
     };
 
     RenderData() :
-            Component(), mesh_(0), material_(0), render_mask_(
+            Component(), mesh_(0), material_(0), light_(0), use_light_(false), render_mask_(
                     DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), cull_test_(true), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
@@ -67,6 +68,27 @@ public:
 
     void set_material(Material* material) {
         material_ = material;
+    }
+
+    Light* light() const {
+        return light_;
+    }
+
+    void set_light(Light* light) {
+        light_ = light;
+        use_light_ = true;
+    }
+
+    void enable_light() {
+        use_light_ = true;
+    }
+
+    void disable_light() {
+        use_light_ = false;
+    }
+
+    bool light_enabled() {
+        return use_light_;
     }
 
     int render_mask() const {
@@ -152,6 +174,8 @@ private:
     static const int DEFAULT_RENDERING_ORDER = Geometry;
     Mesh* mesh_;
     Material* material_;
+    Light* light_;
+    bool use_light_;
     int render_mask_;
     int rendering_order_;
     bool cull_test_;

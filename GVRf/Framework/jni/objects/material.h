@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Links textures and shaders.
  ***************************************************************************/
@@ -36,14 +35,15 @@ class Color;
 class Material: public HybridObject {
 public:
     enum ShaderType {
-        UNLIT_SHADER = 0,
-        UNLIT_HORIZONTAL_STEREO_SHADER = 1,
-        UNLIT_VERTICAL_STEREO_SHADER = 2,
-        OES_SHADER = 3,
-        OES_HORIZONTAL_STEREO_SHADER = 4,
-        OES_VERTICAL_STEREO_SHADER = 5,
-        CUBEMAP_SHADER = 6,
-        CUBEMAP_REFLECTION_SHADER = 7
+        UNLIT_HORIZONTAL_STEREO_SHADER = 0,
+        UNLIT_VERTICAL_STEREO_SHADER = 1,
+        OES_SHADER = 2,
+        OES_HORIZONTAL_STEREO_SHADER = 3,
+        OES_VERTICAL_STEREO_SHADER = 4,
+        CUBEMAP_SHADER = 5,
+        CUBEMAP_REFLECTION_SHADER = 6,
+        TEXTURE_SHADER = 7,
+        TEXTURE_SHADER_NOLIGHT = 100
     };
 
     explicit Material(ShaderType shader_type) :

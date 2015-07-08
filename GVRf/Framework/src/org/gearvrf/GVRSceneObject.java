@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMaterial.GVRShaderType.Unlit;
 
 /**
  * One of the key GVRF classes: a scene object.
@@ -120,11 +119,11 @@ public class GVRSceneObject extends GVRHybridObject {
         getRenderData().setMaterial(material);
     }
 
-    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Unlit.ID;
+    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
 
     /**
      * Constructs a scene object with {@linkplain GVRMesh an arbitrarily complex
-     * geometry} that uses the standard {@linkplain Unlit 'unlit shader'} to
+     * geometry} that uses the standard {@linkplain Texture 'texture shader'} to
      * display a {@linkplain GVRTexture texture.}
      * 
      * 
@@ -226,7 +225,7 @@ public class GVRSceneObject extends GVRHybridObject {
 
     /**
      * Constructs a 2D, rectangular scene object that uses the standard
-     * {@linkplain Unlit 'unlit shader'} to display a {@linkplain GVRTexture
+     * {@linkplain Texture 'texture shader'} to display a {@linkplain GVRTexture
      * texture.}
      * 
      * @param gvrContext

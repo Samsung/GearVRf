@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 import static android.opengl.GLES30.*;
 
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.Threads;
 
 /**
@@ -35,6 +36,7 @@ public class GVRRenderData extends GVRComponent {
 
     private GVRMesh mMesh;
     private GVRMaterial mMaterial;
+    private GVRLight mLight;
 
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
@@ -93,6 +95,7 @@ public class GVRRenderData extends GVRComponent {
      */
     public GVRRenderData(GVRContext gvrContext) {
         super(gvrContext, NativeRenderData.ctor());
+        isLightEnabled = false;
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
@@ -282,6 +285,73 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
+     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is being lit
+     *         by.
+     */
+    public GVRLight getLight() {
+        return mLight;
+    }
+
+    /**
+     * Set the {@link GVRLight light} the mesh will be lit by.
+     * 
+     * @param light
+     *            The {@link GVRLight light} for rendering.
+     */
+    public void setLight(GVRLight light) {
+        if (mMaterial.getShaderType() != GVRShaderType.Texture.ID) {
+            throw new UnsupportedOperationException(
+                    "Only Texture shader can has light.");
+        }
+        mLight = light;
+        NativeRenderData.setLight(getNative(), light.getNative());
+        isLightEnabled = true;
+    }
+
+    /**
+     * Enable lighting effect for the render_data. Note that it is different to
+     * GVRLight.enable(). GVRLight.enable turn on a light, while this method
+     * enable the lighting effect for the render_data. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     */
+    public void enableLight() {
+        if (mLight == null) {
+            throw new UnsupportedOperationException("No light is added yet.");
+        }
+        NativeRenderData.enableLight(getNative());
+        isLightEnabled = true;
+    }
+
+    /**
+     * Disable lighting effect for the render_data. Note that it is different to
+     * GVRLight.disable(). GVRLight.disable turn off a light, while this method
+     * disable the lighting effect for the render_data. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     */
+    public void disableLight() {
+        if (mLight == null) {
+            throw new UnsupportedOperationException("No light is added yet.");
+        }
+        NativeRenderData.disableLight(getNative());
+        isLightEnabled = false;
+    }
+
+    /**
+     * Get the enable/disable status for the lighting effect. Note that it is
+     * different to enable/disable status of the light. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     * 
+     * @return true if lighting effect is enabled, false if lighting effect is
+     *         disabled.
+     */
+    public boolean isLightEnabled() {
+        return isLightEnabled;
+    }
+
+    /**
      * Get the rendering options bit mask.
      * 
      * @return The rendering options bit mask.
@@ -465,6 +535,7 @@ public class GVRRenderData extends GVRComponent {
         NativeRenderData.setDrawMode(getNative(), drawMode);
     }
 
+    private boolean isLightEnabled;
 }
 
 class NativeRenderData {
@@ -473,6 +544,12 @@ class NativeRenderData {
     static native void setMesh(long renderData, long mesh);
 
     static native void setMaterial(long renderData, long material);
+
+    static native void setLight(long renderData, long light);
+
+    static native void enableLight(long renderData);
+
+    static native void disableLight(long renderData);
 
     static native int getRenderMask(long renderData);
 

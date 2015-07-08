@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * JNI
  ***************************************************************************/
@@ -38,16 +37,16 @@ Java_org_gearvrf_NativeShaderManager_getCustomShader(
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeShaderManager_ctor(JNIEnv * env,
-        jobject obj) {
+    jobject obj) {
     return reinterpret_cast<jlong>(new ShaderManager());
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeShaderManager_addCustomShader(
-        JNIEnv * env, jobject obj, jlong jshader_manager, jstring vertex_shader,
-        jstring fragment_shader) {
+    JNIEnv * env, jobject obj, jlong jshader_manager, jstring vertex_shader,
+    jstring fragment_shader) {
     ShaderManager* shader_manager =
-            reinterpret_cast<ShaderManager*>(jshader_manager);
+    reinterpret_cast<ShaderManager*>(jshader_manager);
     const char *vertex_str = env->GetStringUTFChars(vertex_shader, 0);
     std::string native_vertex_shader = std::string(vertex_str);
     const char *fragment_str = env->GetStringUTFChars(fragment_shader, 0);
@@ -63,14 +62,14 @@ Java_org_gearvrf_NativeShaderManager_addCustomShader(
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeShaderManager_getCustomShader(
-        JNIEnv * env, jobject obj, jlong jshader_manager, jint id) {
+    JNIEnv * env, jobject obj, jlong jshader_manager, jint id) {
     ShaderManager* shader_manager =
-            reinterpret_cast<ShaderManager*>(jshader_manager);
+    reinterpret_cast<ShaderManager*>(jshader_manager);
     try {
         return reinterpret_cast<jlong>(shader_manager->getCustomShader(id));
     } catch (char const *e) {
         return 0;
-    }
+}
 }
 
 }
