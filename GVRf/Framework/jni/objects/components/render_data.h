@@ -52,14 +52,9 @@ public:
                     DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), draw_mode_(GL_TRIANGLES) {
-
-        // TODO: Make sure to always create a base pass. Right now it's guaranteed only on Java.
     }
 
     ~RenderData() {
-        for (int i = 0; i < render_pass_list_.size(); ++i) {
-            delete render_pass_list_[i];
-        }
         render_pass_list_.clear();
     }
 
