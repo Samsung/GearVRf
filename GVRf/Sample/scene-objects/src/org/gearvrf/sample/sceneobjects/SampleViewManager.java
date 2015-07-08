@@ -69,7 +69,7 @@ public class SampleViewManager extends GVRScript {
         // object that uses the standard 'unlit' shader)
         GVRSceneObject quadObject = new GVRSceneObject(gvrContext, 4.0f, 2.0f);
         GVRCubeSceneObject cubeObject = new GVRCubeSceneObject(gvrContext, true, material);
-        GVRSphereSceneObject sphereObject = new GVRSphereSceneObject(gvrContext);
+        GVRSphereSceneObject sphereObject = new GVRSphereSceneObject(gvrContext, true, material);
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
                 gvrContext);
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
@@ -99,8 +99,6 @@ public class SampleViewManager extends GVRScript {
         }
 
         quadObject.getRenderData().setMaterial(material);
-        //cubeObject.getRenderData().setMaterial(material);
-        sphereObject.getRenderData().setMaterial(material);
         cylinderObject.getRenderData().setMaterial(material);
         coneObject.getRenderData().setMaterial(material);
 

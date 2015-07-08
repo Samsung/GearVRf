@@ -25,7 +25,7 @@ public class GVRConeSceneObject extends GVRSceneObject {
 
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRConeSceneObject.class);
-    
+
     private static final int STACK_NUMBER = 10;
     private static final int SLICE_NUMBER = 36;
     private static final float BASE_RADIUS = 0.5f;
