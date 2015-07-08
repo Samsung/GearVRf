@@ -60,25 +60,41 @@ public class JassimpModelLoaderViewManager extends GVRScript {
         // Apply frustum culling
         mMainScene.setFrustumCulling(true);
 
-        GVRSceneObject model = gvrContext.getAssimpModel("astro_boy.dae");
-
-        ModelPosition modelPosition = new ModelPosition();
-
-        modelPosition.setPosition(0.0f, -4.0f, -5.0f);
-
-        model.getTransform().setPosition(modelPosition.x, modelPosition.y,
-                modelPosition.z);
-        model.getTransform().setRotationByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
-
         GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
         mainCameraRig.getLeftCamera().setBackgroundColor(Color.BLACK);
         mainCameraRig.getRightCamera().setBackgroundColor(Color.BLACK);
         mainCameraRig.getOwnerObject().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
-        mMainScene.addSceneObject(model);
+        // Model with texture
+        GVRSceneObject astroBoyModel = gvrContext
+                .getAssimpModel("astro_boy.dae");
 
-        rotateModel(model, 60f, modelPosition);
+        // Model with color
+        GVRSceneObject benchModel = gvrContext.getAssimpModel("bench.dae");
+
+        ModelPosition astroBoyModelPosition = new ModelPosition();
+
+        astroBoyModelPosition.setPosition(0.0f, -4.0f, -5.0f);
+
+        astroBoyModel.getTransform().setPosition(astroBoyModelPosition.x,
+                astroBoyModelPosition.y, astroBoyModelPosition.z);
+        astroBoyModel.getTransform()
+                .setRotationByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        ModelPosition benchModelPosition = new ModelPosition();
+
+        benchModelPosition.setPosition(0.0f, -4.0f, -30.0f);
+
+        benchModel.getTransform().setPosition(benchModelPosition.x,
+                benchModelPosition.y, benchModelPosition.z);
+        benchModel.getTransform()
+        .setRotationByAxis(180.0f, 0.0f, 1.0f, 0.0f);
+
+        mMainScene.addSceneObject(astroBoyModel);
+        mMainScene.addSceneObject(benchModel);
+
+        rotateModel(astroBoyModel, 10f, astroBoyModelPosition);
     }
 
     @Override
