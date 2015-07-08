@@ -38,50 +38,54 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
+package org.gearvrf.jassimp;
+
+import java.nio.ByteBuffer;
 
 /**
- * The root structure of the imported data.
- * <p>
- * 
- * Everything that was imported from the given file can be accessed from here.
- * <p>
- * Jassimp copies all data into "java memory" during import and frees resources
- * allocated by native code after scene loading is completed. No special care
- * has to be taken for freeing resources, unreferenced jassimp objects
- * (including the scene itself) are eligible to garbage collection like any
- * other java object.
+ * Debug/utility methods.
  */
-public final class AiScene {
+public final class JaiDebug {
+
     /**
-     * Constructor.
+     * Pure static class, no accessible constructor.
      */
-    AiScene() {
+    private JaiDebug() {
         /* nothing to do */
     }
 
     /**
-     * Returns the scene graph root.
+     * Dumps a single material property to stdout.
      * 
-     * This method is part of the wrapped API (see {@link AiWrapperProvider} for
-     * details on wrappers).
-     * <p>
-     * 
-     * The built-in behavior is to return a {@link AiVector}.
-     * 
-     * @param wrapperProvider
-     *            the wrapper provider (used for type inference)
-     * @return the scene graph root
+     * @param property
+     *            the property
      */
-    @SuppressWarnings("unchecked")
-    public <V3, M4, C, N, Q> N getSceneRoot(
-            AiWrapperProvider<V3, M4, C, N, Q> wrapperProvider) {
+    public static void dumpMaterialProperty(AiMaterial.Property property) {
+        System.out.print(property.getKey() + " " + property.getSemantic() + " "
+                + property.getIndex() + ": ");
+        Object data = property.getData();
 
-        return (N) m_sceneRoot;
+        if (data instanceof ByteBuffer) {
+            ByteBuffer buf = (ByteBuffer) data;
+            for (int i = 0; i < buf.capacity(); i++) {
+                System.out.print(Integer.toHexString(buf.get(i) & 0xFF) + " ");
+            }
+
+            System.out.println();
+        } else {
+            System.out.println(data.toString());
+        }
     }
 
     /**
-     * Scene graph root.
+     * Dumps all properties of a material to stdout.
+     * 
+     * @param material
+     *            the material
      */
-    private Object m_sceneRoot;
+    public static void dumpMaterial(AiMaterial material) {
+        for (AiMaterial.Property prop : material.getProperties()) {
+            dumpMaterialProperty(prop);
+        }
+    }
 }

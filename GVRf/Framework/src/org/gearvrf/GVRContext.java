@@ -31,18 +31,18 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
+import org.gearvrf.jassimp.AiColor;
+import org.gearvrf.jassimp.AiMaterial;
+import org.gearvrf.jassimp.AiMatrix4f;
+import org.gearvrf.jassimp.AiNode;
+import org.gearvrf.jassimp.AiScene;
+import org.gearvrf.jassimp.AiTextureType;
+import org.gearvrf.jassimp.AiWrapperProvider;
+import org.gearvrf.jassimp.AiMaterial.Property;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
-import org.gearvrf.vendor.jassimp.AiColor;
-import org.gearvrf.vendor.jassimp.AiMaterial;
-import org.gearvrf.vendor.jassimp.AiMatrix4f;
-import org.gearvrf.vendor.jassimp.AiNode;
-import org.gearvrf.vendor.jassimp.AiScene;
-import org.gearvrf.vendor.jassimp.AiTextureType;
-import org.gearvrf.vendor.jassimp.AiWrapperProvider;
-import org.gearvrf.vendor.jassimp.AiMaterial.Property;
 
 import android.app.Activity;
 import android.content.Context;

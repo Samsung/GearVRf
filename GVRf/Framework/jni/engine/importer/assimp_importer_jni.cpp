@@ -64,7 +64,7 @@ Java_org_gearvrf_NativeAssimpImporter_getAssimpScene(
             reinterpret_cast<AssimpImporter*>(jassimp_importer);
     jobject jassimp_scene = NULL;
     const aiScene *assimp_scene = assimp_importer->getAssimpScene();
-    assimp_importer->create_instance(env, "org/gearvrf/vendor/jassimp/AiScene", jassimp_scene);
+    assimp_importer->create_instance(env, "org/gearvrf/jassimp/AiScene", jassimp_scene);
     assimp_importer->load_scene_graph(env, assimp_scene, jassimp_scene);
     return reinterpret_cast<jobject>(jassimp_scene);
 }

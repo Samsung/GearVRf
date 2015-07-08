@@ -39,92 +39,92 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getVKeysize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getVKeysize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getQKeysize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getQKeysize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getV3Dsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getV3Dsize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getfloatsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getfloatsize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getintsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getintsize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getuintsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getuintsize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getdoublesize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getdoublesize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getlongsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getlongsize(JNIEnv *env,
         jclass cls);
 JNIEXPORT jstring JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getErrorString(
+Java_org_gearvrf_jassimp_Jassimp_getErrorString(
         JNIEnv *env, jclass cls);
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getVKeysize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getVKeysize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(aiVectorKey);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getQKeysize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getQKeysize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(aiQuatKey);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getV3Dsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getV3Dsize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(aiVector3D);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getfloatsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getfloatsize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(float);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getintsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getintsize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(int);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getuintsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getuintsize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(unsigned int);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getdoublesize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getdoublesize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(double);
     return res;
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getlongsize(JNIEnv *env,
+Java_org_gearvrf_jassimp_Jassimp_getlongsize(JNIEnv *env,
     jclass cls) {
     const int res = sizeof(long);
     return res;
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_gearvrf_vendor_jassimp_Jassimp_getErrorString(
+Java_org_gearvrf_jassimp_Jassimp_getErrorString(
     JNIEnv *env, jclass cls) {
     const char *err = aiGetErrorString();
 

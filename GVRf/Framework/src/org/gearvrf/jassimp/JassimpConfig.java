@@ -38,42 +38,26 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
-
-import java.nio.ByteBuffer;
+package org.gearvrf.jassimp;
 
 /**
- * Wrapper provider using jassimp built in types.
+ * Global configuration values (limits).
  */
-public final class AiBuiltInWrapperProvider implements
-        AiWrapperProvider<AiVector, AiMatrix4f, AiColor, AiNode, AiQuaternion> {
+public final class JassimpConfig {
+    /**
+     * Maximum number of vertex color sets.
+     */
+    public static final int MAX_NUMBER_COLORSETS = 8;
 
-    @Override
-    public AiVector wrapVector3f(ByteBuffer buffer, int offset,
-            int numComponents) {
+    /**
+     * Maximum number of texture coordinate sets.
+     */
+    public static final int MAX_NUMBER_TEXCOORDS = 8;
 
-        return new AiVector(buffer, offset, numComponents);
-    }
-
-    @Override
-    public AiMatrix4f wrapMatrix4f(float[] data) {
-        return new AiMatrix4f(data);
-    }
-
-    @Override
-    public AiColor wrapColor(ByteBuffer buffer, int offset) {
-        return new AiColor(buffer, offset);
-    }
-
-    @Override
-    public AiNode wrapSceneNode(Object parent, Object matrix,
-            int[] meshReferences, String name) {
-
-        return new AiNode((AiNode) parent, matrix, meshReferences, name);
-    }
-
-    @Override
-    public AiQuaternion wrapQuaternion(ByteBuffer buffer, int offset) {
-        return new AiQuaternion(buffer, offset);
+    /**
+     * Pure static class, no accessible constructor.
+     */
+    private JassimpConfig() {
+        /* nothing to do */
     }
 }

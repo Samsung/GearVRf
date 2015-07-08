@@ -38,23 +38,18 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
+package org.gearvrf.jassimp;
 
 import java.nio.ByteBuffer;
 
 /**
- * Wrapper for 3-dimensional vectors.
- * <p>
- * 
- * This wrapper is also used to represent 1- and 2-dimensional vectors. In these
- * cases only the x (or the x and y coordinate) will be used. Accessing unused
- * components will throw UnsupportedOperationExceptions.
+ * Wrapper for colors.
  * <p>
  * 
  * The wrapper is writable, i.e., changes performed via the set-methods will
  * modify the underlying mesh.
  */
-public final class AiVector {
+public final class AiColor {
     /**
      * Constructor.
      * 
@@ -62,120 +57,92 @@ public final class AiVector {
      *            the buffer to wrap
      * @param offset
      *            offset into buffer
-     * @param numComponents
-     *            number vector of components
      */
-    public AiVector(ByteBuffer buffer, int offset, int numComponents) {
-        if (null == buffer) {
-            throw new IllegalArgumentException("buffer may not be null");
-        }
-
+    public AiColor(ByteBuffer buffer, int offset) {
         m_buffer = buffer;
         m_offset = offset;
-        m_numComponents = numComponents;
     }
 
     /**
-     * Returns the x value.
+     * Returns the red color component.
      * 
-     * @return the x value
+     * @return the red component
      */
-    public float getX() {
+    public float getRed() {
         return m_buffer.getFloat(m_offset);
     }
 
     /**
-     * Returns the y value.
-     * <p>
+     * Returns the green color component.
      * 
-     * May only be called on 2- or 3-dimensional vectors.
-     * 
-     * @return the y value
+     * @return the green component
      */
-    public float getY() {
-        if (m_numComponents <= 1) {
-            throw new UnsupportedOperationException(
-                    "vector has only 1 component");
-        }
-
+    public float getGreen() {
         return m_buffer.getFloat(m_offset + 4);
     }
 
     /**
-     * Returns the z value.
-     * <p>
+     * Returns the blue color component.
      * 
-     * May only be called on 3-dimensional vectors.
-     * 
-     * @return the z value
+     * @return the blue component
      */
-    public float getZ() {
-        if (m_numComponents <= 2) {
-            throw new UnsupportedOperationException(
-                    "vector has only 2 components");
-        }
-
+    public float getBlue() {
         return m_buffer.getFloat(m_offset + 8);
     }
 
     /**
-     * Sets the x component.
+     * Returns the alpha color component.
      * 
-     * @param x
-     *            the new value
+     * @return the alpha component
      */
-    public void setX(float x) {
-        m_buffer.putFloat(m_offset, x);
+    public float getAlpha() {
+        return m_buffer.getFloat(m_offset + 12);
     }
 
     /**
-     * Sets the y component.
-     * <p>
+     * Sets the red color component.
      * 
-     * May only be called on 2- or 3-dimensional vectors.
-     * 
-     * @param y
+     * @param red
      *            the new value
      */
-    public void setY(float y) {
-        if (m_numComponents <= 1) {
-            throw new UnsupportedOperationException(
-                    "vector has only 1 component");
-        }
-
-        m_buffer.putFloat(m_offset + 4, y);
+    public void setRed(float red) {
+        m_buffer.putFloat(m_offset, red);
     }
 
     /**
-     * Sets the z component.
-     * <p>
+     * Sets the green color component.
      * 
-     * May only be called on 3-dimensional vectors.
-     * 
-     * @param z
+     * @param green
      *            the new value
      */
-    public void setZ(float z) {
-        if (m_numComponents <= 2) {
-            throw new UnsupportedOperationException(
-                    "vector has only 2 components");
-        }
-
-        m_buffer.putFloat(m_offset + 8, z);
+    public void setGreen(float green) {
+        m_buffer.putFloat(m_offset + 4, green);
     }
 
     /**
-     * Returns the number of components in this vector.
+     * Sets the blue color component.
      * 
-     * @return the number of components
+     * @param blue
+     *            the new value
      */
-    public int getNumComponents() {
-        return m_numComponents;
+    public void setBlue(float blue) {
+        m_buffer.putFloat(m_offset + 8, blue);
+    }
+
+    /**
+     * Sets the alpha color component.
+     * 
+     * @param alpha
+     *            the new value
+     */
+    public void setAlpha(float alpha) {
+        m_buffer.putFloat(m_offset + 12, alpha);
     }
 
     @Override
     public String toString() {
-        return "[" + getX() + ", " + getY() + ", " + getZ() + "]";
+        return "[" + getRed() + ", " + getGreen() + ", " + getBlue() + ", "
+                + getAlpha() + "]";
     }
 
     /**
@@ -187,9 +154,4 @@ public final class AiVector {
      * Offset into m_buffer.
      */
     private final int m_offset;
-
-    /**
-     * Number of components.
-     */
-    private final int m_numComponents;
 }

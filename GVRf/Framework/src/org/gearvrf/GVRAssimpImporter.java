@@ -15,8 +15,8 @@
 
 package org.gearvrf;
 
-import org.gearvrf.vendor.jassimp.AiMaterial;
-import org.gearvrf.vendor.jassimp.AiScene;
+import org.gearvrf.jassimp.AiMaterial;
+import org.gearvrf.jassimp.AiScene;
 
 /**
  * Provides access to the {@link GVRMesh meshes} contained in 3D models that

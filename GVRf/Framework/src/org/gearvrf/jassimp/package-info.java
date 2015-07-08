@@ -38,26 +38,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
 
 /**
- * Global configuration values (limits).
+ * Java binding for the Open Asset Import Library.
  */
-public final class JassimpConfig {
-    /**
-     * Maximum number of vertex color sets.
-     */
-    public static final int MAX_NUMBER_COLORSETS = 8;
+package org.gearvrf.jassimp;
 
-    /**
-     * Maximum number of texture coordinate sets.
-     */
-    public static final int MAX_NUMBER_TEXCOORDS = 8;
-
-    /**
-     * Pure static class, no accessible constructor.
-     */
-    private JassimpConfig() {
-        /* nothing to do */
-    }
-}

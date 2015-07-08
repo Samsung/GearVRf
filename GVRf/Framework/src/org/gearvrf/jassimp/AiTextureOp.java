@@ -38,92 +38,59 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
+package org.gearvrf.jassimp;
 
 /**
- * Defines all shading modes supported by the library.
+ * Defines how the Nth texture of a specific type is combined with the result of
+ * all previous layers.
  * <p>
  * 
- * The list of shading modes has been taken from Blender. See Blender
- * documentation for more information. The API does not distinguish between
- * "specular" and "diffuse" shaders (thus the specular term for diffuse shading
- * models like Oren-Nayar remains undefined).
- * <p>
- * Again, this value is just a hint. Assimp tries to select the shader whose
- * most common implementation matches the original rendering results of the 3D
- * modeller which wrote a particular model as closely as possible.
+ * Example (left: key, right: value): <br>
+ * <code><pre>
+ *  DiffColor0     - gray
+ *  DiffTextureOp0 - aiTextureOpMultiply
+ *  DiffTexture0   - tex1.png
+ *  DiffTextureOp0 - aiTextureOpAdd
+ *  DiffTexture1   - tex2.png
+ * </pre></code>
+ * 
+ * Written as equation, the final diffuse term for a specific pixel would be:
+ * <code><pre>
+ *  diffFinal = DiffColor0 * sampleTex(DiffTexture0,UV0) + 
+ *     sampleTex(DiffTexture1,UV0) * diffContrib;
+ * </pre></code> where 'diffContrib' is the intensity of the incoming light for
+ * that pixel.
  */
-public enum AiShadingMode {
+public enum AiTextureOp {
     /**
-     * Flat shading.
-     * <p>
-     * 
-     * Shading is done on per-face base, diffuse only. Also known as 'faceted
-     * shading'.
+     * <code>T = T1 * T2</code>.
      */
-    FLAT(0x1),
+    MULTIPLY(0x0),
 
     /**
-     * Simple Gouraud shading.
+     * <code>T = T1 + T2</code>.
      */
-    GOURAUD(0x2),
+    ADD(0x1),
 
     /**
-     * Phong-Shading.
+     * <code>T = T1 - T2</code>.
      */
-    PHONG(0x3),
+    SUBTRACT(0x2),
 
     /**
-     * Phong-Blinn-Shading.
+     * <code>T = T1 / T2</code>.
      */
-    BLINN(0x4),
+    DIVIDE(0x3),
 
     /**
-     * Toon-Shading per pixel.
-     * <p>
-     * 
-     * Also known as 'comic' shader.
+     * <code>T = (T1 + T2) - (T1 * T2)</code> .
      */
-    TOON(0x5),
+    SMOOTH_ADD(0x4),
 
     /**
-     * OrenNayar-Shading per pixel.
-     * <p>
-     * 
-     * Extension to standard Lambertian shading, taking the roughness of the
-     * material into account
+     * <code>T = T1 + (T2-0.5)</code>.
      */
-    OREN_NAYAR(0x6),
-
-    /**
-     * Minnaert-Shading per pixel.
-     * <p>
-     * 
-     * Extension to standard Lambertian shading, taking the "darkness" of the
-     * material into account
-     */
-    MINNAERT(0x7),
-
-    /**
-     * CookTorrance-Shading per pixel.
-     * <p>
-     * 
-     * Special shader for metallic surfaces.
-     */
-    COOK_TORRANCE(0x8),
-
-    /**
-     * No shading at all.
-     * <p>
-     * 
-     * Constant light influence of 1.0.
-     */
-    NO_SHADING(0x9),
-
-    /**
-     * Fresnel shading.
-     */
-    FRESNEL(0xa);
+    SIGNED_ADD(0x5);
 
     /**
      * Utility method for converting from c/c++ based integer enums to java
@@ -137,8 +104,8 @@ public enum AiShadingMode {
      *            an integer based enum value (as defined by assimp)
      * @return the enum value corresponding to rawValue
      */
-    static AiShadingMode fromRawValue(int rawValue) {
-        for (AiShadingMode type : AiShadingMode.values()) {
+    static AiTextureOp fromRawValue(int rawValue) {
+        for (AiTextureOp type : AiTextureOp.values()) {
             if (type.m_rawValue == rawValue) {
                 return type;
             }
@@ -153,7 +120,7 @@ public enum AiShadingMode {
      * @param rawValue
      *            maps java enum to c/c++ integer enum values
      */
-    private AiShadingMode(int rawValue) {
+    private AiTextureOp(int rawValue) {
         m_rawValue = rawValue;
     }
 

@@ -38,18 +38,23 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
+package org.gearvrf.jassimp;
 
 import java.nio.ByteBuffer;
 
 /**
- * Wrapper for a quaternion.
+ * Wrapper for 3-dimensional vectors.
+ * <p>
+ * 
+ * This wrapper is also used to represent 1- and 2-dimensional vectors. In these
+ * cases only the x (or the x and y coordinate) will be used. Accessing unused
+ * components will throw UnsupportedOperationExceptions.
  * <p>
  * 
  * The wrapper is writable, i.e., changes performed via the set-methods will
- * modify the underlying mesh/animation.
+ * modify the underlying mesh.
  */
-public final class AiQuaternion {
+public final class AiVector {
     /**
      * Constructor.
      * 
@@ -57,14 +62,17 @@ public final class AiQuaternion {
      *            the buffer to wrap
      * @param offset
      *            offset into buffer
+     * @param numComponents
+     *            number vector of components
      */
-    public AiQuaternion(ByteBuffer buffer, int offset) {
+    public AiVector(ByteBuffer buffer, int offset, int numComponents) {
         if (null == buffer) {
             throw new IllegalArgumentException("buffer may not be null");
         }
 
         m_buffer = buffer;
         m_offset = offset;
+        m_numComponents = numComponents;
     }
 
     /**
@@ -73,34 +81,41 @@ public final class AiQuaternion {
      * @return the x value
      */
     public float getX() {
-        return m_buffer.getFloat(m_offset + 4);
+        return m_buffer.getFloat(m_offset);
     }
 
     /**
      * Returns the y value.
+     * <p>
+     * 
+     * May only be called on 2- or 3-dimensional vectors.
      * 
      * @return the y value
      */
     public float getY() {
-        return m_buffer.getFloat(m_offset + 8);
+        if (m_numComponents <= 1) {
+            throw new UnsupportedOperationException(
+                    "vector has only 1 component");
+        }
+
+        return m_buffer.getFloat(m_offset + 4);
     }
 
     /**
      * Returns the z value.
+     * <p>
+     * 
+     * May only be called on 3-dimensional vectors.
      * 
      * @return the z value
      */
     public float getZ() {
-        return m_buffer.getFloat(m_offset + 12);
-    }
+        if (m_numComponents <= 2) {
+            throw new UnsupportedOperationException(
+                    "vector has only 2 components");
+        }
 
-    /**
-     * Returns the w value.
-     * 
-     * @return the w value
-     */
-    public float getW() {
-        return m_buffer.getFloat(m_offset);
+        return m_buffer.getFloat(m_offset + 8);
     }
 
     /**
@@ -110,43 +125,57 @@ public final class AiQuaternion {
      *            the new value
      */
     public void setX(float x) {
-        m_buffer.putFloat(m_offset + 4, x);
+        m_buffer.putFloat(m_offset, x);
     }
 
     /**
      * Sets the y component.
+     * <p>
+     * 
+     * May only be called on 2- or 3-dimensional vectors.
      * 
      * @param y
      *            the new value
      */
     public void setY(float y) {
-        m_buffer.putFloat(m_offset + 8, y);
+        if (m_numComponents <= 1) {
+            throw new UnsupportedOperationException(
+                    "vector has only 1 component");
+        }
+
+        m_buffer.putFloat(m_offset + 4, y);
     }
 
     /**
      * Sets the z component.
+     * <p>
+     * 
+     * May only be called on 3-dimensional vectors.
      * 
      * @param z
      *            the new value
      */
     public void setZ(float z) {
-        m_buffer.putFloat(m_offset + 12, z);
+        if (m_numComponents <= 2) {
+            throw new UnsupportedOperationException(
+                    "vector has only 2 components");
+        }
+
+        m_buffer.putFloat(m_offset + 8, z);
     }
 
     /**
-     * Sets the z component.
+     * Returns the number of components in this vector.
      * 
-     * @param w
-     *            the new value
+     * @return the number of components
      */
-    public void setW(float w) {
-        m_buffer.putFloat(m_offset, w);
+    public int getNumComponents() {
+        return m_numComponents;
     }
 
     @Override
     public String toString() {
-        return "[" + getX() + ", " + getY() + ", " + getZ() + ", " + getW()
-                + "]";
+        return "[" + getX() + ", " + getY() + ", " + getZ() + "]";
     }
 
     /**
@@ -158,4 +187,9 @@ public final class AiQuaternion {
      * Offset into m_buffer.
      */
     private final int m_offset;
+
+    /**
+     * Number of components.
+     */
+    private final int m_numComponents;
 }

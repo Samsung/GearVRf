@@ -38,40 +38,82 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
  */
-package org.gearvrf.vendor.jassimp;
+package org.gearvrf.jassimp;
 
 import java.util.Set;
 
 /**
- * Enumerates the types of geometric primitives supported by Assimp.
- * <p>
+ * Status flags for {@link AiScene}s.
  */
-public enum AiPrimitiveType {
+public enum AiSceneFlag {
     /**
-     * A point primitive.
-     */
-    POINT(0x1),
-
-    /**
-     * A line primitive.
-     */
-    LINE(0x2),
-
-    /**
-     * A triangular primitive.
-     */
-    TRIANGLE(0x4),
-
-    /**
-     * A higher-level polygon with more than 3 edges.
+     * Specifies that the scene data structure that was imported is not
+     * complete.
      * <p>
      * 
-     * A triangle is a polygon, but polygon in this context means
-     * "all polygons that are not triangles". The "Triangulate"-Step is provided
-     * for your convenience, it splits all polygons in triangles (which are much
-     * easier to handle).
+     * This flag bypasses some internal validations and allows the import of
+     * animation skeletons, material libraries or camera animation paths using
+     * Assimp. Most applications won't support such data.
      */
-    POLYGON(0x8);
+    INCOMPLETE(0x1),
+
+    /**
+     * This flag is set by the validation (
+     * {@link AiPostProcessSteps#VALIDATE_DATA_STRUCTURE
+     * VALIDATE_DATA_STRUCTURE}) postprocess-step if the validation is
+     * successful.
+     * <p>
+     * 
+     * In a validated scene you can be sure that any cross references in the
+     * data structure (e.g. vertex indices) are valid.
+     */
+    VALIDATED(0x2),
+
+    /**
+     * * This flag is set by the validation (
+     * {@link AiPostProcessSteps#VALIDATE_DATA_STRUCTURE
+     * VALIDATE_DATA_STRUCTURE}) postprocess-step if the validation is
+     * successful but some issues have been found.
+     * <p>
+     * 
+     * This can for example mean that a texture that does not exist is
+     * referenced by a material or that the bone weights for a vertex don't sum
+     * to 1.0 ... . In most cases you should still be able to use the import.
+     * This flag could be useful for applications which don't capture Assimp's
+     * log output.
+     */
+    VALIDATION_WARNING(0x4),
+
+    /**
+     * This flag is currently only set by the
+     * {@link jassimp.AiPostProcessSteps#JOIN_IDENTICAL_VERTICES
+     * JOIN_IDENTICAL_VERTICES}.
+     * <p>
+     * 
+     * It indicates that the vertices of the output meshes aren't in the
+     * internal verbose format anymore. In the verbose format all vertices are
+     * unique, no vertex is ever referenced by more than one face.
+     */
+    NON_VERBOSE_FORMAT(0x8),
+
+    /**
+     * Denotes pure height-map terrain data.
+     * <p>
+     * 
+     * Pure terrains usually consist of quads, sometimes triangles, in a regular
+     * grid. The x,y coordinates of all vertex positions refer to the x,y
+     * coordinates on the terrain height map, the z-axis stores the elevation at
+     * a specific point.
+     * <p>
+     * 
+     * TER (Terragen) and HMP (3D Game Studio) are height map formats.
+     * <p>
+     * Assimp is probably not the best choice for loading *huge* terrains -
+     * fully triangulated data takes extremely much free store and should be
+     * avoided as long as possible (typically you'll do the triangulation when
+     * you actually need to render it).
+     */
+    TERRAIN(0x10);
 
     /**
      * Utility method for converting from c/c++ based integer enums to java
@@ -86,9 +128,9 @@ public enum AiPrimitiveType {
      * @param rawValue
      *            an integer based enum value (as defined by assimp)
      */
-    static void fromRawValue(Set<AiPrimitiveType> set, int rawValue) {
+    static void fromRawValue(Set<AiSceneFlag> set, int rawValue) {
 
-        for (AiPrimitiveType type : AiPrimitiveType.values()) {
+        for (AiSceneFlag type : AiSceneFlag.values()) {
             if ((type.m_rawValue & rawValue) != 0) {
                 set.add(type);
             }
@@ -101,7 +143,7 @@ public enum AiPrimitiveType {
      * @param rawValue
      *            maps java enum to c/c++ integer enum values
      */
-    private AiPrimitiveType(int rawValue) {
+    private AiSceneFlag(int rawValue) {
         m_rawValue = rawValue;
     }
 
