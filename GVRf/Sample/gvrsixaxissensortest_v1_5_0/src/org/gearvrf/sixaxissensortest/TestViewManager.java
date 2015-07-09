@@ -15,7 +15,6 @@
 
 package org.gearvrf.sixaxissensortest;
 
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -32,7 +31,6 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.sixaxissensortest.R;
-
 
 public class TestViewManager extends GVRScript {
 
@@ -66,9 +64,9 @@ public class TestViewManager extends GVRScript {
         mGyroscope = new Gyroscope(mGVRContext.getContext());
 
         GVRScene mainScene = mGVRContext.getNextMainScene();
-        
-        mainScene.getMainCameraRig()
-                .setCameraRigType(GVRCameraRig.GVRCameraRigType.YawOnly.ID);
+
+        mainScene.getMainCameraRig().setCameraRigType(
+                GVRCameraRig.GVRCameraRigType.YawOnly.ID);
 
         GVRMesh cylinderMesh = mGVRContext.loadMesh(new GVRAndroidResource(
                 mGVRContext, R.raw.cylinder_obj));
@@ -85,8 +83,7 @@ public class TestViewManager extends GVRScript {
         GVRSceneObject cursor = new GVRSceneObject(mGVRContext, 0.05f, 0.5f,
                 new GVRBitmapTexture(mGVRContext, cursorBitmap));
         cursor.getTransform().setPosition(0.0f, 0.0f, -5.0f);
-        mainScene.getMainCameraRig().getOwnerObject()
-                .addChildObject(cursor);
+        mainScene.getMainCameraRig().addChildObject(cursor);
 
         Bitmap degreeBitmap = GVRTextBitmapFactory2.create(1024, 128,
                 "degree : 0.00", 40, Align.LEFT, Color.YELLOW,
@@ -95,8 +92,7 @@ public class TestViewManager extends GVRScript {
                 new GVRBitmapTexture(mGVRContext, degreeBitmap));
         mDegreeBoard.getTransform().setPosition(-0.5f, 0.7f, -2.0f);
         degreeBitmap.recycle();
-        mainScene.getMainCameraRig().getOwnerObject()
-                .addChildObject(mDegreeBoard);
+        mainScene.getMainCameraRig().addChildObject(mDegreeBoard);
 
         Bitmap angularVelocityBitmap = GVRTextBitmapFactory2.create(1024, 128,
                 "velocity : 0.00", 50, Align.LEFT, Color.YELLOW,
@@ -105,8 +101,7 @@ public class TestViewManager extends GVRScript {
                 new GVRBitmapTexture(mGVRContext, angularVelocityBitmap));
         mAngularVelocityBoard.getTransform().setPosition(-0.5f, -0.7f, -2.0f);
         angularVelocityBitmap.recycle();
-        mainScene.getMainCameraRig().getOwnerObject()
-                .addChildObject(mAngularVelocityBoard);
+        mainScene.getMainCameraRig().addChildObject(mAngularVelocityBoard);
 
         Bitmap aValueBitmap = GVRTextBitmapFactory2.create(1024, 128, String
                 .format("ZRO : %.2f, Spec degree : %.2f", mAValue, mBValue),
@@ -115,8 +110,7 @@ public class TestViewManager extends GVRScript {
                 new GVRBitmapTexture(mGVRContext, aValueBitmap));
         mValueBoard.getTransform().setPosition(-0.5f, 0.5f, -2.0f);
         aValueBitmap.recycle();
-        mainScene.getMainCameraRig().getOwnerObject()
-                .addChildObject(mValueBoard);
+        mainScene.getMainCameraRig().addChildObject(mValueBoard);
 
         Bitmap stateBitmap = GVRTextBitmapFactory2.create(1024, 128, "", 50,
                 Align.LEFT, Color.TRANSPARENT, Color.TRANSPARENT);
@@ -124,8 +118,7 @@ public class TestViewManager extends GVRScript {
                 new GVRBitmapTexture(mGVRContext, stateBitmap));
         mStateBoard.getTransform().setPosition(-0.5f, -0.7f, -5.0f);
         stateBitmap.recycle();
-        mainScene.getMainCameraRig().getOwnerObject()
-                .addChildObject(mStateBoard);
+        mainScene.getMainCameraRig().addChildObject(mStateBoard);
 
     }
 

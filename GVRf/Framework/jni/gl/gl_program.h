@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * RAII class for GL programs.
  ***************************************************************************/
@@ -30,8 +29,25 @@
 namespace gvr {
 class GLProgram {
 public:
-    GLProgram(const char* pVertexSource, const char* pFragmentSource) :
-            id_(createProgram(pVertexSource, pFragmentSource)) {
+    GLProgram(const char* pVertexSourceStrings,
+            const char* pFragmentSourceStrings) {
+        GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
+                pVertexSourceStrings) };
+        GLint fragment_shader_string_lengths[1] = { (GLint) strlen(
+                pFragmentSourceStrings) };
+        id_ = createProgram(1, &pVertexSourceStrings,
+                vertex_shader_string_lengths, &pFragmentSourceStrings,
+                fragment_shader_string_lengths);
+    }
+
+    GLProgram(const char** pVertexSourceStrings,
+            const GLint* pVertexSourceStringLengths,
+            const char** pFragmentSourceStrings,
+            const GLint* pFragmentSourceStringLengths) :
+            id_(
+                    createProgram(2, pVertexSourceStrings,
+                            pVertexSourceStringLengths, pFragmentSourceStrings,
+                            pFragmentSourceStringLengths)) {
     }
 
     ~GLProgram() {
@@ -48,10 +64,11 @@ public:
         }
     }
 
-    static GLuint loadShader(GLenum shaderType, const char* pSource) {
+    static GLuint loadShader(GLenum shaderType, int strLength, const char** pSourceStrings,
+            const GLint*pSourceStringLengths) {
         GLuint shader = glCreateShader(shaderType);
         if (shader) {
-            glShaderSource(shader, 1, &pSource, NULL);
+            glShaderSource(shader, strLength, pSourceStrings, pSourceStringLengths);
             glCompileShader(shader);
             GLint compiled = 0;
             glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
@@ -74,14 +91,19 @@ public:
         return shader;
     }
 
-    static GLuint createProgram(const char* pVertexSource,
-            const char* pFragmentSource) {
-        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource);
+    static GLuint createProgram(int strLength,
+            const char** pVertexSourceStrings,
+            const GLint* pVertexSourceStringLengths,
+            const char** pFragmentSourceStrings,
+            const GLint* pFragmentSourceStringLengths) {
+        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, strLength,
+                pVertexSourceStrings, pVertexSourceStringLengths);
         if (!vertexShader) {
             return 0;
         }
 
-        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, pFragmentSource);
+        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, strLength,
+                pFragmentSourceStrings, pFragmentSourceStringLengths);
         if (!pixelShader) {
             return 0;
         }

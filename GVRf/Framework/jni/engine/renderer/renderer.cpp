@@ -85,8 +85,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         occlusion_cull(scene, scene_objects);
 
         // do frustum culling, if enabled
-        frustum_cull(scene, scene_objects, render_data_vector, vp_matrix,
-                shader_manager);
+        frustum_cull(scene, camera, scene_objects, render_data_vector,
+                vp_matrix, shader_manager);
 
         // do sorting based on render order
         std::sort(render_data_vector.begin(), render_data_vector.end(),
@@ -207,13 +207,13 @@ void Renderer::occlusion_cull(Scene* scene,
 #endif
 }
 
-void Renderer::frustum_cull(Scene* scene,
+void Renderer::frustum_cull(Scene* scene, Camera *camera,
         std::vector<SceneObject*> scene_objects,
         std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
         ShaderManager* shader_manager) {
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
-
-        RenderData* render_data = (*it)->render_data();
+        SceneObject *scene_object = (*it);
+        RenderData* render_data = scene_object->render_data();
         if (render_data == 0 || render_data->pass(0)->material() == 0) {
             continue;
         }
@@ -257,12 +257,37 @@ void Renderer::frustum_cull(Scene* scene,
 
         // Only push those scene objects that are inside of the frustum
         if (!is_inside) {
-            (*it)->set_in_frustum(false);
+            scene_object->set_in_frustum(false);
             continue;
         }
 
-        (*it)->set_in_frustum();
-        bool visible = (*it)->visible();
+        // Transform the bounding sphere
+        const float *sphere_info = currentMesh->getBoundingSphereInfo();
+        glm::vec4 sphere_center(sphere_info[0], sphere_info[1], sphere_info[2],
+                1.0f);
+        glm::vec4 transformed_sphere_center = mvp_matrix_tmp * sphere_center;
+
+        // Calculate distance from camera
+        glm::vec3 camera_position =
+                camera->owner_object()->transform()->position();
+        glm::vec4 position(camera_position, 1.0f);
+        glm::vec4 difference = transformed_sphere_center - position;
+        float distance = glm::dot(difference, difference);
+        // TODO going to store this distance in the scene_object
+        //      so that it can be used later when sorting objects.
+        //      That sorting will likely happen after this frustum
+        //      culling code completes.  The actual object sorting 
+        //      code will be in a future check-in.
+        scene_object->setDistanceFromCamera(distance);
+
+        // Check if this is the correct LOD level
+        if (!scene_object->inLODRange()) {
+            // not in range, don't add it to the list
+            continue;
+        }
+
+        scene_object->set_in_frustum();
+        bool visible = scene_object->visible();
 
         //If visibility flag was set by an earlier occlusion query,
         //turn visibility on for the object
@@ -270,7 +295,8 @@ void Renderer::frustum_cull(Scene* scene,
             render_data_vector.push_back(render_data);
         }
 
-        if (render_data->pass(0)->material() == 0 || !scene->get_occlusion_culling()) {
+        if (render_data->pass(0)->material() == 0
+                || !scene->get_occlusion_culling()) {
             continue;
         }
 
@@ -279,14 +305,14 @@ void Renderer::frustum_cull(Scene* scene,
         //This avoids overloading the GPU with too many queries
         //Queries may span multiple frames
 
-        bool is_query_issued = (*it)->is_query_issued();
+        bool is_query_issued = scene_object->is_query_issued();
         if (!is_query_issued) {
             //Setup basic bounding box and material
             RenderData* bounding_box_render_data(new RenderData());
             Mesh* bounding_box_mesh = render_data->mesh()->getBoundingBox();
             bounding_box_render_data->set_mesh(bounding_box_mesh);
 
-            GLuint *query = (*it)->get_occlusion_array();
+            GLuint *query = scene_object->get_occlusion_array();
 
             glDepthFunc (GL_LEQUAL);
             glEnable (GL_DEPTH_TEST);
@@ -298,7 +324,7 @@ void Renderer::frustum_cull(Scene* scene,
                     bounding_box_render_data,
                     bounding_box_render_data->pass(0)->material());
             glEndQuery (GL_ANY_SAMPLES_PASSED);
-            (*it)->set_query_issued(true);
+            scene_object->set_query_issued(true);
 
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
@@ -500,24 +526,24 @@ void Renderer::renderRenderData(RenderData* render_data,
             glDisable (GL_BLEND);
         }
         if (render_data->mesh() != 0) {
-            for (int curr_pass = 0; curr_pass < render_data->pass_count(); ++curr_pass) {
+            for (int curr_pass = 0; curr_pass < render_data->pass_count();
+                    ++curr_pass) {
                 numberTriangles += render_data->mesh()->getNumTriangles();
                 numberDrawCalls++;
 
                 set_face_culling(render_data->pass(curr_pass)->cull_face());
-                Material* curr_material = render_data->pass(curr_pass)->material();
+                Material* curr_material =
+                        render_data->pass(curr_pass)->material();
 
                 if (curr_material != nullptr) {
-                    glm::mat4 model_matrix(render_data->owner_object()->transform()->getModelMatrix());
+                    glm::mat4 model_matrix(
+                            render_data->owner_object()->transform()->getModelMatrix());
                     glm::mat4 mv_matrix(view_matrix * model_matrix);
                     glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
                     try {
-                        bool right = render_mask & RenderData::RenderMaskBit::Right;
+                        bool right = render_mask
+                                & RenderData::RenderMaskBit::Right;
                         switch (curr_material->shader_type()) {
-                        case Material::ShaderType::UNLIT_SHADER:
-                            shader_manager->getUnlitShader()->render(mvp_matrix,
-                                    render_data, curr_material);
-                            break;
                         case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
                             shader_manager->getUnlitHorizontalStereoShader()->render(
                                     mvp_matrix, render_data, curr_material,
@@ -553,6 +579,11 @@ void Renderer::renderRenderData(RenderData* render_data,
                                     glm::inverse(view_matrix), mvp_matrix,
                                     render_data, curr_material);
                             break;
+                        case Material::ShaderType::TEXTURE_SHADER:
+                            shader_manager->getTextureShader()->render(
+                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                                    mvp_matrix, render_data, curr_material);
+                            break;
                         default:
                             shader_manager->getCustomShader(
                                     curr_material->shader_type())->render(
@@ -561,7 +592,8 @@ void Renderer::renderRenderData(RenderData* render_data,
                             break;
                         }
                     } catch (std::string error) {
-                        LOGE("Error detected in Renderer::renderRenderData; name : %s, error : %s", render_data->owner_object()->name().c_str(), error.c_str());
+                        LOGE(
+                                "Error detected in Renderer::renderRenderData; name : %s, error : %s", render_data->owner_object()->name().c_str(), error.c_str());
                         shader_manager->getErrorShader()->render(mvp_matrix,
                                 render_data);
                     }

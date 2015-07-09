@@ -39,6 +39,18 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
         jobject obj, jlong jrender_data, jlong jrender_pass);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
+        jobject obj, jlong jrender_data, jlong jlight);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
+        jobject obj, jlong jrender_data);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_disableLight(JNIEnv * env,
+        jobject obj, jlong jrender_data);
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -102,16 +114,16 @@ Java_org_gearvrf_NativeRenderData_setDrawMode(
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-        jobject obj) {
-    return reinterpret_cast<jlong>(new RenderData());
+    jobject obj) {
+return reinterpret_cast<jlong>(new RenderData());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmesh) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-    render_data->set_mesh(mesh);
+    jobject obj, jlong jrender_data, jlong jmesh) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+render_data->set_mesh(mesh);
 }
 
 JNIEXPORT void JNICALL
@@ -122,116 +134,138 @@ Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
     render_data->add_pass(render_pass);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
+    jobject obj, jlong jrender_data, jlong jlight) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+Light* light = reinterpret_cast<Light*>(jlight);
+render_data->set_light(light);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->enable_light();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_disableLight(JNIEnv * env,
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->disable_light();
+}
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return render_data->render_mask();
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return render_data->render_mask();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderMask(JNIEnv * env,
-        jobject obj, jlong jrender_data, jint render_mask) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_render_mask(render_mask);
+    jobject obj, jlong jrender_data, jint render_mask) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_render_mask(render_mask);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderingOrder(
-        JNIEnv * env, jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return render_data->rendering_order();
+    JNIEnv * env, jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return render_data->rendering_order();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderingOrder(
-        JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_rendering_order(rendering_order);
+    JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_rendering_order(rendering_order);
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return static_cast<jboolean>(render_data->offset());
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return static_cast<jboolean>(render_data->offset());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setOffset(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean offset) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_offset(static_cast<bool>(offset));
+    jobject obj, jlong jrender_data, jboolean offset) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_offset(static_cast<bool>(offset));
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeRenderData_getOffsetFactor(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return render_data->offset_factor();
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return render_data->offset_factor();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setOffsetFactor(JNIEnv * env,
-        jobject obj, jlong jrender_data, jfloat offset_factor) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_offset_factor(offset_factor);
+    jobject obj, jlong jrender_data, jfloat offset_factor) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_offset_factor(offset_factor);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeRenderData_getOffsetUnits(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return render_data->offset_units();
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return render_data->offset_units();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setOffsetUnits(JNIEnv * env,
-        jobject obj, jlong jrender_data, jfloat offset_units) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_offset_units(offset_units);
+    jobject obj, jlong jrender_data, jfloat offset_units) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_offset_units(offset_units);
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getDepthTest(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return static_cast<jboolean>(render_data->depth_test());
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return static_cast<jboolean>(render_data->depth_test());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setDepthTest(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean depth_test) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_depth_test(static_cast<bool>(depth_test));
+    jobject obj, jlong jrender_data, jboolean depth_test) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_depth_test(static_cast<bool>(depth_test));
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getAlphaBlend(JNIEnv * env,
-        jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return static_cast<jboolean>(render_data->alpha_blend());
+    jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return static_cast<jboolean>(render_data->alpha_blend());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean alpha_blend) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_alpha_blend(static_cast<bool>(alpha_blend));
+    jobject obj, jlong jrender_data, jboolean alpha_blend) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_alpha_blend(static_cast<bool>(alpha_blend));
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setDrawMode(
-        JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_draw_mode(draw_mode);
+    JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->set_draw_mode(draw_mode);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getDrawMode(
-        JNIEnv * env, jobject obj, jlong jrender_data) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    return render_data->draw_mode();
+    JNIEnv * env, jobject obj, jlong jrender_data) {
+RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+return render_data->draw_mode();
 }
 
 }

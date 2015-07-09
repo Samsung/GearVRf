@@ -27,6 +27,7 @@ import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshEyePointee;
 import org.gearvrf.GVRPicker;
+import org.gearvrf.GVRPicker.GVRPickedObject;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -157,16 +158,15 @@ public class SampleCubeScript extends GVRScript {
         mFrontFace.getRenderData().getMaterial().setOpacity(1.0f);
         mFrontFace2.getRenderData().getMaterial().setOpacity(1.0f);
         mFrontFace3.getRenderData().getMaterial().setOpacity(1.0f);
-        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker
-                .pickScene(mGVRContext.getMainScene());
-        for (GVREyePointeeHolder eyePointeeHolder : eyePointeeHolders) {
-            if (eyePointeeHolder.getOwnerObject().equals(mFrontFace)) {
+        for (GVRPickedObject pickedObject : GVRPicker.findObjects(mGVRContext
+                .getMainScene())) {
+            if (pickedObject.getHitObject().equals(mFrontFace)) {
                 mFrontFace.getRenderData().getMaterial().setOpacity(0.5f);
             }
-            if (eyePointeeHolder.getOwnerObject().equals(mFrontFace2)) {
+            if (pickedObject.getHitObject().equals(mFrontFace2)) {
                 mFrontFace2.getRenderData().getMaterial().setOpacity(0.5f);
             }
-            if (eyePointeeHolder.getOwnerObject().equals(mFrontFace3)) {
+            if (pickedObject.getHitObject().equals(mFrontFace3)) {
                 mFrontFace3.getRenderData().getMaterial().setOpacity(0.5f);
             }
         }

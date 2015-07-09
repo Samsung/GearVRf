@@ -254,6 +254,28 @@ public class GVRPicker {
     }
 
     /**
+     * Tests the {@link GVRSceneObject}s contained within scene against the
+     * camera rig's lookat vector.
+     * 
+     * <p>
+     * This method uses higher-level function
+     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} internally.
+     * 
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     * 
+     * @return A list of {@link GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link GVRPickedObject} contains the object
+     *         within the {@link GVREyePointeeHolder} along with the hit
+     *         location.
+     * 
+     */
+    public static final List<GVRPickedObject> findObjects(GVRScene scene) {
+        return findObjects(scene, 0, 0, 0, 0, 0, -1.0f);
+    }
+
+    /**
      * The result of a
      * {@link GVRPicker#findObjects(GVRScene, float, float, float, float, float, float)
      * findObjects()} call.

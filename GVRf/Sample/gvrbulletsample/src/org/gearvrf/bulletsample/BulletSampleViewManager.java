@@ -46,8 +46,7 @@ public class BulletSampleViewManager extends GVRScript {
         mainCameraRig.getLeftCamera().setBackgroundColor(Color.BLACK);
         mainCameraRig.getRightCamera().setBackgroundColor(Color.BLACK);
 
-        mainCameraRig.getOwnerObject().getTransform()
-                .setPosition(0.0f, 6.0f, 0.0f);
+        mainCameraRig.getTransform().setPosition(0.0f, 6.0f, 0.0f);
 
         /*
          * Create new Bullet instance.

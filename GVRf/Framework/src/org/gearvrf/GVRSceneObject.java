@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMaterial.GVRShaderType.Unlit;
 
 /**
  * One of the key GVRF classes: a scene object.
@@ -120,11 +119,11 @@ public class GVRSceneObject extends GVRHybridObject {
         getRenderData().setMaterial(material);
     }
 
-    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Unlit.ID;
+    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
 
     /**
      * Constructs a scene object with {@linkplain GVRMesh an arbitrarily complex
-     * geometry} that uses the standard {@linkplain Unlit 'unlit shader'} to
+     * geometry} that uses the standard {@linkplain Texture 'texture shader'} to
      * display a {@linkplain GVRTexture texture.}
      * 
      * 
@@ -226,7 +225,7 @@ public class GVRSceneObject extends GVRHybridObject {
 
     /**
      * Constructs a 2D, rectangular scene object that uses the standard
-     * {@linkplain Unlit 'unlit shader'} to display a {@linkplain GVRTexture
+     * {@linkplain Texture 'texture shader'} to display a {@linkplain GVRTexture
      * texture.}
      * 
      * @param gvrContext
@@ -571,6 +570,44 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Sets the range of distances from the camera where this object will be shown.
+     *
+     * @param minRange
+     *      The closest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
+     * @param maxRange
+     *      The farthest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
+     */
+    public void setLODRange(float minRange, float maxRange) {
+        if (minRange < 0 || maxRange < 0) {
+            throw new IllegalArgumentException(
+                    "minRange and maxRange must be between 0 and Float.MAX_VALUE");
+        }
+        if (minRange > maxRange) {
+            throw new IllegalArgumentException(
+                    "minRange should not be greater than maxRange");
+        }
+        NativeSceneObject.setLODRange(getNative(), minRange, maxRange);
+    }
+
+    /**
+     * Get the minimum distance from the camera in which to show this object.
+     * 
+     * @return the minimum distance from the camera in which to show this object.  Default value is 0.
+     */
+    public float getLODMinRange() {
+        return NativeSceneObject.getLODMinRange(getNative());
+    }
+
+    /**
+     * Get the maximum distance from the camera in which to show this object.
+     * 
+     * @return the maximum distance from the camera in which to show this object.  Default value is Float.MAX_VALUE.
+     */
+    public float getLODMaxRange() {
+        return NativeSceneObject.getLODMaxRange(getNative());
+    }
+
+    /**
      * Get the number of child objects.
      * 
      * @return Number of {@link GVRSceneObject objects} added as children of
@@ -665,6 +702,36 @@ public class GVRSceneObject extends GVRHybridObject {
             throw new UnsupportedOperationException();
         }
     }
+
+    /**
+     * Add {@code childComponent} as a child of this object (owner object of the
+     * component is added as child). Adding a component will increase the
+     * {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} to add as a child of this
+     *            object.
+     */
+    public void addChildObject(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            addChildObject(childComponent.getOwnerObject());
+        }
+    }
+
+    /**
+     * Remove {@code childComponent} as a child of this object (owner object of
+     * the component is removed as child). Removing a component will decrease
+     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} to remove as a child of this
+     *            object.
+     */
+    public void removeChildObject(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            removeChildObject(childComponent.getOwnerObject());
+        }
+    }
 }
 
 class NativeSceneObject {
@@ -702,4 +769,8 @@ class NativeSceneObject {
     static native void removeChildObject(long sceneObject, long child);
 
     static native boolean isColliding(long sceneObject, long otherObject);
+
+    static native void setLODRange(long sceneObject, float minRange, float maxRange);
+    static native float getLODMinRange(long sceneObject);
+    static native float getLODMaxRange(long sceneObject);
 }

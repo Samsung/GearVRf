@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gearvrf.*;
+import org.gearvrf.GVRPicker.GVRPickedObject;
 import org.gearvrf.utility.Log;
 
 public class SampleViewManager extends GVRScript {
@@ -47,9 +48,9 @@ public class SampleViewManager extends GVRScript {
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
-        
+
         GVRScene mainScene = mGVRContext.getNextMainScene();
-        
+
         mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
         mainScene.getMainCameraRig().getRightCamera()
@@ -124,7 +125,8 @@ public class SampleViewManager extends GVRScript {
             Log.e(TAG, "Mesh was not loaded. Stopping application!");
         }
         // activity was stored in order to stop the application if the mesh is
-        // not loaded. Since we don't need anymore, we set it to null to reduce chance of memory leak.
+        // not loaded. Since we don't need anymore, we set it to null to reduce
+        // chance of memory leak.
         mActivity = null;
 
         // These 2 are testing by the whole mesh.
@@ -164,10 +166,10 @@ public class SampleViewManager extends GVRScript {
                             UNPICKED_COLOR_G, UNPICKED_COLOR_B,
                             UNPICKED_COLOR_A);
         }
-        for (GVREyePointeeHolder eph : GVRPicker.pickScene(mGVRContext
+        for (GVRPickedObject pickedObject : GVRPicker.findObjects(mGVRContext
                 .getMainScene())) {
             for (GVRSceneObject object : mObjects) {
-                if (eph.getOwnerObject().equals(object)) {
+                if (pickedObject.getHitObject().equals(object)) {
                     object.getRenderData()
                             .getMaterial()
                             .setVec4(ColorShader.COLOR_KEY, PICKED_COLOR_R,

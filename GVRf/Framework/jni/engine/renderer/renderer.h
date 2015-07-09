@@ -101,7 +101,7 @@ private:
             PostEffectShaderManager* post_effect_shader_manager);
 
     static void occlusion_cull(Scene* scene, std::vector <  SceneObject* > scene_objects);
-    static void frustum_cull(Scene* scene,
+    static void frustum_cull(Scene* scene, Camera *camera,
         std::vector < SceneObject* > scene_objects,
         std::vector < RenderData* >& render_data_vector,
         glm::mat4 vp_matrix,

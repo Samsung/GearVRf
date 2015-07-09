@@ -159,7 +159,7 @@ public class OutlineScript extends GVRScript {
                 mGVRContext, R.drawable.gearvr_logo));
 
         GVRMaterial material = new GVRMaterial(mGVRContext,
-                GVRShaderType.Unlit.ID);
+                GVRShaderType.Texture.ID);
         material.setMainTexture(texture);
 
         GVRRenderPass pass = new GVRRenderPass(mGVRContext);

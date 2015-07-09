@@ -35,6 +35,7 @@ import org.gearvrf.scene_objects.GVRVideoSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObject.GVRVideoType;
 
 import android.media.MediaPlayer;
+
 public class GalleryViewManager extends GVRScript {
 
     private static final float ANIMATION_DURATION = 0.3f;
@@ -56,18 +57,18 @@ public class GalleryViewManager extends GVRScript {
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
-        
+
         mAnimationEngine = gvrContext.getAnimationEngine();
-        
+
         GVRScene mainScene = mGVRContext.getNextMainScene();
-        
+
         mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
         mainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        mainScene.getMainCameraRig().getOwnerObject()
-                .getTransform().setPosition(0.0f, 0.0f, 0.0f);
+        mainScene.getMainCameraRig().getTransform()
+                .setPosition(0.0f, 0.0f, 0.0f);
 
         GVRMesh sphereMesh = mGVRContext.loadMesh(new GVRAndroidResource(
                 mGVRContext, R.raw.sphere_mesh));
@@ -88,9 +89,8 @@ public class GalleryViewManager extends GVRScript {
 
         List<GVRTexture> numberTextures = new ArrayList<GVRTexture>();
         int[] resourceIds = new int[] { R.drawable.photo_1jpg,
-                R.drawable.photo_2, R.drawable.photo_3,
-                R.drawable.photo_4, R.drawable.photo_5,
-                R.drawable.photo_6, R.drawable.photo_7,
+                R.drawable.photo_2, R.drawable.photo_3, R.drawable.photo_4,
+                R.drawable.photo_5, R.drawable.photo_6, R.drawable.photo_7,
                 R.drawable.photo_8, R.drawable.photo_9 };
         for (int id : resourceIds) {
             numberTextures.add(mGVRContext.loadTexture(new GVRAndroidResource(
@@ -140,10 +140,8 @@ public class GalleryViewManager extends GVRScript {
         postEffect.setVec3("ratio_r", 0.393f, 0.769f, 0.189f);
         postEffect.setVec3("ratio_g", 0.349f, 0.686f, 0.168f);
         postEffect.setVec3("ratio_b", 0.272f, 0.534f, 0.131f);
-        mainScene.getMainCameraRig().getLeftCamera()
-                .addPostEffect(postEffect);
-        mainScene.getMainCameraRig().getRightCamera()
-                .addPostEffect(postEffect);
+        mainScene.getMainCameraRig().getLeftCamera().addPostEffect(postEffect);
+        mainScene.getMainCameraRig().getRightCamera().addPostEffect(postEffect);
 
     }
 
