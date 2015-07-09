@@ -22,10 +22,10 @@
 
 namespace gvr {
 AssimpImporter* Importer::readFileFromAssets(char* buffer,
-        long size) {
+        long size, const char * hint_string) {
     Assimp::Importer* importer = new Assimp::Importer();
     importer->ReadFileFromMemory(buffer, size,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
+            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, hint_string);
     return new AssimpImporter(importer);
 }
 
@@ -34,8 +34,9 @@ AssimpImporter* Importer::readFileFromSDCard(std::string str) {
     const char* c_str = str.c_str();
     importer->ReadFile(str,
             aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
-    importer->ReadFileFromMemory(c_str, str.size(),
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
+    /* No need to load call ReadFileFromMemory as ReadFile is already called */
+    /*importer->ReadFileFromMemory(c_str, str.size(),
+            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);*/
     return new AssimpImporter(importer);
 }
 }

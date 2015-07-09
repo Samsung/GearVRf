@@ -235,6 +235,25 @@ public class GVRAndroidResource {
         }
     }
 
+    /**
+     * Returns the filename of the resource with extension.
+     * 
+     * @return Filename of the GVRAndroidResource. May return null if the
+     *         resource is not associated with any file
+     */
+    public String getResourceFilename() {
+        if (filePath != null) {
+            return filePath.substring(filePath.lastIndexOf(File.separator) + 1);
+        } else if (resourceId != 0) {
+            // TODO: Get Android resource filename.
+            return null;
+        } else if (assetPath != null) {
+            return assetPath
+                    .substring(assetPath.lastIndexOf(File.separator) + 1);
+        }
+        return null;
+    }
+
     /*
      * Auto-generated hashCode() and equals(), for container support &c.
      * 

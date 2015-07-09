@@ -36,7 +36,7 @@ Java_org_gearvrf_NativeImporter_readFileFromSDCard(JNIEnv * env,
         jobject obj, jstring filename);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFromByteArray(JNIEnv * env,
-        jobject obj, jbyteArray bytes);
+        jobject obj, jbyteArray bytes, jstring hint);
 }
 
 JNIEXPORT jlong JNICALL
@@ -53,8 +53,14 @@ Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
     char* buffer = (char*) malloc(sizeof(char) * size);
     AAsset_read(asset, buffer, size);
 
-    AssimpImporter* assimp_scene = Importer::readFileFromAssets(
-            buffer, size);
+    AssimpImporter* assimp_scene = NULL;
+    /* Retrieve the file extension and pass it as hint */
+    char* dot = strrchr(native_string, '.');
+    if (!dot || dot == native_string) {
+        assimp_scene = Importer::readFileFromAssets(buffer, size, 0);
+    } else {
+        assimp_scene = Importer::readFileFromAssets(buffer, size, dot + 1);
+    }
 
     AAsset_close(asset);
 
@@ -67,14 +73,16 @@ Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFromByteArray(JNIEnv * env,jobject obj,
-        jbyteArray bytes) {
+        jbyteArray bytes, jstring hint) {
     jbyte* data = env->GetByteArrayElements(bytes, 0);
     int length = static_cast<int>(env->GetArrayLength(bytes));
+    const char* native_hint_string = env->GetStringUTFChars(hint, 0);
 
     AssimpImporter* assimp_scene = Importer::readFileFromAssets(
-            (char*)data, length);
+            (char*)data, length, native_hint_string);
 
     env->ReleaseByteArrayElements(bytes, data, 0);
+    env->ReleaseStringUTFChars(hint, native_hint_string);
 
     return reinterpret_cast<jlong>(assimp_scene);
 }

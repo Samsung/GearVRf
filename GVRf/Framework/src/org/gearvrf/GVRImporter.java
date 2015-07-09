@@ -43,7 +43,6 @@ class GVRImporter {
      * @return An instance of {@link GVRAssimpImporter} or {@code null} if the
      *         file does not exist (or cannot be read)
      */
-    @SuppressWarnings("resource")
     static GVRAssimpImporter readFileFromAssets(GVRContext gvrContext,
             String filename) {
         long nativeValue = NativeImporter.readFileFromAssets(gvrContext
@@ -70,7 +69,17 @@ class GVRImporter {
             } finally {
                 resource.closeStream();
             }
-            long nativeValue = NativeImporter.readFromByteArray(bytes);
+            /* File extension as hint to Assimp */
+            String resourceFilename = resource.getResourceFilename();
+            String extention = "";
+            if (resourceFilename != null) {
+                int dot = resourceFilename.lastIndexOf(".");
+                if (dot > 0) {
+                    extention = resourceFilename.substring(dot + 1);
+                }
+            }
+            long nativeValue = NativeImporter.readFromByteArray(bytes,
+                    extention);
             return new GVRAssimpImporter(gvrContext, nativeValue);
         } catch (IOException e) {
             e.printStackTrace();
@@ -104,5 +113,5 @@ class NativeImporter {
 
     static native long readFileFromSDCard(String filename);
 
-    static native long readFromByteArray(byte[] bytes);
+    static native long readFromByteArray(byte[] bytes, String hint);
 }
