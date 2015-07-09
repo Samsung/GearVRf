@@ -570,6 +570,44 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Sets the range of distances from the camera where this object will be shown.
+     *
+     * @param minRange
+     *      The closest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
+     * @param maxRange
+     *      The farthest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
+     */
+    public void setLODRange(float minRange, float maxRange) {
+        if (minRange < 0 || maxRange < 0) {
+            throw new IllegalArgumentException(
+                    "minRange and maxRange must be between 0 and Float.MAX_VALUE");
+        }
+        if (minRange > maxRange) {
+            throw new IllegalArgumentException(
+                    "minRange should not be greater than maxRange");
+        }
+        NativeSceneObject.setLODRange(getNative(), minRange, maxRange);
+    }
+
+    /**
+     * Get the minimum distance from the camera in which to show this object.
+     * 
+     * @return the minimum distance from the camera in which to show this object.  Default value is 0.
+     */
+    public float getLODMinRange() {
+        return NativeSceneObject.getLODMinRange(getNative());
+    }
+
+    /**
+     * Get the maximum distance from the camera in which to show this object.
+     * 
+     * @return the maximum distance from the camera in which to show this object.  Default value is Float.MAX_VALUE.
+     */
+    public float getLODMaxRange() {
+        return NativeSceneObject.getLODMaxRange(getNative());
+    }
+
+    /**
      * Get the number of child objects.
      * 
      * @return Number of {@link GVRSceneObject objects} added as children of
@@ -731,4 +769,8 @@ class NativeSceneObject {
     static native void removeChildObject(long sceneObject, long child);
 
     static native boolean isColliding(long sceneObject, long otherObject);
+
+    static native void setLODRange(long sceneObject, float minRange, float maxRange);
+    static native float getLODMinRange(long sceneObject);
+    static native float getLODMaxRange(long sceneObject);
 }
