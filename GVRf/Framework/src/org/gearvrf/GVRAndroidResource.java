@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.util.TypedValue;
 
 /**
  * A class to minimize overload fan-out.
@@ -57,6 +58,8 @@ public class GVRAndroidResource {
     private final String filePath;
     private final int resourceId;
     private final String assetPath;
+    // For hint to Assimp
+    private String resFilePath;
 
     /**
      * Open any file you have permission to read.
@@ -74,6 +77,7 @@ public class GVRAndroidResource {
         filePath = path;
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = null;
+        resFilePath = null;
     }
 
     /**
@@ -117,6 +121,9 @@ public class GVRAndroidResource {
         filePath = null;
         this.resourceId = resourceId;
         assetPath = null;
+        TypedValue value = new TypedValue();
+        resources.getValue(resourceId, value, true);
+        resFilePath = value.string.toString();
     }
 
     /**
@@ -159,6 +166,7 @@ public class GVRAndroidResource {
         filePath = null;
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = assetRelativeFilename;
+        resFilePath = null;
     }
 
     /**
@@ -245,8 +253,10 @@ public class GVRAndroidResource {
         if (filePath != null) {
             return filePath.substring(filePath.lastIndexOf(File.separator) + 1);
         } else if (resourceId != 0) {
-            // TODO: Get Android resource filename.
-            return null;
+            if (resFilePath != null) {
+                return resFilePath.substring(resFilePath
+                        .lastIndexOf(File.separator) + 1);
+            }
         } else if (assetPath != null) {
             return assetPath
                     .substring(assetPath.lastIndexOf(File.separator) + 1);

@@ -29,14 +29,10 @@ AssimpImporter* Importer::readFileFromAssets(char* buffer,
     return new AssimpImporter(importer);
 }
 
-AssimpImporter* Importer::readFileFromSDCard(std::string str) {
+AssimpImporter* Importer::readFileFromSDCard(const char * filename) {
     Assimp::Importer* importer = new Assimp::Importer();
-    const char* c_str = str.c_str();
-    importer->ReadFile(str,
+    importer->ReadFile(filename,
             aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
-    /* No need to load call ReadFileFromMemory as ReadFile is already called */
-    /*importer->ReadFileFromMemory(c_str, str.size(),
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);*/
     return new AssimpImporter(importer);
 }
 }

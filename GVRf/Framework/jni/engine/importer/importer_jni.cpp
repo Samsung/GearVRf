@@ -91,14 +91,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFileFromSDCard(JNIEnv * env,
         jobject obj, jstring filename) {
     const char* native_string = env->GetStringUTFChars(filename, 0);
-
-    std::ifstream ifs(native_string);
-    std::string str((std::istreambuf_iterator<char>(ifs)),
-            std::istreambuf_iterator<char>());
-
-    AssimpImporter* assimp_scene = Importer::readFileFromSDCard(str);
-
-    ifs.close();
+    AssimpImporter* assimp_scene = Importer::readFileFromSDCard(native_string);
 
     env->ReleaseStringUTFChars(filename, native_string);
 

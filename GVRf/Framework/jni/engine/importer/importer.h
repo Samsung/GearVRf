@@ -35,7 +35,7 @@ private:
 
 public:
     static AssimpImporter* readFileFromAssets(char* buffer, long size, const char * hint_string);
-    static AssimpImporter* readFileFromSDCard(std::string str);
+    static AssimpImporter* readFileFromSDCard(const char * filename);
 };
 }
 #endif
