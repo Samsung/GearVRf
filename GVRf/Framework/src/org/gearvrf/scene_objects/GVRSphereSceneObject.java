@@ -111,7 +111,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      * slices.
      * 
      * The sphere's triangles and normals are facing either in or out and the
-     * same material will be applied to each side of the cube.
+     * same material will be applied to each side of the sphere.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
@@ -309,8 +309,8 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 double phi1 = slicePercentage1 * 2.0 * Math.PI;
                 float s0, s1;
                 if (facingOut) {
-                    s0 = 1 - slicePercentage0;
-                    s1 = 1 - slicePercentage1;
+                    s0 = 1.0f - slicePercentage0;
+                    s1 = 1.0f - slicePercentage1;
                 } else {
                     s0 = slicePercentage0;
                     s1 = slicePercentage1;

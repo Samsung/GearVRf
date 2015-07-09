@@ -42,7 +42,7 @@ public class CubemapScript extends GVRScript {
     // 0: surrounding sphere using GVRSphereSceneObject
     // 1: surrounding cube using GVRCubeSceneObject
     // 2: surrounding cube using six GVRSceneOjbects (quads)
-    private static final int mEnvironmentType = 2;
+    private static final int mEnvironmentType = 0;
 
     // Type of object for the reflective object
     // 0: reflective sphere using GVRSphereSceneObject

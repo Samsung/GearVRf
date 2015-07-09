@@ -60,6 +60,17 @@ public class SampleViewManager extends GVRScript {
         Future<GVRTexture> futureTexture = gvrContext
                 .loadFutureTexture(new GVRAndroidResource(gvrContext,
                         R.drawable.gearvr_logo));
+        Future<GVRTexture> futureTextureTop = gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.top));
+        Future<GVRTexture> futureTextureBottom = gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.bottom));
+        ArrayList<Future<GVRTexture>> futureTextureList = new ArrayList<Future<GVRTexture>>(
+                3);
+        futureTextureList.add(futureTextureTop);
+        futureTextureList.add(futureTexture);
+        futureTextureList.add(futureTextureBottom);
 
         // setup material
         GVRMaterial material = new GVRMaterial(gvrContext);
@@ -68,11 +79,14 @@ public class SampleViewManager extends GVRScript {
         // create a scene object (this constructor creates a rectangular scene
         // object that uses the standard 'unlit' shader)
         GVRSceneObject quadObject = new GVRSceneObject(gvrContext, 4.0f, 2.0f);
-        GVRCubeSceneObject cubeObject = new GVRCubeSceneObject(gvrContext, true, material);
-        GVRSphereSceneObject sphereObject = new GVRSphereSceneObject(gvrContext, true, material);
+        GVRCubeSceneObject cubeObject = new GVRCubeSceneObject(gvrContext,
+                true, material);
+        GVRSphereSceneObject sphereObject = new GVRSphereSceneObject(
+                gvrContext, true, material);
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
-                gvrContext);
-        GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext);
+                gvrContext, true, material);
+        GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext,
+                true, material);
         GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
                 gvrContext, 8.0f, 4.0f, mActivity.getCamera());
@@ -99,8 +113,6 @@ public class SampleViewManager extends GVRScript {
         }
 
         quadObject.getRenderData().setMaterial(material);
-        cylinderObject.getRenderData().setMaterial(material);
-        coneObject.getRenderData().setMaterial(material);
 
         // set the scene object positions
         quadObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
@@ -111,7 +123,7 @@ public class SampleViewManager extends GVRScript {
         cameraObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
         videoObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
         textViewSceneObject.getTransform().setPosition(0.0f, 0.0f, -2.0f);
-        
+
         // add the scene objects to the scene graph
         scene.addSceneObject(quadObject);
         scene.addSceneObject(cubeObject);

@@ -273,8 +273,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     /**
      * Constructs a cube scene object with each side of length 1.
      * 
-     * The cube's triangles and normals are facing either in or out and the same
-     * texture will be applied to each side of the cube. Each face has its own
+     * The cube's triangles and normals are facing either in or out. Each face has its own
      * texture.
      * 
      * @param gvrContext
@@ -293,6 +292,12 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut,
             ArrayList<Future<GVRTexture>> futureTextureList) {
         super(gvrContext);
+
+        // assert length of futureTextureList is 6
+        if (futureTextureList.size() != 6) {
+            throw new IllegalArgumentException(
+                    "The length of futureTextureList is not 6.");
+        }
 
         createSimpleCubeSixMeshes(gvrContext, facingOut, futureTextureList);
     }
@@ -388,5 +393,9 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 addChildObject(children[i]);
             }
         }
+        
+        // attached an empty renderData for parent object, so that we can set some common properties
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachRenderData(renderData);
     }
 }
