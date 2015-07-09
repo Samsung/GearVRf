@@ -64,8 +64,8 @@ Java_org_gearvrf_NativeAssimpImporter_getAssimpScene(
             reinterpret_cast<AssimpImporter*>(jassimp_importer);
     jobject jassimp_scene = NULL;
     const aiScene *assimp_scene = assimp_importer->getAssimpScene();
-    assimp_importer->create_instance(env, "org/gearvrf/jassimp/AiScene", jassimp_scene);
-    assimp_importer->load_scene_graph(env, assimp_scene, jassimp_scene);
+    create_instance(env, "org/gearvrf/jassimp/AiScene", jassimp_scene);
+    load_scene_graph(env, assimp_scene, jassimp_scene);
     return reinterpret_cast<jobject>(jassimp_scene);
 }
 
@@ -91,6 +91,7 @@ Java_org_gearvrf_NativeAssimpImporter_getMeshMaterial(JNIEnv * env,
     aiNode* root_node = assimp_importer->getAssimpScene()->mRootNode;
     aiNode* current_node = root_node->FindNode(node_name);
     env->ReleaseStringUTFChars(jnode_name, node_name);
-    return reinterpret_cast<jobject>(assimp_importer->mesh_material(env, current_node->mMeshes[index]));
+    const aiScene *assimp_scene = assimp_importer->getAssimpScene();
+    return reinterpret_cast<jobject>(mesh_material(env, assimp_scene, current_node->mMeshes[index]));
 }
 }

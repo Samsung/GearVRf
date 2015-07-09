@@ -43,6 +43,8 @@
 #include "glm/glm.hpp"
 #include "assimp/cimport.h"
 
+#include "jassimp.h"
+
 namespace gvr {
 class Mesh;
 
@@ -69,31 +71,6 @@ public:
     const aiScene* getAssimpScene() {
         return assimp_importer_->GetScene();
     }
-
-    jobject mesh_material(JNIEnv *env, int index);
-
-    static bool create_instance(JNIEnv *env, const char* class_name,
-            jobject& new_instance);
-    static bool create_instance(JNIEnv *env, const char* class_name,
-            const char* signature,/* const*/jvalue* params,
-            jobject& new_instance);
-    static bool get_field(JNIEnv *env, jobject object, const char* field_name,
-            const char* signature, jobject& field);
-    static bool set_object_field(JNIEnv *env, jobject object,
-            const char* field_name, const char* signature, jobject value);
-    static bool call_method(JNIEnv *env, jobject object, const char* type_name,
-            const char* method_name, const char* signature,/* const*/
-            jvalue* params);
-    static bool call_void_method(JNIEnv *env, jobject object, const char* type_name,
-            const char* method_name, const char* signature,/* const*/
-            jvalue* params);
-    static bool call_static_object(JNIEnv *env, const char* type_name,
-            const char* method_name, const char* signature,/* const*/
-            jvalue* params, jobject& return_value);
-    static bool load_scene_node(JNIEnv *env, const aiNode *node, jobject parent,
-            jobject* loaded_node = NULL);
-    static bool load_scene_graph(JNIEnv *env, const aiScene* assimp_scene,
-            jobject& scene);
 
 private:
     Assimp::Importer* assimp_importer_;
