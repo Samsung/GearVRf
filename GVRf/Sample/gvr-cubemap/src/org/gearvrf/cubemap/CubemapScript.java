@@ -15,6 +15,7 @@
 
 package org.gearvrf.cubemap;
 
+import java.util.ArrayList;
 import java.util.concurrent.Future;
 
 import org.gearvrf.FutureWrapper;
@@ -28,6 +29,7 @@ import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.cubemap.R;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
+import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 
 import android.util.Log;
@@ -41,8 +43,9 @@ public class CubemapScript extends GVRScript {
     // Type of object for the environment
     // 0: surrounding sphere using GVRSphereSceneObject
     // 1: surrounding cube using GVRCubeSceneObject
+    // 2: surrounding cylinder using GVRCylinderSceneObject
     // 2: surrounding cube using six GVRSceneOjbects (quads)
-    private static final int mEnvironmentType = 0;
+    private static final int mEnvironmentType = 1;
 
     // Type of object for the reflective object
     // 0: reflective sphere using GVRSphereSceneObject
@@ -62,6 +65,26 @@ public class CubemapScript extends GVRScript {
         GVRMaterial cubemapMaterial = new GVRMaterial(gvrContext,
                 GVRMaterial.GVRShaderType.Cubemap.ID);
         cubemapMaterial.setMainTexture(futureCubemapTexture);
+        
+        ArrayList<Future<GVRTexture>> futureTextureList = new ArrayList<Future<GVRTexture>>(6);
+        futureTextureList.add(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.back)));
+        futureTextureList.add(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.right)));
+        futureTextureList.add(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.front)));
+        futureTextureList.add(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.left)));
+        futureTextureList.add(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.top)));
+        futureTextureList.add(gvrContext
+                .loadFutureTexture(new GVRAndroidResource(gvrContext,
+                        R.drawable.bottom)));
 
         switch (mEnvironmentType) {
         case 0:
@@ -80,13 +103,24 @@ public class CubemapScript extends GVRScript {
             // create surrounding cube using GVRCubeSceneObject //
             // ////////////////////////////////////////////////////
             GVRCubeSceneObject mCubeEvironment = new GVRCubeSceneObject(
-                    gvrContext, false, cubemapMaterial);
+                    gvrContext, false, futureTextureList, 2);
             mCubeEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
                     CUBE_WIDTH);
             scene.addSceneObject(mCubeEvironment);
             break;
 
         case 2:
+            // ///////////////////////////////////////////////////////////
+            // create surrounding cylinder using GVRCylinderSceneObject //
+            // ///////////////////////////////////////////////////////////
+            GVRCylinderSceneObject mCylinderEvironment = new GVRCylinderSceneObject(
+                    gvrContext, false, cubemapMaterial);
+            mCylinderEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
+                    CUBE_WIDTH);
+            scene.addSceneObject(mCylinderEvironment);
+            break;
+
+        case 3:
             // /////////////////////////////////////////////////////////////
             // create surrounding cube using six GVRSceneOjbects (quads) //
             // /////////////////////////////////////////////////////////////

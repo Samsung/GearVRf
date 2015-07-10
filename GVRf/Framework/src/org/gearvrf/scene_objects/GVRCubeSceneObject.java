@@ -302,6 +302,44 @@ public class GVRCubeSceneObject extends GVRSceneObject {
         createSimpleCubeSixMeshes(gvrContext, facingOut, futureTextureList);
     }
 
+    /**
+     * Constructs a cube scene object with each side of length 1.
+     * 
+     * Each face is subdivided into NxN quads, where N = segmentNumber is given by user.  
+     * 
+     * The cube's triangles and normals are facing either in or out. Each face has its own
+     * texture.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * 
+     * @param futureTextureList
+     *            the list of six textures for six faces. {@code Future<
+     *            {@code GVRTexture}>} is used here for asynchronously loading
+     *            the texture. The six textures are for front, right, back,
+     *            left, top, and bottom faces respectively.
+     *            
+     * @param segmetnNumber
+     *            the segment number along each axis. 
+     *            
+     */
+    public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut,
+            ArrayList<Future<GVRTexture>> futureTextureList, int segmentNumber) {
+        super(gvrContext);
+
+        // assert length of futureTextureList is 6
+        if (futureTextureList.size() != 6) {
+            throw new IllegalArgumentException(
+                    "The length of futureTextureList is not 6.");
+        }
+
+        createComplexCube(gvrContext, facingOut, futureTextureList, segmentNumber);
+    }
+
     private void createSimpleCube(GVRContext gvrContext, boolean facingOut,
             GVRMaterial material) {
 
@@ -394,6 +432,417 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             }
         }
         
+        // attached an empty renderData for parent object, so that we can set some common properties
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachRenderData(renderData);
+    }
+
+    private float[] vertices;
+    private float[] normals;
+    private float[] texCoords;
+    private char[] indices;
+
+    private void createComplexCube(GVRContext gvrContext,
+            boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList, int segmentNumber) {
+
+        GVRSceneObject[] children = new GVRSceneObject[6];
+        for (int i = 0; i < 6; i++) {
+            children[i] = new GVRSceneObject(gvrContext);
+            addChildObject(children[i]);
+        }
+        
+        int numPerFace = segmentNumber*segmentNumber;
+        GVRSceneObject[] grandchildren = new GVRSceneObject[numPerFace];
+        GVRMesh[] subMeshes = new GVRMesh[numPerFace];
+        
+        vertices = new float[12];
+        normals = new float[12];
+        texCoords = new float[8];
+        indices = new char[6];
+        
+        if (facingOut) {
+            indices[0] = 0;
+            indices[1] = 1;
+            indices[2] = 2;
+
+            indices[3] = 1;
+            indices[4] = 3;
+            indices[5] = 2;
+        } else {
+            indices[0] = 0;
+            indices[1] = 2;
+            indices[2] = 1;
+
+            indices[3] = 1;
+            indices[4] = 2;
+            indices[5] = 3;
+        }
+        
+        float segmentLength = 2.0f * SIZE / segmentNumber;
+        float segmentTexCoordLength = 1.0f / segmentNumber;
+        
+        // front face
+        normals[0] = normals[3] = normals[6] = normals[9] = 0.0f;
+        normals[1] = normals[4] = normals[7] = normals[10] = 0.0f;
+        if (facingOut) {
+            normals[2] = normals[5] = normals[8] = normals[11] = 1.0f;
+        } else {
+            normals[2] = normals[5] = normals[8] = normals[11] = -1.0f;
+        }
+        for (int col = 0; col<segmentNumber; col++) {
+            for (int row = 0; row<segmentNumber; row++) {
+                // sub-mesh (col, row)
+                int index = row*segmentNumber+col;
+                
+                float x0 = -SIZE + segmentLength * col;
+                float y0 = -SIZE + segmentLength * row;
+                float x1 = x0 + segmentLength;
+                float y1 = y0 + segmentLength;
+                float z = SIZE;
+                vertices[0] = x0;
+                vertices[1] = y0;
+                vertices[2] = z;
+                vertices[3] = x1;
+                vertices[4] = y0;
+                vertices[5] = z;
+                vertices[6] = x0;
+                vertices[7] = y1;
+                vertices[8] = z;
+                vertices[9] = x1;
+                vertices[10] = y1;
+                vertices[11] = z;
+                
+                float s0, s1;
+                if (facingOut) {
+                    s0 = col * segmentTexCoordLength;
+                    s1 = (col + 1) * segmentTexCoordLength;
+                } else {
+                    s0 = 1.0f - col * segmentTexCoordLength;
+                    s1 = 1.0f - (col + 1) * segmentTexCoordLength;
+                }
+                float t0 = 1.0f - (row + 1) * segmentTexCoordLength;
+                float t1 = 1.0f - row * segmentTexCoordLength;
+                texCoords[0] = s0; 
+                texCoords[1] = t1; 
+                texCoords[2] = s1; 
+                texCoords[3] = t1; 
+                texCoords[4] = s0; 
+                texCoords[5] = t0; 
+                texCoords[6] = s1; 
+                texCoords[7] = t0;
+                
+                subMeshes[index] = new GVRMesh(gvrContext);
+                subMeshes[index].setVertices(vertices);
+                subMeshes[index].setNormals(normals);
+                subMeshes[index].setTexCoords(texCoords);
+                subMeshes[index].setTriangles(indices);
+                grandchildren[index] = new GVRSceneObject(gvrContext,
+                        new FutureWrapper<GVRMesh>(subMeshes[index]),
+                        futureTextureList.get(0));
+                children[0].addChildObject(grandchildren[index]);
+            }
+        }
+
+        // right face
+        if (facingOut) {
+            normals[0] = normals[3] = normals[6] = normals[9] = 1.0f;
+        } else {
+            normals[0] = normals[3] = normals[6] = normals[9] = -1.0f;
+        }
+        normals[1] = normals[4] = normals[7] = normals[10] = 0.0f;
+        normals[2] = normals[5] = normals[8] = normals[11] = 0.0f;
+        for (int col = 0; col<segmentNumber; col++) {
+            for (int row = 0; row<segmentNumber; row++) {
+                // sub-mesh (col, row)
+                int index = row*segmentNumber+col;
+                
+                float x = SIZE;
+                float y0 = -SIZE + segmentLength * row;
+                float z0 = SIZE - segmentLength * col;
+                float y1 = y0 + segmentLength;
+                float z1 = z0 - segmentLength;
+                vertices[0] = x;
+                vertices[1] = y0;
+                vertices[2] = z0;
+                vertices[3] = x;
+                vertices[4] = y0;
+                vertices[5] = z1;
+                vertices[6] = x;
+                vertices[7] = y1;
+                vertices[8] = z0;
+                vertices[9] = x;
+                vertices[10] = y1;
+                vertices[11] = z1;
+                
+                float s0, s1;
+                if (facingOut) {
+                    s0 = col * segmentTexCoordLength;
+                    s1 = (col + 1) * segmentTexCoordLength;
+                } else {
+                    s0 = 1.0f - col * segmentTexCoordLength;
+                    s1 = 1.0f - (col + 1) * segmentTexCoordLength;
+                }
+                float t0 = 1.0f - (row + 1) * segmentTexCoordLength;
+                float t1 = 1.0f - row * segmentTexCoordLength;
+                texCoords[0] = s0; 
+                texCoords[1] = t1; 
+                texCoords[2] = s1; 
+                texCoords[3] = t1; 
+                texCoords[4] = s0; 
+                texCoords[5] = t0; 
+                texCoords[6] = s1; 
+                texCoords[7] = t0;
+                
+                subMeshes[index] = new GVRMesh(gvrContext);
+                subMeshes[index].setVertices(vertices);
+                subMeshes[index].setNormals(normals);
+                subMeshes[index].setTexCoords(texCoords);
+                subMeshes[index].setTriangles(indices);
+                grandchildren[index] = new GVRSceneObject(gvrContext,
+                        new FutureWrapper<GVRMesh>(subMeshes[index]),
+                        futureTextureList.get(1));
+                children[1].addChildObject(grandchildren[index]);
+            }
+        }
+
+        // back face
+        normals[0] = normals[3] = normals[6] = normals[9] = 0.0f;
+        normals[1] = normals[4] = normals[7] = normals[10] = 0.0f;
+        if (facingOut) {
+            normals[2] = normals[5] = normals[8] = normals[11] = -1.0f;
+        } else {
+            normals[2] = normals[5] = normals[8] = normals[11] = 1.0f;
+        }
+        for (int col = 0; col<segmentNumber; col++) {
+            for (int row = 0; row<segmentNumber; row++) {
+                // sub-mesh (col, row)
+                int index = row*segmentNumber+col;
+                
+                float x0 = SIZE - segmentLength * col;
+                float y0 = -SIZE + segmentLength * row;
+                float x1 = x0 - segmentLength;
+                float y1 = y0 + segmentLength;
+                float z = -SIZE;
+                vertices[0] = x0;
+                vertices[1] = y0;
+                vertices[2] = z;
+                vertices[3] = x1;
+                vertices[4] = y0;
+                vertices[5] = z;
+                vertices[6] = x0;
+                vertices[7] = y1;
+                vertices[8] = z;
+                vertices[9] = x1;
+                vertices[10] = y1;
+                vertices[11] = z;
+                
+                float s0, s1;
+                if (facingOut) {
+                    s0 = col * segmentTexCoordLength;
+                    s1 = (col + 1) * segmentTexCoordLength;
+                } else {
+                    s0 = 1.0f - col * segmentTexCoordLength;
+                    s1 = 1.0f - (col + 1) * segmentTexCoordLength;
+                }
+                float t0 = 1.0f - (row + 1) * segmentTexCoordLength;
+                float t1 = 1.0f - row * segmentTexCoordLength;
+                texCoords[0] = s0; 
+                texCoords[1] = t1; 
+                texCoords[2] = s1; 
+                texCoords[3] = t1; 
+                texCoords[4] = s0; 
+                texCoords[5] = t0; 
+                texCoords[6] = s1; 
+                texCoords[7] = t0;
+                
+                subMeshes[index] = new GVRMesh(gvrContext);
+                subMeshes[index].setVertices(vertices);
+                subMeshes[index].setNormals(normals);
+                subMeshes[index].setTexCoords(texCoords);
+                subMeshes[index].setTriangles(indices);
+                grandchildren[index] = new GVRSceneObject(gvrContext,
+                        new FutureWrapper<GVRMesh>(subMeshes[index]),
+                        futureTextureList.get(2));
+                children[2].addChildObject(grandchildren[index]);
+            }
+        }
+
+        // left face
+        if (facingOut) {
+            normals[0] = normals[3] = normals[6] = normals[9] = -1.0f;
+        } else {
+            normals[0] = normals[3] = normals[6] = normals[9] = 1.0f;
+        }
+        normals[1] = normals[4] = normals[7] = normals[10] = 0.0f;
+        normals[2] = normals[5] = normals[8] = normals[11] = 0.0f;
+        for (int col = 0; col<segmentNumber; col++) {
+            for (int row = 0; row<segmentNumber; row++) {
+                // sub-mesh (col, row)
+                int index = row*segmentNumber+col;
+                
+                float x = -SIZE;
+                float y0 = -SIZE + segmentLength * row;
+                float z0 = -SIZE + segmentLength * col;
+                float y1 = y0 + segmentLength;
+                float z1 = z0 + segmentLength;
+                vertices[0] = x;
+                vertices[1] = y0;
+                vertices[2] = z0;
+                vertices[3] = x;
+                vertices[4] = y0;
+                vertices[5] = z1;
+                vertices[6] = x;
+                vertices[7] = y1;
+                vertices[8] = z0;
+                vertices[9] = x;
+                vertices[10] = y1;
+                vertices[11] = z1;
+                
+                float s0, s1;
+                if (facingOut) {
+                    s0 = col * segmentTexCoordLength;
+                    s1 = (col + 1) * segmentTexCoordLength;
+                } else {
+                    s0 = 1.0f - col * segmentTexCoordLength;
+                    s1 = 1.0f - (col + 1) * segmentTexCoordLength;
+                }
+                float t0 = 1.0f - (row + 1) * segmentTexCoordLength;
+                float t1 = 1.0f - row * segmentTexCoordLength;
+                texCoords[0] = s0; 
+                texCoords[1] = t1; 
+                texCoords[2] = s1; 
+                texCoords[3] = t1; 
+                texCoords[4] = s0; 
+                texCoords[5] = t0; 
+                texCoords[6] = s1; 
+                texCoords[7] = t0;
+                
+                subMeshes[index] = new GVRMesh(gvrContext);
+                subMeshes[index].setVertices(vertices);
+                subMeshes[index].setNormals(normals);
+                subMeshes[index].setTexCoords(texCoords);
+                subMeshes[index].setTriangles(indices);
+                grandchildren[index] = new GVRSceneObject(gvrContext,
+                        new FutureWrapper<GVRMesh>(subMeshes[index]),
+                        futureTextureList.get(3));
+                children[3].addChildObject(grandchildren[index]);
+            }
+        }
+
+        // top face
+        normals[0] = normals[3] = normals[6] = normals[9] = 0.0f;
+        if (facingOut) {
+            normals[1] = normals[4] = normals[7] = normals[10] = 1.0f;
+        } else {
+            normals[1] = normals[4] = normals[7] = normals[10] = -1.0f;
+        }
+        normals[2] = normals[5] = normals[8] = normals[11] = 0.0f;
+        for (int col = 0; col<segmentNumber; col++) {
+            for (int row = 0; row<segmentNumber; row++) {
+                // sub-mesh (col, row)
+                int index = row*segmentNumber+col;
+                
+                float y = SIZE;
+                float x0 = -SIZE + segmentLength * col;
+                float z0 = SIZE - segmentLength * row;
+                float x1 = x0 + segmentLength;
+                float z1 = z0 - segmentLength;
+                vertices[0] = x0;
+                vertices[1] = y;
+                vertices[2] = z0;
+                vertices[3] = x1;
+                vertices[4] = y;
+                vertices[5] = z0;
+                vertices[6] = x0;
+                vertices[7] = y;
+                vertices[8] = z1;
+                vertices[9] = x1;
+                vertices[10] = y;
+                vertices[11] = z1;
+                
+                float s0, s1;
+                s0 = col * segmentTexCoordLength;
+                s1 = (col + 1) * segmentTexCoordLength;
+                float t0 = (row + 1) * segmentTexCoordLength;
+                float t1 = row * segmentTexCoordLength;
+                texCoords[0] = s0; 
+                texCoords[1] = t1; 
+                texCoords[2] = s1; 
+                texCoords[3] = t1; 
+                texCoords[4] = s0; 
+                texCoords[5] = t0; 
+                texCoords[6] = s1; 
+                texCoords[7] = t0;
+                
+                subMeshes[index] = new GVRMesh(gvrContext);
+                subMeshes[index].setVertices(vertices);
+                subMeshes[index].setNormals(normals);
+                subMeshes[index].setTexCoords(texCoords);
+                subMeshes[index].setTriangles(indices);
+                grandchildren[index] = new GVRSceneObject(gvrContext,
+                        new FutureWrapper<GVRMesh>(subMeshes[index]),
+                        futureTextureList.get(4));
+                children[4].addChildObject(grandchildren[index]);
+            }
+        }
+
+        // bottom face
+        normals[0] = normals[3] = normals[6] = normals[9] = 0.0f;
+        if (facingOut) {
+            normals[1] = normals[4] = normals[7] = normals[10] = -1.0f;
+        } else {
+            normals[1] = normals[4] = normals[7] = normals[10] = 1.0f;
+        }
+        normals[2] = normals[5] = normals[8] = normals[11] = 0.0f;
+        for (int col = 0; col<segmentNumber; col++) {
+            for (int row = 0; row<segmentNumber; row++) {
+                // sub-mesh (col, row)
+                int index = row*segmentNumber+col;
+                
+                float y = -SIZE;
+                float x0 = -SIZE + segmentLength * col;
+                float z0 = -SIZE + segmentLength * row;
+                float x1 = x0 + segmentLength;
+                float z1 = z0 + segmentLength;
+                vertices[0] = x0;
+                vertices[1] = y;
+                vertices[2] = z0;
+                vertices[3] = x1;
+                vertices[4] = y;
+                vertices[5] = z0;
+                vertices[6] = x0;
+                vertices[7] = y;
+                vertices[8] = z1;
+                vertices[9] = x1;
+                vertices[10] = y;
+                vertices[11] = z1;
+                
+                float s0, s1;
+                s0 = col * segmentTexCoordLength;
+                s1 = (col + 1) * segmentTexCoordLength;
+                float t0 = 1.0f - (row + 1) * segmentTexCoordLength;
+                float t1 = 1.0f - row * segmentTexCoordLength;
+                texCoords[0] = s0; 
+                texCoords[1] = t1; 
+                texCoords[2] = s1; 
+                texCoords[3] = t1; 
+                texCoords[4] = s0; 
+                texCoords[5] = t0; 
+                texCoords[6] = s1; 
+                texCoords[7] = t0;
+                
+                subMeshes[index] = new GVRMesh(gvrContext);
+                subMeshes[index].setVertices(vertices);
+                subMeshes[index].setNormals(normals);
+                subMeshes[index].setTexCoords(texCoords);
+                subMeshes[index].setTriangles(indices);
+                grandchildren[index] = new GVRSceneObject(gvrContext,
+                        new FutureWrapper<GVRMesh>(subMeshes[index]),
+                        futureTextureList.get(5));
+                children[5].addChildObject(grandchildren[index]);
+            }
+        }
+
         // attached an empty renderData for parent object, so that we can set some common properties
         GVRRenderData renderData = new GVRRenderData(gvrContext);
         attachRenderData(renderData);
