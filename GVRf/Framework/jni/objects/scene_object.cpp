@@ -152,7 +152,7 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     }
     children_.push_back(child);
     child->parent_ = self;
-    child->transform()->invalidate();
+    child->transform()->invalidate(false);
 }
 
 void SceneObject::removeChildObject(SceneObject* child) {

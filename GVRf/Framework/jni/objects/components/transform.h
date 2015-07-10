@@ -54,29 +54,29 @@ public:
 
     void set_position(const glm::vec3& position) {
         position_ = position;
-        invalidate();
+        invalidate(false);
     }
 
     void set_position(float x, float y, float z) {
         position_.x = x;
         position_.y = y;
         position_.z = z;
-        invalidate();
+        invalidate(false);
     }
 
     void set_position_x(float x) {
         position_.x = x;
-        invalidate();
+        invalidate(false);
     }
 
     void set_position_y(float y) {
         position_.y = y;
-        invalidate();
+        invalidate(false);
     }
 
     void set_position_z(float z) {
         position_.z = z;
-        invalidate();
+        invalidate(false);
     }
 
     const glm::quat& rotation() const {
@@ -116,12 +116,12 @@ public:
         rotation_.x = x;
         rotation_.y = y;
         rotation_.z = z;
-        invalidate();
+        invalidate(true);
     }
 
     void set_rotation(const glm::quat& roation) {
         rotation_ = roation;
-        invalidate();
+        invalidate(true);
     }
 
     const glm::vec3& scale() const {
@@ -142,32 +142,32 @@ public:
 
     void set_scale(const glm::vec3& scale) {
         scale_ = scale;
-        invalidate();
+        invalidate(false);
     }
 
     void set_scale(float x, float y, float z) {
         scale_.x = x;
         scale_.y = y;
         scale_.z = z;
-        invalidate();
+        invalidate(false);
     }
 
     void set_scale_x(float x) {
         scale_.x = x;
-        invalidate();
+        invalidate(false);
     }
 
     void set_scale_y(float y) {
         scale_.y = y;
-        invalidate();
+        invalidate(false);
     }
 
     void set_scale_z(float z) {
         scale_.z = z;
-        invalidate();
+        invalidate(false);
     }
 
-    void invalidate();
+    void invalidate(bool rotationUpdated);
     glm::mat4 getModelMatrix();
     void translate(float x, float y, float z);
     void setRotationByAxis(float angle, float x, float y, float z);
