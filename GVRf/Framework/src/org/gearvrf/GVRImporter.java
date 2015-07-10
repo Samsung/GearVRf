@@ -69,17 +69,12 @@ class GVRImporter {
             } finally {
                 resource.closeStream();
             }
-            /* File extension as hint to Assimp */
             String resourceFilename = resource.getResourceFilename();
-            String extention = "";
-            if (resourceFilename != null) {
-                int dot = resourceFilename.lastIndexOf(".");
-                if (dot > 0) {
-                    extention = resourceFilename.substring(dot + 1);
-                }
+            if (resourceFilename == null) {
+                resourceFilename = ""; // Passing null causes JNI exception.
             }
             long nativeValue = NativeImporter.readFromByteArray(bytes,
-                    extention);
+                    resourceFilename);
             return new GVRAssimpImporter(gvrContext, nativeValue);
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,5 +108,5 @@ class NativeImporter {
 
     static native long readFileFromSDCard(String filename);
 
-    static native long readFromByteArray(byte[] bytes, String hint);
+    static native long readFromByteArray(byte[] bytes, String filename);
 }
