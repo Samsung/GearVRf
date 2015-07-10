@@ -59,7 +59,7 @@ public class GVRAndroidResource {
     private final int resourceId;
     private final String assetPath;
     // For hint to Assimp
-    private String resFilePath;
+    private String resourceFilePath;
 
     /**
      * Open any file you have permission to read.
@@ -77,7 +77,7 @@ public class GVRAndroidResource {
         filePath = path;
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = null;
-        resFilePath = null;
+        resourceFilePath = null;
     }
 
     /**
@@ -123,7 +123,7 @@ public class GVRAndroidResource {
         assetPath = null;
         TypedValue value = new TypedValue();
         resources.getValue(resourceId, value, true);
-        resFilePath = value.string.toString();
+        resourceFilePath = value.string.toString();
     }
 
     /**
@@ -166,7 +166,7 @@ public class GVRAndroidResource {
         filePath = null;
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = assetRelativeFilename;
-        resFilePath = null;
+        resourceFilePath = null;
     }
 
     /**
@@ -253,8 +253,8 @@ public class GVRAndroidResource {
         if (filePath != null) {
             return filePath.substring(filePath.lastIndexOf(File.separator) + 1);
         } else if (resourceId != 0) {
-            if (resFilePath != null) {
-                return resFilePath.substring(resFilePath
+            if (resourceFilePath != null) {
+                return resourceFilePath.substring(resourceFilePath
                         .lastIndexOf(File.separator) + 1);
             }
         } else if (assetPath != null) {
