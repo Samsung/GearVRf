@@ -31,13 +31,14 @@
 namespace gvr {
 class GLProgram;
 class RenderData;
+class Material;
 
 class BoundingBoxShader: public RecyclableObject {
 public:
     BoundingBoxShader();
     ~BoundingBoxShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
 
 private:
     BoundingBoxShader(const BoundingBoxShader& bounding_box_shader);

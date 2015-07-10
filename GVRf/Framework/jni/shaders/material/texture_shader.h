@@ -31,6 +31,7 @@
 namespace gvr {
 class GLProgram;
 class RenderData;
+class Material;
 
 class TextureShader: public RecyclableObject {
 public:
@@ -38,7 +39,7 @@ public:
     ~TextureShader();
     void recycle();
     void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
-            const glm::mat4& mvp_matrix, RenderData* render_data);
+            const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
 
 private:
     TextureShader(const TextureShader& texture_shader);

@@ -33,13 +33,14 @@
 namespace gvr {
 class GLProgram;
 class RenderData;
+class Material;
 
 class UnlitHorizontalStereoShader: public RecyclableObject {
 public:
     UnlitHorizontalStereoShader();
     ~UnlitHorizontalStereoShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data, bool right);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material, bool right);
 
 private:
     UnlitHorizontalStereoShader(

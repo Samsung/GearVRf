@@ -36,8 +36,8 @@ Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
         jobject obj, jlong jrender_data, jlong jmesh);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmaterial);
+Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
+        jobject obj, jlong jrender_data, jlong jrender_pass);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
@@ -65,13 +65,7 @@ Java_org_gearvrf_NativeRenderData_getRenderingOrder(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getCullTest(JNIEnv * env,
-        jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCullTest(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean cull_test);
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -133,11 +127,11 @@ render_data->set_mesh(mesh);
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env,
-    jobject obj, jlong jrender_data, jlong jmaterial) {
-RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-Material* material = reinterpret_cast<Material*>(jmaterial);
-render_data->set_material(material);
+Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
+        jobject obj, jlong jrender_data, jlong jrender_pass) {
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    RenderPass* render_pass = reinterpret_cast<RenderPass*>(jrender_pass);
+    render_data->add_pass(render_pass);
 }
 
 JNIEXPORT void JNICALL
@@ -188,20 +182,6 @@ Java_org_gearvrf_NativeRenderData_setRenderingOrder(
     JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order) {
 RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
 render_data->set_rendering_order(rendering_order);
-}
-
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getCullTest(JNIEnv * env,
-    jobject obj, jlong jrender_data) {
-RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-return static_cast<jboolean>(render_data->cull_test());
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCullTest(JNIEnv * env,
-    jobject obj, jlong jrender_data, jboolean cull_test) {
-RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-render_data->set_cull_test(static_cast<bool>(cull_test));
 }
 
 JNIEXPORT jboolean JNICALL
