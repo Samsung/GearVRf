@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Imports a scene file using Assimp.
  ***************************************************************************/
@@ -21,21 +20,27 @@
 #include "importer.h"
 
 namespace gvr {
-AssimpImporter* Importer::readFileFromAssets(char* buffer,
-        long size) {
+AssimpImporter* Importer::readFileFromAssets(char* buffer, long size,
+        const char * filename) {
     Assimp::Importer* importer = new Assimp::Importer();
+    char* hint = 0;
+
+    if (filename != 0) {
+        hint = strrchr(filename, '.');
+        if (hint && hint != filename) {
+            hint = hint + 1;
+        }
+    }
     importer->ReadFileFromMemory(buffer, size,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
+            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, hint);
+
     return new AssimpImporter(importer);
 }
 
-AssimpImporter* Importer::readFileFromSDCard(std::string str) {
+AssimpImporter* Importer::readFileFromSDCard(const char * filename) {
     Assimp::Importer* importer = new Assimp::Importer();
-    const char* c_str = str.c_str();
-    importer->ReadFile(str,
+    importer->ReadFile(filename,
             aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
-    importer->ReadFileFromMemory(c_str, str.size(),
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
     return new AssimpImporter(importer);
 }
 }
