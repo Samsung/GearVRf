@@ -333,90 +333,22 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     private void generateCylinderObjectThreeMeshes(GVRContext gvrContext,
             float bottomRadius, float topRadius, float height, int stackNumber,
             int sliceNumber, boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList) {
-        GVRSceneObject[] children = new GVRSceneObject[3];
-        GVRMesh[] meshes = new GVRMesh[3];
-        for (int i = 0; i < 3; i++) {
-            meshes[i] = new GVRMesh(gvrContext);
-        }
-
-        int capVertexNumber = 3 * sliceNumber;
-        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
         float halfHeight = height / 2.0f;
 
         // top cap
-        // 3 * numSlices
         if (topRadius > 0) {
-            vertices = new float[3 * capVertexNumber];
-            normals = new float[3 * capVertexNumber];
-            texCoords = new float[2 * capVertexNumber];
-            indices = new char[capVertexNumber];
-
-            createCap(topRadius, halfHeight, sliceNumber, 1.0f, facingOut);
-
-            meshes[0].setVertices(vertices);
-            meshes[0].setNormals(normals);
-            meshes[0].setTexCoords(texCoords);
-            meshes[0].setTriangles(indices);
-
-            children[0] = new GVRSceneObject(gvrContext,
-                    new FutureWrapper<GVRMesh>(meshes[0]),
-                    futureTextureList.get(0));
-            addChildObject(children[0]);        
+            createCapMesh(gvrContext, topRadius, halfHeight, sliceNumber,
+                    1.0f, facingOut, futureTextureList.get(0));       
         }
         
         // cylinder body
-        // 4 * numSlices * numStacks
-        {
-            int triangleNumber = 6 * sliceNumber * stackNumber;
-    
-            vertices = new float[3 * bodyVertexNumber];
-            normals = new float[3 * bodyVertexNumber];
-            texCoords = new float[2 * triangleNumber];
-            indices = new char[triangleNumber];
-    
-            vertexCount = 0;
-            texCoordCount = 0;
-            indexCount = 0;
-            triangleCount = 0;
-
-            createBody(bottomRadius, topRadius, height, stackNumber, sliceNumber,
-                    facingOut);
-    
-            meshes[1].setVertices(vertices);
-            meshes[1].setNormals(normals);
-            meshes[1].setTexCoords(texCoords);
-            meshes[1].setTriangles(indices);
-    
-            children[1] = new GVRSceneObject(gvrContext,
-                    new FutureWrapper<GVRMesh>(meshes[1]),
-                    futureTextureList.get(1));
-            addChildObject(children[1]);        
-        }
+        createBodyMesh(gvrContext, bottomRadius, topRadius, height, stackNumber, sliceNumber,
+                facingOut, futureTextureList.get(1));
         
         // bottom cap
-        // 3 * numSlices
         if (bottomRadius > 0) {
-            vertices = new float[3 * capVertexNumber];
-            normals = new float[3 * capVertexNumber];
-            texCoords = new float[2 * capVertexNumber];
-            indices = new char[capVertexNumber];
-
-            vertexCount = 0;
-            texCoordCount = 0;
-            indexCount = 0;
-            triangleCount = 0;
-
-            createCap(bottomRadius, -halfHeight, sliceNumber, -1.0f, facingOut);
-
-            meshes[2].setVertices(vertices);
-            meshes[2].setNormals(normals);
-            meshes[2].setTexCoords(texCoords);
-            meshes[2].setTriangles(indices);
-
-            children[2] = new GVRSceneObject(gvrContext,
-                    new FutureWrapper<GVRMesh>(meshes[2]),
-                    futureTextureList.get(2));
-            addChildObject(children[2]);        
+            createCapMesh(gvrContext, bottomRadius, -halfHeight, sliceNumber,
+                    -1.0f, facingOut, futureTextureList.get(2));       
         }
 
         // attached an empty renderData for parent object, so that we can set some common properties
@@ -465,7 +397,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             createCap(bottomRadius, -halfHeight, sliceNumber, -1.0f, facingOut);
         }
     }
-
+    
     private void createCap(float radius, float height, int sliceNumber,
             float normalDirection, boolean facingOut) {
         if (!facingOut) {
@@ -744,5 +676,62 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             normals[i2 + 7] = ny;
             normals[i2 + 8] = nz;
         }
+    }
+
+    private void createCapMesh(GVRContext gvrContext, float radius, float height, int sliceNumber,
+            float normalDirection, boolean facingOut, Future<GVRTexture> futureTexture) {      
+        int capVertexNumber = 3 * sliceNumber;
+        vertices = new float[3 * capVertexNumber];
+        normals = new float[3 * capVertexNumber];
+        texCoords = new float[2 * capVertexNumber];
+        indices = new char[capVertexNumber];
+
+        vertexCount = 0;
+        texCoordCount = 0;
+        indexCount = 0;
+        triangleCount = 0;
+
+        createCap(radius, height, sliceNumber, normalDirection, facingOut);
+
+        GVRMesh mesh = new GVRMesh(gvrContext);
+        mesh.setVertices(vertices);
+        mesh.setNormals(normals);
+        mesh.setTexCoords(texCoords);
+        mesh.setTriangles(indices);
+
+        GVRSceneObject child = new GVRSceneObject(gvrContext,
+                new FutureWrapper<GVRMesh>(mesh),
+                futureTexture);
+        addChildObject(child);        
+   }
+
+    private void createBodyMesh(GVRContext gvrContext, float bottomRadius, float topRadius, float height,
+            int stackNumber, int sliceNumber, boolean facingOut, Future<GVRTexture> futureTexture) {
+        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
+        int triangleNumber = 6 * sliceNumber * stackNumber;
+        
+        vertices = new float[3 * bodyVertexNumber];
+        normals = new float[3 * bodyVertexNumber];
+        texCoords = new float[2 * triangleNumber];
+        indices = new char[triangleNumber];
+
+        vertexCount = 0;
+        texCoordCount = 0;
+        indexCount = 0;
+        triangleCount = 0;
+
+        createBody(bottomRadius, topRadius, height, stackNumber, sliceNumber,
+                facingOut);
+
+        GVRMesh mesh = new GVRMesh(gvrContext);
+        mesh.setVertices(vertices);
+        mesh.setNormals(normals);
+        mesh.setTexCoords(texCoords);
+        mesh.setTriangles(indices);
+
+        GVRSceneObject child = new GVRSceneObject(gvrContext,
+                new FutureWrapper<GVRMesh>(mesh),
+                futureTexture);
+        addChildObject(child);        
     }
 }
