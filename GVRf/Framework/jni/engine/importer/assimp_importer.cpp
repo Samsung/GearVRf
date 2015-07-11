@@ -62,6 +62,14 @@ Mesh* AssimpImporter::getMesh(int index) {
             triangles.push_back(ai_mesh->mFaces[i].mIndices[0]);
             triangles.push_back(ai_mesh->mFaces[i].mIndices[1]);
             triangles.push_back(ai_mesh->mFaces[i].mIndices[2]);
+        } else if (ai_mesh->mFaces[i].mNumIndices == 4) {
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[0]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[1]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[2]);
+
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[2]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[3]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[0]);
         }
     }
     mesh->set_triangles(std::move(triangles));
