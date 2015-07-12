@@ -15,10 +15,14 @@
 
 package org.gearvrf.scene_objects;
 
+import java.util.concurrent.Future;
+
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
 
 public class GVRSphereSceneObject extends GVRSceneObject {
@@ -43,40 +47,92 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
      * slices.
      * 
+     * The sphere's triangles and normals are facing out and the same texture
+     * will be applied to each side of the sphere.
+     * 
      * @param gvrContext
      *            current {@link GVRContext}
      */
     public GVRSphereSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
-        generateSceneObject(gvrContext, STACK_NUMBER, SLICE_NUMBER);
+        generateSphereObject(gvrContext, true, new GVRMaterial(gvrContext));
     }
 
     /**
-     * Constructs a sphere scene object with a radius of 1 and of the given number of stacks and slices.
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     * 
+     * The sphere's triangles and normals are facing either in or out and the
+     * same texture will be applied to each side of the sphere.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
-     * @param stackNumber
-     *            The number of rows high.
-     * @param sliceNumber
-     *            The number of slices around the sphere.
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
      */
-    public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber) {
+    public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut) {
         super(gvrContext);
 
-        // assert numStacks, numSlices > 0
-        if (stackNumber <= 0 || sliceNumber <= 0) {
-            throw new IllegalArgumentException(
-                    "numStacks, and numSlices must be > 0.  Values passed were: numStacks=" + stackNumber + ", numSlices=" + sliceNumber);
-        }
-
-
-        generateSceneObject(gvrContext, stackNumber, sliceNumber);
+        generateSphereObject(gvrContext, facingOut, new GVRMaterial(gvrContext));
     }
 
-    private void generateSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber) {
-        generateSphere(stackNumber, sliceNumber);
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     * 
+     * The sphere's triangles and normals are facing either in or out and the
+     * same texture will be applied to each side of the sphere.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * 
+     * @param futureTexture
+     *            the texture for the sphere. {@code Future<{@code GVRTexture}
+     *            >} is used here for asynchronously loading the texture.
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut,
+            Future<GVRTexture> futureTexture) {
+        super(gvrContext);
+
+        GVRMaterial material = new GVRMaterial(gvrContext);
+        material.setMainTexture(futureTexture);
+        generateSphereObject(gvrContext, facingOut, material);
+    }
+
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     * 
+     * The sphere's triangles and normals are facing either in or out and the
+     * same material will be applied to each side of the sphere.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * 
+     * @param material
+     *            the material for the sphere.
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut,
+            GVRMaterial material) {
+        super(gvrContext);
+
+        generateSphereObject(gvrContext, facingOut, material);
+    }
+
+    private void generateSphereObject(GVRContext gvrContext, boolean facingOut,
+            GVRMaterial material) {
+        generateSphere(STACK_NUMBER, SLICE_NUMBER, facingOut);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -87,9 +143,11 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         GVRRenderData renderData = new GVRRenderData(gvrContext);
         attachRenderData(renderData);
         renderData.setMesh(mesh);
+        renderData.setMaterial(material);
     }
 
-    private void generateSphere(int stackNumber, int sliceNumber) {
+    private void generateSphere(int stackNumber, int sliceNumber,
+            boolean facingOut) {
         int capVertexNumber = 3 * sliceNumber;
         int bodyVertexNumber = 4 * sliceNumber * stackNumber;
         int vertexNumber = (2 * capVertexNumber) + bodyVertexNumber;
@@ -102,63 +160,69 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         indices = new char[triangleNumber];
 
         // bottom cap
-        createCap(0, stackNumber, sliceNumber, false);
+        createCap(stackNumber, sliceNumber, false, facingOut);
 
         // body
-        createBody(stackNumber, sliceNumber);
+        createBody(stackNumber, sliceNumber, facingOut);
 
         // top cap
-        createCap(stackNumber, stackNumber, sliceNumber, true);
+        createCap(stackNumber, sliceNumber, true, facingOut);
     }
 
-    private void createCap(int stack, int stackNumber, int sliceNumber,
-            boolean top) {
+    private void createCap(int stackNumber, int sliceNumber, boolean top,
+            boolean facingOut) {
 
         float stackPercentage0;
         float stackPercentage1;
 
-        if (top) {
-            stackPercentage0 = ((float) (stack - 1) / stackNumber);
-            stackPercentage1 = ((float) (stack) / stackNumber);
+        if (!top) {
+            stackPercentage0 = ((float) (stackNumber - 1) / stackNumber);
+            stackPercentage1 = 1.0f;
 
         } else {
-            stackPercentage0 = ((float) (stack + 1) / stackNumber);
-            stackPercentage1 = ((float) (stack) / stackNumber);
+            stackPercentage0 = (1.0f / stackNumber);
+            stackPercentage1 = 0.0f;
         }
 
         float t0 = stackPercentage0;
         float t1 = stackPercentage1;
-        double theta1 = stackPercentage0 * Math.PI;
-        double theta2 = stackPercentage1 * Math.PI;
+        double theta0 = stackPercentage0 * Math.PI;
+        double theta1 = stackPercentage1 * Math.PI;
+        double cosTheta0 = Math.cos(theta0);
+        double sinTheta0 = Math.sin(theta0);
         double cosTheta1 = Math.cos(theta1);
         double sinTheta1 = Math.sin(theta1);
-        double cosTheta2 = Math.cos(theta2);
-        double sinTheta2 = Math.sin(theta2);
 
         for (int slice = 0; slice < sliceNumber; slice++) {
             float slicePercentage0 = ((float) (slice) / sliceNumber);
             float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
-            double phi1 = slicePercentage0 * 2.0 * Math.PI;
-            double phi2 = slicePercentage1 * 2.0 * Math.PI;
-            float s0 = slicePercentage0;
-            float s1 = slicePercentage1;
+            double phi0 = slicePercentage0 * 2.0 * Math.PI;
+            double phi1 = slicePercentage1 * 2.0 * Math.PI;
+            float s0, s1;
+            if (facingOut) {
+                s0 = 1 - slicePercentage0;
+                s1 = 1 - slicePercentage1;
+            } else {
+                s0 = slicePercentage0;
+                s1 = slicePercentage1;
+            }
             float s2 = (s0 + s1) / 2.0f;
+            double cosPhi0 = Math.cos(phi0);
+            double sinPhi0 = Math.sin(phi0);
             double cosPhi1 = Math.cos(phi1);
             double sinPhi1 = Math.sin(phi1);
-            double cosPhi2 = Math.cos(phi2);
-            double sinPhi2 = Math.sin(phi2);
 
-            float x0 = (float) (sinTheta1 * cosPhi1);
-            float y0 = (float) (sinTheta1 * sinPhi1);
-            float z0 = (float) cosTheta1;
+            float x0 = (float) (sinTheta0 * cosPhi0);
+            float y0 = (float) cosTheta0;
+            float z0 = (float) (sinTheta0 * sinPhi0);
 
-            float x1 = (float) (sinTheta1 * cosPhi2);
-            float y1 = (float) (sinTheta1 * sinPhi2);
-            float z1 = (float) cosTheta1;
+            float x1 = (float) (sinTheta0 * cosPhi1);
+            float y1 = (float) cosTheta0;
+            float z1 = (float) (sinTheta0 * sinPhi1);
 
-            float x2 = (float) (sinTheta2 * cosPhi1);
-            float y2 = (float) (sinTheta2 * sinPhi1);
-            float z2 = (float) cosTheta2;
+            float x2 = (float) (sinTheta1 * cosPhi0);
+            float y2 = (float) cosTheta1;
+            float z2 = (float) (sinTheta1 * sinPhi0);
 
             vertices[vertexCount + 0] = x0;
             vertices[vertexCount + 1] = y0;
@@ -172,17 +236,31 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             vertices[vertexCount + 7] = y2;
             vertices[vertexCount + 8] = z2;
 
-            normals[vertexCount + 0] = x0;
-            normals[vertexCount + 1] = y0;
-            normals[vertexCount + 2] = z0;
+            if (facingOut) {
+                normals[vertexCount + 0] = x0;
+                normals[vertexCount + 1] = y0;
+                normals[vertexCount + 2] = z0;
 
-            normals[vertexCount + 3] = x1;
-            normals[vertexCount + 4] = y1;
-            normals[vertexCount + 5] = z1;
+                normals[vertexCount + 3] = x1;
+                normals[vertexCount + 4] = y1;
+                normals[vertexCount + 5] = z1;
 
-            normals[vertexCount + 6] = x2;
-            normals[vertexCount + 7] = y2;
-            normals[vertexCount + 8] = z2;
+                normals[vertexCount + 6] = x2;
+                normals[vertexCount + 7] = y2;
+                normals[vertexCount + 8] = z2;
+            } else {
+                normals[vertexCount + 0] = -x0;
+                normals[vertexCount + 1] = -y0;
+                normals[vertexCount + 2] = -z0;
+
+                normals[vertexCount + 3] = -x1;
+                normals[vertexCount + 4] = -y1;
+                normals[vertexCount + 5] = -z1;
+
+                normals[vertexCount + 6] = -x2;
+                normals[vertexCount + 7] = -y2;
+                normals[vertexCount + 8] = -z2;
+            }
 
             texCoords[texCoordCount + 0] = s0;
             texCoords[texCoordCount + 1] = t0;
@@ -191,7 +269,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             texCoords[texCoordCount + 4] = s2;
             texCoords[texCoordCount + 5] = t1;
 
-            if (top) {
+            if ((facingOut && top) || (!facingOut && !top)) {
                 indices[indexCount + 0] = (char) (triangleCount + 1);
                 indices[indexCount + 1] = (char) (triangleCount + 0);
                 indices[indexCount + 2] = (char) (triangleCount + 2);
@@ -209,48 +287,54 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
     }
 
-    private void createBody(int stackNumber, int sliceNumber) {
+    private void createBody(int stackNumber, int sliceNumber, boolean facingOut) {
         for (int stack = 1; stack < stackNumber - 1; stack++) {
             float stackPercentage0 = ((float) (stack) / stackNumber);
             float stackPercentage1 = ((float) (stack + 1) / stackNumber);
 
             float t0 = stackPercentage0;
             float t1 = stackPercentage1;
-            
-            double theta1 = stackPercentage0 * Math.PI;
-            double theta2 = stackPercentage1 * Math.PI;
+
+            double theta0 = stackPercentage0 * Math.PI;
+            double theta1 = stackPercentage1 * Math.PI;
+            double cosTheta0 = Math.cos(theta0);
+            double sinTheta0 = Math.sin(theta0);
             double cosTheta1 = Math.cos(theta1);
             double sinTheta1 = Math.sin(theta1);
-            double cosTheta2 = Math.cos(theta2);
-            double sinTheta2 = Math.sin(theta2);
 
             for (int slice = 0; slice < sliceNumber; slice++) {
                 float slicePercentage0 = ((float) (slice) / sliceNumber);
                 float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
-                double phi1 = slicePercentage0 * 2.0 * Math.PI;
-                double phi2 = slicePercentage1 * 2.0 * Math.PI;
-                float s0 = slicePercentage0;
-                float s1 = slicePercentage1;
+                double phi0 = slicePercentage0 * 2.0 * Math.PI;
+                double phi1 = slicePercentage1 * 2.0 * Math.PI;
+                float s0, s1;
+                if (facingOut) {
+                    s0 = 1.0f - slicePercentage0;
+                    s1 = 1.0f - slicePercentage1;
+                } else {
+                    s0 = slicePercentage0;
+                    s1 = slicePercentage1;
+                }
+                double cosPhi0 = Math.cos(phi0);
+                double sinPhi0 = Math.sin(phi0);
                 double cosPhi1 = Math.cos(phi1);
                 double sinPhi1 = Math.sin(phi1);
-                double cosPhi2 = Math.cos(phi2);
-                double sinPhi2 = Math.sin(phi2);
 
-                float x0 = (float) (sinTheta1 * cosPhi1);
-                float y0 = (float) (sinTheta1 * sinPhi1);
-                float z0 = (float) cosTheta1;
+                float x0 = (float) (sinTheta0 * cosPhi0);
+                float y0 = (float) cosTheta0;
+                float z0 = (float) (sinTheta0 * sinPhi0);
 
-                float x1 = (float) (sinTheta1 * cosPhi2);
-                float y1 = (float) (sinTheta1 * sinPhi2);
-                float z1 = (float) cosTheta1;
+                float x1 = (float) (sinTheta0 * cosPhi1);
+                float y1 = (float) cosTheta0;
+                float z1 = (float) (sinTheta0 * sinPhi1);
 
-                float x2 = (float) (sinTheta2 * cosPhi1);
-                float y2 = (float) (sinTheta2 * sinPhi1);
-                float z2 = (float) cosTheta2;
+                float x2 = (float) (sinTheta1 * cosPhi0);
+                float y2 = (float) cosTheta1;
+                float z2 = (float) (sinTheta1 * sinPhi0);
 
-                float x3 = (float) (sinTheta2 * cosPhi2);
-                float y3 = (float) (sinTheta2 * sinPhi2);
-                float z3 = (float) cosTheta2;
+                float x3 = (float) (sinTheta1 * cosPhi1);
+                float y3 = (float) cosTheta1;
+                float z3 = (float) (sinTheta1 * sinPhi1);
 
                 vertices[vertexCount + 0] = x0;
                 vertices[vertexCount + 1] = y0;
@@ -268,21 +352,39 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 vertices[vertexCount + 10] = y3;
                 vertices[vertexCount + 11] = z3;
 
-                normals[vertexCount + 0] = x0;
-                normals[vertexCount + 1] = y0;
-                normals[vertexCount + 2] = z0;
+                if (facingOut) {
+                    normals[vertexCount + 0] = x0;
+                    normals[vertexCount + 1] = y0;
+                    normals[vertexCount + 2] = z0;
 
-                normals[vertexCount + 3] = x1;
-                normals[vertexCount + 4] = y1;
-                normals[vertexCount + 5] = z1;
+                    normals[vertexCount + 3] = x1;
+                    normals[vertexCount + 4] = y1;
+                    normals[vertexCount + 5] = z1;
 
-                normals[vertexCount + 6] = x2;
-                normals[vertexCount + 7] = y2;
-                normals[vertexCount + 8] = z2;
+                    normals[vertexCount + 6] = x2;
+                    normals[vertexCount + 7] = y2;
+                    normals[vertexCount + 8] = z2;
 
-                normals[vertexCount + 9] = x3;
-                normals[vertexCount + 10] = y3;
-                normals[vertexCount + 11] = z3;
+                    normals[vertexCount + 9] = x3;
+                    normals[vertexCount + 10] = y3;
+                    normals[vertexCount + 11] = z3;
+                } else {
+                    normals[vertexCount + 0] = -x0;
+                    normals[vertexCount + 1] = -y0;
+                    normals[vertexCount + 2] = -z0;
+
+                    normals[vertexCount + 3] = -x1;
+                    normals[vertexCount + 4] = -y1;
+                    normals[vertexCount + 5] = -z1;
+
+                    normals[vertexCount + 6] = -x2;
+                    normals[vertexCount + 7] = -y2;
+                    normals[vertexCount + 8] = -z2;
+
+                    normals[vertexCount + 9] = -x3;
+                    normals[vertexCount + 10] = -y3;
+                    normals[vertexCount + 11] = -z3;
+                }
 
                 texCoords[texCoordCount + 0] = s0;
                 texCoords[texCoordCount + 1] = t0;
@@ -293,14 +395,38 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 texCoords[texCoordCount + 6] = s1;
                 texCoords[texCoordCount + 7] = t1;
 
-                // 0, 2, 1
-                // 2, 3, 1
-                indices[indexCount + 0] = (char) (triangleCount + 0);
-                indices[indexCount + 1] = (char) (triangleCount + 2);
-                indices[indexCount + 2] = (char) (triangleCount + 1);
-                indices[indexCount + 3] = (char) (triangleCount + 2);
-                indices[indexCount + 4] = (char) (triangleCount + 3);
-                indices[indexCount + 5] = (char) (triangleCount + 1);
+                // one quad looking from outside toward center
+                //
+                // @formatter:off
+                //
+                //     s1 --> s0
+                //
+                // t0   1-----0
+                //  |   |     |
+                //  v   |     |
+                // t1   3-----2
+                //     
+                // @formatter:on
+                //
+                // Note that tex_coord t increase from top to bottom because the
+                // texture image is loaded upside down.
+                if (facingOut) {
+                    indices[indexCount + 0] = (char) (triangleCount + 0);
+                    indices[indexCount + 1] = (char) (triangleCount + 1);
+                    indices[indexCount + 2] = (char) (triangleCount + 2);
+
+                    indices[indexCount + 3] = (char) (triangleCount + 2);
+                    indices[indexCount + 4] = (char) (triangleCount + 1);
+                    indices[indexCount + 5] = (char) (triangleCount + 3);
+                } else {
+                    indices[indexCount + 0] = (char) (triangleCount + 0);
+                    indices[indexCount + 1] = (char) (triangleCount + 2);
+                    indices[indexCount + 2] = (char) (triangleCount + 1);
+
+                    indices[indexCount + 3] = (char) (triangleCount + 2);
+                    indices[indexCount + 4] = (char) (triangleCount + 3);
+                    indices[indexCount + 5] = (char) (triangleCount + 1);
+                }
 
                 vertexCount += 12;
                 texCoordCount += 8;

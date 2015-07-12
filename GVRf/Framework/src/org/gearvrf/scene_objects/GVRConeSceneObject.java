@@ -16,16 +16,14 @@
 package org.gearvrf.scene_objects;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.utility.Log;
 
-public class GVRConeSceneObject extends GVRSceneObject {
+public class GVRConeSceneObject extends GVRCylinderSceneObject {
 
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRConeSceneObject.class);
-    
+
     private static final int STACK_NUMBER = 10;
     private static final int SLICE_NUMBER = 36;
     private static final float BASE_RADIUS = 0.5f;
@@ -33,23 +31,59 @@ public class GVRConeSceneObject extends GVRSceneObject {
     private static final float HEIGHT = 1.0f;
 
     /**
-     * Constructs a cone scene object with a height of 1, and a radius of 0.5.
+     * Constructs a cone scene object with a height of 1, radius of 0.5, 10
+     * stacks, and 36 slices.
+     * 
+     * The cone's triangles and normals are facing out and the same texture will
+     * be applied to bottom, and side of the cone.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
      */
     public GVRConeSceneObject(GVRContext gvrContext) {
-        super(gvrContext);
-
-        @SuppressWarnings("resource")
-        GVRCylinderSceneObject cylinder = new GVRCylinderSceneObject(
-                gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, STACK_NUMBER,
-                SLICE_NUMBER);
-
-        GVRMesh mesh = cylinder.getRenderData().getMesh();
-        GVRRenderData renderData = new GVRRenderData(gvrContext);
-        attachRenderData(renderData);
-        renderData.setMesh(mesh);
+        super(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, STACK_NUMBER,
+                SLICE_NUMBER, true);
     }
 
+    /**
+     * Constructs a cone scene object with a height of 1, radius of 0.5, 10
+     * stacks, and 36 slices.
+     * 
+     * The cone's triangles and normals are facing either in or out and the same
+     * texture will be applied to bottom, and side of the cone.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     */
+    public GVRConeSceneObject(GVRContext gvrContext, boolean facingOut) {
+        super(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, STACK_NUMBER,
+                SLICE_NUMBER, facingOut);
+    }
+
+    /**
+     * Constructs a cone scene object with a height of 1, radius of 0.5, 10
+     * stacks, and 36 slices.
+     * 
+     * The cone's triangles and normals are facing either in or out and the same
+     * material will be applied to bottom, and side of the cone.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * 
+     * @param material
+     *            the material for the cone.
+     */
+    public GVRConeSceneObject(GVRContext gvrContext, boolean facingOut,
+            GVRMaterial material) {
+        super(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT, STACK_NUMBER,
+                SLICE_NUMBER, facingOut, material);
+    }
 }

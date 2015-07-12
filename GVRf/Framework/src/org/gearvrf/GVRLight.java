@@ -200,10 +200,14 @@ public class GVRLight extends GVRHybridObject {
         return isEnabled;
     }
 
+    // for future use
+    @SuppressWarnings("unused")
     private float getFloat(String key) {
         return NativeLight.getFloat(getNative(), key);
     }
 
+    // for future use
+    @SuppressWarnings("unused")
     private void setFloat(String key, float value) {
         checkStringNotNullOrEmpty("key", key);
         checkFloatNotNaNOrInfinity("value", value);
