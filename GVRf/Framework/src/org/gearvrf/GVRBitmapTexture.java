@@ -32,7 +32,14 @@ public class GVRBitmapTexture extends GVRTexture {
      *            A non-null {@link Bitmap} instance.
      */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap) {
-        super(gvrContext, NativeBaseTexture.bareConstructor());
+        this(gvrContext, bitmap, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture Parameters
+    public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap,
+            GVRTextureParameters textureParameters) {
+        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters
+                .getCurrentValuesArray()));
         update(bitmap);
     }
 
@@ -55,8 +62,16 @@ public class GVRBitmapTexture extends GVRTexture {
      *            location in or under the assets directory.
      */
     public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename) {
+        this(gvrContext, pngAssetFilename,
+                gvrContext.DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture Parameters
+    public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename,
+            GVRTextureParameters textureParameters) {
         super(gvrContext, NativeBaseTexture.fileConstructor(gvrContext
-                .getContext().getAssets(), pngAssetFilename));
+                .getContext().getAssets(), pngAssetFilename, textureParameters
+                .getCurrentValuesArray()));
     }
 
     /**
@@ -80,7 +95,16 @@ public class GVRBitmapTexture extends GVRTexture {
      */
     public GVRBitmapTexture(GVRContext gvrContext, int width, int height,
             byte[] grayscaleData) throws IllegalArgumentException {
-        super(gvrContext, NativeBaseTexture.bareConstructor());
+        this(gvrContext, width, height, grayscaleData,
+                gvrContext.DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture Parameters
+    public GVRBitmapTexture(GVRContext gvrContext, int width, int height,
+            byte[] grayscaleData, GVRTextureParameters textureParameters)
+            throws IllegalArgumentException {
+        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters
+                .getCurrentValuesArray()));
         update(width, height, grayscaleData);
     }
 
@@ -153,9 +177,9 @@ public class GVRBitmapTexture extends GVRTexture {
 
 class NativeBaseTexture {
     static native long fileConstructor(AssetManager assetManager,
-            String filename);
+            String filename, float[] textureParameterValues);
 
-    static native long bareConstructor();
+    static native long bareConstructor(float[] textureParameterValues);
 
     static native boolean update(long pointer, int width, int height,
             byte[] grayscaleData);

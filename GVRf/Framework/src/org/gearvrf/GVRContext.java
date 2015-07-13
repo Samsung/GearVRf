@@ -125,6 +125,12 @@ public abstract class GVRContext {
      */
     protected long mGLThreadID;
 
+    /**
+     * The default texture parameter instance for overloading texture methods
+     * 
+     */
+    public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters();
+
     /*
      * Methods
      */
@@ -873,8 +879,14 @@ public abstract class GVRContext {
      *             {@link #loadTexture(GVRAndroidResource)}
      * 
      */
-    @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(String fileName) {
+        return loadTexture(fileName, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture Parameters
+    @SuppressWarnings("resource")
+    public GVRBitmapTexture loadTexture(String fileName,
+            GVRTextureParameters textureParameters) {
 
         assertGLThread();
 
@@ -883,7 +895,8 @@ public abstract class GVRContext {
         }
 
         Bitmap bitmap = loadBitmap(fileName);
-        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap);
+        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap,
+                textureParameters);
     }
 
     /**
@@ -916,6 +929,12 @@ public abstract class GVRContext {
      * @since 1.6.5
      */
     public GVRTexture loadTexture(GVRAndroidResource resource) {
+        return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public GVRTexture loadTexture(GVRAndroidResource resource,
+            GVRTextureParameters textureParameters) {
 
         GVRTexture texture = sTextureCache.get(resource);
         if (texture == null) {
@@ -924,8 +943,8 @@ public abstract class GVRContext {
             Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
                     resource.getStream(), false);
             resource.closeStream();
-            texture = bitmap == null ? null
-                    : new GVRBitmapTexture(this, bitmap);
+            texture = bitmap == null ? null : new GVRBitmapTexture(this,
+                    bitmap, textureParameters);
             if (texture != null) {
                 sTextureCache.put(resource, texture);
             }

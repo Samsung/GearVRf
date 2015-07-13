@@ -29,9 +29,9 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename);
+        jobject obj, jobject asset_manager, jstring filename, jfloatArray jtexture_parameters);
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj);
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jfloatArray jtexture_parameters);
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata);
@@ -40,7 +40,9 @@ Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename) {
+        jobject obj, jobject asset_manager, jstring filename, jfloatArray jtexture_parameters) {
+
+    jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters,0);
 
     const char* native_string = env->GetStringUTFChars(filename, 0);
     AAssetManager* mgr = AAssetManager_fromJava(env, asset_manager);
@@ -69,12 +71,14 @@ Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
     int imgW = loader.pOutImage.width;
     int imgH = loader.pOutImage.height;
     unsigned char *pixels = loader.pOutImage.bits;
-    return reinterpret_cast<jlong>(new BaseTexture(imgW, imgH, pixels));
+    return reinterpret_cast<jlong>(new BaseTexture(imgW, imgH, pixels, texture_parameters));
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj) {
-    return reinterpret_cast<jlong>(new BaseTexture());
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jfloatArray jtexture_parameters) {
+
+    jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters,0);
+    return reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
 }
 
 JNIEXPORT jboolean JNICALL
