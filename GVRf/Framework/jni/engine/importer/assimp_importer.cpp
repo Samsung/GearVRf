@@ -26,6 +26,12 @@ namespace gvr {
 Mesh* AssimpImporter::getMesh(int index) {
     Mesh* mesh = new Mesh();
 
+    if (assimp_importer_->GetScene() == 0) {
+        LOGE("_ASSIMP_SCENE_NOT_FOUND_");
+        delete mesh;
+        return 0;
+    }
+
     aiMesh* ai_mesh = assimp_importer_->GetScene()->mMeshes[index];
 
     std::vector<glm::vec3> vertices;
