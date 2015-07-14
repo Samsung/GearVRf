@@ -29,8 +29,16 @@ public class GVRTexture extends GVRHybridObject {
     public int getId() {
         return NativeTexture.getId(getNative());
     }
+
+    public void updateTextureParameters(GVRTextureParameters textureParameters) {
+        NativeTexture.updateTextureParameters(getNative(),
+                textureParameters.getCurrentValuesArray());
+    }
 }
 
 class NativeTexture {
     static native int getId(long texture);
+
+    static native void updateTextureParameters(long texture,
+            float[] textureParametersValues);
 }
