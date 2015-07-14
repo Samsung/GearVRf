@@ -27,6 +27,7 @@
 #include "assimp/scene.h"
 
 #include "objects/hybrid_object.h"
+#include "util/gvr_log.h"
 
 namespace gvr {
 class Mesh;
@@ -42,7 +43,11 @@ public:
     }
 
     unsigned int getNumberOfMeshes() {
-        return assimp_importer_->GetScene()->mNumMeshes;
+        if (assimp_importer_->GetScene() != 0) {
+            return assimp_importer_->GetScene()->mNumMeshes;
+        }
+        LOGE("_ASSIMP_SCENE_NOT_FOUND_");
+        return 0;
     }
 
     Mesh* getMesh(int index);
