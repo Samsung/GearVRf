@@ -455,6 +455,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
         GVRSceneObject[] grandchildren = new GVRSceneObject[numPerFace];
         GVRMesh[] subMeshes = new GVRMesh[numPerFace];
         
+        // 4 vertices (2 triangles) per mesh
         vertices = new float[12];
         normals = new float[12];
         texCoords = new float[8];

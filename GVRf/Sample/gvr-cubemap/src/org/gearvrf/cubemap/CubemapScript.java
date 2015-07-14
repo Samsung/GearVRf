@@ -45,13 +45,13 @@ public class CubemapScript extends GVRScript {
     // 1: surrounding cube using GVRCubeSceneObject
     // 2: surrounding cylinder using GVRCylinderSceneObject
     // 2: surrounding cube using six GVRSceneOjbects (quads)
-    private static final int mEnvironmentType = 1;
+    private static final int mEnvironmentType = 0;
 
     // Type of object for the reflective object
     // 0: reflective sphere using GVRSphereSceneObject
     // 1: reflective sphere using OBJ model
     private static final int mReflectiveType = 0;
-
+    
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
@@ -92,7 +92,7 @@ public class CubemapScript extends GVRScript {
             // create surrounding sphere using GVRSphereSceneObject //
             // ///////////////////////////////////////////////////////
             GVRSphereSceneObject mSphereEvironment = new GVRSphereSceneObject(
-                    gvrContext, false, cubemapMaterial);
+                    gvrContext, 18, 36, false, cubemapMaterial, 4, 4);
             mSphereEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
                     CUBE_WIDTH);
             scene.addSceneObject(mSphereEvironment);
@@ -188,7 +188,7 @@ public class CubemapScript extends GVRScript {
             // ///////////////////////////////////////////////////////
             // create reflective sphere using GVRSphereSceneObject //
             // ///////////////////////////////////////////////////////
-            sphere = new GVRSphereSceneObject(gvrContext, true,
+            sphere = new GVRSphereSceneObject(gvrContext, 18, 36, true,
                     cubemapReflectionMaterial);
             break;
 
@@ -212,7 +212,7 @@ public class CubemapScript extends GVRScript {
                     SCALE_FACTOR);
             sphere.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.25f);
         }
-
+        
         for (GVRSceneObject so : scene.getWholeSceneObjects()) {
             Log.v("", "scene object name : " + so.getName());
         }
