@@ -43,6 +43,15 @@ public class GVRActivity extends VrActivity {
 
     private static final String TAG = Log.tag(GVRActivity.class);
 
+    // these values are copy of enum KeyEventType in VrAppFramework/Native_Source/Input.h
+    public static final int KEY_EVENT_NONE = 0;
+    public static final int KEY_EVENT_SHORT_PRESS = 1;
+    public static final int KEY_EVENT_DOUBLE_TAP = 2;
+    public static final int KEY_EVENT_LONG_PRESS = 3;
+    public static final int KEY_EVENT_DOWN = 4;
+    public static final int KEY_EVENT_UP = 5;
+    public static final int KEY_EVENT_MAX = 6;
+
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
@@ -239,14 +248,34 @@ public class GVRActivity extends VrActivity {
          * native side. It can be more than two, DOWN and UP, if the native
          * supports in the future.
          */
-        final int cKeyDown = 1;
 
-        int action = (eventType == cKeyDown) ? KeyEvent.ACTION_DOWN
-                : KeyEvent.ACTION_UP;
-        KeyEvent event = new KeyEvent(action, keyCode);
-
-        return (action == KeyEvent.ACTION_DOWN) ? onKeyDown(keyCode, event)
-                : onKeyUp(keyCode, event);
+        switch (eventType) {
+        case KEY_EVENT_SHORT_PRESS:
+            return onKeyShortPress(keyCode);
+        case KEY_EVENT_DOUBLE_TAP:
+            return onKeyDoubleTap(keyCode);
+        case KEY_EVENT_LONG_PRESS:
+            return onKeyLongPress(keyCode, new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
+        case KEY_EVENT_DOWN:
+            return onKeyDown(keyCode, new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
+        case KEY_EVENT_UP:
+            return onKeyUp(keyCode, new KeyEvent(KeyEvent.ACTION_UP, keyCode));
+        case KEY_EVENT_MAX:
+            return onKeyMax(keyCode);
+        default:
+            return false;
+        }
     }
 
+    public boolean onKeyShortPress(int keyCode) {
+        return false;
+    }
+
+    public boolean onKeyDoubleTap(int keyCode) {
+        return false;
+    }
+
+    public boolean onKeyMax(int keyCode) {
+        return false;
+    }
 }
