@@ -15,29 +15,23 @@
 
 package org.gearvrf.gvrexposeapisample;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.util.concurrent.Future;
 
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshEyePointee;
 import org.gearvrf.GVRPicker;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScreenshot3DCallback;
-import org.gearvrf.GVRScreenshotCallback;
 import org.gearvrf.GVRScript;
 import org.gearvrf.sample.R;
-import org.gearvrf.utility.Threads;
 
-import android.graphics.Bitmap;
-import android.os.Environment;
 import android.util.Log;
 
 public class SampleCubeScript extends GVRScript {
@@ -47,7 +41,7 @@ public class SampleCubeScript extends GVRScript {
     private GVRSceneObject mFrontFace = null;
     private GVRSceneObject mFrontFace2 = null;
     private GVRSceneObject mFrontFace3 = null;
-
+    private static final float SCALE_FACTOR = 2.0f;
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
@@ -56,7 +50,9 @@ public class SampleCubeScript extends GVRScript {
 
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
                 gvrContext.createQuad(CUBE_WIDTH, CUBE_WIDTH));
-
+        Future<GVRTexture> futureCubemapTexture = gvrContext
+                .loadFutureCubemapTexture(new GVRAndroidResource(mGVRContext,
+                        R.raw.beach));
         mFrontFace = new GVRSceneObject(gvrContext, futureMesh,
                 gvrContext.loadFutureTexture(new GVRAndroidResource(
                         mGVRContext, R.drawable.front)));
@@ -146,7 +142,23 @@ public class SampleCubeScript extends GVRScript {
                 boundingBox);
         eyePointeeHolder3.addPointee(meshEyePointee3);
         mFrontFace3.attachEyePointeeHolder(eyePointeeHolder3);
+        // reflective object
+        Future<GVRMesh> futureSphereMesh = gvrContext
+                .loadFutureMesh(new GVRAndroidResource(mGVRContext,
+                        R.raw.sphere));
+        GVRMaterial cubemapReflectionMaterial = new GVRMaterial(gvrContext,
+                GVRMaterial.GVRShaderType.CubemapReflection.ID);
+        cubemapReflectionMaterial.setMainTexture(futureCubemapTexture);
+        cubemapReflectionMaterial.setOpacity(0.25f);
 
+        GVRSceneObject sphere = new GVRSceneObject(gvrContext,
+                futureSphereMesh, futureCubemapTexture);
+        sphere.getRenderData().setMaterial(cubemapReflectionMaterial);
+        sphere.setName("sphere");
+        scene.addSceneObject(sphere);
+        sphere.getTransform()
+                .setScale(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
+        sphere.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.25f);
         for (GVRSceneObject so : scene.getWholeSceneObjects()) {
             Log.v("", "scene object name : " + so.getName());
         }
@@ -173,129 +185,5 @@ public class SampleCubeScript extends GVRScript {
         }
     }
 
-    private boolean lastScreenshotLeftFinished = true;
-    private boolean lastScreenshotRightFinished = true;
-    private boolean lastScreenshotCenterFinished = true;
-    private boolean lastScreenshot3DFinished = true;
 
-    // mode 0: center eye; mode 1: left eye; mode 2: right eye
-    public void captureScreen(final int mode, final String filename) {
-        Threads.spawn(new Runnable() {
-            public void run() {
-                switch (mode) {
-                case 0:
-                    if (lastScreenshotLeftFinished) {
-                        mGVRContext.captureScreenCenter(newScreenshotCallback(
-                                filename, 0));
-                        lastScreenshotLeftFinished = false;
-                    }
-                    break;
-                case 1:
-                    if (lastScreenshotRightFinished) {
-                        mGVRContext.captureScreenLeft(newScreenshotCallback(
-                                filename, 1));
-                        lastScreenshotRightFinished = false;
-                    }
-                    break;
-                case 2:
-                    if (lastScreenshotCenterFinished) {
-                        mGVRContext.captureScreenRight(newScreenshotCallback(
-                                filename, 2));
-                        lastScreenshotCenterFinished = false;
-                    }
-                    break;
-                }
-            }
-        });
-    }
-
-    public void captureScreen3D(String filename) {
-        if (lastScreenshot3DFinished) {
-            mGVRContext.captureScreen3D(newScreenshot3DCallback(filename));
-            lastScreenshot3DFinished = false;
-        }
-    }
-
-    private GVRScreenshotCallback newScreenshotCallback(final String filename,
-            final int mode) {
-        return new GVRScreenshotCallback() {
-
-            @Override
-            public void onScreenCaptured(Bitmap bitmap) {
-                if (bitmap != null) {
-                    File file = new File(
-                            Environment.getExternalStorageDirectory(), filename
-                                    + ".png");
-                    FileOutputStream outputStream = null;
-                    try {
-                        outputStream = new FileOutputStream(file);
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100,
-                                outputStream);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            outputStream.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else {
-                    Log.e("SampleActivity", "Returned Bitmap is null");
-                }
-
-                // enable next screenshot
-                switch (mode) {
-                case 0:
-                    lastScreenshotLeftFinished = true;
-                    break;
-                case 1:
-                    lastScreenshotRightFinished = true;
-                    break;
-                case 2:
-                    lastScreenshotCenterFinished = true;
-                    break;
-                }
-            }
-        };
-    }
-
-    private GVRScreenshot3DCallback newScreenshot3DCallback(
-            final String filename) {
-        return new GVRScreenshot3DCallback() {
-
-            @Override
-            public void onScreenCaptured(Bitmap[] bitmapArray) {
-                Log.d("SampleActivity", "Length of bitmapList: "
-                        + bitmapArray.length);
-                if (bitmapArray.length > 0) {
-                    for (int i = 0; i < bitmapArray.length; i++) {
-                        Bitmap bitmap = bitmapArray[i];
-                        File file = new File(
-                                Environment.getExternalStorageDirectory(),
-                                filename + "_" + i + ".png");
-                        FileOutputStream outputStream = null;
-                        try {
-                            outputStream = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100,
-                                    outputStream);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } finally {
-                            try {
-                                outputStream.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                } else {
-                    Log.e("SampleActivity", "Returned Bitmap List is empty");
-                }
-
-                // enable next screenshot
-                lastScreenshot3DFinished = true;
-            }
-        };
-    }
 }

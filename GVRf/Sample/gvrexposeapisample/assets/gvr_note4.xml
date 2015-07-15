@@ -20,7 +20,6 @@
     <scene fov-y="90.0" camera-separation-distance="0.062" fbo-width="1024" fbo-height="1024" msaa="1"/>
     <vr-app-settings
         showLoadingIcon = "true"
-        renderMonoMode = "false"
         useSrgbFramebuffer = "false"
         useProtectedFramebuffer = "false"
         framebufferPixelsWide="-1"
@@ -28,8 +27,8 @@
         <mode-parms allowPowerSave="true" resetWindowFullScreen="true" cpuLevel="2" gpuLevel="2"/>
         <eye-buffer-parms 
             depthFormat="DEPTH_24"
-            textureFilter="TEXTURE_FILTER_BILINEAR"
-            colorFormat="COLOR_8888"
+            textureFilter="TEXTURE_FILTER_ANISO_4"
+            colorFormat="COLOR_565"
             multiSamples="2"
             widthScale="1"
             resolution="-1"

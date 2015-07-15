@@ -160,7 +160,7 @@ public class GVRActivity extends VrActivity {
             GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
                     distortionDataFileName, mAppSettings);
             onInitAppSettings(mAppSettings);
-            if (isVrSupported() && !mAppSettings.isRenderMonoMode()) {
+            if (isVrSupported() && !getForceMonoscopic()) {
                 mGVRViewManager = new GVRViewManager(this, gvrScript, xmlParser);
             } else {
                 mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript,
@@ -185,7 +185,7 @@ public class GVRActivity extends VrActivity {
      * 
      */
     public void setForceMonoscopic(boolean force) {
-        mAppSettings.setRenderMonoMode(force);
+        mForceMonoscopic = force;
     }
 
     /**
@@ -195,7 +195,7 @@ public class GVRActivity extends VrActivity {
      * @see setForceMonoscopic
      */
     public boolean getForceMonoscopic() {
-        return mAppSettings.isRenderMonoMode();
+        return mForceMonoscopic;
     }
 
     private boolean isVrSupported() {

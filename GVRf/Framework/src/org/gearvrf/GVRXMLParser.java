@@ -111,8 +111,6 @@ class GVRXMLParser {
                             Log.d("XMLParse", tagName + "   " + attributeName);
                             if(attributeName.equals("showLoadingIcon")){
                                 settings.setShowLoadingIcon(Boolean.parseBoolean(xpp.getAttributeValue(i)));
-                            }else if(attributeName.equals("renderMonoMode")){
-                                settings.setRenderMonoMode(Boolean.parseBoolean(xpp.getAttributeValue(i)));
                             }else if(attributeName.equals("useSrgbFramebuffer")){
                                 settings.setUseSrgbFramebuffer(Boolean.parseBoolean(xpp.getAttributeValue(i)));
                             }else if(attributeName.equals("useProtectedFramebuffer")){
