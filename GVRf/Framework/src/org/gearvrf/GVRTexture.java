@@ -34,6 +34,7 @@ public class GVRTexture extends GVRHybridObject {
         NativeTexture.updateTextureParameters(getNative(),
                 textureParameters.getCurrentValuesArray());
     }
+
 }
 
 class NativeTexture {

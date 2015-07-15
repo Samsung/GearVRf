@@ -62,26 +62,16 @@ public class CockpitViewManager extends GVRScript {
 
         GVRTexture shipTexture = gvrContext.loadTexture(new GVRAndroidResource(
                 mGVRContext, R.drawable.gvrf_ship_png), textureParameters);
-        
-        
-        
-        
+
         // Update texture parameters after creation
-        
         textureParameters.setAnisotropicValue(6);
         textureParameters.setMagFilterType(TextureMagFilterType.GL_NEAREST);
         textureParameters.setMinFilterType(TextureMinFilterType.GL_NEAREST);
         textureParameters.setWrapSType(TextureWrapSType.GL_MIRRORED_REPEAT);
         textureParameters.setWrapTType(TextureWrapTType.GL_MIRRORED_REPEAT);
-        
+
         shipTexture.updateTextureParameters(textureParameters);
-        
-        
-        
-        
-        
-        
-        
+
         mShipSceneObject = new GVRSceneObject(gvrContext, shipMesh, shipTexture);
         GVRTexture spaceTexture = gvrContext
                 .loadTexture(new GVRAndroidResource(mGVRContext,
