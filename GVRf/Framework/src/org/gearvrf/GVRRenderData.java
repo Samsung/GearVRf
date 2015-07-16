@@ -346,7 +346,6 @@ public class GVRRenderData extends GVRComponent {
     public void setMaterial(GVRMaterial material, int passIndex) {
         if (passIndex < mRenderPassList.size()) {
             mRenderPassList.get(passIndex).setMaterial(material);
-            //NativeRenderData.setMaterial(getNative(), material.getNative(), passIndex);
         } else {
             Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
         }

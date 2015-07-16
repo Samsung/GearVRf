@@ -80,7 +80,7 @@ public class GVRRenderPass extends GVRHybridObject {
      */
     public GVRRenderPass(GVRContext gvrContext) {
         super(gvrContext, NativeRenderPass.ctor());
-        mMaterial = new GVRMaterial(gvrContext, 0);
+        mMaterial = new GVRMaterial(gvrContext);
         mCullFace = GVRCullFaceEnum.Back;
     }
 
