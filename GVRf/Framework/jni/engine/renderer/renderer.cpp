@@ -279,6 +279,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         //      culling code completes.  The actual object sorting 
         //      code will be in a future check-in.
         scene_object->setDistanceFromCamera(distance);
+        render_data->set_camera_distance(distance);
 
         // Check if this is the correct LOD level
         if (!scene_object->inLODRange()) {

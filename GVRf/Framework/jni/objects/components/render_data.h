@@ -193,6 +193,15 @@ public:
         return draw_mode_;
     }
 
+    void set_camera_distance(float distance) {
+        camera_distance_ = distance;
+    }
+
+    float camera_distance() const {
+        return camera_distance_;
+    }
+
+
     void set_draw_mode(GLenum draw_mode) {
         draw_mode_ = draw_mode;
     }
@@ -218,9 +227,17 @@ private:
     bool depth_test_;
     bool alpha_blend_;
     GLenum draw_mode_;
+    float camera_distance_;
 };
 
 inline bool compareRenderData(RenderData* i, RenderData* j) {
+    // if it is a transparent object, sort by camera distance.
+    if(i->rendering_order() == j->rendering_order() &&
+       i->rendering_order() >= RenderData::Transparent &&
+       i->rendering_order() < RenderData::Overlay) {
+        return i->camera_distance() < j->camera_distance();
+    }
+
     return i->rendering_order() < j->rendering_order();
 }
 
