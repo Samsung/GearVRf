@@ -24,27 +24,32 @@ public class GVRTextureParameters {
 
     private TextureMagFilterType magFilterType;
     private int magFilterTypeValue;
-    
+
     private TextureWrapSType wrapSType;
     private int wrapSTypeValue;
 
     private TextureWrapTType wrapTType;
     private int wrapTTypeValue;
-    
+
     private String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
     private boolean anisotropicSupported;
     private float anisotropicValue;
 
-    public GVRTextureParameters() {
+    GVRContext mGVRContext = null;
+
+    public GVRTextureParameters(GVRContext gvrContext) {
+
+        mGVRContext = gvrContext;
+
         minFilterType = TextureMinFilterType.GL_LINEAR;
         minFilterTypeValue = 0;
 
         magFilterType = TextureMagFilterType.GL_LINEAR;
         magFilterTypeValue = 0;
-        
+
         wrapSType = TextureWrapSType.GL_CLAMP_TO_EDGE;
         wrapSTypeValue = 0;
-        
+
         wrapTType = TextureWrapTType.GL_CLAMP_TO_EDGE;
         wrapTTypeValue = 0;
 
@@ -135,7 +140,7 @@ public class GVRTextureParameters {
         }
         return wrapSTypeValue;
     }
-    
+
     public void setWrapTType(TextureWrapTType wrapTType) {
         this.wrapTType = wrapTType;
     }
@@ -161,11 +166,9 @@ public class GVRTextureParameters {
         }
         return wrapTTypeValue;
     }
-    
+
     public boolean isAnisotropicSupported() {
-        anisotropicSupported = extensions
-                .contains("GL_EXT_texture_filter_anisotropic");
-        return anisotropicSupported;
+        return mGVRContext.isAnisotropicSupported;
     }
 
     public void setAnisotropicValue(float value) {
@@ -180,7 +183,10 @@ public class GVRTextureParameters {
     }
 
     public float getMaxAnisotropicValue() {
-        return NativeTextureParameters.getMaxAnisotropicValue();
+        if (mGVRContext.isAnisotropicSupported) {
+            return mGVRContext.maxAnisotropicValue;
+        }
+        return -1.0f;
     }
 
     public float[] getDefalutValuesArray() {
@@ -214,11 +220,11 @@ public class GVRTextureParameters {
     public enum TextureMagFilterType {
         GL_LINEAR, GL_NEAREST
     }
-    
+
     public enum TextureWrapSType {
         GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, GL_REPEAT
     }
-    
+
     public enum TextureWrapTType {
         GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, GL_REPEAT
     }

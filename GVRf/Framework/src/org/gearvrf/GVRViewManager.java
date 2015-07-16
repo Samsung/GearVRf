@@ -36,6 +36,7 @@ import org.gearvrf.utility.Threads;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.opengl.GLES20;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 
@@ -227,6 +228,17 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         // we know that the current thread is a GL one, so we store it to
         // prevent non-GL thread from calling GL functions
         mGLThreadID = currentThread.getId();
+
+        // Evaluating anisotropic support on GL Thread
+        String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
+        isAnisotropicSupported = extensions
+                .contains("GL_EXT_texture_filter_anisotropic");
+
+        // Evaluating max anisotropic value if supported
+        if (isAnisotropicSupported) {
+            maxAnisotropicValue = NativeTextureParameters
+                    .getMaxAnisotropicValue();
+        }
 
         mPreviousTimeNanos = GVRTime.getCurrentTime();
 

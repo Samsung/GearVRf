@@ -48,11 +48,14 @@ public class CockpitViewManager extends GVRScript {
         GVRMesh spaceMesh = mGVRContext.loadMesh(new GVRAndroidResource(
                 mGVRContext, R.raw.gvrf_space_mesh));
 
-        GVRTextureParameters textureParameters = new GVRTextureParameters();
+        GVRTextureParameters textureParameters = new GVRTextureParameters(
+                gvrContext);
 
-        if (textureParameters.isAnisotropicSupported()) {
-            textureParameters.setAnisotropicValue(12);
-        }
+        System.out.println("ANISO SUPPORTED: "
+                + gvrContext.isAnisotropicSupported);
+        System.out.println("MAX ANISO: " + gvrContext.maxAnisotropicValue);
+
+        textureParameters.setAnisotropicValue(12);
 
         textureParameters.setMagFilterType(TextureMagFilterType.GL_NEAREST);
         textureParameters

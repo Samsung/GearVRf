@@ -50,6 +50,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLES20;
 import android.view.KeyEvent;
 
 /**
@@ -129,7 +130,13 @@ public abstract class GVRContext {
      * The default texture parameter instance for overloading texture methods
      * 
      */
-    public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters();
+    public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(this);
+    
+    // treu or false based on the support for anisotropy
+    public boolean isAnisotropicSupported;
+
+    // Max anisotropic value if supported and -1 otherwise
+    public float maxAnisotropicValue = -1.0f;
 
     /*
      * Methods
