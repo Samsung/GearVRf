@@ -84,7 +84,7 @@ public class SampleViewManager extends GVRScript {
         GVRSphereSceneObject sphereObject = new GVRSphereSceneObject(
                 gvrContext, true, material);
         GVRCylinderSceneObject cylinderObject = new GVRCylinderSceneObject(
-                gvrContext, true, material);
+                gvrContext, 0.5f, 0.5f, 1.0f, 10, 36, true, futureTextureList, 2, 4);
         GVRConeSceneObject coneObject = new GVRConeSceneObject(gvrContext,
                 true, material);
         GVRWebViewSceneObject webViewObject = createWebViewObject(gvrContext);

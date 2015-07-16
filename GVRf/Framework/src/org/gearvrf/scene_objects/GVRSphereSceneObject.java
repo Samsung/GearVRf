@@ -181,7 +181,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
     /**
      * Constructs a sphere scene object with a radius of 1 and user specified
-     * stack and slice numbers.
+     * stack and slice numbers. The sphere is subdivided into MxN meshes, where M=sliceSegmengNumber and N=(stackSegmentNumber+2) are specified by user.
      * 
      * The sphere's triangles and normals are facing either in or out and the
      * same material will be applied to each side of the sphere.
@@ -206,7 +206,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      * 
      * @param stackSegmentNumber
      *            the segment number along vertical direction (i.e. stacks).
-     *            Note both top cap and bottom cap are not subdivided along
+     *            Note neither top cap nor bottom cap are subdivided along
      *            vertical direction. So number of stacks in body part (i.e.
      *            stackNumber-2) should be divisible by stackSegmentNumber.
      * 
@@ -267,10 +267,10 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     private void generateSphere(int stackNumber, int sliceNumber,
             boolean facingOut) {
         int capVertexNumber = 3 * sliceNumber;
-        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
+        int bodyVertexNumber = 4 * sliceNumber * (stackNumber - 2);
         int vertexNumber = (2 * capVertexNumber) + bodyVertexNumber;
         int triangleNumber = (2 * capVertexNumber)
-                + (6 * sliceNumber * stackNumber);
+                + (6 * sliceNumber * (stackNumber - 2));
 
         vertices = new float[3 * vertexNumber];
         normals = new float[3 * vertexNumber];
@@ -745,172 +745,170 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         indexCount = 0;
         triangleCount = 0;
 
-        int sliceCounter = 0;
-
-        for (int stack = 1; stack < stackNumber - 1; stack++) {
-            float stackPercentage0 = ((float) (stack) / stackNumber);
-            float stackPercentage1 = ((float) (stack + 1) / stackNumber);
-
-            float t0 = stackPercentage0;
-            float t1 = stackPercentage1;
-
-            double theta0 = stackPercentage0 * Math.PI;
-            double theta1 = stackPercentage1 * Math.PI;
-            double cosTheta0 = Math.cos(theta0);
-            double sinTheta0 = Math.sin(theta0);
-            double cosTheta1 = Math.cos(theta1);
-            double sinTheta1 = Math.sin(theta1);
-
-            for (int slice = 0; slice < sliceNumber; slice++) {
-                float slicePercentage0 = ((float) (slice) / sliceNumber);
-                float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
-                double phi0 = slicePercentage0 * 2.0 * Math.PI;
-                double phi1 = slicePercentage1 * 2.0 * Math.PI;
-                float s0, s1;
-                if (facingOut) {
-                    s0 = 1.0f - slicePercentage0;
-                    s1 = 1.0f - slicePercentage1;
-                } else {
-                    s0 = slicePercentage0;
-                    s1 = slicePercentage1;
+        for (int stackSegment = 0; stackSegment < stackSegmentNumber; stackSegment++) {
+            for (int sliceSegment = 0; sliceSegment < sliceSegmentNumber; sliceSegment++) {
+                for (int stack = stackSegment * stackPerSegment + 1; stack < (stackSegment+1) * stackPerSegment + 1; stack++) {
+    
+                    float stackPercentage0 = ((float) (stack) / stackNumber);
+                    float stackPercentage1 = ((float) (stack + 1) / stackNumber);
+        
+                    float t0 = stackPercentage0;
+                    float t1 = stackPercentage1;
+        
+                    double theta0 = stackPercentage0 * Math.PI;
+                    double theta1 = stackPercentage1 * Math.PI;
+                    double cosTheta0 = Math.cos(theta0);
+                    double sinTheta0 = Math.sin(theta0);
+                    double cosTheta1 = Math.cos(theta1);
+                    double sinTheta1 = Math.sin(theta1);
+        
+                    for (int slice = sliceSegment * slicePerSegment; slice < (sliceSegment+1) * slicePerSegment; slice++) {
+                        float slicePercentage0 = ((float) (slice) / sliceNumber);
+                        float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+                        double phi0 = slicePercentage0 * 2.0 * Math.PI;
+                        double phi1 = slicePercentage1 * 2.0 * Math.PI;
+                        float s0, s1;
+                        if (facingOut) {
+                            s0 = 1.0f - slicePercentage0;
+                            s1 = 1.0f - slicePercentage1;
+                        } else {
+                            s0 = slicePercentage0;
+                            s1 = slicePercentage1;
+                        }
+                        double cosPhi0 = Math.cos(phi0);
+                        double sinPhi0 = Math.sin(phi0);
+                        double cosPhi1 = Math.cos(phi1);
+                        double sinPhi1 = Math.sin(phi1);
+        
+                        float x0 = (float) (sinTheta0 * cosPhi0);
+                        float y0 = (float) cosTheta0;
+                        float z0 = (float) (sinTheta0 * sinPhi0);
+        
+                        float x1 = (float) (sinTheta0 * cosPhi1);
+                        float y1 = (float) cosTheta0;
+                        float z1 = (float) (sinTheta0 * sinPhi1);
+        
+                        float x2 = (float) (sinTheta1 * cosPhi0);
+                        float y2 = (float) cosTheta1;
+                        float z2 = (float) (sinTheta1 * sinPhi0);
+        
+                        float x3 = (float) (sinTheta1 * cosPhi1);
+                        float y3 = (float) cosTheta1;
+                        float z3 = (float) (sinTheta1 * sinPhi1);
+        
+                        vertices[vertexCount + 0] = x0;
+                        vertices[vertexCount + 1] = y0;
+                        vertices[vertexCount + 2] = z0;
+        
+                        vertices[vertexCount + 3] = x1;
+                        vertices[vertexCount + 4] = y1;
+                        vertices[vertexCount + 5] = z1;
+        
+                        vertices[vertexCount + 6] = x2;
+                        vertices[vertexCount + 7] = y2;
+                        vertices[vertexCount + 8] = z2;
+        
+                        vertices[vertexCount + 9] = x3;
+                        vertices[vertexCount + 10] = y3;
+                        vertices[vertexCount + 11] = z3;
+        
+                        if (facingOut) {
+                            normals[vertexCount + 0] = x0;
+                            normals[vertexCount + 1] = y0;
+                            normals[vertexCount + 2] = z0;
+        
+                            normals[vertexCount + 3] = x1;
+                            normals[vertexCount + 4] = y1;
+                            normals[vertexCount + 5] = z1;
+        
+                            normals[vertexCount + 6] = x2;
+                            normals[vertexCount + 7] = y2;
+                            normals[vertexCount + 8] = z2;
+        
+                            normals[vertexCount + 9] = x3;
+                            normals[vertexCount + 10] = y3;
+                            normals[vertexCount + 11] = z3;
+                        } else {
+                            normals[vertexCount + 0] = -x0;
+                            normals[vertexCount + 1] = -y0;
+                            normals[vertexCount + 2] = -z0;
+        
+                            normals[vertexCount + 3] = -x1;
+                            normals[vertexCount + 4] = -y1;
+                            normals[vertexCount + 5] = -z1;
+        
+                            normals[vertexCount + 6] = -x2;
+                            normals[vertexCount + 7] = -y2;
+                            normals[vertexCount + 8] = -z2;
+        
+                            normals[vertexCount + 9] = -x3;
+                            normals[vertexCount + 10] = -y3;
+                            normals[vertexCount + 11] = -z3;
+                        }
+        
+                        texCoords[texCoordCount + 0] = s0;
+                        texCoords[texCoordCount + 1] = t0;
+                        texCoords[texCoordCount + 2] = s1;
+                        texCoords[texCoordCount + 3] = t0;
+                        texCoords[texCoordCount + 4] = s0;
+                        texCoords[texCoordCount + 5] = t1;
+                        texCoords[texCoordCount + 6] = s1;
+                        texCoords[texCoordCount + 7] = t1;
+        
+                        // one quad looking from outside toward center
+                        //
+                        // @formatter:off
+                        //
+                        //     s1 --> s0
+                        //
+                        // t0   1-----0
+                        //  |   |     |
+                        //  v   |     |
+                        // t1   3-----2
+                        //     
+                        // @formatter:on
+                        //
+                        // Note that tex_coord t increase from top to bottom because the
+                        // texture image is loaded upside down.
+                        if (facingOut) {
+                            indices[indexCount + 0] = (char) (triangleCount + 0);
+                            indices[indexCount + 1] = (char) (triangleCount + 1);
+                            indices[indexCount + 2] = (char) (triangleCount + 2);
+        
+                            indices[indexCount + 3] = (char) (triangleCount + 2);
+                            indices[indexCount + 4] = (char) (triangleCount + 1);
+                            indices[indexCount + 5] = (char) (triangleCount + 3);
+                        } else {
+                            indices[indexCount + 0] = (char) (triangleCount + 0);
+                            indices[indexCount + 1] = (char) (triangleCount + 2);
+                            indices[indexCount + 2] = (char) (triangleCount + 1);
+        
+                            indices[indexCount + 3] = (char) (triangleCount + 2);
+                            indices[indexCount + 4] = (char) (triangleCount + 3);
+                            indices[indexCount + 5] = (char) (triangleCount + 1);
+                        }
+        
+                        vertexCount += 12;
+                        texCoordCount += 8;
+                        indexCount += 6;
+                        triangleCount += 4;
+                    }
                 }
-                double cosPhi0 = Math.cos(phi0);
-                double sinPhi0 = Math.sin(phi0);
-                double cosPhi1 = Math.cos(phi1);
-                double sinPhi1 = Math.sin(phi1);
 
-                float x0 = (float) (sinTheta0 * cosPhi0);
-                float y0 = (float) cosTheta0;
-                float z0 = (float) (sinTheta0 * sinPhi0);
+                GVRMesh mesh = new GVRMesh(gvrContext);
+                mesh.setVertices(vertices);
+                mesh.setNormals(normals);
+                mesh.setTexCoords(texCoords);
+                mesh.setTriangles(indices);
+                GVRSceneObject childObject = new GVRSceneObject(gvrContext,
+                        mesh);
+                childObject.getRenderData().setMaterial(material);
+                addChildObject(childObject);
 
-                float x1 = (float) (sinTheta0 * cosPhi1);
-                float y1 = (float) cosTheta0;
-                float z1 = (float) (sinTheta0 * sinPhi1);
-
-                float x2 = (float) (sinTheta1 * cosPhi0);
-                float y2 = (float) cosTheta1;
-                float z2 = (float) (sinTheta1 * sinPhi0);
-
-                float x3 = (float) (sinTheta1 * cosPhi1);
-                float y3 = (float) cosTheta1;
-                float z3 = (float) (sinTheta1 * sinPhi1);
-
-                vertices[vertexCount + 0] = x0;
-                vertices[vertexCount + 1] = y0;
-                vertices[vertexCount + 2] = z0;
-
-                vertices[vertexCount + 3] = x1;
-                vertices[vertexCount + 4] = y1;
-                vertices[vertexCount + 5] = z1;
-
-                vertices[vertexCount + 6] = x2;
-                vertices[vertexCount + 7] = y2;
-                vertices[vertexCount + 8] = z2;
-
-                vertices[vertexCount + 9] = x3;
-                vertices[vertexCount + 10] = y3;
-                vertices[vertexCount + 11] = z3;
-
-                if (facingOut) {
-                    normals[vertexCount + 0] = x0;
-                    normals[vertexCount + 1] = y0;
-                    normals[vertexCount + 2] = z0;
-
-                    normals[vertexCount + 3] = x1;
-                    normals[vertexCount + 4] = y1;
-                    normals[vertexCount + 5] = z1;
-
-                    normals[vertexCount + 6] = x2;
-                    normals[vertexCount + 7] = y2;
-                    normals[vertexCount + 8] = z2;
-
-                    normals[vertexCount + 9] = x3;
-                    normals[vertexCount + 10] = y3;
-                    normals[vertexCount + 11] = z3;
-                } else {
-                    normals[vertexCount + 0] = -x0;
-                    normals[vertexCount + 1] = -y0;
-                    normals[vertexCount + 2] = -z0;
-
-                    normals[vertexCount + 3] = -x1;
-                    normals[vertexCount + 4] = -y1;
-                    normals[vertexCount + 5] = -z1;
-
-                    normals[vertexCount + 6] = -x2;
-                    normals[vertexCount + 7] = -y2;
-                    normals[vertexCount + 8] = -z2;
-
-                    normals[vertexCount + 9] = -x3;
-                    normals[vertexCount + 10] = -y3;
-                    normals[vertexCount + 11] = -z3;
-                }
-
-                texCoords[texCoordCount + 0] = s0;
-                texCoords[texCoordCount + 1] = t0;
-                texCoords[texCoordCount + 2] = s1;
-                texCoords[texCoordCount + 3] = t0;
-                texCoords[texCoordCount + 4] = s0;
-                texCoords[texCoordCount + 5] = t1;
-                texCoords[texCoordCount + 6] = s1;
-                texCoords[texCoordCount + 7] = t1;
-
-                // one quad looking from outside toward center
-                //
-                // @formatter:off
-                //
-                //     s1 --> s0
-                //
-                // t0   1-----0
-                //  |   |     |
-                //  v   |     |
-                // t1   3-----2
-                //     
-                // @formatter:on
-                //
-                // Note that tex_coord t increase from top to bottom because the
-                // texture image is loaded upside down.
-                if (facingOut) {
-                    indices[indexCount + 0] = (char) (triangleCount + 0);
-                    indices[indexCount + 1] = (char) (triangleCount + 1);
-                    indices[indexCount + 2] = (char) (triangleCount + 2);
-
-                    indices[indexCount + 3] = (char) (triangleCount + 2);
-                    indices[indexCount + 4] = (char) (triangleCount + 1);
-                    indices[indexCount + 5] = (char) (triangleCount + 3);
-                } else {
-                    indices[indexCount + 0] = (char) (triangleCount + 0);
-                    indices[indexCount + 1] = (char) (triangleCount + 2);
-                    indices[indexCount + 2] = (char) (triangleCount + 1);
-
-                    indices[indexCount + 3] = (char) (triangleCount + 2);
-                    indices[indexCount + 4] = (char) (triangleCount + 3);
-                    indices[indexCount + 5] = (char) (triangleCount + 1);
-                }
-
-                sliceCounter++;
-                if (sliceCounter == slicePerSegment) {
-                    GVRMesh mesh = new GVRMesh(gvrContext);
-                    mesh.setVertices(vertices);
-                    mesh.setNormals(normals);
-                    mesh.setTexCoords(texCoords);
-                    mesh.setTriangles(indices);
-                    GVRSceneObject childObject = new GVRSceneObject(gvrContext,
-                            mesh);
-                    childObject.getRenderData().setMaterial(material);
-                    addChildObject(childObject);
-
-                    sliceCounter = 0;
-
-                    vertexCount = 0;
-                    texCoordCount = 0;
-                    indexCount = 0;
-                    triangleCount = 0;
-                } else {
-                    vertexCount += 12;
-                    texCoordCount += 8;
-                    indexCount += 6;
-                    triangleCount += 4;
-                }
+                vertexCount = 0;
+                texCoordCount = 0;
+                indexCount = 0;
+                triangleCount = 0;
             }
         }
     }

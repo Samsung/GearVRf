@@ -57,6 +57,8 @@ public class CubemapScript extends GVRScript {
         mGVRContext = gvrContext;
 
         GVRScene scene = mGVRContext.getNextMainScene();
+        scene.setStatsEnabled(true);
+        scene.setFrustumCulling(true);
 
         Future<GVRTexture> futureCubemapTexture = gvrContext
                 .loadFutureCubemapTexture(new GVRAndroidResource(mGVRContext,
@@ -114,7 +116,7 @@ public class CubemapScript extends GVRScript {
             // create surrounding cylinder using GVRCylinderSceneObject //
             // ///////////////////////////////////////////////////////////
             GVRCylinderSceneObject mCylinderEvironment = new GVRCylinderSceneObject(
-                    gvrContext, false, cubemapMaterial);
+                    gvrContext, 0.5f, 0.5f, 1.0f, 10, 36, false, cubemapMaterial, 2, 4);
             mCylinderEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
                     CUBE_WIDTH);
             scene.addSceneObject(mCylinderEvironment);
@@ -207,7 +209,7 @@ public class CubemapScript extends GVRScript {
 
         if (sphere != null) {
             sphere.setName("sphere");
-            scene.addSceneObject(sphere);
+//            scene.addSceneObject(sphere);
             sphere.getTransform().setScale(SCALE_FACTOR, SCALE_FACTOR,
                     SCALE_FACTOR);
             sphere.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.25f);
