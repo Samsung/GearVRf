@@ -39,7 +39,7 @@
         android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        <!-- meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/-->
+        <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/>
         <activity
             android:name="org.gearvrf.vuforiasample.VuforiaSampleActivity"
             android:screenOrientation="landscape"
