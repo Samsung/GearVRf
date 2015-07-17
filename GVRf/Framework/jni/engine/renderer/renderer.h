@@ -79,7 +79,6 @@ public:
 
     static void renderCamera(Scene* scene,
             Camera* camera,
-            RenderTexture* render_texture,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
