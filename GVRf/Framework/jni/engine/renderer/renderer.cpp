@@ -274,7 +274,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         glm::vec4 difference = transformed_sphere_center - position;
         float distance = glm::dot(difference, difference);
 
-        // this distance will be used when soring transparent objects
+        // this distance will be used when sorting transparent objects
         render_data->set_camera_distance(distance);
 
         // Check if this is the correct LOD level
