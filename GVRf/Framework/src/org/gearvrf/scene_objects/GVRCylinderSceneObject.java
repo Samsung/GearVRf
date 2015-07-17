@@ -18,7 +18,6 @@ package org.gearvrf.scene_objects;
 import java.util.ArrayList;
 import java.util.concurrent.Future;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRSceneObject;
@@ -181,14 +180,19 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      * 
      * @param gvrContext
      *            current {@link GVRContext}
+     *            
      * @param bottomRadius
      *            radius for the bottom of the cylinder
+     *            
      * @param topRadius
      *            radius for the top of the cylinder
+     *            
      * @param height
      *            height of the cylinder
+     *            
      * @param stackNumber
      *            number of quads high to make the cylinder.
+     *            
      * @param sliceNumber
      *            number of quads around to make the cylinder.
      */
@@ -224,16 +228,22 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      * 
      * @param gvrContext
      *            current {@link GVRContext}
+     *            
      * @param bottomRadius
      *            radius for the bottom of the cylinder
+     *            
      * @param topRadius
      *            radius for the top of the cylinder
+     *            
      * @param height
      *            height of the cylinder
+     *            
      * @param stackNumber
      *            number of quads high to make the cylinder.
+     *            
      * @param sliceNumber
      *            number of quads around to make the cylinder.
+     *            
      * @param material
      *            the material for the cylinder.
      */
@@ -268,16 +278,22 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      * 
      * @param gvrContext
      *            current {@link GVRContext}
+     *            
      * @param bottomRadius
      *            radius for the bottom of the cylinder
+     *            
      * @param topRadius
      *            radius for the top of the cylinder
+     *            
      * @param height
      *            height of the cylinder
+     *            
      * @param stackNumber
      *            number of quads high to make the cylinder.
+     *            
      * @param sliceNumber
      *            number of quads around to make the cylinder.
+     *            
      * @param futureTextureList
      *            the list of three textures for the cylinder. {@code Future<
      *            {@code GVRTexture}>} is used here for asynchronously loading
@@ -310,6 +326,162 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
 
         generateCylinderObjectThreeMeshes(gvrContext, bottomRadius, topRadius, height,
                 stackNumber, sliceNumber, facingOut, futureTextureList);
+    }
+
+    /**
+     * Constructs a cylinder scene object with user-specified height, top-radius, bottom-radius, 
+     * stacks, slices. The sphere is subdivided into MxN meshes, where M=sliceSegmengNumber and N=(stackSegmentNumber+2) are specified by user.
+     * 
+     * The cylinder's triangles and normals are facing either in or out. The top, bottom, and side of the cylinder each has its own texture.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     *            
+     * @param bottomRadius
+     *            radius for the bottom of the cylinder
+     *            
+     * @param topRadius
+     *            radius for the top of the cylinder
+     *            
+     * @param height
+     *            height of the cylinder
+     *            
+     * @param stackNumber
+     *            number of quads high to make the cylinder.
+     *            
+     * @param sliceNumber
+     *            number of quads around to make the cylinder.
+     *            
+     * @param futureTextureList
+     *            the list of three textures for the cylinder. {@code Future<
+     *            {@code GVRTexture}>} is used here for asynchronously loading
+     *            the texture. The six textures are for top, side, and bottom faces respectively.
+     *            
+     * @param stackSegmentNumber
+     *            the segment number along vertical direction (i.e. stacks).
+     *            Note only body is subdivided along
+     *            vertical direction. Number of stacks (i.e.
+     *            stackNumber) should be divisible by stackSegmentNumber.
+     * 
+     * @param sliceSegmentNumber
+     *            the segment number along horizontal direction (i.e. slices).
+     *            Number of slices (i.e. sliceNumber) should be divisible by
+     *            sliceSegmentNumber.
+    */
+    public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
+            float topRadius, float height, int stackNumber, int sliceNumber,
+            boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList, int stackSegmentNumber, int sliceSegmentNumber) {
+        super(gvrContext);
+        // assert height, numStacks, numSlices > 0
+        if (height <= 0 || stackNumber <= 0 || sliceNumber <= 0) {
+            throw new IllegalArgumentException(
+                    "height, numStacks, and numSlices must be > 0.  Values passed were: height="
+                            + height + ", numStacks=" + stackNumber
+                            + ", numSlices=" + sliceNumber);
+        }
+
+        // assert numCaps > 0
+        if (bottomRadius <= 0 && topRadius <= 0) {
+            throw new IllegalArgumentException(
+                    "bottomRadius and topRadius must be >= 0 and at least one of bottomRadius or topRadius must be > 0.  Values passed were: bottomRadius="
+                            + bottomRadius + ", topRadius=" + topRadius);
+        }
+
+        // assert length of futureTextureList is 3
+        if (futureTextureList.size() != 3) {
+            throw new IllegalArgumentException(
+                    "The length of futureTextureList is not 3.");
+        }
+
+
+        // assert for valid stackSegmentNumber
+        if (stackNumber % stackSegmentNumber != 0) {
+            throw new IllegalArgumentException(
+                    "stackNumber should be divisible by stackSegmentNumber.");
+        }
+
+        // assert for valid sliceSegmentNumber
+        if (sliceNumber % sliceSegmentNumber != 0) {
+            throw new IllegalArgumentException(
+                    "sliceNumber should be divisible by sliceSegmentNumber.");
+        }
+        
+        generateComplexCylinderObject(gvrContext, bottomRadius, topRadius, height,
+                stackNumber, sliceNumber, facingOut, futureTextureList, stackSegmentNumber, sliceSegmentNumber);
+    }
+
+    /**
+     * Constructs a cylinder scene object with user-specified height, top-radius, bottom-radius, 
+     * stacks, slices. The sphere is subdivided into MxN meshes, where M=sliceSegmengNumber and N=(stackSegmentNumber+2) are specified by user.
+     * 
+     * The cylinder's triangles and normals are facing either in or out and the
+     * same material will be applied to top, bottom, and side of the cylinder.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     *            
+     * @param bottomRadius
+     *            radius for the bottom of the cylinder
+     *            
+     * @param topRadius
+     *            radius for the top of the cylinder
+     *            
+     * @param height
+     *            height of the cylinder
+     *            
+     * @param stackNumber
+     *            number of quads high to make the cylinder.
+     *            
+     * @param sliceNumber
+     *            number of quads around to make the cylinder.
+     *            
+     * @param material
+     *            the material for the cylinder.
+     *            
+     * @param stackSegmentNumber
+     *            the segment number along vertical direction (i.e. stacks).
+     *            Note only body is subdivided along
+     *            vertical direction. Number of stacks (i.e.
+     *            stackNumber) should be divisible by stackSegmentNumber.
+     * 
+     * @param sliceSegmentNumber
+     *            the segment number along horizontal direction (i.e. slices).
+     *            Number of slices (i.e. sliceNumber) should be divisible by
+     *            sliceSegmentNumber.
+    */
+    public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
+            float topRadius, float height, int stackNumber, int sliceNumber,
+            boolean facingOut, GVRMaterial material, int stackSegmentNumber, int sliceSegmentNumber) {
+        super(gvrContext);
+        // assert height, numStacks, numSlices > 0
+        if (height <= 0 || stackNumber <= 0 || sliceNumber <= 0) {
+            throw new IllegalArgumentException(
+                    "height, numStacks, and numSlices must be > 0.  Values passed were: height="
+                            + height + ", numStacks=" + stackNumber
+                            + ", numSlices=" + sliceNumber);
+        }
+
+        // assert numCaps > 0
+        if (bottomRadius <= 0 && topRadius <= 0) {
+            throw new IllegalArgumentException(
+                    "bottomRadius and topRadius must be >= 0 and at least one of bottomRadius or topRadius must be > 0.  Values passed were: bottomRadius="
+                            + bottomRadius + ", topRadius=" + topRadius);
+        }
+
+        // assert for valid stackSegmentNumber
+        if (stackNumber % stackSegmentNumber != 0) {
+            throw new IllegalArgumentException(
+                    "stackNumber should be divisible by stackSegmentNumber.");
+        }
+
+        // assert for valid sliceSegmentNumber
+        if (sliceNumber % sliceSegmentNumber != 0) {
+            throw new IllegalArgumentException(
+                    "sliceNumber should be divisible by sliceSegmentNumber.");
+        }
+        
+        generateComplexCylinderObject(gvrContext, bottomRadius, topRadius, height,
+                stackNumber, sliceNumber, facingOut, material, stackSegmentNumber, sliceSegmentNumber);
     }
 
     private void generateCylinderObject(GVRContext gvrContext,
@@ -473,11 +645,11 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     private void createBody(float bottomRadius, float topRadius, float height,
             int stackNumber, int sliceNumber, boolean facingOut) {
         float difference = bottomRadius - topRadius;
+        float length = (float) Math.sqrt(difference*difference + height*height);
+        float ratio = height / length;
         float halfHeight = height / 2.0f;
 
         for (int stack = 0; stack < stackNumber; stack++) {
-
-            int initVertexCount = vertexCount;
 
             float stackPercentage0 = ((float) (stack) / stackNumber);
             float stackPercentage1 = ((float) (stack + 1) / stackNumber);
@@ -487,7 +659,6 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             float y0 = -halfHeight + (stackPercentage0 * height);
             float y1 = -halfHeight + (stackPercentage1 * height);
 
-            float nx, ny, nz;
             for (int slice = 0; slice < sliceNumber; slice++) {
                 float slicePercentage0 = ((float) (slice) / sliceNumber);
                 float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
@@ -536,31 +707,27 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 vertices[vertexCount + 11] = z3;
 
                 // calculate normal
-                Vector3D v1 = new Vector3D(x1 - x0, 0, z1 - z0);
-                Vector3D v2 = new Vector3D(x2 - x0, y1 - y0, z2 - z0);
-                Vector3D v3 = v1.crossProduct(v2).normalize();
-
-                if (facingOut) {
-                    nx = (float) v3.getX();
-                    ny = (float) v3.getY();
-                    nz = (float) v3.getZ();
-                } else {
-                    nx = (float) -v3.getX();
-                    ny = (float) -v3.getY();
-                    nz = (float) -v3.getZ();
-                }
-                normals[vertexCount + 0] = nx;
+                float nx0 = (float) (ratio * cosTheta0);
+                float nx1 = (float) (ratio * cosTheta1);
+                float ny = difference / length;
+                float nz0 = (float) (-ratio * sinTheta0);
+                float nz1 = (float) (-ratio * sinTheta0);
+                
+                normals[vertexCount + 0] = nx0;
                 normals[vertexCount + 1] = ny;
-                normals[vertexCount + 2] = nz;
-                normals[vertexCount + 3] = nx;
+                normals[vertexCount + 2] = nz0;
+                
+                normals[vertexCount + 3] = nx1;
                 normals[vertexCount + 4] = ny;
-                normals[vertexCount + 5] = nz;
-                normals[vertexCount + 6] = nx;
+                normals[vertexCount + 5] = nz1;
+                
+                normals[vertexCount + 6] = nx0;
                 normals[vertexCount + 7] = ny;
-                normals[vertexCount + 8] = nz;
-                normals[vertexCount + 9] = nx;
+                normals[vertexCount + 8] = nz0;
+                
+                normals[vertexCount + 9] = nx1;
                 normals[vertexCount + 10] = ny;
-                normals[vertexCount + 11] = nz;
+                normals[vertexCount + 11] = nz1;
 
                 texCoords[texCoordCount + 0] = s0;
                 texCoords[texCoordCount + 1] = t0;
@@ -612,69 +779,6 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 indexCount += 6;
                 triangleCount += 4;
             }
-
-            // compute average of normals of adjacent faces
-            for (int i = initVertexCount; i < vertexCount - 12; i += 12) {
-                Vector3D v1 = new Vector3D(normals[i + 3], normals[i + 4],
-                        normals[i + 5]);
-                Vector3D v2 = new Vector3D(normals[i + 12], normals[i + 13],
-                        normals[i + 14]);
-                Vector3D v3 = v1.add(v2).normalize();
-                nx = (float) v3.getX();
-                ny = (float) v3.getY();
-                nz = (float) v3.getZ();
-                normals[i + 3] = nx;
-                normals[i + 4] = ny;
-                normals[i + 5] = nz;
-                normals[i + 12] = nx;
-                normals[i + 13] = ny;
-                normals[i + 14] = nz;
-
-                v1 = new Vector3D(normals[i + 9], normals[i + 10],
-                        normals[i + 11]);
-                v2 = new Vector3D(normals[i + 18], normals[i + 19],
-                        normals[i + 20]);
-                v3 = v1.add(v2).normalize();
-                nx = (float) v3.getX();
-                ny = (float) v3.getY();
-                nz = (float) v3.getZ();
-                normals[i + 9] = nx;
-                normals[i + 10] = ny;
-                normals[i + 11] = nz;
-                normals[i + 18] = nx;
-                normals[i + 19] = ny;
-                normals[i + 20] = nz;
-            }
-            int i1 = vertexCount - 12;
-            Vector3D v1 = new Vector3D(normals[i1 + 3], normals[i1 + 4],
-                    normals[i1 + 5]);
-            int i2 = initVertexCount;
-            Vector3D v2 = new Vector3D(normals[i2 + 0], normals[i2 + 1],
-                    normals[i2 + 2]);
-            Vector3D v3 = v1.add(v2).normalize();
-            nx = (float) v3.getX();
-            ny = (float) v3.getY();
-            nz = (float) v3.getZ();
-            normals[i1 + 3] = nx;
-            normals[i1 + 4] = ny;
-            normals[i1 + 5] = nz;
-            normals[i2 + 0] = nx;
-            normals[i2 + 1] = ny;
-            normals[i2 + 2] = nz;
-
-            v1 = new Vector3D(normals[i1 + 9], normals[i1 + 10],
-                    normals[i1 + 11]);
-            v2 = new Vector3D(normals[i2 + 6], normals[i2 + 7], normals[i2 + 8]);
-            v3 = v1.add(v2).normalize();
-            nx = (float) v3.getX();
-            ny = (float) v3.getY();
-            nz = (float) v3.getZ();
-            normals[i1 + 9] = nx;
-            normals[i1 + 10] = ny;
-            normals[i1 + 11] = nz;
-            normals[i2 + 6] = nx;
-            normals[i2 + 7] = ny;
-            normals[i2 + 8] = nz;
         }
     }
 
@@ -733,5 +837,344 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 new FutureWrapper<GVRMesh>(mesh),
                 futureTexture);
         addChildObject(child);        
+    }
+
+    private void generateComplexCylinderObject(GVRContext gvrContext,
+            float bottomRadius, float topRadius, float height, int stackNumber,
+            int sliceNumber, boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList, int stackSegmentNumber, int sliceSegmentNumber) {
+        float halfHeight = height / 2.0f;
+
+        GVRMaterial material;
+        // top cap
+        if (topRadius > 0) {
+            material = new GVRMaterial(gvrContext);
+            material.setMainTexture(futureTextureList.get(0));
+            createComplexCap(gvrContext, topRadius, halfHeight, sliceNumber,
+                    1.0f, facingOut, material, sliceNumber);       
+        }
+        
+        // cylinder body
+        material = new GVRMaterial(gvrContext);
+        material.setMainTexture(futureTextureList.get(1));
+        createComplexBody(gvrContext, bottomRadius, topRadius, height, stackNumber, sliceNumber,
+                facingOut, material, stackSegmentNumber, sliceSegmentNumber);
+        
+        // bottom cap
+        if (bottomRadius > 0) {
+            material = new GVRMaterial(gvrContext);
+            material.setMainTexture(futureTextureList.get(2));
+            createComplexCap(gvrContext, bottomRadius, -halfHeight, sliceNumber,
+                    -1.0f, facingOut, material, sliceNumber);       
+        }
+
+        // attached an empty renderData for parent object, so that we can set some common properties
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachRenderData(renderData);
+    }
+
+    private void generateComplexCylinderObject(GVRContext gvrContext,
+            float bottomRadius, float topRadius, float height, int stackNumber,
+            int sliceNumber, boolean facingOut, GVRMaterial material, int stackSegmentNumber, int sliceSegmentNumber) {
+        float halfHeight = height / 2.0f;
+
+        // top cap
+        if (topRadius > 0) {
+            createComplexCap(gvrContext, topRadius, halfHeight, sliceNumber,
+                    1.0f, facingOut, material, sliceNumber);       
+        }
+        
+        // cylinder body
+        createComplexBody(gvrContext, bottomRadius, topRadius, height, stackNumber, sliceNumber,
+                facingOut, material, stackSegmentNumber, sliceSegmentNumber);
+        
+        // bottom cap
+        if (bottomRadius > 0) {
+            createComplexCap(gvrContext, bottomRadius, -halfHeight, sliceNumber,
+                    -1.0f, facingOut, material, sliceNumber);       
+        }
+
+        // attached an empty renderData for parent object, so that we can set some common properties
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachRenderData(renderData);
+    }
+
+    private void createComplexCap(GVRContext gvrContext, float radius, float height, int sliceNumber,
+            float normalDirection, boolean facingOut, GVRMaterial material, int sliceSegmentNumber) {
+        if (!facingOut) {
+            normalDirection = -normalDirection;
+        }
+
+        int slicePerSegment = sliceNumber / sliceSegmentNumber;
+        int vertexNumber = 3 * slicePerSegment;
+        vertices = new float[3 * vertexNumber];
+        normals = new float[3 * vertexNumber];
+        texCoords = new float[2 * vertexNumber];
+        indices = new char[vertexNumber];
+
+        vertexCount = 0;
+        texCoordCount = 0;
+        indexCount = 0;
+        triangleCount = 0;
+
+        int sliceCounter = 0;
+        
+        for (int slice = 0; slice < sliceNumber; slice++) {
+            double theta0 = ((double) (slice) / sliceNumber) * 2.0 * Math.PI;
+            double theta1 = ((double) (slice + 1) / sliceNumber) * 2.0
+                    * Math.PI;
+
+            float y = height;
+            float x0 = (float) (radius * Math.cos(theta0));
+            float z0 = (float) (radius * Math.sin(theta0));
+            float x1 = (float) (radius * Math.cos(theta1));
+            float z1 = (float) (radius * Math.sin(theta1));
+
+            float s0, s1;
+            if (normalDirection > 0) {
+                s0 = (float) (slice) / sliceNumber;
+                s1 = (float) (slice + 1) / sliceNumber;
+            } else {
+                s0 = 1.0f - (float) (slice) / sliceNumber;
+                s1 = 1.0f - (float) (slice + 1) / sliceNumber;
+            }
+            float s2 = (s0 + s1) / 2.0f;
+
+            vertices[vertexCount + 0] = x0;
+            vertices[vertexCount + 1] = y;
+            vertices[vertexCount + 2] = z0;
+            vertices[vertexCount + 3] = x1;
+            vertices[vertexCount + 4] = y;
+            vertices[vertexCount + 5] = z1;
+            vertices[vertexCount + 6] = 0.0f;
+            vertices[vertexCount + 7] = y;
+            vertices[vertexCount + 8] = 0.0f;
+
+            normals[vertexCount + 0] = 0.0f;
+            normals[vertexCount + 1] = normalDirection;
+            normals[vertexCount + 2] = 0.0f;
+            normals[vertexCount + 3] = 0.0f;
+            normals[vertexCount + 4] = normalDirection;
+            normals[vertexCount + 5] = 0.0f;
+            normals[vertexCount + 6] = 0.0f;
+            normals[vertexCount + 7] = normalDirection;
+            normals[vertexCount + 8] = 0.0f;
+
+            texCoords[texCoordCount + 0] = s0;
+            texCoords[texCoordCount + 1] = 0.0f;
+
+            texCoords[texCoordCount + 2] = s1;
+            texCoords[texCoordCount + 3] = 0.0f;
+
+            texCoords[texCoordCount + 4] = s2;
+            texCoords[texCoordCount + 5] = 1.0f;
+
+            if (normalDirection > 0) {
+                indices[indexCount + 0] = (char) (triangleCount + 1);
+                indices[indexCount + 1] = (char) (triangleCount + 0);
+                indices[indexCount + 2] = (char) (triangleCount + 2);
+            } else {
+                indices[indexCount + 0] = (char) (triangleCount + 0);
+                indices[indexCount + 1] = (char) (triangleCount + 1);
+                indices[indexCount + 2] = (char) (triangleCount + 2);
+            }
+
+            sliceCounter++;
+            if (sliceCounter == slicePerSegment) {
+                GVRMesh mesh = new GVRMesh(gvrContext);
+                mesh.setVertices(vertices);
+                mesh.setNormals(normals);
+                mesh.setTexCoords(texCoords);
+                mesh.setTriangles(indices);
+                GVRSceneObject childObject = new GVRSceneObject(gvrContext,
+                        mesh);
+                childObject.getRenderData().setMaterial(material);
+                addChildObject(childObject);
+
+                sliceCounter = 0;
+
+                vertexCount = 0;
+                texCoordCount = 0;
+                indexCount = 0;
+                triangleCount = 0;
+            } else {
+                vertexCount += 9;
+                texCoordCount += 6;
+                indexCount += 3;
+                triangleCount += 3;
+            }
+        }
+    }
+
+    private void createComplexBody(GVRContext gvrContext, float bottomRadius, float topRadius, float height,
+            int stackNumber, int sliceNumber, boolean facingOut, GVRMaterial material, int stackSegmentNumber, int sliceSegmentNumber) {
+        float difference = bottomRadius - topRadius;
+        float length = (float) Math.sqrt(difference*difference + height*height);
+        float ratio = height / length;
+        float halfHeight = height / 2.0f;
+
+        int stackPerSegment = stackNumber / stackSegmentNumber;
+        int slicePerSegment = sliceNumber / sliceSegmentNumber;
+        
+        int vertexNumber = 4 * stackPerSegment * slicePerSegment;
+        int triangleNumber = 6 * stackPerSegment * slicePerSegment;
+        vertices = new float[3 * vertexNumber];
+        normals = new float[3 * vertexNumber];
+        texCoords = new float[2 * vertexNumber];
+        indices = new char[triangleNumber];
+
+        vertexCount = 0;
+        texCoordCount = 0;
+        indexCount = 0;
+        triangleCount = 0;
+
+        for (int stackSegment = 0; stackSegment < stackSegmentNumber; stackSegment++) {
+            for (int sliceSegment = 0; sliceSegment < sliceSegmentNumber; sliceSegment++) {
+                for (int stack = stackSegment * stackPerSegment; stack < (stackSegment+1) * stackPerSegment; stack++) {
+                    float stackPercentage0 = ((float) (stack) / stackNumber);
+                    float stackPercentage1 = ((float) (stack + 1) / stackNumber);
+        
+                    float t0 = 1.0f - stackPercentage0;
+                    float t1 = 1.0f - stackPercentage1;
+                    float y0 = -halfHeight + (stackPercentage0 * height);
+                    float y1 = -halfHeight + (stackPercentage1 * height);
+    
+                    for (int slice = sliceSegment * slicePerSegment; slice < (sliceSegment+1) * slicePerSegment; slice++) {
+                        float slicePercentage0 = ((float) (slice) / sliceNumber);
+                        float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+                        double theta0 = slicePercentage0 * 2.0 * Math.PI;
+                        double theta1 = slicePercentage1 * 2.0 * Math.PI;
+                        double cosTheta0 = Math.cos(theta0);
+                        double sinTheta0 = Math.sin(theta0);
+                        double cosTheta1 = Math.cos(theta1);
+                        double sinTheta1 = Math.sin(theta1);
+        
+                        float radius = (bottomRadius - (difference * stackPercentage0));
+                        float x0 = (float) (radius * cosTheta0);
+                        float z0 = (float) (-radius * sinTheta0);
+                        float x1 = (float) (radius * cosTheta1);
+                        float z1 = (float) (-radius * sinTheta1);
+        
+                        radius = (bottomRadius - (difference * stackPercentage1));
+                        float x2 = (float) (radius * cosTheta0);
+                        float z2 = (float) (-radius * sinTheta0);
+                        float x3 = (float) (radius * cosTheta1);
+                        float z3 = (float) (-radius * sinTheta1);
+        
+                        float s0, s1;
+                        if (facingOut) {
+                            s0 = slicePercentage0;
+                            s1 = slicePercentage1;
+                        } else {
+                            s0 = 1.0f - slicePercentage0;
+                            s1 = 1.0f - slicePercentage1;
+                        }
+        
+                        vertices[vertexCount + 0] = x0;
+                        vertices[vertexCount + 1] = y0;
+                        vertices[vertexCount + 2] = z0;
+        
+                        vertices[vertexCount + 3] = x1;
+                        vertices[vertexCount + 4] = y0;
+                        vertices[vertexCount + 5] = z1;
+        
+                        vertices[vertexCount + 6] = x2;
+                        vertices[vertexCount + 7] = y1;
+                        vertices[vertexCount + 8] = z2;
+        
+                        vertices[vertexCount + 9] = x3;
+                        vertices[vertexCount + 10] = y1;
+                        vertices[vertexCount + 11] = z3;
+        
+                        // calculate normal
+                        float nx0 = (float) (ratio * cosTheta0);
+                        float nx1 = (float) (ratio * cosTheta1);
+                        float ny = difference / length;
+                        float nz0 = (float) (-ratio * sinTheta0);
+                        float nz1 = (float) (-ratio * sinTheta0);
+                        
+                        normals[vertexCount + 0] = nx0;
+                        normals[vertexCount + 1] = ny;
+                        normals[vertexCount + 2] = nz0;
+                        
+                        normals[vertexCount + 3] = nx1;
+                        normals[vertexCount + 4] = ny;
+                        normals[vertexCount + 5] = nz1;
+                        
+                        normals[vertexCount + 6] = nx0;
+                        normals[vertexCount + 7] = ny;
+                        normals[vertexCount + 8] = nz0;
+                        
+                        normals[vertexCount + 9] = nx1;
+                        normals[vertexCount + 10] = ny;
+                        normals[vertexCount + 11] = nz1;
+        
+                        texCoords[texCoordCount + 0] = s0;
+                        texCoords[texCoordCount + 1] = t0;
+        
+                        texCoords[texCoordCount + 2] = s1;
+                        texCoords[texCoordCount + 3] = t0;
+        
+                        texCoords[texCoordCount + 4] = s0;
+                        texCoords[texCoordCount + 5] = t1;
+        
+                        texCoords[texCoordCount + 6] = s1;
+                        texCoords[texCoordCount + 7] = t1;
+        
+                        // one quad looking from outside toward center
+                        //
+                        // @formatter:off
+                        //
+                        // t1   2-----3
+                        //  |   |     |
+                        //  v   |     |
+                        // t0   0-----1
+                        //
+                        //     s0 --> s1
+                        //     
+                        // @formatter:on
+                        //
+                        // Note that tex_coord t increase from top to bottom because the
+                        // texture image is loaded upside down.
+                        if (facingOut) {
+                            indices[indexCount + 0] = (char) (triangleCount + 0); // 0
+                            indices[indexCount + 1] = (char) (triangleCount + 1); // 1
+                            indices[indexCount + 2] = (char) (triangleCount + 2); // 2
+        
+                            indices[indexCount + 3] = (char) (triangleCount + 2); // 2
+                            indices[indexCount + 4] = (char) (triangleCount + 1); // 1
+                            indices[indexCount + 5] = (char) (triangleCount + 3); // 3
+                        } else {
+                            indices[indexCount + 0] = (char) (triangleCount + 0); // 0
+                            indices[indexCount + 1] = (char) (triangleCount + 2); // 2
+                            indices[indexCount + 2] = (char) (triangleCount + 1); // 1
+        
+                            indices[indexCount + 3] = (char) (triangleCount + 2); // 2
+                            indices[indexCount + 4] = (char) (triangleCount + 3); // 3
+                            indices[indexCount + 5] = (char) (triangleCount + 1); // 1
+                        }
+        
+                        vertexCount += 12;
+                        texCoordCount += 8;
+                        indexCount += 6;
+                        triangleCount += 4;
+                    }
+                }
+
+                GVRMesh mesh = new GVRMesh(gvrContext);
+                mesh.setVertices(vertices);
+                mesh.setNormals(normals);
+                mesh.setTexCoords(texCoords);
+                mesh.setTriangles(indices);
+                GVRSceneObject childObject = new GVRSceneObject(gvrContext,
+                        mesh);
+                childObject.getRenderData().setMaterial(material);
+                addChildObject(childObject);
+
+                vertexCount = 0;
+                texCoordCount = 0;
+                indexCount = 0;
+                triangleCount = 0;
+            }
+        }
     }
 }
