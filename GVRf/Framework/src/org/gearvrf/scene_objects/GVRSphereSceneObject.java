@@ -96,8 +96,8 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      *            facing out.
      * 
      * @param futureTexture
-     *            the texture for the sphere. {@code Future<{@code GVRTexture}
-     *            >} is used here for asynchronously loading the texture.
+     *            the texture for the sphere. {@code Future<GVRTexture>} is used
+     *            here for asynchronously loading the texture.
      */
     public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut,
             Future<GVRTexture> futureTexture) {

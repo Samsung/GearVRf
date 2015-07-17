@@ -101,9 +101,8 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            facing out.
      * 
      * @param futureTexture
-     *            the texture for the cylinder. {@code Future<
-     *            {@code GVRTexture} >} is used here for asynchronously loading
-     *            the texture.
+     *            the texture for the cylinder. {@code Future<GVRTexture>} is
+     *            used here for asynchronously loading the texture.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, boolean facingOut,
             Future<GVRTexture> futureTexture) {
@@ -154,8 +153,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            facing out.
      * 
      * @param futureTextureList
-     *            the list of three textures for the cylinder. {@code Future<
-     *            {@code GVRTexture}>} is used here for asynchronously loading
+     *            the list of three textures for the cylinder. {@code Future<GVRTexture>} is used here for asynchronously loading
      *            the texture. The six textures are for top, side, and bottom faces respectively.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, boolean facingOut,
@@ -279,8 +277,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      * @param sliceNumber
      *            number of quads around to make the cylinder.
      * @param futureTextureList
-     *            the list of three textures for the cylinder. {@code Future<
-     *            {@code GVRTexture}>} is used here for asynchronously loading
+     *            the list of three textures for the cylinder. {@code Future<GVRTexture>} is used here for asynchronously loading
      *            the texture. The six textures are for top, side, and bottom faces respectively.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
