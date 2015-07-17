@@ -235,7 +235,7 @@ inline bool compareRenderData(RenderData* i, RenderData* j) {
     if(i->rendering_order() == j->rendering_order() &&
        i->rendering_order() >= RenderData::Transparent &&
        i->rendering_order() < RenderData::Overlay) {
-        return i->camera_distance() < j->camera_distance();
+        return i->camera_distance() > j->camera_distance();
     }
 
     return i->rendering_order() < j->rendering_order();
