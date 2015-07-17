@@ -45,6 +45,8 @@ public class SampleCubeScript extends GVRScript {
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
+        
+        Log.d("okokokok","width" + gvrContext.getActivity().getAppSettings().getFramebufferPixelsHigh());
 
         GVRScene scene = mGVRContext.getNextMainScene();
 

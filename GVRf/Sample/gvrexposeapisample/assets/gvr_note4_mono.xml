@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--/* Copyright 2015 Samsung Electronics Co., LTD
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,12 +13,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */-->
+ */
+-->
 
+<lens name="N4" >
 
+    <vr-app-settings>
+        <mono-mode-parms
+            monoFullScreen="false"
+            monoMode="true" />
+    </vr-app-settings>
 
-<resources>
-
-    <string name="app_name">GVR Expose Setting Sample</string>
-
-</resources>
+</lens>

@@ -118,6 +118,16 @@ public class VrAppSettings {
             resetWindowFullScreen = true;
             cpuLevel = gpuLevel = 2;
         }
+        
+        @Override
+        public String toString(){
+            StringBuilder res = new StringBuilder();
+            res.append(" allowPowerSave = " + this.allowPowerSave);
+            res.append(" resetWindowFullScreen = " + this.resetWindowFullScreen);
+            res.append(" cpuLevel = " + this.cpuLevel);
+            res.append(" gpuLevel = " + this.gpuLevel);
+            return res.toString();
+        }
 
     }
 
@@ -143,6 +153,9 @@ public class VrAppSettings {
         // Level for multi sampling.
         // Default to 2.
         public int multiSamples;
+        
+        //fov-y
+        public float mFovY;
 
         public enum DepthFormat {
             DEPTH_0(0), //No depth buffer
@@ -338,6 +351,25 @@ public class VrAppSettings {
         public void setMultiSamples(int multiSamples) {
             this.multiSamples = multiSamples;
         }
+        
+        /**
+         * Set current multi FovY.
+         * 
+         * @param fovy
+         *            FovY degree to set
+         */
+        public void setFovY(float fovy){
+            this.mFovY = fovy;
+        }
+        
+        /**
+         * Get current multi FovY.
+         * 
+         * @return Current fovY degree.
+         */
+        public float getFovY(){
+            return mFovY;
+        }
 
         public EyeBufferParms() {
             multiSamples = 2;
@@ -346,8 +378,20 @@ public class VrAppSettings {
             depthFormat = DepthFormat.DEPTH_24;
             colorFormat = ColorFormat.COLOR_8888;
             textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR;
+            mFovY = 90.0f;
         }
-
+        
+        @Override
+        public String toString(){
+            StringBuilder res = new StringBuilder();
+            res.append(" multiSamples = " + this.multiSamples);
+            res.append(" widthScale = " + this.widthScale);
+            res.append(" resolution = " + this.resolution);
+            res.append(" depthFormat = " + this.depthFormat.name());
+            res.append(" colorFormat = " + this.colorFormat.name());
+            res.append(" textureFilter = " + this.textureFilter.name());
+            return res.toString();
+        }
     }
 
     // -----------------------------------------------------------------
@@ -443,8 +487,72 @@ public class VrAppSettings {
             this.headModelDepth = Float.NaN;
             this.headModelHeight = Float.NaN;
         }
+        
+        @Override
+        public String toString(){
+            StringBuilder res = new StringBuilder();
+            res.append(" interpuillaryDistance = " + this.interpupillaryDistance);
+            res.append(" eyeHeight = " + this.eyeHeight);
+            res.append(" headModelDepth = " + this.headModelDepth);
+            res.append(" headModelHeight = " + this.headModelHeight);
+            return res.toString();
+        }
     }
-
+    // -----------------------------------------------------------------
+    // This class is to judge if the app will run under a special mono scopic mode.
+    // If it is the case, many parameters like headmodelparms and modeparms won't 
+    // take effect
+    // -----------------------------------------------------------------
+   
+    public static class MonoScopicModeParms{
+        private boolean isMonoScopicMode;// Is the app mono scopic rendering mode?
+        private boolean isMonoFullScreen;// If it is mono scopic, will it be fullscreen or simple quad?
+        
+        /**
+         * Set if current app is mono scopic.
+         * 
+         * @param isMono
+         *            if current app is mono scopic
+         */
+        public void setMonoScopicMode(boolean isMono){
+            this.isMonoScopicMode = isMono;
+        }
+        
+        /**
+         * Check if current app is mono scopic.
+         * 
+         * @return if current app is mono scopic.
+         */
+        public boolean isMonoScopicMode(){
+            return isMonoScopicMode;
+        }
+        
+        /**
+         * Set if current app is full screen under mono scopic mode.
+         * 
+         * @param isFullScreen
+         *            if current app is full screen under mono scopic mode.
+         */
+        public void setMonoFullScreenMode(boolean isFullScreen){
+            this.isMonoFullScreen = isFullScreen;
+        }
+        
+        /**
+         * Check if current app is full screen under mono scopic mode.
+         * 
+         * @return if current app is full screen under mono scopic mode.
+         */
+        public boolean isMonoFullScreenMode(){
+            return isMonoFullScreen;
+        }
+        
+        public MonoScopicModeParms(){
+            isMonoScopicMode = isMonoFullScreen = false;
+        }
+    }
+    
+    public static int DEFAULT_FBO_RESOLUTION = 1024;
+    
     // If it will show loading icon in the vr app.
     public boolean showLoadingIcon;
 
@@ -465,6 +573,7 @@ public class VrAppSettings {
     public ModeParms modeParms;
     public EyeBufferParms eyeBufferParms;
     public HeadModelParms headModelParms;
+    public MonoScopicModeParms monoScopicModeParms;
 
     /**
      * Check if current app shows loading icon
@@ -618,6 +727,25 @@ public class VrAppSettings {
         this.headModelParms = headModelParms;
     }
 
+    /**
+     * Get current overall mono scopic mode parameters.
+     * 
+     * @return Current overall mono scopic mode parameters.
+     */
+    public MonoScopicModeParms getMonoScopicModeParms(){
+        return monoScopicModeParms;
+    }
+    
+    /**
+     * Set overall mono scopic mode parameters.
+     * 
+     * @param monoScopicModeParms
+     *            New overall mono scopic mode parameters.
+     */
+    public void setMonoScopicModeParms(MonoScopicModeParms monoScopicModeParms){
+        this.monoScopicModeParms = monoScopicModeParms;
+    }
+    
     public VrAppSettings() {
         showLoadingIcon = true;
         useSrgbFramebuffer = false;
@@ -627,5 +755,19 @@ public class VrAppSettings {
         modeParms = new ModeParms();
         eyeBufferParms = new EyeBufferParms();
         headModelParms = new HeadModelParms();
+        monoScopicModeParms = new MonoScopicModeParms();
+    }
+    
+    public String toString(){
+        StringBuilder res = new StringBuilder();
+        res.append("showLoadingIcon = " + showLoadingIcon);
+        res.append(" useSrgbFramebuffer = " + useSrgbFramebuffer);
+        res.append(" useProtectedFramebuffer = " + useProtectedFramebuffer);
+        res.append(" framebufferPixelsWide = " + this.framebufferPixelsWide);
+        res.append(" framebufferPixelsHigh = " + this.framebufferPixelsHigh);
+        res.append(modeParms.toString());
+        res.append(eyeBufferParms.toString());
+        res.append(this.headModelParms.toString());
+        return res.toString();
     }
 }

@@ -15,14 +15,14 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.VrAppSettings;
+
 /**
  * This class holds distortion parameters (from an XML file, read by
  * {@link GVRXMLParser}) and is used in {@link GVRViewManager}.
  */
 class GVRLensInfo {
-    private final int mFBOWidth;
-    private final int mFBOHeight;
-    private final int mMSAA;
+    private final VrAppSettings mAppSettings;
     private final float mRealScreenWidthMeters;
     private final int mHorizontalRealScreenPixels;
     private final int mVerticalRealScreenPixels;
@@ -45,13 +45,11 @@ class GVRLensInfo {
      */
     public GVRLensInfo(int screenWidthPixels, int screenHeightPixels,
             float screenWidthMeters, float screenHeightMeters,
-            GVRXMLParser xmlParser) {
+            VrAppSettings appSettings) {
         /*
          * Sets values which don't need combinations.
          */
-        mFBOWidth = xmlParser.getFBOWidth();
-        mFBOHeight = xmlParser.getFBOHeight();
-        mMSAA = xmlParser.getMSAA();
+        mAppSettings = appSettings;
         mRealScreenWidthMeters = screenWidthMeters * 0.5f;
         mRealScreenHeightMeters = screenHeightMeters;
         mHorizontalRealScreenPixels = screenWidthPixels / 2;
@@ -73,7 +71,9 @@ class GVRLensInfo {
      * @return current distortion FBO width value
      */
     public int getFBOWidth() {
-        return mFBOWidth;
+        //return mAppSettings.getFramebufferPixelsWide() <= 0 ? getHorizontalRealScreenPixels()
+          //      : mAppSettings.getFramebufferPixelsWide() / 2;
+        return mAppSettings.getEyeBufferParms().getResolution() * mAppSettings.getEyeBufferParms().getWidthScale();
     }
 
     /**
@@ -82,7 +82,9 @@ class GVRLensInfo {
      * @return current distortion FBO height value
      */
     public int getFBOHeight() {
-        return mFBOHeight;
+//        return mAppSettings.getFramebufferPixelsHigh() <= 0 ? getVerticalRealScreenPixels()
+ //               : mAppSettings.getFramebufferPixelsHigh();
+        return mAppSettings.getEyeBufferParms().getResolution();
     }
 
     /**
@@ -91,7 +93,8 @@ class GVRLensInfo {
      * @return current distortion MSAA value
      */
     public int getMSAA() {
-        return mMSAA;
+        return mAppSettings.getEyeBufferParms().getMultiSamples() < 0 ? 0
+                : mAppSettings.getEyeBufferParms().getMultiSamples();
     }
 
     /**

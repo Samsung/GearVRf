@@ -56,7 +56,6 @@ public class GVRActivity extends VrActivity {
 
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
-    private boolean mForceMonoscopic = false;
     private VrAppSettings mAppSettings;
 
     static {
@@ -160,7 +159,7 @@ public class GVRActivity extends VrActivity {
             GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
                     distortionDataFileName, mAppSettings);
             onInitAppSettings(mAppSettings);
-            if (isVrSupported() && !getForceMonoscopic()) {
+            if (isVrSupported() && !mAppSettings.getMonoScopicModeParms().isMonoScopicMode()) {
                 mGVRViewManager = new GVRViewManager(this, gvrScript, xmlParser);
             } else {
                 mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript,
@@ -182,10 +181,13 @@ public class GVRActivity extends VrActivity {
      *            rendering and choose the appropriate ViewManager. This call
      *            will only have an effect if it is called before
      *            {@linkplain #setScript(GVRScript, String) setScript()}.
+     *            
+     * @deprecated
      * 
      */
+    @Deprecated
     public void setForceMonoscopic(boolean force) {
-        mForceMonoscopic = force;
+        mAppSettings.monoScopicModeParms.setMonoScopicMode(force);
     }
 
     /**
@@ -193,9 +195,11 @@ public class GVRActivity extends VrActivity {
      * {@linkplain #setScript(GVRScript, String) setScript()}.
      * 
      * @see setForceMonoscopic
+     * @deprecated
      */
+    @Deprecated
     public boolean getForceMonoscopic() {
-        return mForceMonoscopic;
+        return mAppSettings.monoScopicModeParms.isMonoScopicMode();
     }
 
     private boolean isVrSupported() {

@@ -16,6 +16,39 @@
 
 
 
-<lens name="N4">
-    <scene fov-y="90.0" camera-separation-distance="0.062" fbo-width="1024" fbo-height="1024" msaa="1"/>
+<lens name="N4" >
+
+    <vr-app-settings
+        framebufferPixelsHigh="-1"
+        framebufferPixelsWide="-1"
+        showLoadingIcon="true"
+        useProtectedFramebuffer="false"
+        useSrgbFramebuffer="false" >
+
+        <mono-mode-parms
+            monoFullScreen="false"
+            monoMode="false" />
+
+        <mode-parms
+            allowPowerSave="true"
+            cpuLevel="2"
+            gpuLevel="2"
+            resetWindowFullScreen="true" />
+
+        <eye-buffer-parms
+            colorFormat="COLOR_8888"
+            depthFormat="DEPTH_24"
+            fov-y="90.0"
+            multiSamples="1"
+            resolution="-1"
+            textureFilter="TEXTURE_FILTER_BILINEAR"
+            widthScale="1" />
+
+        <head-model-parms
+            eyeHeight="NaN"
+            headModelDepth="NaN"
+            headModelHeight="NaN"
+            interpupillaryDistance="NaN" />
+    </vr-app-settings>
+
 </lens>
