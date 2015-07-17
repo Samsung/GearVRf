@@ -573,6 +573,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         // attached an empty renderData for parent object, so that we can set
         // some common properties
         GVRRenderData renderData = new GVRRenderData(gvrContext);
+        renderData.setMaterial(material);
         attachRenderData(renderData);
     }
 
