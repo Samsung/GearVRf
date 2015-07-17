@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -30,9 +31,18 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
+import org.gearvrf.jassimp.AiColor;
+import org.gearvrf.jassimp.AiMaterial;
+import org.gearvrf.jassimp.AiMatrix4f;
+import org.gearvrf.jassimp.AiNode;
+import org.gearvrf.jassimp.AiScene;
+import org.gearvrf.jassimp.AiTextureType;
+import org.gearvrf.jassimp.AiWrapperProvider;
+import org.gearvrf.jassimp.AiMaterial.Property;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
+
 
 import android.app.Activity;
 import android.content.Context;
@@ -414,6 +424,286 @@ public abstract class GVRContext {
             int priority) {
         return GVRAsynchronousResourceLoader.loadFutureMesh(this, resource,
                 priority);
+    }
+
+    /**
+     * Simple, high-level method to load a scene as {@link GVRSceneObject} from
+     * 3D model.
+     * 
+     * @param assetRelativeFilename
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     * 
+     * @return A {@link GVRSceneObject} that contains the meshes with textures
+     * 
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename)
+            throws IOException {
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                this, new GVRAndroidResource(this, assetRelativeFilename));
+
+        GVRSceneObject wholeSceneObject = new GVRSceneObject(this);
+
+        AiScene assimpScene = assimpImporter.getAssimpScene();
+
+        AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider = new AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]>() {
+
+            /**
+             * Wraps a RGBA color.
+             * <p>
+             * 
+             * A color consists of 4 float values (r,g,b,a) starting from offset
+             * 
+             * @param buffer
+             *            the buffer to wrap
+             * @param offset
+             *            the offset into buffer
+             * @return the wrapped color
+             */
+            @Override
+            public AiColor wrapColor(ByteBuffer buffer, int offset) {
+                AiColor color = new AiColor(buffer, offset);
+                return color;
+            }
+
+            /**
+             * Wraps a 4x4 matrix of floats.
+             * <p>
+             * 
+             * The calling code will allocate a new array for each invocation of
+             * this method. It is safe to store a reference to the passed in
+             * array and use the array to store the matrix data.
+             * 
+             * @param data
+             *            the matrix data in row-major order
+             * @return the wrapped matrix
+             */
+            @Override
+            public AiMatrix4f wrapMatrix4f(float[] data) {
+
+                AiMatrix4f transformMatrix = new AiMatrix4f(data);
+                return transformMatrix;
+            }
+
+            /**
+             * Wraps a quaternion.
+             * <p>
+             * 
+             * A quaternion consists of 4 float values (w,x,y,z) starting from
+             * offset
+             * 
+             * @param buffer
+             *            the buffer to wrap
+             * @param offset
+             *            the offset into buffer
+             * @return the wrapped quaternion
+             */
+            @Override
+            public byte[] wrapQuaternion(ByteBuffer buffer, int offset) {
+                byte[] quaternion = new byte[4];
+                buffer.get(quaternion, offset, 4);
+                return quaternion;
+            }
+
+            /**
+             * Wraps a scene graph node.
+             * <p>
+             * 
+             * See {@link AiNode} for a description of the scene graph structure
+             * used by assimp.
+             * <p>
+             * 
+             * The parent node is either null or an instance returned by this
+             * method. It is therefore safe to cast the passed in parent object
+             * to the implementation specific type
+             * 
+             * @param parent
+             *            the parent node
+             * @param matrix
+             *            the transformation matrix
+             * @param meshReferences
+             *            array of mesh references (indexes)
+             * @param name
+             *            the name of the node
+             * @return the wrapped scene graph node
+             */
+            @Override
+            public AiNode wrapSceneNode(Object parent, Object matrix,
+                    int[] meshReferences, String name) {
+
+                AiNode node = new AiNode(null, matrix, meshReferences, name);
+
+                return node;
+            }
+
+            /**
+             * Wraps a vector.
+             * <p>
+             * 
+             * Most vectors are 3-dimensional, i.e., with 3 components. The
+             * exception are texture coordinates, which may be 1- or
+             * 2-dimensional. A vector consists of numComponents floats (x,y,z)
+             * starting from offset
+             * 
+             * @param buffer
+             *            the buffer to wrap
+             * @param offset
+             *            the offset into buffer
+             * @param numComponents
+             *            the number of components
+             * @return the wrapped vector
+             */
+            @Override
+            public byte[] wrapVector3f(ByteBuffer buffer, int offset,
+                    int numComponents) {
+                byte[] warpedVector = new byte[numComponents];
+                buffer.get(warpedVector, offset, numComponents);
+                return warpedVector;
+            }
+        };
+
+        AiNode rootNode = assimpScene.getSceneRoot(wrapperProvider);
+
+        List<AiNode> childrenNodes = rootNode.getChildren();
+
+        try {
+            for (AiNode childNode : childrenNodes) {
+                for (int i = 0; i < childNode.getNumMeshes(); i++) {
+
+                    FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
+                            this.getNodeMesh(new GVRAndroidResource(this,
+                                    assetRelativeFilename),
+                                    childNode.getName(), i));
+
+                    AiMaterial material = this
+                            .getMeshMaterial(new GVRAndroidResource(this,
+                                    assetRelativeFilename),
+                                    childNode.getName(), i);
+
+                    Property property = material.getProperty("$tex.file");
+                    if (property != null) {
+                        int textureIndex = property.getIndex();
+                        String texFileName = material.getTextureFile(
+                                AiTextureType.DIFFUSE, textureIndex);
+
+                        Future<GVRTexture> futureMeshTexture = this
+                                .loadFutureTexture(new GVRAndroidResource(this,
+                                        texFileName));
+
+                        GVRSceneObject sceneObject = new GVRSceneObject(this,
+                                futureMesh, futureMeshTexture);
+
+                        // add the scene object to the scene graph
+                        wholeSceneObject.addChildObject(sceneObject);
+
+                    } else {
+                        // The case when there is no texture
+                        // This block also takes care for the case when there
+                        // are no texture or color for the mesh as the methods
+                        // that are used for getting the colors of the material
+                        // returns a default when they are not present
+                        AiColor diffuseColor = material
+                                .getDiffuseColor(wrapperProvider);
+                        AiColor ambientColor = material
+                                .getAmbientColor(wrapperProvider);
+                        float opacity = material.getOpacity();
+
+                        final String DIFFUSE_COLOR_KEY = "diffuse_color";
+                        final String AMBIENT_COLOR_KEY = "ambient_color";
+                        final String COLOR_OPACITY_KEY = "opacity";
+
+                        final String VERTEX_SHADER = "attribute vec4 a_position;\n"
+                                + "uniform mat4 u_mvp;\n"
+                                + "void main() {\n"
+                                + "  gl_Position = u_mvp * a_position;\n"
+                                + "}\n";
+
+                        final String FRAGMENT_SHADER = "precision mediump float;\n"
+                                + "uniform vec4 diffuse_color;\n" //
+                                + "uniform vec4 ambient_color;\n"
+                                + "uniform float opacity;\n"
+                                + "void main() {\n" //
+                                + "  gl_FragColor = ( diffuse_color * opacity ) + ambient_color;\n"
+                                + "}\n";
+
+                        GVRCustomMaterialShaderId mShaderId;
+                        GVRMaterialMap mCustomShader = null;
+
+                        final GVRMaterialShaderManager shaderManager = this
+                                .getMaterialShaderManager();
+                        mShaderId = shaderManager.addShader(VERTEX_SHADER,
+                                FRAGMENT_SHADER);
+                        mCustomShader = shaderManager.getShaderMap(mShaderId);
+                        mCustomShader.addUniformVec4Key("diffuse_color",
+                                DIFFUSE_COLOR_KEY);
+                        mCustomShader.addUniformVec4Key("ambient_color",
+                                AMBIENT_COLOR_KEY);
+                        mCustomShader.addUniformFloatKey("opacity",
+                                COLOR_OPACITY_KEY);
+
+                        GVRMaterial meshMaterial = new GVRMaterial(this,
+                                mShaderId);
+
+                        meshMaterial
+                                .setVec4(DIFFUSE_COLOR_KEY,
+                                        diffuseColor.getRed(),
+                                        diffuseColor.getGreen(),
+                                        diffuseColor.getBlue(),
+                                        diffuseColor.getAlpha());
+
+                        meshMaterial
+                                .setVec4(AMBIENT_COLOR_KEY,
+                                        ambientColor.getRed(),
+                                        ambientColor.getGreen(),
+                                        ambientColor.getBlue(),
+                                        ambientColor.getAlpha());
+
+                        meshMaterial.setFloat(COLOR_OPACITY_KEY, opacity);
+
+                        GVRSceneObject sceneObject = new GVRSceneObject(this);
+                        GVRRenderData sceneObjectRenderData = new GVRRenderData(
+                                this);
+                        sceneObjectRenderData.setMesh(futureMesh);
+                        sceneObjectRenderData.setMaterial(meshMaterial);
+                        sceneObject.attachRenderData(sceneObjectRenderData);
+
+                        wholeSceneObject.addChildObject(sceneObject);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Error while recursing the Scene Graph
+            e.printStackTrace();
+        }
+        return wholeSceneObject;
+    }
+
+    /**
+     * Retrieves the particular index mesh for the given node.
+     * 
+     * @return The mesh, encapsulated as a {@link GVRMesh}.
+     */
+    public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
+            String nodeName, int meshIndex) {
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                this, androidResource);
+        return assimpImporter.getNodeMesh(nodeName, meshIndex);
+    }
+
+    /**
+     * Retrieves the material for the mesh of the given node..
+     * 
+     * @return The material, encapsulated as a {@link AiMaterial}.
+     */
+    public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
+            String nodeName, int meshIndex) {
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                this, androidResource);
+        return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
 
     /**

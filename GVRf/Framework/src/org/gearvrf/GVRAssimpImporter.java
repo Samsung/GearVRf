@@ -15,6 +15,9 @@
 
 package org.gearvrf;
 
+import org.gearvrf.jassimp.AiMaterial;
+import org.gearvrf.jassimp.AiScene;
+
 /**
  * Provides access to the {@link GVRMesh meshes} contained in 3D models that
  * have been imported with {@link GVRImporter}.
@@ -43,10 +46,49 @@ class GVRAssimpImporter extends GVRHybridObject {
         return new GVRMesh(getGVRContext(), NativeAssimpImporter.getMesh(
                 getNative(), index));
     }
+
+    /**
+     * Retrieves the complete scene from the imported 3D model.
+     * 
+     * @return The scene, encapsulated as a {@link AiScene}, which is a
+     *         component of the Jassimp integration.
+     */
+    AiScene getAssimpScene() {
+        return NativeAssimpImporter.getAssimpScene(getNative());
+    }
+
+    /**
+     * Retrieves the particular mesh for the given node.
+     * 
+     * @return The mesh, encapsulated as a {@link GVRMesh}.
+     */
+    GVRMesh getNodeMesh(String nodeName, int meshIndex) {
+        return new GVRMesh(getGVRContext(), NativeAssimpImporter.getNodeMesh(
+                getNative(), nodeName, meshIndex));
+    }
+
+    /**
+     * Retrieves the material for the mesh of the given node..
+     * 
+     * @return The material, encapsulated as a {@link AiMaterial}.
+     */
+    AiMaterial getMeshMaterial(String nodeName, int meshIndex) {
+        return NativeAssimpImporter.getMeshMaterial(getNative(), nodeName,
+                meshIndex);
+    }
+
 }
 
 class NativeAssimpImporter {
     static native int getNumberOfMeshes(long assimpImporter);
 
     static native long getMesh(long assimpImporter, int index);
+
+    static native AiScene getAssimpScene(long assimpImporter);
+
+    static native long getNodeMesh(long assimpImporter, String nodeName,
+            int meshIndex);
+
+    static native AiMaterial getMeshMaterial(long assimpImporter,
+            String nodeName, int meshIndex);
 }
