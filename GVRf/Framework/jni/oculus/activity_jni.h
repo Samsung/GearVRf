@@ -23,6 +23,7 @@
 #include "Input.h"
 #include "view_manager.h"
 #include "../objects/components/camera.h"
+#include "../objects/components/camera_rig.h"
 
 namespace gvr {
 
@@ -54,6 +55,8 @@ public:
     GVRViewManager*     viewManager;
 
     Camera*             camera;
+    CameraRig*          cameraRig;
+    bool                useOculusOrientationReading;
 private:
     glm::mat4           mvp_matrix;
     void                SetMVPMatrix(glm::mat4 mvp){

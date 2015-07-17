@@ -17,6 +17,7 @@
 #include <jni.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "VrApi_Helpers.h"
+#include "objects/scene_object.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 
@@ -34,11 +35,18 @@ long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
 }
 
 void Java_org_gearvrf_GVRActivity_nativeSetCamera(
-        JNIEnv * jni, jclass clazz, jlong appPtr, jlong jcamera )
+        JNIEnv * jni, jclass clazz, jlong appPtr, jlong jcamera)
 {
     GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     activity->camera = camera;
+}
+
+void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
+        JNIEnv * jni, jclass clazz, jlong appPtr, jlong jCameraRig)
+{
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
 }
 
 } // extern "C"
@@ -114,6 +122,7 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
     settings.EyeBufferParms.multisamples = 2;
+    useOculusOrientationReading = false;
     // leave the rest as default for now.
     // TODO: take values specified in xml and set them here.
 }
@@ -173,6 +182,14 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 
     SetMVPMatrix(mvp_matrix);
 
+    if (!useOculusOrientationReading) {
+       if (1 == eye) {
+          cameraRig->predict(4.0f / 60.0f);
+       } else {
+          cameraRig->predict(3.5f / 60.0f);
+       }
+    }
+
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, drawEyeViewMethodId, eye, fovDegrees );
 
@@ -194,13 +211,17 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 
 }
 
-
-
 OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
 {
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
+
+    if (useOculusOrientationReading) {
+       const ovrQuatf& orientation = vrFrame.Tracking.HeadPose.Pose.Orientation;
+       glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
+       cameraRig->owner_object()->transform()->set_rotation(glm::conjugate(glm::inverse(quat)));
+    }
 
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.
