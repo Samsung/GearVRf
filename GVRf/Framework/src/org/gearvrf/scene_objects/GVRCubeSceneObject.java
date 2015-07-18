@@ -234,7 +234,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
      *            facing out.
      * 
      * @param futureTexture
-     *            the texture for six faces. {@code Future<{@code GVRTexture}>}
+     *            the texture for six faces. {@code Future<GVRTexture>}
      *            is used here for asynchronously loading the texture.
      */
     public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut,
@@ -273,8 +273,8 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     /**
      * Constructs a cube scene object with each side of length 1.
      * 
-     * The cube's triangles and normals are facing either in or out. Each face has its own
-     * texture.
+     * The cube's triangles and normals are facing either in or out. Each face
+     * has its own texture.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
@@ -284,10 +284,10 @@ public class GVRCubeSceneObject extends GVRSceneObject {
      *            facing out.
      * 
      * @param futureTextureList
-     *            the list of six textures for six faces. {@code Future<
-     *            {@code GVRTexture}>} is used here for asynchronously loading
-     *            the texture. The six textures are for front, right, back,
-     *            left, top, and bottom faces respectively.
+     *            the list of six textures for six faces.
+     *            {@code Future<GVRTexture>} is used here for asynchronously
+     *            loading the texture. The six textures are for front, right,
+     *            back, left, top, and bottom faces respectively.
      */
     public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut,
             ArrayList<Future<GVRTexture>> futureTextureList) {
@@ -318,8 +318,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
      *            facing out.
      * 
      * @param futureTextureList
-     *            the list of six textures for six faces. {@code Future<
-     *            {@code GVRTexture}>} is used here for asynchronously loading
+     *            the list of six textures for six faces. {@code Future<GVRTexture>} is used here for asynchronously loading
      *            the texture. The six textures are for front, right, back,
      *            left, top, and bottom faces respectively.
      *            
