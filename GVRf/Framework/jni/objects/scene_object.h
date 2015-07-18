@@ -135,25 +135,16 @@ public:
         return lod_max_range_;
     }
 
-    bool inLODRange() {
+    bool inLODRange(float distance_from_camera) {
         if(!using_lod_) {
             return true;
         }
-        if(distance_from_camera_ >= lod_min_range_ &&
-           distance_from_camera_ < lod_max_range_) {
+        if(distance_from_camera >= lod_min_range_ &&
+           distance_from_camera < lod_max_range_) {
             return true;
         }
         return false;
     }
-
-    void setDistanceFromCamera(float distance) {
-        distance_from_camera_ = distance;
-    }
-
-    float getDistanceFromCamera() { 
-        return distance_from_camera_; 
-    }
-             
 
 private:
     SceneObject(const SceneObject& scene_object);
@@ -172,7 +163,6 @@ private:
     std::vector<SceneObject*> children_;
     float lod_min_range_;
     float lod_max_range_;
-    float distance_from_camera_;
     bool using_lod_;
 
     //Flags to check for visibility of a node and
