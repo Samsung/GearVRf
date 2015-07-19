@@ -44,22 +44,22 @@ class GVRImporter {
      *         file does not exist (or cannot be read)
      */
     static GVRAssimpImporter readFileFromAssets(GVRContext gvrContext,
-            String filename) {
+            String filename, GVRImportSettings settings) {
         long nativeValue = NativeImporter.readFileFromAssets(gvrContext
-                .getContext().getAssets(), filename);
+                .getContext().getAssets(), filename, settings.getValue());
         return nativeValue == 0 ? null : new GVRAssimpImporter(gvrContext,
                 nativeValue);
     }
 
     static GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
-            int resourceId) {
+            int resourceId, GVRImportSettings settings) {
         return readFileFromResources(gvrContext, new GVRAndroidResource(
-                gvrContext, resourceId));
+                gvrContext, resourceId), settings);
     }
 
     /** @since 1.6.2 */
     static GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
-            GVRAndroidResource resource) {
+            GVRAndroidResource resource, GVRImportSettings settings) {
         try {
             byte[] bytes;
             InputStream stream = resource.getStream();
@@ -74,7 +74,7 @@ class GVRImporter {
                 resourceFilename = ""; // Passing null causes JNI exception.
             }
             long nativeValue = NativeImporter.readFromByteArray(bytes,
-                    resourceFilename);
+                    resourceFilename, settings.getValue());
             return new GVRAssimpImporter(gvrContext, nativeValue);
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,17 +96,17 @@ class GVRImporter {
      * @return An instance of {@link GVRAssimpImporter}.
      */
     static GVRAssimpImporter readFileFromSDCard(GVRContext gvrContext,
-            String filename) {
-        long nativeValue = NativeImporter.readFileFromSDCard(filename);
+            String filename, GVRImportSettings settings) {
+        long nativeValue = NativeImporter.readFileFromSDCard(filename, settings.getValue());
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 }
 
 class NativeImporter {
     static native long readFileFromAssets(AssetManager assetManager,
-            String filename);
+            String filename, int settings);
 
-    static native long readFileFromSDCard(String filename);
+    static native long readFileFromSDCard(String filename, int settings);
 
-    static native long readFromByteArray(byte[] bytes, String filename);
+    static native long readFromByteArray(byte[] bytes, String filename, int settings);
 }

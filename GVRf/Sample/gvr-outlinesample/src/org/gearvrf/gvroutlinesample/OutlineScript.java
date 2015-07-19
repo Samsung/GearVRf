@@ -29,6 +29,7 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRRenderPass;
 import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+import org.gearvrf.GVRImportSettings;
 
 import android.util.Log;
 
@@ -55,8 +56,10 @@ public class OutlineScript extends GVRScript {
         GVRScene outlineScene = gvrContext.getNextMainScene();
         
         try {
+          GVRImportSettings settings = new GVRImportSettings(GVRImportSettings.CalculateSmoothNormals 
+                  | GVRImportSettings.CalculateTangents);
           GVRMesh characterMesh = mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext,
-              mModelPath));
+              mModelPath), settings);
           
           // Setup Scene - Alternatively to set character transform, one could
           // achieve same effect by setting camera transform (outlineScene->getMainCameraRig)

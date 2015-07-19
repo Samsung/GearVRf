@@ -21,7 +21,7 @@
 
 namespace gvr {
 AssimpImporter* Importer::readFileFromAssets(char* buffer, long size,
-        const char * filename) {
+        const char * filename, int settings) {
     Assimp::Importer* importer = new Assimp::Importer();
     char* hint = 0;
 
@@ -31,16 +31,39 @@ AssimpImporter* Importer::readFileFromAssets(char* buffer, long size,
             hint = hint + 1;
         }
     }
-    importer->ReadFileFromMemory(buffer, size,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, hint);
+    importer->ReadFileFromMemory(buffer, size, getImportFlags(settings), hint);
 
     return new AssimpImporter(importer);
 }
 
-AssimpImporter* Importer::readFileFromSDCard(const char * filename) {
+AssimpImporter* Importer::readFileFromSDCard(const char * filename, int settings) {
     Assimp::Importer* importer = new Assimp::Importer();
-    importer->ReadFile(filename,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
+    importer->ReadFile(filename, getImportFlags(settings));
     return new AssimpImporter(importer);
+}
+
+unsigned int Importer::getImportFlags(int settings) {
+    int flags = aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_Triangulate;
+
+    // TODO: Think of a better way to not do this with hardcoded values.
+    // Cannot specify to generate both kind of normals.
+    // Generating Smooth Normals has precedence over "hard" normals
+    if (settings & 0x1) {
+        flags |= aiProcess_GenSmoothNormals;
+    } else if (settings & 0x2){
+        flags |= aiProcess_GenNormals;
+    }
+
+    // Needed for most per pixel lighting as most artists don't export tangents.
+    if (settings & 0x4) {
+        flags |= aiProcess_CalcTangentSpace;
+    }
+
+    // This might increase loading time but it will reduce drawcalls and improve cache hit.
+    if (settings & 0x8) {
+        flags |= aiProcess_ImproveCacheLocality | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph;
+    }
+
+    return static_cast<unsigned int>(flags);
 }
 }

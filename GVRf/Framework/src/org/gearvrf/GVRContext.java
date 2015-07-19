@@ -26,6 +26,7 @@ import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
@@ -184,16 +185,40 @@ public abstract class GVRContext {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource) {
+        return loadMesh(androidResource, new GVRImportSettings(GVRImportSettings.Default));
+    }
+
+    /**
+     * Loads a file as a {@link GVRMesh}.
+     * 
+     * Note that this method can be quite slow; we recommend never calling it
+     * from the GL thread. The asynchronous version
+     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)} is
+     * better because it moves most of the work to a background thread, doing as
+     * little as possible on the GL thread.
+     * 
+     * @param androidResource
+     *            Basically, a stream containing a 3D model. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     *            
+     * @param settings Additional import {@link GVRImpotSettings settings}.
+     * @return The file as a GL mesh.
+     * 
+     * @since 1.6.2
+     */
+    public GVRMesh loadMesh(GVRAndroidResource androidResource, GVRImportSettings settings) {
         GVRMesh mesh = sMeshCache.get(androidResource);
         if (mesh == null) {
             GVRAssimpImporter assimpImporter = GVRImporter
-                    .readFileFromResources(this, androidResource);
+                    .readFileFromResources(this, androidResource, settings);
             mesh = assimpImporter.getMesh(0);
             sMeshCache.put(androidResource, mesh);
         }
         return mesh;
     }
-
+    
     private final static ResourceCache<GVRMesh> sMeshCache = new ResourceCache<GVRMesh>();
 
     /**
@@ -441,10 +466,31 @@ public abstract class GVRContext {
      * @throws IOException
      *             File does not exist or cannot be read
      */
-    public GVRSceneObject getAssimpModel(String assetRelativeFilename)
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename) 
+                throws IOException {
+        return getAssimpModel(assetRelativeFilename, new GVRImportSettings(GVRImportSettings.Default));
+    }
+    
+    /**
+     * Simple, high-level method to load a scene as {@link GVRSceneObject} from
+     * 3D model.
+     * 
+     * @param assetRelativeFilename
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     * 
+     * @param settings Additional import {@link GVRImportSettings settings}
+     * @return A {@link GVRSceneObject} that contains the meshes with textures
+     * 
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename, GVRImportSettings settings)
             throws IOException {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, new GVRAndroidResource(this, assetRelativeFilename));
+                this, new GVRAndroidResource(this, assetRelativeFilename), settings);
 
         GVRSceneObject wholeSceneObject = new GVRSceneObject(this);
 
@@ -690,7 +736,7 @@ public abstract class GVRContext {
     public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource);
+                this, androidResource, new GVRImportSettings(GVRImportSettings.Default));
         return assimpImporter.getNodeMesh(nodeName, meshIndex);
     }
 
@@ -702,7 +748,7 @@ public abstract class GVRContext {
     public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource);
+                this, androidResource, new GVRImportSettings(GVRImportSettings.Default));
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
 
