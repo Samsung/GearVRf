@@ -23,29 +23,29 @@ public class GVRImportSettings {
     /**
      * Use Default Importer Settings with no additional options.
      */
-    public static final int Default = 0x0;
+    public static final int DEFAULT = 0x0;
     
     /**
      * Tell Importer to calculate hard normals in case they are not present in imported model.
      */
-    public static final int CalculateSmoothNormals = 0x1;
+    public static final int CALCULATE_SMOOTH_NORMALS = 0x1;
     
     /**
      * Tell Importer to calculate tangents in case they are not present in imported model.
      * This is required for bump map as most models won't have tangents exported.
      */
-    public static final int CalculateNormals = 0x2;
+    public static final int CALCULATE_NORMALS = 0x2;
     
     /**
      * Tell Importer to calculate smooth normals in case they are not present in imported model. 
      */
-    public static final int CalculateTangents = 0x4;
+    public static final int CALCULATE_TANGENTS = 0x4;
     
     /**
      * Tell Importer to optimize mesh to reduce drawcalls and improve cache locality. This might
      * increase loading time.
      */
-    public static final int OptimizeMeshData = 0x8;
+    public static final int OPTIMIZE_MESH_DATA = 0x8;
     
     /**
      * Stores current settings value

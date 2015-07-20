@@ -56,8 +56,8 @@ public class OutlineScript extends GVRScript {
         GVRScene outlineScene = gvrContext.getNextMainScene();
         
         try {
-          GVRImportSettings settings = new GVRImportSettings(GVRImportSettings.CalculateSmoothNormals 
-                  | GVRImportSettings.CalculateTangents);
+          GVRImportSettings settings = new GVRImportSettings(GVRImportSettings.CALCULATE_SMOOTH_NORMALS 
+                  | GVRImportSettings.CALCULATE_TANGENTS);
           GVRMesh characterMesh = mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext,
               mModelPath), settings);
           
