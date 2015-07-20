@@ -185,7 +185,7 @@ public abstract class GVRContext {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource) {
-        return loadMesh(androidResource, new GVRImportSettings(GVRImportSettings.Default));
+        return loadMesh(androidResource, new GVRImportSettings(GVRImportSettings.DEFAULT));
     }
 
     /**
@@ -468,7 +468,7 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename) 
                 throws IOException {
-        return getAssimpModel(assetRelativeFilename, new GVRImportSettings(GVRImportSettings.Default));
+        return getAssimpModel(assetRelativeFilename, new GVRImportSettings(GVRImportSettings.DEFAULT));
     }
     
     /**
@@ -736,7 +736,7 @@ public abstract class GVRContext {
     public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource, new GVRImportSettings(GVRImportSettings.Default));
+                this, androidResource, new GVRImportSettings(GVRImportSettings.DEFAULT));
         return assimpImporter.getNodeMesh(nodeName, meshIndex);
     }
 
@@ -748,7 +748,7 @@ public abstract class GVRContext {
     public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource, new GVRImportSettings(GVRImportSettings.Default));
+                this, androidResource, new GVRImportSettings(GVRImportSettings.DEFAULT));
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
 
