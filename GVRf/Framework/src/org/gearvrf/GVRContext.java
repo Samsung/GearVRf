@@ -45,7 +45,6 @@ import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -130,8 +129,9 @@ public abstract class GVRContext {
      * The default texture parameter instance for overloading texture methods
      * 
      */
-    public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(this);
-    
+    public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(
+            this);
+
     // treu or false based on the support for anisotropy
     public boolean isAnisotropicSupported;
 
@@ -986,6 +986,13 @@ public abstract class GVRContext {
      */
     public GVRCubemapTexture loadCubemapTexture(
             GVRAndroidResource[] resourceArray) {
+        return loadCubemapTexture(resourceArray, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public GVRCubemapTexture loadCubemapTexture(
+            GVRAndroidResource[] resourceArray,
+            GVRTextureParameters textureParameters) {
 
         assertGLThread();
 
@@ -1000,7 +1007,7 @@ public abstract class GVRContext {
             resourceArray[i].closeStream();
         }
 
-        return new GVRCubemapTexture(this, bitmapArray);
+        return new GVRCubemapTexture(this, bitmapArray, textureParameters);
     }
 
     /**

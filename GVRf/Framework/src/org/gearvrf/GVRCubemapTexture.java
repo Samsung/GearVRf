@@ -36,8 +36,14 @@ public class GVRCubemapTexture extends GVRTexture {
      *            {@link GVRCubemapTexture#setFaceNames(String[])}.
      */
     public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray) {
-        super(gvrContext, NativeCubemapTexture
-                .bitmapArrayConstructor(bitmapArray));
+        this(gvrContext, bitmapArray, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray,
+            GVRTextureParameters textureParameters) {
+        super(gvrContext, NativeCubemapTexture.bitmapArrayConstructor(
+                bitmapArray, textureParameters.getCurrentValuesArray()));
     }
 
     /**
@@ -75,5 +81,6 @@ public class GVRCubemapTexture extends GVRTexture {
 }
 
 class NativeCubemapTexture {
-    static native long bitmapArrayConstructor(Bitmap[] bitmapArray);
+    static native long bitmapArrayConstructor(Bitmap[] bitmapArray,
+            float[] textureParameterValues);
 }
