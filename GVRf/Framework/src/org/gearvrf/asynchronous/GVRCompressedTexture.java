@@ -19,6 +19,7 @@ import static android.opengl.GLES20.*;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.RuntimeAssertion;
 
@@ -61,8 +62,17 @@ public class GVRCompressedTexture extends GVRTexture {
 
     GVRCompressedTexture(GVRContext gvrContext, int internalFormat, int width,
             int height, int imageSize, byte[] data, int levels, int quality) {
+        this(gvrContext, internalFormat, width, height, imageSize, data,
+                levels, quality, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    GVRCompressedTexture(GVRContext gvrContext, int internalFormat, int width,
+            int height, int imageSize, byte[] data, int levels, int quality,
+            GVRTextureParameters textureParameters) {
         super(gvrContext, NativeCompressedTexture.normalConstructor(GL_TARGET,
-                internalFormat, width, height, imageSize, data));
+                internalFormat, width, height, imageSize, data,
+                textureParameters.getCurrentValuesArray()));
         mLevels = levels;
         mQuality = GVRCompressedTexture.clamp(quality);
 
@@ -151,7 +161,8 @@ public class GVRCompressedTexture extends GVRTexture {
 
 class NativeCompressedTexture {
     static native long normalConstructor(int target, int internalFormat,
-            int width, int height, int imageSize, byte[] data);
+            int width, int height, int imageSize, byte[] data,
+            float[] textureParameterValues);
 
     static native long mipmappedConstructor(int target);
 }

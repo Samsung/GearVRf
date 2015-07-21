@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader.Reader;
 
 import android.opengl.GLES20;
@@ -91,6 +92,13 @@ class CompressedTexture {
     GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
         return new GVRCompressedTexture(gvrContext, internalformat, width,
                 height, imageSize, data.array(), levels, quality);
+    }
+
+    // Texture parameters
+    GVRCompressedTexture toTexture(GVRContext gvrContext, int quality,
+            GVRTextureParameters textureParameters) {
+        return new GVRCompressedTexture(gvrContext, internalformat, width,
+                height, imageSize, data.array(), levels, quality, textureParameters);
     }
 
     /**

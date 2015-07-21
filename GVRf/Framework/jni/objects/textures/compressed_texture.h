@@ -36,9 +36,9 @@ public:
 
     // The constructor to use when loading a single-level texture
     explicit CompressedTexture(GLenum target, GLenum internalFormat,
-            GLsizei width, GLsizei height, GLsizei imageSize, const void* data
-         ) :
-            Texture(new GLTexture(target)), target(target) {
+            GLsizei width, GLsizei height, GLsizei imageSize, const void* data,
+            float* texture_parameters) :
+            Texture(new GLTexture(target, texture_parameters)), target(target) {
         glBindTexture(target, gl_texture_->id());
         glCompressedTexImage2D(target, 0, internalFormat, width, height, 0,
                 imageSize, data);

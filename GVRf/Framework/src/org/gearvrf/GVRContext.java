@@ -1641,7 +1641,13 @@ public abstract class GVRContext {
      *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource) {
-        return loadFutureTexture(resource, DEFAULT_PRIORITY);
+        return loadFutureTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
+            GVRTextureParameters textureParameters) {
+        return loadFutureTexture(resource, DEFAULT_PRIORITY, textureParameters);
     }
 
     /**
@@ -1710,8 +1716,14 @@ public abstract class GVRContext {
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority) {
+        return loadFutureTexture(resource, priority, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
+            int priority, GVRTextureParameters textureParameters) {
         return loadFutureTexture(resource, priority,
-                GVRCompressedTexture.BALANCED);
+                GVRCompressedTexture.BALANCED, textureParameters);
     }
 
     /**
@@ -1787,8 +1799,15 @@ public abstract class GVRContext {
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority, int quality) {
+        return loadFutureTexture(resource, priority, quality,
+                DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
+            int priority, int quality, GVRTextureParameters textureParameters) {
         return GVRAsynchronousResourceLoader.loadFutureTexture(this,
-                sTextureCache, resource, priority, quality);
+                sTextureCache, resource, priority, quality, textureParameters);
     }
 
     /**
