@@ -390,6 +390,7 @@ public class VrAppSettings {
             res.append(" depthFormat = " + this.depthFormat.name());
             res.append(" colorFormat = " + this.colorFormat.name());
             res.append(" textureFilter = " + this.textureFilter.name());
+            res.append(" fovY = " + this.mFovY);
             return res.toString();
         }
     }
@@ -546,6 +547,14 @@ public class VrAppSettings {
             return isMonoFullScreen;
         }
         
+        @Override
+        public String toString(){
+            StringBuilder result = new StringBuilder();
+            result.append(" isMonoScopicMode = " + isMonoScopicMode);
+            result.append(" isMonoFullScreenMode = " + isMonoFullScreen);
+            return result.toString();
+        }
+        
         public MonoScopicModeParms(){
             isMonoScopicMode = isMonoFullScreen = false;
         }
@@ -569,12 +578,36 @@ public class VrAppSettings {
 
     // Current frame buffer's pixels height.
     public int framebufferPixelsHigh;
+    
+    //If it is going to show ovrSettings' content after Configure.
+    //Just for debug purpose, not configuration for app context.
+    //Not going to become part of xml content.
+    public static boolean isShowDebugLog = false;
 
     public ModeParms modeParms;
     public EyeBufferParms eyeBufferParms;
     public HeadModelParms headModelParms;
     public MonoScopicModeParms monoScopicModeParms;
 
+    /**
+     * Set if current app prints information from ovrAppSettings
+     * 
+     * @param showDebugLog
+     *            if current app prints information from ovrAppSettings.
+     */
+    public static void setShowDebugLog(boolean showDebugLog){
+        isShowDebugLog = showDebugLog;
+    }
+    
+    /**
+     * Get if current app prints information from ovrAppSettings
+     * 
+     * @return if current app prints information from ovrAppSettings.
+     */
+    public static boolean isShowDebugLog(){
+        return isShowDebugLog;
+    }
+    
     /**
      * Check if current app shows loading icon
      * 
@@ -767,7 +800,8 @@ public class VrAppSettings {
         res.append(" framebufferPixelsHigh = " + this.framebufferPixelsHigh);
         res.append(modeParms.toString());
         res.append(eyeBufferParms.toString());
-        res.append(this.headModelParms.toString());
+        res.append(headModelParms.toString());
+        res.append(monoScopicModeParms.toString());
         return res.toString();
     }
 }

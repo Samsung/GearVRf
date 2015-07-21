@@ -71,8 +71,6 @@ class GVRLensInfo {
      * @return current distortion FBO width value
      */
     public int getFBOWidth() {
-        //return mAppSettings.getFramebufferPixelsWide() <= 0 ? getHorizontalRealScreenPixels()
-          //      : mAppSettings.getFramebufferPixelsWide() / 2;
         return mAppSettings.getEyeBufferParms().getResolution() * mAppSettings.getEyeBufferParms().getWidthScale();
     }
 
@@ -82,8 +80,6 @@ class GVRLensInfo {
      * @return current distortion FBO height value
      */
     public int getFBOHeight() {
-//        return mAppSettings.getFramebufferPixelsHigh() <= 0 ? getVerticalRealScreenPixels()
- //               : mAppSettings.getFramebufferPixelsHigh();
         return mAppSettings.getEyeBufferParms().getResolution();
     }
 
