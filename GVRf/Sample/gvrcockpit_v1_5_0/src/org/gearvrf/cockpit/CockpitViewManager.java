@@ -23,10 +23,8 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
-import org.gearvrf.GVRTextureParameters.TextureMagFilterType;
-import org.gearvrf.GVRTextureParameters.TextureMinFilterType;
-import org.gearvrf.GVRTextureParameters.TextureWrapSType;
-import org.gearvrf.GVRTextureParameters.TextureWrapTType;
+import org.gearvrf.GVRTextureParameters.TextureFilterType;
+import org.gearvrf.GVRTextureParameters.TextureWrapType;
 
 public class CockpitViewManager extends GVRScript {
 
@@ -57,21 +55,21 @@ public class CockpitViewManager extends GVRScript {
 
         textureParameters.setAnisotropicValue(12);
 
-        textureParameters.setMagFilterType(TextureMagFilterType.GL_NEAREST);
+        textureParameters.setMagFilterType(TextureFilterType.GL_NEAREST);
         textureParameters
-                .setMinFilterType(TextureMinFilterType.GL_LINEAR_MIPMAP_NEAREST);
-        textureParameters.setWrapSType(TextureWrapSType.GL_REPEAT);
-        textureParameters.setWrapTType(TextureWrapTType.GL_REPEAT);
+                .setMinFilterType(TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+        textureParameters.setWrapSType(TextureWrapType.GL_REPEAT);
+        textureParameters.setWrapTType(TextureWrapType.GL_REPEAT);
 
         GVRTexture shipTexture = gvrContext.loadTexture(new GVRAndroidResource(
                 mGVRContext, R.drawable.gvrf_ship_png), textureParameters);
 
         // Update texture parameters after creation
         textureParameters.setAnisotropicValue(6);
-        textureParameters.setMagFilterType(TextureMagFilterType.GL_NEAREST);
-        textureParameters.setMinFilterType(TextureMinFilterType.GL_NEAREST);
-        textureParameters.setWrapSType(TextureWrapSType.GL_MIRRORED_REPEAT);
-        textureParameters.setWrapTType(TextureWrapTType.GL_MIRRORED_REPEAT);
+        textureParameters.setMagFilterType(TextureFilterType.GL_NEAREST);
+        textureParameters.setMinFilterType(TextureFilterType.GL_NEAREST);
+        textureParameters.setWrapSType(TextureWrapType.GL_MIRRORED_REPEAT);
+        textureParameters.setWrapTType(TextureWrapType.GL_MIRRORED_REPEAT);
 
         shipTexture.updateTextureParameters(textureParameters);
 

@@ -19,152 +19,54 @@ import android.opengl.GLES20;
 
 public class GVRTextureParameters {
 
-    private TextureMinFilterType minFilterType;
-    private int minFilterTypeValue;
+    private TextureFilterType minFilterType;
+    private TextureFilterType magFilterType;
+    private TextureWrapType wrapSType;
+    private TextureWrapType wrapTType;
 
-    private TextureMagFilterType magFilterType;
-    private int magFilterTypeValue;
-
-    private TextureWrapSType wrapSType;
-    private int wrapSTypeValue;
-
-    private TextureWrapTType wrapTType;
-    private int wrapTTypeValue;
-
-    private String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
-    private boolean anisotropicSupported;
     private float anisotropicValue;
 
     GVRContext mGVRContext = null;
 
     public GVRTextureParameters(GVRContext gvrContext) {
-
         mGVRContext = gvrContext;
-
-        minFilterType = TextureMinFilterType.GL_LINEAR;
-        minFilterTypeValue = 0;
-
-        magFilterType = TextureMagFilterType.GL_LINEAR;
-        magFilterTypeValue = 0;
-
-        wrapSType = TextureWrapSType.GL_CLAMP_TO_EDGE;
-        wrapSTypeValue = 0;
-
-        wrapTType = TextureWrapTType.GL_CLAMP_TO_EDGE;
-        wrapTTypeValue = 0;
-
-        anisotropicSupported = false;
+        minFilterType = TextureFilterType.GL_LINEAR;
+        magFilterType = TextureFilterType.GL_LINEAR;
+        wrapSType = TextureWrapType.GL_CLAMP_TO_EDGE;
+        wrapTType = TextureWrapType.GL_CLAMP_TO_EDGE;
         anisotropicValue = 1.0f;
     }
 
-    public void setMinFilterType(TextureMinFilterType minFilterType) {
+    public void setMinFilterType(TextureFilterType minFilterType) {
         this.minFilterType = minFilterType;
     }
 
-    public TextureMinFilterType getMinFilterType() {
+    public TextureFilterType getMinFilterType() {
         return minFilterType;
     }
 
-    public int getMinFilterTypeValue() {
-        switch (minFilterType) {
-        case GL_LINEAR:
-            minFilterTypeValue = 0;
-            break;
-        case GL_NEAREST:
-            minFilterTypeValue = 1;
-            break;
-        case GL_NEAREST_MIPMAP_NEAREST:
-            minFilterTypeValue = 2;
-            break;
-        case GL_LINEAR_MIPMAP_NEAREST:
-            minFilterTypeValue = 3;
-            break;
-        case GL_NEAREST_MIPMAP_LINEAR:
-            minFilterTypeValue = 4;
-            break;
-        case GL_LINEAR_MIPMAP_LINEAR:
-            minFilterTypeValue = 5;
-            break;
-        default:
-            minFilterTypeValue = 0;
-            break;
-        }
-        return minFilterTypeValue;
-    }
-
-    public void setMagFilterType(TextureMagFilterType magFilterType) {
+    public void setMagFilterType(TextureFilterType magFilterType) {
         this.magFilterType = magFilterType;
     }
 
-    public TextureMagFilterType getMagFilterType() {
+    public TextureFilterType getMagFilterType() {
         return magFilterType;
     }
 
-    public int getMagFilterTypeValue() {
-        switch (magFilterType) {
-        case GL_LINEAR:
-            magFilterTypeValue = 0;
-            break;
-        case GL_NEAREST:
-            magFilterTypeValue = 1;
-            break;
-        default:
-            magFilterTypeValue = 0;
-            break;
-        }
-        return magFilterTypeValue;
-    }
-
-    public void setWrapSType(TextureWrapSType wrapSType) {
+    public void setWrapSType(TextureWrapType wrapSType) {
         this.wrapSType = wrapSType;
     }
 
-    public TextureWrapSType getWrapSType() {
+    public TextureWrapType getWrapSType() {
         return wrapSType;
     }
 
-    public int getWrapSTypeValue() {
-        switch (wrapSType) {
-        case GL_CLAMP_TO_EDGE:
-            wrapSTypeValue = 0;
-            break;
-        case GL_MIRRORED_REPEAT:
-            wrapSTypeValue = 1;
-            break;
-        case GL_REPEAT:
-            wrapSTypeValue = 2;
-            break;
-        default:
-            wrapSTypeValue = 0;
-            break;
-        }
-        return wrapSTypeValue;
-    }
-
-    public void setWrapTType(TextureWrapTType wrapTType) {
+    public void setWrapTType(TextureWrapType wrapTType) {
         this.wrapTType = wrapTType;
     }
 
-    public TextureWrapTType getWrapTType() {
+    public TextureWrapType getWrapTType() {
         return wrapTType;
-    }
-
-    public int getWrapTTypeValue() {
-        switch (wrapTType) {
-        case GL_CLAMP_TO_EDGE:
-            wrapTTypeValue = 0;
-            break;
-        case GL_MIRRORED_REPEAT:
-            wrapTTypeValue = 1;
-            break;
-        case GL_REPEAT:
-            wrapTTypeValue = 2;
-            break;
-        default:
-            wrapTTypeValue = 0;
-            break;
-        }
-        return wrapTTypeValue;
     }
 
     public boolean isAnisotropicSupported() {
@@ -192,11 +94,11 @@ public class GVRTextureParameters {
     public float[] getDefalutValuesArray() {
         float[] defaultValues = new float[5];
 
-        defaultValues[0] = 0; // MIN FILTER
-        defaultValues[1] = 0; // MAG FILTER
+        defaultValues[0] = GLES20.GL_LINEAR; // MIN FILTER
+        defaultValues[1] = GLES20.GL_LINEAR; // MAG FILTER
         defaultValues[2] = 1.0f; // ANISO FILTER
-        defaultValues[3] = 0; // WRAP S
-        defaultValues[4] = 0; // WRAP T
+        defaultValues[3] = GLES20.GL_CLAMP_TO_EDGE; // WRAP S
+        defaultValues[4] = GLES20.GL_CLAMP_TO_EDGE; // WRAP T
 
         return defaultValues;
     }
@@ -204,29 +106,46 @@ public class GVRTextureParameters {
     public float[] getCurrentValuesArray() {
         float[] currentValues = new float[5];
 
-        currentValues[0] = getMinFilterTypeValue(); // MIN FILTER
-        currentValues[1] = getMagFilterTypeValue(); // MAG FILTER
+        currentValues[0] = getMinFilterType().getFilterValue(); // MIN FILTER
+        currentValues[1] = getMagFilterType().getFilterValue(); // MAG FILTER
         currentValues[2] = getAnisotropicValue(); // ANISO FILTER
-        currentValues[3] = getWrapSTypeValue(); // WRAP S
-        currentValues[4] = getWrapTTypeValue(); // WRAP T
+        currentValues[3] = getWrapSType().getWrapValue(); // WRAP S
+        currentValues[4] = getWrapTType().getWrapValue(); // WRAP T
 
         return currentValues;
     }
 
-    public enum TextureMinFilterType {
-        GL_LINEAR, GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR
+    public enum TextureFilterType {
+        GL_LINEAR(GLES20.GL_LINEAR), GL_NEAREST(GLES20.GL_NEAREST), GL_NEAREST_MIPMAP_NEAREST(
+                GLES20.GL_NEAREST_MIPMAP_NEAREST), GL_NEAREST_MIPMAP_LINEAR(
+                GLES20.GL_NEAREST_MIPMAP_LINEAR), GL_LINEAR_MIPMAP_NEAREST(
+                GLES20.GL_LINEAR_MIPMAP_NEAREST), GL_LINEAR_MIPMAP_LINEAR(
+                GLES20.GL_LINEAR_MIPMAP_LINEAR);
+
+        private int filterValue;
+
+        TextureFilterType(int filterValue) {
+            this.filterValue = filterValue;
+        }
+
+        public int getFilterValue() {
+            return filterValue;
+        }
     }
 
-    public enum TextureMagFilterType {
-        GL_LINEAR, GL_NEAREST
-    }
+    public enum TextureWrapType {
+        GL_CLAMP_TO_EDGE(GLES20.GL_CLAMP_TO_EDGE), GL_MIRRORED_REPEAT(
+                GLES20.GL_MIRRORED_REPEAT), GL_REPEAT(GLES20.GL_REPEAT);
 
-    public enum TextureWrapSType {
-        GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, GL_REPEAT
-    }
+        private int wrapValue;
 
-    public enum TextureWrapTType {
-        GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, GL_REPEAT
+        TextureWrapType(int wrapValue) {
+            this.wrapValue = wrapValue;
+        }
+
+        public int getWrapValue() {
+            return wrapValue;
+        }
     }
 }
 

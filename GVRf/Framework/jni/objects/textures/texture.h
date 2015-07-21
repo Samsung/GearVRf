@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Textures.
  ***************************************************************************/
@@ -50,79 +49,16 @@ public:
     virtual void updateTextureParameters(float* texture_parameters) {
 
         // Sets the new MIN FILTER
-        GLenum min_filter_type_;
-
-        switch ((int) texture_parameters[0]) {
-        case 0:
-            min_filter_type_ = GL_LINEAR;
-            break;
-        case 1:
-            min_filter_type_ = GL_NEAREST;
-            break;
-        case 2:
-            min_filter_type_ = GL_NEAREST_MIPMAP_NEAREST;
-            break;
-        case 3:
-            min_filter_type_ = GL_NEAREST_MIPMAP_LINEAR;
-            break;
-        case 4:
-            min_filter_type_ = GL_LINEAR_MIPMAP_NEAREST;
-            break;
-        case 5:
-            min_filter_type_ = GL_LINEAR_MIPMAP_LINEAR;
-            break;
-        default:
-            min_filter_type_ = GL_LINEAR;
-            break;
-        }
+        GLenum min_filter_type_ = texture_parameters[0];
 
         // Sets the MAG FILTER
-        GLenum mag_filter_type_;
-        switch ((int) texture_parameters[1]) {
-        case 0:
-            mag_filter_type_ = GL_LINEAR;
-            break;
-        case 1:
-            mag_filter_type_ = GL_NEAREST;
-            break;
-        default:
-            mag_filter_type_ = GL_LINEAR;
-            break;
-        }
+        GLenum mag_filter_type_ = texture_parameters[1];
 
         // Sets the wrap parameter for texture coordinate S
-        GLenum wrap_s_type_;
-        switch ((int) texture_parameters[3]) {
-        case 0:
-            wrap_s_type_ = GL_CLAMP_TO_EDGE;
-            break;
-        case 1:
-            wrap_s_type_ = GL_MIRRORED_REPEAT;
-            break;
-        case 2:
-            wrap_s_type_ = GL_REPEAT;
-            break;
-        default:
-            wrap_s_type_ = GL_CLAMP_TO_EDGE;
-            break;
-        }
+        GLenum wrap_s_type_ = texture_parameters[3];
 
         // Sets the wrap parameter for texture coordinate S
-        GLenum wrap_t_type_;
-        switch ((int) texture_parameters[4]) {
-        case 0:
-            wrap_t_type_ = GL_CLAMP_TO_EDGE;
-            break;
-        case 1:
-            wrap_t_type_ = GL_MIRRORED_REPEAT;
-            break;
-        case 2:
-            wrap_t_type_ = GL_REPEAT;
-            break;
-        default:
-            wrap_t_type_ = GL_CLAMP_TO_EDGE;
-            break;
-        }
+        GLenum wrap_t_type_ = texture_parameters[4];
 
         glBindTexture(target, getId());
 
@@ -131,13 +67,6 @@ public:
             glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
                     texture_parameters[2]);
         }
-
-        LOGE("Updated Texture Parameters");
-        LOGE("MIN: %d", (int)texture_parameters[0]);
-        LOGE("MAG: %d", (int)texture_parameters[1]);
-        LOGE("ANISO: %f", texture_parameters[2]);
-        LOGE("WRAP S: %d", (int)texture_parameters[3]);
-        LOGE("WRAP T: %d", (int)texture_parameters[4]);
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
