@@ -16,6 +16,7 @@
 package org.gearvrf.gvroutlinesample;
 
 import java.io.IOException;
+import java.util.EnumSet;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
@@ -44,7 +45,7 @@ public class OutlineScript extends GVRScript {
     
     private GVRActivity mActivity;
      
-    private static final String TAG = OutlineScript.class.getName();
+    private static final String TAG = "OutlineSample";
  
     public OutlineScript(GVRActivity activity) {
       mActivity = activity;
@@ -56,8 +57,8 @@ public class OutlineScript extends GVRScript {
         GVRScene outlineScene = gvrContext.getNextMainScene();
         
         try {
-          GVRImportSettings settings = new GVRImportSettings(GVRImportSettings.CALCULATE_SMOOTH_NORMALS 
-                  | GVRImportSettings.CALCULATE_TANGENTS);
+          EnumSet<GVRImportSettings> additionalSettings = EnumSet.of(GVRImportSettings.CALCULATE_SMOOTH_NORMALS);
+          EnumSet<GVRImportSettings> settings = GVRImportSettings.getRecommendedSettingsWith(additionalSettings);
           GVRMesh characterMesh = mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext,
               mModelPath), settings);
           

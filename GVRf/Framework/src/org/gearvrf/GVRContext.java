@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.EnumSet;
 
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
@@ -185,7 +186,7 @@ public abstract class GVRContext {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource) {
-        return loadMesh(androidResource, new GVRImportSettings(GVRImportSettings.DEFAULT));
+        return loadMesh(androidResource, GVRImportSettings.getRecommendedSettings());
     }
 
     /**
@@ -208,7 +209,7 @@ public abstract class GVRContext {
      * 
      * @since 1.6.2
      */
-    public GVRMesh loadMesh(GVRAndroidResource androidResource, GVRImportSettings settings) {
+    public GVRMesh loadMesh(GVRAndroidResource androidResource, EnumSet<GVRImportSettings> settings) {
         GVRMesh mesh = sMeshCache.get(androidResource);
         if (mesh == null) {
             GVRAssimpImporter assimpImporter = GVRImporter
@@ -468,7 +469,7 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename) 
                 throws IOException {
-        return getAssimpModel(assetRelativeFilename, new GVRImportSettings(GVRImportSettings.DEFAULT));
+        return getAssimpModel(assetRelativeFilename, GVRImportSettings.getRecommendedSettings());
     }
     
     /**
@@ -487,7 +488,7 @@ public abstract class GVRContext {
      * @throws IOException
      *             File does not exist or cannot be read
      */
-    public GVRSceneObject getAssimpModel(String assetRelativeFilename, GVRImportSettings settings)
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename, EnumSet<GVRImportSettings> settings)
             throws IOException {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
                 this, new GVRAndroidResource(this, assetRelativeFilename), settings);
@@ -736,7 +737,7 @@ public abstract class GVRContext {
     public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource, new GVRImportSettings(GVRImportSettings.DEFAULT));
+                this, androidResource, GVRImportSettings.getRecommendedSettings());
         return assimpImporter.getNodeMesh(nodeName, meshIndex);
     }
 
@@ -748,7 +749,7 @@ public abstract class GVRContext {
     public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource, new GVRImportSettings(GVRImportSettings.DEFAULT));
+                this, androidResource, GVRImportSettings.getRecommendedSettings());
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
 
