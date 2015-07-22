@@ -53,8 +53,7 @@ public:
                         ShaderManager* shader_manager,
                         PostEffectShaderManager* post_effect_shader_manager,
                         RenderTexture* post_effect_render_texture_a,
-                        RenderTexture* post_effect_render_texture_b,
-                        glm::mat4 mvp);
+                        RenderTexture* post_effect_render_texture_b);
 
     glm::mat4 mvp_matrix;
 

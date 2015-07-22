@@ -473,7 +473,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera,
         ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,
         RenderTexture* post_effect_render_texture_a,
-        RenderTexture* post_effect_render_texture_b, glm::mat4 vp_matrix) {
+        RenderTexture* post_effect_render_texture_b) {
     GLint curFBO;
     GLint viewport[4];
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curFBO);

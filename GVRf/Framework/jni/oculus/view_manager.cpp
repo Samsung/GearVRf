@@ -43,8 +43,7 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
 
     activity->viewManager->renderCamera(activity->Scene, scene, camera,
             shader_manager, post_effect_shader_manager,
-            post_effect_render_texture_a, post_effect_render_texture_b,
-            activity->viewManager->mvp_matrix);
+            post_effect_render_texture_a, post_effect_render_texture_b);
 }
 
 void Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * jni,
@@ -57,12 +56,12 @@ void Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * jni,
     int width = render_texture->width();
     int height = render_texture->height();
 
-    // remember current FBO bindings
+// remember current FBO bindings
     GLint currentReadFBO, currentDrawFBO;
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &currentReadFBO);
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentDrawFBO);
 
-    // blit the multisampled FBO to a normal FBO and read from it
+// blit the multisampled FBO to a normal FBO and read from it
     GLuint renderTextureFBO = render_texture->getFrameBufferId();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderTextureFBO);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
@@ -72,7 +71,7 @@ void Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * jni,
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
             pReadbackBuffer);
 
-    // recover FBO bindings
+// recover FBO bindings
     glBindFramebuffer(GL_READ_FRAMEBUFFER, currentReadFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, currentDrawFBO);
 }
@@ -101,7 +100,7 @@ void GVRViewManager::renderCamera(OVR::OvrSceneView &ovr_scene, Scene* scene,
         Camera* camera, ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,
         RenderTexture* post_effect_render_texture_a,
-        RenderTexture* post_effect_render_texture_b, glm::mat4 mvp) {
+        RenderTexture* post_effect_render_texture_b) {
 #ifdef GVRF_FBO_FPS
     // starting to collect rendering time
     // first flash GPU tasks
@@ -123,7 +122,7 @@ void GVRViewManager::renderCamera(OVR::OvrSceneView &ovr_scene, Scene* scene,
 
     Renderer::renderCamera(scene, camera, shader_manager,
             post_effect_shader_manager, post_effect_render_texture_a,
-            post_effect_render_texture_b, mvp);
+            post_effect_render_texture_b);
 
 #ifdef GVRF_FBO_FPS
     // finish rendering
