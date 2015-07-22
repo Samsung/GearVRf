@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
@@ -77,8 +78,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     protected final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
 
-    protected final Object[] mFrameListenersLock = new Object[0];
-    protected List<GVRDrawFrameListener> mFrameListeners = new ArrayList<GVRDrawFrameListener>();
+    protected List<GVRDrawFrameListener> mFrameListeners = new CopyOnWriteArrayList<GVRDrawFrameListener>();
 
     protected GVRScript mScript;
     protected RotationSensor mRotationSensor;
@@ -705,11 +705,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 runnable.run();
             }
 
-            synchronized (mFrameListenersLock) {
-                final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
-                for (GVRDrawFrameListener listener : frameListeners) {
-                    listener.onDrawFrame(mFrameTime);
-                }
+            final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
+            for (GVRDrawFrameListener listener : frameListeners) {
+                listener.onDrawFrame(mFrameTime);
             }
         }
 
@@ -835,20 +833,12 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     @Override
     public void registerDrawFrameListener(GVRDrawFrameListener frameListener) {
-        synchronized (mFrameListenersLock) {
-            mFrameListeners = new ArrayList<GVRDrawFrameListener>(
-                    mFrameListeners);
-            mFrameListeners.add(frameListener);
-        }
+        mFrameListeners.add(frameListener);
     }
 
     @Override
     public void unregisterDrawFrameListener(GVRDrawFrameListener frameListener) {
-        synchronized (mFrameListenersLock) {
-            mFrameListeners = new ArrayList<GVRDrawFrameListener>(
-                    mFrameListeners);
-            mFrameListeners.remove(frameListener);
-        }
+        mFrameListeners.remove(frameListener);
     }
 
     @Override
