@@ -16,6 +16,9 @@
  */
 -->
 
+<!-- This is a configuration file which contains settings of low quality for the purpose
+of stable frame rate and power saving. -->
+
 <lens name="N4" >
 
     <vr-app-settings
@@ -45,10 +48,10 @@
             widthScale="1" />
 
         <head-model-parms
-            eyeHeight="NaN"
-            headModelDepth="NaN"
-            headModelHeight="NaN"
-            interpupillaryDistance="NaN" />
+            eyeHeight="DEFAULT"
+            headModelDepth="DEFAULT"
+            headModelHeight="DEFAULT"
+            interpupillaryDistance="DEFAULT" />
     </vr-app-settings>
 
 </lens>

@@ -77,9 +77,12 @@ class GVRXMLParser {
             int eventType = xpp.getEventType();
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_DOCUMENT) {
-                } else if (eventType == XmlPullParser.START_TAG) {
+                } else if (eventType == XmlPullParser.START_TAG) {                    
                     String tagName = xpp.getName();
                     for (int i = 0; i < xpp.getAttributeCount(); ++i) {
+                        if(xpp.getAttributeValue(i).equals("DEFAULT")){
+                            continue;
+                        }
                         String attributeName = xpp.getAttributeName(i);
                         if (tagName.equals("mono-mode-parms")) {
                             if (attributeName.equals("monoFullScreen")) {

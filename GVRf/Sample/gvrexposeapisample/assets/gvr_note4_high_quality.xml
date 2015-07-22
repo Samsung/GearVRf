@@ -16,6 +16,9 @@
  */
 -->
 
+<!-- This is a sample configuration profile which is for high quality app with little 
+consideration on frame rate and power consumption. -->
+
 <lens name="N4" >
 
     <vr-app-settings
@@ -45,10 +48,10 @@
             widthScale="1" />
 
         <head-model-parms
-            eyeHeight="NaN"
-            headModelDepth="NaN"
-            headModelHeight="NaN"
-            interpupillaryDistance="NaN" />
+            eyeHeight="DEFAULT"
+            headModelDepth="DEFAULT"
+            headModelHeight="DEFAULT"
+            interpupillaryDistance="DEFAULT" />
     </vr-app-settings>
 
 </lens>

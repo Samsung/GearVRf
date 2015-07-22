@@ -14,7 +14,8 @@
  * limitations under the License.
  */-->
 
-
+<!-- An empty configuration file like this will set all parameters by default from either
+driver or preset values. -->
 
 <lens name="N4">
 </lens>

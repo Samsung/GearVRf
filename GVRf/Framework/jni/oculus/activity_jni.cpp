@@ -19,6 +19,7 @@
 #include "VrApi_Helpers.h"
 #include "objects/scene_object.h"
 #include "VrApi_Types.h"
+#include <sstream>
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 static const char * app_settings_name = "org/gearvrf/utility/VrAppSettings";
@@ -282,7 +283,6 @@ template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OV
     }else{
         settings.HeadModelParms.HeadModelHeight = headModelHeight;
     }
-#if 1
     if (env->GetStaticBooleanField(vrAppSettingsClass,
             env->GetStaticFieldID(vrAppSettingsClass, "isShowDebugLog", "Z"))) {
         std::stringstream logInfo;
@@ -376,7 +376,6 @@ template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OV
                 << settings.ModeParms.ResetWindowFullscreen << std::endl;
         LOGI("%s", logInfo.str().c_str());
     }
-#endif
 }
 
 template <class PredictionTrait> void GVRActivity<PredictionTrait>::OneTimeInit(const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI)

@@ -18,8 +18,8 @@
 
 <lens name="N4">
 <vr-app-settings
-        framebufferPixelsHigh="-1"
-        framebufferPixelsWide="-1"
+        framebufferPixelsHigh="DEFAULT"
+        framebufferPixelsWide="DEFAULT"
         showLoadingIcon="true"
         useProtectedFramebuffer="false"
         useSrgbFramebuffer="false" >
@@ -39,13 +39,13 @@
             depthFormat="DEPTH_24"
             fov-y="90.0"
             multiSamples="1"
-            resolution="-1"
+            resolution="DEFAULT"
             textureFilter="TEXTURE_FILTER_BILINEAR"
             widthScale="1" />
 
         <head-model-parms
-            eyeHeight="NaN"
-            headModelDepth="NaN"
-            headModelHeight="NaN"
-            interpupillaryDistance="NaN" />
+            eyeHeight="DEFAULT"
+            headModelDepth="DEFAULT"
+            headModelHeight="DEFAULT"
+            interpupillaryDistance="DEFAULT" />
     </vr-app-settings></lens>

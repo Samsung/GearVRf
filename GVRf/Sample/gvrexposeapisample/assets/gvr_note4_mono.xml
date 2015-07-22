@@ -16,6 +16,8 @@
  */
 -->
 
+<!-- This is a configuration file of normal mono scopic rendering mode. -->
+
 <lens name="N4" >
 
     <vr-app-settings>

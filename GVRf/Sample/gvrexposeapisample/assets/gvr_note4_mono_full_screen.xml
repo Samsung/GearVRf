@@ -16,6 +16,9 @@
  */
 -->
 
+<!-- This is a configuration file for the purpose of full screen mono scopic rendering 
+mode. -->
+
 <lens name="N4" >
 
     <vr-app-settings>
