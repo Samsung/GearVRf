@@ -60,6 +60,7 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
     , ModelLoaded( false )
     , UiJni(&jni_)
     , viewManager(NULL)
+    , cameraRig(nullptr)
 {
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
@@ -182,7 +183,7 @@ OVR::Matrix4f GVRActivity::DrawEyeView( const int eye, const float fovDegrees )
 
     SetMVPMatrix(mvp_matrix);
 
-    if (!useOculusOrientationReading) {
+    if (!useOculusOrientationReading && nullptr != cameraRig) {
        if (1 == eye) {
           cameraRig->predict(4.0f / 60.0f);
        } else {
@@ -217,7 +218,7 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
 
-    if (useOculusOrientationReading) {
+    if (useOculusOrientationReading && nullptr != cameraRig) {
        const ovrQuatf& orientation = vrFrame.Tracking.HeadPose.Pose.Orientation;
        glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
        cameraRig->owner_object()->transform()->set_rotation(glm::conjugate(glm::inverse(quat)));

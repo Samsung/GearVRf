@@ -234,7 +234,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
          * GL Initializations.
          */
         mRenderBundle = new GVRRenderBundle(this, mLensInfo);
-        mMainScene = new GVRScene(this);
+        setMainScene(new GVRScene(this));
     }
 
     private void renderCamera(long activity_ptr, GVRScene scene,
@@ -536,7 +536,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {
-        mActivity.setCameraRig(mMainScene.getMainCameraRig());
         if (mCurrentEye == 1) {
             mActivity.setCamera(mMainScene.getMainCameraRig().getLeftCamera());
         } else {
@@ -802,6 +801,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mOnSwitchMainScene.run();
                 mOnSwitchMainScene = null;
             }
+        }
+        if (null != mMainScene) {
+            getActivity().setCameraRig(mMainScene.getMainCameraRig());
         }
     }
 
