@@ -24,9 +24,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,7 +48,6 @@ public class SampleViewManager extends GVRScript {
 
     @Override
     public void onInit(GVRContext gvrContext) throws IOException {
-
         mScene = gvrContext.getNextMainScene();
 
         // set background color
@@ -69,39 +66,43 @@ public class SampleViewManager extends GVRScript {
         earthMeshObject.getTransform().setPosition(2.0f, 0.0f, -4.0f);
         earthMeshObject.getTransform().setScale(1.5f, 1.5f, 1.5f);
         mScene.addSceneObject(earthMeshObject);
-
     }
 
     @Override
     public void onStep() {
     }
 
-    public void processKeyEvent(int keyCode) {
-
+    public boolean processKeyEvent(int keyCode) {
         GVRCameraRig mainCameraRig = mScene.getMainCameraRig();
         int color = mainCameraRig.getLeftCamera().getBackgroundColor();
+
+        boolean handled = false;
 
         switch (keyCode) {
         case android.view.KeyEvent.KEYCODE_BUTTON_L1:
             colorIndex = (colorIndex + 1) % colors.size();
+            handled = true;
             break;
 
         case android.view.KeyEvent.KEYCODE_BUTTON_R1:
             colorIndex = (colorIndex > 0) ? colorIndex - 1 : colors.size() - 1;
+            handled = true;
             break;
         }
 
         // change background color
-        color = colors.get(colorIndex);
-        mainCameraRig.getLeftCamera().setBackgroundColor(color);
-        mainCameraRig.getRightCamera().setBackgroundColor(color);
-
+        if (handled) {
+            color = colors.get(colorIndex);
+            mainCameraRig.getLeftCamera().setBackgroundColor(color);
+            mainCameraRig.getRightCamera().setBackgroundColor(color);
+            return true;
+        }
+        return false;
     }
 
-    public void processMotionEvent(float motionX, float motionY) {
-
+    public boolean processMotionEvent(float motionX, float motionY) {
         if (mScene.getSceneObjects().isEmpty()) {
-            return;
+            return false;
         }
 
         // Translate the camera
@@ -110,7 +111,7 @@ public class SampleViewManager extends GVRScript {
         GVRTransform transform = mScene.getSceneObjects().get(0).getTransform();
         transform.setPositionX(transform.getPositionX() - SCALE * motionX);
         transform.setPositionY(transform.getPositionY() + SCALE * motionY);
-
+        
+        return true;
     }
-
 }

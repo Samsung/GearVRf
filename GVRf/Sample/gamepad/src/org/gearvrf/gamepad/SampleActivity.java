@@ -16,17 +16,13 @@
 package org.gearvrf.gamepad;
 
 import org.gearvrf.GVRActivity;
-import org.gearvrf.utility.Log;
 
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.view.InputDevice;
+import android.view.KeyEvent;
 
 public class SampleActivity extends GVRActivity {
 
     private SampleViewManager mScript = null;
-    private long lastClickMillis;
-    private static final long THRESHOLD_MILLIS = 500L;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -37,25 +33,34 @@ public class SampleActivity extends GVRActivity {
 
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        boolean handled = false;
 
-        long now = SystemClock.elapsedRealtime();
-        if (now - lastClickMillis > THRESHOLD_MILLIS) {
-            lastClickMillis = now;
-            mScript.processKeyEvent(event.getKeyCode());
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            handled = mScript.processKeyEvent(event.getKeyCode());
         }
-        return true;
+
+        if (handled) {
+            return true;
+        } else {
+            return super.dispatchKeyEvent(event);
+        }
     }
 
     @Override
     public boolean dispatchGenericMotionEvent(android.view.MotionEvent event) {
+        boolean handled = false;
 
         if (event.getAction() == android.view.MotionEvent.ACTION_MOVE) {
-            mScript.processMotionEvent(
+            handled = mScript.processMotionEvent(
                     event.getAxisValue(android.view.MotionEvent.AXIS_HAT_X),
                     event.getAxisValue(android.view.MotionEvent.AXIS_HAT_Y));
         }
 
-        return true;
+        if (handled) {
+            return true;
+        } else {
+            return super.dispatchGenericMotionEvent(event);
+        }
     }
 
 }
