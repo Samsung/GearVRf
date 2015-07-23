@@ -30,18 +30,18 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename);
+        jobject obj, jobject asset_manager, jstring filename, jint settings);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFileFromSDCard(JNIEnv * env,
-        jobject obj, jstring filename);
+        jobject obj, jstring filename, jint settings);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFromByteArray(JNIEnv * env,
-        jobject obj, jbyteArray bytes, jstring filename);
+        jobject obj, jbyteArray bytes, jstring filename, jint settings);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename) {
+        jobject obj, jobject asset_manager, jstring filename, jint settings) {
     const char* native_string = env->GetStringUTFChars(filename, 0);
     AAssetManager* mgr = AAssetManager_fromJava(env, asset_manager);
     AAsset* asset = AAssetManager_open(mgr, native_string, AASSET_MODE_UNKNOWN);
@@ -54,7 +54,7 @@ Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
     AAsset_read(asset, buffer, size);
 
     AssimpImporter* assimp_scene = Importer::readFileFromAssets(
-            buffer, size, native_string);
+            buffer, size, native_string, static_cast<int>(settings));
 
     AAsset_close(asset);
 
@@ -67,13 +67,13 @@ Java_org_gearvrf_NativeImporter_readFileFromAssets(JNIEnv * env,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFromByteArray(JNIEnv * env,jobject obj,
-        jbyteArray bytes, jstring filename) {
+        jbyteArray bytes, jstring filename, jint settings) {
     jbyte* data = env->GetByteArrayElements(bytes, 0);
     int length = static_cast<int>(env->GetArrayLength(bytes));
     const char* native_string = env->GetStringUTFChars(filename, 0);
 
     AssimpImporter* assimp_scene = Importer::readFileFromAssets(
-            (char*)data, length, native_string);
+            (char*)data, length, native_string, static_cast<int>(settings));
 
     env->ReleaseByteArrayElements(bytes, data, 0);
     env->ReleaseStringUTFChars(filename, native_string);
@@ -83,9 +83,9 @@ Java_org_gearvrf_NativeImporter_readFromByteArray(JNIEnv * env,jobject obj,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeImporter_readFileFromSDCard(JNIEnv * env,
-        jobject obj, jstring filename) {
+        jobject obj, jstring filename, jint settings) {
     const char* native_string = env->GetStringUTFChars(filename, 0);
-    AssimpImporter* assimp_scene = Importer::readFileFromSDCard(native_string);
+    AssimpImporter* assimp_scene = Importer::readFileFromSDCard(native_string, static_cast<int>(settings));
 
     env->ReleaseStringUTFChars(filename, native_string);
 

@@ -21,7 +21,7 @@
 
 namespace gvr {
 AssimpImporter* Importer::readFileFromAssets(char* buffer, long size,
-        const char * filename) {
+        const char * filename, int settings) {
     Assimp::Importer* importer = new Assimp::Importer();
     char* hint = 0;
 
@@ -31,16 +31,14 @@ AssimpImporter* Importer::readFileFromAssets(char* buffer, long size,
             hint = hint + 1;
         }
     }
-    importer->ReadFileFromMemory(buffer, size,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, hint);
+    importer->ReadFileFromMemory(buffer, size, settings, hint);
 
     return new AssimpImporter(importer);
 }
 
-AssimpImporter* Importer::readFileFromSDCard(const char * filename) {
+AssimpImporter* Importer::readFileFromSDCard(const char * filename, int settings) {
     Assimp::Importer* importer = new Assimp::Importer();
-    importer->ReadFile(filename,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
+    importer->ReadFile(filename, settings);
     return new AssimpImporter(importer);
 }
 }
