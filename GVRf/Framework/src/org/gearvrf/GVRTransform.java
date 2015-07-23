@@ -396,6 +396,19 @@ public class GVRTransform extends GVRComponent {
         NativeTransform.rotateByAxisWithPivot(getNative(), angle, axisX, axisY,
                 axisZ, pivotX, pivotY, pivotZ);
     }
+
+
+    /**
+     * Reset the transform
+     *
+     * This will undo any translations, rotations, or scaling and reset the Transform back to default values.  This is the equivilent to setting the Transform to an identity matrix.
+     */
+    public void reset() {
+        setPosition(0, 0, 0);
+        setRotation(1, 0, 0, 0);
+        setScale(1, 1, 1);
+    }
+
 }
 
 class NativeTransform {
