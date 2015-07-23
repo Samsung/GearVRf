@@ -20,6 +20,7 @@
 #include "objects/scene_object.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
+static const bool canSwitchToOculusHeadTracking = true;
 
 namespace gvr {
 
@@ -47,6 +48,23 @@ void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
 {
     GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
     activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
+}
+
+void Java_org_gearvrf_GVRActivity_nativeOnDock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    if (canSwitchToOculusHeadTracking) {
+        LOGV("will start using orientation readings from oculus");
+        activity->useOculusOrientationReading = true;
+    }
+}
+
+void Java_org_gearvrf_GVRActivity_nativeOnUndock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->useOculusOrientationReading = false;
 }
 
 } // extern "C"
@@ -123,7 +141,6 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
     settings.EyeBufferParms.multisamples = 2;
-    useOculusOrientationReading = false;
     // leave the rest as default for now.
     // TODO: take values specified in xml and set them here.
 }
