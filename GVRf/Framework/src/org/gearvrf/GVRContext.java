@@ -132,11 +132,11 @@ public abstract class GVRContext {
     public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(
             this);
 
-    // treu or false based on the support for anisotropy
+    // true or false based on the support for anisotropy
     public boolean isAnisotropicSupported;
 
     // Max anisotropic value if supported and -1 otherwise
-    public float maxAnisotropicValue = -1.0f;
+    public int maxAnisotropicValue = -1;
 
     /*
      * Methods

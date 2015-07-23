@@ -31,7 +31,7 @@ namespace gvr {
 class CubemapTexture: public Texture {
 public:
     explicit CubemapTexture(JNIEnv* env, jobjectArray bitmapArray,
-            float* texture_parameters) :
+            int* texture_parameters) :
             Texture(new GLTexture(TARGET, texture_parameters)) {
         glBindTexture(TARGET, gl_texture_->id());
         for (int i = 0; i < 6; i++) {

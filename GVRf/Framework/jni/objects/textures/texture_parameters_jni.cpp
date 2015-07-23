@@ -32,15 +32,15 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeTextureParameters_getMaxAnisotropicValue(JNIEnv * env, jobject obj);
 }
 ;
 
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeTextureParameters_getMaxAnisotropicValue(JNIEnv * env, jobject obj) {
     float aniso_max_value = 0.0f;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &aniso_max_value);
-    return aniso_max_value;
+    return (int)aniso_max_value;
 }
 }

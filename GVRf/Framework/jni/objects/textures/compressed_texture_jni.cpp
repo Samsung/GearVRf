@@ -26,7 +26,7 @@ JNIEXPORT jlong JNICALL
 // Note that "asynchronous_textures" becomes "asynchronous_1textures"
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
         jobject obj, jint target, jint internalFormat,
-        jint width, jint height, jint imageSize, jbyteArray bytes, jfloatArray jtexture_parameters);
+        jint width, jint height, jint imageSize, jbyteArray bytes, jintArray jtexture_parameters);
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
@@ -37,9 +37,9 @@ Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstru
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
     jobject obj, jint target, jint internalFormat,
-    jint width, jint height, jint imageSize, jbyteArray bytes, jfloatArray jtexture_parameters) {
+    jint width, jint height, jint imageSize, jbyteArray bytes, jintArray jtexture_parameters) {
 
-    jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters,0);
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
 
     jbyte* data = env->GetByteArrayElements(bytes, 0);
 

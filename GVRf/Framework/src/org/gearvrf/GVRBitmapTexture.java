@@ -177,9 +177,9 @@ public class GVRBitmapTexture extends GVRTexture {
 
 class NativeBaseTexture {
     static native long fileConstructor(AssetManager assetManager,
-            String filename, float[] textureParameterValues);
+            String filename, int[] textureParameterValues);
 
-    static native long bareConstructor(float[] textureParameterValues);
+    static native long bareConstructor(int[] textureParameterValues);
 
     static native boolean update(long pointer, int width, int height,
             byte[] grayscaleData);

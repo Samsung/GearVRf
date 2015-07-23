@@ -41,5 +41,5 @@ class NativeTexture {
     static native int getId(long texture);
 
     static native void updateTextureParameters(long texture,
-            float[] textureParametersValues);
+            int[] textureParametersValues);
 }

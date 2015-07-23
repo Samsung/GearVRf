@@ -162,7 +162,7 @@ public class GVRCompressedTexture extends GVRTexture {
 class NativeCompressedTexture {
     static native long normalConstructor(int target, int internalFormat,
             int width, int height, int imageSize, byte[] data,
-            float[] textureParameterValues);
+            int[] textureParameterValues);
 
     static native long mipmappedConstructor(int target);
 }

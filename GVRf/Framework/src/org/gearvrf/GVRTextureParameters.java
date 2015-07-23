@@ -24,7 +24,7 @@ public class GVRTextureParameters {
     private TextureWrapType wrapSType;
     private TextureWrapType wrapTType;
 
-    private float anisotropicValue;
+    private int anisotropicValue;
 
     GVRContext mGVRContext = null;
 
@@ -34,7 +34,7 @@ public class GVRTextureParameters {
         magFilterType = TextureFilterType.GL_LINEAR;
         wrapSType = TextureWrapType.GL_CLAMP_TO_EDGE;
         wrapTType = TextureWrapType.GL_CLAMP_TO_EDGE;
-        anisotropicValue = 1.0f;
+        anisotropicValue = 1;
     }
 
     public void setMinFilterType(TextureFilterType minFilterType) {
@@ -73,38 +73,38 @@ public class GVRTextureParameters {
         return mGVRContext.isAnisotropicSupported;
     }
 
-    public void setAnisotropicValue(float value) {
+    public void setAnisotropicValue(int value) {
         if (value > getMaxAnisotropicValue()) {
             value = getMaxAnisotropicValue();
         }
         anisotropicValue = value;
     }
 
-    public float getAnisotropicValue() {
+    public int getAnisotropicValue() {
         return anisotropicValue;
     }
 
-    public float getMaxAnisotropicValue() {
+    public int getMaxAnisotropicValue() {
         if (mGVRContext.isAnisotropicSupported) {
             return mGVRContext.maxAnisotropicValue;
         }
-        return -1.0f;
+        return -1;
     }
 
-    public float[] getDefalutValuesArray() {
-        float[] defaultValues = new float[5];
+    public int[] getDefalutValuesArray() {
+        int[] defaultValues = new int[5];
 
         defaultValues[0] = GLES20.GL_LINEAR; // MIN FILTER
         defaultValues[1] = GLES20.GL_LINEAR; // MAG FILTER
-        defaultValues[2] = 1.0f; // ANISO FILTER
+        defaultValues[2] = 1; // ANISO FILTER
         defaultValues[3] = GLES20.GL_CLAMP_TO_EDGE; // WRAP S
         defaultValues[4] = GLES20.GL_CLAMP_TO_EDGE; // WRAP T
 
         return defaultValues;
     }
 
-    public float[] getCurrentValuesArray() {
-        float[] currentValues = new float[5];
+    public int[] getCurrentValuesArray() {
+        int[] currentValues = new int[5];
 
         currentValues[0] = getMinFilterType().getFilterValue(); // MIN FILTER
         currentValues[1] = getMagFilterType().getFilterValue(); // MAG FILTER
@@ -150,5 +150,5 @@ public class GVRTextureParameters {
 }
 
 class NativeTextureParameters {
-    static native float getMaxAnisotropicValue();
+    static native int getMaxAnisotropicValue();
 }

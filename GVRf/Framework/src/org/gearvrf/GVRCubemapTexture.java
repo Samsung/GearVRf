@@ -82,5 +82,5 @@ public class GVRCubemapTexture extends GVRTexture {
 
 class NativeCubemapTexture {
     static native long bitmapArrayConstructor(Bitmap[] bitmapArray,
-            float[] textureParameterValues);
+            int[] textureParameterValues);
 }

@@ -59,7 +59,7 @@ public:
     }
 
     explicit BaseTexture(int width, int height, const unsigned char* pixels,
-            float* texture_parameters) :
+            int* texture_parameters) :
             Texture(new GLTexture(TARGET, texture_parameters)) {
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
@@ -67,7 +67,7 @@ public:
         glGenerateMipmap (GL_TEXTURE_2D);
     }
 
-    explicit BaseTexture(float* texture_parameters) :
+    explicit BaseTexture(int* texture_parameters) :
             Texture(new GLTexture(TARGET, texture_parameters)) {
     }
 

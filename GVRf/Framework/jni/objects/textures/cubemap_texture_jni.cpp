@@ -29,20 +29,20 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCubemapTexture_bitmapArrayConstructor(JNIEnv * env,
-        jobject obj, jobjectArray bitmapArray, jfloatArray jtexture_parameters);
+        jobject obj, jobjectArray bitmapArray, jintArray jtexture_parameters);
 }
 ;
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCubemapTexture_bitmapArrayConstructor(JNIEnv * env,
-    jobject obj, jobjectArray bitmapArray, jfloatArray jtexture_parameters) {
+    jobject obj, jobjectArray bitmapArray, jintArray jtexture_parameters) {
     if (env->GetArrayLength(bitmapArray) != 6) {
         std::string error =
         "new CubemapTexture() failed! Input bitmapList's length is not 6.";
         throw error;
     }
     try {
-        jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters,0);
+        jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
         return reinterpret_cast<jlong>(new CubemapTexture(env, bitmapArray, texture_parameters));
     } catch (const std::string &err) {
         printJavaCallStack(env, err);

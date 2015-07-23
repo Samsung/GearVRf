@@ -29,9 +29,9 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename, jfloatArray jtexture_parameters);
+        jobject obj, jobject asset_manager, jstring filename, jintArray jtexture_parameters);
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jfloatArray jtexture_parameters);
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters);
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata);
@@ -40,9 +40,9 @@ Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename, jfloatArray jtexture_parameters) {
+        jobject obj, jobject asset_manager, jstring filename, jintArray jtexture_parameters) {
 
-    jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters,0);
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
 
     const char* native_string = env->GetStringUTFChars(filename, 0);
     AAssetManager* mgr = AAssetManager_fromJava(env, asset_manager);
@@ -75,9 +75,9 @@ Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jfloatArray jtexture_parameters) {
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters) {
 
-    jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters,0);
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
     return reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
 }
 

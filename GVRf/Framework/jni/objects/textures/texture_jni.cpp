@@ -29,7 +29,7 @@ Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
         jlong jtexture);
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
-        jlong jtexture, jfloatArray jtexture_parameters);
+        jlong jtexture, jintArray jtexture_parameters);
 }
 ;
 
@@ -42,10 +42,10 @@ Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
-        jlong jtexture, jfloatArray jtexture_parameters) {
+        jlong jtexture, jintArray jtexture_parameters) {
     Texture* texture = reinterpret_cast<Texture*>(jtexture);
 
-    jfloat* texture_parameters = env->GetFloatArrayElements(jtexture_parameters, 0);
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters, 0);
     texture->updateTextureParameters(texture_parameters);
 }
 
