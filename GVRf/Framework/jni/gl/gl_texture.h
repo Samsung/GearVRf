@@ -47,10 +47,6 @@ public:
 
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
-        LOGE("BEFORE:");
-        LOGE("MIN %d MAG %d A %d S %d T %d.", texture_parameters[0],
-                texture_parameters[1], texture_parameters[2],
-                texture_parameters[3], texture_parameters[4]);
         // Sets the new MIN FILTER
         GLenum min_filter_type_ = texture_parameters[0];
 
@@ -69,7 +65,7 @@ public:
         // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
         if (texture_parameters[2] > 1.0f) {
             glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                    (float)texture_parameters[2]);
+                    (float) texture_parameters[2]);
         }
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);

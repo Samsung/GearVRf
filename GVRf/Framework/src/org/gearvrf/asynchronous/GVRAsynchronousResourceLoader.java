@@ -247,16 +247,6 @@ public class GVRAsynchronousResourceLoader {
             final CancelableCallback<GVRTexture> callback,
             final GVRAndroidResource resource, final int priority,
             final int quality) {
-        loadTexture(gvrContext, textureCache, callback, resource, priority,
-                quality, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    // Texture parameters
-    public static void loadTexture(final GVRContext gvrContext,
-            final ResourceCache<GVRTexture> textureCache,
-            final CancelableCallback<GVRTexture> callback,
-            final GVRAndroidResource resource, final int priority,
-            final int quality, final GVRTextureParameters textureParameters) {
         validateCallbackParameters(gvrContext, callback, resource);
 
         final GVRTexture cached = textureCache == null ? null : textureCache
@@ -300,7 +290,7 @@ public class GVRAsynchronousResourceLoader {
                                 @Override
                                 public void run() {
                                     GVRTexture texture = compressedTexture
-                                            .toTexture(gvrContext, quality, textureParameters);
+                                            .toTexture(gvrContext, quality);
                                     textureCache.put(resource, texture);
                                     callback.loaded(texture, resource);
                                 }
@@ -362,15 +352,6 @@ public class GVRAsynchronousResourceLoader {
     public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
             ResourceCache<GVRTexture> textureCache,
             GVRAndroidResource resource, int priority, int quality) {
-        return loadFutureTexture(gvrContext, textureCache, resource, priority,
-                quality, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    // Texture parameters
-    public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
-            ResourceCache<GVRTexture> textureCache,
-            GVRAndroidResource resource, int priority, int quality,
-            GVRTextureParameters textureParameters) {
         GVRTexture cached = textureCache == null ? null : textureCache
                 .get(resource);
         if (cached != null) {
@@ -379,7 +360,7 @@ public class GVRAsynchronousResourceLoader {
             FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
             loadTexture(gvrContext, textureCache, result.callback, resource,
-                    priority, quality, textureParameters);
+                    priority, quality);
 
             return result;
         }

@@ -890,7 +890,54 @@ public abstract class GVRContext {
         return loadTexture(fileName, DEFAULT_TEXTURE_PARAMETERS);
     }
 
-    // Texture Parameters
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * with the user provided texture parameters.
+     * 
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the texture is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames. For large
+     * images, you should use either
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} (faster) or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
+     * (fastest <em>and</em> least memory pressure).
+     * 
+     * <p>
+     * Note also that this method does no scaling, and will return a full-size
+     * {@link Bitmap}. Loading (say) an unscaled photograph may abort your app:
+     * Use
+     * <ul>
+     * <li>Pre-scaled images
+     * <li>{@link BitmapFactory} methods which give you more control over the
+     * image size, or
+     * <li>
+     * {@link #loadTexture(GVRAndroidResource)} or
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)}
+     * which automatically scale large images to fit the GPU's restrictions and
+     * to avoid {@linkplain OutOfMemoryError out of memory errors.}
+     * </ul>
+     * 
+     * @param fileName
+     *            The name of a file, relative to the assets directory. The
+     *            assets directory may contain an arbitrarily complex tree of
+     *            sub-directories; the file name can specify any location in or
+     *            under the assets directory.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * @return The file as a texture, or {@code null} if file path does not
+     *         exist or the file can not be decoded into a Bitmap.
+     * 
+     * @deprecated We will remove this uncached, blocking function during Q3 of
+     *             2015. We suggest that you switch to
+     *             {@link #loadTexture(GVRAndroidResource)}
+     * 
+     */
     @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(String fileName,
             GVRTextureParameters textureParameters) {
@@ -939,7 +986,40 @@ public abstract class GVRContext {
         return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
     }
 
-    // Texture parameters
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * with the user provided texture parameters.
+     * 
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the texture is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames. For large
+     * images, you should use either
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} (faster) or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
+     * (fastest <em>and</em> least memory pressure).
+     * 
+     * <p>
+     * This method automatically scales large images to fit the GPU's
+     * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
+     * errors.} </ul>
+     * 
+     * @param resource
+     *            Basically, a stream containing a bitmap texture. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * @return The file as a texture, or {@code null} if the file can not be
+     *         decoded into a Bitmap.
+     * 
+     */
     public GVRTexture loadTexture(GVRAndroidResource resource,
             GVRTextureParameters textureParameters) {
 
@@ -1641,13 +1721,7 @@ public abstract class GVRContext {
      *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource) {
-        return loadFutureTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    // Texture parameters
-    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
-            GVRTextureParameters textureParameters) {
-        return loadFutureTexture(resource, DEFAULT_PRIORITY, textureParameters);
+        return loadFutureTexture(resource, DEFAULT_PRIORITY);
     }
 
     /**
@@ -1716,14 +1790,8 @@ public abstract class GVRContext {
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority) {
-        return loadFutureTexture(resource, priority, DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    // Texture parameters
-    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
-            int priority, GVRTextureParameters textureParameters) {
         return loadFutureTexture(resource, priority,
-                GVRCompressedTexture.BALANCED, textureParameters);
+                GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1799,15 +1867,8 @@ public abstract class GVRContext {
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority, int quality) {
-        return loadFutureTexture(resource, priority, quality,
-                DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    // Texture parameters
-    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
-            int priority, int quality, GVRTextureParameters textureParameters) {
         return GVRAsynchronousResourceLoader.loadFutureTexture(this,
-                sTextureCache, resource, priority, quality, textureParameters);
+                sTextureCache, resource, priority, quality);
     }
 
     /**

@@ -47,12 +47,6 @@ public:
     }
 
     virtual void updateTextureParameters(int* texture_parameters) {
-
-        LOGE("AFTER:");
-        LOGE("MIN %d MAG %d A %d S %d T %d.", texture_parameters[0],
-                texture_parameters[1], texture_parameters[2],
-                texture_parameters[3], texture_parameters[4]);
-
         // Sets the new MIN FILTER
         GLenum min_filter_type_ = texture_parameters[0];
 

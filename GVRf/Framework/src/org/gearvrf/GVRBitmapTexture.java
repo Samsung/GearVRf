@@ -35,7 +35,18 @@ public class GVRBitmapTexture extends GVRTexture {
         this(gvrContext, bitmap, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
     }
 
-    // Texture Parameters
+    /**
+     * Constructs a texture using a pre-existing {@link Bitmap} and the user
+     * defined filters {@link GVRTextureParameters}.
+     * 
+     * @param gvrContext
+     *            Current {@link GVRContext}
+     * @param bitmap
+     *            A non-null {@link Bitmap} instance.
+     * @param textureParameters
+     *            User defined object for {@link GVRTextureParameters} which may
+     *            also contain default values.
+     */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap,
             GVRTextureParameters textureParameters) {
         super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters
@@ -66,7 +77,29 @@ public class GVRBitmapTexture extends GVRTexture {
                 gvrContext.DEFAULT_TEXTURE_PARAMETERS);
     }
 
-    // Texture Parameters
+    /**
+     * Constructs a texture by loading a bitmap from a PNG file in (or under)
+     * the {@code assets} directory and the user defined filters
+     * {@link GVRTextureParameters}.
+     * 
+     * This method uses a native code path to create a texture directly from a
+     * {@code .png} file along with the filters defined by the calling API; it
+     * does not create an Android {@link Bitmap}. It may thus be slightly faster
+     * than loading a {@link Bitmap} and creating a texture with
+     * {@link #GVRBitmapTexture(GVRContext, Bitmap)}, and it should reduce
+     * memory pressure, a bit.
+     * 
+     * @param gvrContext
+     *            Current {@link GVRContext}
+     * @param pngAssetFilename
+     *            The name of a {@code .png} file, relative to the assets
+     *            directory. The assets directory may contain an arbitrarily
+     *            complex tree of subdirectories; the file name can specify any
+     *            location in or under the assets directory.
+     * @param textureParameters
+     *            User defined object for {@link GVRTextureParameters} which may
+     *            also contain default values.
+     */
     public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename,
             GVRTextureParameters textureParameters) {
         super(gvrContext, NativeBaseTexture.fileConstructor(gvrContext
@@ -99,7 +132,27 @@ public class GVRBitmapTexture extends GVRTexture {
                 gvrContext.DEFAULT_TEXTURE_PARAMETERS);
     }
 
-    // Texture Parameters
+    /**
+     * Create a new, grayscale texture, from an array of luminance bytes and the
+     * user defined filters {@link GVRTextureParameters}.
+     * 
+     * @param gvrContext
+     *            Current {@link GVRContext}
+     * @param width
+     *            Texture width, in pixels
+     * @param height
+     *            Texture height, in pixels
+     * @param grayscaleData
+     *            {@code width * height} bytes of gray scale data
+     * @param textureParameters
+     *            User defined object for {@link GVRTextureParameters} which may
+     *            also contain default values.
+     * 
+     * @throws IllegalArgumentException
+     *             If {@code width} or {@code height} is {@literal <= 0,} or if
+     *             {@code grayScaleData} is {@code null}, or if
+     *             {@code grayscaleData.length < height * width}
+     */
     public GVRBitmapTexture(GVRContext gvrContext, int width, int height,
             byte[] grayscaleData, GVRTextureParameters textureParameters)
             throws IllegalArgumentException {

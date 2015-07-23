@@ -39,7 +39,23 @@ public class GVRCubemapTexture extends GVRTexture {
         this(gvrContext, bitmapArray, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
     }
 
-    // Texture parameters
+    /**
+     * Constructs a cube map texture using six pre-existing {@link Bitmap}s and
+     * the user defined filters {@link GVRTextureParameters}.
+     * 
+     * @param gvrContext
+     *            Current {@link GVRContext}
+     * @param bitmapArray
+     *            A {@link Bitmap} array which contains six {@link Bitmap}s. The
+     *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
+     *            "posz.png", and "negz.png", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @param textureParameters
+     *            User defined object for {@link GVRTextureParameters} which may
+     *            also contain default values.
+     */
     public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray,
             GVRTextureParameters textureParameters) {
         super(gvrContext, NativeCubemapTexture.bitmapArrayConstructor(
