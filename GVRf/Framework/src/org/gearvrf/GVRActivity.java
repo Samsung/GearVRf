@@ -55,6 +55,7 @@ public class GVRActivity extends VrActivity {
             String fromPackageName, String commandString, String uriString);
 
     static native void nativeSetCamera(long appPtr, long camera);
+    static native void nativeSetCameraRig(long appPtr, long cameraRig);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,6 +205,10 @@ public class GVRActivity extends VrActivity {
         mCamera = camera;
 
         nativeSetCamera(getAppPtr(), camera.getNative());
+    }
+
+    void setCameraRig(GVRCameraRig cameraRig) {
+        nativeSetCameraRig(getAppPtr(), cameraRig.getNative());
     }
 
     @Override

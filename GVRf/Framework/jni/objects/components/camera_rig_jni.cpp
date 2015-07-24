@@ -114,8 +114,7 @@ Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
         jobject obj, jlong jcamera_rig);
-}
-;
+};
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv * env,

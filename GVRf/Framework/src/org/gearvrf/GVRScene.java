@@ -119,6 +119,11 @@ public class GVRScene extends GVRHybridObject {
     public void setMainCameraRig(GVRCameraRig cameraRig) {
         mMainCameraRig = cameraRig;
         NativeScene.setMainCameraRig(getNative(), cameraRig.getNative());
+
+        final GVRContext gvrContext = getGVRContext();
+        if (this == gvrContext.getMainScene()) {
+            gvrContext.getActivity().setCameraRig(getMainCameraRig());
+        }
     }
 
     /**
