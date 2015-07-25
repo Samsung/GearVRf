@@ -29,11 +29,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import android.graphics.Color;
+import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 public class SampleViewManager extends GVRScript {
 
     GVRScene mScene;
     private int colorIndex = 0;
+    private static final String TAG = "SampleViewManager";
 
     static List<Integer> colors = Arrays.asList(Color.WHITE, Color.YELLOW,
             Color.BLACK, Color.BLUE, Color.GREEN, Color.RED, Color.MAGENTA,
@@ -72,6 +76,80 @@ public class SampleViewManager extends GVRScript {
     public void onStep() {
     }
 
+    // getCenteredAxis() and some other code are referenced from:
+    // https://developer.android.com/training/game-controllers/controller-input.html
+    private static float getCenteredAxis(MotionEvent event, InputDevice device,
+            int axis, int historyPos) {
+        final InputDevice.MotionRange range = device.getMotionRange(axis,
+                event.getSource());
+
+        // A joystick at rest does not always report an absolute position of
+        // (0,0). Use the getFlat() method to determine the range of values
+        // bounding the joystick axis center.
+        if (range != null) {
+            final float flat = range.getFlat();
+            final float value = historyPos < 0 ? event.getAxisValue(axis)
+                    : event.getHistoricalAxisValue(axis, historyPos);
+
+            // Ignore axis values that are within the 'flat' region of the
+            // joystick axis center.
+            if (Math.abs(value) > flat) {
+                return value;
+            }
+        }
+        return 0;
+    }
+
+    public boolean processJoystickInput(MotionEvent event, int historyPos) {
+        if (mScene.getSceneObjects().isEmpty()) {
+            return false;
+        }
+
+        InputDevice mInputDevice = event.getDevice();
+
+        // Calculate the horizontal distance to move by
+        // using the input value from one of these physical controls:
+        // the left control stick, hat axis, or the right control stick.
+        float x = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_X,
+                historyPos);
+        float hatx = getCenteredAxis(event, mInputDevice,
+                MotionEvent.AXIS_HAT_X, historyPos);
+        
+        // Google refers to this axis as z, Samsung Gamepad uses RX.
+        float z = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_RX,
+                historyPos);
+
+        // Calculate the vertical distance to move by
+        // using the input value from one of these physical controls:
+        // the left control stick, hat switch, or the right control stick.
+        float y = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_Y,
+                historyPos);
+
+        float haty = getCenteredAxis(event, mInputDevice,
+                MotionEvent.AXIS_HAT_Y, historyPos);
+
+        // Google refers to this axis as rz, Samsung Gamepad uses RY.
+        float rz = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_RY,
+                historyPos);
+
+        android.util.Log.d(TAG, "x = " + x);
+        android.util.Log.d(TAG, "hatx = " + hatx);
+        android.util.Log.d(TAG, "z = " + z);
+
+        android.util.Log.d(TAG, "y = " + y);
+        android.util.Log.d(TAG, "haty = " + haty);
+        android.util.Log.d(TAG, "rz = " + rz);
+
+        // Translate the camera
+        // the first object of the scene is the cameraRigObject
+        final float SCALE = 0.5f;
+        GVRTransform transform = mScene.getSceneObjects().get(0).getTransform();
+        transform.setPositionX(transform.getPositionX() - SCALE * hatx);
+        transform.setPositionY(transform.getPositionY() + SCALE * haty);
+
+        return true;
+    }
+
     public boolean processKeyEvent(int keyCode) {
         GVRCameraRig mainCameraRig = mScene.getMainCameraRig();
         int color = mainCameraRig.getLeftCamera().getBackgroundColor();
@@ -79,13 +157,43 @@ public class SampleViewManager extends GVRScript {
         boolean handled = false;
 
         switch (keyCode) {
-        case android.view.KeyEvent.KEYCODE_BUTTON_L1:
+        case KeyEvent.KEYCODE_BUTTON_L1:
+            android.util.Log.d(TAG, "button L1");
             colorIndex = (colorIndex + 1) % colors.size();
             handled = true;
             break;
 
-        case android.view.KeyEvent.KEYCODE_BUTTON_R1:
+        case KeyEvent.KEYCODE_BUTTON_R1:
+            android.util.Log.d(TAG, "button R1");
             colorIndex = (colorIndex > 0) ? colorIndex - 1 : colors.size() - 1;
+            handled = true;
+            break;
+        case KeyEvent.KEYCODE_BUTTON_A:
+            android.util.Log.d(TAG, "button .");
+            handled = true;
+            break;
+        case KeyEvent.KEYCODE_BUTTON_B:
+            android.util.Log.d(TAG, "button ..");
+            handled = true;
+            break;
+        case KeyEvent.KEYCODE_BUTTON_X:
+            android.util.Log.d(TAG, "button ...");
+            handled = true;
+            break;
+        case KeyEvent.KEYCODE_BUTTON_Y:
+            android.util.Log.d(TAG, "button ....");
+            handled = true;
+            break;
+        case KeyEvent.KEYCODE_BUTTON_START:
+            android.util.Log.d(TAG, "button START");
+            handled = true;
+            break;
+        case KeyEvent.KEYCODE_BUTTON_SELECT:
+            android.util.Log.d(TAG, "button SELECT");
+            handled = true;
+            break;
+        case 310:
+            android.util.Log.d(TAG, "Play");
             handled = true;
             break;
         }
@@ -100,18 +208,4 @@ public class SampleViewManager extends GVRScript {
         return false;
     }
 
-    public boolean processMotionEvent(float motionX, float motionY) {
-        if (mScene.getSceneObjects().isEmpty()) {
-            return false;
-        }
-
-        // Translate the camera
-        // the first object of the scene is the cameraRigObject
-        final float SCALE = 0.5f;
-        GVRTransform transform = mScene.getSceneObjects().get(0).getTransform();
-        transform.setPositionX(transform.getPositionX() - SCALE * motionX);
-        transform.setPositionY(transform.getPositionY() + SCALE * motionY);
-        
-        return true;
-    }
 }

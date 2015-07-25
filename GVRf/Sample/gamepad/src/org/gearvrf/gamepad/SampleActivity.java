@@ -18,7 +18,9 @@ package org.gearvrf.gamepad;
 import org.gearvrf.GVRActivity;
 
 import android.os.Bundle;
+import android.view.InputDevice;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 public class SampleActivity extends GVRActivity {
 
@@ -47,20 +49,32 @@ public class SampleActivity extends GVRActivity {
     }
 
     @Override
-    public boolean dispatchGenericMotionEvent(android.view.MotionEvent event) {
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
         boolean handled = false;
 
-        if (event.getAction() == android.view.MotionEvent.ACTION_MOVE) {
-            handled = mScript.processMotionEvent(
-                    event.getAxisValue(android.view.MotionEvent.AXIS_HAT_X),
-                    event.getAxisValue(android.view.MotionEvent.AXIS_HAT_Y));
-        }
+        // Check that the event came from a game controller
+        if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+                && event.getAction() == MotionEvent.ACTION_MOVE) {
 
-        if (handled) {
-            return true;
-        } else {
-            return super.dispatchGenericMotionEvent(event);
+            // Process all historical movement samples in the batch
+            final int historySize = event.getHistorySize();
+
+            // Process the movements starting from the
+            // earliest historical position in the batch
+            for (int i = 0; i < historySize; i++) {
+                // Process the event at historical position i
+                mScript.processJoystickInput(event, i);
+            }
+
+            // Process the current movement sample in the batch (position -1)
+            handled = mScript.processJoystickInput(event, -1);
+
+            if (handled) {
+                return true;
+            } else {
+                return super.dispatchGenericMotionEvent(event);
+            }
         }
+        return handled;
     }
-
 }
