@@ -18,6 +18,7 @@ package org.gearvrf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.gearvrf.utility.Log;
 
@@ -105,7 +106,8 @@ public class GVRPicker {
      */
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene,
             float ox, float oy, float oz, float dx, float dy, float dz) {
-        synchronized (scene) {
+        sFindObjectsLock.lock();
+        try {
             long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz,
                     dx, dy, dz);
             GVREyePointeeHolder[] eyePointeeHolders = new GVREyePointeeHolder[ptrs.length];
@@ -118,6 +120,8 @@ public class GVRPicker {
                         eyePointeeHolders[i]);
             }
             return eyePointeeHolders;
+        } finally {
+            sFindObjectsLock.unlock();
         }
     }
 
@@ -237,7 +241,8 @@ public class GVRPicker {
      */
     public static final List<GVRPickedObject> findObjects(GVRScene scene,
             float ox, float oy, float oz, float dx, float dy, float dz) {
-        synchronized (scene) {
+        sFindObjectsLock.lock();
+        try {
             GVRContext gvrContext = scene.getGVRContext();
 
             long[] pointers = NativePicker.pickScene(scene.getNative(), ox, oy,
@@ -250,6 +255,8 @@ public class GVRPicker {
                 result.add(new GVRPickedObject(holder));
             }
             return result;
+        } finally {
+            sFindObjectsLock.unlock();
         }
     }
 
@@ -327,6 +334,8 @@ public class GVRPicker {
             return hitLocation[2];
         }
     }
+
+    static final ReentrantLock sFindObjectsLock = new ReentrantLock();
 }
 
 final class NativePicker {

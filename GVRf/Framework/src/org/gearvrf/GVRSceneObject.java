@@ -463,11 +463,17 @@ public class GVRSceneObject extends GVRHybridObject {
      * Detach the object's current {@link GVREyePointeeHolder}.
      */
     public void detachEyePointeeHolder() {
-        if (mEyePointeeHolder != null) {
-            mEyePointeeHolder.setOwnerObject(null);
+        // see GVRPicker.findObjects
+        GVRPicker.sFindObjectsLock.lock();
+        try {
+            if (mEyePointeeHolder != null) {
+                mEyePointeeHolder.setOwnerObject(null);
+            }
+            mEyePointeeHolder = null;
+            NativeSceneObject.detachEyePointeeHolder(getNative());
+        } finally {
+            GVRPicker.sFindObjectsLock.unlock();
         }
-        mEyePointeeHolder = null;
-        NativeSceneObject.detachEyePointeeHolder(getNative());
     }
 
     /**
