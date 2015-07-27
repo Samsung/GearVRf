@@ -21,8 +21,6 @@ class GVRRenderBundle {
     private final GVRLensInfo mData;
     private final GVRMaterialShaderManager mMaterialShaderManager;
     private final GVRPostEffectShaderManager mPostEffectShaderManager;
-    private GVRRenderTexture mLeftRenderTexture = null;
-    private GVRRenderTexture mRightRenderTexture = null;
     private GVRRenderTexture mPostEffectRenderTextureA = null;
     private GVRRenderTexture mPostEffectRenderTextureB = null;
 
@@ -57,14 +55,6 @@ class GVRRenderBundle {
         return mPostEffectShaderManager;
     }
 
-    GVRRenderTexture getLeftRenderTexture() {
-        return mLeftRenderTexture;
-    }
-
-    GVRRenderTexture getRightRenderTexture() {
-        return mRightRenderTexture;
-    }
-
     GVRRenderTexture getPostEffectRenderTextureA() {
         return mPostEffectRenderTextureA;
     }
@@ -83,19 +73,11 @@ class GVRRenderBundle {
             }
         }
         if (sampleCount <= 1) {
-            mLeftRenderTexture = new GVRRenderTexture(mGVRContext,
-                    mData.getFBOWidth(), mData.getFBOHeight());
-            mRightRenderTexture = new GVRRenderTexture(mGVRContext,
-                    mData.getFBOWidth(), mData.getFBOHeight());
             mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext,
                     mData.getFBOWidth(), mData.getFBOHeight());
             mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext,
                     mData.getFBOWidth(), mData.getFBOHeight());
         } else {
-            mLeftRenderTexture = new GVRRenderTexture(mGVRContext,
-                    mData.getFBOWidth(), mData.getFBOHeight(), sampleCount);
-            mRightRenderTexture = new GVRRenderTexture(mGVRContext,
-                    mData.getFBOWidth(), mData.getFBOHeight(), sampleCount);
             mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext,
                     mData.getFBOWidth(), mData.getFBOHeight(), sampleCount);
             mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext,

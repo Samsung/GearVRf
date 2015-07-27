@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a scene, a screen.
  ***************************************************************************/
@@ -52,39 +51,31 @@ private:
     Renderer();
 
 public:
-    static void renderCamera(Scene* scene,
-            Camera* camera,
-            int framebufferId,
+    static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
 
-    static void renderCamera(Scene* scene,
-            Camera* camera,
-            RenderTexture* render_texture,
+    static void renderCamera(Scene* scene, Camera* camera,
+            RenderTexture* render_texture, ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
+
+    static void renderCamera(Scene* scene, Camera* camera, int viewportX,
+            int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
 
-    static void renderCamera(Scene* scene,
-            Camera* camera,
-            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+    static void renderCamera(Scene* scene, Camera* camera,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-
-    static void renderCamera(Scene* scene,
-            Camera* camera,
-            RenderTexture* render_texture,
-            ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b,
-            glm::mat4 vp_matrix);
 
     static void initializeStats();
     static void resetStats();
@@ -93,21 +84,21 @@ public:
 
 private:
     static void renderRenderData(RenderData* render_data,
-    		const glm::mat4& view_matrix, const glm::mat4& projection_matrix, int render_mask,
-            ShaderManager* shader_manager);
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager);
     static void renderPostEffectData(Camera* camera,
-            RenderTexture* render_texture,
-            PostEffectData* post_effect_data,
+            RenderTexture* render_texture, PostEffectData* post_effect_data,
             PostEffectShaderManager* post_effect_shader_manager);
 
-    static void occlusion_cull(Scene* scene, std::vector <  SceneObject* > scene_objects);
+    static void occlusion_cull(Scene* scene,
+            std::vector<SceneObject*> scene_objects);
     static void frustum_cull(Scene* scene, Camera *camera,
-        std::vector < SceneObject* > scene_objects,
-        std::vector < RenderData* >& render_data_vector,
-        glm::mat4 vp_matrix,
-        ShaderManager* shader_manager);
+            std::vector<SceneObject*> scene_objects,
+            std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
+            ShaderManager* shader_manager);
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
-    static bool is_cube_in_frustum( float frustum[6][4], const float *vertex_limit);
+    static bool is_cube_in_frustum(float frustum[6][4],
+            const float *vertex_limit);
 
     static void set_face_culling(int cull_face);
 

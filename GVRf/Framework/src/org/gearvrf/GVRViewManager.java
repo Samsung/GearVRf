@@ -108,9 +108,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
 
     private native void renderCamera(long appPtr, long scene, long camera,
-            long renderTexture, long shaderManager,
-            long postEffectShaderManager, long postEffectRenderTextureA,
-            long postEffectRenderTextureB);
+            long shaderManager, long postEffectShaderManager,
+            long postEffectRenderTextureA, long postEffectRenderTextureB);
 
     private native void readRenderResultNative(long renderTexture,
             Object readbackBuffer);
@@ -250,13 +249,11 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     private void renderCamera(long activity_ptr, GVRScene scene,
-            GVRCamera camera, GVRRenderTexture renderTexture,
-            GVRRenderBundle renderBundle) {
+            GVRCamera camera, GVRRenderBundle renderBundle) {
         renderCamera(activity_ptr, scene.getNative(), camera.getNative(),
-                renderTexture.getNative(), renderBundle
-                        .getMaterialShaderManager().getNative(), renderBundle
-                        .getPostEffectShaderManager().getNative(), renderBundle
-                        .getPostEffectRenderTextureA().getNative(),
+                renderBundle.getMaterialShaderManager().getNative(),
+                renderBundle.getPostEffectShaderManager().getNative(),
+                renderBundle.getPostEffectRenderTextureA().getNative(),
                 renderBundle.getPostEffectRenderTextureB().getNative());
     }
 
@@ -306,10 +303,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     private void readRenderResult() {
         if (mReadbackBuffer == null) {
-            GVRRenderTexture renderTexture = mRenderBundle
-                    .getRightRenderTexture();
-            mReadbackBufferWidth = renderTexture.getWidth();
-            mReadbackBufferHeight = renderTexture.getHeight();
+
+            mReadbackBufferWidth = mLensInfo.getFBOWidth();
+            mReadbackBufferHeight = mLensInfo.getFBOHeight();
             mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth
                     * mReadbackBufferHeight * 4);
             mReadbackBuffer.order(ByteOrder.nativeOrder());
@@ -356,7 +352,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             int index) {
 
         renderCamera(mActivity.getAppPtr(), mMainScene, centerCamera,
-                mRenderBundle.getRightRenderTexture(), mRenderBundle);
+                mRenderBundle);
         readRenderResult();
         byteArrays[index] = Arrays.copyOf(mReadbackBuffer.array(),
                 mReadbackBuffer.array().length);
@@ -470,7 +466,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             if (eye == 1) {
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
                 renderCamera(mActivity.getAppPtr(), mMainScene, rightCamera,
-                        mRenderBundle.getRightRenderTexture(), mRenderBundle);
+                        mRenderBundle);
 
                 // if mScreenshotRightCallback is not null, capture right eye
                 if (mScreenshotRightCallback != null) {
@@ -495,9 +491,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                             centerCameraObject);
 
                     renderCamera(mActivity.getAppPtr(), mMainScene,
-                            centerCamera,
-                            mRenderBundle.getRightRenderTexture(),
-                            mRenderBundle);
+                            centerCamera, mRenderBundle);
 
                     centerCameraObject.detachCamera();
                     mainCameraRig.getOwnerObject().removeChildObject(
@@ -523,7 +517,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
                 renderCamera(mActivity.getAppPtr(), mMainScene, leftCamera,
-                        mRenderBundle.getLeftRenderTexture(), mRenderBundle);
+                        mRenderBundle);
 
                 // if mScreenshotLeftCallback is not null, capture left eye
                 if (mScreenshotLeftCallback != null) {
