@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Textures.
  ***************************************************************************/
@@ -47,6 +46,34 @@ public:
         return gl_texture_->id();
     }
 
+    virtual void updateTextureParameters(int* texture_parameters) {
+        // Sets the new MIN FILTER
+        GLenum min_filter_type_ = texture_parameters[0];
+
+        // Sets the MAG FILTER
+        GLenum mag_filter_type_ = texture_parameters[1];
+
+        // Sets the wrap parameter for texture coordinate S
+        GLenum wrap_s_type_ = texture_parameters[3];
+
+        // Sets the wrap parameter for texture coordinate S
+        GLenum wrap_t_type_ = texture_parameters[4];
+
+        glBindTexture(target, getId());
+
+        // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
+        if (texture_parameters[2] > 1.0f) {
+            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                    texture_parameters[2]);
+        }
+
+        glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
+        glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
+        glBindTexture(target, 0);
+    }
+
     virtual GLenum getTarget() const = 0;
 
 protected:
@@ -62,6 +89,9 @@ private:
     Texture(Texture&& texture);
     Texture& operator=(const Texture& texture);
     Texture& operator=(Texture&& texture);
+
+private:
+    static const GLenum target = GL_TEXTURE_2D;
 };
 
 }

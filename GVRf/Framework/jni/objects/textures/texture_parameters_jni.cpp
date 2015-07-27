@@ -13,40 +13,34 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * JNI
  ***************************************************************************/
 
-#include "texture.h"
+#ifndef GL_EXT_texture_filter_anisotropic
+#define GL_EXT_texture_filter_anisotropic 1
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+#endif /* GL_EXT_texture_filter_anisotropic */
+
+#include "GLES3/gl3.h"
+#include "util/gvr_log.h"
+
+#include "engine/memory/gl_delete.h"
 
 #include "util/gvr_jni.h"
 
 namespace gvr {
 extern "C" {
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
-        jlong jtexture);
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
-        jlong jtexture, jintArray jtexture_parameters);
+Java_org_gearvrf_NativeTextureParameters_getMaxAnisotropicValue(JNIEnv * env, jobject obj);
 }
 ;
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
-        jlong jtexture) {
-    Texture* texture = reinterpret_cast<Texture*>(jtexture);
-    return texture->getId();
+Java_org_gearvrf_NativeTextureParameters_getMaxAnisotropicValue(JNIEnv * env, jobject obj) {
+    float aniso_max_value = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &aniso_max_value);
+    return (int)aniso_max_value;
 }
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
-        jlong jtexture, jintArray jtexture_parameters) {
-    Texture* texture = reinterpret_cast<Texture*>(jtexture);
-
-    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters, 0);
-    texture->updateTextureParameters(texture_parameters);
-}
-
 }

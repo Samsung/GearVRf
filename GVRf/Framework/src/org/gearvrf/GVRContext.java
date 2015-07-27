@@ -45,11 +45,11 @@ import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLES20;
 import android.view.KeyEvent;
 
 /**
@@ -124,6 +124,19 @@ public abstract class GVRContext {
      * @since 1.6.5
      */
     protected long mGLThreadID;
+
+    /**
+     * The default texture parameter instance for overloading texture methods
+     * 
+     */
+    public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(
+            this);
+
+    // true or false based on the support for anisotropy
+    public boolean isAnisotropicSupported;
+
+    // Max anisotropic value if supported and -1 otherwise
+    public int maxAnisotropicValue = -1;
 
     /*
      * Methods
@@ -873,8 +886,61 @@ public abstract class GVRContext {
      *             {@link #loadTexture(GVRAndroidResource)}
      * 
      */
-    @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(String fileName) {
+        return loadTexture(fileName, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * with the user provided texture parameters.
+     * 
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the texture is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames. For large
+     * images, you should use either
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} (faster) or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
+     * (fastest <em>and</em> least memory pressure).
+     * 
+     * <p>
+     * Note also that this method does no scaling, and will return a full-size
+     * {@link Bitmap}. Loading (say) an unscaled photograph may abort your app:
+     * Use
+     * <ul>
+     * <li>Pre-scaled images
+     * <li>{@link BitmapFactory} methods which give you more control over the
+     * image size, or
+     * <li>
+     * {@link #loadTexture(GVRAndroidResource)} or
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)}
+     * which automatically scale large images to fit the GPU's restrictions and
+     * to avoid {@linkplain OutOfMemoryError out of memory errors.}
+     * </ul>
+     * 
+     * @param fileName
+     *            The name of a file, relative to the assets directory. The
+     *            assets directory may contain an arbitrarily complex tree of
+     *            sub-directories; the file name can specify any location in or
+     *            under the assets directory.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * @return The file as a texture, or {@code null} if file path does not
+     *         exist or the file can not be decoded into a Bitmap.
+     * 
+     * @deprecated We will remove this uncached, blocking function during Q3 of
+     *             2015. We suggest that you switch to
+     *             {@link #loadTexture(GVRAndroidResource)}
+     * 
+     */
+    @SuppressWarnings("resource")
+    public GVRBitmapTexture loadTexture(String fileName,
+            GVRTextureParameters textureParameters) {
 
         assertGLThread();
 
@@ -883,7 +949,8 @@ public abstract class GVRContext {
         }
 
         Bitmap bitmap = loadBitmap(fileName);
-        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap);
+        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap,
+                textureParameters);
     }
 
     /**
@@ -916,6 +983,45 @@ public abstract class GVRContext {
      * @since 1.6.5
      */
     public GVRTexture loadTexture(GVRAndroidResource resource) {
+        return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * with the user provided texture parameters.
+     * 
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the texture is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames. For large
+     * images, you should use either
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} (faster) or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
+     * (fastest <em>and</em> least memory pressure).
+     * 
+     * <p>
+     * This method automatically scales large images to fit the GPU's
+     * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
+     * errors.} </ul>
+     * 
+     * @param resource
+     *            Basically, a stream containing a bitmap texture. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * @return The file as a texture, or {@code null} if the file can not be
+     *         decoded into a Bitmap.
+     * 
+     */
+    public GVRTexture loadTexture(GVRAndroidResource resource,
+            GVRTextureParameters textureParameters) {
 
         GVRTexture texture = sTextureCache.get(resource);
         if (texture == null) {
@@ -924,8 +1030,8 @@ public abstract class GVRContext {
             Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
                     resource.getStream(), false);
             resource.closeStream();
-            texture = bitmap == null ? null
-                    : new GVRBitmapTexture(this, bitmap);
+            texture = bitmap == null ? null : new GVRBitmapTexture(this,
+                    bitmap, textureParameters);
             if (texture != null) {
                 sTextureCache.put(resource, texture);
             }
@@ -960,6 +1066,13 @@ public abstract class GVRContext {
      */
     public GVRCubemapTexture loadCubemapTexture(
             GVRAndroidResource[] resourceArray) {
+        return loadCubemapTexture(resourceArray, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+    // Texture parameters
+    public GVRCubemapTexture loadCubemapTexture(
+            GVRAndroidResource[] resourceArray,
+            GVRTextureParameters textureParameters) {
 
         assertGLThread();
 
@@ -974,7 +1087,7 @@ public abstract class GVRContext {
             resourceArray[i].closeStream();
         }
 
-        return new GVRCubemapTexture(this, bitmapArray);
+        return new GVRCubemapTexture(this, bitmapArray, textureParameters);
     }
 
     /**
