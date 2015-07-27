@@ -79,6 +79,7 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
     , UiJni(&jni_)
     , viewManager(NULL)
     , cameraRig(nullptr)
+    , useOculusOrientationReading(false)
 {
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
