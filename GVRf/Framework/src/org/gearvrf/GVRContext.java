@@ -672,9 +672,7 @@ public abstract class GVRContext {
             AiNode node,
             AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider) {
         try {
-            // for (AiNode childNode : childrenNodes) {
             for (int i = 0; i < node.getNumMeshes(); i++) {
-
                 FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
                         this.getNodeMesh(new GVRAndroidResource(this,
                                 assetRelativeFilename), node.getName(), i));
@@ -770,8 +768,6 @@ public abstract class GVRContext {
                         wholeSceneObject, node.getChildren().get(i),
                         wrapperProvider);
             }
-
-            // }
         } catch (Exception e) {
             // Error while recursing the Scene Graph
             e.printStackTrace();
