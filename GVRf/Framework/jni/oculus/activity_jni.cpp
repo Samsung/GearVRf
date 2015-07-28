@@ -50,23 +50,6 @@ void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
     activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
 }
 
-void Java_org_gearvrf_GVRActivity_nativeOnDock(
-        JNIEnv * jni, jclass clazz, jlong appPtr)
-{
-    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
-    if (canSwitchToOculusHeadTracking) {
-        LOGV("will start using orientation readings from oculus");
-        activity->useOculusOrientationReading = true;
-    }
-}
-
-void Java_org_gearvrf_GVRActivity_nativeOnUndock(
-        JNIEnv * jni, jclass clazz, jlong appPtr)
-{
-    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
-    activity->useOculusOrientationReading = false;
-}
-
 } // extern "C"
 
 //=============================================================================
@@ -235,6 +218,7 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
 
+    useOculusOrientationReading = canSwitchToOculusHeadTracking && vrFrame.DeviceStatus.DeviceIsDocked;
     if (useOculusOrientationReading && nullptr != cameraRig) {
        const ovrQuatf& orientation = vrFrame.Tracking.HeadPose.Pose.Orientation;
        glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
