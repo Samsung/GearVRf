@@ -20,6 +20,7 @@
 #include "objects/scene_object.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
+static const bool canSwitchToOculusHeadTracking = true;
 
 namespace gvr {
 
@@ -123,7 +124,6 @@ jclass GVRActivity::GetGlobalClassReference( const char * className ) const
 void GVRActivity::Configure( OVR::ovrSettings & settings )
 {
     settings.EyeBufferParms.multisamples = 2;
-    useOculusOrientationReading = false;
     // leave the rest as default for now.
     // TODO: take values specified in xml and set them here.
 }
@@ -218,6 +218,7 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
     jni->CallVoidMethod( javaObject, beforeDrawEyesMethodId );
     jni->CallVoidMethod( javaObject, drawFrameMethodId );
 
+    useOculusOrientationReading = canSwitchToOculusHeadTracking && vrFrame.DeviceStatus.DeviceIsDocked;
     if (useOculusOrientationReading && nullptr != cameraRig) {
        const ovrQuatf& orientation = vrFrame.Tracking.HeadPose.Pose.Orientation;
        glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
