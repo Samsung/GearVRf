@@ -329,8 +329,6 @@ template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Fra
     jni->CallVoidMethod(javaObject, beforeDrawEyesMethodId);
     jni->CallVoidMethod(javaObject, drawFrameMethodId);
 
-    deviceIsDocked = vrFrame.DeviceStatus.DeviceIsDocked;
-
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.
 	//Centerview camera matrix can be retrieved from its parent, CameraRig
@@ -370,6 +368,20 @@ template <class PredictionTrait> bool GVRActivity<PredictionTrait>::OnKeyEvent(c
     }
 
     return handled;
+}
+
+void Java_org_gearvrf_GVRActivity_nativeOnDock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->deviceIsDocked = true;
+}
+
+void Java_org_gearvrf_GVRActivity_nativeOnUndock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->deviceIsDocked = false;
 }
 
 }
