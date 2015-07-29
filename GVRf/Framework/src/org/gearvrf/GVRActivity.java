@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Build;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Window;
@@ -94,6 +93,14 @@ public class GVRActivity extends VrActivity {
                 commandString, uriString));
 
         mDockEventReceiver = new DockEventReceiver(this, mRunOnDock, mRunOnUndock);
+    }
+
+    protected void onInitAppSettings(VrAppSettings appSettings) {
+
+    }
+
+    public VrAppSettings getAppSettings(){
+        return mAppSettings;
     }
 
     @Override

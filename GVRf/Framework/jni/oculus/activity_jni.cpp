@@ -21,6 +21,7 @@
 #include "VrApi_Types.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
+static const char * app_settings_name = "org/gearvrf/utility/VrAppSettings";
 
 namespace gvr {
 
@@ -49,6 +50,20 @@ void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
     activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
 }
 
+void Java_org_gearvrf_GVRActivity_nativeOnDock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivityReal* activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->deviceIsDocked = true;
+}
+
+void Java_org_gearvrf_GVRActivity_nativeOnUndock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivityReal* activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->deviceIsDocked = false;
+}
+
 } // extern "C"
 
 //=============================================================================
@@ -61,6 +76,7 @@ template <class PredictionTrait> GVRActivity<PredictionTrait>::GVRActivity(JNIEn
     , UiJni(&jni_)
     , viewManager(NULL)
     , cameraRig(nullptr)
+    , deviceIsDocked(false)
 {
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
@@ -368,20 +384,6 @@ template <class PredictionTrait> bool GVRActivity<PredictionTrait>::OnKeyEvent(c
     }
 
     return handled;
-}
-
-void Java_org_gearvrf_GVRActivity_nativeOnDock(
-        JNIEnv * jni, jclass clazz, jlong appPtr)
-{
-    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
-    activity->deviceIsDocked = true;
-}
-
-void Java_org_gearvrf_GVRActivity_nativeOnUndock(
-        JNIEnv * jni, jclass clazz, jlong appPtr)
-{
-    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
-    activity->deviceIsDocked = false;
 }
 
 }

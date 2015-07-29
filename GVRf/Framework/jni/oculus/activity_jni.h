@@ -119,7 +119,7 @@ public:
     }
 };
 
-typedef GVRActivity<KSensorPrediction> GVRActivityReal;
+typedef GVRActivity<OculusPrediction> GVRActivityReal;
 
 }
 #endif
