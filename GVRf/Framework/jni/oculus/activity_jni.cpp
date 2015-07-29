@@ -21,7 +21,6 @@
 #include "VrApi_Types.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
-static const char * app_settings_name = "org/gearvrf/utility/VrAppSettings";
 
 namespace gvr {
 
@@ -151,8 +150,6 @@ template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OV
     settings.UseProtectedFramebuffer = env->GetBooleanField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "useProtectedFramebuffer",
                     "Z"));
-
-
 
     //Settings for EyeBufferParms.
     jobject eyeParmsSettings = env->GetObjectField(vrSettings,
