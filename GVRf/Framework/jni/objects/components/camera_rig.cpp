@@ -82,7 +82,12 @@ void CameraRig::setRotationSensorData(long long time_stamp, float w, float x,
             gyro_y, gyro_z);
 }
 
-void CameraRig::predict(float time) {
+void CameraRig::predictAndSetRotation(float time) {
+    glm::quat headRotation = predict(time);
+    setRotation(headRotation);
+}
+
+glm::quat CameraRig::predict(float time) {
     long long clock_time = getCurrentTime();
     float time_diff = (clock_time - rotation_sensor_data_.time_stamp())
             / 1000000000.0f;
@@ -98,18 +103,22 @@ void CameraRig::predict(float time) {
     glm::quat rotation = rotation_sensor_data_.quaternion()
             * glm::angleAxis(angle, axis);
 
-    glm::quat transfrom_rotation = complementary_rotation_ * rotation;
+    glm::quat transform_rotation = complementary_rotation_ * rotation;
 
+    return transform_rotation;
+}
+
+void CameraRig::setRotation(glm::quat transform_rotation) {
     if (camera_rig_type_ == FREE) {
-        owner_object()->transform()->set_rotation(transfrom_rotation);
+        owner_object()->transform()->set_rotation(transform_rotation);
     } else if (camera_rig_type_ == YAW_ONLY) {
-        glm::vec3 look_at = glm::rotate(transfrom_rotation,
+        glm::vec3 look_at = glm::rotate(transform_rotation,
                 glm::vec3(0.0f, 0.0f, -1.0f));
         float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
         owner_object()->transform()->set_rotation(
                 glm::angleAxis(yaw, glm::vec3(0.0f, 1.0f, 0.0f)));
     } else if (camera_rig_type_ == ROLL_FREEZE) {
-        glm::vec3 look_at = glm::rotate(transfrom_rotation,
+        glm::vec3 look_at = glm::rotate(transform_rotation,
                 glm::vec3(0.0f, 0.0f, -1.0f));
         float pitch = atan2f(look_at.y,
                 sqrtf(look_at.x * look_at.x + look_at.z * look_at.z)) * 180.0f
@@ -125,9 +134,9 @@ void CameraRig::predict(float time) {
         owner_object()->transform()->set_position(pivot.x, pivot.y,
                 pivot.z + getFloat("distance"));
         owner_object()->transform()->set_rotation(glm::quat());
-        owner_object()->transform()->rotateWithPivot(transfrom_rotation.w,
-                transfrom_rotation.x, transfrom_rotation.y,
-                transfrom_rotation.z, pivot.x, pivot.y, pivot.z);
+        owner_object()->transform()->rotateWithPivot(transform_rotation.w,
+                transform_rotation.x, transform_rotation.y,
+                transform_rotation.z, pivot.x, pivot.y, pivot.z);
     }
 }
 

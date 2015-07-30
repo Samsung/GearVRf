@@ -24,10 +24,14 @@
 #include "view_manager.h"
 #include "../objects/components/camera.h"
 #include "../objects/components/camera_rig.h"
+#include "VrApi.h"
 
 namespace gvr {
 
-class GVRActivity : public OVR::VrAppInterface
+class OculusPrediction;
+class KSensorPrediction;
+
+template <class PredictionTrait> class GVRActivity : public OVR::VrAppInterface
 {
 public:
                         GVRActivity( JNIEnv & jni_, jobject activityObject_);
@@ -38,11 +42,7 @@ public:
     virtual void        OneTimeShutdown();
     virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegrees );
     virtual OVR::Matrix4f    Frame( const OVR::VrFrame & vrFrame );
-    virtual void        NewIntent( const char * fromPackageName, const char * command, const char * uri );
-    virtual void        Command( const char * msg );
     virtual bool        OnKeyEvent( const int keyCode, const int repeatCount, const OVR::KeyEventType eventType );
-    virtual void        WindowCreated();
-    void                InitSceneObject( );
 
     // When launched by an intent, we may be viewing a partial
     // scene for debugging, so always clear the screen to grey
@@ -56,7 +56,7 @@ public:
 
     Camera*             camera;
     CameraRig*          cameraRig;
-    bool                useOculusOrientationReading;
+    bool                deviceIsDocked;
 private:
     glm::mat4           mvp_matrix;
     void                SetMVPMatrix(glm::mat4 mvp){
@@ -89,5 +89,37 @@ private:
     jmethodID           GetMethodID( const char * name, const char * signature );
     jmethodID           GetStaticMethodID( jclass activityClass, const char * name, const char * signature );
 };
+
+class KSensorPrediction {
+public:
+    static glm::quat getPrediction(GVRActivity<KSensorPrediction>* gvrActivity, const float time) {
+        if (nullptr != gvrActivity->cameraRig) {
+            return gvrActivity->cameraRig->predict(time);
+        } else {
+            return glm::quat();
+        }
+    }
+};
+
+class OculusPrediction {
+public:
+    static glm::quat getPrediction(GVRActivity<OculusPrediction>* gvrActivity, const float time) {
+        if (gvrActivity->deviceIsDocked) {
+            ovrMobile* ovr = gvrActivity->app->GetOvrMobile();
+            const ovrTracking& ovrTracking = vrapi_GetPredictedTracking(ovr, 0.0);
+
+            const ovrQuatf& orientation = ovrTracking.HeadPose.Pose.Orientation;
+            glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
+            return glm::conjugate(glm::inverse(quat));
+        } else if (nullptr != gvrActivity->cameraRig) {
+            return gvrActivity->cameraRig->predict(time);
+        } else {
+            return glm::quat();
+        }
+    }
+};
+
+typedef GVRActivity<OculusPrediction> GVRActivityReal;
+
 }
 #endif

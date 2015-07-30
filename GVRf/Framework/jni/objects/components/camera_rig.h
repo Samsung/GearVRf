@@ -138,7 +138,9 @@ public:
     void resetYawPitch();
     void setRotationSensorData(long long time_stamp, float w, float x, float y,
             float z, float gyro_x, float gyro_y, float gyro_z);
-    void predict(float time);
+    void setRotation(glm::quat transform_rotation);
+    glm::quat predict(float time);
+    void predictAndSetRotation(float time);
     glm::vec3 getLookAt() const;
 
 private:
