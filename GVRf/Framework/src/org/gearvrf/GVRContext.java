@@ -666,7 +666,7 @@ public abstract class GVRContext {
      * 
      */
 
-    public void recurseAssimpNodes(
+    private void recurseAssimpNodes(
             String assetRelativeFilename,
             GVRSceneObject wholeSceneObject,
             AiNode node,
