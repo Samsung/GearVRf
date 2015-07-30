@@ -560,8 +560,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     protected interface FrameHandler {
         void beforeDrawEyes();
 
-        void onDrawFrame();
-
         void afterDrawEyes();
     }
 
@@ -594,9 +592,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mFrameHandler = splashFrames;
                 firstFrame = null;
             }
-        }
-
-        public void onDrawFrame() {
         }
 
         @Override
@@ -640,12 +635,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
         }
 
-        public void onDrawFrame() {
-            // Log.v(TAG, "splashFrame, onDrawFrame()");
-
-            drawEyes();
-        }
-
         @Override
         public void afterDrawEyes() {
         }
@@ -661,12 +650,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             doMemoryManagementAndPerFrameCallbacks();
 
             mScript.onStep();
-        }
-
-        public void onDrawFrame() {
-            // Log.v(TAG, "normalFrame, onDrawFrame()");
-
-            drawEyes();
         }
 
         @Override
@@ -704,9 +687,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         NativeGLDelete.processQueues();
 
         return currentTime;
-    }
-
-    protected void drawEyes() {
     }
 
     protected FrameHandler mFrameHandler = firstFrame;
@@ -753,12 +733,26 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         if (cameraRig != null) {
             cameraRig.setRotationSensorData(timeStamp, rotationW, rotationX,
                     rotationY, rotationZ, gyroX, gyroY, gyroZ);
+            updateSensoredScene();
+        }
+    }
 
-            if (mSensoredScene == null || !mMainScene.equals(mSensoredScene)) {
+    boolean updateSensoredScene() {
+        if (mSensoredScene != null && mMainScene.equals(mSensoredScene)) {
+            return true;
+        }
+
+        if (null != mMainScene) {
+            final GVRCameraRig cameraRig = mMainScene.getMainCameraRig();
+
+            if (null != cameraRig
+                    && (mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
                 cameraRig.resetYaw();
                 mSensoredScene = mMainScene;
+                return true;
             }
         }
+        return false;
     }
 
     /**

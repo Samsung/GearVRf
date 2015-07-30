@@ -41,7 +41,7 @@ Java_org_gearvrf_NativeCubemapTexture_bitmapArrayConstructor(JNIEnv * env,
         "new CubemapTexture() failed! Input bitmapList's length is not 6.";
         throw error;
     }
-    jlong result = NULL;
+    jlong result = 0;
     try {
         jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
         result = reinterpret_cast<jlong>(new CubemapTexture(env, bitmapArray, texture_parameters));

@@ -25,50 +25,64 @@
 #include "ktracker_data_info.h"
 #include "util/gvr_log.h"
 #include "util/gvr_time.h"
+#include <chrono>
+#include <assert.h>
 
 namespace gvr {
+
+void KSensor::readerThreadFunc() {
+    LOGV("ksensor reader starting up");
+
+    Quaternion q;
+    KTrackerSensorZip data;
+
+    while (processing_flag_) {
+        if (!pollSensor(&data)) {
+            if (fd_ >= 0) {
+                close(fd_);
+                fd_ = -1;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            continue;
+        }
+
+        vec3 corrected_gyro;
+        long long currentTime = getCurrentTime();
+        process(&data, corrected_gyro, q);
+
+        std::lock_guard<std::mutex> lock(update_mutex_);
+        latest_time_ = currentTime;
+        last_corrected_gyro_ = corrected_gyro;
+        q_ = q;
+    }
+
+    if (fd_ >= 0) {
+        close(fd_);
+        fd_ = -1;
+    }
+
+    LOGV("ksensor reader shut down");
+}
+
 KSensor::KSensor() :
         fd_(-1), q_(), first_(true), step_(0), first_real_time_delta_(0.0f), last_timestamp_(
                 0), full_timestamp_(0), last_sample_count_(0), latest_time_(0), last_acceleration_(
                 0.0f, 0.0f, 0.0f), last_rotation_rate_(0.0f, 0.0f, 0.0f), last_corrected_gyro_(
-                0.0f, 0.0f, 0.0f), gyro_offset_(0.0f, 0.0f, 0.0f), tilt_filter_() {
+                0.0f, 0.0f, 0.0f), gyro_offset_(0.0f, 0.0f, 0.0f), tilt_filter_(),
+                processing_flag_(true), processing_thread_() {
 }
 
 KSensor::~KSensor() {
 }
 
-bool KSensor::update() {
-    KTrackerSensorZip data;
-    if (!pollSensor(&data)) {
-        if (fd_ >= 0) {
-            close(fd_);
-            fd_ = -1;
-        }
-        return false;
-    }
-    latest_time_ = getCurrentTime();
-
-    process(&data);
-
-    return true;
+void KSensor::start() {
+	processing_thread_ = std::thread(&KSensor::readerThreadFunc, this);
 }
 
-long long KSensor::getLatestTime() {
-    return latest_time_;
-}
-
-Quaternion KSensor::getSensorQuaternion() {
-    return q_;
-}
-
-vec3 KSensor::getAngularVelocity() {
-    return last_corrected_gyro_;
-}
-
-void KSensor::closeSensor() {
-    if (fd_ >= 0) {
-        close(fd_);
-        fd_ = -1;
+void KSensor::stop() {
+    processing_flag_ = false;
+    if(processing_thread_.joinable()) {
+        processing_thread_.join();
     }
 }
 
@@ -80,13 +94,15 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
         return false;
     }
 
+    //thr priority
+
     struct pollfd pfds;
     pfds.fd = fd_;
     pfds.events = POLLIN;
 
+    uint8_t buffer[100];
     int n = poll(&pfds, 1, 100);
     if (n > 0 && (pfds.revents & POLLIN)) {
-        uint8_t buffer[100];
         int r = read(fd_, buffer, 100);
         if (r < 0) {
             LOGI("OnSensorEvent() read error %d", r);
@@ -134,14 +150,12 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
         data->MagX = (int16_t)(*(buffer + 57) << 8) | (int16_t)(*(buffer + 56));
         data->MagY = (int16_t)(*(buffer + 59) << 8) | (int16_t)(*(buffer + 58));
         data->MagZ = (int16_t)(*(buffer + 61) << 8) | (int16_t)(*(buffer + 60));
-
         return true;
     }
-
     return false;
 }
 
-void KSensor::process(KTrackerSensorZip* data) {
+void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q) {
     const float timeUnit = (1.0f / 1000.f);
 
     struct timespec tp;
@@ -199,7 +213,7 @@ void KSensor::process(KTrackerSensorZip* data) {
             sensors.Acceleration = last_acceleration_;
             sensors.RotationRate = last_rotation_rate_;
 
-            updateQ(&sensors);
+            updateQ(&sensors, corrected_gyro, q);
         }
     }
 
@@ -219,7 +233,7 @@ void KSensor::process(KTrackerSensorZip* data) {
         sensors.RotationRate = vec3(data->Samples[i].GyroX,
                 data->Samples[i].GyroY, data->Samples[i].GyroZ) * 0.0001f;
 
-        updateQ(&sensors);
+        updateQ(&sensors, corrected_gyro, q);
 
         // TimeDelta for the last two sample is always fixed.
         sensors.TimeDelta = timeUnit;
@@ -229,37 +243,34 @@ void KSensor::process(KTrackerSensorZip* data) {
     last_timestamp_ = data->Timestamp;
     last_acceleration_ = sensors.Acceleration;
     last_rotation_rate_ = sensors.RotationRate;
-
 }
 
-void KSensor::updateQ(KTrackerMessage *msg) {
+void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q) {
     // Put the sensor readings into convenient local variables
     vec3 gyro = msg->RotationRate;
     vec3 accel = msg->Acceleration;
     const float DeltaT = msg->TimeDelta;
-    vec3 gyroCorrected = gyrocorrect(gyro, accel, DeltaT);
-    last_corrected_gyro_ = gyroCorrected;
+    vec3 gyroCorrected = gyrocorrect(gyro, accel, DeltaT, q);
+    corrected_gyro = gyroCorrected;
 
     // Update the orientation quaternion based on the corrected angular velocity vector
     float gyro_length = gyroCorrected.Length();
     if (gyro_length != 0.0f) {
         float angle = gyro_length * DeltaT;
-        q_ = q_
-                * Quaternion(cos(angle * 0.5f),
-                        gyroCorrected.Normalized() * sin(angle * 0.5f));
+        q = q * Quaternion(cos(angle * 0.5f), gyroCorrected.Normalized() * sin(angle * 0.5f));
     }
 
     step_++;
 
     // Normalize error
     if (step_ % 500 == 0) {
-        q_.Normalize();
+        q.Normalize();
     }
 }
 
-vec3 KSensor::gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT) {
+vec3 KSensor::gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT, Quaternion& q) {
     // Small preprocessing
-    Quaternion Qinv = q_.Inverted();
+    Quaternion Qinv = q.Inverted();
     vec3 up = Qinv.Rotate(vec3(0, 1, 0));
     vec3 gyroCorrected = gyro;
 
@@ -300,7 +311,7 @@ vec3 KSensor::gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT) {
         gyroCorrected += (tiltCorrection * proportionalGain);
         gyro_offset_ -= (tiltCorrection * integralGain * DeltaT);
     } else {
-        LOGI("invalidaccel");
+        LOGE("invalidaccel");
     }
 
     return gyroCorrected;

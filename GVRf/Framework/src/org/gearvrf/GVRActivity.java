@@ -307,6 +307,10 @@ public class GVRActivity extends VrActivity {
         return false;
     }
 
+    boolean updateSensoredScene() {
+        return mGVRViewManager.updateSensoredScene();
+    }
+
     private final Runnable mRunOnDock = new Runnable() {
         @Override
         public void run() {
