@@ -194,10 +194,6 @@ public class SampleViewManager extends GVRScript {
             android.util.Log.d(TAG, "button SELECT");
             handled = true;
             break;
-        case 310:
-            android.util.Log.d(TAG, "Play");
-            handled = true;
-            break;
         }
 
         // change background color
