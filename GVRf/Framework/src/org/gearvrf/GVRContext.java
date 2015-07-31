@@ -702,7 +702,9 @@ public abstract class GVRContext {
     }
 
     /**
-     * Helper method to create a new {@link GVRSceneObject} with either color or texture.
+     * Helper method to create a new {@link GVRSceneObject} with the mesh at the
+     * index {@link index} of the node mesh array with a color or texture
+     * material.
      * 
      * @param assetRelativeFilename
      *            A filename, relative to the {@code assets} directory. The file
