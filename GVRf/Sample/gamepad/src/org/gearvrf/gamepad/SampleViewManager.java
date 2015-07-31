@@ -115,8 +115,9 @@ public class SampleViewManager extends GVRScript {
         float hatx = getCenteredAxis(event, mInputDevice,
                 MotionEvent.AXIS_HAT_X, historyPos);
         
-        // Google refers to this axis as z, Samsung Gamepad uses RX.
-        float z = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_RX,
+        // Google refers to the second analog x axis as z, 
+        // the Samsung Gamepad refers to is as RX.
+        float rx = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_RX,
                 historyPos);
 
         // Calculate the vertical distance to move by
@@ -128,17 +129,18 @@ public class SampleViewManager extends GVRScript {
         float haty = getCenteredAxis(event, mInputDevice,
                 MotionEvent.AXIS_HAT_Y, historyPos);
 
-        // Google refers to this axis as rz, Samsung Gamepad uses RY.
-        float rz = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_RY,
+        // Google refers to the second analog y axis as rz, 
+        // the Samsung Gamepad refers to is as RY.
+        float ry = getCenteredAxis(event, mInputDevice, MotionEvent.AXIS_RY,
                 historyPos);
 
         android.util.Log.d(TAG, "x = " + x);
         android.util.Log.d(TAG, "hatx = " + hatx);
-        android.util.Log.d(TAG, "z = " + z);
+        android.util.Log.d(TAG, "rx = " + rx);
 
         android.util.Log.d(TAG, "y = " + y);
         android.util.Log.d(TAG, "haty = " + haty);
-        android.util.Log.d(TAG, "rz = " + rz);
+        android.util.Log.d(TAG, "ry = " + ry);
 
         // Translate the camera
         // the first object of the scene is the cameraRigObject
