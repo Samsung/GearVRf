@@ -69,6 +69,11 @@ private:
     jobject             javaObject;
     jclass              activityClass;    // must be looked up from main thread or FindClass() will fail
 
+    jclass              vrAppSettingsClass;
+    jclass              eyeBufferParmsClass;
+
+    jmethodID           getAppSettingsMethodId;
+
     jmethodID           oneTimeInitMethodId;
     jmethodID           oneTimeShutdownMethodId;
 

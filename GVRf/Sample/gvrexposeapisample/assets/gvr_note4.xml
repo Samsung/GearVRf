@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+
+
+
+<lens name="N4">
+    <scene fov-y="90.0" camera-separation-distance="0.062" fbo-width="1024" fbo-height="1024" msaa="1"/>
+    <vr-app-settings
+        showLoadingIcon = "true"
+        renderMonoMode = "false"
+        useSrgbFramebuffer = "false"
+        useProtectedFramebuffer = "false"
+        framebufferPixelsWide="-1"
+        framebufferPixelsHigh="-1">
+        <mode-parms allowPowerSave="true" resetWindowFullScreen="true" cpuLevel="2" gpuLevel="2"/>
+        <eye-buffer-parms 
+            depthFormat="DEPTH_24"
+            textureFilter="TEXTURE_FILTER_BILINEAR"
+            colorFormat="COLOR_8888"
+            multiSamples="2"
+            widthScale="1"
+            resolution="-1"
+            />
+        <head-model-parms
+            interpupillaryDistance="NaN"
+            eyeHeight="NaN"
+            headModelDepth="NaN"
+            headModelHeight="NaN"
+            />        
+    </vr-app-settings>
+</lens>

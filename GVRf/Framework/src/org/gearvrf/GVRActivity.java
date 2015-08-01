@@ -16,12 +16,13 @@
 package org.gearvrf;
 
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.content.Intent;
-import android.os.Bundle;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
+import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Window;
@@ -46,6 +47,7 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private boolean mForceMonoscopic = false;
+    private VrAppSettings mAppSettings;
 
     static {
         System.loadLibrary("gvrf");
@@ -66,7 +68,7 @@ public class GVRActivity extends VrActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
+        mAppSettings = new VrAppSettings();
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
@@ -77,6 +79,13 @@ public class GVRActivity extends VrActivity {
 
         setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString));
+    }
+
+    protected void onInitAppSettings(VrAppSettings appSettings) {
+
+    }
+    public VrAppSettings getAppSettings(){
+        return mAppSettings;
     }
 
     @Override
@@ -126,12 +135,15 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            if (isVrSupported() && !mForceMonoscopic) {
-                mGVRViewManager = new GVRViewManager(this, gvrScript,
-                        distortionDataFileName);
+
+            GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
+                    distortionDataFileName, mAppSettings);
+            onInitAppSettings(mAppSettings);
+            if (isVrSupported() && !mAppSettings.isRenderMonoMode()) {
+                mGVRViewManager = new GVRViewManager(this, gvrScript, xmlParser);
             } else {
                 mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript,
-                        distortionDataFileName);
+                        xmlParser);
             }
         } else {
             throw new IllegalArgumentException(
@@ -152,7 +164,7 @@ public class GVRActivity extends VrActivity {
      * 
      */
     public void setForceMonoscopic(boolean force) {
-        mForceMonoscopic = force;
+        mAppSettings.setRenderMonoMode(force);
     }
 
     /**
@@ -162,7 +174,7 @@ public class GVRActivity extends VrActivity {
      * @see setForceMonoscopic
      */
     public boolean getForceMonoscopic() {
-        return mForceMonoscopic;
+        return mAppSettings.isRenderMonoMode();
     }
 
     private boolean isVrSupported() {
