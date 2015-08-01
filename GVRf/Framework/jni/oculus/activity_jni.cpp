@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "VrApi_Helpers.h"
 #include "objects/scene_object.h"
+#include "VrApi_Types.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 static const bool canSwitchToOculusHeadTracking = true;
@@ -396,11 +397,15 @@ void GVRActivity::InitSceneObject() {
 bool GVRActivity::OnKeyEvent(const int keyCode, const int repeatCode,
         const OVR::KeyEventType eventType) {
 
-    // 1: KeyState::KEY_EVENT_DOWN, 0: KeyState::KEY_EVENT_UP. Other information is lost from Oculus side.
-    int isDown = (eventType == OVR::KEY_EVENT_DOWN) ? 1 : 0;
+    bool handled = app->GetVrJni()->CallBooleanMethod(javaObject,
+            onKeyEventNativeMethodId, keyCode, (int)eventType);
 
-    return app->GetVrJni()->CallBooleanMethod(javaObject,
-            onKeyEventNativeMethodId, keyCode, isDown);
+    // if not handled back key long press, show global menu
+    if (handled == false && keyCode == 4 && eventType == OVR::KEY_EVENT_LONG_PRESS) {
+        app->StartSystemActivity(PUI_GLOBAL_MENU);
+    }
+
+    return handled;
 }
 
 }
