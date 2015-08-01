@@ -49,7 +49,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.opengl.GLES20;
 import android.view.KeyEvent;
 
 /**
@@ -199,7 +198,8 @@ public abstract class GVRContext {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource) {
-        return loadMesh(androidResource, GVRImportSettings.getRecommendedSettings());
+        return loadMesh(androidResource,
+                GVRImportSettings.getRecommendedSettings());
     }
 
     /**
@@ -216,13 +216,15 @@ public abstract class GVRContext {
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
-     *            
-     * @param settings Additional import {@link GVRImpotSettings settings}.
+     * 
+     * @param settings
+     *            Additional import {@link GVRImpotSettings settings}.
      * @return The file as a GL mesh.
      * 
      * @since 1.6.2
      */
-    public GVRMesh loadMesh(GVRAndroidResource androidResource, EnumSet<GVRImportSettings> settings) {
+    public GVRMesh loadMesh(GVRAndroidResource androidResource,
+            EnumSet<GVRImportSettings> settings) {
         GVRMesh mesh = sMeshCache.get(androidResource);
         if (mesh == null) {
             GVRAssimpImporter assimpImporter = GVRImporter
@@ -232,7 +234,7 @@ public abstract class GVRContext {
         }
         return mesh;
     }
-    
+
     private final static ResourceCache<GVRMesh> sMeshCache = new ResourceCache<GVRMesh>();
 
     /**
@@ -480,11 +482,12 @@ public abstract class GVRContext {
      * @throws IOException
      *             File does not exist or cannot be read
      */
-    public GVRSceneObject getAssimpModel(String assetRelativeFilename) 
-                throws IOException {
-        return getAssimpModel(assetRelativeFilename, GVRImportSettings.getRecommendedSettings());
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename)
+            throws IOException {
+        return getAssimpModel(assetRelativeFilename,
+                GVRImportSettings.getRecommendedSettings());
     }
-    
+
     /**
      * Simple, high-level method to load a scene as {@link GVRSceneObject} from
      * 3D model.
@@ -495,16 +498,18 @@ public abstract class GVRContext {
      *            {@code "foo/bar.png"} will open the file
      *            {@code assets/foo/bar.png}
      * 
-     * @param settings Additional import {@link GVRImportSettings settings}
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
      * @return A {@link GVRSceneObject} that contains the meshes with textures
      * 
      * @throws IOException
      *             File does not exist or cannot be read
      */
-    public GVRSceneObject getAssimpModel(String assetRelativeFilename, EnumSet<GVRImportSettings> settings)
-            throws IOException {
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename,
+            EnumSet<GVRImportSettings> settings) throws IOException {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, new GVRAndroidResource(this, assetRelativeFilename), settings);
+                this, new GVRAndroidResource(this, assetRelativeFilename),
+                settings);
 
         GVRSceneObject wholeSceneObject = new GVRSceneObject(this);
 
@@ -628,118 +633,186 @@ public abstract class GVRContext {
 
         AiNode rootNode = assimpScene.getSceneRoot(wrapperProvider);
 
-        List<AiNode> childrenNodes = rootNode.getChildren();
+        // Recurse through the entire hierarchy to attache all the meshes as
+        // Scene Object
+        this.recurseAssimpNodes(assetRelativeFilename, wholeSceneObject,
+                rootNode, wrapperProvider);
 
+        return wholeSceneObject;
+    }
+
+    /**
+     * Helper method to recurse through all the assimp nodes and get all their
+     * meshes that can be used to create {@link GVRSceneObject} to be attached
+     * to the set of complete scene objects for the assimp model.
+     * 
+     * @param assetRelativeFilename
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     * 
+     * @param wholeSceneObject
+     *            A reference of the {@link GVRSceneObject}, to which all other
+     *            scene objects are attached.
+     * 
+     * @param node
+     *            A reference to the AiNode for which we want to recurse all its
+     *            children and meshes.
+     * 
+     * @param wrapperProvider
+     *            AiWrapperProvider for unwrapping Jassimp properties.
+     * 
+     */
+    @SuppressWarnings("resource")
+    private void recurseAssimpNodes(
+            String assetRelativeFilename,
+            GVRSceneObject parentSceneObject,
+            AiNode node,
+            AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider) {
         try {
-            for (AiNode childNode : childrenNodes) {
-                for (int i = 0; i < childNode.getNumMeshes(); i++) {
-
-                    FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-                            this.getNodeMesh(new GVRAndroidResource(this,
-                                    assetRelativeFilename),
-                                    childNode.getName(), i));
-
-                    AiMaterial material = this
-                            .getMeshMaterial(new GVRAndroidResource(this,
-                                    assetRelativeFilename),
-                                    childNode.getName(), i);
-
-                    Property property = material.getProperty("$tex.file");
-                    if (property != null) {
-                        int textureIndex = property.getIndex();
-                        String texFileName = material.getTextureFile(
-                                AiTextureType.DIFFUSE, textureIndex);
-
-                        Future<GVRTexture> futureMeshTexture = this
-                                .loadFutureTexture(new GVRAndroidResource(this,
-                                        texFileName));
-
-                        GVRSceneObject sceneObject = new GVRSceneObject(this,
-                                futureMesh, futureMeshTexture);
-
-                        // add the scene object to the scene graph
-                        wholeSceneObject.addChildObject(sceneObject);
-
-                    } else {
-                        // The case when there is no texture
-                        // This block also takes care for the case when there
-                        // are no texture or color for the mesh as the methods
-                        // that are used for getting the colors of the material
-                        // returns a default when they are not present
-                        AiColor diffuseColor = material
-                                .getDiffuseColor(wrapperProvider);
-                        AiColor ambientColor = material
-                                .getAmbientColor(wrapperProvider);
-                        float opacity = material.getOpacity();
-
-                        final String DIFFUSE_COLOR_KEY = "diffuse_color";
-                        final String AMBIENT_COLOR_KEY = "ambient_color";
-                        final String COLOR_OPACITY_KEY = "opacity";
-
-                        final String VERTEX_SHADER = "attribute vec4 a_position;\n"
-                                + "uniform mat4 u_mvp;\n"
-                                + "void main() {\n"
-                                + "  gl_Position = u_mvp * a_position;\n"
-                                + "}\n";
-
-                        final String FRAGMENT_SHADER = "precision mediump float;\n"
-                                + "uniform vec4 diffuse_color;\n" //
-                                + "uniform vec4 ambient_color;\n"
-                                + "uniform float opacity;\n"
-                                + "void main() {\n" //
-                                + "  gl_FragColor = ( diffuse_color * opacity ) + ambient_color;\n"
-                                + "}\n";
-
-                        GVRCustomMaterialShaderId mShaderId;
-                        GVRMaterialMap mCustomShader = null;
-
-                        final GVRMaterialShaderManager shaderManager = this
-                                .getMaterialShaderManager();
-                        mShaderId = shaderManager.addShader(VERTEX_SHADER,
-                                FRAGMENT_SHADER);
-                        mCustomShader = shaderManager.getShaderMap(mShaderId);
-                        mCustomShader.addUniformVec4Key("diffuse_color",
-                                DIFFUSE_COLOR_KEY);
-                        mCustomShader.addUniformVec4Key("ambient_color",
-                                AMBIENT_COLOR_KEY);
-                        mCustomShader.addUniformFloatKey("opacity",
-                                COLOR_OPACITY_KEY);
-
-                        GVRMaterial meshMaterial = new GVRMaterial(this,
-                                mShaderId);
-
-                        meshMaterial
-                                .setVec4(DIFFUSE_COLOR_KEY,
-                                        diffuseColor.getRed(),
-                                        diffuseColor.getGreen(),
-                                        diffuseColor.getBlue(),
-                                        diffuseColor.getAlpha());
-
-                        meshMaterial
-                                .setVec4(AMBIENT_COLOR_KEY,
-                                        ambientColor.getRed(),
-                                        ambientColor.getGreen(),
-                                        ambientColor.getBlue(),
-                                        ambientColor.getAlpha());
-
-                        meshMaterial.setFloat(COLOR_OPACITY_KEY, opacity);
-
-                        GVRSceneObject sceneObject = new GVRSceneObject(this);
-                        GVRRenderData sceneObjectRenderData = new GVRRenderData(
-                                this);
-                        sceneObjectRenderData.setMesh(futureMesh);
-                        sceneObjectRenderData.setMaterial(meshMaterial);
-                        sceneObject.attachRenderData(sceneObjectRenderData);
-
-                        wholeSceneObject.addChildObject(sceneObject);
-                    }
+            GVRSceneObject newParentSceneObject = new GVRSceneObject(this);
+            if (node.getNumMeshes() == 0) {
+                parentSceneObject.addChildObject(newParentSceneObject);
+                parentSceneObject = newParentSceneObject;
+            } else if (node.getNumMeshes() == 1) {
+                // add the scene object to the scene graph
+                GVRSceneObject sceneObject = createSceneObject(
+                        assetRelativeFilename, node, 0, wrapperProvider);
+                parentSceneObject.addChildObject(sceneObject);
+                parentSceneObject = sceneObject;
+            } else {
+                for (int i = 0; i < node.getNumMeshes(); i++) {
+                    GVRSceneObject sceneObject = createSceneObject(
+                            assetRelativeFilename, node, i, wrapperProvider);
+                    newParentSceneObject.addChildObject(sceneObject);
                 }
+                parentSceneObject.addChildObject(newParentSceneObject);
+                parentSceneObject = newParentSceneObject;
+            }
+            for (int i = 0; i < node.getNumChildren(); i++) {
+                this.recurseAssimpNodes(assetRelativeFilename,
+                        parentSceneObject, node.getChildren().get(i),
+                        wrapperProvider);
             }
         } catch (Exception e) {
             // Error while recursing the Scene Graph
             e.printStackTrace();
         }
-        return wholeSceneObject;
+    }
+
+    /**
+     * Helper method to create a new {@link GVRSceneObject} with the mesh at the
+     * index {@link index} of the node mesh array with a color or texture
+     * material.
+     * 
+     * @param assetRelativeFilename
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     * 
+     * @param node
+     *            A reference to the AiNode for which we want to recurse all its
+     *            children and meshes.
+     * 
+     * @param index
+     *            The index of the mesh in the array of meshes for that node.
+     * 
+     * @param wrapperProvider
+     *            AiWrapperProvider for unwrapping Jassimp properties.
+     * 
+     * @return The new {@link GVRSceneObject} with the mesh at the index
+     *         {@link index} for the node {@link node}
+     * 
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    private GVRSceneObject createSceneObject(
+            String assetRelativeFilename,
+            AiNode node,
+            int index,
+            AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider)
+            throws IOException {
+
+        FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
+                this.getNodeMesh(new GVRAndroidResource(this,
+                        assetRelativeFilename), node.getName(), index));
+
+        AiMaterial material = this.getMeshMaterial(new GVRAndroidResource(this,
+                assetRelativeFilename), node.getName(), index);
+
+        Property property = material.getProperty("$tex.file");
+        if (property != null) {
+            int textureIndex = property.getIndex();
+            String texFileName = material.getTextureFile(AiTextureType.DIFFUSE,
+                    textureIndex);
+
+            Future<GVRTexture> futureMeshTexture = this
+                    .loadFutureTexture(new GVRAndroidResource(this, texFileName));
+
+            GVRSceneObject sceneObject = new GVRSceneObject(this, futureMesh,
+                    futureMeshTexture);
+
+            return sceneObject;
+
+        } else {
+            // The case when there is no texture
+            // This block also takes care for the case when there
+            // are no texture or color for the mesh as the methods
+            // that are used for getting the colors of the material
+            // returns a default when they are not present
+            AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
+            AiColor ambientColor = material.getAmbientColor(wrapperProvider);
+            float opacity = material.getOpacity();
+
+            final String DIFFUSE_COLOR_KEY = "diffuse_color";
+            final String AMBIENT_COLOR_KEY = "ambient_color";
+            final String COLOR_OPACITY_KEY = "opacity";
+
+            final String VERTEX_SHADER = "attribute vec4 a_position;\n"
+                    + "uniform mat4 u_mvp;\n" + "void main() {\n"
+                    + "  gl_Position = u_mvp * a_position;\n" + "}\n";
+
+            final String FRAGMENT_SHADER = "precision mediump float;\n"
+                    + "uniform vec4 diffuse_color;\n" //
+                    + "uniform vec4 ambient_color;\n"
+                    + "uniform float opacity;\n"
+                    + "void main() {\n" //
+                    + "  gl_FragColor = ( diffuse_color * opacity ) + ambient_color;\n"
+                    + "}\n";
+
+            GVRCustomMaterialShaderId mShaderId;
+            GVRMaterialMap mCustomShader = null;
+
+            final GVRMaterialShaderManager shaderManager = this
+                    .getMaterialShaderManager();
+            mShaderId = shaderManager.addShader(VERTEX_SHADER, FRAGMENT_SHADER);
+            mCustomShader = shaderManager.getShaderMap(mShaderId);
+            mCustomShader.addUniformVec4Key("diffuse_color", DIFFUSE_COLOR_KEY);
+            mCustomShader.addUniformVec4Key("ambient_color", AMBIENT_COLOR_KEY);
+            mCustomShader.addUniformFloatKey("opacity", COLOR_OPACITY_KEY);
+
+            GVRMaterial meshMaterial = new GVRMaterial(this, mShaderId);
+
+            meshMaterial.setVec4(DIFFUSE_COLOR_KEY, diffuseColor.getRed(),
+                    diffuseColor.getGreen(), diffuseColor.getBlue(),
+                    diffuseColor.getAlpha());
+
+            meshMaterial.setVec4(AMBIENT_COLOR_KEY, ambientColor.getRed(),
+                    ambientColor.getGreen(), ambientColor.getBlue(),
+                    ambientColor.getAlpha());
+
+            meshMaterial.setFloat(COLOR_OPACITY_KEY, opacity);
+
+            GVRSceneObject sceneObject = new GVRSceneObject(this);
+            GVRRenderData sceneObjectRenderData = new GVRRenderData(this);
+            sceneObjectRenderData.setMesh(futureMesh);
+            sceneObjectRenderData.setMaterial(meshMaterial);
+            sceneObject.attachRenderData(sceneObjectRenderData);
+
+            return sceneObject;
+        }
     }
 
     /**
@@ -750,7 +823,8 @@ public abstract class GVRContext {
     public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource, GVRImportSettings.getRecommendedSettings());
+                this, androidResource,
+                GVRImportSettings.getRecommendedSettings());
         return assimpImporter.getNodeMesh(nodeName, meshIndex);
     }
 
@@ -762,7 +836,8 @@ public abstract class GVRContext {
     public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
             String nodeName, int meshIndex) {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource, GVRImportSettings.getRecommendedSettings());
+                this, androidResource,
+                GVRImportSettings.getRecommendedSettings());
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
 
