@@ -21,7 +21,6 @@
 #include "VrApi_Types.h"
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
-static const bool canSwitchToOculusHeadTracking = true;
 static const char * app_settings_name = "org/gearvrf/utility/VrAppSettings";
 
 namespace gvr {
@@ -33,14 +32,13 @@ long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
         jstring fromPackageName, jstring commandString,
         jstring uriString)
 {
-    return (new GVRActivity(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
-
+    return (new GVRActivityReal(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
 }
 
 void Java_org_gearvrf_GVRActivity_nativeSetCamera(
         JNIEnv * jni, jclass clazz, jlong appPtr, jlong jcamera)
 {
-    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    GVRActivityReal *activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     activity->camera = camera;
 }
@@ -48,7 +46,7 @@ void Java_org_gearvrf_GVRActivity_nativeSetCamera(
 void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
         JNIEnv * jni, jclass clazz, jlong appPtr, jlong jCameraRig)
 {
-    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    GVRActivityReal *activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
     activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
 }
 
@@ -58,7 +56,7 @@ void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
 //                             GVRActivity
 //=============================================================================
 
-GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
+template <class PredictionTrait> GVRActivity<PredictionTrait>::GVRActivity(JNIEnv & jni_, jobject activityObject_)
     : forceScreenClear( false )
     , ModelLoaded( false )
     , UiJni(&jni_)
@@ -84,31 +82,32 @@ GVRActivity::GVRActivity(JNIEnv & jni_, jobject activityObject_)
 
 }
 
-GVRActivity::~GVRActivity() {
+template <class PredictionTrait> GVRActivity<PredictionTrait>::~GVRActivity() {
     if ( javaObject != 0 )
     {
         UiJni->DeleteGlobalRef( javaObject );
     }
 }
 
-jmethodID GVRActivity::GetStaticMethodID(jclass clazz, const char * name,
+template <class PredictionTrait> jmethodID GVRActivity<PredictionTrait>::GetStaticMethodID( jclass clazz, const char * name,
         const char * signature) {
     jmethodID mid = UiJni->GetStaticMethodID(clazz, name, signature);
     if (!mid) {
-        FAIL( "couldn't get %s", name);
+        FAIL("couldn't get %s", name);
     }
     return mid;
 }
 
-jmethodID GVRActivity::GetMethodID(const char * name, const char * signature) {
+template <class PredictionTrait> jmethodID GVRActivity<PredictionTrait>::GetMethodID(const char * name, const char * signature) {
     jmethodID mid = UiJni->GetMethodID(activityClass, name, signature);
     if (!mid) {
-        FAIL( "couldn't get %s", name);
+        FAIL("couldn't get %s", name );
     }
     return mid;
 }
 
-jclass GVRActivity::GetGlobalClassReference(const char * className) const {
+
+template <class PredictionTrait> jclass GVRActivity<PredictionTrait>::GetGlobalClassReference(const char * className) const {
     jclass lc = UiJni->FindClass(className);
     if (lc == 0) {
         FAIL( "FindClass( %s ) failed", className);
@@ -121,7 +120,7 @@ jclass GVRActivity::GetGlobalClassReference(const char * className) const {
     return gc;
 }
 
-void GVRActivity::Configure( OVR::ovrSettings & settings )
+template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OVR::ovrSettings & settings)
 {
     //General settings.
     JNIEnv *env = app->GetVrJni();
@@ -272,45 +271,26 @@ void GVRActivity::Configure( OVR::ovrSettings & settings )
     }
 }
 
-void GVRActivity::OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI )
+template <class PredictionTrait> void GVRActivity<PredictionTrait>::OneTimeInit(const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI)
 {
     app->GetVrJni()->CallVoidMethod( javaObject, oneTimeInitMethodId );
-    // Check if we already loaded the model through an intent
-    if (!ModelLoaded) {
-        InitSceneObject();
-    }
 }
 
-void GVRActivity::OneTimeShutdown()
+template <class PredictionTrait> void GVRActivity<PredictionTrait>::OneTimeShutdown()
 {
     app->GetVrJni()->CallVoidMethod(javaObject, oneTimeShutdownMethodId);
 
     // Free GL resources
 }
 
-void GVRActivity::NewIntent(const char * fromPackageName, const char * command,
-        const char * uri) {
-    InitSceneObject();
+template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::GetEyeView(const int eye, const float fovDegrees) const
+{
+    const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye( eye, fovDegrees );
+    const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye( eye );
+    return ( projectionMatrix * viewMatrix );
 }
 
-void GVRActivity::Command(const char * msg) {
-    //LOG( "GVRActivity::Command %s", msg );
-}
-
-void GVRActivity::WindowCreated() {
-    //LOG( "GVRActivity::WindowCreated");
-}
-
-OVR::Matrix4f GVRActivity::GetEyeView(const int eye,
-        const float fovDegrees) const {
-    const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye(eye,
-            fovDegrees);
-    const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye(eye);
-    return (projectionMatrix * viewMatrix);
-
-}
-
-OVR::Matrix4f GVRActivity::DrawEyeView(const int eye, const float fovDegrees) {
+template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::DrawEyeView(const int eye, const float fovDegrees) {
     const OVR::Matrix4f view = GetEyeView(eye, fovDegrees);
 
     // Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.
@@ -322,13 +302,8 @@ OVR::Matrix4f GVRActivity::DrawEyeView(const int eye, const float fovDegrees) {
 
     SetMVPMatrix(mvp_matrix);
 
-    if (!useOculusOrientationReading && nullptr != cameraRig) {
-       if (1 == eye) {
-          cameraRig->predict(4.0f / 60.0f);
-       } else {
-          cameraRig->predict(3.5f / 60.0f);
-       }
-    }
+    glm::quat headRotation = PredictionTrait::getPrediction(this, (1 == eye ? 4.0f : 3.5f) / 60.0f);
+    cameraRig->setRotation(headRotation);
 
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod(javaObject, drawEyeViewMethodId, eye, fovDegrees);
@@ -351,18 +326,13 @@ OVR::Matrix4f GVRActivity::DrawEyeView(const int eye, const float fovDegrees) {
 
 }
 
-OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
+template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Frame( const OVR::VrFrame & vrFrame )
 {
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod(javaObject, beforeDrawEyesMethodId);
     jni->CallVoidMethod(javaObject, drawFrameMethodId);
 
-    useOculusOrientationReading = canSwitchToOculusHeadTracking && vrFrame.DeviceStatus.DeviceIsDocked;
-    if (useOculusOrientationReading && nullptr != cameraRig) {
-       const ovrQuatf& orientation = vrFrame.Tracking.HeadPose.Pose.Orientation;
-       glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
-       cameraRig->owner_object()->transform()->set_rotation(glm::conjugate(glm::inverse(quat)));
-    }
+    deviceIsDocked = vrFrame.DeviceStatus.DeviceIsDocked;
 
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.
@@ -391,10 +361,7 @@ OVR::Matrix4f GVRActivity::Frame( const OVR::VrFrame & vrFrame )
     return view2;
 }
 
-void GVRActivity::InitSceneObject() {
-}
-
-bool GVRActivity::OnKeyEvent(const int keyCode, const int repeatCode,
+template <class PredictionTrait> bool GVRActivity<PredictionTrait>::OnKeyEvent(const int keyCode, const int repeatCode,
         const OVR::KeyEventType eventType) {
 
     bool handled = app->GetVrJni()->CallBooleanMethod(javaObject,

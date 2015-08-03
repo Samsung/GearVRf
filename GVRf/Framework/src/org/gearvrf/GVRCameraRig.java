@@ -332,8 +332,8 @@ public class GVRCameraRig extends GVRComponent {
      * @see #setRotationSensorData(long, float, float, float, float, float,
      *      float, float)
      */
-    void predict(float time) {
-        NativeCameraRig.predict(getNative(), time);
+    void predictAndSetRotation(float time) {
+        NativeCameraRig.predictAndSetRotation(getNative(), time);
     }
 
     /**
@@ -476,7 +476,7 @@ class NativeCameraRig {
             float w, float x, float y, float z, float gyroX, float gyroY,
             float gyroZ);
 
-    static native void predict(long cameraRig, float time);
+    static native void predictAndSetRotation(long cameraRig, float time);
 
     static native float[] getLookAt(long cameraRig);
 }
