@@ -50,6 +50,20 @@ void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
     activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
 }
 
+void Java_org_gearvrf_GVRActivity_nativeOnDock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivityReal* activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->deviceIsDocked = true;
+}
+
+void Java_org_gearvrf_GVRActivity_nativeOnUndock(
+        JNIEnv * jni, jclass clazz, jlong appPtr)
+{
+    GVRActivityReal* activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->deviceIsDocked = false;
+}
+
 } // extern "C"
 
 //=============================================================================
@@ -62,6 +76,7 @@ template <class PredictionTrait> GVRActivity<PredictionTrait>::GVRActivity(JNIEn
     , UiJni(&jni_)
     , viewManager(NULL)
     , cameraRig(nullptr)
+    , deviceIsDocked(false)
 {
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
@@ -151,8 +166,6 @@ template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OV
     settings.UseProtectedFramebuffer = env->GetBooleanField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "useProtectedFramebuffer",
                     "Z"));
-
-
 
     //Settings for EyeBufferParms.
     jobject eyeParmsSettings = env->GetObjectField(vrSettings,
@@ -331,8 +344,6 @@ template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Fra
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod(javaObject, beforeDrawEyesMethodId);
     jni->CallVoidMethod(javaObject, drawFrameMethodId);
-
-    deviceIsDocked = vrFrame.DeviceStatus.DeviceIsDocked;
 
 	//This is called once while DrawEyeView is called twice, when eye=0 and eye 1.
 	//So camera is set in java as one of left and right camera.

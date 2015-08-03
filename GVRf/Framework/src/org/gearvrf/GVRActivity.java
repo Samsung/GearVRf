@@ -16,6 +16,7 @@
 package org.gearvrf;
 
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.DockEventReceiver;
 import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
@@ -67,6 +68,8 @@ public class GVRActivity extends VrActivity {
 
     static native void nativeSetCamera(long appPtr, long camera);
     static native void nativeSetCameraRig(long appPtr, long cameraRig);
+    static native void nativeOnDock(long appPtr);
+    static native void nativeOnUndock(long appPtr);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +91,14 @@ public class GVRActivity extends VrActivity {
 
         setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString));
+
+        mDockEventReceiver = new DockEventReceiver(this, mRunOnDock, mRunOnUndock);
     }
 
     protected void onInitAppSettings(VrAppSettings appSettings) {
 
     }
+
     public VrAppSettings getAppSettings(){
         return mAppSettings;
     }
@@ -103,6 +109,9 @@ public class GVRActivity extends VrActivity {
         if (mGVRViewManager != null) {
             mGVRViewManager.onPause();
         }
+        if (null != mDockEventReceiver) {
+            mDockEventReceiver.stop();
+        }
     }
 
     @Override
@@ -110,6 +119,9 @@ public class GVRActivity extends VrActivity {
         super.onResume();
         if (mGVRViewManager != null) {
             mGVRViewManager.onResume();
+        }
+        if (null != mDockEventReceiver) {
+            mDockEventReceiver.start();
         }
     }
 
@@ -290,4 +302,20 @@ public class GVRActivity extends VrActivity {
     public boolean onKeyMax(int keyCode) {
         return false;
     }
+
+    private final Runnable mRunOnDock = new Runnable() {
+        @Override
+        public void run() {
+            nativeOnDock(getAppPtr());
+        }
+    };
+
+    private final Runnable mRunOnUndock = new Runnable() {
+        @Override
+        public void run() {
+            nativeOnUndock(getAppPtr());
+        }
+    };
+
+    private DockEventReceiver mDockEventReceiver;
 }
