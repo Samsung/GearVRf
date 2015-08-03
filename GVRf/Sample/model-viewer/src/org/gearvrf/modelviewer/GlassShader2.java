@@ -35,9 +35,10 @@ public class GlassShader2 {
     public static final String MAT4_KEY = "u_mat4";
 
     private static final String VERTEX_SHADER = "" //
-            + "attribute vec4 a_position;\n"
-            + "attribute vec3 a_normal;\n" //
-            + "attribute vec2 a_tex_coord;\n"
+            + "#version 300 es\n"
+            + "in vec4 a_position;\n"
+            + "in vec3 a_normal;\n" //
+            + "in vec2 a_tex_coord;\n"
             + "uniform mat4 u_mvp;\n" //
             + "uniform vec4 u_mat1;\n"
             + "uniform vec4 u_mat2;\n" //
@@ -45,11 +46,11 @@ public class GlassShader2 {
             + "uniform vec4 u_mat4;\n" //
             + "uniform vec3 u_eye;\n"
             + "uniform vec3 u_light;\n" //
-            + "varying vec3  n;\n"
-            + "varying vec3  v;\n" //
-            + "varying vec3  l;\n"
-            + "varying vec3  p;\n" //
-            + "varying vec2  coord;\n"
+            + "out vec3  n;\n"
+            + "out vec3  v;\n" //
+            + "out vec3  l;\n"
+            + "out vec3  p;\n" //
+            + "out vec2  coord;\n"
             + "void main() {\n" //
             + "  mat4 model;\n" //
             + "  model[0] = u_mat1;\n"
@@ -68,15 +69,17 @@ public class GlassShader2 {
             + "}\n";
 
     private static final String FRAGMENT_SHADER = "" //
+            + "#version 300 es\n"
             + "precision mediump float;\n"
-            + "varying vec2  coord;\n"
+            + "in vec2  coord;\n"
             + "uniform vec4  u_color;\n"
             + "uniform float u_radius;\n"
-            + "varying vec3  n;\n"
-            + "varying vec3  v;\n"
-            + "varying vec3  l;\n"
-            + "varying vec3  p;\n"
-            + "uniform sampler2D texture;\n"
+            + "in vec3  n;\n"
+            + "in vec3  v;\n"
+            + "in vec3  l;\n"
+            + "in vec3  p;\n"
+            + "uniform sampler2D intexture;\n"
+            + "out vec4 FragColor;\n"
             + "void main() {\n"
             + "  vec3  r = normalize(reflect(v,n));\n"
             // + "  vec3  r = normalize(refract(v,n,0.86));\n"
@@ -94,7 +97,7 @@ public class GlassShader2 {
             + "  reflect_coord.y  = ray.y;\n"
             + "  reflect_coord.x = 0.5 + 0.6*asin(reflect_coord.x)/1.57079632675;\n"
             + "  reflect_coord.y = 0.5 + 0.6*asin(reflect_coord.y)/1.57079632675;\n"
-            + "  vec3 color = texture2D(texture, reflect_coord).rgb;\n"
+            + "  vec3 color = texture(intexture, reflect_coord).rgb;\n"
             + "  vec3  h = normalize(v+l);\n"
             + "  float diffuse  = max ( dot(l,n), 0.0 );\n"
             + "  float specular = max ( dot(h,n), 0.0 );\n"
@@ -102,8 +105,8 @@ public class GlassShader2 {
             + "  color *= diffuse;\n" //
             + "  color *= u_color.rgb;\n"
             + "  color += 1.5*(1.0- color)*specular;\n"
-            + "  gl_FragColor = vec4( color, 0.7 );\n"
-            + "  gl_FragColor.rgb *= gl_FragColor.a;\n" //
+            + "  FragColor = vec4( color, 0.7 );\n"
+            + "  FragColor.rgb *= FragColor.a;\n" //
             + "}\n";
 
     private GVRCustomMaterialShaderId mShaderId;
@@ -118,7 +121,7 @@ public class GlassShader2 {
         mCustomShader.addUniformVec3Key("u_light", LIGHT_KEY);
         mCustomShader.addUniformVec3Key("u_eye", EYE_KEY);
         mCustomShader.addUniformFloatKey("u_radius", RADIUS_KEY);
-        mCustomShader.addTextureKey("texture", TEXTURE_KEY);
+        mCustomShader.addTextureKey("intexture", TEXTURE_KEY);
 
         mCustomShader.addUniformVec4Key("u_mat1", MAT1_KEY);
         mCustomShader.addUniformVec4Key("u_mat2", MAT2_KEY);
