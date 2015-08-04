@@ -23,7 +23,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.debug.GVRConsole.EyeMode;
-import org.gearvrf.simplesample.R;
+import org.gearvrf.nontlthreadupdate.R;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

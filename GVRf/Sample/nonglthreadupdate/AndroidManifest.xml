@@ -14,7 +14,7 @@
  */-->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.gearvrf.simplesample"
+    package="org.gearvrf.nontlthreadupdate"
     android:versionCode="1"
     android:versionName="1.0" >
 
