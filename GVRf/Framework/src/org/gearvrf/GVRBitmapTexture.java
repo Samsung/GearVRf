@@ -15,11 +15,19 @@
 
 package org.gearvrf;
 
+import static android.opengl.GLES20.GL_NO_ERROR;
+import static android.opengl.GLES20.GL_TEXTURE_2D;
+import static android.opengl.GLES20.glBindTexture;
+import static android.opengl.GLES20.glGetError;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.RunnableFuture;
+
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.opengl.GLUtils;
-import static android.opengl.GLES20.*;
 
 /** Bitmap-based texture. */
 public class GVRBitmapTexture extends GVRTexture {
@@ -201,6 +209,43 @@ public class GVRBitmapTexture extends GVRTexture {
     }
 
     /**
+     * Copy new luminance data to a grayscale texture. This is also safe to be
+     * called in a non-GL thread.
+     * 
+     * @param width
+     *            Texture width, in pixels
+     * @param height
+     *            Texture height, in pixels
+     * @param grayscaleData
+     *            {@code width * height} bytes of gray scale data
+     * @return {@link Future<Boolean>} A update request on a non-GL thread will
+     *         finally be forwarded to the GL thread and be executed before main
+     *         rendering happens. So at the time we call the safeUpdate, we can
+     *         only return a Future containing a boolean value to see if it is
+     *         successfully updated later in GL thread.
+     * @since 1.6.3
+     */
+    public Future<Boolean> safeUpdate(int width, int height,
+            byte[] grayscaleData, GVRContext gvrContext) {
+        final int widthOnCall = width, heightOnCall = height;
+        final byte[] grayscaleDataOnCall = grayscaleData;
+        RunnableFuture<Boolean> updateTask = new GVRFutureOnGlThread<Boolean>(
+                new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() {
+                        return update(widthOnCall, heightOnCall,
+                                grayscaleDataOnCall);
+                    }
+                });
+        if (gvrContext.isCurrentThreadGLThread()) {
+            updateTask.run();
+        } else {
+            gvrContext.runOnGlThread(updateTask);
+        }
+        return updateTask;
+    }
+
+    /**
      * Copy a new {@link Bitmap} to the GL texture.
      * 
      * Creating a new {@link GVRTexture} is pretty cheap, but it's still not a
@@ -221,11 +266,45 @@ public class GVRBitmapTexture extends GVRTexture {
      * 
      * @since 1.6.3
      */
+
     public boolean update(Bitmap bitmap) {
         glBindTexture(GL_TEXTURE_2D, getId());
         GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
         return (glGetError() == GL_NO_ERROR);
     }
+
+    /**
+     * Copy a new {@link Bitmap} to the GL texture. This one is also safe even
+     * in a non-GL thread.
+     * 
+     * @param bitmap
+     *            A standard Android {@link Bitmap} gvrContext Current GVR
+     *            context we are running with.
+     * @return {@link Future<Boolean>} A update request on a non-GL thread will
+     *         finally be forwarded to the GL thread and be executed before main
+     *         rendering happens. So at the time we call the safeUpdate, we can
+     *         only return a Future containing a boolean value to see if it is
+     *         successfully updated later in GL thread.
+     * 
+     * @since 1.6.3
+     */
+    public Future<Boolean> safeUpdate(Bitmap bitmap, GVRContext gvrContext) {
+        final Bitmap onCallBitmap = bitmap;
+        RunnableFuture<Boolean> updateTask = new GVRFutureOnGlThread<Boolean>(
+                new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() {
+                        return update(onCallBitmap);
+                    }
+                });
+        if (gvrContext.isCurrentThreadGLThread()) {
+            updateTask.run();
+        } else {
+            gvrContext.runOnGlThread(updateTask);
+        }
+        return updateTask;
+    }
+
 }
 
 class NativeBaseTexture {
