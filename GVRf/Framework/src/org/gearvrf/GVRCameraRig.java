@@ -70,6 +70,20 @@ public class GVRCameraRig extends GVRComponent {
 
     /** Constructor helper */
     private void init(GVRContext gvrContext) {
+        /*
+         * Create an object hierarchy
+         *
+         *             [camera rig object]
+         *                     |
+         *           [head transform object]
+         *            /        |          \
+         * [left cam obj] [right cam obj] [center cam obj]
+         *
+         * 1. camera rig object: used for camera rig moving and turning via
+         *    CameraRig.getTransform()
+         * 2. head transform object: used internally to do sensor-based rotation
+         */
+
         setOwnerObject(new GVRSceneObject(gvrContext));
         getOwnerObject().attachCameraRig(this);
 
@@ -275,7 +289,7 @@ public class GVRCameraRig extends GVRComponent {
      */
     public void attachLeftCamera(GVRCamera camera) {
         if (camera.hasOwnerObject()) {
-            throw new IllegalArgumentException("Owner object should not be set");
+            camera.getOwnerObject().detachCamera();
         }
 
         leftCameraObject.attachCamera(camera);
@@ -291,7 +305,7 @@ public class GVRCameraRig extends GVRComponent {
      */
     public void attachRightCamera(GVRCamera camera) {
         if (camera.hasOwnerObject()) {
-            throw new IllegalArgumentException("Owner object should not be set");
+            camera.getOwnerObject().detachCamera();
         }
 
         rightCameraObject.attachCamera(camera);
@@ -307,7 +321,7 @@ public class GVRCameraRig extends GVRComponent {
      */
     public void attachCenterCamera(GVRPerspectiveCamera camera) {
         if (camera.hasOwnerObject()) {
-            throw new IllegalArgumentException("Owner object should not be set");
+            camera.getOwnerObject().detachCamera();
         }
 
         centerCameraObject.attachCamera(camera);
