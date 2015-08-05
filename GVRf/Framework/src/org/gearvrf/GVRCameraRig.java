@@ -19,8 +19,13 @@ import static org.gearvrf.utility.Assert.*;
 
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {
+    private GVRSceneObject headTransformObject;
+
     private GVRCamera leftCamera, rightCamera;
     private GVRPerspectiveCamera centerCamera;
+
+    private GVRSceneObject leftCameraObject, rightCameraObject;
+    private GVRSceneObject centerCameraObject;
 
     /** Ways to use the rotation sensor data. */
     public abstract static class GVRCameraRigType {
@@ -55,10 +60,29 @@ public class GVRCameraRig extends GVRComponent {
     /** Constructs a camera rig without cameras attached. */
     public GVRCameraRig(GVRContext gvrContext) {
         super(gvrContext, NativeCameraRig.ctor());
+        init(gvrContext);
     }
 
     private GVRCameraRig(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        init(gvrContext);
+    }
+
+    /** Constructor helper */
+    private void init(GVRContext gvrContext) {
+        setOwnerObject(new GVRSceneObject(gvrContext));
+        getOwnerObject().attachCameraRig(this);
+
+        headTransformObject = new GVRSceneObject(gvrContext);
+        getOwnerObject().addChildObject(headTransformObject);
+
+        leftCameraObject = new GVRSceneObject(gvrContext);
+        rightCameraObject = new GVRSceneObject(gvrContext);
+        centerCameraObject = new GVRSceneObject(gvrContext);
+
+        headTransformObject.addChildObject(leftCameraObject);
+        headTransformObject.addChildObject(rightCameraObject);
+        headTransformObject.addChildObject(centerCameraObject);
     }
 
     /** @return The {@link GVRCameraRigType type} of the camera rig. */
@@ -250,9 +274,11 @@ public class GVRCameraRig extends GVRComponent {
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachLeftCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null) {
-            throw new IllegalArgumentException("Owner object not set correctly");
+        if (camera.hasOwnerObject()) {
+            throw new IllegalArgumentException("Owner object should not be set");
         }
+
+        leftCameraObject.attachCamera(camera);
         leftCamera = camera;
         NativeCameraRig.attachLeftCamera(getNative(), camera.getNative());
     }
@@ -264,9 +290,11 @@ public class GVRCameraRig extends GVRComponent {
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachRightCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null) {
-            throw new IllegalArgumentException("Owner object not set correctly");
+        if (camera.hasOwnerObject()) {
+            throw new IllegalArgumentException("Owner object should not be set");
         }
+
+        rightCameraObject.attachCamera(camera);
         rightCamera = camera;
         NativeCameraRig.attachRightCamera(getNative(), camera.getNative());
     }
@@ -278,13 +306,14 @@ public class GVRCameraRig extends GVRComponent {
      *            {@link GVRPerspectiveCamera Camera} to attach.
      */
     public void attachCenterCamera(GVRPerspectiveCamera camera) {
-        if (camera.getOwnerObject() == null) {
-            throw new IllegalArgumentException("Owner object not set correctly");
+        if (camera.hasOwnerObject()) {
+            throw new IllegalArgumentException("Owner object should not be set");
         }
+
+        centerCameraObject.attachCamera(camera);
         centerCamera = camera;
         NativeCameraRig.attachCenterCamera(getNative(), camera.getNative());
     }
-
 
     /**
      * Resets the rotation of the camera rig by multiplying further rotations by
@@ -450,6 +479,17 @@ public class GVRCameraRig extends GVRComponent {
             return getOwnerObject().getChildrenCount();
         }
         return 0;
+    }
+
+    /**
+     * Get the head {@link GVRTransform transform} for setting sensor data. In contrast,
+     * use {@link #getTransform()} for additional camera positioning, such as the game
+     * character moving and turning.
+     *
+     * @return The head {@link GVRTransform transform} object.
+     */
+    public GVRTransform getHeadTransform() {
+        return headTransformObject.getTransform();
     }
 }
 

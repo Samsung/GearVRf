@@ -151,14 +151,17 @@ glm::quat CameraRig::predict(float time) {
     return transform_rotation;
 }
 
-void CameraRig::setRotation(glm::quat transform_rotation) {
+void CameraRig::setRotation(const glm::quat& transform_rotation) {
+    // Get head transform (a child of camera rig object)
+    Transform* transform = getHeadTransform();
+
     if (camera_rig_type_ == FREE) {
-        owner_object()->transform()->set_rotation(transform_rotation);
+        transform->set_rotation(transform_rotation);
     } else if (camera_rig_type_ == YAW_ONLY) {
         glm::vec3 look_at = glm::rotate(transform_rotation,
                 glm::vec3(0.0f, 0.0f, -1.0f));
         float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
-        owner_object()->transform()->set_rotation(
+        transform->set_rotation(
                 glm::angleAxis(yaw, glm::vec3(0.0f, 1.0f, 0.0f)));
     } else if (camera_rig_type_ == ROLL_FREEZE) {
         glm::vec3 look_at = glm::rotate(transform_rotation,
@@ -167,20 +170,24 @@ void CameraRig::setRotation(glm::quat transform_rotation) {
                 sqrtf(look_at.x * look_at.x + look_at.z * look_at.z)) * 180.0f
                 / M_PI;
         float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
-        owner_object()->transform()->set_rotation(
+        transform->set_rotation(
                 glm::angleAxis(pitch, glm::vec3(1.0f, 0.0f, 0.0f)));
-        owner_object()->transform()->rotateByAxis(yaw, 0.0f, 1.0f, 0.0f);
+        transform->rotateByAxis(yaw, 0.0f, 1.0f, 0.0f);
     } else if (camera_rig_type_ == FREEZE) {
-        owner_object()->transform()->set_rotation(glm::quat());
+        transform->set_rotation(glm::quat());
     } else if (camera_rig_type_ == ORBIT_PIVOT) {
         glm::vec3 pivot(getVec3("pivot"));
-        owner_object()->transform()->set_position(pivot.x, pivot.y,
+        transform->set_position(pivot.x, pivot.y,
                 pivot.z + getFloat("distance"));
-        owner_object()->transform()->set_rotation(glm::quat());
-        owner_object()->transform()->rotateWithPivot(transform_rotation.w,
+        transform->set_rotation(glm::quat());
+        transform->rotateWithPivot(transform_rotation.w,
                 transform_rotation.x, transform_rotation.y,
                 transform_rotation.z, pivot.x, pivot.y, pivot.z);
     }
+}
+
+Transform* CameraRig::getHeadTransform() const {
+	return owner_object()->getChildByIndex(0)->transform();
 }
 
 glm::vec3 CameraRig::getLookAt() const {

@@ -82,4 +82,13 @@ class GVRComponent extends GVRHybridObject {
     protected void setOwnerObject(GVRSceneObject owner) {
         this.owner = owner;
     }
+
+    /**
+     * Checks if the {@link GVRComponent} is attached to a {@link GVRSceneObject}.
+     *
+     * @return true if a {@link GVRSceneObject} is attached.
+     */
+    public boolean hasOwnerObject() {
+        return owner != null;
+    }
 }
