@@ -46,8 +46,6 @@ public class SampleCubeScript extends GVRScript {
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
         
-        Log.d("okokokok","width" + gvrContext.getActivity().getAppSettings().getFramebufferPixelsHigh());
-
         GVRScene scene = mGVRContext.getNextMainScene();
 
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
@@ -161,9 +159,6 @@ public class SampleCubeScript extends GVRScript {
         sphere.getTransform()
                 .setScale(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
         sphere.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.25f);
-        for (GVRSceneObject so : scene.getWholeSceneObjects()) {
-            Log.v("", "scene object name : " + so.getName());
-        }
     }
 
     @Override
