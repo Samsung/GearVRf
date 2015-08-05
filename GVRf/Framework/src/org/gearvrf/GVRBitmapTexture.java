@@ -198,7 +198,7 @@ public class GVRBitmapTexture extends GVRTexture {
      * 
      * @since 1.6.3
      */
-    public boolean update(int width, int height, byte[] grayscaleData)
+    private boolean updateCall(int width, int height, byte[] grayscaleData)
             throws IllegalArgumentException {
         if (width <= 0 || height <= 0 || grayscaleData == null
                 || grayscaleData.length < height * width) {
@@ -225,22 +225,21 @@ public class GVRBitmapTexture extends GVRTexture {
      *         successfully updated later in GL thread.
      * @since 1.6.3
      */
-    public Future<Boolean> safeUpdate(int width, int height,
-            byte[] grayscaleData, GVRContext gvrContext) {
+    public Future<Boolean> update(int width, int height, byte[] grayscaleData) {
         final int widthOnCall = width, heightOnCall = height;
         final byte[] grayscaleDataOnCall = grayscaleData;
         RunnableFuture<Boolean> updateTask = new GVRFutureOnGlThread<Boolean>(
                 new Callable<Boolean>() {
                     @Override
                     public Boolean call() {
-                        return update(widthOnCall, heightOnCall,
+                        return updateCall(widthOnCall, heightOnCall,
                                 grayscaleDataOnCall);
                     }
                 });
-        if (gvrContext.isCurrentThreadGLThread()) {
+        if (getGVRContext().isCurrentThreadGLThread()) {
             updateTask.run();
         } else {
-            gvrContext.runOnGlThread(updateTask);
+            getGVRContext().runOnGlThread(updateTask);
         }
         return updateTask;
     }
@@ -267,7 +266,7 @@ public class GVRBitmapTexture extends GVRTexture {
      * @since 1.6.3
      */
 
-    public boolean update(Bitmap bitmap) {
+    private boolean updateCall(Bitmap bitmap) {
         glBindTexture(GL_TEXTURE_2D, getId());
         GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
         return (glGetError() == GL_NO_ERROR);
@@ -276,6 +275,13 @@ public class GVRBitmapTexture extends GVRTexture {
     /**
      * Copy a new {@link Bitmap} to the GL texture. This one is also safe even
      * in a non-GL thread.
+     *
+     * Creating a new {@link GVRTexture} is pretty cheap, but it's still not a
+     * totally trivial operation: it does involve some memory management and
+     * some GL hardware handshaking. Reusing the texture reduces this overhead
+     * (primarily by delaying garbage collection). Do be aware that updating a
+     * texture will affect any and all {@linkplain GVRMaterial materials}
+     * (and/or {@link GVRPostEffect post effects)} that use the texture!
      * 
      * @param bitmap
      *            A standard Android {@link Bitmap} gvrContext Current GVR
@@ -288,19 +294,19 @@ public class GVRBitmapTexture extends GVRTexture {
      * 
      * @since 1.6.3
      */
-    public Future<Boolean> safeUpdate(Bitmap bitmap, GVRContext gvrContext) {
+    public Future<Boolean> update(Bitmap bitmap) {
         final Bitmap onCallBitmap = bitmap;
         RunnableFuture<Boolean> updateTask = new GVRFutureOnGlThread<Boolean>(
                 new Callable<Boolean>() {
                     @Override
                     public Boolean call() {
-                        return update(onCallBitmap);
+                        return updateCall(onCallBitmap);
                     }
                 });
-        if (gvrContext.isCurrentThreadGLThread()) {
+        if (getGVRContext().isCurrentThreadGLThread()) {
             updateTask.run();
         } else {
-            gvrContext.runOnGlThread(updateTask);
+            getGVRContext().runOnGlThread(updateTask);
         }
         return updateTask;
     }

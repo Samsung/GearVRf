@@ -83,7 +83,7 @@ public class SampleViewManager extends GVRScript {
         mConsole.clear();
         counter %= 3;
         mConsole.writeLine("TextureNumber Number %d", counter);
-        mTexture.safeUpdate(bitmap[counter], mGVRContext);
+        mTexture.update(bitmap[counter]);
     }
 
 }

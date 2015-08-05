@@ -372,7 +372,7 @@ public class GVRConsole extends GVRPostEffect {
 
         Future<Boolean> textureUpdated = null;
         if (texture != null) {
-            textureUpdated = texture.safeUpdate(HUD, this.getGVRContext());
+            textureUpdated = texture.update(HUD);
         }
 
         try {
