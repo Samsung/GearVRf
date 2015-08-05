@@ -477,22 +477,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             } else {
                 // if mScreenshotCenterCallback is not null, capture center eye
                 if (mScreenshotCenterCallback != null) {
-
-                    // temporarily create a center camera
-                    GVRCamera centerCamera = new GVRPerspectiveCamera(this);
-                    centerCamera.setRenderMask(GVRRenderMaskBit.Left
-                            | GVRRenderMaskBit.Right);
-                    GVRSceneObject centerCameraObject = new GVRSceneObject(this);
-                    centerCameraObject.attachCamera(centerCamera);
-                    mainCameraRig.getOwnerObject().addChildObject(
-                            centerCameraObject);
-
+                    GVRPerspectiveCamera centerCamera = mainCameraRig.getCenterCamera();
+                        
                     renderCamera(mActivity.getAppPtr(), mMainScene,
                             centerCamera, mRenderBundle);
-
-                    centerCameraObject.detachCamera();
-                    mainCameraRig.getOwnerObject().removeChildObject(
-                            centerCameraObject);
 
                     readRenderResult();
                     returnScreenshotToCaller(mScreenshotCenterCallback,

@@ -24,6 +24,7 @@
 
 #include "objects/scene_object.h"
 #include "objects/components/camera.h"
+#include "objects/components/perspective_camera.h"
 #include "util/gvr_time.h"
 
 namespace gvr {
@@ -31,7 +32,7 @@ namespace gvr {
 float CameraRig::default_camera_separation_distance_ = 0.062f;
 
 CameraRig::CameraRig() :
-        Component(), camera_rig_type_(DEFAULT_CAMERA_RIG_TYPE), left_camera_(), right_camera_(), camera_separation_distance_(
+        Component(), camera_rig_type_(DEFAULT_CAMERA_RIG_TYPE), left_camera_(), right_camera_(), center_camera_(), camera_separation_distance_(
                 default_camera_separation_distance_), floats_(), vec2s_(), vec3s_(), vec4s_(), complementary_rotation_(), rotation_sensor_data_(), rotation_buffer_() {
 }
 
@@ -48,6 +49,48 @@ void CameraRig::attachRightCamera(Camera* const right_camera) {
     right_camera->owner_object()->transform()->set_position(
             camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
     right_camera_ = right_camera;
+}
+
+/*
+ * We want to create a center camera that encompasses the fov of both the left and right cameras.
+ * To do this, we keep the camera at an x,y of 0, and move it in z.
+ * To find z:
+ *         \ left /|\ right/
+ *          \ eye/ | \ eye/
+ *           \  /  |  \  /
+ *            \/   |   \/
+ *             ----+---  <- ipd
+ *              \  |  /
+ *               \ | /
+ *                \|/
+ *                 z
+ *
+ * Let's look at one of the triangles that make the center camera:
+ *
+ *   ipd/2
+ *   +---
+ *   |  /
+ *   | /
+ *   |/
+ *   z
+ *
+ * We know:
+ *    opposite:  ipd/2
+ *       theta:  fov_y / 2
+ *
+ * We need z (adjacent).
+ *
+ * tan(theta) = opposite / adjacent
+ * adjacent = opposite * 1/tan(theta)
+ * z = ipd/2 * 1/tan(fov_y/2)
+ */
+void CameraRig::attachCenterCamera(PerspectiveCamera* const center_camera) {
+    float half_ipd = camera_separation_distance_ * 0.5f;
+    float theta = (center_camera->fov_y() * 0.5f) * (M_PI/180.0f);
+    float tan_theta = tan(theta);
+    float z = half_ipd * (1.0f/tan_theta);
+    center_camera->owner_object()->transform()->set_position(0.0f, 0.0f, z);
+    center_camera_ = center_camera;
 }
 
 void CameraRig::reset() {

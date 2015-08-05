@@ -183,24 +183,24 @@ public class SampleCubeScript extends GVRScript {
             public void run() {
                 switch (mode) {
                 case 0:
-                    if (lastScreenshotLeftFinished) {
+                    if (lastScreenshotCenterFinished) {
                         mGVRContext.captureScreenCenter(newScreenshotCallback(
                                 filename, 0));
-                        lastScreenshotLeftFinished = false;
+                        lastScreenshotCenterFinished = false;
                     }
                     break;
                 case 1:
-                    if (lastScreenshotRightFinished) {
+                    if (lastScreenshotLeftFinished) {
                         mGVRContext.captureScreenLeft(newScreenshotCallback(
                                 filename, 1));
-                        lastScreenshotRightFinished = false;
+                        lastScreenshotLeftFinished = false;
                     }
                     break;
                 case 2:
-                    if (lastScreenshotCenterFinished) {
+                    if (lastScreenshotRightFinished) {
                         mGVRContext.captureScreenRight(newScreenshotCallback(
                                 filename, 2));
-                        lastScreenshotCenterFinished = false;
+                        lastScreenshotRightFinished = false;
                     }
                     break;
                 }
@@ -246,13 +246,13 @@ public class SampleCubeScript extends GVRScript {
                 // enable next screenshot
                 switch (mode) {
                 case 0:
-                    lastScreenshotLeftFinished = true;
+                    lastScreenshotCenterFinished = true;
                     break;
                 case 1:
-                    lastScreenshotRightFinished = true;
+                    lastScreenshotLeftFinished = true;
                     break;
                 case 2:
-                    lastScreenshotCenterFinished = true;
+                    lastScreenshotRightFinished = true;
                     break;
                 }
             }
