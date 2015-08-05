@@ -20,6 +20,7 @@ import static org.gearvrf.utility.Assert.*;
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {
     private GVRCamera leftCamera, rightCamera;
+    private GVRPerspectiveCamera centerCamera;
 
     /** Ways to use the rotation sensor data. */
     public abstract static class GVRCameraRigType {
@@ -91,6 +92,15 @@ public class GVRCameraRig extends GVRComponent {
      */
     public GVRCamera getRightCamera() {
         return rightCamera;
+    }
+
+    /**
+     * @return Get the center {@link GVRPerspectiveCamera camera}, if one has been
+     *         {@link #attachCenterCamera(GVRPerspectiveCamera) attached}; {@code null} if
+     *         not.
+     */
+    public GVRPerspectiveCamera getCenterCamera() {
+        return centerCamera;
     }
 
     /**
@@ -260,6 +270,21 @@ public class GVRCameraRig extends GVRComponent {
         rightCamera = camera;
         NativeCameraRig.attachRightCamera(getNative(), camera.getNative());
     }
+
+    /**
+     * Attach a {@link GVRPerspectiveCamera camera} as the center camera of the camera rig.
+     * 
+     * @param camera
+     *            {@link GVRPerspectiveCamera Camera} to attach.
+     */
+    public void attachCenterCamera(GVRPerspectiveCamera camera) {
+        if (camera.getOwnerObject() == null) {
+            throw new IllegalArgumentException("Owner object not set correctly");
+        }
+        centerCamera = camera;
+        NativeCameraRig.attachCenterCamera(getNative(), camera.getNative());
+    }
+
 
     /**
      * Resets the rotation of the camera rig by multiplying further rotations by
@@ -465,6 +490,8 @@ class NativeCameraRig {
     static native void attachLeftCamera(long cameraRig, long camera);
 
     static native void attachRightCamera(long cameraRig, long camera);
+
+    static native void attachCenterCamera(long cameraRig, long camera);
 
     static native void reset(long cameraRig);
 

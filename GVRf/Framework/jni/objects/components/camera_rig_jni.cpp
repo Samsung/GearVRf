@@ -91,6 +91,10 @@ Java_org_gearvrf_NativeCameraRig_attachRightCamera(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jlong jcamera);
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCameraRig_attachCenterCamera(JNIEnv * env,
+        jobject obj, jlong jcamera_rig, jlong jcamera);
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_reset(JNIEnv * env,
         jobject obj, jlong jcamera_rig);
 
@@ -290,6 +294,14 @@ Java_org_gearvrf_NativeCameraRig_attachRightCamera(JNIEnv * env,
     CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera_rig->attachRightCamera(camera);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCameraRig_attachCenterCamera(JNIEnv * env,
+        jobject obj, jlong jcamera_rig, jlong jcamera) {
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
+    PerspectiveCamera* camera = reinterpret_cast<PerspectiveCamera*>(jcamera);
+    camera_rig->attachCenterCamera(camera);
 }
 
 JNIEXPORT void JNICALL

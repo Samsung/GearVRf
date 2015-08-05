@@ -51,15 +51,23 @@ public class GVRScene extends GVRHybridObject {
         GVRSceneObject rightCameraObject = new GVRSceneObject(gvrContext);
         rightCameraObject.attachCamera(rightCamera);
 
+        GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
+        centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
+        GVRSceneObject centerCameraObject = new GVRSceneObject(gvrContext);
+        centerCameraObject.attachCamera(centerCamera);
+
+
         GVRSceneObject cameraRigObject = new GVRSceneObject(gvrContext);
         GVRCameraRig cameraRig = new GVRCameraRig(gvrContext);
         cameraRig.attachLeftCamera(leftCamera);
         cameraRig.attachRightCamera(rightCamera);
+        cameraRig.attachCenterCamera(centerCamera);
         cameraRigObject.attachCameraRig(cameraRig);
 
         addSceneObject(cameraRigObject);
         cameraRigObject.addChildObject(leftCameraObject);
         cameraRigObject.addChildObject(rightCameraObject);
+        cameraRigObject.addChildObject(centerCameraObject);
         setMainCameraRig(cameraRig);
     }
 

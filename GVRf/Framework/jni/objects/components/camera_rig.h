@@ -34,6 +34,7 @@
 
 namespace gvr {
 class Camera;
+class PerspectiveCamera;
 
 class CameraRig: public Component {
 public:
@@ -58,6 +59,10 @@ public:
 
     Camera* right_camera() const {
         return right_camera_;
+    }
+
+    PerspectiveCamera* center_camera() const {
+        return center_camera_;
     }
 
     static float default_camera_separation_distance() {
@@ -133,6 +138,7 @@ public:
 
     void attachLeftCamera(Camera* const left_camera);
     void attachRightCamera(Camera* const right_camera);
+    void attachCenterCamera(PerspectiveCamera* const center_camera);
     void reset();
     void resetYaw();
     void resetYawPitch();
@@ -155,6 +161,7 @@ private:
     CameraRigType camera_rig_type_;
     Camera* left_camera_;
     Camera* right_camera_;
+    PerspectiveCamera* center_camera_;
     static float default_camera_separation_distance_;
     float camera_separation_distance_;
     std::map<std::string, float> floats_;
