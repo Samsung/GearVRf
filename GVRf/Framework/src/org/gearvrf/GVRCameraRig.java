@@ -463,9 +463,7 @@ public class GVRCameraRig extends GVRComponent {
      *            rig owner object.
      */
     public void addChildObject(GVRSceneObject child) {
-        if (getOwnerObject() != null) {
-            getOwnerObject().addChildObject(child);
-        }
+        headTransformObject.addChildObject(child);
     }
 
     /**
@@ -476,9 +474,7 @@ public class GVRCameraRig extends GVRComponent {
      *            camera rig owner object.
      */
     public void removeChildObject(GVRSceneObject child) {
-        if (getOwnerObject() != null) {
-            getOwnerObject().removeChildObject(child);
-        }
+        headTransformObject.removeChildObject(child);
     }
 
     /**
@@ -489,10 +485,7 @@ public class GVRCameraRig extends GVRComponent {
      *         this camera rig owner object.
      */
     public int getChildrenCount() {
-        if (getOwnerObject() != null) {
-            return getOwnerObject().getChildrenCount();
-        }
-        return 0;
+        return headTransformObject.getChildrenCount();
     }
 
     /**
