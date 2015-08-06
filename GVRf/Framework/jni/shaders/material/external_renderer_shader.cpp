@@ -9,6 +9,7 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "objects/textures/external_renderer_texture.h"
+#include "util/gvr_gl.h"
 #include "util/gvr_log.h"
 
 static GVRF_ExternalRenderer externalRenderer = NULL;
