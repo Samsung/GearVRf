@@ -25,7 +25,7 @@ void ExternalRendererShader::render(const glm::mat4& mvp_matrix, RenderData* ren
         return;
     }
 
-    Texture* texture = render_data->material()->getTexture("main_texture");
+    Texture* texture = render_data->pass(0)->material()->getTexture("main_texture");
     if (texture->getTarget() != ExternalRendererTexture::TARGET) {
         LOGE("External renderer only takes external renderer textures");
         return;
