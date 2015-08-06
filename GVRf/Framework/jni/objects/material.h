@@ -43,6 +43,7 @@ public:
         CUBEMAP_SHADER = 5,
         CUBEMAP_REFLECTION_SHADER = 6,
         TEXTURE_SHADER = 7,
+        EXTERNAL_RENDERER_SHADER = 8,
         TEXTURE_SHADER_NOLIGHT = 100
     };
 

@@ -112,6 +112,11 @@ public class GVRMaterial extends GVRHybridObject implements
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     7);
         }
+
+        public abstract static class ExternalRenderer {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    8);
+        }
     };
 
     /**
