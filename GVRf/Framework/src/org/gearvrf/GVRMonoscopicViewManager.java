@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.VrAppSettings;
+
 import android.app.Activity;
 import android.util.DisplayMetrics;
 
@@ -93,16 +95,21 @@ class GVRMonoscopicViewManager extends GVRViewManager {
                 * INCH_TO_METERS;
 
         mLensInfo = new GVRLensInfo(screenWidthPixels, screenHeightPixels,
-                screenWidthMeters, screenHeightMeters, xmlParser);
+                screenWidthMeters, screenHeightMeters,
+                gvrActivity.getAppSettings());
 
-        GVRPerspectiveCamera.setDefaultFovY(xmlParser.getFovY());
-        int fboWidth = xmlParser.getFBOWidth();
-        int fboHeight = xmlParser.getFBOHeight();
-        if (fboWidth <= 0) {
+        GVRPerspectiveCamera.setDefaultFovY(gvrActivity.getAppSettings()
+                .getEyeBufferParms().getFovY());
+        int fboWidth = gvrActivity.getAppSettings().getEyeBufferParms()
+                .getResolution();
+        int fboHeight = gvrActivity.getAppSettings().getEyeBufferParms()
+                .getResolution();
+        if (gvrActivity.getAppSettings().getMonoScopicModeParms()
+                .isMonoFullScreenMode()) {
             fboWidth = screenWidthPixels;
-        }
-        if (fboHeight <= 0) {
             fboHeight = screenHeightPixels;
+        } else if (fboWidth <= 0 || fboHeight <= 0) {
+            fboWidth = fboHeight = VrAppSettings.DEFAULT_FBO_RESOLUTION;
         }
         float aspect = (float) fboWidth / (float) fboHeight;
         GVRPerspectiveCamera.setDefaultAspectRatio(aspect);

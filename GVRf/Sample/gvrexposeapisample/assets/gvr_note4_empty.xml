@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--/* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,8 @@
  * limitations under the License.
  */-->
 
+<!-- An empty configuration file like this will set all parameters by default from either
+driver or preset values. -->
 
-
-<resources>
-
-    <string name="app_name">GVR Expose Setting Sample</string>
-
-</resources>
+<lens name="N4">
+</lens>

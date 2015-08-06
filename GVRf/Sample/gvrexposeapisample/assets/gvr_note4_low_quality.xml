@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--/* Copyright 2015 Samsung Electronics Co., LTD
+<!--
+ /* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,14 +13,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */-->
+ */
+-->
 
+<!-- This is a configuration file which contains settings of low quality for the purpose
+of stable frame rate and power saving. -->
 
 <lens name="N4" >
 
     <vr-app-settings
-        framebufferPixelsHigh="DEFAULT"
-        framebufferPixelsWide="DEFAULT"
+        framebufferPixelsHigh="1280"
+        framebufferPixelsWide="720"
         showLoadingIcon="true"
         useProtectedFramebuffer="false"
         useSrgbFramebuffer="false" >
@@ -38,8 +42,8 @@
             colorFormat="COLOR_8888"
             depthFormat="DEPTH_24"
             fov-y="90.0"
-            multiSamples="1"
-            resolution="DEFAULT"
+            multiSamples="0"
+            resolution="512"
             textureFilter="TEXTURE_FILTER_BILINEAR"
             widthScale="1" />
 

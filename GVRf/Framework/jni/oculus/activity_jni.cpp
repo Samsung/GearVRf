@@ -19,6 +19,7 @@
 #include "VrApi_Helpers.h"
 #include "objects/scene_object.h"
 #include "VrApi_Types.h"
+#include <sstream>
 
 static const char * activityClassName = "org/gearvrf/GVRActivity";
 static const char * app_settings_name = "org/gearvrf/utility/VrAppSettings";
@@ -281,6 +282,99 @@ template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OV
         env->SetFloatField(headModelParms, env->GetFieldID(headModelParmsClass, "headModelHeight", "F"), settings.HeadModelParms.HeadModelHeight);
     }else{
         settings.HeadModelParms.HeadModelHeight = headModelHeight;
+    }
+    if (env->GetStaticBooleanField(vrAppSettingsClass,
+            env->GetStaticFieldID(vrAppSettingsClass, "isShowDebugLog", "Z"))) {
+        std::stringstream logInfo;
+        logInfo << "====== General Configuration ======" << std::endl;
+        if (settings.FramebufferPixelsHigh == 0
+                && settings.FramebufferPixelsWide == 0) {
+            logInfo
+                    << "FramebufferPixelsHigh = screen size; FramebufferPixelsWide = screen size \n";
+        } else {
+            logInfo << "FramebufferPixelsHigh = "
+                    << settings.FramebufferPixelsHigh
+                    << "; FrameBufferPixelsWide = "
+                    << settings.FramebufferPixelsWide << std::endl;
+        }
+        logInfo << "ShowLoadingIcon = " << settings.ShowLoadingIcon
+                << "; UseProtectedFramebuffer = "
+                << settings.UseProtectedFramebuffer << "; UseSrgbFramebuffer = "
+                << settings.UseSrgbFramebuffer << "\n";
+        logInfo << "====== Eye Buffer Configuration ======\n";
+        logInfo << "colorFormat = ";
+        switch (settings.EyeBufferParms.colorFormat) {
+        case 0:
+            logInfo << "COLOR_565";
+            break;
+        case 1:
+            logInfo << "COLOR_5551";
+            break;
+        case 2:
+            logInfo << "COLOR_4444";
+            break;
+        case 3:
+            logInfo << "COLOR_8888";
+            break;
+        case 4:
+            logInfo << "COLOR_8888_sRGB";
+            break;
+        default:
+            break;
+        }
+        logInfo << "; depthFormat = ";
+        switch (settings.EyeBufferParms.depthFormat) {
+        case 0:
+            logInfo << "DEPTH_0";
+            break;
+        case 1:
+            logInfo << "DEPTH_16";
+            break;
+        case 2:
+            logInfo << "DEPTH_24";
+            break;
+        case 3:
+            logInfo << "DEPTH_24_STENCIL_8";
+            break;
+        default:
+            break;
+        }
+        logInfo << "; textureFilter = ";
+        switch (settings.EyeBufferParms.textureFilter) {
+        case 0:
+            logInfo << "TEXTURE_FILTER_NEAREST";
+            break;
+        case 1:
+            logInfo << "TEXTURE_FILTER_BILINEAR";
+            break;
+        case 2:
+            logInfo << "TEXTURE_FILTER_ANISO_2";
+            break;
+        case 3:
+            logInfo << "TEXTURE_FILTER_ANISO_4";
+            break;
+        default:
+            break;
+        }
+        logInfo << "; WidthScale = " << settings.EyeBufferParms.WidthScale
+                << "; multiSample = " << settings.EyeBufferParms.multisamples
+                << "; resolution = " << settings.EyeBufferParms.resolution
+                << std::endl;
+        logInfo << "====== Head Model Configuration ======" << std::endl;
+        logInfo << "EyeHeight = " << settings.HeadModelParms.EyeHeight
+                << "; HeadModelDepth = "
+                << settings.HeadModelParms.HeadModelDepth
+                << "; HeadModelHeight = "
+                << settings.HeadModelParms.HeadModelHeight
+                << "; InterpupillaryDistance = "
+                << settings.HeadModelParms.InterpupillaryDistance << std::endl;
+        logInfo << "====== Mode Configuration ======" << std::endl;
+        logInfo << "AllowPowerSave = " << settings.ModeParms.AllowPowerSave
+                << "; CpuLevel = " << settings.ModeParms.CpuLevel
+                << "; GpuLevel = " << settings.ModeParms.GpuLevel
+                << "; ResetWindowFullscreen = "
+                << settings.ModeParms.ResetWindowFullscreen << std::endl;
+        LOGI("%s", logInfo.str().c_str());
     }
 }
 

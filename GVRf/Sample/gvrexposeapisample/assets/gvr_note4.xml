@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--/* Copyright 2015 Samsung Electronics Co., LTD
+<!--
+ /* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,33 +13,45 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */-->
+ */
+-->
 
+<!-- This is a configuration file with default settings. You can assume that using this
+ one will receive the same effect as gvr_note4_empty.xml. -->
 
+<lens name="N4" >
 
-<lens name="N4">
-    <scene fov-y="90.0" camera-separation-distance="0.062" fbo-width="1024" fbo-height="1024" msaa="1"/>
     <vr-app-settings
-        showLoadingIcon = "true"
-        renderMonoMode = "false"
-        useSrgbFramebuffer = "false"
-        useProtectedFramebuffer = "false"
-        framebufferPixelsWide="-1"
-        framebufferPixelsHigh="-1">
-        <mode-parms allowPowerSave="true" resetWindowFullScreen="true" cpuLevel="2" gpuLevel="2"/>
-        <eye-buffer-parms 
-            depthFormat="DEPTH_24"
-            textureFilter="TEXTURE_FILTER_BILINEAR"
+        framebufferPixelsHigh="DEFAULT"
+        framebufferPixelsWide="DEFAULT"
+        showLoadingIcon="true"
+        useProtectedFramebuffer="false"
+        useSrgbFramebuffer="false" >
+
+        <mono-mode-parms
+            monoFullScreen="false"
+            monoMode="false" />
+
+        <mode-parms
+            allowPowerSave="true"
+            cpuLevel="2"
+            gpuLevel="2"
+            resetWindowFullScreen="true" />
+
+        <eye-buffer-parms
             colorFormat="COLOR_8888"
-            multiSamples="2"
-            widthScale="1"
-            resolution="-1"
-            />
+            depthFormat="DEPTH_24"
+            fov-y="90.0"
+            multiSamples="1"
+            resolution="DEFAULT"
+            textureFilter="TEXTURE_FILTER_BILINEAR"
+            widthScale="1" />
+
         <head-model-parms
-            interpupillaryDistance="NaN"
-            eyeHeight="NaN"
-            headModelDepth="NaN"
-            headModelHeight="NaN"
-            />        
+            eyeHeight="DEFAULT"
+            headModelDepth="DEFAULT"
+            headModelHeight="DEFAULT"
+            interpupillaryDistance="DEFAULT" />
     </vr-app-settings>
+
 </lens>
