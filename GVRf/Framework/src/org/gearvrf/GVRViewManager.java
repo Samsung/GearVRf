@@ -107,6 +107,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     ByteBuffer mReadbackBuffer = null;
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
 
+    private native void cull(long scene, long camera, long shader_manager);
     private native void renderCamera(long appPtr, long scene, long camera,
             long shaderManager, long postEffectShaderManager,
             long postEffectRenderTextureA, long postEffectRenderTextureB);
@@ -638,6 +639,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     mSplashScreen = null;
                 }
             }
+            cull(mMainScene.getNative(), mMainScene.getMainCameraRig().getCenterCamera().getNative(), mRenderBundle.getMaterialShaderManager().getNative());
         }
 
         public void onDrawFrame() {
@@ -661,6 +663,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             doMemoryManagementAndPerFrameCallbacks();
 
             mScript.onStep();
+
+            cull(mMainScene.getNative(), mMainScene.getMainCameraRig().getCenterCamera().getNative(), mRenderBundle.getMaterialShaderManager().getNative());
         }
 
         public void onDrawFrame() {
