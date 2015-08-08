@@ -191,7 +191,7 @@ Transform* CameraRig::getHeadTransform() const {
 }
 
 glm::vec3 CameraRig::getLookAt() const {
-    glm::mat4 model_matrix = owner_object()->transform()->getModelMatrix();
+    glm::mat4 model_matrix = getHeadTransform()->getModelMatrix();
     float x0 = model_matrix[3][0];
     float y0 = model_matrix[3][1];
     float z0 = model_matrix[3][2];
