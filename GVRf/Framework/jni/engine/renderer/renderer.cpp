@@ -586,6 +586,11 @@ void Renderer::renderRenderData(RenderData* render_data,
                             shader_manager->getExternalRendererShader()->render(
                                     mvp_matrix, render_data);
                             break;
+                        case Material::ShaderType::ASSIMP_SHADER:
+                            shader_manager->getAssimpShader()->render(
+                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                                    mvp_matrix, render_data, curr_material);
+                            break;
                         default:
                             shader_manager->getCustomShader(
                                     curr_material->shader_type())->render(

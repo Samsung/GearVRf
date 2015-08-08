@@ -28,6 +28,7 @@ import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRImportSettings;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
@@ -741,78 +742,54 @@ public abstract class GVRContext {
 
         AiMaterial material = this.getMeshMaterial(new GVRAndroidResource(this,
                 assetRelativeFilename), node.getName(), index);
+        
+        GVRMaterial meshMaterial = new GVRMaterial(this,
+                GVRShaderType.Assimp.ID);
+        
+        /* Diffuse color */
+        AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
+        meshMaterial.setDiffuseColor(diffuseColor.getRed(),
+                diffuseColor.getGreen(), diffuseColor.getBlue(),
+                diffuseColor.getAlpha());
 
-        Property property = material.getProperty("$tex.file");
-        if (property != null) {
-            int textureIndex = property.getIndex();
-            String texFileName = material.getTextureFile(AiTextureType.DIFFUSE,
-                    textureIndex);
+        /* Specular color */
+        AiColor specularColor = material.getSpecularColor(wrapperProvider);
+        meshMaterial.setSpecularColor(specularColor.getRed(),
+                specularColor.getGreen(), specularColor.getBlue(),
+                specularColor.getAlpha());
 
-            Future<GVRTexture> futureMeshTexture = this
-                    .loadFutureTexture(new GVRAndroidResource(this, texFileName));
+        /* Ambient color */
+        AiColor ambientColor = material.getAmbientColor(wrapperProvider);
+        meshMaterial.setAmbientColor(ambientColor.getRed(),
+                ambientColor.getGreen(), ambientColor.getBlue(),
+                ambientColor.getAlpha());
 
-            GVRSceneObject sceneObject = new GVRSceneObject(this, futureMesh,
-                    futureMeshTexture);
+        /* Emissive color */
+        AiColor emissiveColor = material.getEmissiveColor(wrapperProvider);
+        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                emissiveColor.getGreen(), emissiveColor.getBlue(),
+                emissiveColor.getAlpha());
 
-            return sceneObject;
+        /* Opacity */
+        float opacity = material.getOpacity();
+        meshMaterial.setOpacity(opacity);
 
-        } else {
-            // The case when there is no texture
-            // This block also takes care for the case when there
-            // are no texture or color for the mesh as the methods
-            // that are used for getting the colors of the material
-            // returns a default when they are not present
-            AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
-            AiColor ambientColor = material.getAmbientColor(wrapperProvider);
-            float opacity = material.getOpacity();
-
-            final String DIFFUSE_COLOR_KEY = "diffuse_color";
-            final String AMBIENT_COLOR_KEY = "ambient_color";
-            final String COLOR_OPACITY_KEY = "opacity";
-
-            final String VERTEX_SHADER = "attribute vec4 a_position;\n"
-                    + "uniform mat4 u_mvp;\n" + "void main() {\n"
-                    + "  gl_Position = u_mvp * a_position;\n" + "}\n";
-
-            final String FRAGMENT_SHADER = "precision mediump float;\n"
-                    + "uniform vec4 diffuse_color;\n" //
-                    + "uniform vec4 ambient_color;\n"
-                    + "uniform float opacity;\n"
-                    + "void main() {\n" //
-                    + "  gl_FragColor = ( diffuse_color * opacity ) + ambient_color;\n"
-                    + "}\n";
-
-            GVRCustomMaterialShaderId mShaderId;
-            GVRMaterialMap mCustomShader = null;
-
-            final GVRMaterialShaderManager shaderManager = this
-                    .getMaterialShaderManager();
-            mShaderId = shaderManager.addShader(VERTEX_SHADER, FRAGMENT_SHADER);
-            mCustomShader = shaderManager.getShaderMap(mShaderId);
-            mCustomShader.addUniformVec4Key("diffuse_color", DIFFUSE_COLOR_KEY);
-            mCustomShader.addUniformVec4Key("ambient_color", AMBIENT_COLOR_KEY);
-            mCustomShader.addUniformFloatKey("opacity", COLOR_OPACITY_KEY);
-
-            GVRMaterial meshMaterial = new GVRMaterial(this, mShaderId);
-
-            meshMaterial.setVec4(DIFFUSE_COLOR_KEY, diffuseColor.getRed(),
-                    diffuseColor.getGreen(), diffuseColor.getBlue(),
-                    diffuseColor.getAlpha());
-
-            meshMaterial.setVec4(AMBIENT_COLOR_KEY, ambientColor.getRed(),
-                    ambientColor.getGreen(), ambientColor.getBlue(),
-                    ambientColor.getAlpha());
-
-            meshMaterial.setFloat(COLOR_OPACITY_KEY, opacity);
-
-            GVRSceneObject sceneObject = new GVRSceneObject(this);
-            GVRRenderData sceneObjectRenderData = new GVRRenderData(this);
-            sceneObjectRenderData.setMesh(futureMesh);
-            sceneObjectRenderData.setMaterial(meshMaterial);
-            sceneObject.attachRenderData(sceneObjectRenderData);
-
-            return sceneObject;
+        /* Diffuse Texture */
+        String texDiffuseFileName = material.getTextureFile(
+                AiTextureType.DIFFUSE, 0);
+        if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+            Future<GVRTexture> futureDiffuseTexture = this
+                    .loadFutureTexture(new GVRAndroidResource(this,
+                            texDiffuseFileName));
+            meshMaterial.setMainTexture(futureDiffuseTexture);
         }
+
+        GVRSceneObject sceneObject = new GVRSceneObject(this);
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(this);
+        sceneObjectRenderData.setMesh(futureMesh);
+        sceneObjectRenderData.setMaterial(meshMaterial);
+        sceneObject.attachRenderData(sceneObjectRenderData);
+        return sceneObject;
     }
 
     /**
@@ -1013,7 +990,6 @@ public abstract class GVRContext {
      *             {@link #loadTexture(GVRAndroidResource)}
      * 
      */
-    @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(String fileName,
             GVRTextureParameters textureParameters) {
 

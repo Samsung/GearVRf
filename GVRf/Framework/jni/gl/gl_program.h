@@ -43,9 +43,9 @@ public:
     GLProgram(const char** pVertexSourceStrings,
             const GLint* pVertexSourceStringLengths,
             const char** pFragmentSourceStrings,
-            const GLint* pFragmentSourceStringLengths) :
+            const GLint* pFragmentSourceStringLengths, int count) :
             id_(
-                    createProgram(2, pVertexSourceStrings,
+                    createProgram(count, pVertexSourceStrings,
                             pVertexSourceStringLengths, pFragmentSourceStrings,
                             pFragmentSourceStringLengths)) {
     }

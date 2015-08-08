@@ -129,11 +129,11 @@ TextureShader::TextureShader() :
 
     program_light_ = new GLProgram(vertex_shader_light_strings,
             vertex_shader_light_string_lengths, fragment_shader_light_strings,
-            fragment_shader_light_string_lengths);
+            fragment_shader_light_string_lengths, 2);
     program_no_light_ = new GLProgram(vertex_shader_no_light_strings,
             vertex_shader_no_light_string_lengths,
             fragment_shader_no_light_strings,
-            fragment_shader_no_light_string_lengths);
+            fragment_shader_no_light_string_lengths, 2);
 
     a_position_no_light_ = glGetAttribLocation(program_no_light_->id(),
             "a_position");
