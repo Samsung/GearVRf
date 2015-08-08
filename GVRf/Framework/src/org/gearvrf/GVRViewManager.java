@@ -463,6 +463,11 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
 
+            if(eye == 0) {
+                GVRPerspectiveCamera centerCamera = mainCameraRig.getCenterCamera();
+                cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
+            }
+
             if (eye == 1) {
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
                 renderCamera(mActivity.getAppPtr(), mMainScene, rightCamera,
@@ -639,7 +644,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     mSplashScreen = null;
                 }
             }
-            cull(mMainScene.getNative(), mMainScene.getMainCameraRig().getCenterCamera().getNative(), mRenderBundle.getMaterialShaderManager().getNative());
         }
 
         public void onDrawFrame() {
@@ -663,8 +667,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             doMemoryManagementAndPerFrameCallbacks();
 
             mScript.onStep();
-
-            cull(mMainScene.getNative(), mMainScene.getMainCameraRig().getCenterCamera().getNative(), mRenderBundle.getMaterialShaderManager().getNative());
         }
 
         public void onDrawFrame() {
