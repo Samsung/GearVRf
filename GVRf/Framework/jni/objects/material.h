@@ -153,6 +153,14 @@ public:
         mat4s_[key] = matrix;
     }
 
+    int get_shader_feature_set() {
+        return shader_feature_set;
+    }
+
+    void set_shader_feature_set(int feature_set) {
+        shader_feature_set = feature_set;
+    }
+
 private:
     Material(const Material& material);
     Material(Material&& material);
@@ -167,6 +175,7 @@ private:
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
+    int shader_feature_set;
 };
 }
 #endif

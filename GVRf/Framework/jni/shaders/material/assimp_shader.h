@@ -32,8 +32,8 @@
 #define ISSET(num, i)                    ((num & (1 << i)) != 0)
 #define CLEARBIT(num, i)                 num = (num & ~(1 << i))
 
-#define AS_DIFFUSE_TEXTURE                0x00000001
-#define AS_SPECULAR_TEXTURE               0x00000002
+#define AS_DIFFUSE_TEXTURE                0x00000000
+#define AS_SPECULAR_TEXTURE               0x00000001
 
 /*
  * As the features are incremented, need to increase AS_TOTAL_FEATURE_COUNT

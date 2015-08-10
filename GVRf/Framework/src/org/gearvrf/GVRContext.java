@@ -41,7 +41,6 @@ import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.AiWrapperProvider;
-import org.gearvrf.jassimp.AiMaterial.Property;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
@@ -746,6 +745,9 @@ public abstract class GVRContext {
         GVRMaterial meshMaterial = new GVRMaterial(this,
                 GVRShaderType.Assimp.ID);
         
+        /* Feature set */
+        int assimpFeatureSet = 0;
+        
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
         meshMaterial.setDiffuseColor(diffuseColor.getRed(),
@@ -778,11 +780,16 @@ public abstract class GVRContext {
         String texDiffuseFileName = material.getTextureFile(
                 AiTextureType.DIFFUSE, 0);
         if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+            assimpFeatureSet = GVRShaderType.Assimp.setBit(assimpFeatureSet,
+                    GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
             Future<GVRTexture> futureDiffuseTexture = this
                     .loadFutureTexture(new GVRAndroidResource(this,
                             texDiffuseFileName));
             meshMaterial.setMainTexture(futureDiffuseTexture);
         }
+
+        /* Apply feature set to the material */
+        meshMaterial.setShaderFeatureSet(assimpFeatureSet);
 
         GVRSceneObject sceneObject = new GVRSceneObject(this);
         GVRRenderData sceneObjectRenderData = new GVRRenderData(this);

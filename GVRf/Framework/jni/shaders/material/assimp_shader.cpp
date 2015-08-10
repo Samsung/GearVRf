@@ -158,21 +158,17 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
         const glm::mat4& mv_it_matrix, const glm::mat4& mvp_matrix,
         RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
-
-    // Which feature are enabled should come from Java material, as an integer
-    // TODO: Get rid of this code and pass from Java, and can get rid of try catch
     Texture* texture;
-    int feature_set = 0;
-    try {
+    int feature_set = material->get_shader_feature_set();
+
+    /* Get the texture only diffuese texture is set */
+    if (ISSET(feature_set, AS_DIFFUSE_TEXTURE)) {
         texture = material->getTexture("main_texture");
         if (texture->getTarget() != GL_TEXTURE_2D) {
             std::string error =
-                    "UnlitVerticalStereoShader::render : texture with wrong target";
+                    "TextureShader::render : texture with wrong target.";
             throw error;
         }
-        SETBIT(feature_set, AS_DIFFUSE_TEXTURE);
-    } catch (std::string error) {
-        /* No texture */
     }
 
     /* Based on feature set get the shader program */

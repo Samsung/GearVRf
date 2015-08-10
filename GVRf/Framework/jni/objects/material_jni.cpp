@@ -71,6 +71,9 @@ Java_org_gearvrf_NativeMaterial_setMat4(JNIEnv * env,
         jfloat z1, jfloat w1, jfloat x2, jfloat y2, jfloat z2, jfloat w2,
         jfloat x3, jfloat y3, jfloat z3, jfloat w3, jfloat x4, jfloat y4,
         jfloat z4, jfloat w4);
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeMaterial_setShaderFeatureSet(JNIEnv * env, jobject obj,
+        jlong jmaterial, jint feature_set);
 }
 ;
 
@@ -207,6 +210,13 @@ glm::mat4 mat(x1, y1, z1, w1, x2, y2, z2, w2, x3, y3, z3, w3, x4, y4, z4,
         w4);
 material->setMat4(native_key, mat);
 env->ReleaseStringUTFChars(key, char_key);
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeMaterial_setShaderFeatureSet(JNIEnv * env, jobject obj,
+    jlong jmaterial, jint feature_set) {
+Material* material = reinterpret_cast<Material*>(jmaterial);
+material->set_shader_feature_set(feature_set);
 }
 
 }
