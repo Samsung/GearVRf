@@ -366,6 +366,8 @@ private:
     float bounding_sphere_info_[4]; // [0-2] center x,y,z; [3] radius
 
     bool vao_dirty_;
+
+    BoundingVolume bounding_volume;
 };
 }
 #endif

@@ -230,10 +230,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
             continue;
         }
 
-        const float* bounding_box_info = currentMesh->getBoundingBoxInfo();
-        if (bounding_box_info == NULL) {
-            continue;
-        }
+        const BoundingVolume& bounding_volume = currentMesh->getBoundingVolume();
 
         glm::mat4 model_matrix_tmp(
                 render_data->owner_object()->transform()->getModelMatrix());
@@ -252,7 +249,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         build_frustum(frustum, mvp_matrix_array);
 
         // Check for being inside or outside frustum
-        bool is_inside = is_cube_in_frustum(frustum, bounding_box_info);
+        bool is_inside = is_cube_in_frustum(frustum, bounding_volume);
 
         // Only push those scene objects that are inside of the frustum
         if (!is_inside) {
@@ -261,9 +258,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         }
 
         // Transform the bounding sphere
-        const float *sphere_info = currentMesh->getBoundingSphereInfo();
-        glm::vec4 sphere_center(sphere_info[0], sphere_info[1], sphere_info[2],
-                1.0f);
+        glm::vec4 sphere_center(bounding_volume.center(), 1.0f);
         glm::vec4 transformed_sphere_center = mvp_matrix_tmp * sphere_center;
 
         // Calculate distance from camera
@@ -427,14 +422,17 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16]) {
 }
 
 bool Renderer::is_cube_in_frustum(float frustum[6][4],
-        const float *vertex_limit) {
+        const BoundingVolume &bounding_volume) {
     int p;
-    float Xmin = vertex_limit[0];
-    float Ymin = vertex_limit[1];
-    float Zmin = vertex_limit[2];
-    float Xmax = vertex_limit[3];
-    float Ymax = vertex_limit[4];
-    float Zmax = vertex_limit[5];
+    glm::vec3 min_corner = bounding_volume.min_corner();
+    glm::vec3 max_corner = bounding_volume.max_corner();
+
+    float Xmin = min_corner[0];
+    float Ymin = min_corner[1];
+    float Zmin = min_corner[2];
+    float Xmax = max_corner[0];
+    float Ymax = max_corner[1];
+    float Zmax = max_corner[2];
 
     for (p = 0; p < 6; p++) {
         if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin)

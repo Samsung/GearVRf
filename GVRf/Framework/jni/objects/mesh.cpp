@@ -33,14 +33,17 @@ namespace gvr {
 Mesh* Mesh::getBoundingBox() {
     Mesh* mesh = new Mesh();
 
-    getBoundingBoxInfo(); // Make sure bounding_box_info_ is valid
+    getBoundingVolume(); // Make sure bounding_volume is valid
 
-    float min_x = bounding_box_info_[0];
-    float max_x = bounding_box_info_[3];
-    float min_y = bounding_box_info_[1];
-    float max_y = bounding_box_info_[4];
-    float min_z = bounding_box_info_[2];
-    float max_z = bounding_box_info_[5];
+    glm::vec3 min_corner = bounding_volume.min_corner();
+    glm::vec3 max_corner = bounding_volume.max_corner();
+
+    float min_x = min_corner[0];
+    float min_y = min_corner[1];
+    float min_z = min_corner[2];
+    float max_x = max_corner[0];
+    float max_y = max_corner[1];
+    float max_z = max_corner[2];
 
     mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
     mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
@@ -97,60 +100,28 @@ Mesh* Mesh::getBoundingBox() {
 }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
-const float* Mesh::getBoundingBoxInfo() {
-    if (have_bounding_box_) {
-        return bounding_box_info_;
+const bounding_volume& Mesh::getBoundingVolume() {
+    if (have_bounding_volume_) {
+        return bounding_volume;
     }
-
-    float min_x = std::numeric_limits<float>::infinity();
-    float max_x = -std::numeric_limits<float>::infinity();
-    float min_y = std::numeric_limits<float>::infinity();
-    float max_y = -std::numeric_limits<float>::infinity();
-    float min_z = std::numeric_limits<float>::infinity();
-    float max_z = -std::numeric_limits<float>::infinity();
 
     if (vertices_.size() == 0) {
         return NULL;
     }
 
     for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
-        if (it->x < min_x) {
-            min_x = it->x;
-        }
-        if (it->x > max_x) {
-            max_x = it->x;
-        }
-        if (it->y < min_y) {
-            min_y = it->y;
-        }
-        if (it->y > max_y) {
-            max_y = it->y;
-        }
-        if (it->z < min_z) {
-            min_z = it->z;
-        }
-        if (it->z > max_z) {
-            max_z = it->z;
-        }
+        bounding_volume.expand(*it);
     }
 
-    bounding_box_info_[0] = min_x;
-    bounding_box_info_[1] = min_y;
-    bounding_box_info_[2] = min_z;
-
-    bounding_box_info_[3] = max_x;
-    bounding_box_info_[4] = max_y;
-    bounding_box_info_[5] = max_z;
-
-    have_bounding_box_ = true;
-    return bounding_box_info_;
+    have_bounding_volume = true;
+    return bounding_volume;
 }
 
 void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
         float *transformed_bounding_box) {
 
-    if (have_bounding_box_ == false) {
-        getBoundingBoxInfo();
+    if (have_bounding_volume_ == false) {
+        getBoundingVolume();
     }
 
     glm::mat4 M = *Mat;
@@ -208,7 +179,7 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 // This gives us a really coarse bounding sphere given the already calcuated bounding box.  This won't be a tight-fitting sphere because it is based on the bounding box.  We can revisit this later if we decide we need a tighter sphere.
 const float *Mesh::getBoundingSphereInfo() {
     if (!have_bounding_box_) {
-        getBoundingBoxInfo();
+        getBoundingVolume();
     }
 
     if (have_bounding_sphere_) {
