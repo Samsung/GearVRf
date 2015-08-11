@@ -1,4 +1,4 @@
-![Virtual Keyboard demo](https://github.com/Samsung/GearVRf/tree/master/GVRf/Sample/GVRfKeyboards/virtual_keyboard_demo.png)
+![Virtual Keyboard demo](https://github.com/Samsung/GearVRf/tree/master/GVRf/Sample/GVRfKeyboards/virtual_keyboard_demo.png.png)
 
 GVRf keyboards
 ==============
