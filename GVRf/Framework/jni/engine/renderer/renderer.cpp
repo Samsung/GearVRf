@@ -327,6 +327,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
 
             //Delete the generated bounding box mesh
             bounding_box_mesh->cleanUp();
+            delete bounding_box_render_data;
         }
 #endif
     }
