@@ -139,7 +139,7 @@ public class VuforiaSampleScript extends GVRScript {
                         scaleFactor);
 
                 mGVRMVMatrix = mGVRContext.getMainScene().getMainCameraRig()
-                        .getOwnerObject().getTransform().getModelMatrix();
+                        .getTransform().getModelMatrix();
 
                 Matrix.multiplyMM(mTotalMVMatrix, 0, mGVRMVMatrix, 0,
                         mConvertedMVMatrix, 0);
