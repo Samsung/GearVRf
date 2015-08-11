@@ -63,8 +63,7 @@ public class JassimpModelLoaderViewManager extends GVRScript {
         GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
         mainCameraRig.getLeftCamera().setBackgroundColor(Color.BLACK);
         mainCameraRig.getRightCamera().setBackgroundColor(Color.BLACK);
-        mainCameraRig.getOwnerObject().getTransform()
-                .setPosition(0.0f, 0.0f, 0.0f);
+        mainCameraRig.getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
         // Model with texture
         GVRSceneObject astroBoyModel = gvrContext

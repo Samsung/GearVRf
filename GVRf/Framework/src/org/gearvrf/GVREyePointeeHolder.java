@@ -119,6 +119,10 @@ public class GVREyePointeeHolder extends GVRComponent {
         sConcatenations = new CleanupHandlerListManager(sCleanup);
     }
 
+    public GVRSceneObject getOwnerObject() {
+        return super.getOwnerObject();
+    }
+
     /**
      * Is this holder enabled?
      * 

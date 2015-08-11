@@ -72,7 +72,7 @@ public class CollisionViewManager extends GVRScript {
         mMainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        mMainScene.getMainCameraRig().getOwnerObject().getTransform()
+        mMainScene.getMainCameraRig().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
         GVRSceneObject solarSystemObject = new GVRSceneObject(gvrContext);
@@ -103,8 +103,7 @@ public class CollisionViewManager extends GVRScript {
         GVRSceneObject moonRevolutionObject = new GVRSceneObject(gvrContext);
         moonRevolutionObject.getTransform().setPosition(4.0f, 0.0f, 0.0f);
         earthRevolutionObject.addChildObject(moonRevolutionObject);
-        moonRevolutionObject.addChildObject(mMainScene.getMainCameraRig()
-                .getOwnerObject());
+        mMainScene.getMainCameraRig().attachToParent(moonRevolutionObject);
 
         counterClockwise(venusRevolutionObject, 400f);
         clockwise(venusRotationObject, 400f);
@@ -113,7 +112,7 @@ public class CollisionViewManager extends GVRScript {
         counterClockwise(earthRotationObject, 1.5f);
 
         clockwise(
-                mMainScene.getMainCameraRig().getOwnerObject().getTransform(),
+                mMainScene.getMainCameraRig().getTransform(),
                 60f);
     }
 

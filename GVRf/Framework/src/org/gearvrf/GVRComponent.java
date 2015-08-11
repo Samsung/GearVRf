@@ -70,7 +70,7 @@ class GVRComponent extends GVRHybridObject {
     /**
      * @return The {@link GVRSceneObject} this object is currently attached to.
      */
-    public GVRSceneObject getOwnerObject() {
+    protected GVRSceneObject getOwnerObject() {
         if (owner != null) {
             return owner;
         }
