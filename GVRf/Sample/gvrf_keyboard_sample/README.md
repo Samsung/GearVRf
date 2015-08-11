@@ -62,14 +62,14 @@ We are happy to help creating the best VR moment for humanity. :)
 
 Authors:
 
-Developers:
-Anderson André - anderson.acs@samsung.com
-Daniel Nogueira - daniel.nog@samsung.com
-Douglas Alípio - d.alipio@samsung.com
-Jonathan Santos - js.santos@samsung.com
-Nathan Almeida - nathan.a@samsung.com
-Ricardo Maginador - ricardo.cm@samsung.com
+Developers:</br>
+Anderson André - anderson.acs@samsung.com</br>
+Daniel Nogueira - daniel.nog@samsung.com</br>
+Douglas Alípio - d.alipio@samsung.com</br>
+Jonathan Santos - js.santos@samsung.com</br>
+Nathan Almeida - nathan.a@samsung.com</br>
+Ricardo Maginador - ricardo.cm@samsung.com</br>
 
-Design & UX:
-Josiane Nascimento - josiane.p@samsung.com
-Alvaro Lourenço - alvaro.abl@samsung.com
+Design & UX:</br>
+Josiane Nascimento - josiane.p@samsung.com</br>
+Alvaro Lourenço - alvaro.abl@samsung.com</br>
