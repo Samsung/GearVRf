@@ -89,8 +89,7 @@ public class VuforiaSampleScript extends GVRScript {
         Renderer.getInstance().setVideoBackgroundTextureID(
                 passThroughTexture.getId());
 
-        mMainScene.getMainCameraRig().getOwnerObject()
-                .addChildObject(mPassThroughObject);
+        mMainScene.getMainCameraRig().addChildObject(mPassThroughObject);
     }
 
     private void createTeaPotObject() {
