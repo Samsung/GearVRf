@@ -59,3 +59,17 @@ Take the code, improve it, give purpose, put your name over and show the world.
 We are happy to help creating the best VR moment for humanity. :)
 
 > - Samsung SIDIA, UX TEAM
+
+Authors:
+
+Developers:
+Anderson André - anderson.acs@samsung.com
+Daniel Nogueira - daniel.nog@samsung.com
+Douglas Alípio - d.alipio@samsung.com
+Jonathan Santos - js.santos@samsung.com
+Nathan Almeida - nathan.a@samsung.com
+Ricardo Maginador - ricardo.cm@samsung.com
+
+Design & UX:
+Josiane Nascimento - josiane.p@samsung.com
+Alvaro Lourenço - alvaro.abl@samsung.com
