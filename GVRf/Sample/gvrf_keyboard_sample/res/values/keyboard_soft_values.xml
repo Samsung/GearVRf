@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Key -->
+    <array name="key_1">
+        <item name="character">q</item>
+        <item name="special_character">1</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_2">
+        <item name="character">w</item>
+        <item name="special_character">2</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_3">
+        <item name="character">e</item>
+        <item name="special_character">3</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_4">
+        <item name="character">r</item>
+        <item name="special_character">4</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_5">
+        <item name="character">t</item>
+        <item name="special_character">5</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_6">
+        <item name="character">y</item>
+        <item name="special_character">6</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_7">
+        <item name="character">u</item>
+        <item name="special_character">7</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_8">
+        <item name="character">i</item>
+        <item name="special_character">8</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_9">
+        <item name="character">o</item>
+        <item name="special_character">9</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_10">
+        <item name="character">p</item>
+        <item name="special_character">0</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_11">
+        <item name="character">a</item>
+        <item name="special_character">&#43;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_12">
+        <item name="character">s</item>
+        <item name="special_character">&#10005;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_13">
+        <item name="character">r</item>
+        <item name="special_character">&#8260;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_14">
+        <item name="character">f</item>
+        <item name="special_character">&#61;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_15">
+        <item name="character">g</item>
+        <item name="special_character">&#x25;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_16">
+        <item name="character">h</item>
+        <item name="special_character">&#x5F;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_17">
+        <item name="character">j</item>
+        <item name="special_character">&#x24;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_18">
+        <item name="character">k</item>
+        <item name="special_character">&#xA3;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_19">
+        <item name="character">l</item>
+        <item name="special_character">&#xA5;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_20">
+        <item name="character">SHIFT</item>
+        <item name="special_character">&#x2E;</item>
+        <item name="style">@array/style_key_shift</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_21">
+        <item name="character">z</item>
+        <item name="special_character">&#x2C;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_22">
+        <item name="character">x</item>
+        <item name="special_character">\&#x3F;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_23">
+        <item name="character">c</item>
+        <item name="special_character">"&#x21;"</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_24">
+        <item name="character">v</item>
+        <item name="special_character">&#8211;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_25">
+        <item name="character">b</item>
+        <item name="special_character">\&#x27;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_26">
+        <item name="character">n</item>
+        <item name="special_character">\&#x22;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_27">
+        <item name="character">m</item>
+        <item name="special_character">\&#x5C;</item>
+        <item name="style">@array/style_default</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_28">
+        <item name="character">DEL</item>
+        <item name="special_character">DEL</item>
+        <item name="style">@array/style_back_button_alpha</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_29">
+        <item name="character">123</item>
+        <item name="special_character">ABC</item>
+        <item name="style">@array/style_special_button_alpha</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_30">
+        <item name="character"></item>
+        <item name="special_character"></item>
+        <item name="style">@array/style_space_button</item>
+    </array>
+
+    <!-- Key -->
+    <array name="key_31">
+        <item name="character">OK</item>
+        <item name="special_character">OK</item>
+        <item name="style">@array/style_ok_button_alpha</item>
+    </array>
+
+    <!-- Array Line 1 -->
+    <array name="new_line_1">
+        <item>@array/key_1</item>
+        <item>@array/key_2</item>
+        <item>@array/key_3</item>
+        <item>@array/key_4</item>
+        <item>@array/key_5</item>
+        <item>@array/key_6</item>
+        <item>@array/key_7</item>
+        <item>@array/key_8</item>
+        <item>@array/key_9</item>
+        <item>@array/key_10</item>
+    </array>
+
+    <!-- Array Line 2 -->
+    <array name="new_line_2">
+        <item>@array/key_11</item>
+        <item>@array/key_12</item>
+        <item>@array/key_13</item>
+        <item>@array/key_14</item>
+        <item>@array/key_15</item>
+        <item>@array/key_16</item>
+        <item>@array/key_17</item>
+        <item>@array/key_18</item>
+        <item>@array/key_19</item>
+    </array>
+
+    <!-- Array Line 2 -->
+    <array name="new_line_3">
+        <item>@array/key_20</item>
+        <item>@array/key_21</item>
+        <item>@array/key_22</item>
+        <item>@array/key_23</item>
+        <item>@array/key_24</item>
+        <item>@array/key_25</item>
+        <item>@array/key_26</item>
+        <item>@array/key_27</item>
+        <item>@array/key_28</item>
+    </array>
+
+    <!-- Array Line 2 -->
+    <array name="new_line_4">
+        <item>@array/key_29</item>
+        <item>@array/key_30</item>
+        <item>@array/key_31</item>
+    </array>
+
+    <!-- Soft Keyboard Group Lines -->
+    <array name="new_soft_lines">
+        <item>@array/new_line_1</item>
+        <item>@array/new_line_2</item>
+        <item>@array/new_line_3</item>
+        <item>@array/new_line_4</item>
+    </array>
+
+</resources>
