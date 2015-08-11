@@ -52,7 +52,7 @@ std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
 
     glm::mat4 view_matrix =
             glm::affineInverse(
-                    scene->main_camera_rig()->owner_object()->transform()->getModelMatrix());
+                    scene->main_camera_rig()->getHeadTransform()->getModelMatrix());
 
     std::vector<EyePointeeHolderData> picked_holder_data;
 
@@ -87,7 +87,7 @@ std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene) {
 float Picker::pickSceneObject(const SceneObject* scene_object,
         const CameraRig* camera_rig) {
     glm::mat4 view_matrix = glm::affineInverse(
-            camera_rig->owner_object()->transform()->getModelMatrix());
+            camera_rig->getHeadTransform()->getModelMatrix());
     if (scene_object->eye_pointee_holder() != 0) {
         EyePointeeHolder* eye_pointee_holder =
                 scene_object->eye_pointee_holder();

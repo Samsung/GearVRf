@@ -410,7 +410,7 @@ template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Dra
     SetMVPMatrix(mvp_matrix);
 
     glm::quat headRotation = PredictionTrait::getPrediction(this, (1 == eye ? 4.0f : 3.5f) / 60.0f);
-    cameraRig->setRotation(headRotation);
+    cameraRig->getHeadTransform()->set_rotation(headRotation);
 
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod(javaObject, drawEyeViewMethodId, eye, fovDegrees);

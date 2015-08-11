@@ -30,6 +30,7 @@
 #include "glm/gtx/quaternion.hpp"
 
 #include "objects/components/component.h"
+#include "objects/components/transform.h"
 #include "objects/rotation_sensor_data.h"
 
 namespace gvr {
@@ -144,9 +145,9 @@ public:
     void resetYawPitch();
     void setRotationSensorData(long long time_stamp, float w, float x, float y,
             float z, float gyro_x, float gyro_y, float gyro_z);
-    void setRotation(glm::quat transform_rotation);
     glm::quat predict(float time);
     void predictAndSetRotation(float time);
+    Transform* getHeadTransform() const; // for rotation/k-sensor
     glm::vec3 getLookAt() const;
 
 private:
@@ -154,6 +155,7 @@ private:
     CameraRig(CameraRig&& camera_rig);
     CameraRig& operator=(const CameraRig& camera_rig);
     CameraRig& operator=(CameraRig&& camera_rig);
+    void setRotation(const glm::quat& transform_rotation);
 
 private:
     static const CameraRigType DEFAULT_CAMERA_RIG_TYPE = FREE;
