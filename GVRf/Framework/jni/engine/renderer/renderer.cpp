@@ -89,8 +89,13 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 vp_matrix, shader_manager);
 
         // do sorting based on render order
-        std::sort(render_data_vector.begin(), render_data_vector.end(),
-                compareRenderData);
+        if (!scene->get_frustum_culling()) {
+            std::sort(render_data_vector.begin(), render_data_vector.end(),
+                    compareRenderData);
+        } else {
+            std::sort(render_data_vector.begin(), render_data_vector.end(),
+                    compareRenderDataWithFrustumCulling);
+        }
 
         std::vector<PostEffectData*> post_effects = camera->post_effect_data();
 
