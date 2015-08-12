@@ -26,7 +26,7 @@ public class VuforiaSampleActivity extends GVRActivity implements
         VuforiaApplicationControl {
 
     private static final String TAG = "gvr-vuforia";
-    private VuforiaSampleScript mScript;
+    private VuforiaSampleScript script;
 
     private VuforiaApplicationSession vuforiaAppSession;
 
@@ -51,8 +51,8 @@ public class VuforiaSampleActivity extends GVRActivity implements
         super.onCreate(icicle);
         Log.d(TAG, "onCreate");
         
-        mScript = new VuforiaSampleScript();
-        setScript(mScript, "gvr_note4.xml");
+        script = new VuforiaSampleScript();
+        setScript(script, "gvr_note4.xml");
 
         datasetStrings.add("StonesAndChips.xml");
 
@@ -103,7 +103,7 @@ public class VuforiaSampleActivity extends GVRActivity implements
     protected void onDestroy() {
         super.onDestroy();
 
-        mScript = null;
+        script = null;
 
         if (vuforiaState != VUFORIA_INACTIVE) {
             Log.d(TAG, "onDestroy");
@@ -287,8 +287,8 @@ public class VuforiaSampleActivity extends GVRActivity implements
 
     @Override
     public void onQCARUpdate(State s) {
-        if (mScript.isInit()) {
-            mScript.updateObjectPose(s);
+        if (script.isInit()) {
+            script.updateObjectPose(s);
         }
     }
 }

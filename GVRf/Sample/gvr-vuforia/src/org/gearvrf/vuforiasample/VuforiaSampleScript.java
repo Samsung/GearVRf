@@ -29,30 +29,35 @@ public class VuforiaSampleScript extends GVRScript {
 
     private static final String TAG = "gvr-vuforia";
 
-    private GVRContext mGVRContext = null;
+    private GVRContext gvrContext = null;
     private GVRSceneObject teapot = null;
-    private GVRSceneObject mPassThroughObject = null;
+    private GVRSceneObject passThroughObject = null;
 
     static final int VUFORIA_CAMERA_WIDTH = 1280;
     static final int VUFORIA_CAMERA_HEIGHT = 720;
     
     private volatile boolean init = false;
 
-    private GVRScene mMainScene;
+    private GVRScene mainScene;
+    
+    private float[] vuforiaMVMatrix;
+    private float[] convertedMVMatrix;
+    private float[] gvrMVMatrix;
+    private float[] totalMVMatrix;
     
     @Override
     public void onInit(GVRContext gvrContext) {
-        mGVRContext = gvrContext;
-        mMainScene = gvrContext.getMainScene();
+        this.gvrContext = gvrContext;
+        mainScene = gvrContext.getMainScene();
 
         createCameraPassThrough();
 
         createTeaPotObject();
 
-        mVuforiaMVMatrix = new float[16];
-        mConvertedMVMatrix = new float[16];
-        mGVRMVMatrix = new float[16];
-        mTotalMVMatrix = new float[16];
+        vuforiaMVMatrix = new float[16];
+        convertedMVMatrix = new float[16];
+        gvrMVMatrix = new float[16];
+        totalMVMatrix = new float[16];
         
         init = true;
     }
@@ -62,19 +67,19 @@ public class VuforiaSampleScript extends GVRScript {
     }
 
     private void createCameraPassThrough() {
-        mPassThroughObject = new GVRSceneObject(mGVRContext, 2.0f, 1.0f);
+        passThroughObject = new GVRSceneObject(gvrContext, 2.0f, 1.0f);
 
-        mPassThroughObject.getTransform().setPosition(0.0f, 0.0f, -1000.0f);
-        mPassThroughObject.getTransform().setScaleX(1000f);
-        mPassThroughObject.getTransform().setScaleY(1000f);
+        passThroughObject.getTransform().setPosition(0.0f, 0.0f, -1000.0f);
+        passThroughObject.getTransform().setScaleX(1000f);
+        passThroughObject.getTransform().setScaleY(1000f);
 
         GVRTexture passThroughTexture;
 
-        passThroughTexture = new GVRRenderTexture(mGVRContext,
+        passThroughTexture = new GVRRenderTexture(gvrContext,
                 VUFORIA_CAMERA_WIDTH, VUFORIA_CAMERA_HEIGHT);
 
-        GVRRenderData renderData = mPassThroughObject.getRenderData();
-        GVRMaterial material = new GVRMaterial(mGVRContext);
+        GVRRenderData renderData = passThroughObject.getRenderData();
+        GVRMaterial material = new GVRMaterial(gvrContext);
         renderData.setMaterial(material);
         material.setMainTexture(passThroughTexture);
         material.setShaderType(GVRShaderType.Texture.ID);
@@ -89,22 +94,22 @@ public class VuforiaSampleScript extends GVRScript {
         Renderer.getInstance().setVideoBackgroundTextureID(
                 passThroughTexture.getId());
 
-        mMainScene.getMainCameraRig().addChildObject(mPassThroughObject);
+        mainScene.getMainCameraRig().addChildObject(passThroughObject);
     }
 
     private void createTeaPotObject() {
         try {
-            teapot = new GVRSceneObject(mGVRContext,
-                    mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext
+            teapot = new GVRSceneObject(gvrContext,
+                    gvrContext.loadMesh(new GVRAndroidResource(gvrContext
                             .getContext(), "teapot.obj")),
-                    mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext
+                    gvrContext.loadTexture(new GVRAndroidResource(gvrContext
                             .getContext(), "teapot_tex1.jpg")));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         teapot.getTransform().setPosition(0f, 0f, -0.5f);
-        mMainScene.addSceneObject(teapot);
+        mainScene.addSceneObject(teapot);
     }
 
     private float[] convertMatrix = { 1f, 0f, 0f, 0f, 0f, -1f, 0f, 0f, 0f, 0f,
@@ -127,22 +132,22 @@ public class VuforiaSampleScript extends GVRScript {
             if (trackable.getId() == 1) {
                 Matrix44F modelViewMatrix_Vuforia = Tool
                         .convertPose2GLMatrix(result.getPose());
-                mVuforiaMVMatrix = modelViewMatrix_Vuforia.getData();
+                vuforiaMVMatrix = modelViewMatrix_Vuforia.getData();
 
-                Matrix.multiplyMM(mConvertedMVMatrix, 0, convertMatrix, 0,
-                        mVuforiaMVMatrix, 0);
+                Matrix.multiplyMM(convertedMVMatrix, 0, convertMatrix, 0,
+                        vuforiaMVMatrix, 0);
 
                 float scaleFactor = ((ImageTarget) trackable).getSize()
                         .getData()[0];
-                Matrix.scaleM(mConvertedMVMatrix, 0, scaleFactor, scaleFactor,
+                Matrix.scaleM(convertedMVMatrix, 0, scaleFactor, scaleFactor,
                         scaleFactor);
 
-                mGVRMVMatrix = mGVRContext.getMainScene().getMainCameraRig()
+                gvrMVMatrix = gvrContext.getMainScene().getMainCameraRig()
                         .getTransform().getModelMatrix();
 
-                Matrix.multiplyMM(mTotalMVMatrix, 0, mGVRMVMatrix, 0,
-                        mConvertedMVMatrix, 0);
-                teapot.getTransform().setModelMatrix(mTotalMVMatrix);
+                Matrix.multiplyMM(totalMVMatrix, 0, gvrMVMatrix, 0,
+                        convertedMVMatrix, 0);
+                teapot.getTransform().setModelMatrix(totalMVMatrix);
                 
                 break;
             }
@@ -162,9 +167,4 @@ public class VuforiaSampleScript extends GVRScript {
                 matrix[7], matrix[11], matrix[15]));
         Log.d(TAG, "\n");
     }
-
-    private float[] mVuforiaMVMatrix;
-    private float[] mConvertedMVMatrix;
-    private float[] mGVRMVMatrix;
-    private float[] mTotalMVMatrix;
 }
