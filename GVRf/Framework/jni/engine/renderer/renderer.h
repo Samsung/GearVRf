@@ -34,6 +34,7 @@
 
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
+#include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
 
 namespace gvr {
@@ -99,8 +100,9 @@ private:
             std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
             ShaderManager* shader_manager);
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
+
     static bool is_cube_in_frustum(float frustum[6][4],
-            const float *vertex_limit);
+            const BoundingVolume &bounding_volume);
 
     static void set_face_culling(int cull_face);
 
