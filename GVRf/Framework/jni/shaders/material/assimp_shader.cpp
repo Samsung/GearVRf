@@ -161,7 +161,7 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     Texture* texture;
     int feature_set = material->get_shader_feature_set();
 
-    /* Get the texture only diffuese texture is set */
+    /* Get the texture only diffuse texture is set */
     if (ISSET(feature_set, AS_DIFFUSE_TEXTURE)) {
         texture = material->getTexture("main_texture");
         if (texture->getTarget() != GL_TEXTURE_2D) {
@@ -171,8 +171,8 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
         }
     }
 
-    /* Based on feature set get the shader program */
-    program_ = program_list_[feature_set];
+    /* Based on feature set get the shader program, feature set cannot exceed program count */
+    program_ = program_list_[feature_set & (AS_TOTAL_GL_PROGRAM_COUNT - 1)];
 
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
