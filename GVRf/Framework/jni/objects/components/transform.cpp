@@ -54,6 +54,10 @@ void Transform::invalidate(bool rotationUpdated) {
             rotation_.z *= scale_factor;
         }
     }
+
+    if(owner_object()) {
+        owner_object()->dirtyBoundingVolume();
+    }
 }
 
 glm::mat4 Transform::getModelMatrix() {
