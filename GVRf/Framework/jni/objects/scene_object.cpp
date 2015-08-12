@@ -29,7 +29,7 @@
 namespace gvr {
 SceneObject::SceneObject() :
         HybridObject(), name_(""), transform_(), render_data_(), camera_(), camera_rig_(), eye_pointee_holder_(), parent_(), children_(), visible_(
-                true), in_frustum_(false), query_currently_issued_(false), vis_count_(0), lod_min_range_(0), lod_max_range_(MAXFLOAT), using_lod_(false) {
+                true), in_frustum_(false), query_currently_issued_(false), vis_count_(0), lod_min_range_(0), lod_max_range_(MAXFLOAT), using_lod_(false), bounding_volume_dirty_(true) {
 
     // Occlusion query setup
 #if _GVRF_USE_GLES3_
@@ -54,6 +54,7 @@ void SceneObject::attachTransform(SceneObject* self, Transform* transform) {
     }
     transform_ = transform;
     transform_->set_owner_object(self);
+    dirtyBoundingVolume();
 }
 
 void SceneObject::detachTransform() {
@@ -61,6 +62,7 @@ void SceneObject::detachTransform() {
         transform_->removeOwnerObject();
         transform_ = NULL;
     }
+    dirtyBoundingVolume();
 }
 
 void SceneObject::attachRenderData(SceneObject* self, RenderData* render_data) {
@@ -73,6 +75,7 @@ void SceneObject::attachRenderData(SceneObject* self, RenderData* render_data) {
     }
     render_data_ = render_data;
     render_data->set_owner_object(self);
+    dirtyBoundingVolume();
 }
 
 void SceneObject::detachRenderData() {
@@ -80,6 +83,7 @@ void SceneObject::detachRenderData() {
         render_data_->removeOwnerObject();
         render_data_ = NULL;
     }
+    dirtyBoundingVolume();
 }
 
 void SceneObject::attachCamera(SceneObject* self, Camera* camera) {
@@ -153,6 +157,7 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     children_.push_back(child);
     child->parent_ = self;
     child->transform()->invalidate(false);
+    dirtyBoundingVolume();
 }
 
 void SceneObject::removeChildObject(SceneObject* child) {
@@ -161,6 +166,7 @@ void SceneObject::removeChildObject(SceneObject* child) {
                 children_.end());
         child->parent_ = NULL;
     }
+    dirtyBoundingVolume();
 }
 
 int SceneObject::getChildrenCount() const {
@@ -226,4 +232,32 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
     return result;
 }
 
+void SceneObject::dirtyBoundingVolume() {
+    if(bounding_volume_dirty_) {
+        return;
+    }
+
+    bounding_volume_dirty_ = true;
+
+    if(parent_ != NULL) {
+        parent_->dirtyBoundingVolume();
+    }
+}
+
+BoundingVolume& SceneObject::getBoundingVolume() {
+    if(!bounding_volume_dirty_) {
+        return bounding_volume_;
+    }
+
+    if(render_data_ && render_data_->mesh()) {
+        bounding_volume_.expand(render_data_->mesh()->getBoundingVolume());
+    }
+
+    for(int i=0; i<children_.size(); i++) {
+        SceneObject *child = children_[i];
+        bounding_volume_.expand(child->getBoundingVolume());
+    }
+
+    return bounding_volume_;
+}
 }
