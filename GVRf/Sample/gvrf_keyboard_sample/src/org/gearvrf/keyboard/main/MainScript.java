@@ -1,11 +1,11 @@
 
 package org.gearvrf.keyboard.main;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+import android.text.TextUtils;
+import android.view.MotionEvent;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMesh;
@@ -14,6 +14,7 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRTransform;
 import org.gearvrf.keyboard.R;
 import org.gearvrf.keyboard.keyboard.model.KeyboardEventListener;
 import org.gearvrf.keyboard.keyboard.numeric.Keyboard;
@@ -42,8 +43,9 @@ import org.gearvrf.keyboard.util.StringUtil;
 import org.gearvrf.keyboard.util.Util;
 import org.gearvrf.keyboard.util.VRSamplesTouchPadGesturesDetector.SwipeDirection;
 
-import android.text.TextUtils;
-import android.view.MotionEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 public class MainScript extends GVRScript implements KeyboardEventListener {
 
@@ -74,11 +76,11 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
     public void onInit(GVRContext gvrContext) {
 
         mGVRContext = gvrContext;
-        
+
         SpinnerItemFactory.getInstance(gvrContext).init();
 
         exceptionFeedback = new ExceptionFeedback(gvrContext);
-        gvrContext.getMainScene().getMainCameraRig().getOwnerObject()
+        gvrContext.getMainScene().getMainCameraRig()
                 .addChildObject(exceptionFeedback);
 
         keyboard = new Keyboard(gvrContext);
@@ -87,7 +89,8 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
         AudioClip.getInstance(mGVRContext.getActivity());
 
         GVRSceneObject floor = new GVRSceneObject(mGVRContext,
-                mGVRContext.createQuad(120.0f, 120.0f), mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext, R.drawable.floor)));
+                mGVRContext.createQuad(120.0f, 120.0f),
+                mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext, R.drawable.floor)));
 
         floor.getTransform().setRotationByAxis(-90, 1, 0, 0);
         floor.getTransform().setPositionY(-10.0f);
@@ -114,13 +117,13 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
 
         flagListCostructor = new SphereStaticList(gvrContext);
 
-        GVRSceneObject cameraObject = gvrContext.getMainScene()
-                .getMainCameraRig().getOwnerObject();
+        GVRCameraRig cameraObject = gvrContext.getMainScene()
+                .getMainCameraRig();
         for (GVRSceneObject spherePack : flagListCostructor.listFlag) {
-            rotateObject(spherePack, cameraObject);
+            rotateObject(spherePack, cameraObject.getTransform());
 
             double distance = Util.distance(spherePack, gvrContext
-                    .getMainScene().getMainCameraRig().getOwnerObject());
+                    .getMainScene().getMainCameraRig().getTransform());
             float scaleFactor = Util.getHitAreaScaleFactor((float) distance);
             spherePack.getTransform().setScale(scaleFactor, scaleFactor,
                     scaleFactor);
@@ -184,7 +187,8 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
 
                             Character charater = result.charAt(i);
                             int mode = CharList.getInstance(mGVRContext).getMode(charater);
-                            int position = CharList.getInstance(mGVRContext).indexOf(String.valueOf(charater), mode);
+                            int position = CharList.getInstance(mGVRContext).indexOf(
+                                    String.valueOf(charater), mode);
                             answer.append(i, new CharItem(mode, position, String.valueOf(charater)));
                         }
 
@@ -216,12 +220,13 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
 
     private void createSkybox() {
 
-        mGVRContext.getMainScene().getMainCameraRig().getOwnerObject()
+        mGVRContext.getMainScene().getMainCameraRig()
                 .getTransform().setPosition(-0f, Util.applyRatioAt(1.70), 0f);
 
         GVRMesh spaceMesh = mGVRContext.loadMesh(new GVRAndroidResource(
                 mGVRContext, R.drawable.skybox_esphere));
-        GVRTexture spaceTexture = mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext, R.drawable.skybox));
+        GVRTexture spaceTexture = mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext,
+                R.drawable.skybox));
 
         GVRSceneObject mSpaceSceneObject = new GVRSceneObject(mGVRContext, spaceMesh, spaceTexture);
         mGVRContext.getMainScene().addSceneObject(mSpaceSceneObject);
@@ -231,23 +236,26 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
     private void addCursorPosition() {
 
         GVRSceneObject headTracker = new GVRSceneObject(mGVRContext,
-                mGVRContext.createQuad(0.5f, 0.5f), mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext, R.drawable.head_tracker)));
+                mGVRContext.createQuad(0.5f, 0.5f), mGVRContext.loadTexture(new GVRAndroidResource(
+                        mGVRContext, R.drawable.head_tracker)));
 
         headTracker.getTransform().setPositionZ(-9.0f);
         headTracker.getRenderData().setRenderingOrder(
                 GVRRenderData.GVRRenderingOrder.OVERLAY);
         headTracker.getRenderData().setDepthTest(false);
         headTracker.getRenderData().setRenderingOrder(100000);
-        mGVRContext.getMainScene().getMainCameraRig().getRightCamera().getOwnerObject().addChildObject(headTracker);
+        mGVRContext.getMainScene().getMainCameraRig().getRightCamera()
+                .addChildObject(headTracker);
     }
 
     private void rotateObject(GVRSceneObject spherePack,
-            GVRSceneObject cameraObject) {
+            GVRTransform cameraObject) {
         spherePack.getTransform().rotateByAxis(
                 Util.getZRotationAngle(spherePack, cameraObject), 0, 0, 1);
         spherePack.getTransform().rotateByAxis(
                 Util.getYRotationAngle(spherePack, cameraObject), 0, 1, 0);
-        spherePack.getChildByIndex(0).getTransform().rotateByAxis(-Util.getZRotationAngle(spherePack, cameraObject), 0, 0, 1);
+        spherePack.getChildByIndex(0).getTransform()
+                .rotateByAxis(-Util.getZRotationAngle(spherePack, cameraObject), 0, 0, 1);
     }
 
     @Override
@@ -269,7 +277,7 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
         }
 
         if (!keyboard.isEnabled()) {
-            
+
             interactWithVisibleObjects();
         } else {
 
@@ -320,7 +328,8 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
 
                                 if (this.mDisableSnapSound == false) {
                                     this.mDisableSnapSound = true;
-                                    AudioClip.getInstance(mGVRContext.getContext()).playSound(AudioClip.getSnapSoundID(), 1.0f, 1.0f);
+                                    AudioClip.getInstance(mGVRContext.getContext()).playSound(
+                                            AudioClip.getSnapSoundID(), 1.0f, 1.0f);
                                 }
                                 break;
                             }
@@ -361,7 +370,8 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
         } else if (lastSelectedSphereFlag != null
                 && lastSelectedSphereFlag.answerState == SphereStaticList.MOVEABLE) {
 
-            AudioClip.getInstance(mGVRContext.getContext()).playSound(AudioClip.getSelectionSoundID(), 1.0f, 1.0f);
+            AudioClip.getInstance(mGVRContext.getContext()).playSound(
+                    AudioClip.getSelectionSoundID(), 1.0f, 1.0f);
 
             lastSelectedSphereFlag.stopFloatingSphere();
             lastSelectedSphereFlag.answerState = SphereStaticList.ANSWERING;
@@ -377,8 +387,9 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
             answer.getTransform().setPosition(positionX, 0.87f, Constants.CAMERA_DISTANCE);
 
             float[] keyboardPosition = Util.calculatePointBetweenTwoObjects(mGVRContext
-                    .getMainScene().getMainCameraRig().getOwnerObject(),
-                    lastSelectedSphereFlag.getInitialPositionVector(), Constants.SPHERE_SELECTION_DISTANCE);
+                    .getMainScene().getMainCameraRig().getTransform(),
+                    lastSelectedSphereFlag.getInitialPositionVector(),
+                    Constants.SPHERE_SELECTION_DISTANCE);
 
             showKeyboard();
 
@@ -390,7 +401,7 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
                     keyboardPosition[2]);
             keyboard.getTransform().rotateByAxis(
                     Util.getYRotationAngle(keyboard, mGVRContext.getMainScene()
-                            .getMainCameraRig().getOwnerObject()), 0, 1, 0);
+                            .getMainCameraRig().getTransform()), 0, 1, 0);
             if (dashboard != null) {
                 dashboard.show();
                 dashboard.reset();
@@ -402,7 +413,7 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
                 dashboard.getTransform().rotateByAxis(
                         Util.getYRotationAngle(dashboard,
                                 mGVRContext.getMainScene().getMainCameraRig()
-                                        .getOwnerObject()), 0, 1, 0);
+                                        .getTransform()), 0, 1, 0);
             }
 
         }
@@ -412,7 +423,8 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
         removeQuestionChildren();
 
         String questionString = lastSelectedSphereFlag.getQuestion();
-        Vector<StringBuffer> lines = StringUtil.splitStringInLines(questionString, QUESTION_LINE_LENGTH);
+        Vector<StringBuffer> lines = StringUtil.splitStringInLines(questionString,
+                QUESTION_LINE_LENGTH);
 
         addQuestionLines(lines);
     }
@@ -431,10 +443,13 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
             line.currentText.maxLength = 9999;
             line.currentText.textSize = 80;
             line.setText(mGVRContext, lines.get(i).toString());
-            line.getTransform().setPosition(0, 3.33f + 0.4f * (lines.size() - 1 - i), Constants.CAMERA_DISTANCE);
-            line.getRenderData().getMaterial().setFloat(TransparentButtonShaderThreeStates.OPACITY, 0);
+            line.getTransform().setPosition(0, 3.33f + 0.4f * (lines.size() - 1 - i),
+                    Constants.CAMERA_DISTANCE);
+            line.getRenderData().getMaterial()
+                    .setFloat(TransparentButtonShaderThreeStates.OPACITY, 0);
             line.getRenderData().setRenderingOrder(RenderingOrder.KEYBOARD);
-            line.getRenderData().getMaterial().setFloat(TransparentButtonShaderThreeStates.OPACITY, 1);
+            line.getRenderData().getMaterial()
+                    .setFloat(TransparentButtonShaderThreeStates.OPACITY, 1);
 
             question.addChildObject(line);
         }
@@ -448,7 +463,7 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
             public void run() {
 
                 if (getOnlyNumbers(lastSelectedSphereFlag.getAnswer()).equals("")) {
-                    
+
                     keyboard.showKeyboard(KeyboardType.ALPHA);
 
                 } else {
@@ -522,7 +537,8 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
     @Override
     public void onKeyDelete() {
         answer.removeCharacter(TextField.LAST_CHARACTER);
-        AudioClip.getInstance(mGVRContext.getContext()).playSound(AudioClip.getKeyEnterSoundID(), 1.0f, 1.0f);
+        AudioClip.getInstance(mGVRContext.getContext()).playSound(AudioClip.getKeyEnterSoundID(),
+                1.0f, 1.0f);
     }
 
     @Override

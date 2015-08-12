@@ -1,20 +1,21 @@
 
 package org.gearvrf.keyboard.util;
 
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.util.Log;
+
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
-
-import android.content.Context;
-import android.media.MediaPlayer;
-import android.util.Log;
+import org.gearvrf.GVRTransform;
 
 public class Util {
 
     public static double ratio = 0.5;
-    public static boolean isLogActive= false;
+    public static boolean isLogActive = false;
 
     public static float convertPixelToVRFloatValue(float pixel) {
 
@@ -76,6 +77,13 @@ public class Util {
                         - rotatingObject.getTransform().getPositionZ()));
     }
 
+    public static float getYRotationAngle(GVRSceneObject rotatingObject, GVRTransform targetObject) {
+        return (float) Math.toDegrees(Math.atan2(targetObject.getPositionX()
+                - rotatingObject.getTransform().getPositionX(),
+                targetObject.getPositionZ()
+                        - rotatingObject.getTransform().getPositionZ()));
+    }
+
     public static float getYRotationAngle(Vector3D rotatingVector, GVRSceneObject targetObject) {
         return (float) Math.toDegrees(Math.atan2(targetObject.getTransform().getPositionX()
                 - rotatingVector.getX(),
@@ -91,7 +99,7 @@ public class Util {
 
         return angle;
     }
-    
+
     public static float getYRotationAngle(Vector3D rotatingVector, Vector3D targetObject) {
         return (float) Math.toDegrees(Math.atan2(targetObject.getX()
                 - rotatingVector.getX(),
@@ -113,6 +121,20 @@ public class Util {
         return point;
     }
 
+    public static float[] calculatePointBetweenTwoObjects(GVRTransform object1,
+            GVRSceneObject object2, float desiredDistance) {
+        float[] point = new float[3];
+        float ratio = desiredDistance / (float) distance(object1, object2.getTransform());
+        point[0] = (1 - ratio) * object1.getPositionX() + (ratio)
+                * object2.getTransform().getPositionX();
+        point[1] = (1 - ratio) * object1.getPositionY() + (ratio)
+                * object2.getTransform().getPositionY();
+        point[2] = (1 - ratio) * object1.getPositionZ() + (ratio)
+                * object2.getTransform().getPositionZ();
+
+        return point;
+    }
+
     public static float[] calculatePointBetweenTwoObjects(GVRSceneObject object, Vector3D vector,
             float desiredDistance) {
         float[] point = new float[3];
@@ -122,6 +144,20 @@ public class Util {
         point[1] = (1 - ratio) * object.getTransform().getPositionY() + (ratio)
                 * (float) vector.getY();
         point[2] = (1 - ratio) * object.getTransform().getPositionZ() + (ratio)
+                * (float) vector.getZ();
+
+        return point;
+    }
+
+    public static float[] calculatePointBetweenTwoObjects(GVRTransform object, Vector3D vector,
+            float desiredDistance) {
+        float[] point = new float[3];
+        float ratio = desiredDistance / (float) distance(vector, object);
+        point[0] = (1 - ratio) * object.getPositionX() + (ratio)
+                * (float) vector.getX();
+        point[1] = (1 - ratio) * object.getPositionY() + (ratio)
+                * (float) vector.getY();
+        point[2] = (1 - ratio) * object.getPositionZ() + (ratio)
                 * (float) vector.getZ();
 
         return point;
@@ -139,6 +175,30 @@ public class Util {
 
     }
 
+    public static double distance(GVRTransform object1, GVRTransform object2) {
+        return Math.sqrt(Math.pow(object1.getPositionX()
+                - object2.getPositionX(), 2)
+                +
+                Math.pow(object1.getPositionY()
+                        - object2.getPositionY(), 2)
+                +
+                Math.pow(object1.getPositionZ()
+                        - object2.getPositionZ(), 2));
+
+    }
+
+    public static double distance(GVRSceneObject object1, GVRTransform object2) {
+        return Math.sqrt(Math.pow(object1.getTransform().getPositionX()
+                - object2.getPositionX(), 2)
+                +
+                Math.pow(object1.getTransform().getPositionY()
+                        - object2.getPositionY(), 2)
+                +
+                Math.pow(object1.getTransform().getPositionZ()
+                        - object2.getPositionZ(), 2));
+
+    }
+
     public static double distance(float ax, float ay, float az, float bx, float by, float bz) {
         return Math.sqrt(
                 Math.pow(ax - bx, 2) +
@@ -151,6 +211,13 @@ public class Util {
         return Math.sqrt(Math.pow(vector.getX() - object.getTransform().getPositionX(), 2) +
                 Math.pow(vector.getY() - object.getTransform().getPositionY(), 2) +
                 Math.pow(vector.getZ() - object.getTransform().getPositionZ(), 2));
+
+    }
+
+    public static double distance(Vector3D vector, GVRTransform object) {
+        return Math.sqrt(Math.pow(vector.getX() - object.getPositionX(), 2) +
+                Math.pow(vector.getY() - object.getPositionY(), 2) +
+                Math.pow(vector.getZ() - object.getPositionZ(), 2));
 
     }
 
@@ -229,7 +296,7 @@ public class Util {
         Log.d("RotationUtil", " RotationZ :" + object.getTransform().getRotationZ());
 
     }
-    
+
     public static float getDistanceDegree(float oldRotation, float actualRotation, boolean clockWise) {
         float distance;
 
@@ -248,13 +315,13 @@ public class Util {
 
     private static float antiClockUnWise(float first, float secund) {
         float result = 0;
-        
-        if(first == 0 && secund == 0){
-            
-            result = 0 ;
+
+        if (first == 0 && secund == 0) {
+
+            result = 0;
             Log("antiClockUnWise", "first == 0 && secund == 0 result : " + result);
             return result;
-          
+
         }
 
         if (first >= 0 && secund >= 0) {
@@ -302,14 +369,13 @@ public class Util {
 
     private static float clockWise(float first, float secund) {
         float result = 0;
-        
-        
-        if(first == 0 && secund == 0){
-            
-            result = 0 ;
+
+        if (first == 0 && secund == 0) {
+
+            result = 0;
             Log("clockWise", "first == 0 && secund == 0 result : " + result);
             return result;
-          
+
         }
 
         if (first >= 0 && secund >= 0) {
@@ -340,18 +406,26 @@ public class Util {
 
             result = (180 + secund) + (180 - first);
 
-            Log("clockWise", "first :" +first+" > 0 && secund :"+secund+" < 0 and result : " + result);
+            Log("clockWise", "first :" + first + " > 0 && secund :" + secund + " < 0 and result : "
+                    + result);
 
         }
 
         return result;
     }
 
-    
-    public static void loadAudioClipAndPlay( Context context , int idResource) {
+    public static void loadAudioClipAndPlay(Context context, int idResource) {
         MediaPlayer mediaPlayer = MediaPlayer.create(context, idResource);
         mediaPlayer.start();
     }
 
+    public static float getZRotationAngle(GVRSceneObject rotatingObject, GVRTransform targetObject) {
+        float angle = (float) Math.toDegrees(Math.atan2(targetObject.getPositionY()
+                - rotatingObject.getTransform().getPositionY(),
+                targetObject.getPositionX()
+                        - rotatingObject.getTransform().getPositionX()));
+
+        return angle;
+    }
 
 }

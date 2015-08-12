@@ -20,7 +20,7 @@ public class Dashboard extends GVRSceneObject {
     private static final float Y_ANCHOR_POINT_THRESHOLD = .05f;
 
     private boolean heightSyncLocked = false;
-    
+
     public static float HIGHT = 10.0f;
     public static float WIDTH = 8.0f;
     public boolean onFocus = false;
@@ -118,7 +118,7 @@ public class Dashboard extends GVRSceneObject {
         }
         return Z_POSITION_OFFSET;
     }
-    
+
     public static float getXPositionOffset(float f) {
 
         if (f > 0) {
@@ -127,6 +127,5 @@ public class Dashboard extends GVRSceneObject {
         }
         return X_POSITION_OFFSET;
     }
-
 
 }

@@ -4,6 +4,7 @@ package org.gearvrf.keyboard.spinner;
 import android.util.Log;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRPicker;
@@ -52,14 +53,17 @@ public class Spinner extends GVRSceneObject {
         spinnerRoulette.stopAnimations();
 
         for (int i = 0; i < spinnerRoulette.getSpinnerAdapter().getSpinnerItems().size(); i++) {
-            new GVROpacityAnimation(spinnerRoulette.getSpinnerAdapter().getSpinnerItems().get(i), ANIMATION_TIME, 0).start(
+            new GVROpacityAnimation(spinnerRoulette.getSpinnerAdapter().getSpinnerItems().get(i),
+                    ANIMATION_TIME, 0).start(
                     this.getGVRContext().getAnimationEngine());
 
         }
 
-        new GVROpacityAnimation(spinnerSkeleton.getSpinnerBox(), ANIMATION_TIME, 0).start(this.getGVRContext().getAnimationEngine());
+        new GVROpacityAnimation(spinnerSkeleton.getSpinnerBox(), ANIMATION_TIME, 0).start(this
+                .getGVRContext().getAnimationEngine());
 
-        new GVROpacityAnimation(spinnerSkeleton.getSpinnerShadow(), ANIMATION_TIME, 0).start(this.getGVRContext().getAnimationEngine()).setOnFinish(
+        new GVROpacityAnimation(spinnerSkeleton.getSpinnerShadow(), ANIMATION_TIME, 0).start(
+                this.getGVRContext().getAnimationEngine()).setOnFinish(
                 new GVROnFinish() {
 
                     @Override
@@ -84,16 +88,20 @@ public class Spinner extends GVRSceneObject {
         spinnerRoulette.setSoudOn(true);
         spinnerRoulette.setInitialCharacterPosition(initialCharacterPosition);
         spinnerRoulette.setPosition(position);
-        spinnerRoulette.getSpinnerAdapter().setCharacterList(CharList.getInstance(getGVRContext()).getListCircular(mode));
+        spinnerRoulette.getSpinnerAdapter().setCharacterList(
+                CharList.getInstance(getGVRContext()).getListCircular(mode));
 
         spinnerRoulette.setDefaultCharactersInSpinner();
 
-        new GVROpacityAnimation(spinnerSkeleton.getSpinnerBox(), ANIMATION_TIME, 1).start(this.getGVRContext().getAnimationEngine());
+        new GVROpacityAnimation(spinnerSkeleton.getSpinnerBox(), ANIMATION_TIME, 1).start(this
+                .getGVRContext().getAnimationEngine());
 
-        new GVROpacityAnimation(spinnerSkeleton.getSpinnerShadow(), ANIMATION_TIME, 1).start(this.getGVRContext().getAnimationEngine());
+        new GVROpacityAnimation(spinnerSkeleton.getSpinnerShadow(), ANIMATION_TIME, 1).start(this
+                .getGVRContext().getAnimationEngine());
 
         for (int i = 0; i < spinnerRoulette.getSpinnerAdapter().getSpinnerItems().size(); i++) {
-            new GVROpacityAnimation(spinnerRoulette.getSpinnerAdapter().getSpinnerItems().get(i), ANIMATION_TIME, 1).start(
+            new GVROpacityAnimation(spinnerRoulette.getSpinnerAdapter().getSpinnerItems().get(i),
+                    ANIMATION_TIME, 1).start(
                     this.getGVRContext().getAnimationEngine());
             active = true;
         }
@@ -101,13 +109,15 @@ public class Spinner extends GVRSceneObject {
 
     public boolean isHitArea() {
 
-        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext().getMainScene());
+        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext()
+                .getMainScene());
 
         if (eyePointeeHolders.length > 0) {
 
             for (GVREyePointeeHolder eyePointeeHolder : eyePointeeHolders) {
 
-                if (eyePointeeHolder.hashCode() == spinnerSkeleton.getSpinnerBox().getEyePointeeHolder().hashCode()) {
+                if (eyePointeeHolder.hashCode() == spinnerSkeleton.getSpinnerBox()
+                        .getEyePointeeHolder().hashCode()) {
 
                     return false;
                 }
@@ -124,27 +134,31 @@ public class Spinner extends GVRSceneObject {
         float z = currentChar.getTransform().getPositionZ() + Z_DISTANCE;
 
         getTransform().setPosition(x, y, z);
-        
+
         lookAt(currentChar);
 
     }
 
     private void lookAt(GVRSceneObject currentChar) {
-        GVRSceneObject camera = this.getGVRContext().getMainScene().getMainCameraRig().getOwnerObject();
-        Vector3D vectorCamera = new Vector3D(camera.getTransform().getPositionX(), camera.getTransform().getPositionY(), camera.getTransform()
+        GVRCameraRig camera = this.getGVRContext().getMainScene().getMainCameraRig();
+        Vector3D vectorCamera = new Vector3D(camera.getTransform().getPositionX(), camera
+                .getTransform().getPositionY(), camera.getTransform()
                 .getPositionZ());
-        Vector3D vectorKeyboard = new Vector3D(this.getParent().getParent().getTransform().getPositionX(), this.getParent().getParent()
-                .getTransform().getPositionY(), this.getParent().getParent().getTransform().getPositionZ());
+        Vector3D vectorKeyboard = new Vector3D(this.getParent().getParent().getTransform()
+                .getPositionX(), this.getParent().getParent()
+                .getTransform().getPositionY(), this.getParent().getParent().getTransform()
+                .getPositionZ());
 
-        float newX = currentChar.getTransform().getPositionX()+currentChar.getParent().getTransform().getPositionX();
+        float newX = currentChar.getTransform().getPositionX()
+                + currentChar.getParent().getTransform().getPositionX();
         float newY = 0;
         float newZ = (float) Vector3D.distance(vectorKeyboard, vectorCamera);
-        
+
         Log.d("lookatspinner", "newX " + newX);
         Log.d("lookatspinner", "newY " + newY);
         Log.d("lookatspinner", "newZ " + newZ);
 
-        Vector3D emulatedSpinner = new Vector3D(newX, newY, newZ*-1);
+        Vector3D emulatedSpinner = new Vector3D(newX, newY, newZ * -1);
 
         Vector3D emulateCam = new Vector3D(0, 0, 0);
 
@@ -152,12 +166,12 @@ public class Spinner extends GVRSceneObject {
 
         Log.d("lookatspinner", "angle " + angle);
 
-       // angle =(float) (angle*1.1);
-        
+        // angle =(float) (angle*1.1);
+
         Log.d("lookatspinner", "angle new" + angle);
 
-        getTransform().setRotationByAxis(angle ,0, 1, 0);
-        
+        getTransform().setRotationByAxis(angle, 0, 1, 0);
+
     }
 
 }

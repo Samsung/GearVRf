@@ -1,7 +1,9 @@
 
 package org.gearvrf.keyboard.mic;
 
-import java.util.ArrayList;
+import android.os.Bundle;
+import android.speech.RecognitionListener;
+import android.speech.SpeechRecognizer;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
@@ -12,9 +14,7 @@ import org.gearvrf.keyboard.mic.model.MicItem;
 import org.gearvrf.keyboard.textField.TextField;
 import org.gearvrf.keyboard.util.SceneObjectNames;
 
-import android.os.Bundle;
-import android.speech.RecognitionListener;
-import android.speech.SpeechRecognizer;
+import java.util.ArrayList;
 
 public class Mic extends GVRSceneObject implements RecognitionListener {
 
@@ -169,7 +169,8 @@ public class Mic extends GVRSceneObject implements RecognitionListener {
 
     private void verifyEyePointee() {
 
-        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext().getMainScene());
+        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext()
+                .getMainScene());
 
         if (eyePointeeHolders.length == 0) {
             tryChangeSeeMe(false);
@@ -187,7 +188,7 @@ public class Mic extends GVRSceneObject implements RecognitionListener {
 
                 boolean seeMeNow = false;
 
-                if (mMicHitGroupArea.mHitArea.hashCode() == gVREyePointeeHolder.getOwnerObject().hashCode()) {
+                if (mMicHitGroupArea.mHitArea.hashCode() == gVREyePointeeHolder.hashCode()) {
                     tryChangeSeeMe(true);
                     seeMeNow = true;
                 }
@@ -288,7 +289,8 @@ public class Mic extends GVRSceneObject implements RecognitionListener {
     @Override
     public void onResults(Bundle results) {
 
-        ArrayList<String> resultList = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        ArrayList<String> resultList = results
+                .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
         if (mListnerResult != null) {
             mListnerResult.onResults(resultList);

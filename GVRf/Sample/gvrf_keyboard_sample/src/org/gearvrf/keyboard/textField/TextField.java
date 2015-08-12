@@ -1,8 +1,7 @@
 
 package org.gearvrf.keyboard.textField;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.graphics.Color;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
@@ -17,7 +16,8 @@ import org.gearvrf.keyboard.util.RenderingOrder;
 import org.gearvrf.keyboard.util.SceneObjectNames;
 import org.gearvrf.keyboard.util.Util;
 
-import android.graphics.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TextField extends GVRSceneObject {
 
@@ -51,7 +51,8 @@ public class TextField extends GVRSceneObject {
     }
 
     public float getSize() {
-        return Util.convertPixelToVRFloatValue((TEXT_WIDTH + INTERACTIVE_TEXT_WIDTH) * maxNumberOfCharecters);
+        return Util.convertPixelToVRFloatValue((TEXT_WIDTH + INTERACTIVE_TEXT_WIDTH)
+                * maxNumberOfCharecters);
     }
 
     public void append(CharItem charItem) {
@@ -92,7 +93,9 @@ public class TextField extends GVRSceneObject {
         GVRSceneObject space = new GVRSceneObject(TextField.this.getGVRContext(),
                 Util.convertPixelToVRFloatValue(40),
                 Util.convertPixelToVRFloatValue(5),
-                TextField.this.getGVRContext().loadTexture(new GVRAndroidResource(TextField.this.getGVRContext(), R.drawable.key_space_active)));
+                TextField.this.getGVRContext().loadTexture(
+                        new GVRAndroidResource(TextField.this.getGVRContext(),
+                                R.drawable.key_space_active)));
 
         space.getTransform().setPosition(position * TEXT_WIDTH, SUB_LINE_Y, 0);
         space.getRenderData().setRenderingOrder(RenderingOrder.KEYBOARD);
@@ -126,13 +129,15 @@ public class TextField extends GVRSceneObject {
 
     protected TextFieldItem getObjectInHitArea() {
 
-        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext().getMainScene());
+        GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext()
+                .getMainScene());
 
         for (GVREyePointeeHolder eph : eyePointeeHolders) {
 
             for (int i = 0; i < mListFieldItems.size(); i++) {
 
-                if (eph.getOwnerObject().getEyePointeeHolder().hashCode() == mListFieldItems.get(i).getEyePointeeHolder().hashCode()) {
+                if (eph.getOwnerObject().hashCode() == mListFieldItems.get(i)
+                        .getEyePointeeHolder().hashCode()) {
 
                     currentCharPosition = i;
                     return mListFieldItems.get(i);
@@ -216,10 +221,12 @@ public class TextField extends GVRSceneObject {
     private synchronized void tryHideSpinner() {
         if (spinner.isActive() && !spinner.isShuttingDown()) {
 
-            mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).getRenderData().getMaterial().setOpacity(1);
+            mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).getRenderData()
+                    .getMaterial().setOpacity(1);
             mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).getCharItem()
                     .setMode(spinner.getSpinnerRoulette().getCurrentValue().getMode());
-            mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).setText(getGVRContext(), spinner.getSpinnerRoulette().getCurrentValue());
+            mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).setText(
+                    getGVRContext(), spinner.getSpinnerRoulette().getCurrentValue());
 
             spinner.off();
 
@@ -229,12 +236,14 @@ public class TextField extends GVRSceneObject {
     private synchronized void tryShowSpinner(Spinner spinner) {
         if (!spinner.isActive() && !spinner.isShuttingDown()) {
 
-            spinner.on(currentCharSelected.getCharItem().getPosition(), currentCharSelected.getCharItem().getMode(),
+            spinner.on(currentCharSelected.getCharItem().getPosition(), currentCharSelected
+                    .getCharItem().getMode(),
                     currentCharPosition);
 
             setPositionSpinner(currentCharSelected, spinner);
 
-            mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).getRenderData().getMaterial().setOpacity(0);
+            mListFieldItems.get(spinner.getSpinnerRoulette().getPosition()).getRenderData()
+                    .getMaterial().setOpacity(0);
 
         }
     }

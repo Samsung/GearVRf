@@ -1,8 +1,12 @@
 
 package org.gearvrf.keyboard.model;
 
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRRenderData;
@@ -21,9 +25,6 @@ import org.gearvrf.keyboard.shader.SphereShader;
 import org.gearvrf.keyboard.util.Constants;
 import org.gearvrf.keyboard.util.SceneObjectNames;
 import org.gearvrf.keyboard.util.Util;
-
-import android.content.res.Resources;
-import android.content.res.TypedArray;
 
 public class SphereFlag extends GVRSceneObject {
 
@@ -152,16 +153,18 @@ public class SphereFlag extends GVRSceneObject {
     }
 
     private GVRAnimation createSpotAnimation() {
-        GVRSceneObject cameraObject = gvrContext.getMainScene().getMainCameraRig().getOwnerObject();
+        GVRCameraRig cameraObject = gvrContext.getMainScene().getMainCameraRig();
         float distance = (float) Math.max(
-                0.7 * Util.distance(getInitialPositionVector(), cameraObject),
+                0.7 * Util.distance(getInitialPositionVector(), cameraObject.getTransform()),
                 Constants.MINIMUM_DISTANCE_FROM_CAMERA);
-        float[] newPosition = Util.calculatePointBetweenTwoObjects(cameraObject, getParent(),
+        float[] newPosition = Util.calculatePointBetweenTwoObjects(cameraObject.getTransform(),
+                getParent(),
                 distance);
         float scaleFactor = Util.getHitAreaScaleFactor(distance);
 
-        scaleParentAnimation = new GVRScaleAnimation(getParent(), 1.2f, scaleFactor).start(gvrContext
-                .getAnimationEngine());
+        scaleParentAnimation = new GVRScaleAnimation(getParent(), 1.2f, scaleFactor)
+                .start(gvrContext
+                        .getAnimationEngine());
         scaleThisAnimation = new GVRScaleAnimation(this, 1.2f, 1 / scaleFactor).start(gvrContext
                 .getAnimationEngine());
 
@@ -175,10 +178,9 @@ public class SphereFlag extends GVRSceneObject {
     public void unspotSphere() {
         if (!isUnspottingSphere) {
             isUnspottingSphere = true;
-            GVRSceneObject cameraObject = gvrContext.getMainScene().getMainCameraRig()
-                    .getOwnerObject();
+            GVRCameraRig cameraObject = gvrContext.getMainScene().getMainCameraRig();
             float scaleFactor = Util.getHitAreaScaleFactor((float) Util.distance(
-                    getInitialPositionVector(), cameraObject));
+                    getInitialPositionVector(), cameraObject.getTransform()));
 
             stopAnimationsToUnspot();
 
@@ -193,8 +195,9 @@ public class SphereFlag extends GVRSceneObject {
     }
 
     private GVRAnimation createUnspotAnimation(float scaleFactor) {
-        scaleParentAnimation = new GVRScaleAnimation(getParent(), 1.2f, scaleFactor).start(gvrContext
-                .getAnimationEngine());
+        scaleParentAnimation = new GVRScaleAnimation(getParent(), 1.2f, scaleFactor)
+                .start(gvrContext
+                        .getAnimationEngine());
         scaleThisAnimation = new GVRScaleAnimation(this, 1.2f, 1 / scaleFactor).start(gvrContext
                 .getAnimationEngine());
 
@@ -263,7 +266,8 @@ public class SphereFlag extends GVRSceneObject {
             public void run() {
                 if (getAnswer().equalsIgnoreCase(answer)) {
 
-                    AudioClip.getInstance(getGVRContext().getContext()).playSound(AudioClip.getSucessSoundID(), 1.0f, 1.0f);
+                    AudioClip.getInstance(getGVRContext().getContext()).playSound(
+                            AudioClip.getSucessSoundID(), 1.0f, 1.0f);
                     getRenderData().getMaterial().setVec3(SphereShader.TRANSITION_COLOR, 0.2f,
                             0.675f, 0.443f);
                     getRenderData().getMaterial().setTexture(
@@ -272,7 +276,8 @@ public class SphereFlag extends GVRSceneObject {
                                     new GVRAndroidResource(getGVRContext(), R.drawable.check)));
                 } else {
 
-                    AudioClip.getInstance(getGVRContext().getContext()).playSound(AudioClip.getWrongSoundID(), 1.0f, 1.0f);
+                    AudioClip.getInstance(getGVRContext().getContext()).playSound(
+                            AudioClip.getWrongSoundID(), 1.0f, 1.0f);
                     getRenderData().getMaterial().setVec3(SphereShader.TRANSITION_COLOR, 1, 0, 0);
                     getRenderData().getMaterial().setTexture(
                             SphereShader.SECUNDARY_TEXTURE_KEY,
@@ -287,10 +292,10 @@ public class SphereFlag extends GVRSceneObject {
         if (followCursorAnimation != null) {
             getGVRContext().getAnimationEngine().stop(followCursorAnimation);
         }
-        GVRSceneObject cameraObject = getGVRContext().getMainScene().getMainCameraRig()
-                .getOwnerObject();
+        GVRCameraRig cameraObject = getGVRContext().getMainScene().getMainCameraRig();
 
-        float desiredDistance = (float) Math.max(0.7 * Util.distance(getParent(), cameraObject),
+        float desiredDistance = (float) Math.max(
+                0.7 * Util.distance(getParent(), cameraObject.getTransform()),
                 Constants.MINIMUM_DISTANCE_FROM_CAMERA);
         float[] lookAt = getGVRContext().getMainScene().getMainCameraRig().getLookAt();
         Vector3D lookAtVector = new Vector3D(lookAt[0], lookAt[1], lookAt[2]);
@@ -367,10 +372,12 @@ public class SphereFlag extends GVRSceneObject {
             public void run() {
                 float duration = 0.71f;
                 unsnapSphere(duration);
-                GVRSceneObject cameraObject = getGVRContext().getMainScene().getMainCameraRig()
-                        .getOwnerObject();
+                GVRCameraRig cameraObject = getGVRContext().getMainScene().getMainCameraRig()
+                ;
                 float distance = Constants.SPHERE_SELECTION_DISTANCE;
-                float[] newPosition = Util.calculatePointBetweenTwoObjects(cameraObject, getInitialPositionVector(), distance);
+                float[] newPosition = Util.calculatePointBetweenTwoObjects(
+                        cameraObject.getTransform(),
+                        getInitialPositionVector(), distance);
                 float scaleFactor = Util.getHitAreaScaleFactor(distance);
 
                 scaleParentAnimation = new GVRScaleAnimation(getParent(), duration, scaleFactor).start(getGVRContext()
@@ -402,12 +409,12 @@ public class SphereFlag extends GVRSceneObject {
         new GVRShaderAnimation(sphereFlag, SphereShader.BLUR_INTENSITY, duration, 1)
                 .start(getGVRContext().getAnimationEngine());
 
-        GVRSceneObject cameraObject = getGVRContext().getMainScene().getMainCameraRig()
-                .getOwnerObject();
+        GVRCameraRig cameraObject = getGVRContext().getMainScene().getMainCameraRig();
         float distance = (float) (Constants.NEAREST_NON_SELECTED_SPHERE - Constants.NEAREST_SPHERE + Util
                 .distance(getInitialPositionVector(),
-                        cameraObject));
-        float[] newPosition = Util.calculatePointBetweenTwoObjects(cameraObject, getParent(),
+                        cameraObject.getTransform()));
+        float[] newPosition = Util.calculatePointBetweenTwoObjects(cameraObject.getTransform(),
+                getParent(),
                 distance);
         float scaleFactor = Util.getHitAreaScaleFactor(distance);
 

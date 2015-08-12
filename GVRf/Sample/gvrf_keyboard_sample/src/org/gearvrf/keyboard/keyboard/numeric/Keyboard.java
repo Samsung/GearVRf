@@ -106,19 +106,23 @@ public class Keyboard extends GVRSceneObject {
 
     public void tapKeyboard() {
 
-        AudioClip.getInstance(getGVRContext().getContext()).playSound(AudioClip.getKeyEnterSoundID(), 1.0f, 1.0f);
+        AudioClip.getInstance(getGVRContext().getContext()).playSound(
+                AudioClip.getKeyEnterSoundID(), 1.0f, 1.0f);
 
         if (currentSelection != null) {
 
             if (keyboardEventListener != null) {
 
-                KeyboardCharItem currentItem = ((KeyboardItemBase) currentSelection).getKeyboardCharItem();
-                
-                if (currentItem.getCharacter().equalsIgnoreCase(androidResources.getString(R.string.btn_rmv))) {
+                KeyboardCharItem currentItem = ((KeyboardItemBase) currentSelection)
+                        .getKeyboardCharItem();
+
+                if (currentItem.getCharacter().equalsIgnoreCase(
+                        androidResources.getString(R.string.btn_rmv))) {
 
                     keyboardEventListener.onKeyDelete();
 
-                } else if (currentItem.getCharacter().equalsIgnoreCase(androidResources.getString(R.string.btn_ok))) {
+                } else if (currentItem.getCharacter().equalsIgnoreCase(
+                        androidResources.getString(R.string.btn_ok))) {
 
                     getTransform().setRotation(1, 0, 0, 0);
                     getTransform().setPosition(0, 0, 0);
@@ -126,14 +130,17 @@ public class Keyboard extends GVRSceneObject {
 
                     keyboardEventListener.onKeyConfirm();
 
-                } else if (currentItem.getCharacter().equalsIgnoreCase(androidResources.getString(R.string.btn_shift))) {
+                } else if (currentItem.getCharacter().equalsIgnoreCase(
+                        androidResources.getString(R.string.btn_shift))) {
                     shiftKeys();
                 }
-                
-                else if (currentItem.getCharacter().equalsIgnoreCase(androidResources.getString(R.string.btn_123))) {
+
+                else if (currentItem.getCharacter().equalsIgnoreCase(
+                        androidResources.getString(R.string.btn_123))) {
                     changeToSpecialCharacter();
 
-                } else if (currentItem.getCharacter().equalsIgnoreCase(androidResources.getString(R.string.btn_abc))) {
+                } else if (currentItem.getCharacter().equalsIgnoreCase(
+                        androidResources.getString(R.string.btn_abc))) {
                     changeToLowercase();
 
                 } else {
@@ -192,13 +199,13 @@ public class Keyboard extends GVRSceneObject {
     }
 
     public void setHoverMaterial(GVRSceneObject obj) {
-        
+
         KeyboardItemBase t = (KeyboardItemBase) obj;
         t.setHoverMaterial();
     }
 
     public void setNormalMaterial(GVRSceneObject obj) {
-        
+
         KeyboardItemBase t = (KeyboardItemBase) obj;
         t.setNormalMaterial();
     }
@@ -210,7 +217,7 @@ public class Keyboard extends GVRSceneObject {
     public void update() {
         changeTexture();
     }
-    
+
     boolean test = true;
 
     private void changeTexture() {
@@ -225,9 +232,8 @@ public class Keyboard extends GVRSceneObject {
 
             currentSelection = null;
         }
-        
-        for (GVREyePointeeHolder eph : GVRPicker.pickScene(getGVRContext().getMainScene())) {
 
+        for (GVREyePointeeHolder eph : GVRPicker.pickScene(getGVRContext().getMainScene())) {
 
             if (eph.getOwnerObject().hashCode() == Dashboard.currentDashboardHashCode) {
                 continue;
