@@ -27,12 +27,16 @@
 #include <string>
 
 #include "glm/glm.hpp"
+#include "glm/geometric.hpp"
 
 
 namespace gvr {
-class BoundingVolume: {
+class BoundingVolume {
 public:
     BoundingVolume() {
+        center_ = glm::vec3(0.0f, 0.0f, 0.0f);
+        min_corner_ = glm::vec3(0.0f, 0.0f, 0.0f);
+        max_corner_ = glm::vec3(0.0f, 0.0f, 0.0f);
     }
 
     ~BoundingVolume() {
@@ -64,7 +68,7 @@ public:
     }
 
     void expand(const BoundingVolume &volume) {
-        float in_center = volume.center();
+        const glm::vec3 in_center = volume.center();
         float in_radius = volume.radius();
 
         glm::vec3 v = in_center - center_;
@@ -73,36 +77,36 @@ public:
         if(length == 0 && in_radius > radius_){
             radius_ = in_radius;
         } else if((length + in_radius)> radius_) {
-            v.normalize();
+            glm::normalize(v);
             glm::vec3 c1 = in_center + (v * in_radius);
             glm::vec3 c0 = center_ - (v * radius_);
             center_ = (c0 + c1) * 0.5f;
             radius_ = (c1 - c0).length() * 0.5f;
         }
 
-        float s = (float) sqrt((radius/3.0f));
-        leftBottomNear.set(center_[0] - s,
-                           center_[0] - s,
-                           center_[0] - s);
+        float s = (float) sqrt((radius_/3.0f));
+        min_corner_ = glm::vec3(center_[0] - s,
+                                center_[0] - s,
+                                center_[0] - s);
 
-        max_corner_.set(center_[0] + s,
-                        center_[0] + s,
-                        center_[0] + s);
+        max_corner_ = glm::vec3(center_[0] + s,
+                                center_[0] + s,
+                                center_[0] + s);
     }
 
-    glm::vec3& center() { return center_; }
-    glm::vec3& radius() { return radius_; }
-    glm::vec3& min_corner() { return min_corner_; }
-    glm::vec3& max_corner() { return max_corner_; }
+    const glm::vec3& center() const { return center_; }
+    float radius() const { return radius_; }
+    const glm::vec3& min_corner() const { return min_corner_; }
+    const glm::vec3& max_corner() const { return max_corner_; }
 
 private:
     // bounding volume info
     bool dirty = true;
 
-    glm::vec3 center_(0.0f, 0.0f, 0.0f);
+    glm::vec3 center_;
     float radius_ = 0.0f;
-    glm::vec3 min_corner_(0.0f, 0.0f, 0.0f);
-    glm::vec3 max_corner_(0.0f, 0.0f, 0.0f);
+    glm::vec3 min_corner_;
+    glm::vec3 max_corner_;
 };
 }
 #endif

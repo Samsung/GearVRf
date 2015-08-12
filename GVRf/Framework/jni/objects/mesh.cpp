@@ -100,20 +100,16 @@ Mesh* Mesh::getBoundingBox() {
 }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
-const bounding_volume& Mesh::getBoundingVolume() {
+const BoundingVolume& Mesh::getBoundingVolume() {
     if (have_bounding_volume_) {
         return bounding_volume;
-    }
-
-    if (vertices_.size() == 0) {
-        return NULL;
     }
 
     for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
         bounding_volume.expand(*it);
     }
 
-    have_bounding_volume = true;
+    have_bounding_volume_ = true;
     return bounding_volume;
 }
 
@@ -140,10 +136,13 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
     transformed_bounding_box[2] = M[3].z;
     transformed_bounding_box[5] = M[3].z;
 
+    glm::vec3 min_corner = bounding_volume.min_corner();
+    glm::vec3 max_corner = bounding_volume.max_corner();
+
     for (int i = 0; i < 3; i++) {
         //x coord
-        a = M[i].x * bounding_box_info_[0];
-        b = M[i].x * bounding_box_info_[3];
+        a = M[i].x * min_corner.x;
+        b = M[i].x * max_corner.x;
         if (a < b) {
             transformed_bounding_box[0] += a;
             transformed_bounding_box[3] += b;
@@ -153,8 +152,8 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
         }
 
         //y coord
-        a = M[i].y * bounding_box_info_[1];
-        b = M[i].y * bounding_box_info_[4];
+        a = M[i].y * min_corner.y;
+        b = M[i].y * max_corner.y;
         if (a < b) {
             transformed_bounding_box[1] += a;
             transformed_bounding_box[4] += b;
@@ -164,8 +163,8 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
         }
 
         //z coord
-        a = M[i].z * bounding_box_info_[2];
-        b = M[i].z * bounding_box_info_[5];
+        a = M[i].z * min_corner.z;
+        b = M[i].z * max_corner.z;
         if (a < b) {
             transformed_bounding_box[2] += a;
             transformed_bounding_box[5] += b;
@@ -174,46 +173,6 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
             transformed_bounding_box[5] += a;
         }
     }
-}
-
-// This gives us a really coarse bounding sphere given the already calcuated bounding box.  This won't be a tight-fitting sphere because it is based on the bounding box.  We can revisit this later if we decide we need a tighter sphere.
-const float *Mesh::getBoundingSphereInfo() {
-    if (!have_bounding_box_) {
-        getBoundingVolume();
-    }
-
-    if (have_bounding_sphere_) {
-        return bounding_sphere_info_;
-    }
-
-    // get the bounding box into nicely readable variables
-    float min_x = bounding_box_info_[0];
-    float max_x = bounding_box_info_[3];
-    float min_y = bounding_box_info_[1];
-    float max_y = bounding_box_info_[4];
-    float min_z = bounding_box_info_[2];
-    float max_z = bounding_box_info_[5];
-
-    // find center
-    float center_x = (min_x + max_x) / 2.0f;
-    float center_y = (min_y + max_y) / 2.0f;
-    float center_z = (min_z + max_z) / 2.0f;
-
-    // find radius
-    float x_squared = (min_x - center_x) * (min_x - center_x);
-    float y_squared = (min_y - center_y) * (min_y - center_y);
-    float z_squared = (min_z - center_z) * (min_z - center_z);
-    float radius = sqrtf(x_squared + y_squared + z_squared);
-
-    // assign the sphere
-    bounding_sphere_info_[0] = center_x;
-    bounding_sphere_info_[1] = center_y;
-    bounding_sphere_info_[2] = center_z;
-    bounding_sphere_info_[3] = radius;
-
-    have_bounding_sphere_ = true;
-
-    return bounding_sphere_info_;
 }
 
 // generate vertex array object
