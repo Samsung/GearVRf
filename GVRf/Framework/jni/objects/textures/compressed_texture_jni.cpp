@@ -48,6 +48,8 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 
     env->ReleaseByteArrayElements(bytes, data, 0);
 
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+
     return reinterpret_cast<jlong>(texture);
 }
 
