@@ -746,7 +746,7 @@ public abstract class GVRContext {
                 GVRShaderType.Assimp.ID);
         
         /* Feature set */
-        int assimpFeatureSet = 0;
+        int assimpFeatureSet = 0x00000000;
         
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);

@@ -49,7 +49,8 @@ public:
     };
 
     explicit Material(ShaderType shader_type) :
-            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_() {
+            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_(), shader_feature_set_(
+                    0) {
         switch (shader_type) {
         default:
             vec3s_["color"] = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -154,11 +155,11 @@ public:
     }
 
     int get_shader_feature_set() {
-        return shader_feature_set;
+        return shader_feature_set_;
     }
 
     void set_shader_feature_set(int feature_set) {
-        shader_feature_set = feature_set;
+        shader_feature_set_ = feature_set;
     }
 
 private:
@@ -175,7 +176,7 @@ private:
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
-    int shader_feature_set;
+    unsigned int shader_feature_set_;
 };
 }
 #endif
