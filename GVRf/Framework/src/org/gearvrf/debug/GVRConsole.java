@@ -376,7 +376,7 @@ public class GVRConsole extends GVRPostEffect {
         }
 
         try {
-            if (texture == null || textureUpdated.get() != null && !textureUpdated.get()) {
+            if (texture == null || (textureUpdated.get() != null && !textureUpdated.get())) {
                 texture = new GVRBitmapTexture(getGVRContext(), HUD);
                 setMainTexture(texture);
             }

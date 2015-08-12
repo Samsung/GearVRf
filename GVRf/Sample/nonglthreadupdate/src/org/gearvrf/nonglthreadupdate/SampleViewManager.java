@@ -31,7 +31,6 @@ import android.graphics.Color;
 
 public class SampleViewManager extends GVRScript {
 
-    private GVRContext mGVRContext;
     private GVRConsole mConsole;
     GVRBitmapTexture mTexture;
     
@@ -42,7 +41,6 @@ public class SampleViewManager extends GVRScript {
 
         // save context for possible use in onStep(), even though that's empty
         // in this sample
-        mGVRContext = gvrContext;
 
         GVRScene scene = gvrContext.getNextMainScene();
         mConsole = new GVRConsole(gvrContext, EyeMode.BOTH_EYES, gvrContext.getNextMainScene());

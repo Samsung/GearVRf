@@ -88,23 +88,16 @@ public class GVRFutureOnGlThread<T> implements RunnableFuture<T> {
      * The result we get after run() successfully executed.
      * 
      * @return The result from the Callable we put in.
+     * @throws InterruptedException 
      * @throws CancellationException
      *             If the task was successfully cancelled.
      */
     @Override
-    public T get() {
-        synchronized (lock) {
-            if (!mIsDone && !mIsCancelled) {
-                try {
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        if (mIsCancelled) {
-            throw new CancellationException(
-                    "The task on GVRFutureOnGlThread has already been cancelled.");
+    public T get() throws InterruptedException {
+        try {
+            get(0, null);
+        } catch (TimeoutException e) {
+            e.printStackTrace();
         }
         return t;
     }
@@ -176,7 +169,11 @@ public class GVRFutureOnGlThread<T> implements RunnableFuture<T> {
             if (mIsDone) {
                 return t;
             }
-            lock.wait(unit.convert(timeout, TimeUnit.MILLISECONDS));
+            if(unit == null){
+                lock.wait();
+            }else{
+                lock.wait(unit.convert(timeout, TimeUnit.MILLISECONDS));
+            }
             if (mIsCancelled) {
                 throw new CancellationException(
                         "The task on GVRFutureOnGlThread has already been cancelled.");

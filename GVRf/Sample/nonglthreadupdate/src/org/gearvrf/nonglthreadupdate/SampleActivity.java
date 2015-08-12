@@ -76,6 +76,6 @@ public class SampleActivity extends GVRActivity implements OnGestureListener{
     public boolean onSingleTapUp(MotionEvent e) {
         // TODO Auto-generated method stub
         mScript.onTapUp();        
-        return false;
+        return true;
     }
 }
