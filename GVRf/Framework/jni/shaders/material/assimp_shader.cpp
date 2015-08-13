@@ -82,7 +82,7 @@ static const char FRAGMENT_SHADER[] =
 AssimpShader::AssimpShader() :
         program_(0), a_position_(0), u_mvp_(0), a_tex_coord_(0), u_diffuse_color_(
                 0), u_ambient_color_(0), u_texture_(0), u_color_(0), u_opacity_(
-                0) {
+                0), program_list_(0) {
     program_list_ = new GLProgram*[AS_TOTAL_GL_PROGRAM_COUNT];
 
     const char* vertex_shader_strings[AS_TOTAL_SHADER_STRINGS_COUNT];
