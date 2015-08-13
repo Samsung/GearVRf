@@ -276,6 +276,7 @@ public class MainScript extends GVRScript implements KeyboardEventListener {
     public void onStep() {
 
         mMic.onUpdate();
+        flagListCostructor.updateSpheresMaterial();
 
         if (dashboard != null && lastSelectedSphereFlag != null) {
             dashboard.onUpdate();

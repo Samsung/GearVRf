@@ -23,6 +23,7 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.keyboard.R;
+import org.gearvrf.keyboard.shader.SphereShader;
 import org.gearvrf.keyboard.util.SceneObjectNames;
 
 import java.util.ArrayList;
@@ -45,6 +46,46 @@ public class SphereStaticList {
                 sphereFlag.getEyePointeeHolder().setEnable(lock);
             }
         }
+    }
+
+    public void updateSpheresMaterial() {
+
+        for (GVRSceneObject sphereFlag : listFlag) {
+
+            float[] mat = sphereFlag.getTransform().getModelMatrix();
+
+            float[] light = new float[4];
+            light[0] = 2.0f;
+            light[1] = 4.0f;
+            light[2] = 10.0f;
+            light[3] = 1.0f;
+
+            float lX = mat[0] * light[0] + mat[1] * light[1] + mat[2]
+                    * light[2] + mat[3] * light[3];
+            float lY = mat[4] * light[0] + mat[5] * light[1] + mat[6]
+                    * light[2] + mat[7] * light[3];
+            float lZ = mat[8] * light[0] + mat[9] * light[1] + mat[10]
+                    * light[2] + mat[11] * light[3];
+
+            float x = 0;// this.getGVRContext().getMainScene().getMainCameraRig().getOwnerObject().getTransform().getPositionX();
+            float y = 0;// this.getGVRContext().getMainScene().getMainCameraRig().getOwnerObject().getTransform().getPositionY();
+            float z = 0;// this.getGVRContext().getMainScene().getMainCameraRig().getOwnerObject().getTransform().getPositionZ();
+
+            float eX = mat[0] * x + mat[1] * y + mat[2] * z + mat[3] * 1;
+            float eY = mat[4] * x + mat[5] * y + mat[6] * z + mat[7] * 1;
+            float eZ = mat[8] * x + mat[9] * y + mat[10] * z + mat[11] * 1;
+            sphereFlag
+                    .getRenderData()
+                    .getMaterial()
+                    .setVec3(SphereShader.LIGHT_KEY,
+                            lX - sphereFlag.getTransform().getPositionX(),
+                            lY - sphereFlag.getTransform().getPositionY(),
+                            lZ - sphereFlag.getTransform().getPositionZ());
+            sphereFlag.getRenderData().getMaterial()
+                    .setVec3(SphereShader.EYE_KEY, eX, eY, eZ);
+
+        }
+
     }
 
     private void getSpheres(GVRContext gvrContext, int array) {

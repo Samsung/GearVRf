@@ -25,6 +25,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRelativeMotionAnimation;
@@ -73,11 +74,12 @@ public class SphereFlag extends GVRSceneObject {
         initSphere(sphere);
 
         GVRMaterial material = getMaterial();
-
+        
         GVRRenderData renderData = getRenderData(material);
 
         attachRenderData(renderData);
-
+        
+        updateMaterial();
     }
 
     private void initSphere(TypedArray sphere) {
@@ -95,6 +97,33 @@ public class SphereFlag extends GVRSceneObject {
         positionVector = new Vector3D(posX, posY, posZ);
     }
 
+    public void updateMaterial() {
+
+        float[] mat = this.getTransform().getModelMatrix();
+
+        float[] light = new float[4];
+        light[0] = 0;
+        light[1] = 6;
+        light[2] = 6;
+        light[3] = 1.0f;
+
+        float lX = mat[0] * light[0] + mat[1] * light[1] + mat[2] * light[2] + mat[3] * light[3];
+        float lY = mat[4] * light[0] + mat[5] * light[1] + mat[6] * light[2] + mat[7] * light[3];
+        float lZ = mat[8] * light[0] + mat[9] * light[1] + mat[10] * light[2] + mat[11] * light[3];
+
+        float x = 0;
+        float y = 0;
+        float z = 0;
+
+       
+        this.getRenderData().getMaterial().setVec3(SphereShader.LIGHT_KEY,
+                lX - this.getTransform().getPositionX(),
+                lY - this.getTransform().getPositionY(),
+                lZ - this.getTransform().getPositionZ());
+        this.getRenderData().getMaterial().setVec3(SphereShader.EYE_KEY, x, y, z);
+
+    }
+
     private GVRMaterial getMaterial() {
         GVRMaterial material = new GVRMaterial(gvrContext);
         material.setShaderType(new SphereShader(gvrContext).getShaderId());
@@ -106,6 +135,12 @@ public class SphereFlag extends GVRSceneObject {
                 gvrContext.loadTexture(new GVRAndroidResource(gvrContext, mResultTexture)));
         material.setVec3(SphereShader.TRANSITION_COLOR, 1, 1, 1);
         material.setVec3(SphereShader.EYE_KEY, 0, 0, 0);
+
+        // Light config
+        GVRTexture hdriTexture = gvrContext.loadTexture(new GVRAndroidResource(gvrContext,
+                R.drawable.hdri_reflex));
+        material.setTexture(SphereShader.HDRI_TEXTURE_KEY, hdriTexture);
+
         return material;
     }
 
