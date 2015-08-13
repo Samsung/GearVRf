@@ -1,11 +1,25 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.gearvrf.keyboard.spinner;
+
+import android.util.Log;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.keyboard.model.CharItem;
 import org.gearvrf.keyboard.util.CircularList;
-
-import android.util.Log;
 
 public class SpinnerAdapter {
 
@@ -15,7 +29,8 @@ public class SpinnerAdapter {
     private int centralPosition = 0;
     private int centralPositionCharacter = 0;
 
-    public SpinnerAdapter(CircularList<SpinnerItem> spinnerItems, CircularList<CharItem> characterList) {
+    public SpinnerAdapter(CircularList<SpinnerItem> spinnerItems,
+            CircularList<CharItem> characterList) {
         this.characterList = characterList;
         this.spinnerItems = spinnerItems;
     }
@@ -30,14 +45,19 @@ public class SpinnerAdapter {
         if (degree < 0.0f) {
             int howFar = 1;
             int upSpinnerPosition = spinnerItems.getNextPosition(centralPosition + howFar + 1);
-            int upCharacterPosition = characterList.getNextPosition(centralPositionCharacter + howFar + 1);
-            spinnerItems.get(upSpinnerPosition).setText(gvrContext, characterList.get(upCharacterPosition));
+            int upCharacterPosition = characterList.getNextPosition(centralPositionCharacter
+                    + howFar + 1);
+            spinnerItems.get(upSpinnerPosition).setText(gvrContext,
+                    characterList.get(upCharacterPosition));
             Log.d("SpinnerTest", "upSpinnerPosition" + upSpinnerPosition);
         } else {
             int howFar = 1;
-            int downSpinnerPosition = spinnerItems.getPreviousPosition(centralPosition - howFar - 1);
-            int downCharacterPosition = characterList.getPreviousPosition(centralPositionCharacter - howFar - 1);
-            spinnerItems.get(downSpinnerPosition).setText(gvrContext, characterList.get(downCharacterPosition));
+            int downSpinnerPosition = spinnerItems
+                    .getPreviousPosition(centralPosition - howFar - 1);
+            int downCharacterPosition = characterList.getPreviousPosition(centralPositionCharacter
+                    - howFar - 1);
+            spinnerItems.get(downSpinnerPosition).setText(gvrContext,
+                    characterList.get(downCharacterPosition));
             Log.d("SpinnerTest", "downSpinnerPosition" + downSpinnerPosition);
         }
     }

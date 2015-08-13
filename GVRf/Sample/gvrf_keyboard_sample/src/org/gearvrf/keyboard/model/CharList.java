@@ -1,3 +1,17 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.gearvrf.keyboard.model;
 
@@ -19,10 +33,14 @@ public class CharList {
     private ArrayList<String> numericKeyboardList = new ArrayList<>();
     private ArrayList<String> specialKeyboardList = new ArrayList<>();
 
-    private CircularList<CharItem> softKeyboardListUpperCaseCircular = new CircularList<CharItem>(new ArrayList<CharItem>());
-    private CircularList<CharItem> numericKeyboardListCircular = new CircularList<CharItem>(new ArrayList<CharItem>());
-    private CircularList<CharItem> softKeyboardListLowerCaseCircular = new CircularList<CharItem>(new ArrayList<CharItem>());
-    private CircularList<CharItem> softKeyboardListSpecialCircular = new CircularList<CharItem>(new ArrayList<CharItem>());
+    private CircularList<CharItem> softKeyboardListUpperCaseCircular = new CircularList<CharItem>(
+            new ArrayList<CharItem>());
+    private CircularList<CharItem> numericKeyboardListCircular = new CircularList<CharItem>(
+            new ArrayList<CharItem>());
+    private CircularList<CharItem> softKeyboardListLowerCaseCircular = new CircularList<CharItem>(
+            new ArrayList<CharItem>());
+    private CircularList<CharItem> softKeyboardListSpecialCircular = new CircularList<CharItem>(
+            new ArrayList<CharItem>());
 
     private CharList(GVRContext gvrContext) {
 
@@ -50,22 +68,26 @@ public class CharList {
         // Circular //
 
         for (int i = 0; i < softKeyboard.length(); i++) {
-            softKeyboardListUpperCaseCircular.add(new CharItem(Keyboard.SOFT_KEYBOARD_UPPERCASE, i, softKeyboard.getString(i)));
+            softKeyboardListUpperCaseCircular.add(new CharItem(Keyboard.SOFT_KEYBOARD_UPPERCASE, i,
+                    softKeyboard.getString(i)));
         }
 
         for (int i = 0; i < softKeyboard.length(); i++) {
-            softKeyboardListLowerCaseCircular.add(new CharItem(Keyboard.SOFT_KEYBOARD_LOWERCASE, i, softKeyboard.getString(i).toLowerCase()));
+            softKeyboardListLowerCaseCircular.add(new CharItem(Keyboard.SOFT_KEYBOARD_LOWERCASE, i,
+                    softKeyboard.getString(i).toLowerCase()));
         }
 
         for (int i = 0; i < numericKeyboard.length(); i++) {
-            numericKeyboardListCircular.add(new CharItem(Keyboard.NUMERIC_KEYBOARD, i, numericKeyboard.getString(i)));
+            numericKeyboardListCircular.add(new CharItem(Keyboard.NUMERIC_KEYBOARD, i,
+                    numericKeyboard.getString(i)));
         }
 
         for (int i = 0; i < specialKeyboard.length(); i++) {
-            softKeyboardListSpecialCircular.add(new CharItem(Keyboard.SOFT_KEYBOARD_SPECIAL, i, specialKeyboard.getString(i)));
+            softKeyboardListSpecialCircular.add(new CharItem(Keyboard.SOFT_KEYBOARD_SPECIAL, i,
+                    specialKeyboard.getString(i)));
         }
     }
-     
+
     public static synchronized CharList getInstance(GVRContext gvrContext) {
         if (instance == null) {
             instance = new CharList(gvrContext);

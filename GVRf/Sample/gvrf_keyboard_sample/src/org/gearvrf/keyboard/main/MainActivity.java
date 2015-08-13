@@ -1,9 +1,19 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.gearvrf.keyboard.main;
-
-import org.gearvrf.GVRActivity;
-import org.gearvrf.keyboard.util.VRSamplesTouchPadGesturesDetector;
-import org.gearvrf.keyboard.util.VRSamplesTouchPadGesturesDetector.SwipeDirection;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +24,12 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-public class MainActivity extends GVRActivity implements VRSamplesTouchPadGesturesDetector.OnTouchPadGestureListener {
+import org.gearvrf.GVRActivity;
+import org.gearvrf.keyboard.util.VRSamplesTouchPadGesturesDetector;
+import org.gearvrf.keyboard.util.VRSamplesTouchPadGesturesDetector.SwipeDirection;
+
+public class MainActivity extends GVRActivity implements
+        VRSamplesTouchPadGesturesDetector.OnTouchPadGestureListener {
 
     float rawY = 0.0f, dist = 0;
 
@@ -33,9 +48,9 @@ public class MainActivity extends GVRActivity implements VRSamplesTouchPadGestur
 
         // https://github.com/Samsung/GearVRf/issues/69
         mScript.setActivity(this);
-//        mDetector = new VRTouchPadGestureDetector(this);
+        // mDetector = new VRTouchPadGestureDetector(this);
         setScript(mScript, "gvr_note4.xml");
-        
+
         mDetector = new VRSamplesTouchPadGesturesDetector(this, this);
     }
 
@@ -59,8 +74,8 @@ public class MainActivity extends GVRActivity implements VRSamplesTouchPadGestur
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         mDetector.onTouchEvent(event);
-        //t.onTouchEvent(event);
-        
+        // t.onTouchEvent(event);
+
         return super.onTouchEvent(event);
     }
 
@@ -80,7 +95,8 @@ public class MainActivity extends GVRActivity implements VRSamplesTouchPadGestur
     }
 
     @Override
-    public boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection, float velocityX, float velocityY) {
+    public boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection, float velocityX,
+            float velocityY) {
         Log.d(MainActivity.class.getSimpleName(), "onSwipe");
 
         mScript.spinnerListenerAnimation(swipeDirection, velocityY);
@@ -111,12 +127,14 @@ public class MainActivity extends GVRActivity implements VRSamplesTouchPadGestur
     }
 
     @Override
-    public void onSwiping(MotionEvent e, MotionEvent e2, float velocityX, float velocityY, SwipeDirection swipeDirection) {
+    public void onSwiping(MotionEvent e, MotionEvent e2, float velocityX, float velocityY,
+            SwipeDirection swipeDirection) {
         Log.d(VRSamplesTouchPadGesturesDetector.DEBUG_TAG, "onSwiping() : Call the stop method");
     }
 
     @Override
     public void onSwipeOppositeLastDirection() {
-        Log.d(VRSamplesTouchPadGesturesDetector.DEBUG_TAG, "onSwipeOppositeLastDirection() : Call the stop method");
+        Log.d(VRSamplesTouchPadGesturesDetector.DEBUG_TAG,
+                "onSwipeOppositeLastDirection() : Call the stop method");
     }
 }

@@ -1,3 +1,18 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.gearvrf.keyboard.util;
 
 import android.content.Context;
@@ -7,21 +22,22 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
-public class VRSamplesTouchPadGesturesDetector extends Object implements  GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
-  
+public class VRSamplesTouchPadGesturesDetector extends Object implements
+        GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
+
     private static final int MIN_MOVE_TIME = 250;
     public static final String DEBUG_TAG = "Gestures";
-    private GestureDetectorCompat mDetector; 
+    private GestureDetectorCompat mDetector;
     private long downCurrentTimeMillis = 0;
     private SwipeDirection lastDirection = SwipeDirection.Ignore;
-    
+
     private static final int SWIPE_MIN_DISTANCE = 80;
     private static final int ONTAP_MIN_DISTANCE = 0;
 
-    public enum SwipeDirection{
+    public enum SwipeDirection {
         Backward, Forward, Down, Up, Ignore
     }
-    
+
     VRSamplesTouchPadGesturesDetector.OnTouchPadGestureListener gestureListener;
     VRSamplesTouchPadGesturesDetector.OnTouchPadDoubleTapListener doubleTapListener;
 
@@ -59,8 +75,7 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
          */
         boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection,
                 float velocityX, float velocityY);
-        
-        
+
         void onSwiping(MotionEvent e, MotionEvent e2,
                 float velocityX, float velocityY, SwipeDirection swipeDirection);
 
@@ -88,32 +103,31 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
          */
         boolean onDoubleTap(MotionEvent e);
     }
-    
+
     SharedPreferences sharedPref;
-    SharedPreferences.Editor editor; 
+    SharedPreferences.Editor editor;
     int countSwipe = 0;
-    
-    public VRSamplesTouchPadGesturesDetector(Context context,  VRSamplesTouchPadGesturesDetector.OnTouchPadGestureListener listener){
-        
+
+    public VRSamplesTouchPadGesturesDetector(Context context,
+            VRSamplesTouchPadGesturesDetector.OnTouchPadGestureListener listener) {
+
         this.mDetector = new GestureDetectorCompat(context, this);
         this.mDetector.setIsLongpressEnabled(false);
         this.mDetector.setOnDoubleTapListener(this);
         this.gestureListener = listener;
-        
-        
-        //Test
-        sharedPref =  context.getSharedPreferences("VR", Context.MODE_PRIVATE);
+
+        // Test
+        sharedPref = context.getSharedPreferences("VR", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
-        
+
         showLogsAtPref();
     }
-    
-    
-    private void showLogsAtPref(){
-        
-        for(int i = 0; i < 60; i++){
-            
-            Log.d(DEBUG_TAG, " - " + sharedPref.getFloat("SWIPE_DISTANCE"+i, -00000));
+
+    private void showLogsAtPref() {
+
+        for (int i = 0; i < 60; i++) {
+
+            Log.d(DEBUG_TAG, " - " + sharedPref.getFloat("SWIPE_DISTANCE" + i, -00000));
         }
     }
 
@@ -121,57 +135,58 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
             VRSamplesTouchPadGesturesDetector.OnTouchPadDoubleTapListener onDoubleTapListener) {
         doubleTapListener = onDoubleTapListener;
     }
-     
-    public boolean onTouchEvent(MotionEvent event){ 
-        return  this.mDetector.onTouchEvent(event);
+
+    public boolean onTouchEvent(MotionEvent event) {
+        return this.mDetector.onTouchEvent(event);
     }
-    
+
     @Override
-    public boolean onDown(MotionEvent event) { 
+    public boolean onDown(MotionEvent event) {
         downCurrentTimeMillis = System.currentTimeMillis();
         return true;
     }
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        
+
         long moveTime = System.currentTimeMillis();
-        
-        if((moveTime - downCurrentTimeMillis) > MIN_MOVE_TIME){
-            
+
+        if ((moveTime - downCurrentTimeMillis) > MIN_MOVE_TIME) {
+
             SwipeDirection direction = getSwipeDirection(e1.getX(), e1.getY(), e2.getX(), e2.getY());
-            
-            if(direction != lastDirection){
+
+            if (direction != lastDirection) {
                 gestureListener.onSwipeOppositeLastDirection();
             }
-            
+
             lastDirection = direction;
         }
-        
+
         gestureListener.onSwiping(e1, e2, distanceX, distanceY, lastDirection);
 
         return true;
     }
-    
-    private void saveSwipeDistanceValue(float value){
-        editor.putFloat("SWIPE_DISTANCE"+ countSwipe, value);
+
+    private void saveSwipeDistanceValue(float value) {
+        editor.putFloat("SWIPE_DISTANCE" + countSwipe, value);
         editor.commit();
         countSwipe++;
     }
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        
+
         Log.d(VRSamplesTouchPadGesturesDetector.DEBUG_TAG, "onFling()");
-        
-        if (mDetector == null){
+
+        if (mDetector == null) {
             return false;
         }
 
-        double distance = Math.sqrt(Math.pow(e2.getX() - e1.getX(), 2) + Math.pow(e2.getY() - e1.getY(), 2));
-        
-        saveSwipeDistanceValue((float)distance);
-        
+        double distance = Math.sqrt(Math.pow(e2.getX() - e1.getX(), 2)
+                + Math.pow(e2.getY() - e1.getY(), 2));
+
+        saveSwipeDistanceValue((float) distance);
+
         if (distance > SWIPE_MIN_DISTANCE) {
             try {
 
@@ -184,11 +199,13 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
                     angle -= 360;
 
                 if (angle < 90) {
-                    return gestureListener.onSwipe(e1, SwipeDirection.Forward, velocityX, velocityY);
+                    return gestureListener
+                            .onSwipe(e1, SwipeDirection.Forward, velocityX, velocityY);
                 } else if (angle < 180) {
                     return gestureListener.onSwipe(e1, SwipeDirection.Up, velocityX, velocityY);
                 } else if (angle < 270) {
-                    return gestureListener.onSwipe(e1, SwipeDirection.Backward,velocityX, velocityY);
+                    return gestureListener.onSwipe(e1, SwipeDirection.Backward, velocityX,
+                            velocityY);
                 } else {
                     return gestureListener.onSwipe(e1, SwipeDirection.Down, velocityX, velocityY);
                 }
@@ -196,7 +213,7 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
             } catch (Exception e) {
                 // Ignore
             }
-            
+
         } else if (distance >= ONTAP_MIN_DISTANCE) {
             /*
              * The gesture listener filters out dirty taps that look like swipes
@@ -211,18 +228,20 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
     }
 
     @Override
-    public void onLongPress(MotionEvent event) {}
+    public void onLongPress(MotionEvent event) {
+    }
 
     @Override
-    public void onShowPress(MotionEvent event) {}
+    public void onShowPress(MotionEvent event) {
+    }
 
     @Override
     public boolean onSingleTapUp(MotionEvent event) {
-        
+
         if (gestureListener != null) {
             return gestureListener.onSingleTap(event);
         }
-        
+
         return false;
     }
 
@@ -246,21 +265,21 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements  Gestur
         }
         return false;
     }
-    
+
     private SwipeDirection getSwipeDirection(float x1, float y1, float x2, float y2) {
-        
+
         Double angle = Math.toDegrees(Math.atan2(y1 - y2, x2 - x1));
-        
-        if (angle > 45 && angle <= 135){
+
+        if (angle > 45 && angle <= 135) {
             return SwipeDirection.Up;
-        } else if (angle >= 135 && angle < 180 || angle < -135 && angle > -180){
+        } else if (angle >= 135 && angle < 180 || angle < -135 && angle > -180) {
             return SwipeDirection.Ignore; // left to right
-        } else if (angle < -45 && angle>= -135){
+        } else if (angle < -45 && angle >= -135) {
             return SwipeDirection.Down;
-        } else if (angle > -45 && angle <= 45){
+        } else if (angle > -45 && angle <= 45) {
             return SwipeDirection.Ignore; // right to left
         }
-        
-        return SwipeDirection.Ignore; 
+
+        return SwipeDirection.Ignore;
     }
 }

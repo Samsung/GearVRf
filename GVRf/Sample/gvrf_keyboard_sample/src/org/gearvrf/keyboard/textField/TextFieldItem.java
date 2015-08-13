@@ -1,3 +1,17 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.gearvrf.keyboard.textField;
 
@@ -18,9 +32,11 @@ public class TextFieldItem extends GVRSceneObject {
     protected CharItem charItem;
     private int position;
 
-    public TextFieldItem(GVRContext gvrContext, float sceneObjectWidth, float sceneObjectHeigth, int bitmapWidth, int bitmapHeigth, Text text,
+    public TextFieldItem(GVRContext gvrContext, float sceneObjectWidth, float sceneObjectHeigth,
+            int bitmapWidth, int bitmapHeigth, Text text,
             int position) {
-        super(gvrContext, sceneObjectWidth, sceneObjectHeigth, gvrContext.loadTexture(new GVRAndroidResource(gvrContext, R.raw.empty)));
+        super(gvrContext, sceneObjectWidth, sceneObjectHeigth, gvrContext
+                .loadTexture(new GVRAndroidResource(gvrContext, R.raw.empty)));
         setName(SceneObjectNames.TEXT_FIELD_ITEM);
 
         currentText = text;
@@ -35,7 +51,8 @@ public class TextFieldItem extends GVRSceneObject {
     }
 
     public void updateText(GVRContext context) {
-        GVRBitmapTexture tex = new GVRBitmapTexture(context, GVRTextBitmapFactory.create(context.getContext(), width, height, currentText, 0));
+        GVRBitmapTexture tex = new GVRBitmapTexture(context, GVRTextBitmapFactory.create(
+                context.getContext(), width, height, currentText, 0));
         getRenderData().getMaterial().setMainTexture(tex);
     }
 
