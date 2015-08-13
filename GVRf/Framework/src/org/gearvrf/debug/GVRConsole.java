@@ -17,8 +17,21 @@ package org.gearvrf.debug;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
-import org.gearvrf.*;
+import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRCamera;
+import org.gearvrf.GVRCameraRig;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCustomPostEffectShaderId;
+import org.gearvrf.GVRPostEffect;
+import org.gearvrf.GVRPostEffectMap;
+import org.gearvrf.GVRPostEffectShaderId;
+import org.gearvrf.GVRPostEffectShaderManager;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRScript;
+import org.gearvrf.R;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -357,14 +370,20 @@ public class GVRConsole extends GVRPostEffect {
 
     private void setMainTexture() {
 
-        boolean textureUpdated = false;
+        Future<Boolean> textureUpdated = null;
         if (texture != null) {
             textureUpdated = texture.update(HUD);
         }
 
-        if (textureUpdated != true) {
-            texture = new GVRBitmapTexture(getGVRContext(), HUD);
-            setMainTexture(texture);
+        try {
+            if (texture == null || (textureUpdated.get() != null && !textureUpdated.get())) {
+                texture = new GVRBitmapTexture(getGVRContext(), HUD);
+                setMainTexture(texture);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         }
     }
 

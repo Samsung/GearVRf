@@ -1163,6 +1163,17 @@ public abstract class GVRContext {
 
     }
 
+    /*
+     * To see if current thread is GL thread.
+     * 
+     * @return {@code true} if current thread is GL thread, {@code false} if
+     * current thread is not GL thread
+     */
+
+    public boolean isCurrentThreadGLThread() {
+        return Thread.currentThread().getId() == mGLThreadID;
+    }
+
     /**
      * Load a bitmap, asynchronously, with a default priority.
      * 
