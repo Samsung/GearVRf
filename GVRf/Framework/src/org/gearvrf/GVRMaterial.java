@@ -67,6 +67,7 @@ import android.graphics.Color;
 public class GVRMaterial extends GVRHybridObject implements
         GVRShaders<GVRMaterialShaderId> {
 
+    private int mShaderFeatureSet;
     private GVRMaterialShaderId shaderId;
     final private Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
 
@@ -117,6 +118,35 @@ public class GVRMaterial extends GVRHybridObject implements
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     8);
         }
+
+        public abstract static class Assimp {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    9);
+
+            /*
+             * Set this feature enum if diffuse texture is present in Assimp
+             * material Diffuse texture maps to main_texture in GearVRf
+             */
+            public static int AS_DIFFUSE_TEXTURE = 0x00000000;
+
+            /*
+             * Set this feature enum if specular texture is present in Assimp
+             * material
+             */
+            public static int AS_SPECULAR_TEXTURE = 0x00000001;
+
+            public static int setBit(int number, int index) {
+                return (number |= 1 << index);
+            }
+
+            public static boolean isSet(int number, int index) {
+                return ((number & (1 << index)) != 0);
+            }
+
+            public static int clearBit(int number, int index) {
+                return (number &= ~(1 << index));
+            }
+        }
     };
 
     /**
@@ -139,6 +169,7 @@ public class GVRMaterial extends GVRHybridObject implements
             setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
             setSpecularExponent(0.0f);
         }
+        this.mShaderFeatureSet = 0;
     }
 
     /**
@@ -504,6 +535,31 @@ public class GVRMaterial extends GVRHybridObject implements
         NativeMaterial.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2, z2,
                 w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
+    
+    /**
+     * Set the feature set for pre-built shader's. Pre-built shader could be
+     * written to support all the properties of a material system with
+     * preprocessor macro to On/Off features. feature set would determine which
+     * properties are available for current model. Currently only Assimp shader
+     * has support for feature set.
+     * 
+     * @param featureSet
+     *            Feature set for this material.
+     */
+    public void setShaderFeatureSet(int featureSet) {
+        this.mShaderFeatureSet = featureSet;
+        NativeMaterial.setShaderFeatureSet(getNative(), featureSet);
+    }
+    
+    /**
+     * Get the feature set associated with this material.
+     * 
+     * @return An integer representing the feature set.
+     * 
+     */
+    public int getShaderFeatureSet() {
+        return mShaderFeatureSet;
+    }
 
 }
 
@@ -536,4 +592,6 @@ class NativeMaterial {
             float z1, float w1, float x2, float y2, float z2, float w2,
             float x3, float y3, float z3, float w3, float x4, float y4,
             float z4, float w4);
+
+    static native void setShaderFeatureSet(long material, int featureSet);
 }
