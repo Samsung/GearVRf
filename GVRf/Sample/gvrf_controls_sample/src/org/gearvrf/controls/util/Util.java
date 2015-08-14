@@ -20,6 +20,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
@@ -97,12 +98,19 @@ public class Util {
     public static GVRTexture transparentTexture(GVRContext context) {
         return context.loadTexture(new GVRAndroidResource(context, R.raw.empty));
     }
-    
+
     public static float getYRotationAngle(GVRSceneObject rotatingObject, GVRSceneObject targetObject) {
         return (float) Math.toDegrees(Math.atan2(targetObject.getTransform().getPositionX()
                 - rotatingObject.getTransform().getPositionX(),
                 targetObject.getTransform().getPositionZ()
                         - rotatingObject.getTransform().getPositionZ()));
     }
-    
+
+    public static float getYRotationAngle(GVRSceneObject rotatingObject, GVRCameraRig targetObject) {
+        return (float) Math.toDegrees(Math.atan2(targetObject.getTransform().getPositionX()
+                - rotatingObject.getTransform().getPositionX(),
+                targetObject.getTransform().getPositionZ()
+                        - rotatingObject.getTransform().getPositionZ()));
+    }
+
 }
