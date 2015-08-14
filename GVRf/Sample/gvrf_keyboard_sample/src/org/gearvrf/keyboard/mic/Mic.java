@@ -202,7 +202,7 @@ public class Mic extends GVRSceneObject implements RecognitionListener {
 
                 boolean seeMeNow = false;
 
-                if (mMicHitGroupArea.mHitArea.hashCode() == gVREyePointeeHolder.hashCode()) {
+                if (mMicHitGroupArea.mHitArea.hashCode() == gVREyePointeeHolder.getOwnerObject().hashCode()) {
                     tryChangeSeeMe(true);
                     seeMeNow = true;
                 }

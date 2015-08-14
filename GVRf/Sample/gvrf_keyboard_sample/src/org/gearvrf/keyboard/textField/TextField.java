@@ -145,14 +145,14 @@ public class TextField extends GVRSceneObject {
 
         GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(this.getGVRContext()
                 .getMainScene());
-
+       
         for (GVREyePointeeHolder eph : eyePointeeHolders) {
 
             for (int i = 0; i < mListFieldItems.size(); i++) {
 
                 if (eph.getOwnerObject().hashCode() == mListFieldItems.get(i)
-                        .getEyePointeeHolder().hashCode()) {
-
+                        .getEyePointeeHolder().getOwnerObject().hashCode()) {
+                    
                     currentCharPosition = i;
                     return mListFieldItems.get(i);
 
@@ -216,11 +216,14 @@ public class TextField extends GVRSceneObject {
 
         spinner.getSpinnerRoulette().onStep();
 
+  
         if (!mListFieldItems.isEmpty()) {
 
             currentCharSelected = getObjectInHitArea();
-
+           
+            
             if (currentCharSelected != null) {
+
                 tryShowSpinner(spinner);
 
             }
@@ -248,6 +251,7 @@ public class TextField extends GVRSceneObject {
     }
 
     private synchronized void tryShowSpinner(Spinner spinner) {
+       
         if (!spinner.isActive() && !spinner.isShuttingDown()) {
 
             spinner.on(currentCharSelected.getCharItem().getPosition(), currentCharSelected
