@@ -55,7 +55,7 @@ public class MainScript extends GVRScript {
     private float SCENE_Y = -1.0f;
 
     private Menu mMenu = null;
-    
+
     private GamepadObject gamepadObject;
 
     @Override
@@ -66,9 +66,11 @@ public class MainScript extends GVRScript {
         mGVRContext = gvrContext;
 
         scene = gvrContext.getMainScene();
-        
-        gvrContext.getMainScene().getMainCameraRig().getRightCamera().setBackgroundColor(Color.GREEN);
-        gvrContext.getMainScene().getMainCameraRig().getLeftCamera().setBackgroundColor(Color.GREEN);
+
+        gvrContext.getMainScene().getMainCameraRig().getRightCamera()
+                .setBackgroundColor(Color.GREEN);
+        gvrContext.getMainScene().getMainCameraRig().getLeftCamera()
+                .setBackgroundColor(Color.GREEN);
 
         // set background color
         GVRCameraRig mainCameraRig = scene.getMainCameraRig();
@@ -214,34 +216,36 @@ public class MainScript extends GVRScript {
         GamepadInput.interactWithDPad(worm);
         ControlSceneObjectBehavior.process(mGVRContext);
 
-        if(gamepadObject != null){
+        if (gamepadObject != null) {
 
             gamepadObject.getGamepadVirtual().handlerAnalogL(
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_X), 
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y), 
+                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_X),
+                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y),
                     0);
-            
+
             gamepadObject.getGamepadVirtual().handlerAnalogR(
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX), 
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY), 
+                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX),
+                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY),
                     0);
-            
-            gamepadObject.getGamepadVirtual().dpadTouch(GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X), 
+
+            gamepadObject.getGamepadVirtual().dpadTouch(
+                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X),
                     GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y));
-            
-            
-            gamepadObject.getGamepadVirtual().handlerLRButtons(GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_L1),
+
+            gamepadObject.getGamepadVirtual().handlerLRButtons(
+                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_L1),
                     GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_R1));
-            
+
             gamepadObject.getGamepadVirtual().buttonsPressed(
                     GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_X),
                     GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_Y),
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_A),  
+                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_A),
                     GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_B));
         }
     }
 
-    public void animateWorm(org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirection swipeDirection) {
+    public void animateWorm(
+            org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirection swipeDirection) {
 
         float duration = 0.6f;
         float movement = 0.75f;
@@ -270,19 +274,19 @@ public class MainScript extends GVRScript {
         mMenu.getTransform().setScale(0.4f, 0.4f, 0.4f);
         mMenu.getTransform().setPosition(0, -.5f, -3f);
         mMenu.getRenderData().getMaterial().setOpacity(0.5f);
-//        scene.addSceneObject(mMenu);
+        // scene.addSceneObject(mMenu);
     }
-    
+
     private void createGamepad3D() {
-        GVRSceneObject cameraObject = mGVRContext.getMainScene()
-                .getMainCameraRig().getOwnerObject();
+        GVRCameraRig cameraObject = mGVRContext.getMainScene()
+                .getMainCameraRig();
         gamepadObject = new GamepadObject(mGVRContext);
 
         gamepadObject.getTransform().setPosition(-3, 1.f, 8f);
-        float angle = Util.getYRotationAngle(gamepadObject,cameraObject);
-        
+        float angle = Util.getYRotationAngle(gamepadObject, cameraObject);
+
         gamepadObject.getTransform().rotateByAxis(angle, 0, 1, 0);
-        
+
         scene.addSceneObject(gamepadObject);
     }
 }
