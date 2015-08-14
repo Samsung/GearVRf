@@ -102,7 +102,7 @@
     <!-- Key -->
     <array name="key_15">
         <item name="character">g</item>
-        <item name="special_character">&#x25;</item>
+        <item name="special_character">|</item>
         <item name="style">@array/style_default</item>
     </array>
 
