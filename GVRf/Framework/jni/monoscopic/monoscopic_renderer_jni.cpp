@@ -26,6 +26,8 @@ void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
         jlong jpost_effect_render_texture_a,
         jlong jpost_effect_render_texture_b);
 
+void Java_org_gearvrf_NativeMonoscopicRenderer_cull(JNIEnv * env,
+        jobject obj, jlong jscene, jlong jcamera, jlong shader_manager);
 }
 
 void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
@@ -49,5 +51,15 @@ void Java_org_gearvrf_NativeMonoscopicRenderer_renderCamera(JNIEnv * env,
             post_effect_render_texture_a, post_effect_render_texture_b);
 
 }
+
+void Java_org_gearvrf_NativeMonoscopicRenderer_cull(JNIEnv * env,
+        jobject obj, jlong jscene, jlong jcamera, jlong jshader_manager) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
+    ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
+
+    Renderer::cull(scene, camera, shader_manager);
+}
+
 
 }

@@ -107,6 +107,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     ByteBuffer mReadbackBuffer = null;
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
 
+    private native void cull(long scene, long camera, long shader_manager);
     private native void renderCamera(long appPtr, long scene, long camera,
             long shaderManager, long postEffectShaderManager,
             long postEffectRenderTextureA, long postEffectRenderTextureB);
@@ -529,6 +530,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {
+
+        GVRPerspectiveCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
+        cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
+
         if (mCurrentEye == 1) {
             mActivity.setCamera(mMainScene.getMainCameraRig().getLeftCamera());
         } else {

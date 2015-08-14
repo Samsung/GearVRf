@@ -141,6 +141,7 @@ class GVRMonoscopicViewManager extends GVRViewManager {
     protected void drawEyes() {
         // Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().predictAndSetRotation(3.5f / 60.0f);
+        GVRMonoscopicRenderer.cull(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle);
         GVRMonoscopicRenderer.renderCamera(mMainScene, mMainScene
                 .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
                 mViewportWidth, mViewportHeight, mRenderBundle);

@@ -23,6 +23,14 @@ namespace gvr {
 
 extern "C" {
 
+void Java_org_gearvrf_GVRViewManager_cull(JNIEnv * jni, jclass clazz,
+        jlong jscene, jlong jcamera, jlong jshader_manager) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
+    ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
+    Renderer::cull(scene, camera, shader_manager);
+}
+
 void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
         jlong appPtr, jlong jscene, jlong jcamera, jlong jshader_manager,
         jlong jpost_effect_shader_manager, jlong jpost_effect_render_texture_a,

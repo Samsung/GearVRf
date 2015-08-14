@@ -77,6 +77,8 @@ public:
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
 
+    static void cull(Scene *scene, Camera *camera, ShaderManager* shader_manager);
+
     static void initializeStats();
     static void resetStats();
     static int getNumberDrawCalls();
