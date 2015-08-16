@@ -33,7 +33,7 @@ float CameraRig::default_camera_separation_distance_ = 0.062f;
 
 CameraRig::CameraRig() :
         Component(), camera_rig_type_(DEFAULT_CAMERA_RIG_TYPE), left_camera_(), right_camera_(), center_camera_(), camera_separation_distance_(
-                default_camera_separation_distance_), floats_(), vec2s_(), vec3s_(), vec4s_(), complementary_rotation_(), rotation_sensor_data_(), rotation_buffer_() {
+                default_camera_separation_distance_), floats_(), vec2s_(), vec3s_(), vec4s_(), complementary_rotation_(), rotation_sensor_data_() {
 }
 
 CameraRig::~CameraRig() {
@@ -95,7 +95,6 @@ void CameraRig::attachCenterCamera(PerspectiveCamera* const center_camera) {
 
 void CameraRig::reset() {
     complementary_rotation_ = glm::inverse(rotation_sensor_data_.quaternion());
-    rotation_buffer_.clear();
 }
 
 void CameraRig::resetYaw() {
@@ -103,7 +102,6 @@ void CameraRig::resetYaw() {
             glm::vec3(0.0f, 0.0f, -1.0f));
     float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
     complementary_rotation_ = glm::angleAxis(-yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-    rotation_buffer_.clear();
 }
 
 void CameraRig::resetYawPitch() {
@@ -116,13 +114,11 @@ void CameraRig::resetYawPitch() {
     glm::quat quat = glm::angleAxis(pitch, glm::vec3(1.0f, 0.0f, 0.0f));
     quat = glm::angleAxis(yaw, glm::vec3(0.0f, 1.0f, 0.0f)) * quat;
     complementary_rotation_ = glm::inverse(quat);
-    rotation_buffer_.clear();
 }
 
 void CameraRig::setRotationSensorData(long long time_stamp, float w, float x,
         float y, float z, float gyro_x, float gyro_y, float gyro_z) {
-    rotation_sensor_data_ = RotationSensorData(time_stamp, w, x, y, z, gyro_x,
-            gyro_y, gyro_z);
+    rotation_sensor_data_.update(time_stamp, w, x, y, z, gyro_x, gyro_y, gyro_z);
 }
 
 void CameraRig::predictAndSetRotation(float time) {
@@ -131,11 +127,15 @@ void CameraRig::predictAndSetRotation(float time) {
 }
 
 glm::quat CameraRig::predict(float time) {
+    return predict(time, rotation_sensor_data_);
+}
+
+glm::quat CameraRig::predict(float time, const RotationSensorData& rotationSensorData) {
     long long clock_time = getCurrentTime();
-    float time_diff = (clock_time - rotation_sensor_data_.time_stamp())
+    float time_diff = (clock_time - rotationSensorData.time_stamp())
             / 1000000000.0f;
 
-    glm::vec3 axis = rotation_sensor_data_.gyro();
+    glm::vec3 axis = rotationSensorData.gyro();
     float angle = glm::length(axis);
 
     if (angle != 0.0f) {
@@ -143,7 +143,7 @@ glm::quat CameraRig::predict(float time) {
     }
     angle *= (time + time_diff) * 180.0f / M_PI;
 
-    glm::quat rotation = rotation_sensor_data_.quaternion()
+    glm::quat rotation = rotationSensorData.quaternion()
             * glm::angleAxis(angle, axis);
 
     glm::quat transform_rotation = complementary_rotation_ * rotation;
