@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="btn_abc">ABC</string>
+
+    <!--  -->
+    <string name="number_one">1</string>
+    <string name="number_two">2</string>
+    <string name="number_three">3</string>
+    <string name="number_four">4</string>
+    <string name="number_five">5</string>
+    <string name="number_six">6</string>
+    <string name="number_seven">7</string>
+    <string name="number_eight">8</string>
+    <string name="number_nine">9</string>
+    <string name="number_zero">0</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_rmv">DEL</string>
+    <string name="btn_shift">SHIFT</string>
+    <string name="btn_123">123</string>
+
+    <string-array name="soft_keyboard_number">
+        <item>@string/number_zero</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
+    <string-array name="soft_keyboard">
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+        <item>D</item>
+        <item>E</item>
+        <item>F</item>
+        <item>G</item>
+        <item>H</item>
+        <item>I</item>
+        <item>J</item>
+        <item>K</item>
+        <item>H</item>
+        <item>L</item>
+        <item>M</item>
+        <item>N</item>
+        <item>O</item>
+        <item>P</item>
+        <item>Q</item>
+        <item>R</item>
+        <item>S</item>
+        <item>T</item>
+        <item>U</item>
+        <item>V</item>
+        <item>W</item>
+        <item>X</item>
+        <item>Y</item>
+        <item>Z</item>
+        <item></item>
+    </string-array>
+    <string-array name="soft_keyboard_special">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>0</item>
+        <item>&#43;</item>
+        <item>&#10005;</item>
+        <item>&#8260;</item>
+        <item>&#61;</item>
+        <item>&#x25;</item>
+        <item>&#x5F;</item>
+        <item>&#x24;</item>
+        <item>&#xA3;</item>
+        <item>&#xA5;</item>
+        <item>&#x2E;</item>
+        <item>&#x2C;</item>
+        <item>\&#x3F;</item>
+        <item>"&#x21;"</item>
+        <item>&#8211;</item>
+        <item>\&#x27;</item>
+        <item>\&#x22;</item>
+        <item>\&#x5C;</item>
+    </string-array>
+
+</resources>
