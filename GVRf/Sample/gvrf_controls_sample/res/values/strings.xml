@@ -15,7 +15,7 @@
 
 <resources>
 
-    <string name="app_name">GVR Simple Sample</string>
+    <string name="app_name">GVR Controls Sample</string>
     
 	<string name="motion">MOTION</string>
 	<string name="color">COLOR</string>
