@@ -44,6 +44,8 @@ public class VuforiaSampleScript extends GVRScript {
     private float[] convertedMVMatrix;
     private float[] gvrMVMatrix;
     private float[] totalMVMatrix;
+
+    private boolean teapotVisible = false;
     
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -67,7 +69,7 @@ public class VuforiaSampleScript extends GVRScript {
     }
 
     private void createCameraPassThrough() {
-        passThroughObject = new GVRSceneObject(gvrContext, 2.0f, 1.0f);
+        passThroughObject = new GVRSceneObject(gvrContext, 16.0f / 9.0f, 1.0f);
 
         passThroughObject.getTransform().setPosition(0.0f, 0.0f, -1000.0f);
         passThroughObject.getTransform().setScaleX(1000f);
@@ -124,12 +126,33 @@ public class VuforiaSampleScript extends GVRScript {
         }
     }
 
+	private void showTeapot() {
+		if (teapotVisible == false) {
+			mainScene.addSceneObject(teapot);
+			teapotVisible = true;
+		}
+	}
+
+	private void hideTeapot() {
+		if (teapotVisible) {
+			mainScene.removeSceneObject(teapot);
+			teapotVisible = false;
+		}
+	}
+
     public void updateObjectPose(State state) {
         // did we find any trackables this frame?
-        for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
+        int numDetectedMarkers = state.getNumTrackableResults();
+
+		if (numDetectedMarkers == 0) {
+			hideTeapot();
+			return;
+		}
+
+        for (int tIdx = 0; tIdx < numDetectedMarkers; tIdx++) {
             TrackableResult result = state.getTrackableResult(tIdx);
             Trackable trackable = result.getTrackable();
-            if (trackable.getId() == 1) {
+            if (trackable.getId() == 1 || trackable.getId() == 2) {
                 Matrix44F modelViewMatrix_Vuforia = Tool
                         .convertPose2GLMatrix(result.getPose());
                 vuforiaMVMatrix = modelViewMatrix_Vuforia.getData();
@@ -143,14 +166,18 @@ public class VuforiaSampleScript extends GVRScript {
                         scaleFactor);
 
                 gvrMVMatrix = gvrContext.getMainScene().getMainCameraRig()
-                        .getTransform().getModelMatrix();
+                        .getHeadTransform().getModelMatrix();
 
                 Matrix.multiplyMM(totalMVMatrix, 0, gvrMVMatrix, 0,
                         convertedMVMatrix, 0);
                 teapot.getTransform().setModelMatrix(totalMVMatrix);
+
+                showTeapot();
                 
                 break;
-            }
+            } else {
+				hideTeapot();
+			}
         }
     }
 

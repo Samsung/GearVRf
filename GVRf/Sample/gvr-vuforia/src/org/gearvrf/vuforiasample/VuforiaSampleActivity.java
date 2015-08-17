@@ -45,6 +45,9 @@ public class VuforiaSampleActivity extends GVRActivity implements
     private ArrayList<String> datasetStrings = new ArrayList<String>();
 
     private boolean extendedTracking = false;
+    
+    private static final float NEAR_Z_PLANE = 10.0f;
+    private static final float FAR_Z_PLANE = 5000.0f;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -58,6 +61,7 @@ public class VuforiaSampleActivity extends GVRActivity implements
 
         vuforiaState = VUFORIA_INITIALIZING;
         vuforiaAppSession = new VuforiaApplicationSession(this);
+        vuforiaAppSession.setZPlanes(NEAR_Z_PLANE, FAR_Z_PLANE);
         vuforiaAppSession.initAR(this);
     }
 
