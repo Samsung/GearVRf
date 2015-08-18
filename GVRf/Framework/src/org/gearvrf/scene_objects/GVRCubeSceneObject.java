@@ -249,9 +249,15 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     /**
      * Constructs a cube scene object with each side of length 1.
      * 
-     * The cube's triangles and normals are facing either in or out and the same
-     * texture will be applied to each side of the cube. All six faces share the
-     * same material (i.e. same texture and same shader).
+     * The cube's triangles and normals are facing either in or out and the material
+     * is applied to the cube.
+     *
+     * To use the same texture on the six faces, use a material with the shader type
+     * {@code GVRMaterial.GVRShaderType.Texture} and a {@code GVRTexture}.
+     *
+     * To use different textures on different faces, use a material
+     * with the shader type {@code GVRMaterial.GVRShaderType.Cubemap}, and a
+     * cubemap texture loaded by {@code GVRContext.loadFutureCubemapTexture}.
      * 
      * @param gvrContext
      *            current {@link GVRContext}
