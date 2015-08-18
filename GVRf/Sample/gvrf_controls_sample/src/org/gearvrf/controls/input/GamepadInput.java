@@ -121,9 +121,8 @@ public final class GamepadInput {
 
     public static boolean processJoystickInput(MotionEvent event, int historyPos) {
 
-       
-            Log.d("processJoystickInput", "processJoystickInput");
-        
+        Log.d("processJoystickInput", "processJoystickInput");
+
         InputDevice mInputDevice = event.getDevice();
 
         // Calculate the horizontal distance to move by
@@ -208,26 +207,26 @@ public final class GamepadInput {
     }
 
     public static void interactWithDPad(Worm worm) {
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X) == 1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_X) == 1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX) == 1) {
+        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X) >= 1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_X) >= 1
+                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX) >= 1) {
             Log.d("AAA", "RIGHT");
             worm.rotateAroundCamera(.1f, -5f);
             worm.rotateWorm(MovementDirection.Right);
         }
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X) == -1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_X) == -1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX) == -1) {
+        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X) <= -1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_X) <= -1
+                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX) <= -1) {
             Log.d("AAA", "LEFT");
             worm.rotateAroundCamera(.1f, 5f);
             worm.rotateWorm(MovementDirection.Left);
         }
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y) == 1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y) == 1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY) == 1) {
+        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y) >= 1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y) >= 1
+                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY) >= 1) {
             Log.d("AAA", "DOWN");
             worm.moveAlongCameraVector(.1f, -.225f);
             worm.rotateWorm(MovementDirection.Down);
         }
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y) == -1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y) == -1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY) == -1) {
+        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y) <= -1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y) <= -1
+                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY) <= -1) {
             Log.d("AAA", "UP");
             worm.moveAlongCameraVector(.1f, .225f);
             worm.rotateWorm(MovementDirection.Up);
