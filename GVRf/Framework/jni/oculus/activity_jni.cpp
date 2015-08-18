@@ -33,36 +33,36 @@ long Java_org_gearvrf_GVRActivity_nativeSetAppInterface(
         jstring fromPackageName, jstring commandString,
         jstring uriString)
 {
-    return (new GVRActivityReal(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
+    return (new GVRActivity(*jni,activity))->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
 }
 
 void Java_org_gearvrf_GVRActivity_nativeSetCamera(
         JNIEnv * jni, jclass clazz, jlong appPtr, jlong jcamera)
 {
-    GVRActivityReal *activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     activity->camera = camera;
 }
 
 void Java_org_gearvrf_GVRActivity_nativeSetCameraRig(
-        JNIEnv * jni, jclass clazz, jlong appPtr, jlong jCameraRig)
+        JNIEnv * jni, jclass clazz, jlong appPtr, jlong cameraRig)
 {
-    GVRActivityReal *activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
-    activity->cameraRig = reinterpret_cast<CameraRig*>(jCameraRig);
+    GVRActivity *activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->setCameraRig(cameraRig);
 }
 
 void Java_org_gearvrf_GVRActivity_nativeOnDock(
         JNIEnv * jni, jclass clazz, jlong appPtr)
 {
-    GVRActivityReal* activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
-    activity->deviceIsDocked = true;
+    GVRActivity* activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->headRotationProvider_.onDock();
 }
 
 void Java_org_gearvrf_GVRActivity_nativeOnUndock(
         JNIEnv * jni, jclass clazz, jlong appPtr)
 {
-    GVRActivityReal* activity = (GVRActivityReal*)((OVR::App *)appPtr)->GetAppInterface();
-    activity->deviceIsDocked = false;
+    GVRActivity* activity = (GVRActivity*)((OVR::App *)appPtr)->GetAppInterface();
+    activity->headRotationProvider_.onUndock();
 }
 
 } // extern "C"
@@ -71,13 +71,11 @@ void Java_org_gearvrf_GVRActivity_nativeOnUndock(
 //                             GVRActivity
 //=============================================================================
 
-template <class PredictionTrait> GVRActivity<PredictionTrait>::GVRActivity(JNIEnv & jni_, jobject activityObject_)
+template <class R> GVRActivityT<R>::GVRActivityT(JNIEnv & jni_, jobject activityObject_)
     : forceScreenClear( false )
     , ModelLoaded( false )
     , UiJni(&jni_)
     , viewManager(NULL)
-    , cameraRig(nullptr)
-    , deviceIsDocked(false)
 {
     viewManager = new GVRViewManager(jni_,activityObject_);
     javaObject = UiJni->NewGlobalRef( activityObject_ );
@@ -93,19 +91,20 @@ template <class PredictionTrait> GVRActivity<PredictionTrait>::GVRActivity(JNIEn
     afterDrawEyesMethodId = GetMethodID("afterDrawEyes", "()V");
 
     onKeyEventNativeMethodId = GetMethodID("onKeyEventNative", "(II)Z");
+    updateSensoredSceneMethodId = GetMethodID("updateSensoredScene", "()Z");
     getAppSettingsMethodId = GetMethodID("getAppSettings",
             "()Lorg/gearvrf/utility/VrAppSettings;");
 
 }
 
-template <class PredictionTrait> GVRActivity<PredictionTrait>::~GVRActivity() {
+template <class R> GVRActivityT<R>::~GVRActivityT() {
     if ( javaObject != 0 )
     {
         UiJni->DeleteGlobalRef( javaObject );
     }
 }
 
-template <class PredictionTrait> jmethodID GVRActivity<PredictionTrait>::GetStaticMethodID( jclass clazz, const char * name,
+template <class R> jmethodID GVRActivityT<R>::GetStaticMethodID( jclass clazz, const char * name,
         const char * signature) {
     jmethodID mid = UiJni->GetStaticMethodID(clazz, name, signature);
     if (!mid) {
@@ -114,7 +113,7 @@ template <class PredictionTrait> jmethodID GVRActivity<PredictionTrait>::GetStat
     return mid;
 }
 
-template <class PredictionTrait> jmethodID GVRActivity<PredictionTrait>::GetMethodID(const char * name, const char * signature) {
+template <class R> jmethodID GVRActivityT<R>::GetMethodID(const char * name, const char * signature) {
     jmethodID mid = UiJni->GetMethodID(activityClass, name, signature);
     if (!mid) {
         FAIL("couldn't get %s", name );
@@ -123,7 +122,7 @@ template <class PredictionTrait> jmethodID GVRActivity<PredictionTrait>::GetMeth
 }
 
 
-template <class PredictionTrait> jclass GVRActivity<PredictionTrait>::GetGlobalClassReference(const char * className) const {
+template <class PredictionTrait> jclass GVRActivityT<PredictionTrait>::GetGlobalClassReference(const char * className) const {
     jclass lc = UiJni->FindClass(className);
     if (lc == 0) {
         FAIL( "FindClass( %s ) failed", className);
@@ -136,7 +135,7 @@ template <class PredictionTrait> jclass GVRActivity<PredictionTrait>::GetGlobalC
     return gc;
 }
 
-template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OVR::ovrSettings & settings)
+template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
 {
     //General settings.
     JNIEnv *env = app->GetVrJni();
@@ -378,26 +377,26 @@ template <class PredictionTrait> void GVRActivity<PredictionTrait>::Configure(OV
     }
 }
 
-template <class PredictionTrait> void GVRActivity<PredictionTrait>::OneTimeInit(const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI)
+template <class R> void GVRActivityT<R>::OneTimeInit(const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI)
 {
     app->GetVrJni()->CallVoidMethod( javaObject, oneTimeInitMethodId );
 }
 
-template <class PredictionTrait> void GVRActivity<PredictionTrait>::OneTimeShutdown()
+template <class R> void GVRActivityT<R>::OneTimeShutdown()
 {
     app->GetVrJni()->CallVoidMethod(javaObject, oneTimeShutdownMethodId);
 
     // Free GL resources
 }
 
-template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::GetEyeView(const int eye, const float fovDegrees) const
+template <class R> OVR::Matrix4f GVRActivityT<R>::GetEyeView(const int eye, const float fovDegrees) const
 {
     const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye( eye, fovDegrees );
     const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye( eye );
     return ( projectionMatrix * viewMatrix );
 }
 
-template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::DrawEyeView(const int eye, const float fovDegrees) {
+template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, const float fovDegrees) {
     const OVR::Matrix4f view = GetEyeView(eye, fovDegrees);
 
     // Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.
@@ -409,8 +408,11 @@ template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Dra
 
     SetMVPMatrix(mvp_matrix);
 
-    glm::quat headRotation = PredictionTrait::getPrediction(this, (1 == eye ? 4.0f : 3.5f) / 60.0f);
-    cameraRig->getHeadTransform()->set_rotation(headRotation);
+    if (!sensoredSceneUpdated_ && headRotationProvider_.receivingUpdates()) {
+        sensoredSceneUpdated_ = updateSensoredScene();
+    }
+    glm::quat headRotation = headRotationProvider_.getPrediction(*this, (1 == eye ? 4.0f : 3.5f) / 60.0f);
+    cameraRig_->getHeadTransform()->set_rotation(headRotation);
 
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod(javaObject, drawEyeViewMethodId, eye, fovDegrees);
@@ -433,7 +435,7 @@ template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Dra
 
 }
 
-template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Frame( const OVR::VrFrame & vrFrame )
+template <class R> OVR::Matrix4f GVRActivityT<R>::Frame( const OVR::VrFrame & vrFrame )
 {
     JNIEnv* jni = app->GetVrJni();
     jni->CallVoidMethod(javaObject, beforeDrawEyesMethodId);
@@ -466,7 +468,7 @@ template <class PredictionTrait> OVR::Matrix4f GVRActivity<PredictionTrait>::Fra
     return view2;
 }
 
-template <class PredictionTrait> bool GVRActivity<PredictionTrait>::OnKeyEvent(const int keyCode, const int repeatCode,
+template <class R> bool GVRActivityT<R>::OnKeyEvent(const int keyCode, const int repeatCode,
         const OVR::KeyEventType eventType) {
 
     bool handled = app->GetVrJni()->CallBooleanMethod(javaObject,
@@ -478,6 +480,15 @@ template <class PredictionTrait> bool GVRActivity<PredictionTrait>::OnKeyEvent(c
     }
 
     return handled;
+}
+
+template <class R> bool GVRActivityT<R>::updateSensoredScene() {
+    return app->GetVrJni()->CallBooleanMethod(javaObject, updateSensoredSceneMethodId);
+}
+
+template <class R> void GVRActivityT<R>::setCameraRig(jlong cameraRig) {
+    cameraRig_ = reinterpret_cast<CameraRig*>(cameraRig);
+    sensoredSceneUpdated_ = false;
 }
 
 }

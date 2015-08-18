@@ -146,6 +146,7 @@ public:
     void setRotationSensorData(long long time_stamp, float w, float x, float y,
             float z, float gyro_x, float gyro_y, float gyro_z);
     glm::quat predict(float time);
+    glm::quat predict(float time, const RotationSensorData& rotationSensorData);
     void predictAndSetRotation(float time);
     Transform* getHeadTransform() const; // for rotation/k-sensor
     glm::vec3 getLookAt() const;
@@ -172,7 +173,6 @@ private:
     std::map<std::string, glm::vec4> vec4s_;
     glm::quat complementary_rotation_;
     RotationSensorData rotation_sensor_data_;
-    std::vector<glm::quat> rotation_buffer_;
 };
 
 }

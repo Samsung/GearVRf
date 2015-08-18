@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.DockEventReceiver;
+
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -28,24 +30,12 @@ import android.hardware.SensorManager;
  * back to the device's internal sensor.
  */
 class RotationSensor {
-
-    private static abstract class SensorType {
-        public static final int INTERNAL = 0;
-        public static final int KSENSOR = 1;
-    }
-
-    private static final int DEFAULT_SENSOR = SensorType.INTERNAL;
-
-    private int mCurrentSensor = DEFAULT_SENSOR;
-
     private final RotationSensorListener mListener;
 
-    private final KSensor mKSensor;
-    private final KSensorListener mKSensorListener;
-
-    private final Sensor mInternalSensor;
-    private final SensorManager mInternalSensorManager;
-    private final GVRInternalSensorListener mInternalSensorListener;
+    private GVRInternalSensorListener mInternalSensorListener;
+    private final DockEventReceiver mDockEventReceiver;
+    private final Context mApplicationContext;
+    private boolean mUsingInternalSensor = true;
 
     /**
      * Constructor.
@@ -58,16 +48,9 @@ class RotationSensor {
      */
     RotationSensor(Context context, RotationSensorListener listener) {
         mListener = listener;
+        mApplicationContext = context.getApplicationContext();
 
-        mInternalSensorManager = (SensorManager) context
-                .getSystemService(Context.SENSOR_SERVICE);
-        mInternalSensor = mInternalSensorManager
-                .getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
-        mInternalSensorListener = new GVRInternalSensorListener(this);
-
-        mKSensor = new KSensor();
-        mKSensorListener = new KSensorListener(this);
-        mKSensor.registerListener(mKSensorListener);
+        mDockEventReceiver = new DockEventReceiver(context, mOnDock, mOnUndock);
     }
 
     /**
@@ -75,9 +58,10 @@ class RotationSensor {
      * {@link Activity#onResume()}.
      */
     void onResume() {
-        mInternalSensorManager.registerListener(mInternalSensorListener,
-                mInternalSensor, SensorManager.SENSOR_DELAY_FASTEST);
-        mKSensor.resume();
+        mDockEventReceiver.start();
+        if (mUsingInternalSensor) {
+            startInternalSensor();
+        }
     }
 
     /**
@@ -85,8 +69,10 @@ class RotationSensor {
      * {@link Activity#onPause()}.
      */
     void onPause() {
-        mInternalSensorManager.unregisterListener(mInternalSensorListener);
-        mKSensor.pause();
+        mDockEventReceiver.stop();
+        if (mUsingInternalSensor) {
+            stopInternalSensor();
+        }
     }
 
     /**
@@ -94,7 +80,8 @@ class RotationSensor {
      * {@link Activity#onDestroy()}.
      */
     void onDestroy() {
-        mKSensor.close();
+        mDockEventReceiver.stop();
+        stopInternalSensor();
     }
 
     /**
@@ -105,34 +92,46 @@ class RotationSensor {
      */
     void onInternalRotationSensor(long timeStamp, float w, float x, float y,
             float z, float gyroX, float gyroY, float gyroZ) {
-        if (mCurrentSensor == SensorType.INTERNAL) {
-            mListener.onRotationSensor(timeStamp, w, x, y, z, gyroX, gyroY,
-                    gyroZ);
-        }
-    }
-
-    /**
-     * Implementation detail. Handles data from {@link KSensor}. See
-     * {@link RotationSensorListener#onRotationSensor(long, float, float, float, float, float, float, float)
-     * RotationSensorListener.onRotationSensor()}.
-     */
-    void onKSensor(long timeStamp, float w, float x, float y, float z,
-            float gyroX, float gyroY, float gyroZ) {
-        mCurrentSensor = SensorType.KSENSOR;
         mListener.onRotationSensor(timeStamp, w, x, y, z, gyroX, gyroY, gyroZ);
-    }
-
-    /**
-     * Implementation detail. Switches to device's internal sensor.
-     */
-    void onKSensorError() {
-        mCurrentSensor = SensorType.INTERNAL;
     }
 
     /**
      * Chooses the sensor to call onRotationSensor().
      */
     void onRotationSensorChanged(int currentSensor) {
-        mCurrentSensor = currentSensor;
     }
+
+    private void startInternalSensor() {
+        if (null == mInternalSensorListener) {
+            final SensorManager sensorManager = (SensorManager)mApplicationContext.getSystemService(Context.SENSOR_SERVICE);
+            final Sensor internalSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+            mInternalSensorListener = new GVRInternalSensorListener(this);
+            sensorManager.registerListener(mInternalSensorListener, internalSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+    }
+
+    private void stopInternalSensor() {
+        if (null != mInternalSensorListener) {
+            final SensorManager sensorManager = (SensorManager)mApplicationContext.getSystemService(Context.SENSOR_SERVICE);
+            sensorManager.unregisterListener(mInternalSensorListener);
+            mInternalSensorListener = null;
+        }
+    }
+
+    private final Runnable mOnDock = new Runnable() {
+        @Override
+        public void run() {
+            stopInternalSensor();
+            mUsingInternalSensor = false;
+        }
+    };
+
+    private final Runnable mOnUndock = new Runnable() {
+        @Override
+        public void run() {
+            startInternalSensor();
+            mUsingInternalSensor = true;
+        }
+    };
+
 }
