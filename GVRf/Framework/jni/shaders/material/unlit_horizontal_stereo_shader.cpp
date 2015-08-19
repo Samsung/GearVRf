@@ -80,11 +80,18 @@ void UnlitHorizontalStereoShader::render(const glm::mat4& mvp_matrix,
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
+    bool mono_rendering;
 
     if (texture->getTarget() != GL_TEXTURE_2D) {
         std::string error =
                 "UnlitHorizontalStereoShader::render : texture with wrong target";
         throw error;
+    }
+
+    try {
+        mono_rendering = material->getFloat("mono_rendering") == 1;
+    } catch (std::string& error) {
+        mono_rendering  = false;
     }
 
 #if _GVRF_USE_GLES3_
@@ -100,7 +107,7 @@ void UnlitHorizontalStereoShader::render(const glm::mat4& mvp_matrix,
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-    glUniform1i(u_right_, right ? 1 : 0);
+    glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
     glBindVertexArray(mesh->getVAOId(Material::UNLIT_HORIZONTAL_STEREO_SHADER));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
@@ -127,7 +134,7 @@ void UnlitHorizontalStereoShader::render(const glm::mat4& mvp_matrix,
 
     glUniform1f(u_opacity_, opacity);
 
-    glUniform1i(u_right_, right ? 1 : 0);
+    glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             mesh->triangles().data());
