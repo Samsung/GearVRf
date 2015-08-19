@@ -114,20 +114,10 @@ public class TouchPadGesturesDetector implements GestureDetector.OnGestureListen
         this.mDetector.setOnDoubleTapListener(this);
         this.gestureListener = listener;
 
-        // Test
         sharedPref = context.getSharedPreferences("VR", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
-
-        showLogsAtPref();
     }
 
-    private void showLogsAtPref() {
-
-        for (int i = 0; i < 60; i++) {
-
-            Log.d(DEBUG_TAG, " - " + sharedPref.getFloat("SWIPE_DISTANCE" + i, -00000));
-        }
-    }
 
     public void setOnDoubleTapListener(
             TouchPadGesturesDetector.OnTouchPadDoubleTapListener onDoubleTapListener) {
