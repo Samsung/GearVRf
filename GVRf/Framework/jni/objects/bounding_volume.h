@@ -33,66 +33,13 @@
 namespace gvr {
 class BoundingVolume {
 public:
-    BoundingVolume() {
-        center_ = glm::vec3(0.0f, 0.0f, 0.0f);
-        min_corner_ = glm::vec3(0.0f, 0.0f, 0.0f);
-        max_corner_ = glm::vec3(0.0f, 0.0f, 0.0f);
-    }
+    BoundingVolume();
 
     ~BoundingVolume() {
     }
 
-    void expand(const glm::vec3 point) {
-        if(min_corner_[0] > point[0]) {
-            min_corner_[0] = point[0];
-        }
-        if(min_corner_[1] > point[1]) {
-            min_corner_[1] = point[1];
-        }
-        if(min_corner_[2] > point[2]) {
-            min_corner_[2] = point[2];
-        }
-
-        if(max_corner_[0] < point[0]) {
-            max_corner_[0] = point[0];
-        }
-        if(max_corner_[1] < point[1]) {
-            max_corner_[1] = point[1];
-        }
-        if(max_corner_[2] < point[2]) {
-            max_corner_[2] = point[2];
-        }
-
-        center_ = (min_corner_ + max_corner_)*0.5f;
-        radius_ = (max_corner_ - center_).length();
-    }
-
-    void expand(const BoundingVolume &volume) {
-        const glm::vec3 in_center = volume.center();
-        float in_radius = volume.radius();
-
-        glm::vec3 v = in_center - center_;
-        float length = v.length();
-
-        if(length == 0 && in_radius > radius_){
-            radius_ = in_radius;
-        } else if((length + in_radius)> radius_) {
-            glm::normalize(v);
-            glm::vec3 c1 = in_center + (v * in_radius);
-            glm::vec3 c0 = center_ - (v * radius_);
-            center_ = (c0 + c1) * 0.5f;
-            radius_ = (c1 - c0).length() * 0.5f;
-        }
-
-        float s = (float) sqrt((radius_/3.0f));
-        min_corner_ = glm::vec3(center_[0] - s,
-                                center_[0] - s,
-                                center_[0] - s);
-
-        max_corner_ = glm::vec3(center_[0] + s,
-                                center_[0] + s,
-                                center_[0] + s);
-    }
+    void expand(const glm::vec3 point);
+    void expand(const BoundingVolume &volume);
 
     const glm::vec3& center() const { return center_; }
     float radius() const { return radius_; }
