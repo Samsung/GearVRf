@@ -5,13 +5,13 @@ Vuforia is a trademark of QUALCOMM Incorporated, registered in the United States
 and other countries. Trademarks of QUALCOMM Incorporated are used with permission.
 ===============================================================================*/
 
-package com.qualcomm.vuforia.samples.SampleApplication;
+package com.qualcomm.vuforia.misc;
 
 import com.qualcomm.vuforia.State;
 
 
-//  Interface to be implemented by the activity which uses SampleApplicationSession
-public interface SampleApplicationControl
+//  Interface to be implemented by the activity which uses VuforiaApplicationSession
+public interface VuforiaApplicationControl
 {
     
     // To be called to initialize the trackers
@@ -42,7 +42,7 @@ public interface SampleApplicationControl
     // This callback is called after the Vuforia initialization is complete,
     // the trackers are initialized, their data loaded and
     // tracking is ready to start
-    void onInitARDone(SampleApplicationException e);
+    void onInitARDone(VuforiaApplicationException e);
     
     
     // This callback is called every cycle
