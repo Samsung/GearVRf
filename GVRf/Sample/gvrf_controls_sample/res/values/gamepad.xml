@@ -1,0 +1,100 @@
+<resources>
+
+    <string-array name="dpad">
+        <item name="name">dpad</item>
+        <item name="texture_button">@drawable/dpad_button_dev</item>
+        <item name="texture_event">@drawable/dpad_event_dev</item>
+        <item name="pivotX_event">-0.33911f</item>
+        <item name="pivoty_event">-0.19612f</item>
+        <item name="pivotz_event">-0.25772f</item>
+    </string-array>
+    <string-array name="play_button">
+        <item name="name">play_button</item>
+        <item name="texture_button">@drawable/play_button_dev</item>
+        <item name="texture_event">-1</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="action_button1">
+        <item name="name">action_button1</item>
+        <item name="texture_button">@drawable/action_button1_dev</item>
+        <item name="texture_event">@drawable/action_button1_event_dev</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="action_button2">
+        <item name="name">action_button2</item>
+        <item name="texture_button">@drawable/action_button2_dev</item>
+        <item name="texture_event">@drawable/action_button2_event_dev</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="action_button3">
+        <item name="name">action_button3</item>
+        <item name="texture_button">@drawable/action_button3_dev</item>
+        <item name="texture_event">@drawable/action_button3_event_dev</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="action_button4">
+        <item name="name">action_button4</item>
+        <item name="texture_button">@drawable/action_button4_dev</item>
+        <item name="texture_event">@drawable/action_button4_event_dev</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+
+    <!-- Pivot adjusted -->
+    <string-array name="analog_stick_l_button">
+        <item name="name">analog_stick_l_button</item>
+        <item name="texture_button">@drawable/analog_stick_l_button_dev</item>
+        <item name="texture_event">@drawable/analog_stick_levent_dev</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="analog_stick_r_button">
+        <item name="name">analog_stick_r_button</item>
+        <item name="texture_button">@drawable/analog_stick_r_button_dev</item>
+        <item name="texture_event">@drawable/analog_stick_revent_dev</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="lt_button">
+        <item name="name">lt_button</item>
+        <item name="texture_button">@drawable/lt_button</item>
+        <item name="texture_event">@drawable/lt_event</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+    <string-array name="rt_button">
+        <item name="name">rt_button</item>
+        <item name="texture_button">@drawable/rt_button_dev</item>
+        <item name="texture_event">@drawable/rt_event</item>
+        <item name="pivotX_event">0</item>
+        <item name="pivoty_event">0</item>
+        <item name="pivotz_event">0</item>
+    </string-array>
+
+    <!-- Gamepad -->
+    <array name="gamepad">
+        <item>@array/dpad</item>
+        <item>@array/play_button</item>
+        <item>@array/action_button1</item>
+        <item>@array/action_button2</item>
+        <item>@array/action_button3</item>
+        <item>@array/action_button4</item>
+        <item>@array/analog_stick_l_button</item>
+        <item>@array/analog_stick_r_button</item>
+        <item>@array/lt_button</item>
+        <item>@array/rt_button</item>
+    </array>
+
+</resources>
