@@ -103,11 +103,13 @@ public:
 
     void set_vertices(const std::vector<glm::vec3>& vertices) {
         vertices_ = vertices;
+        have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
         vertices_ = std::move(vertices);
+        have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
     }
 
