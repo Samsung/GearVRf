@@ -23,8 +23,14 @@ namespace gvr {
 
 BoundingVolume::BoundingVolume() {
     center_ = glm::vec3(0.0f, 0.0f, 0.0f);
-    min_corner_ = glm::vec3(0.0f, 0.0f, 0.0f);
-    max_corner_ = glm::vec3(0.0f, 0.0f, 0.0f);
+    min_corner_ = glm::vec3(
+           std::numeric_limits<float>::infinity(), 
+           std::numeric_limits<float>::infinity(), 
+           std::numeric_limits<float>::infinity());
+    max_corner_ = glm::vec3(
+          -std::numeric_limits<float>::infinity(), 
+          -std::numeric_limits<float>::infinity(), 
+          -std::numeric_limits<float>::infinity());
 }
 
 /* 
