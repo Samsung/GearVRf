@@ -26,6 +26,7 @@
 
 #include "objects/hybrid_object.h"
 #include "objects/components/transform.h"
+#include "objects/bounding_volume.h"
 #include "util/gvr_gl.h"
 
 namespace gvr {
@@ -146,6 +147,9 @@ public:
         return false;
     }
 
+    void dirtyBoundingVolume();
+    BoundingVolume& getBoundingVolume();
+
 private:
     SceneObject(const SceneObject& scene_object);
     SceneObject(SceneObject&& scene_object);
@@ -164,6 +168,8 @@ private:
     float lod_min_range_;
     float lod_max_range_;
     bool using_lod_;
+    BoundingVolume bounding_volume_;
+    bool bounding_volume_dirty_;
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it

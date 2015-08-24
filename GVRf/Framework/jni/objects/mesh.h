@@ -31,6 +31,7 @@
 
 #include "objects/hybrid_object.h"
 #include "objects/material.h"
+#include "objects/bounding_volume.h"
 
 #include "engine/memory/gl_delete.h"
 
@@ -39,7 +40,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
-                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(false), have_bounding_sphere_(false) {
+                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_volume_(false) {
     }
 
     ~Mesh() {
@@ -89,8 +90,7 @@ public:
             gl_delete.queueBuffer(iterator->second);
         }
         tex_vboID_map_.clear();
-        have_bounding_box_ = false;
-        have_bounding_sphere_ = false;
+        have_bounding_volume_ = false;
     }
 
     std::vector<glm::vec3>& vertices() {
@@ -103,12 +103,14 @@ public:
 
     void set_vertices(const std::vector<glm::vec3>& vertices) {
         vertices_ = vertices;
-        getBoundingSphereInfo(); // calculate bounding sphere
+        have_bounding_volume_ = false;
+        getBoundingVolume(); // calculate bounding volume
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
         vertices_ = std::move(vertices);
-        getBoundingSphereInfo(); // calculate bounding sphere
+        have_bounding_volume_ = false;
+        getBoundingVolume(); // calculate bounding volume
     }
 
     std::vector<glm::vec3>& normals() {
@@ -259,11 +261,10 @@ public:
         vec4_vectors_[key] = vector;
     }
 
+    const BoundingVolume& getBoundingVolume() const { return bounding_volume; }
     Mesh* getBoundingBox();
-    const float* getBoundingBoxInfo(); // Xmin, Ymin, Zmin and Xmax, Ymax, Zmax
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
-    const float *getBoundingSphereInfo(); // Get bounding sphere based on the bounding box
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
@@ -320,6 +321,8 @@ public:
         return numTriangles_;
     }
 
+    const BoundingVolume& getBoundingVolume();
+
 private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
@@ -356,16 +359,10 @@ private:
 
     // triangle information
     GLuint numTriangles_;
-
-    // bounding box info
-    bool have_bounding_box_;
-    float bounding_box_info_[6];
-
-    // bounding sphere info
-    bool have_bounding_sphere_;
-    float bounding_sphere_info_[4]; // [0-2] center x,y,z; [3] radius
-
     bool vao_dirty_;
+
+    bool have_bounding_volume_;
+    BoundingVolume bounding_volume;
 };
 }
 #endif

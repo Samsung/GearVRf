@@ -33,7 +33,7 @@ void ExternalRendererShader::render(const glm::mat4& mvp_matrix, RenderData* ren
     }
 
     externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
-                     render_data->mesh()->getBoundingBoxInfo(), 6,
+                     render_data->mesh()->getBoundingVolume(), 6,
                      glm::value_ptr(mvp_matrix), 16);
 
     checkGlError("ExternalRendererShader::render");
