@@ -19,7 +19,7 @@
 #include <vector>
 #include <memory>
 #include "App.h"
-#include "ModelView.h"
+#include "SceneView.h"
 #include "AppLocal.h"
 #include "util/gvr_jni.h"
 #include "glm/glm.hpp"

@@ -7,5 +7,7 @@
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
+	<classpathentry exported="true" kind="lib" path="/VrApi_Prebuilt/Prebuilt_Libs/VrApi.jar"/>
+	<classpathentry exported="true" kind="lib" path="/VrAppFramework_Prebuilt/Prebuilt_Libs/VrAppFramework.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

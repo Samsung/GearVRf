@@ -19,7 +19,7 @@
 
 #include "glm/glm.hpp"
 #include "App.h"
-#include "ModelView.h"
+#include "SceneView.h"
 #include "Input.h"
 #include "view_manager.h"
 #include "../objects/components/camera.h"
@@ -41,7 +41,7 @@ public:
     virtual void        Configure( OVR::ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
     virtual void        OneTimeShutdown();
-    virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegrees );
+    virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegrees, ovrFrameParms & frameParms );
     virtual OVR::Matrix4f    Frame( const OVR::VrFrame & vrFrame );
     virtual bool        OnKeyEvent( const int keyCode, const int repeatCount, const OVR::KeyEventType eventType );
     bool                updateSensoredScene();
