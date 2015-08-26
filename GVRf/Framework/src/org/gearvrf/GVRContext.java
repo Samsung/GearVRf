@@ -1983,6 +1983,48 @@ public abstract class GVRContext {
     }
 
     /**
+     * Simple, high-level method to load a compressed cube map texture asynchronously,
+     * for use with {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
+     *
+     * @param resource
+     *            A steam containing a zip file which contains six compressed textures.
+     *            The six textures correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.pkm", "negx.pkm", "posy.pkm", "negx.pkm",
+     *            "posz.pkm", and "negz.pkm", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     *
+     * @since 1.6.9
+     *
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
+     */
+    public Future<GVRTexture> loadFutureCompressedCubemapTexture(
+            GVRAndroidResource resource) {
+        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(this,
+                sTextureCache, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
+    }
+
+    /**
      * Get the current {@link GVRScene}, which contains the scene graph (a
      * hierarchy of {@linkplain GVRSceneObject scene objects}) and the
      * {@linkplain GVRCameraRig camera rig}

@@ -107,6 +107,8 @@ class CompressedTexture {
      * 
      * @param stream
      *            InputStream containing a compressed texture file
+     * @param maxLength
+     *            Max length to read. -1 for unlimited.
      * @param closeStream
      *            Close {@code stream} on exit?
      * @return Normally, one and only one {@link GVRCompressedTextureLoader}
@@ -118,11 +120,14 @@ class CompressedTexture {
      * @throws IOException
      *             Does not catch any internal exceptions
      */
-    static CompressedTexture load(InputStream stream, boolean closeStream)
+    static CompressedTexture load(InputStream stream, int maxLength,
+                                  boolean closeStream)
             throws IOException {
         byte[] data;
         try {
-            data = readBytes(stream);
+            data = maxLength >= 0
+                ? readBytes(stream, maxLength)
+                : readBytes(stream);
         } finally {
             if (closeStream) {
                 stream.close();

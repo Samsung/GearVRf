@@ -65,6 +65,30 @@ public:
         }
     }
 
+    explicit CubemapTexture(JNIEnv* env, GLenum internalFormat,
+            GLsizei width, GLsizei height, GLsizei imageSize,
+            jobjectArray textureArray, int* texture_parameters) :
+            Texture(new GLTexture(TARGET, texture_parameters)) {
+        glBindTexture(TARGET, gl_texture_->id());
+        for (int i = 0; i < 6; i++) {
+            jbyteArray byteArray = static_cast<jbyteArray>(env->GetObjectArrayElement(textureArray, i));
+
+            jbyte *textureData = env->GetByteArrayElements(byteArray, 0);
+            int ret;
+
+            if (byteArray == NULL) {
+                std::string error =
+                        "new CubemapTexture() failed! Input texture is NULL.";
+                throw error;
+            }
+
+            glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                    internalFormat, width, height, 0, imageSize, textureData);
+
+            env->ReleaseByteArrayElements(byteArray, textureData, 0);
+        }
+    }
+
     explicit CubemapTexture() :
             Texture(new GLTexture(TARGET)) {
     }

@@ -29,6 +29,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
+import org.gearvrf.utility.FileExtension;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -64,7 +65,7 @@ abstract class AsyncCubemapTexture {
     private static final Class<? extends GVRHybridObject> TEXTURE_CLASS = GVRCubemapTexture.class;
 
     /*
-     * Asynchronous loader
+     * Asynchronous loader for uncompressed cubemap
      */
 
     private static class AsyncLoadCubemapTextureResource extends
@@ -95,7 +96,8 @@ abstract class AsyncCubemapTexture {
                 ZipEntry zipEntry = null;
                 while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                     String imageName = zipEntry.getName();
-                    Integer imageIndex = faceIndexMap.get(imageName);
+                    String imageBaseName = FileExtension.getBaseName(imageName);
+                    Integer imageIndex = faceIndexMap.get(imageBaseName);
                     if (imageIndex == null) {
                         throw new IllegalArgumentException("Name of image ("
                                 + imageName + ") is not set!");
