@@ -51,12 +51,14 @@ public class LODTestScript extends GVRScript {
         sphereHighDensity.setLODRange(0.0f, 5.0f);
         scene.addSceneObject(sphereHighDensity);
         
-        GVRSphereSceneObject sphereMediumDensity = new GVRSphereSceneObject(gvrContext, 9, 9);
+        GVRSphereSceneObject sphereMediumDensity = new GVRSphereSceneObject(gvrContext, 9, 9,
+                true, new GVRMaterial(gvrContext));
         setupObject(gvrContext, sphereMediumDensity, greenFutureTexture); 
         sphereMediumDensity.setLODRange(5.0f, 9.0f);
         scene.addSceneObject(sphereMediumDensity);
         
-        GVRSphereSceneObject sphereLowDensity = new GVRSphereSceneObject(gvrContext, 6, 6);
+        GVRSphereSceneObject sphereLowDensity = new GVRSphereSceneObject(gvrContext, 6, 6,
+                true, new GVRMaterial(gvrContext));
         setupObject(gvrContext, sphereLowDensity, blueFutureTexture);   
         sphereLowDensity.setLODRange(9.0f, Float.MAX_VALUE);
         scene.addSceneObject(sphereLowDensity);
@@ -65,7 +67,7 @@ public class LODTestScript extends GVRScript {
     
     private void setupObject(GVRContext gvrContext, GVRSceneObject object, Future<GVRTexture> futureTexture) {
         object.getTransform().setPosition(0,  0,  -3.0f);
-        GVRMaterial unlit = new GVRMaterial(gvrContext, GVRShaderType.Unlit.ID);
+        GVRMaterial unlit = new GVRMaterial(gvrContext, GVRShaderType.Texture.ID);
         unlit.setMainTexture(futureTexture);
         object.getRenderData().setMaterial(unlit);
         setupAnimation(object);  
