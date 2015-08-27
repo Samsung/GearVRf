@@ -114,6 +114,7 @@ public:
             checkGlError("glAttachShader");
             glAttachShader(program, pixelShader);
             checkGlError("glAttachShader");
+            bindCommonAttributes(program);
             glLinkProgram(program);
             GLint linkStatus = GL_FALSE;
             glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -137,6 +138,14 @@ public:
 
 private:
     GLuint id_;
+
+    static void bindCommonAttributes(GLuint id)
+    {
+    	glBindAttribLocation (id, 0, "a_position");
+    	glBindAttribLocation (id, 1, "a_tex_coord");
+    	glBindAttribLocation (id, 2, "a_normal");
+    }
+
 };
 }
 #endif

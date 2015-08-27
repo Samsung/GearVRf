@@ -68,7 +68,7 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
 #if _GVRF_USE_GLES3_
     Material* material = render_data->pass(0)->material();
     mesh->setVertexLoc(a_position_);
-    mesh->generateVAO(material->shader_type());
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 

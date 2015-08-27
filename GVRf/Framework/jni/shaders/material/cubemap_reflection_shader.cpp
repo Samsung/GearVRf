@@ -137,7 +137,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
     mesh->setNormalLoc(a_normal_);
-    mesh->generateVAO(Material::CUBEMAP_REFLECTION_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 
