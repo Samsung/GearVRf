@@ -290,8 +290,6 @@ public:
 
     const GLuint getVAOId(Material::ShaderType key) const {
     	return vaoID_;
-//        auto iterator = vaoID_map_.find(key);
-//        return iterator != vaoID_map_.end() ? iterator->second : 0;
     }
 
     GLuint getNumTriangles() {
@@ -321,11 +319,6 @@ private:
     std::map<int, std::string> attribute_vec4_keys_;
 
     // add vertex array object and VBO
-//    std::map<Material::ShaderType, GLuint> vaoID_map_;
-//    std::map<Material::ShaderType, GLuint> triangle_vboID_map_;
-//    std::map<Material::ShaderType, GLuint> vert_vboID_map_;
-//    std::map<Material::ShaderType, GLuint> norm_vboID_map_;
-//    std::map<Material::ShaderType, GLuint> tex_vboID_map_;
 
     bool   vaoInitiliased_;
     GLuint vaoID_;
