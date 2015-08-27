@@ -31,6 +31,7 @@
 
 namespace gvr {
 Mesh* Mesh::getBoundingBox() {
+
     Mesh* mesh = new Mesh();
 
     getBoundingVolume(); // Make sure bounding_volume is valid
@@ -176,17 +177,15 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 }
 
 // generate vertex array object
-void Mesh::generateVAO(Material::ShaderType key) {
+void Mesh::generateVAO() {
 #if _GVRF_USE_GLES3_
+
+	if (vaoInitiliased_)
+		return;
     GLuint tmpID;
 
     if (vao_dirty_) {
-        deleteVaos();
-    }
-
-    if (vaoID_map_.find(key) != vaoID_map_.end()) {
-        // already initialized
-        return;
+         deleteVaos();
     }
 
     if (vertices_.size() == 0 && normals_.size() == 0
@@ -203,8 +202,6 @@ void Mesh::generateVAO(Material::ShaderType key) {
         return;
     }
 
-    GLuint vaoID_ = 0;
-    GLuint triangle_vboID_, vert_vboID_, norm_vboID_, tex_vboID_;
 
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
@@ -287,18 +284,13 @@ void Mesh::generateVAO(Material::ShaderType key) {
         glVertexAttribPointer(it->first, 4, GL_FLOAT, 0, 0, 0);
     }
 
-    vaoID_map_[key] = vaoID_;
-    triangle_vboID_map_[key] = triangle_vboID_;
-    vert_vboID_map_[key] = vert_vboID_;
-    norm_vboID_map_[key] = norm_vboID_;
-    tex_vboID_map_[key] = tex_vboID_;
-
     // done generation
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     vao_dirty_ = false;
+    vaoInitiliased_ = true;
 #endif
 }
 

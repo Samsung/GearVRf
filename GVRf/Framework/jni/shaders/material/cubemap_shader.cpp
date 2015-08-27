@@ -121,7 +121,7 @@ void CubemapShader::render(const glm::mat4& model_matrix,
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
-    mesh->generateVAO(Material::CUBEMAP_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 

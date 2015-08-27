@@ -148,7 +148,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, 
         mesh->setVertexAttribLocV4(it->first, it->second);
     }
 
-    mesh->generateVAO(material->shader_type());  // setup VAO
+    mesh->generateVAO();  // setup VAO
 
     ///////////// uniform /////////
     for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();

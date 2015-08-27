@@ -65,7 +65,7 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
 
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
-    mesh->generateVAO(material->shader_type());
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));

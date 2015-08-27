@@ -85,7 +85,7 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
 #if _GVRF_USE_GLES3_
     mesh->setVertexLoc(a_position_);
     mesh->setTexCoordLoc(a_tex_coord_);
-    mesh->generateVAO(Material::OES_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 

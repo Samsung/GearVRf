@@ -222,12 +222,12 @@ void TextureShader::render(const glm::mat4& mv_matrix,
         mesh->setVertexLoc(a_position_);
         mesh->setTexCoordLoc(a_tex_coord_);
         mesh->setNormalLoc(a_normal_);
-        mesh->generateVAO(Material::TEXTURE_SHADER);
+        mesh->generateVAO();
     } else {
         mesh->setVertexLoc(a_position_no_light_);
         mesh->setTexCoordLoc(a_tex_coord_no_light_);
         mesh->setNormalLoc(-1);
-        mesh->generateVAO(Material::TEXTURE_SHADER_NOLIGHT);
+        mesh->generateVAO();
     }
 
     if (use_light) {
