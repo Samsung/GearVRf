@@ -70,7 +70,9 @@ public class GVRMaterial extends GVRHybridObject implements
     private int mShaderFeatureSet;
     private GVRMaterialShaderId shaderId;
     final private Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
-
+    // ---------------------------------------------AR------------------------{
+    public static float ar_offsets[] = new float[4];
+    // ---------------------------------------------AR------------------------}
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
 
@@ -214,6 +216,35 @@ public class GVRMaterial extends GVRHybridObject implements
         setTexture(MAIN_TEXTURE, texture);
     }
 
+    // ---------------------------------------------AR------------------------{
+    public void setAR(int ar) {
+        setAR(MAIN_TEXTURE, ar);
+    }
+
+    public void setMVPmat(float MVPmatrix[]) {
+        setMVPmatrix(MAIN_TEXTURE, MVPmatrix);
+    }
+
+    public void setAROffsets() {
+        setAROffsets(MAIN_TEXTURE, ar_offsets);
+    }
+
+    public void setAR(String key, int ar) {
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setAR(getNative(), key, ar);
+    }
+
+    public void setMVPmatrix(String key, float MVPmatrix[]) {
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setMVPmatrix(getNative(), key, MVPmatrix);
+    }
+    
+    public void setAROffsets(String key, float offsets[]) {
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setAROffsets(getNative(), key, offsets);
+    }
+    // ---------------------------------------------AR------------------------}
+    
     /**
      * Get the {@code color} uniform.
      * 
@@ -594,4 +625,15 @@ class NativeMaterial {
             float z4, float w4);
 
     static native void setShaderFeatureSet(long material, int featureSet);
+    
+    // ---------------------------------------------AR------------------------{
+    public static native void setAR(long material, String key, int isAR);
+
+    public static native void setMVPmatrix(long material, String key,
+            float MVPmatrix[]);
+
+    public static native void setAROffsets(long material, String key,
+            float offsets[]);
+    // ---------------------------------------------AR------------------------}
+    
 }

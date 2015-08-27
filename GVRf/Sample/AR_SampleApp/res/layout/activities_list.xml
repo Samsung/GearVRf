@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+	>
+
+    <TextView android:id="@+id/activities_list_title"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:gravity="center_horizontal"
+              android:textSize="@dimen/menu_title"
+              android:padding="@dimen/menu_title_padding"
+              android:background="@color/light_gray"
+              android:fontFamily="sans-serif"
+              android:textStyle="bold"
+              android:text="@string/activities_list_title_string"/>
+    
+    <ListView android:id="@android:id/list"
+              android:layout_width="match_parent"
+              android:layout_height="0dip"
+              android:layout_weight="1"/>
+
+    <TextView android:id="@android:id/empty"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/activities_list_empty"/>
+    
+</LinearLayout>
+

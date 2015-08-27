@@ -74,6 +74,19 @@ Java_org_gearvrf_NativeMaterial_setMat4(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMaterial_setShaderFeatureSet(JNIEnv * env, jobject obj,
         jlong jmaterial, jint feature_set);
+
+// ---------------------------------------------AR------------------------{
+
+JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setMVPmatrix(JNIEnv * env,
+        jobject obj,jlong jmaterial, jstring key, jfloatArray MVPmatrix);
+
+JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setAR(JNIEnv * env,
+        jobject obj,jlong jmaterial, jstring key, jint isAR);
+
+JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setAROffsets(JNIEnv * env,
+    jobject obj,jlong jmaterial, jstring key, jfloatArray arOffsets);
+// ---------------------------------------------AR------------------------}
+
 }
 ;
 
@@ -218,5 +231,42 @@ Java_org_gearvrf_NativeMaterial_setShaderFeatureSet(JNIEnv * env, jobject obj,
 Material* material = reinterpret_cast<Material*>(jmaterial);
 material->set_shader_feature_set(feature_set);
 }
+
+// ---------------------------------------------AR------------------------{
+JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setAR(JNIEnv * env,
+    jobject obj,jlong jmaterial, jstring key, jint isAR) {
+
+Material* material = reinterpret_cast<Material*>(jmaterial);
+const char* char_key = env->GetStringUTFChars(key, 0);
+std::string native_key = std::string(char_key);
+material->setAR(native_key, isAR);
+env->ReleaseStringUTFChars(key, char_key);
+
+}
+
+JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setMVPmatrix(JNIEnv * env, jobject obj,jlong jmaterial, jstring key, jfloatArray MVPmatrix) {
+Material* material = reinterpret_cast<Material*>(jmaterial);
+const char* char_key = env->GetStringUTFChars(key, 0);
+std::string native_key = std::string(char_key);
+jfloat* MVP_matrix = env->GetFloatArrayElements(MVPmatrix,0);
+glm::mat4 mat(MVP_matrix[0], MVP_matrix[1], MVP_matrix[2], MVP_matrix[3], MVP_matrix[4], MVP_matrix[5], MVP_matrix[6], MVP_matrix[7], MVP_matrix[8], MVP_matrix[9], MVP_matrix[10], MVP_matrix[11], MVP_matrix[12], MVP_matrix[13], MVP_matrix[14], MVP_matrix[15]);
+material->setMVPmatrix(native_key, mat);
+env->ReleaseStringUTFChars(key, char_key);
+env->ReleaseFloatArrayElements(MVPmatrix,MVP_matrix,0);
+}
+
+JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setAROffsets(JNIEnv * env,
+    jobject obj,jlong jmaterial, jstring key, jfloatArray arOffsets)
+{
+Material* material = reinterpret_cast<Material*>(jmaterial);
+const char* char_key = env->GetStringUTFChars(key, 0);
+std::string native_key = std::string(char_key);
+jfloat* AR_offsets = env->GetFloatArrayElements(arOffsets,0);
+glm::vec4 mat(AR_offsets[0], AR_offsets[1], AR_offsets[2], AR_offsets[3]);
+material->setAROffsets(native_key, mat);
+env->ReleaseStringUTFChars(key, char_key);
+env->ReleaseFloatArrayElements(arOffsets,AR_offsets,0);
+}
+// ---------------------------------------------AR------------------------}
 
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/selectplayer"
+    android:gravity="bottom"
+    android:orientation="vertical"
+    tools:context=".MainActivity" >
+
+    <ImageButton
+        android:id="@+id/imageButtonW"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="140dp"
+        android:src="@drawable/playerw" />
+
+    <ImageButton
+        android:id="@+id/imageButtonB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="200dp"
+        android:layout_toRightOf="@+id/imageButtonW"
+        android:src="@drawable/playerb" />
+
+</RelativeLayout>

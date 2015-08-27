@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="menu_entries_text">10sp</dimen>
+    <dimen name="menu_entries_title">8sp</dimen>
+    
+</resources>

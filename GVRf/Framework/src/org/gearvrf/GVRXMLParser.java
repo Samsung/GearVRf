@@ -48,6 +48,9 @@ class GVRXMLParser {
      * @param fileName
      *            the distortion file name under assets folder
      */
+    //------------------------AR-------------------------------------------{
+    private float offsets[] = new float[4];
+    //------------------------AR-------------------------------------------}
     GVRXMLParser(AssetManager assets, String fileName, VrAppSettings settings) {
         try {
             StringBuilder buf = new StringBuilder();
@@ -225,6 +228,24 @@ class GVRXMLParser {
                                                         .getAttributeValue(i)));
                             }
                         }
+                        //------------------
+                        else if (tagName.equals("scene")) {
+                            if (attributeName.equals("ar_offsetX")) {
+                            	offsets[0] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            } else if (attributeName.equals("ar_offsetY")) {
+                            	offsets[1] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            } else if (attributeName.equals("ar_offsetWidth")) {
+                            	offsets[2] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            } else if (attributeName.equals("ar_offsetHeight")) {
+                            	offsets[3] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            }
+
+                        }   
+                        
                     }
                 } else if (eventType == XmlPullParser.END_TAG) {
                 } else if (eventType == XmlPullParser.TEXT) {
@@ -239,5 +260,9 @@ class GVRXMLParser {
             e.printStackTrace();
             throw e;
         }
+    }
+    
+    float[] getAROffsets() {
+        return offsets;
     }
 }

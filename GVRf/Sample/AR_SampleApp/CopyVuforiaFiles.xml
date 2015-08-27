@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="VuforiaSamples" default="CopyVuforiaSo">
+    <target name="CopyVuforiaSo">
+        <copy overwrite="true" todir="C:\adt\adt-bundle-windows-x86-20131030\vuforia-sdk-android-3-0-9\build\lib\armeabi-v7a">
+			<fileset dir="C:\adt\adt-bundle-windows-x86-20131030\vuforia-sdk-android-3-0-9\build\lib\armeabi-v7a"/>
+		</copy>
+    </target>
+</project>
