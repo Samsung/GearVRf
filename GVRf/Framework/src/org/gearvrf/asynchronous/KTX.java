@@ -166,6 +166,7 @@ class KTX extends GVRCompressedTextureLoader {
             GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
                     GVRCompressedTexture.GL_TARGET, levels, quality);
 
+            ByteBuffer data = getData();
             ByteOrder defaultOrder = data.order();
             ByteOrder dataOrder = littleEndian ? ByteOrder.LITTLE_ENDIAN
                     : ByteOrder.BIG_ENDIAN;

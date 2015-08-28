@@ -77,7 +77,8 @@ class CompressedTexture {
      * Currently only support containers with mipmap chains - not containers
      * with unrelated textures.
      */
-    protected final ByteBuffer data;
+    private final ByteBuffer data;
+    private final int dataOffset;
 
     protected CompressedTexture(int internalformat, int width, int height,
             int imageSize, int levels, ByteBuffer data) {
@@ -87,18 +88,46 @@ class CompressedTexture {
         this.imageSize = imageSize;
         this.levels = levels;
         this.data = data;
+
+        /*
+         * Initial position is the data offset in backing array. We cannot use
+         * ByteBuffer.arrayOffset() which is always 0.
+         */
+        this.dataOffset = data.position();
+    }
+
+    /*
+     * Get backing array.
+     */
+    protected byte[] getArray() {
+        return data.array();
+    }
+
+    /*
+     * Get offset of data in backing array.
+     */
+    protected int getArrayOffset() {
+        return dataOffset;
+    }
+
+    /*
+     * Get the ByteBuffer.
+     */
+    protected ByteBuffer getData() {
+        return data;
     }
 
     GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
         return new GVRCompressedTexture(gvrContext, internalformat, width,
-                height, imageSize, data.array(), levels, quality);
+                height, imageSize, getArray(), getArrayOffset(), levels, quality);
     }
 
     // Texture parameters
     GVRCompressedTexture toTexture(GVRContext gvrContext, int quality,
             GVRTextureParameters textureParameters) {
         return new GVRCompressedTexture(gvrContext, internalformat, width,
-                height, imageSize, data.array(), levels, quality, textureParameters);
+                height, imageSize, getArray(), getArrayOffset(), levels, quality,
+                textureParameters);
     }
 
     /**

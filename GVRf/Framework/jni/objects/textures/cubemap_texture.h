@@ -67,7 +67,7 @@ public:
 
     explicit CubemapTexture(JNIEnv* env, GLenum internalFormat,
             GLsizei width, GLsizei height, GLsizei imageSize,
-            jobjectArray textureArray, int* texture_parameters) :
+            jobjectArray textureArray, int* textureOffset, int* texture_parameters) :
             Texture(new GLTexture(TARGET, texture_parameters)) {
         glBindTexture(TARGET, gl_texture_->id());
         for (int i = 0; i < 6; i++) {
@@ -83,7 +83,7 @@ public:
             }
 
             glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
-                    internalFormat, width, height, 0, imageSize, textureData);
+                    internalFormat, width, height, 0, imageSize, textureData + textureOffset[i]);
 
             env->ReleaseByteArrayElements(byteArray, textureData, 0);
         }

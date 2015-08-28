@@ -76,12 +76,14 @@ abstract class AsyncCompressedCubemapTexture {
             CompressedTexture[] textureArray) {
           CompressedTexture texture = textureArray[0];
           byte[][] data = new byte[6][];
+          int[] dataOffset = new int[6];
           for (int i = 0; i < 6; ++i) {
-            data[i] = textureArray[i].data.array();
+            data[i] = textureArray[i].getArray();
+            dataOffset[i] = textureArray[i].getArrayOffset();
           }
           return new GVRCompressedCubemapTexture(gvrContext, texture.internalformat,
-                                       texture.width, texture.height,
-                                       texture.imageSize, data);
+                  texture.width, texture.height,
+                  texture.imageSize, data, dataOffset);
         }
       };
 
