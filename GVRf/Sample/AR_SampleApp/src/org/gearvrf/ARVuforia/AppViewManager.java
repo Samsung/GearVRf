@@ -50,7 +50,8 @@ public class AppViewManager extends GVRScript {
     float[] modelViewMatrix = new float[16];
     static final int VUFORIA_CAMERA_WIDTH = 1280;
     static final int VUFORIA_CAMERA_HEIGHT = 720;
-//    FPSCounter fpscounter;
+
+    // FPSCounter fpscounter;
     @SuppressWarnings("unused")
     private GVRSceneObject asyncSceneObject(GVRContext context,
             GVRAndroidResource meshResource, String textureName)
@@ -59,8 +60,7 @@ public class AppViewManager extends GVRScript {
                 new GVRAndroidResource(context, textureName));
     }
 
-    public AppViewManager(AppActivity activity,
-            SampleApplicationSession session) {
+    public AppViewManager(AppActivity activity, SampleApplicationSession session) {
         vuforiaAppSession = session;
     }
 
@@ -68,7 +68,7 @@ public class AppViewManager extends GVRScript {
     public void onInit(GVRContext gvrContext) throws IOException {
         mGVRContext = gvrContext;
         initRendering();
-        Log.i("new","entered onInit");
+        Log.i("new", "entered onInit");
         mMainScene = gvrContext.getNextMainScene(new Runnable() {
 
             @Override
@@ -83,15 +83,14 @@ public class AppViewManager extends GVRScript {
         mMainScene.getMainCameraRig().getTransform()
                 .setPosition(0.0f, 0.0f, 0.0f);
 
-//        cameraTex = new GVRRenderTexture(mGVRContext, 2560, 1440);
-        cameraTex = new GVRRenderTexture(gvrContext,
-                VUFORIA_CAMERA_WIDTH, VUFORIA_CAMERA_HEIGHT);
+        cameraTex = new GVRRenderTexture(gvrContext, VUFORIA_CAMERA_WIDTH,
+                VUFORIA_CAMERA_HEIGHT);
 
         try {
             camMesh = mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext,
                     "screen.obj"));
-            float[] texCoords = { 0.0f, 0.0f, 0.0f, 0.70f, 0.62f, 0.0f, 0.62f, 0.7f };
-//            float[] texCoords = { 0.0f, 0.0f, 0.0f,1.0f, 1.0f, 1.0f, 1.0f, 0.0f };
+            float[] texCoords = { 0.0f, 0.0f, 0.0f, 0.70f, 0.62f, 0.0f, 0.62f,
+                    0.7f };
             camMesh.setTexCoords(texCoords);
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -101,9 +100,8 @@ public class AppViewManager extends GVRScript {
         cameraObj = new GVRSceneObject(mGVRContext, camMesh, cameraTex);
         cameraObj.getRenderData().getMaterial().setAR(1);
         cameraObj.getRenderData().getMaterial().setAROffsets();
-        mRenderer.setVideoBackgroundTextureID(
-        		cameraTex.getId());
-        
+        mRenderer.setVideoBackgroundTextureID(cameraTex.getId());
+
         mMainScene.getMainCameraRig().addChildObject(cameraObj);
         cameraObj.getTransform().rotateByAxis(90, 0, 0, -1);
         cameraObj.getTransform().setScale(9.2f, 9.2f, 1.0f);
@@ -113,15 +111,16 @@ public class AppViewManager extends GVRScript {
         teaoptTex = mGVRContext.loadTexture(new GVRAndroidResource(mGVRContext,
                 "teapot_tex1.jpg"));
         teapotMesh = mGVRContext.loadMesh(meshResource_board);
-        teapotObj = new GVRSceneObject(mGVRContext, teapotMesh, teaoptTex); // AR object
+        teapotObj = new GVRSceneObject(mGVRContext, teapotMesh, teaoptTex); // AR
+                                                                            // object
         teapotObj.getRenderData().getMaterial().setAR(2);
         teapotObj.getRenderData().getMaterial().setAROffsets();
-        
-//        fpscounter = new FPSCounter();
+
+        // fpscounter = new FPSCounter();
     }
 
     private void initRendering() {
-//        mTeapot = new Teapot();
+        // mTeapot = new Teapot();
         mRenderer = Renderer.getInstance();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     }
@@ -133,11 +132,9 @@ public class AppViewManager extends GVRScript {
 
     @Override
     public void onStep() {
-        Log.i("new","entered onStep");
-//        fpscounter.logFrame();
+        // fpscounter.logFrame();
         if (!mIsActive)
             return;
-//        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, cameraTex.getFBOId());
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT);
         renderFrame();
@@ -145,13 +142,13 @@ public class AppViewManager extends GVRScript {
 
     // The render function.
     private void renderFrame() {
-        Log.i("new","entered renderFrame");
+        Log.i("new", "entered renderFrame");
         mMainScene.getMainCameraRig().removeChildObject(teapotObj);
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         State state = mRenderer.begin();
-//        mRenderer.drawVideoBackground();
+        // mRenderer.drawVideoBackground();
         mRenderer.bindVideoBackground(3);
 
         GLES20.glDisable(GLES20.GL_BLEND);
@@ -174,22 +171,12 @@ public class AppViewManager extends GVRScript {
             Matrix.rotateM(modelViewMatrix, 0, 90, 1.0f, 0.0f, 0.0f);
             Matrix.scaleM(modelViewMatrix, 0, 120.0f, 120.0f, 120.0f);
 
-            
             Matrix.multiplyMM(modelViewProjection, 0, vuforiaAppSession
                     .getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
             Log.i("track", "TRACKING......");
-//            float temp[]=new float[16];
-//            float temp1[]=new float[16];
-//            mGVRContext.getMainScene().getMainCameraRig().getRightCamera()
-//            Matrix.multiplyMM(temp, 0, temp1, 0, modelViewMatrix, 0);
-            
-//            teapotObj.setMVMatrix(modelViewMatrix);
-//            teapotObj.setMVPMatrix(modelViewProjection);
-//            teapotObj.getRenderData().getMaterial().setMVmat(modelViewMatrix);
-            teapotObj.getRenderData().getMaterial().setMVPmat(modelViewProjection);
-//            teapotObj.getTransform().setModelMatrix(modelViewProjection);
+            teapotObj.getRenderData().getMaterial()
+                    .setMVPmat(modelViewProjection);
             mMainScene.getMainCameraRig().addChildObject(teapotObj);
-//            SampleUtils.checkGLError("Render Frame");
         }
         mRenderer.end();
     }

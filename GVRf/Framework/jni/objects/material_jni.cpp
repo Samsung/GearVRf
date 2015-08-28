@@ -84,7 +84,7 @@ JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setAR(JNIEnv * env,
         jobject obj,jlong jmaterial, jstring key, jint isAR);
 
 JNIEXPORT void JNICALL Java_org_gearvrf_NativeMaterial_setAROffsets(JNIEnv * env,
-    jobject obj,jlong jmaterial, jstring key, jfloatArray arOffsets);
+        jobject obj,jlong jmaterial, jstring key, jfloatArray arOffsets);
 // ---------------------------------------------AR------------------------}
 
 }

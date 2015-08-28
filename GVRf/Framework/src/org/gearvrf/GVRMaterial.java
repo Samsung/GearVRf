@@ -72,6 +72,7 @@ public class GVRMaterial extends GVRHybridObject implements
     final private Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
     // ---------------------------------------------AR------------------------{
     public static float ar_offsets[] = new float[4];
+
     // ---------------------------------------------AR------------------------}
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
@@ -163,7 +164,8 @@ public class GVRMaterial extends GVRHybridObject implements
     public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
         super(gvrContext, NativeMaterial.ctor(shaderId.ID));
         this.shaderId = shaderId;
-        // if texture shader is used, set lighting coefficients to OpenGL default
+        // if texture shader is used, set lighting coefficients to OpenGL
+        // default
         // values
         if (shaderId == GVRShaderType.Texture.ID) {
             setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -176,7 +178,8 @@ public class GVRMaterial extends GVRHybridObject implements
 
     /**
      * A convenience overload: builds a {@link GVRMaterial} that uses the most
-     * common stock shader, the {@linkplain GVRShaderType.Texture 'texture'} shader.
+     * common stock shader, the {@linkplain GVRShaderType.Texture 'texture'}
+     * shader.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
@@ -238,13 +241,14 @@ public class GVRMaterial extends GVRHybridObject implements
         checkStringNotNullOrEmpty("key", key);
         NativeMaterial.setMVPmatrix(getNative(), key, MVPmatrix);
     }
-    
+
     public void setAROffsets(String key, float offsets[]) {
         checkStringNotNullOrEmpty("key", key);
         NativeMaterial.setAROffsets(getNative(), key, offsets);
     }
+
     // ---------------------------------------------AR------------------------}
-    
+
     /**
      * Get the {@code color} uniform.
      * 
@@ -566,7 +570,7 @@ public class GVRMaterial extends GVRHybridObject implements
         NativeMaterial.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2, z2,
                 w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
-    
+
     /**
      * Set the feature set for pre-built shader's. Pre-built shader could be
      * written to support all the properties of a material system with
@@ -581,7 +585,7 @@ public class GVRMaterial extends GVRHybridObject implements
         this.mShaderFeatureSet = featureSet;
         NativeMaterial.setShaderFeatureSet(getNative(), featureSet);
     }
-    
+
     /**
      * Get the feature set associated with this material.
      * 
@@ -625,7 +629,7 @@ class NativeMaterial {
             float z4, float w4);
 
     static native void setShaderFeatureSet(long material, int featureSet);
-    
+
     // ---------------------------------------------AR------------------------{
     public static native void setAR(long material, String key, int isAR);
 
@@ -635,5 +639,5 @@ class NativeMaterial {
     public static native void setAROffsets(long material, String key,
             float offsets[]);
     // ---------------------------------------------AR------------------------}
-    
+
 }

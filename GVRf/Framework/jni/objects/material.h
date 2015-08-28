@@ -96,7 +96,7 @@ public:
     }
 
     void setAROffsets(std::string key, glm::vec4 ar_offsets) {
-        arOffsets=ar_offsets;
+        arOffsets = ar_offsets;
     }
     // ---------------------------------------------AR------------------------}
 

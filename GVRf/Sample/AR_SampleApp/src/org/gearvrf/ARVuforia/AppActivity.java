@@ -53,15 +53,12 @@ public class AppActivity extends GVRActivity implements
     private ArrayList<String> mDatasetStrings = new ArrayList<String>();
     private GestureDetector mGestureDetector;
 
-    // The textures we will use for rendering:
-//    private Vector<Texture> mTextures;
     private boolean mSwitchDatasetAsap = false;
     private boolean mFlash = false;
     private boolean mContAutofocus = false;
     private boolean mExtendedTracking = false;
     private View mFlashOptionView;
     private RelativeLayout mUILayout;
-//    LoadingDialogHandler loadingDialogHandler = new LoadingDialogHandler(this);
     boolean mIsDroidDevice = false;
     private AppViewManager mRenderer;
     int selectedR;
@@ -84,8 +81,8 @@ public class AppActivity extends GVRActivity implements
         vuforiaAppSession.initAR(this,
                 ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         // Load any sample specific textures:
-//        mTextures = new Vector<Texture>();
-//        loadTextures();
+        // mTextures = new Vector<Texture>();
+        // loadTextures();
         mGestureDetector = new GestureDetector(this, new GestureListener());
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
                 "droid");
@@ -125,26 +122,13 @@ public class AppActivity extends GVRActivity implements
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // replaces the default 'Back' button action
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-//            Intent intent = new Intent(AppActivity1.this, MainActivity.class);
+            // Intent intent = new Intent(AppActivity1.this,
+            // MainActivity.class);
             finish();
-//            startActivity(intent);
+            // startActivity(intent);
         }
         return true;
     }
-
-    // We want to load specific textures from the APK, which we will later use
-    // for rendering.
-
-//    private void loadTextures() {
-//        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png",
-//                getAssets()));
-//        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png",
-//                getAssets()));
-//        mTextures.add(Texture.loadTextureFromApk("TextureTeapotRed.png",
-//                getAssets()));
-//        mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg",
-//                getAssets()));
-//    }
 
     // Called when the activity will start interacting with the user.
     @Override
@@ -210,10 +194,6 @@ public class AppActivity extends GVRActivity implements
             Log.e(LOGTAG, e.getString());
         }
 
-        // Unload texture:
-//        mTextures.clear();
-//        mTextures = null;
-
         System.gc();
     }
 
@@ -224,10 +204,6 @@ public class AppActivity extends GVRActivity implements
 
         mUILayout.setVisibility(View.VISIBLE);
         mUILayout.setBackgroundColor(Color.BLACK);
-
-        // Gets a reference to the loading dialog
-//        loadingDialogHandler.mLoadingDialogContainer = mUILayout
-//                .findViewById(R.id.loading_indicator);
 
     }
 
@@ -443,6 +419,5 @@ public class AppActivity extends GVRActivity implements
         // TODO Auto-generated method stub
         return false;
     }
-
 
 }
