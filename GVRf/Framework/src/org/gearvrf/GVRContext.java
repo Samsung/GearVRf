@@ -782,13 +782,16 @@ public abstract class GVRContext {
                 AiTextureType.DIFFUSE, 0);
         if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
             try {
-            Future<GVRTexture> futureDiffuseTexture = this
-                    .loadFutureTexture(new GVRAndroidResource(this,
-                            texDiffuseFileName));
-            meshMaterial.setMainTexture(futureDiffuseTexture);
-            assimpFeatureSet = GVRShaderType.Assimp.setBit(assimpFeatureSet, GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
+                Future<GVRTexture> futureDiffuseTexture = this
+                        .loadFutureTexture(new GVRAndroidResource(this,
+                                texDiffuseFileName));
+                meshMaterial.setMainTexture(futureDiffuseTexture);
+                assimpFeatureSet = GVRShaderType.Assimp.setBit(
+                        assimpFeatureSet,
+                        GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
             } catch (FileNotFoundException file) {
-                android.util.Log.e(TAG, "Couldn't find diffuse texture: " + texDiffuseFileName);
+                android.util.Log.e(TAG, "Couldn't find diffuse texture: "
+                        + texDiffuseFileName);
             }
         }
 
