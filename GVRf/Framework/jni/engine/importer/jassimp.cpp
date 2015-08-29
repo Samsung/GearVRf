@@ -64,6 +64,7 @@ bool create_instance(JNIEnv *env, const char* class_name,
 
     jmethodID constructor_id = env->GetMethodID(java_class, "<init>", "()V");
 
+    DeleteLocalRef clazzRef(env, java_class);
     if (NULL == constructor_id) {
         return false;
     }
@@ -72,7 +73,6 @@ bool create_instance(JNIEnv *env, const char* class_name,
     if (NULL == new_instance) {
         return false;
     }
-    DeleteLocalRef clazzRef(env, java_class);
 
     return true;
 }
@@ -88,6 +88,7 @@ jvalue* params, jobject& new_instance) {
     jmethodID constructor_id = env->GetMethodID(java_class, "<init>",
             signature);
 
+    DeleteLocalRef clazzRef(env, java_class);
     if (NULL == constructor_id) {
         return false;
     }
@@ -96,7 +97,6 @@ jvalue* params, jobject& new_instance) {
     if (NULL == new_instance) {
         return false;
     }
-    DeleteLocalRef clazzRef(env, java_class);
 
     return true;
 }
@@ -110,12 +110,12 @@ bool get_field(JNIEnv *env, jobject object, const char* field_name,
     }
 
     jfieldID field_id = env->GetFieldID(java_class, field_name, signature);
+    DeleteLocalRef clazzRef(env, java_class);
     if (NULL == field_id) {
         return false;
     }
 
     field = env->GetObjectField(object, field_id);
-    DeleteLocalRef clazzRef(env, java_class);
 
     return true;
 }
@@ -129,12 +129,12 @@ bool set_object_field(JNIEnv *env, jobject object, const char* field_name,
     }
 
     jfieldID field_id = env->GetFieldID(java_class, field_name, signature);
+    DeleteLocalRef clazzRef(env, java_class);
     if (NULL == field_id) {
         return false;
     }
 
     env->SetObjectField(object, field_id, value);
-    DeleteLocalRef clazzRef(env, java_class);
 
     return true;
 }
@@ -170,12 +170,12 @@ bool call_void_method(JNIEnv *env, jobject object, const char* type_name,
     }
 
     jmethodID method_id = env->GetMethodID(java_class, method_name, signature);
+    DeleteLocalRef clazzRef(env, java_class);
     if (NULL == method_id) {
         return false;
     }
 
     env->CallVoidMethodA(object, method_id, params);
-    DeleteLocalRef clazzRef(env, java_class);
 
     return true;
 }
@@ -191,13 +191,12 @@ bool call_static_object(JNIEnv *env, const char* type_name,
 
     jmethodID method_id = env->GetStaticMethodID(java_class, method_name,
             signature);
-
+    DeleteLocalRef clazzRef(env, java_class);
     if (NULL == method_id) {
         return false;
     }
 
     return_value = env->CallStaticObjectMethodA(java_class, method_id, params);
-    DeleteLocalRef clazzRef(env, java_class);
 
     return true;
 }
@@ -269,6 +268,7 @@ bool load_scene_graph(JNIEnv *env, const aiScene* assimp_scene,
         jobject& jassimp_scene) {
     if (NULL != assimp_scene->mRootNode) {
         jobject jassimp_root;
+        DeleteLocalRef ref(env, jassimp_root);
 
         if (!load_scene_node(env, assimp_scene->mRootNode, NULL,
                 &jassimp_root)) {
@@ -279,7 +279,6 @@ bool load_scene_graph(JNIEnv *env, const aiScene* assimp_scene,
                 "Ljava/lang/Object;", jassimp_root)) {
             return false;
         }
-        DeleteLocalRef ref(env, jassimp_root);
     }
     return true;
 }
@@ -345,6 +344,7 @@ jobject mesh_material(JNIEnv *env, const aiScene *assimp_scene, int index) {
                 return NULL;
             }
 
+            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
             constructor_params[4].l = jassimp_data;
             if (!create_instance(env, "org/gearvrf/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
@@ -393,13 +393,13 @@ jobject mesh_material(JNIEnv *env, const aiScene *assimp_scene, int index) {
                 return NULL;
             }
 
+            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
             constructor_params[4].l = jassimp_data;
             if (!create_instance(env, "org/gearvrf/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
             }
-            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
         } else if (assimp_material_property->mType == aiPTI_Integer
                 && assimp_material_property->mDataLength == sizeof(int)) {
             jobject jassimp_data = NULL;
@@ -411,25 +411,25 @@ jobject mesh_material(JNIEnv *env, const aiScene *assimp_scene, int index) {
                 return NULL;
             }
 
+            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
             constructor_params[4].l = jassimp_data;
             if (!create_instance(env, "org/gearvrf/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
             }
-            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
         } else if (assimp_material_property->mType == aiPTI_String) {
             /* skip length prefix */
             jobject jassimp_data = env->NewStringUTF(
                     assimp_material_property->mData + 4);
 
+            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
             constructor_params[4].l = jassimp_data;
             if (!create_instance(env, "org/gearvrf/jassimp/AiMaterial$Property",
                     "(Ljava/lang/String;IIILjava/lang/Object;)V",
                     constructor_params, jassimp_material_property)) {
                 return NULL;
             }
-            DeleteLocalRef jassimp_data_ref(env, jassimp_data);
         } else {
             constructor_params[4].i = assimp_material_property->mDataLength;
 
@@ -446,6 +446,7 @@ jobject mesh_material(JNIEnv *env, const aiScene *assimp_scene, int index) {
                     "Ljava/lang/Object;", jassimp_buffer)) {
                 return NULL;
             }
+            DeleteLocalRef jassimp_buffer_ref(env, jassimp_buffer);
 
             if (env->GetDirectBufferCapacity(jassimp_buffer)
                     != assimp_material_property->mDataLength) {
@@ -463,7 +464,6 @@ jobject mesh_material(JNIEnv *env, const aiScene *assimp_scene, int index) {
 
             memcpy(jassimp_buffer_ptr, assimp_material_property->mData,
                     assimp_material_property->mDataLength);
-            DeleteLocalRef jassimp_buffer_ref(env, jassimp_buffer);
         }
 
         /* add property */
@@ -474,14 +474,14 @@ jobject mesh_material(JNIEnv *env, const aiScene *assimp_scene, int index) {
             return NULL;
         }
 
+        DeleteLocalRef jassimp_properties_ref(env, jassimp_properties);
+        DeleteLocalRef jassimp_material_property_ref(env, jassimp_material_property);
         jvalue add_properties_params[1];
         add_properties_params[0].l = jassimp_material_property;
         if (!call_method(env, jassimp_properties, "java/util/Collection", "add",
                 "(Ljava/lang/Object;)Z", add_properties_params)) {
             return NULL;
         }
-        DeleteLocalRef jassimp_properties_ref(env, jassimp_properties);
-        DeleteLocalRef jassimp_material_property_ref(env, jassimp_material_property);
     }
     return jassimp_material;
 }
