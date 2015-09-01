@@ -263,7 +263,7 @@ public:
 
     void setTexCoordLoc(GLuint loc) {
         texCoordLoc_ = loc;
-   }
+    }
 
     const GLuint getTexCoordLoc() const {
         return texCoordLoc_;
@@ -283,7 +283,7 @@ public:
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
-     }
+    }
 
     // generate VAO
     void generateVAO();
