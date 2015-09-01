@@ -66,7 +66,6 @@ public:
     	gl_delete.queueBuffer(vert_vboID_);
     	gl_delete.queueBuffer(norm_vboID_);
     	gl_delete.queueBuffer(tex_vboID_);
-
         have_bounding_volume_ = false;
     }
 
@@ -264,7 +263,7 @@ public:
 
     void setTexCoordLoc(GLuint loc) {
         texCoordLoc_ = loc;
-    }
+   }
 
     const GLuint getTexCoordLoc() const {
         return texCoordLoc_;
@@ -276,15 +275,15 @@ public:
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
-    }
+        }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
-    }
+         }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
-    }
+     }
 
     // generate VAO
     void generateVAO();
