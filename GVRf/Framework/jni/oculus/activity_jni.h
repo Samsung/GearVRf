@@ -98,6 +98,7 @@ private:
 
 
 typedef GVRActivityT<OculusHeadRotation> GVRActivity;
+//typedef GVRActivityT<KSensorHeadRotation> GVRActivity;
 
 class KSensorHeadRotation {
 public:
@@ -127,7 +128,7 @@ public:
         }
     }
 
-private:
+public:
     std::unique_ptr<KSensor> sensor_;
     RotationSensorData rotationSensorData_;
 };

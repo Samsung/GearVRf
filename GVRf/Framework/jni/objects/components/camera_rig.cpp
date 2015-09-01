@@ -136,19 +136,15 @@ glm::quat CameraRig::predict(float time, const RotationSensorData& rotationSenso
             / 1000000000.0f;
 
     glm::vec3 axis = rotationSensorData.gyro();
+    //the magnitude of the gyro vector should be the angular velocity, rad/sec
     float angle = glm::length(axis);
 
+    //normalize the axis
     if (angle != 0.0f) {
         axis /= angle;
     }
-    angle *= (time + time_diff) * 180.0f / M_PI;
 
-    glm::quat rotation = rotationSensorData.quaternion()
-            * glm::angleAxis(angle, axis);
-
-    glm::quat transform_rotation = complementary_rotation_ * rotation;
-
-    return transform_rotation;
+    return complementary_rotation_*rotationSensorData.quaternion();
 }
 
 void CameraRig::setRotation(const glm::quat& transform_rotation) {
