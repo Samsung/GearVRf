@@ -40,7 +40,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
-                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_box_(false), have_bounding_sphere_(false), vaoInitiliased_(false) {
+                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_volume_(false), vaoInitiliased_(false) {
     }
 
     ~Mesh() {

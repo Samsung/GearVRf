@@ -192,7 +192,7 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     if (ISSET(feature_set, AS_DIFFUSE_TEXTURE)) {
         mesh->setTexCoordLoc(a_tex_coord_);
     }
-    mesh->generateVAO(Material::ASSIMP_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
