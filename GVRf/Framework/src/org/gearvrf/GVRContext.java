@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -780,18 +781,25 @@ public abstract class GVRContext {
         String texDiffuseFileName = material.getTextureFile(
                 AiTextureType.DIFFUSE, 0);
         if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
-            assimpFeatureSet = GVRShaderType.Assimp.setBit(assimpFeatureSet,
-                    GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
-            Future<GVRTexture> futureDiffuseTexture = this
-                    .loadFutureTexture(new GVRAndroidResource(this,
-                            texDiffuseFileName));
-            meshMaterial.setMainTexture(futureDiffuseTexture);
+            try {
+                Future<GVRTexture> futureDiffuseTexture = this
+                        .loadFutureTexture(new GVRAndroidResource(this,
+                                texDiffuseFileName));
+                meshMaterial.setMainTexture(futureDiffuseTexture);
+                assimpFeatureSet = GVRShaderType.Assimp.setBit(
+                        assimpFeatureSet,
+                        GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
+            } catch (FileNotFoundException file) {
+                android.util.Log.e(TAG, "Couldn't find diffuse texture: "
+                        + texDiffuseFileName);
+            }
         }
 
         /* Apply feature set to the material */
         meshMaterial.setShaderFeatureSet(assimpFeatureSet);
 
         GVRSceneObject sceneObject = new GVRSceneObject(this);
+        sceneObject.setName(node.getName());
         GVRRenderData sceneObjectRenderData = new GVRRenderData(this);
         sceneObjectRenderData.setMesh(futureMesh);
         sceneObjectRenderData.setMaterial(meshMaterial);
