@@ -275,11 +275,11 @@ public:
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
-        }
+    }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
-         }
+    }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
