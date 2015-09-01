@@ -61,11 +61,11 @@ public:
     }
 
     void deleteVaos() {
-    	gl_delete.queueVertexArray(vaoID_);
-    	gl_delete.queueBuffer(triangle_vboID_);
-    	gl_delete.queueBuffer(vert_vboID_);
-    	gl_delete.queueBuffer(norm_vboID_);
-    	gl_delete.queueBuffer(tex_vboID_);
+        gl_delete.queueVertexArray(vaoID_);
+        gl_delete.queueBuffer(triangle_vboID_);
+        gl_delete.queueBuffer(vert_vboID_);
+        gl_delete.queueBuffer(norm_vboID_);
+        gl_delete.queueBuffer(tex_vboID_);
         have_bounding_volume_ = false;
     }
 
