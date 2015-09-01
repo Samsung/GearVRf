@@ -87,12 +87,16 @@ public class GVRCubemapTexture extends GVRTexture {
     final static Map<String, Integer> faceIndexMap = new HashMap<String, Integer>(
             6);
     static {
-        faceIndexMap.put("posx.png", 0);
-        faceIndexMap.put("negx.png", 1);
-        faceIndexMap.put("posy.png", 2);
-        faceIndexMap.put("negy.png", 3);
-        faceIndexMap.put("posz.png", 4);
-        faceIndexMap.put("negz.png", 5);
+        /*
+         *  File extensions can be .png for uncompressed cubemap textures,
+         *  or .pkm for compressed cubemap textures.
+         */
+        faceIndexMap.put("posx", 0);
+        faceIndexMap.put("negx", 1);
+        faceIndexMap.put("posy", 2);
+        faceIndexMap.put("negy", 3);
+        faceIndexMap.put("posz", 4);
+        faceIndexMap.put("negz", 5);
     }
 }
 
