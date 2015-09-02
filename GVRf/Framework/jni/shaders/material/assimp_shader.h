@@ -71,9 +71,7 @@ private:
     GLProgram* program_;
     GLProgram** program_list_;
 
-    GLuint a_position_;
     GLuint u_mvp_;
-    GLuint a_tex_coord_;
     GLuint u_texture_;
     GLuint u_diffuse_color_;
     GLuint u_ambient_color_;

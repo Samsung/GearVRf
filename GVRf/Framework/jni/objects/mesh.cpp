@@ -195,14 +195,6 @@ void Mesh::generateVAO() {
         return;
     }
 
-    if (vertexLoc_ == -1 && normalLoc_ == -1 && texCoordLoc_ == -1) {
-        std::string error =
-                "no attrib loc setup yet, please compile shader and set attribLoc first. ";
-        throw error;
-        return;
-    }
-
-
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
 
@@ -218,8 +210,9 @@ void Mesh::generateVAO() {
         glBindBuffer(GL_ARRAY_BUFFER, vert_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices_.size(),
                 &vertices_[0], GL_STATIC_DRAW);
-        glEnableVertexAttribArray(getVertexLoc());
-        glVertexAttribPointer(getVertexLoc(), 3, GL_FLOAT, 0, 0, 0);
+        GLuint vertexLoc = GLProgram::POSITION_ATTRIBUTE_LOCATION;
+        glEnableVertexAttribArray(vertexLoc);
+        glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
     }
 
     if (normals_.size()) {
@@ -227,8 +220,9 @@ void Mesh::generateVAO() {
         glBindBuffer(GL_ARRAY_BUFFER, norm_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals_.size(),
                 &normals_[0], GL_STATIC_DRAW);
-        glEnableVertexAttribArray(getNormalLoc());
-        glVertexAttribPointer(getNormalLoc(), 3, GL_FLOAT, 0, 0, 0);
+        GLuint normalLoc = GLProgram::NORMAL_ATTRIBUTE_LOCATION;
+        glEnableVertexAttribArray(normalLoc);
+        glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, 0, 0);
     }
 
     if (tex_coords_.size()) {
@@ -236,8 +230,9 @@ void Mesh::generateVAO() {
         glBindBuffer(GL_ARRAY_BUFFER, tex_vboID_);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * tex_coords_.size(),
                 &tex_coords_[0], GL_STATIC_DRAW);
-        glEnableVertexAttribArray(getTexCoordLoc());
-        glVertexAttribPointer(getTexCoordLoc(), 2, GL_FLOAT, 0, 0, 0);
+        GLuint texCoordLoc = GLProgram::TEXCOORD_ATTRIBUT_LOCATION;
+        glEnableVertexAttribArray(texCoordLoc);
+        glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, 0, 0);
     }
 
     for (auto it = attribute_float_keys_.begin();

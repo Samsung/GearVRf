@@ -28,6 +28,7 @@
 #include "GLES3/gl3.h"
 #include "glm/glm.hpp"
 #include "gl/gl_buffer.h"
+#include "gl/gl_program.h"
 
 #include "objects/hybrid_object.h"
 #include "objects/material.h"
@@ -39,8 +40,8 @@ namespace gvr {
 class Mesh: public HybridObject {
 public:
     Mesh() :
-            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
-                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_volume_(false), vaoInitiliased_(false) {
+            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
+                    have_bounding_volume_(false), vaoInitiliased_(false) {
     }
 
     ~Mesh() {
@@ -245,30 +246,6 @@ public:
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
 
-    void setVertexLoc(GLuint loc) {
-        vertexLoc_ = loc;
-    }
-
-    const GLuint getVertexLoc() const {
-        return vertexLoc_;
-    }
-
-    void setNormalLoc(GLuint loc) {
-        normalLoc_ = loc;
-    }
-
-    const GLuint getNormalLoc() const {
-        return normalLoc_;
-    }
-
-    void setTexCoordLoc(GLuint loc) {
-        texCoordLoc_ = loc;
-    }
-
-    const GLuint getTexCoordLoc() const {
-        return texCoordLoc_;
-    }
-
     void setVertexAttribLocF(GLuint location, std::string key) {
         attribute_float_keys_[location] = key;
     }
@@ -302,7 +279,6 @@ private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
     Mesh& operator=(const Mesh& mesh);
-    Mesh& operator=(Mesh&& mesh);
 
 private:
     std::vector<glm::vec3> vertices_;
@@ -328,11 +304,6 @@ private:
     GLuint vert_vboID_;
     GLuint norm_vboID_;
     GLuint tex_vboID_;
-
-    // attribute locations
-    GLuint vertexLoc_;
-    GLuint normalLoc_;
-    GLuint texCoordLoc_;
 
     // triangle information
     GLuint numTriangles_;

@@ -105,8 +105,7 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 TextureShader::TextureShader() :
-        program_light_(0), program_no_light_(0), a_position_(0), a_tex_coord_(
-                0), a_normal_(0), u_mv_(0), u_mv_it_(0), u_mvp_(0), u_light_pos_(
+        program_light_(0), program_no_light_(0),u_mv_(0), u_mv_it_(0), u_mvp_(0), u_light_pos_(
                 0), u_texture_(0), u_color_(0), u_opacity_(0), u_material_ambient_color_(
                 0), u_material_diffuse_color_(0), u_material_specular_color_(0), u_material_specular_exponent_(
                 0), u_light_ambient_intensity_(0), u_light_diffuse_intensity_(
@@ -135,10 +134,6 @@ TextureShader::TextureShader() :
             fragment_shader_no_light_strings,
             fragment_shader_no_light_string_lengths, 2);
 
-    a_position_no_light_ = glGetAttribLocation(program_no_light_->id(),
-            "a_position");
-    a_tex_coord_no_light_ = glGetAttribLocation(program_no_light_->id(),
-            "a_tex_coord");
     u_mvp_no_light_ = glGetUniformLocation(program_no_light_->id(), "u_mvp");
     u_texture_no_light_ = glGetUniformLocation(program_no_light_->id(),
             "u_texture");
@@ -147,14 +142,11 @@ TextureShader::TextureShader() :
     u_opacity_no_light_ = glGetUniformLocation(program_no_light_->id(),
             "u_opacity");
 
-    a_position_ = glGetAttribLocation(program_light_->id(), "a_position");
-    a_tex_coord_ = glGetAttribLocation(program_light_->id(), "a_tex_coord");
     u_mvp_ = glGetUniformLocation(program_light_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_light_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_light_->id(), "u_color");
     u_opacity_ = glGetUniformLocation(program_light_->id(), "u_opacity");
 
-    a_normal_ = glGetAttribLocation(program_light_->id(), "a_normal");
     u_mv_ = glGetUniformLocation(program_light_->id(), "u_mv");
     u_mv_it_ = glGetUniformLocation(program_light_->id(), "u_mv_it");
     u_light_pos_ = glGetUniformLocation(program_light_->id(), "u_light_pos");
@@ -219,14 +211,8 @@ void TextureShader::render(const glm::mat4& mv_matrix,
 
 #if _GVRF_USE_GLES3_
     if (use_light) {
-        mesh->setVertexLoc(a_position_);
-        mesh->setTexCoordLoc(a_tex_coord_);
-        mesh->setNormalLoc(a_normal_);
         mesh->generateVAO();
     } else {
-        mesh->setVertexLoc(a_position_no_light_);
-        mesh->setTexCoordLoc(a_tex_coord_no_light_);
-        mesh->setNormalLoc(-1);
         mesh->generateVAO();
     }
 

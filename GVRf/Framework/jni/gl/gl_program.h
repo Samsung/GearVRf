@@ -136,14 +136,20 @@ public:
         return program;
     }
 
+    enum attributeBindLocation {
+        POSITION_ATTRIBUTE_LOCATION = 0,
+        TEXCOORD_ATTRIBUT_LOCATION = 1,
+        NORMAL_ATTRIBUTE_LOCATION = 2
+    };
+
 private:
     GLuint id_;
 
     static void bindCommonAttributes(GLuint id)
     {
-    	glBindAttribLocation (id, 0, "a_position");
-    	glBindAttribLocation (id, 1, "a_tex_coord");
-    	glBindAttribLocation (id, 2, "a_normal");
+    	glBindAttribLocation (id, POSITION_ATTRIBUTE_LOCATION, "a_position");
+    	glBindAttribLocation (id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
+    	glBindAttribLocation (id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
     }
 
 };

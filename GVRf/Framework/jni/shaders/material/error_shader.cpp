@@ -40,9 +40,8 @@ static const char FRAGMENT_SHADER[] = "precision highp float;\n"
         "}\n";
 
 ErrorShader::ErrorShader() :
-        program_(0), a_position_(0), u_mvp_(0), u_color_(0) {
+        program_(0), u_mvp_(0), u_color_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
 }
@@ -67,7 +66,6 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
 
 #if _GVRF_USE_GLES3_
     Material* material = render_data->pass(0)->material();
-    mesh->setVertexLoc(a_position_);
     mesh->generateVAO();
 
     glUseProgram(program_->id());
