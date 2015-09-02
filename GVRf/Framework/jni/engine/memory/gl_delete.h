@@ -20,6 +20,8 @@
 #include <pthread.h>
 #include "GLES3/gl3.h"
 
+#define GVR_INVALID 0
+
 namespace gvr {
 class GlDelete {
 
@@ -53,6 +55,8 @@ private:
     void unlock() {
         pthread_mutex_unlock(&mutex);
     }
+
+    void logInvalidParameter(const char *msg);
 
     std::vector<GLuint> buffers_;
     std::vector<GLuint> frame_buffers_;
