@@ -210,11 +210,8 @@ void TextureShader::render(const glm::mat4& mv_matrix,
     }
 
 #if _GVRF_USE_GLES3_
-    if (use_light) {
-        mesh->generateVAO();
-    } else {
-        mesh->generateVAO();
-    }
+
+    mesh->generateVAO();
 
     if (use_light) {
         glUseProgram(program_light_->id());
