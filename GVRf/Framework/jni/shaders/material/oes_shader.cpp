@@ -49,11 +49,9 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 OESShader::OESShader() :
-        program_(0), a_position_(0), a_tex_coord_(0), u_mvp_(0), u_texture_(0), u_color_(
+        program_(0), u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
@@ -83,9 +81,7 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
     }
 
 #if _GVRF_USE_GLES3_
-    mesh->setVertexLoc(a_position_);
-    mesh->setTexCoordLoc(a_tex_coord_);
-    mesh->generateVAO(Material::OES_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 

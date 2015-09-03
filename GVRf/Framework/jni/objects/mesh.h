@@ -28,6 +28,7 @@
 #include "GLES3/gl3.h"
 #include "glm/glm.hpp"
 #include "gl/gl_buffer.h"
+#include "gl/gl_program.h"
 
 #include "objects/hybrid_object.h"
 #include "objects/material.h"
@@ -39,8 +40,8 @@ namespace gvr {
 class Mesh: public HybridObject {
 public:
     Mesh() :
-            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(), vertexLoc_(
-                    -1), normalLoc_(-1), texCoordLoc_(-1), have_bounding_volume_(false) {
+            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
+                    have_bounding_volume_(false), vaoInitiliased_(false) {
     }
 
     ~Mesh() {
@@ -61,35 +62,11 @@ public:
     }
 
     void deleteVaos() {
-        for (auto iterator = vaoID_map_.begin(); iterator != vaoID_map_.end();
-                iterator++) {
-            gl_delete.queueVertexArray(iterator->second);
-        }
-        vaoID_map_.clear();
-
-        for (auto iterator = triangle_vboID_map_.begin();
-                iterator != triangle_vboID_map_.end(); iterator++) {
-            gl_delete.queueBuffer(iterator->second);
-        }
-        triangle_vboID_map_.clear();
-
-        for (auto iterator = vert_vboID_map_.begin();
-                iterator != vert_vboID_map_.end(); iterator++) {
-            gl_delete.queueBuffer(iterator->second);
-        }
-        vert_vboID_map_.clear();
-
-        for (auto iterator = norm_vboID_map_.begin();
-                iterator != norm_vboID_map_.end(); iterator++) {
-            gl_delete.queueBuffer(iterator->second);
-        }
-        norm_vboID_map_.clear();
-
-        for (auto iterator = tex_vboID_map_.begin();
-                iterator != tex_vboID_map_.end(); iterator++) {
-            gl_delete.queueBuffer(iterator->second);
-        }
-        tex_vboID_map_.clear();
+        gl_delete.queueVertexArray(vaoID_);
+        gl_delete.queueBuffer(triangle_vboID_);
+        gl_delete.queueBuffer(vert_vboID_);
+        gl_delete.queueBuffer(norm_vboID_);
+        gl_delete.queueBuffer(tex_vboID_);
         have_bounding_volume_ = false;
     }
 
@@ -269,30 +246,6 @@ public:
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
 
-    void setVertexLoc(GLuint loc) {
-        vertexLoc_ = loc;
-    }
-
-    const GLuint getVertexLoc() const {
-        return vertexLoc_;
-    }
-
-    void setNormalLoc(GLuint loc) {
-        normalLoc_ = loc;
-    }
-
-    const GLuint getNormalLoc() const {
-        return normalLoc_;
-    }
-
-    void setTexCoordLoc(GLuint loc) {
-        texCoordLoc_ = loc;
-    }
-
-    const GLuint getTexCoordLoc() const {
-        return texCoordLoc_;
-    }
-
     void setVertexAttribLocF(GLuint location, std::string key) {
         attribute_float_keys_[location] = key;
     }
@@ -310,11 +263,10 @@ public:
     }
 
     // generate VAO
-    void generateVAO(Material::ShaderType key);
+    void generateVAO();
 
     const GLuint getVAOId(Material::ShaderType key) const {
-        auto iterator = vaoID_map_.find(key);
-        return iterator != vaoID_map_.end() ? iterator->second : 0;
+    	return vaoID_;
     }
 
     GLuint getNumTriangles() {
@@ -327,7 +279,6 @@ private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
     Mesh& operator=(const Mesh& mesh);
-    Mesh& operator=(Mesh&& mesh);
 
 private:
     std::vector<glm::vec3> vertices_;
@@ -346,16 +297,13 @@ private:
     std::map<int, std::string> attribute_vec4_keys_;
 
     // add vertex array object and VBO
-    std::map<Material::ShaderType, GLuint> vaoID_map_;
-    std::map<Material::ShaderType, GLuint> triangle_vboID_map_;
-    std::map<Material::ShaderType, GLuint> vert_vboID_map_;
-    std::map<Material::ShaderType, GLuint> norm_vboID_map_;
-    std::map<Material::ShaderType, GLuint> tex_vboID_map_;
 
-    // attribute locations
-    GLuint vertexLoc_;
-    GLuint normalLoc_;
-    GLuint texCoordLoc_;
+    bool   vaoInitiliased_;
+    GLuint vaoID_;
+    GLuint triangle_vboID_;
+    GLuint vert_vboID_;
+    GLuint norm_vboID_;
+    GLuint tex_vboID_;
 
     // triangle information
     GLuint numTriangles_;

@@ -51,8 +51,6 @@ private:
 
 private:
     GLProgram* program_;
-    GLuint a_position_;
-    GLuint a_normal_;
     GLuint u_mv_;
     GLuint u_mv_it_;
     GLuint u_mvp_;

@@ -95,11 +95,9 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 CubemapReflectionShader::CubemapReflectionShader() :
-        program_(0), a_position_(0), a_normal_(0), u_mv_(0), u_mv_it_(0), u_mvp_(
+        program_(0), u_mv_(0), u_mv_it_(0), u_mvp_(
                 0), u_view_i_(0), u_texture_(0), u_color_(0), u_opacity_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    a_normal_ = glGetAttribLocation(program_->id(), "a_normal");
     u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
     u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -135,9 +133,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
     }
 
 #if _GVRF_USE_GLES3_
-    mesh->setVertexLoc(a_position_);
-    mesh->setNormalLoc(a_normal_);
-    mesh->generateVAO(Material::CUBEMAP_REFLECTION_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 

@@ -80,8 +80,8 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 AssimpShader::AssimpShader() :
-        program_(0), a_position_(0), u_mvp_(0), a_tex_coord_(0), u_diffuse_color_(
-                0), u_ambient_color_(0), u_texture_(0), u_color_(0), u_opacity_(
+        program_(0), u_mvp_(0), u_diffuse_color_(0), u_ambient_color_(
+                0), u_texture_(0), u_color_(0), u_opacity_(
                 0), program_list_(0) {
     program_list_ = new GLProgram*[AS_TOTAL_GL_PROGRAM_COUNT];
 
@@ -174,9 +174,7 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     /* Based on feature set get the shader program, feature set cannot exceed program count */
     program_ = program_list_[feature_set & (AS_TOTAL_GL_PROGRAM_COUNT - 1)];
 
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_diffuse_color_ = glGetUniformLocation(program_->id(), "u_diffuse_color");
     u_ambient_color_ = glGetUniformLocation(program_->id(), "u_ambient_color");
@@ -188,11 +186,7 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     float opacity = material->getFloat("opacity");
 
 #if _GVRF_USE_GLES3_
-    mesh->setVertexLoc(a_position_);
-    if (ISSET(feature_set, AS_DIFFUSE_TEXTURE)) {
-        mesh->setTexCoordLoc(a_tex_coord_);
-    }
-    mesh->generateVAO(Material::ASSIMP_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));

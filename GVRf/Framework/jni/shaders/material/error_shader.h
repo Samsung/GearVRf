@@ -49,7 +49,6 @@ private:
 
 private:
     GLProgram* program_;
-    GLuint a_position_;
     GLuint u_mvp_;
     GLuint u_color_;
 };
