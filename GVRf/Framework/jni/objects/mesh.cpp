@@ -180,8 +180,8 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 void Mesh::generateVAO() {
 #if _GVRF_USE_GLES3_
 
-	if (vaoInitiliased_)
-		return;
+    if (vaoInitiliased_)
+        return;
     GLuint tmpID;
 
     if (vao_dirty_) {
