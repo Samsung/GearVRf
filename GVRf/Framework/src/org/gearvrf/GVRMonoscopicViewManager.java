@@ -117,6 +117,10 @@ class GVRMonoscopicViewManager extends GVRViewManager {
         mViewportY = 0;
         mViewportWidth = fboWidth;
         mViewportHeight = fboHeight;
+
+        mLensInfo.setFBOWidth(mViewportWidth);
+        mLensInfo.setFBOHeight(mViewportHeight);
+
         if (fboWidth != screenWidthPixels) {
             mViewportX = (screenWidthPixels / 2) - (fboWidth / 2);
         }
