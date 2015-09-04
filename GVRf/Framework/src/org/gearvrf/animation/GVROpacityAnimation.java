@@ -16,49 +16,32 @@
 package org.gearvrf.animation;
 
 import org.gearvrf.GVRHybridObject;
-import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRSceneObject;
 
 /** Animate the opacity. */
-public class GVROpacityAnimation extends GVRMaterialAnimation {
+public class GVROpacityAnimation extends GVRAnimation {
 
     private final float mInitialOpacity;
     private final float mDeltaOpacity;
 
     /**
-     * Animate the {@link GVRMaterial#setOpacity(float) opacity} property.
+     * Animate the {@link GVRSceneObject#setOpacity(float) opacity} property.
      * 
      * @param target
-     *            {@link GVRMaterial} to animate.
+     *            {@link GVRSceneObject} to animate.
      * @param duration
      *            The animation duration, in seconds.
      * @param opacity
      *            A value from 0 to 1
      */
-    public GVROpacityAnimation(GVRMaterial target, float duration, float opacity) {
+    public GVROpacityAnimation(GVRSceneObject target, float duration, float opacity) {
         super(target, duration);
-        mInitialOpacity = mMaterial.getOpacity();
+        mInitialOpacity = target.getOpacity();
         mDeltaOpacity = opacity - mInitialOpacity;
-    }
-
-    /**
-     * Animate the {@link GVRMaterial#setOpacity(float) opacity} property.
-     * 
-     * @param target
-     *            {@link GVRSceneObject} containing a {@link GVRMaterial} to
-     *            animate.
-     * @param duration
-     *            The animation duration, in seconds.
-     * @param opacity
-     *            A value from 0 to 1
-     */
-    public GVROpacityAnimation(GVRSceneObject target, float duration,
-            float opacity) {
-        this(getMaterial(target), duration, opacity);
     }
 
     @Override
     protected void animate(GVRHybridObject target, float ratio) {
-        mMaterial.setOpacity(mInitialOpacity + mDeltaOpacity * ratio);
+        ((GVRSceneObject) target).setOpacity(mInitialOpacity + mDeltaOpacity * ratio);
     }
 }

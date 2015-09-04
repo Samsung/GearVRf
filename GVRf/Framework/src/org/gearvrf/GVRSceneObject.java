@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 
 /**
  * One of the key GVRF classes: a scene object.
@@ -47,6 +48,8 @@ public class GVRSceneObject extends GVRHybridObject {
     private GVREyePointeeHolder mEyePointeeHolder;
     private GVRSceneObject mParent;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
+    private float mOpacity = 1.0f;
+    private boolean mVisible = true;
 
     /**
      * Constructs an empty scene object with a default {@link GVRTransform
@@ -736,6 +739,98 @@ public class GVRSceneObject extends GVRHybridObject {
     public void removeChildObject(GVRComponent childComponent) {
         if (childComponent.getOwnerObject() != null) {
             removeChildObject(childComponent.getOwnerObject());
+        }
+    }
+
+    /**
+     * Set visibility of this object. This affects also all children of this
+     * object.
+     * 
+     * @param visible
+     */
+    public void setVisible(boolean visible) {
+        this.mVisible = visible;
+        updateVisibility();
+    }
+
+    /**
+     * Get visibility set by {@link setVisible() setVisible()}.
+     * 
+     * @return Visibility of this object.
+     */
+    public boolean isVisible() {
+        return mVisible;
+    }
+
+    /**
+     * Get if object is shown to scene.
+     * 
+     * @return Visibility of this object. Even if isVisible() == true, it can
+     *         return false if this parent.isVisible() == false.
+     */
+    public boolean isShown() {
+
+        if (!mVisible)
+            return mVisible;
+
+        if (getParent() == null)
+            return mVisible;
+
+        return mVisible && getParent().isShown();
+    }
+
+    private void updateVisibility() {
+        GVRRenderData renderData = getRenderData();
+        if (renderData != null) {
+            boolean visible = isShown();
+            renderData.setRenderMask(visible ? GVRRenderMaskBit.Left | GVRRenderMaskBit.Right : 0);
+        }
+
+        for (GVRSceneObject child : children()) {
+            child.updateVisibility();
+        }
+    }
+
+    /**
+     * Set opacity of this object. This affects also all children of this
+     * object.
+     * 
+     * @param opacity
+     */
+    public void setOpacity(float opacity) {
+        this.mOpacity = opacity;
+        updateOpacity();
+    }
+
+    /**
+     * Get opacity set by {@link setOpacity() setOpacity()}.
+     * 
+     * @return opacity
+     */
+    public float getOpacity() {
+        return mOpacity;
+    }
+
+    /**
+     * Get actual opacity. This value is mOpacity if object has no parent.
+     * Otherwise, this returns mOpacity * parent.getActualOpacity().
+     */
+    private float getActualOpacity() {
+        float parentOpacity = getParent() != null ? getParent().getActualOpacity() : 1.0f;
+        return mOpacity * parentOpacity;
+    }
+
+    private void updateOpacity() {
+        GVRRenderData renderData = getRenderData();
+        if (renderData != null) {
+            GVRMaterial material = renderData.getMaterial();
+            if (material != null) {
+                material.setOpacity(getActualOpacity());
+            }
+        }
+
+        for (GVRSceneObject child : children()) {
+            child.updateOpacity();
         }
     }
 }
