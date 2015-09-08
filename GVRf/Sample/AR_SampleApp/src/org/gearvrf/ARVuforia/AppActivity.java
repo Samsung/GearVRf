@@ -5,29 +5,16 @@
 package org.gearvrf.ARVuforia;
 
 import java.util.ArrayList;
-import java.util.Vector;
 import org.gearvrf.GVRActivity;
-import org.gearvrf.util.VRTouchPadGestureDetector.OnTouchPadGestureListener;
-import org.gearvrf.util.VRTouchPadGestureDetector.SwipeDirection;
-import android.app.AlertDialog;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.RelativeLayout;
 import android.widget.Switch;
-import android.widget.Toast;
 import com.qualcomm.vuforia.CameraDevice;
 import com.qualcomm.vuforia.DataSet;
 import com.qualcomm.vuforia.ImageTracker;
@@ -36,14 +23,12 @@ import com.qualcomm.vuforia.State;
 import com.qualcomm.vuforia.Trackable;
 import com.qualcomm.vuforia.Tracker;
 import com.qualcomm.vuforia.TrackerManager;
-import com.qualcomm.vuforia.Vuforia;
 import com.qualcomm.vuforia.samples.SampleApplication.SampleApplicationControl;
 import com.qualcomm.vuforia.samples.SampleApplication.SampleApplicationException;
 import com.qualcomm.vuforia.samples.SampleApplication.SampleApplicationSession;
-import com.qualcomm.vuforia.samples.VuforiaSamples.R;
 
 public class AppActivity extends GVRActivity implements
-        OnTouchPadGestureListener, SampleApplicationControl {
+        SampleApplicationControl {
 
     private AppViewManager mScript = null;
     private static final String LOGTAG = "ImageTargets";
@@ -51,23 +36,12 @@ public class AppActivity extends GVRActivity implements
     private DataSet mCurrentDataset;
     private int mCurrentDatasetSelectionIndex = 0;
     private ArrayList<String> mDatasetStrings = new ArrayList<String>();
-    private GestureDetector mGestureDetector;
 
     private boolean mSwitchDatasetAsap = false;
     private boolean mFlash = false;
-    private boolean mContAutofocus = false;
     private boolean mExtendedTracking = false;
     private View mFlashOptionView;
-    private RelativeLayout mUILayout;
     boolean mIsDroidDevice = false;
-    private AppViewManager mRenderer;
-    int selectedR;
-    int selectedC;
-    /*********** fling *******************/
-    boolean isflingdetected = false;
-    boolean isLongPress = false;
-
-    /*****************************************/
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -75,15 +49,10 @@ public class AppActivity extends GVRActivity implements
         Log.d(LOGTAG, "onCreate");
         super.onCreate(icicle);
         vuforiaAppSession = new SampleApplicationSession(this);
-        startLoadingAnimation();
         mDatasetStrings.add("StonesAndChips.xml");
         mDatasetStrings.add("Tarmac.xml");
         vuforiaAppSession.initAR(this,
                 ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        // Load any sample specific textures:
-        // mTextures = new Vector<Texture>();
-        // loadTextures();
-        mGestureDetector = new GestureDetector(this, new GestureListener());
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
                 "droid");
         mScript = new AppViewManager(this, vuforiaAppSession);
@@ -91,41 +60,11 @@ public class AppActivity extends GVRActivity implements
 
     }
 
-    // Process Single Tap event to trigger autofocus
-    private class GestureListener extends
-            GestureDetector.SimpleOnGestureListener {
-        // Used to set autofocus one second after a manual focus is triggered
-        private final Handler autofocusHandler = new Handler();
-
-        @Override
-        public boolean onDown(MotionEvent e) {
-            return true;
-        }
-
-        @Override
-        public void onLongPress(MotionEvent event) {
-            Log.i("longpress", "onLongPress ");
-            isLongPress = true;
-        }
-
-        @Override
-        public boolean onSingleTapUp(MotionEvent e) {
-            {
-                isflingdetected = true;
-                Log.i("singletap", "tap ");
-            }
-            return isflingdetected;
-        }
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // replaces the default 'Back' button action
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // Intent intent = new Intent(AppActivity1.this,
-            // MainActivity.class);
             finish();
-            // startActivity(intent);
         }
         return true;
     }
@@ -195,16 +134,6 @@ public class AppActivity extends GVRActivity implements
         }
 
         System.gc();
-    }
-
-    private void startLoadingAnimation() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        mUILayout = (RelativeLayout) inflater.inflate(R.layout.camera_overlay,
-                null, false);
-
-        mUILayout.setVisibility(View.VISIBLE);
-        mUILayout.setBackgroundColor(Color.BLACK);
-
     }
 
     // Methods to load and destroy tracking data.
@@ -277,25 +206,11 @@ public class AppActivity extends GVRActivity implements
         if (exception == null) {
 
             mScript.mIsActive = true;
-
-            // Sets the UILayout to be drawn in front of the camera
-            mUILayout.bringToFront();
-
-            // Sets the layout background to transparent
-            mUILayout.setBackgroundColor(Color.TRANSPARENT);
             try {
                 vuforiaAppSession.startAR(CameraDevice.CAMERA.CAMERA_BACK);
             } catch (SampleApplicationException e) {
                 Log.e(LOGTAG, e.getString());
             }
-
-            boolean result = CameraDevice.getInstance().setFocusMode(
-                    CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO);
-
-            if (result)
-                mContAutofocus = true;
-            else
-                Log.e(LOGTAG, "Unable to enable continuous autofocus");
 
         } else {
             Log.e(LOGTAG, exception.getString());
@@ -378,13 +293,6 @@ public class AppActivity extends GVRActivity implements
         return result;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        // Process the Gestures
-
-        return mGestureDetector.onTouchEvent(event);
-    }
-
     boolean isExtendedTrackingActive() {
         return mExtendedTracking;
     }
@@ -396,28 +304,4 @@ public class AppActivity extends GVRActivity implements
     final public static int CMD_CAMERA_FRONT = 4;
     final public static int CMD_CAMERA_REAR = 5;
     final public static int CMD_DATASET_START_INDEX = 6;
-
-    private void showToast(String text) {
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public boolean onSingleTap(MotionEvent e) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection,
-            float velocityX, float velocityY) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
 }

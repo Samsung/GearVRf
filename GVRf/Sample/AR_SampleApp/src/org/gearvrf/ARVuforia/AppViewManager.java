@@ -5,14 +5,7 @@
 package org.gearvrf.ARVuforia;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Timer;
-import java.util.Vector;
-
-import javax.security.auth.login.LoginException;
-
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderTexture;
@@ -20,11 +13,9 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.utility.Log;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.view.MotionEvent;
 import com.qualcomm.vuforia.Matrix44F;
 import com.qualcomm.vuforia.Renderer;
 import com.qualcomm.vuforia.State;
@@ -51,7 +42,6 @@ public class AppViewManager extends GVRScript {
     static final int VUFORIA_CAMERA_WIDTH = 1280;
     static final int VUFORIA_CAMERA_HEIGHT = 720;
 
-    // FPSCounter fpscounter;
     @SuppressWarnings("unused")
     private GVRSceneObject asyncSceneObject(GVRContext context,
             GVRAndroidResource meshResource, String textureName)
@@ -98,8 +88,8 @@ public class AppViewManager extends GVRScript {
         }
 
         cameraObj = new GVRSceneObject(mGVRContext, camMesh, cameraTex);
-        cameraObj.getRenderData().getMaterial().setAR(1);
-        cameraObj.getRenderData().getMaterial().setAROffsets();
+        cameraObj.getRenderData().getMaterial().setIsAr(1);
+        cameraObj.getRenderData().getMaterial().setArViewOffsets();
         mRenderer.setVideoBackgroundTextureID(cameraTex.getId());
 
         mMainScene.getMainCameraRig().addChildObject(cameraObj);
@@ -113,10 +103,8 @@ public class AppViewManager extends GVRScript {
         teapotMesh = mGVRContext.loadMesh(meshResource_board);
         teapotObj = new GVRSceneObject(mGVRContext, teapotMesh, teaoptTex); // AR
                                                                             // object
-        teapotObj.getRenderData().getMaterial().setAR(2);
-        teapotObj.getRenderData().getMaterial().setAROffsets();
-
-        // fpscounter = new FPSCounter();
+        teapotObj.getRenderData().getMaterial().setIsAr(2);
+        teapotObj.getRenderData().getMaterial().setArViewOffsets();
     }
 
     private void initRendering() {
@@ -132,7 +120,6 @@ public class AppViewManager extends GVRScript {
 
     @Override
     public void onStep() {
-        // fpscounter.logFrame();
         if (!mIsActive)
             return;
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
@@ -148,8 +135,7 @@ public class AppViewManager extends GVRScript {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         State state = mRenderer.begin();
-        // mRenderer.drawVideoBackground();
-        mRenderer.bindVideoBackground(3);
+        mRenderer.bindVideoBackground(10);
 
         GLES20.glDisable(GLES20.GL_BLEND);
         GLES20.glDisable(GLES20.GL_CULL_FACE);
@@ -175,7 +161,7 @@ public class AppViewManager extends GVRScript {
                     .getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
             Log.i("track", "TRACKING......");
             teapotObj.getRenderData().getMaterial()
-                    .setMVPmat(modelViewProjection);
+                    .setMvpMatrix(modelViewProjection);
             mMainScene.getMainCameraRig().addChildObject(teapotObj);
         }
         mRenderer.end();

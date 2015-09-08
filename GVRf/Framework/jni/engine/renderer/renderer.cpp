@@ -115,12 +115,13 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
 
         // ---------------------------------------------AR------------------------{
-        if (setIsAr != 0)
+        if (setIsAr != 0) {
             glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
                     viewportWidth - ar_offsets[2],
                     viewportHeight - ar_offsets[3]);
-        else
+        } else {
             glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
         // ---------------------------------------------AR------------------------}
 
         glClearColor(camera->background_color_r(), camera->background_color_g(),
@@ -140,12 +141,13 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 texture_render_texture->getFrameBufferId());
 
         // ---------------------------------------------AR------------------------{
-        if (setIsAr != 0)
+        if (setIsAr != 0) {
             glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
                     viewportWidth - ar_offsets[2],
                     viewportHeight - ar_offsets[3]);
-        else
+        } else {
             glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
         // ---------------------------------------------AR------------------------}
 
         glClearColor(camera->background_color_r(), camera->background_color_g(),
@@ -172,12 +174,13 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
             glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
 
             // ---------------------------------------------AR------------------------{
-            if (setIsAr != 0)
+            if (setIsAr != 0) {
                 glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
                         viewportWidth - ar_offsets[2],
                         viewportHeight - ar_offsets[3]);
-            else
+            } else {
                 glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+            }
             // ---------------------------------------------AR------------------------}
 
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -188,12 +191,13 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
 
         // ---------------------------------------------AR------------------------{
-        if (setIsAr != 0)
+        if (setIsAr != 0) {
             glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
                     viewportWidth - ar_offsets[2],
                     viewportHeight - ar_offsets[3]);
-        else
+        } else {
             glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
         // ---------------------------------------------AR------------------------}
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         renderPostEffectData(camera, texture_render_texture,

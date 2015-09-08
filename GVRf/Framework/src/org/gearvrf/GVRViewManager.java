@@ -175,7 +175,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         // ------------------------AR-------------------------------------------{
         float arOffsets[] = new float[4];
         arOffsets = xmlParser.getAROffsets();
-        GVRMaterial.ar_offsets = arOffsets;
+        GVRMaterial.arOffsets = arOffsets;
         // ------------------------AR-------------------------------------------}
     }
 

@@ -87,15 +87,15 @@ public:
 
     // ---------------------------------------------AR------------------------{
 
-    void setAR(std::string key, int ar) {
+    void setIsAr(std::string key, int ar) {
         isAR_ = ar;
     }
 
-    void setMVPmatrix(std::string key, glm::mat4 mat) {
+    void setMvpMatrix(std::string key, glm::mat4 mat) {
         mvpMatrix = mat;
     }
 
-    void setAROffsets(std::string key, glm::vec4 ar_offsets) {
+    void setArViewOffsets(std::string key, glm::vec4 ar_offsets) {
         arOffsets = ar_offsets;
     }
     // ---------------------------------------------AR------------------------}
