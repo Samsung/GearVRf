@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "android/log.h"
+#include "util/gvr_log.h"
 #include "gvr_cpp_stack_trace.h"
 
 #include <iostream>
@@ -22,8 +22,6 @@
 
 #include <unwind.h>
 #include <dlfcn.h>
-
-#define TAG "gvrf"
 
 namespace {
 
@@ -79,5 +77,5 @@ void printStackTrace(unsigned int max_frames)
 
     dumpBacktrace(oss, buffer, captureBacktrace(buffer, max_frames));
 
-    __android_log_print(ANDROID_LOG_DEBUG, TAG, "%s", oss.str().c_str());
+    LOGD("%s", oss.str().c_str());
 }
