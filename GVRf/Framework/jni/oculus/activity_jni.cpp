@@ -169,7 +169,7 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
                     "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms;"));
     jclass eyeParmsClass = env->GetObjectClass(eyeParmsSettings);
     settings.EyeBufferParms.multisamples = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "multiSamples", "I"));
-    settings.EyeBufferParms.WidthScale = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "widthScale", "I"));
+    settings.EyeBufferParms.resolveDepth = env->GetBooleanField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolveDepth", "Z"));
     jint resolution = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolution", "I"));
     if(resolution == -1){
         env->SetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolution", "I"), settings.EyeBufferParms.resolution);
@@ -218,33 +218,17 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
     default:
         break;
     }
-    jobject textureFilter = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "textureFilter", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$TextureFilter;"));
-    getValueID = env->GetMethodID(env->GetObjectClass(textureFilter),"getValue","()I");
-    int textureFilterValue = (int)env->CallIntMethod(textureFilter, getValueID);
-    switch(textureFilterValue){
-    case 0:
-        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_NEAREST;
-        break;
-    case 1:
-        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_BILINEAR;
-        break;
-    case 2:
-        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_ANISO_2;
-        break;
-    case 3:
-        settings.EyeBufferParms.textureFilter = OVR::TEXTURE_FILTER_ANISO_4;
-        break;
-    default:
-        break;
-    }
+
 
     //Settings for ModeParms
     jobject modeParms = env->GetObjectField(vrSettings, env->GetFieldID(vrAppSettingsClass, "modeParms", "Lorg/gearvrf/utility/VrAppSettings$ModeParms;"));
     jclass modeParmsClass = env->GetObjectClass(modeParms);
     settings.ModeParms.AllowPowerSave = env->GetBooleanField(modeParms, env->GetFieldID(modeParmsClass, "allowPowerSave", "Z"));
     settings.ModeParms.ResetWindowFullscreen = env->GetBooleanField(modeParms, env->GetFieldID(modeParmsClass, "resetWindowFullScreen","Z"));
-    settings.ModeParms.GpuLevel = env->GetIntField(modeParms, env->GetFieldID(modeParmsClass, "gpuLevel", "I"));
-    settings.ModeParms.CpuLevel = env->GetIntField(modeParms, env->GetFieldID(modeParmsClass, "cpuLevel", "I"));
+    jobject performanceParms = env->GetObjectField(vrSettings, env->GetFieldID(vrAppSettingsClass, "performanceParms", "Lorg/gearvrf/utility/VrAppSettings$PerformanceParms;"));
+    jclass performanceParmsClass = env->GetObjectClass(performanceParms);
+    settings.PerformanceParms.GpuLevel = env->GetIntField(performanceParms, env->GetFieldID(performanceParmsClass, "gpuLevel", "I"));
+    settings.PerformanceParms.CpuLevel = env->GetIntField(performanceParms, env->GetFieldID(performanceParmsClass, "cpuLevel", "I"));
 
     // Settings for HeadModelParms
     jobject headModelParms = env->GetObjectField(vrSettings, env->GetFieldID(vrAppSettingsClass, "headModelParms", "Lorg/gearvrf/utility/VrAppSettings$HeadModelParms;" ));
@@ -334,24 +318,7 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
         default:
             break;
         }
-        logInfo << "; textureFilter = ";
-        switch (settings.EyeBufferParms.textureFilter) {
-        case 0:
-            logInfo << "TEXTURE_FILTER_NEAREST";
-            break;
-        case 1:
-            logInfo << "TEXTURE_FILTER_BILINEAR";
-            break;
-        case 2:
-            logInfo << "TEXTURE_FILTER_ANISO_2";
-            break;
-        case 3:
-            logInfo << "TEXTURE_FILTER_ANISO_4";
-            break;
-        default:
-            break;
-        }
-        logInfo << "; WidthScale = " << settings.EyeBufferParms.WidthScale
+        logInfo << "; ResolveDepth = " << settings.EyeBufferParms.resolveDepth
                 << "; multiSample = " << settings.EyeBufferParms.multisamples
                 << "; resolution = " << settings.EyeBufferParms.resolution
                 << std::endl;
@@ -365,10 +332,12 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
                 << settings.HeadModelParms.InterpupillaryDistance << std::endl;
         logInfo << "====== Mode Configuration ======" << std::endl;
         logInfo << "AllowPowerSave = " << settings.ModeParms.AllowPowerSave
-                << "; CpuLevel = " << settings.ModeParms.CpuLevel
-                << "; GpuLevel = " << settings.ModeParms.GpuLevel
                 << "; ResetWindowFullscreen = "
                 << settings.ModeParms.ResetWindowFullscreen << std::endl;
+        logInfo << "====== Performance Configuration ======"
+                << "; CpuLevel = " << settings.PerformanceParms.CpuLevel
+                << "; GpuLevel = " << settings.PerformanceParms.GpuLevel << std::endl;
+
         LOGI("%s", logInfo.str().c_str());
     }
 }
@@ -387,12 +356,12 @@ template <class R> void GVRActivityT<R>::OneTimeShutdown()
 
 template <class R> OVR::Matrix4f GVRActivityT<R>::GetEyeView(const int eye, const float fovDegrees) const
 {
-    const OVR::Matrix4f projectionMatrix = Scene.ProjectionMatrixForEye( eye, fovDegrees );
-    const OVR::Matrix4f viewMatrix = Scene.ViewMatrixForEye( eye );
+    const OVR::Matrix4f projectionMatrix = Scene.GetEyeProjectionMatrix( eye, fovDegrees );
+    const OVR::Matrix4f viewMatrix = Scene.GetEyeViewMatrix( eye );
     return ( projectionMatrix * viewMatrix );
 }
 
-template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, const float fovDegrees) {
+template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, const float fovDegrees, ovrFrameParms & frameParms) {
     const OVR::Matrix4f view = GetEyeView(eye, fovDegrees);
 
     // Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.

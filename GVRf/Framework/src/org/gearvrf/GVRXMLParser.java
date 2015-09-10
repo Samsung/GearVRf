@@ -24,7 +24,6 @@ import java.io.StringReader;
 import org.gearvrf.utility.VrAppSettings;
 import org.gearvrf.utility.VrAppSettings.EyeBufferParms.ColorFormat;
 import org.gearvrf.utility.VrAppSettings.EyeBufferParms.DepthFormat;
-import org.gearvrf.utility.VrAppSettings.EyeBufferParms.TextureFilter;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -128,16 +127,18 @@ class GVRXMLParser {
                                         .setResetWindowFullScreen(
                                                 Boolean.parseBoolean(xpp
                                                         .getAttributeValue(i)));
-                            } else if (attributeName.equals("cpuLevel")) {
-                                settings.getModeParms().setCpuLevel(
+                            } 
+                        } else if(tagName.equals("performance-parms")){
+                            if (attributeName.equals("cpuLevel")) {
+                                settings.getPerformanceParms().setCpuLevel(
                                         Integer.parseInt(xpp
                                                 .getAttributeValue(i)));
                             } else if (attributeName.equals("gpuLevel")) {
-                                settings.getModeParms().setGpuLevel(
+                                settings.getPerformanceParms().setGpuLevel(
                                         Integer.parseInt(xpp
                                                 .getAttributeValue(i)));
                             }
-                        } else if (tagName.equals("eye-buffer-parms")) {
+                        }else if (tagName.equals("eye-buffer-parms")) {
                             String attributeValue = xpp.getAttributeValue(i);
                             if (attributeName.equals("fov-y")) {
                                 settings.getEyeBufferParms().setFovY(
@@ -157,24 +158,6 @@ class GVRXMLParser {
                                         .equals("DEPTH_24_STENCIL_8")) {
                                     settings.eyeBufferParms
                                             .setDepthFormat(DepthFormat.DEPTH_24_STENCIL_8);
-                                }
-                            } else if (attributeName.equals("textureFilter")) {
-                                if (attributeValue
-                                        .equals("TEXTURE_FILTER_NEAREST")) {
-                                    settings.eyeBufferParms
-                                            .setTextureFilter(TextureFilter.TEXTURE_FILTER_NEAREST);
-                                } else if (attributeValue
-                                        .equals("TEXTURE_FILTER_BILINEAR")) {
-                                    settings.eyeBufferParms
-                                            .setTextureFilter(TextureFilter.TEXTURE_FILTER_BILINEAR);
-                                } else if (attributeValue
-                                        .equals("TEXTURE_FILTER_ANISO_2")) {
-                                    settings.eyeBufferParms
-                                            .setTextureFilter(TextureFilter.TEXTURE_FILTER_ANISO_2);
-                                } else if (attributeValue
-                                        .equals("TEXTURE_FILTER_ANISO_4")) {
-                                    settings.eyeBufferParms
-                                            .setTextureFilter(TextureFilter.TEXTURE_FILTER_ANISO_4);
                                 }
                             } else if (attributeName.equals("colorFormat")) {
                                 if (attributeValue.equals("COLOR_565")) {
@@ -197,9 +180,9 @@ class GVRXMLParser {
                             } else if (attributeName.equals("multiSamples")) {
                                 settings.eyeBufferParms.setMultiSamples(Integer
                                         .parseInt(attributeValue));
-                            } else if (attributeName.equals("widthScale")) {
-                                settings.eyeBufferParms.setWidthScale(Integer
-                                        .parseInt(attributeValue));
+                            } else if (attributeName.equals("resolveDepth")) {
+                                settings.eyeBufferParms.enableResolveDepth(Boolean
+                                        .parseBoolean(attributeValue));
                             } else if (attributeName.equals("resolution")) {
                                 int resolution = Integer
                                         .parseInt(attributeValue);

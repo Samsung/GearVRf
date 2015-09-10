@@ -22,19 +22,19 @@ package org.gearvrf.utility;
 public class VrAppSettings {
     public static class ModeParms {
 
-        //To set power save mode is allowed. If true, then the app will run
-        //at 30 fps when power is low. Otherwise will show a error message
-        //instead.
+        // To set power save mode is allowed. If true, then the app will run
+        // at 30 fps when power is low. Otherwise will show a error message
+        // instead.
         public boolean allowPowerSave;
-        
-        //If true, the fullscreen flag of the activity window will be on when a vr
-        //activity return from background to foreground. It will benefit the performance 
-        // since it won't draw DecorView as background. However it will mess up codebases
+
+        // If true, the fullscreen flag of the activity window will be on when a
+        // vr
+        // activity return from background to foreground. It will benefit the
+        // performance
+        // since it won't draw DecorView as background. However it will mess up
+        // codebases
         // which depends on native activity like Stratum and Unreal Engine.
         public boolean resetWindowFullScreen;
-        
-        // Set fixed cpu clock level and gpu clock level.
-        public int cpuLevel, gpuLevel;
 
         /**
          * Check if it allows power save mode.
@@ -75,57 +75,16 @@ public class VrAppSettings {
             this.resetWindowFullScreen = resetWindowFullScreen;
         }
 
-        /**
-         * Get current CPU clock level.
-         * 
-         * @return Current CPU clock level.
-         */
-        public int getCpuLevel() {
-            return cpuLevel;
-        }
-
-        /**
-         * Set CPU clock level.
-         * 
-         * @param cpuLevel
-         *            Current CPU clock level.
-         */
-        public void setCpuLevel(int cpuLevel) {
-            this.cpuLevel = cpuLevel;
-        }
-
-        /**
-         * Get current GPU clock level.
-         * 
-         * @return Current GPU clock level.
-         */
-        public int getGpuLevel() {
-            return gpuLevel;
-        }
-
-        /**
-         * Set GPU clock level.
-         * 
-         * @param gpuLevel
-         *            Current GPU clock level.
-         */
-        public void setGpuLevel(int gpuLevel) {
-            this.gpuLevel = gpuLevel;
-        }
-
         public ModeParms() {
             allowPowerSave = true;
             resetWindowFullScreen = true;
-            cpuLevel = gpuLevel = 2;
         }
-        
+
         @Override
-        public String toString(){
+        public String toString() {
             StringBuilder res = new StringBuilder();
             res.append(" allowPowerSave = " + this.allowPowerSave);
             res.append(" resetWindowFullScreen = " + this.resetWindowFullScreen);
-            res.append(" cpuLevel = " + this.cpuLevel);
-            res.append(" gpuLevel = " + this.gpuLevel);
             return res.toString();
         }
 
@@ -133,39 +92,35 @@ public class VrAppSettings {
 
     public static class EyeBufferParms {
 
-        //Data format for depth buffer
+        // Data format for depth buffer
         public DepthFormat depthFormat;
-
-        // Determines the texture filtering method.
-        // It is actually how the time warp samples the eye buffers.
-        public TextureFilter textureFilter;
 
         // Color format of current vr app.
         // Defaults to FMT_8888.
         public ColorFormat colorFormat;
-        
+
         // Resolution for each eye buffer.
         public int resolution;
-
-        // Level of width scaling.
-        public int widthScale;
         
+        //Is depth buffer resolved to a texture or not.
+        boolean resolveDepth;
+
         // Level for multi sampling.
         // Default to 2.
         public int multiSamples;
-        
-        //fov-y
+
+        // fov-y
         public float mFovY;
 
         public enum DepthFormat {
-            DEPTH_0(0), //No depth buffer
-            
-            DEPTH_16(1), //16-bit depth buffer
-            
-            DEPTH_24(2), //24-bit depth buffer
-            
-            DEPTH_24_STENCIL_8(3);//32-bit depth buffer
-            
+            DEPTH_0(0), // No depth buffer
+
+            DEPTH_16(1), // 16-bit depth buffer
+
+            DEPTH_24(2), // 24-bit depth buffer
+
+            DEPTH_24_STENCIL_8(3);// 32-bit depth buffer
+
             private final int value;
 
             private DepthFormat(int value) {
@@ -182,46 +137,19 @@ public class VrAppSettings {
             }
         }
 
-        public enum TextureFilter {
-            TEXTURE_FILTER_NEAREST(0), //Nearest-neighbor interpolation
-                                       //Fastest, but will cause lots of aliasing
-                                       //and artifacts
-            TEXTURE_FILTER_BILINEAR(1), //Bilinear filtering.
-                                        //Should be the most common one to use.
-            TEXTURE_FILTER_ANISO_2(2), // 2:1 Anisotropic filtering
-                                       // Will reduce aliasing, but will cause
-                                       // worse performance.
-            TEXTURE_FILTER_ANISO_4(3); // 4:1 Anisotropic filtering
-                                       // Texture filtering with best quality.
-                                       // But also with worst performance.
-            
-            private final int value;
-
-            private TextureFilter(int value) {
-                this.value = value;
-            }
-
-            /**
-             * Get numerical value of current TextureFilter.
-             * 
-             * @return numerical value of current TextureFilter.
-             */
-            public int getValue() {
-                return value;
-            }
-        }
-
         public enum ColorFormat {
             COLOR_565(0), // 5-bit red, 6-bit for green, 5-bit blue
 
             COLOR_5551(1), // one bit from green right now for alpha channel.
 
-            COLOR_4444(2),//4-bit red, 4-bit green, 4-bit blue, 4-bit alpha channel.
+            COLOR_4444(2), // 4-bit red, 4-bit green, 4-bit blue, 4-bit alpha
+                           // channel.
 
-            COLOR_8888(3),//8-bit red, 8-bit green, 8-bit blue, 8-bit alpha channel.
+            COLOR_8888(3), // 8-bit red, 8-bit green, 8-bit blue, 8-bit alpha
+                           // channel.
 
             COLOR_8888_sRGB(4);// SRGB color format
-            
+
             private final int value;
 
             private ColorFormat(int value) {
@@ -255,25 +183,6 @@ public class VrAppSettings {
          */
         public void setDepthFormat(DepthFormat depthFormat) {
             this.depthFormat = depthFormat;
-        }
-
-        /**
-         * Get current textureFilter.
-         * 
-         * @return Current textureFilter.
-         */
-        public TextureFilter getTextureFilter() {
-            return textureFilter;
-        }
-
-        /**
-         * Set TextureFilter.
-         * 
-         * @param textureFilter
-         *            TextureFilter to set.
-         */
-        public void setTextureFilter(TextureFilter textureFilter) {
-            this.textureFilter = textureFilter;
         }
 
         /**
@@ -315,22 +224,22 @@ public class VrAppSettings {
         }
 
         /**
-         * Get current width scale.
+         *  Check if depth buffer is currently resolved to a texture 
          * 
-         * @return Current width scale.
+         * @return if depth buffer is currently resolved to a texture
          */
-        public int getWidthScale() {
-            return widthScale;
+        public boolean isResolveDepth() {
+            return resolveDepth;
         }
 
         /**
-         * Set width scale.
+         * Set if depth buffer is currently resolved to a texture 
          * 
-         * @param widthScale
-         *            width scale to set.
+         * @param resolveDepth
+         *            if depth buffer is currently resolved to a texture
          */
-        public void setWidthScale(int widthScale) {
-            this.widthScale = widthScale;
+        public void enableResolveDepth(boolean resolveDepth) {
+            this.resolveDepth = resolveDepth;
         }
 
         /**
@@ -351,45 +260,43 @@ public class VrAppSettings {
         public void setMultiSamples(int multiSamples) {
             this.multiSamples = multiSamples;
         }
-        
+
         /**
          * Set current multi FovY.
          * 
          * @param fovy
          *            FovY degree to set
          */
-        public void setFovY(float fovy){
+        public void setFovY(float fovy) {
             this.mFovY = fovy;
         }
-        
+
         /**
          * Get current multi FovY.
          * 
          * @return Current fovY degree.
          */
-        public float getFovY(){
+        public float getFovY() {
             return mFovY;
         }
 
         public EyeBufferParms() {
             multiSamples = 2;
-            widthScale = 1;
+            resolveDepth = false;
             resolution = -1;
             depthFormat = DepthFormat.DEPTH_24;
             colorFormat = ColorFormat.COLOR_8888;
-            textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR;
             mFovY = 90.0f;
         }
-        
+
         @Override
-        public String toString(){
+        public String toString() {
             StringBuilder res = new StringBuilder();
             res.append(" multiSamples = " + this.multiSamples);
-            res.append(" widthScale = " + this.widthScale);
+            res.append(" resolveDepth = " + this.resolveDepth);
             res.append(" resolution = " + this.resolution);
             res.append(" depthFormat = " + this.depthFormat.name());
             res.append(" colorFormat = " + this.colorFormat.name());
-            res.append(" textureFilter = " + this.textureFilter.name());
             res.append(" fovY = " + this.mFovY);
             return res.toString();
         }
@@ -399,10 +306,12 @@ public class VrAppSettings {
     // Head Model
     // -----------------------------------------------------------------
     public static class HeadModelParms {
-        float interpupillaryDistance; //Distance from left eye to right eye.
+        float interpupillaryDistance; // Distance from left eye to right eye.
         float eyeHeight; // Distance from ground to eye.
-        float headModelDepth; // Offset of head center ahead of eyes based on eyeHeight.
-        float headModelHeight; // Distance from neck joint to eyes based on eyeHeight.
+        float headModelDepth; // Offset of head center ahead of eyes based on
+                              // eyeHeight.
+        float headModelHeight; // Distance from neck joint to eyes based on
+                               // eyeHeight.
 
         /**
          * Get current distance between eyes.
@@ -488,80 +397,141 @@ public class VrAppSettings {
             this.headModelDepth = Float.NaN;
             this.headModelHeight = Float.NaN;
         }
-        
+
         @Override
-        public String toString(){
+        public String toString() {
             StringBuilder res = new StringBuilder();
-            res.append(" interpuillaryDistance = " + this.interpupillaryDistance);
+            res.append(" interpuillaryDistance = "
+                    + this.interpupillaryDistance);
             res.append(" eyeHeight = " + this.eyeHeight);
             res.append(" headModelDepth = " + this.headModelDepth);
             res.append(" headModelHeight = " + this.headModelHeight);
             return res.toString();
         }
     }
+
     // -----------------------------------------------------------------
-    // This class is to judge if the app will run under a special mono scopic mode.
-    // If it is the case, many parameters like headmodelparms and modeparms won't 
+    // This class is to judge if the app will run under a special mono scopic
+    // mode.
+    // If it is the case, many parameters like headmodelparms and modeparms
+    // won't
     // take effect
     // -----------------------------------------------------------------
-   
-    public static class MonoScopicModeParms{
-        private boolean isMonoScopicMode;// Is the app mono scopic rendering mode?
-        private boolean isMonoFullScreen;// If it is mono scopic, will it be fullscreen or simple quad?
-        
+
+    public static class MonoScopicModeParms {
+        private boolean isMonoScopicMode;// Is the app mono scopic rendering
+                                         // mode?
+        private boolean isMonoFullScreen;// If it is mono scopic, will it be
+                                         // fullscreen or simple quad?
+
         /**
          * Set if current app is mono scopic.
          * 
          * @param isMono
          *            if current app is mono scopic
          */
-        public void setMonoScopicMode(boolean isMono){
+        public void setMonoScopicMode(boolean isMono) {
             this.isMonoScopicMode = isMono;
         }
-        
+
         /**
          * Check if current app is mono scopic.
          * 
          * @return if current app is mono scopic.
          */
-        public boolean isMonoScopicMode(){
+        public boolean isMonoScopicMode() {
             return isMonoScopicMode;
         }
-        
+
         /**
          * Set if current app is full screen under mono scopic mode.
          * 
          * @param isFullScreen
          *            if current app is full screen under mono scopic mode.
          */
-        public void setMonoFullScreenMode(boolean isFullScreen){
+        public void setMonoFullScreenMode(boolean isFullScreen) {
             this.isMonoFullScreen = isFullScreen;
         }
-        
+
         /**
          * Check if current app is full screen under mono scopic mode.
          * 
          * @return if current app is full screen under mono scopic mode.
          */
-        public boolean isMonoFullScreenMode(){
+        public boolean isMonoFullScreenMode() {
             return isMonoFullScreen;
         }
-        
+
         @Override
-        public String toString(){
+        public String toString() {
             StringBuilder result = new StringBuilder();
             result.append(" isMonoScopicMode = " + isMonoScopicMode);
             result.append(" isMonoFullScreenMode = " + isMonoFullScreen);
             return result.toString();
         }
-        
-        public MonoScopicModeParms(){
+
+        public MonoScopicModeParms() {
             isMonoScopicMode = isMonoFullScreen = false;
         }
     }
-    
+
+    public static class PerformanceParms {
+
+        // Set fixed cpu clock level and gpu clock level.
+        public int cpuLevel, gpuLevel;
+
+        public PerformanceParms() {
+            cpuLevel = gpuLevel = 2;
+        }
+
+        /**
+         * Get current CPU clock level.
+         * 
+         * @return Current CPU clock level.
+         */
+        public int getCpuLevel() {
+            return cpuLevel;
+        }
+
+        /**
+         * Set CPU clock level.
+         * 
+         * @param cpuLevel
+         *            Current CPU clock level.
+         */
+        public void setCpuLevel(int cpuLevel) {
+            this.cpuLevel = cpuLevel;
+        }
+
+        /**
+         * Get current GPU clock level.
+         * 
+         * @return Current GPU clock level.
+         */
+        public int getGpuLevel() {
+            return gpuLevel;
+        }
+
+        /**
+         * Set GPU clock level.
+         * 
+         * @param gpuLevel
+         *            Current GPU clock level.
+         */
+        public void setGpuLevel(int gpuLevel) {
+            this.gpuLevel = gpuLevel;
+        }
+
+        public String toString() {
+            StringBuilder res = new StringBuilder();
+            res.append(" cpuLevel = " + this.cpuLevel);
+            res.append(" gpuLevel = " + this.gpuLevel);
+            return res.toString();
+        }
+    }
+
     public static int DEFAULT_FBO_RESOLUTION = 1024;
-    
+
     // If it will show loading icon in the vr app.
     public boolean showLoadingIcon;
 
@@ -578,16 +548,17 @@ public class VrAppSettings {
 
     // Current frame buffer's pixels height.
     public int framebufferPixelsHigh;
-    
-    //If it is going to show ovrSettings' content after Configure.
-    //Just for debug purpose, not configuration for app context.
-    //Not going to become part of xml content.
+
+    // If it is going to show ovrSettings' content after Configure.
+    // Just for debug purpose, not configuration for app context.
+    // Not going to become part of xml content.
     public static boolean isShowDebugLog = false;
 
     public ModeParms modeParms;
     public EyeBufferParms eyeBufferParms;
     public HeadModelParms headModelParms;
     public MonoScopicModeParms monoScopicModeParms;
+    public PerformanceParms performanceParms;
 
     /**
      * Set if current app prints information from ovrAppSettings
@@ -595,19 +566,19 @@ public class VrAppSettings {
      * @param showDebugLog
      *            if current app prints information from ovrAppSettings.
      */
-    public static void setShowDebugLog(boolean showDebugLog){
+    public static void setShowDebugLog(boolean showDebugLog) {
         isShowDebugLog = showDebugLog;
     }
-    
+
     /**
      * Get if current app prints information from ovrAppSettings
      * 
      * @return if current app prints information from ovrAppSettings.
      */
-    public static boolean isShowDebugLog(){
+    public static boolean isShowDebugLog() {
         return isShowDebugLog;
     }
-    
+
     /**
      * Check if current app shows loading icon
      * 
@@ -626,7 +597,7 @@ public class VrAppSettings {
     public void setShowLoadingIcon(boolean showLoadingIcon) {
         this.showLoadingIcon = showLoadingIcon;
     }
-    
+
     /**
      * Check if current app is using srgb frame buffer
      * 
@@ -765,20 +736,39 @@ public class VrAppSettings {
      * 
      * @return Current overall mono scopic mode parameters.
      */
-    public MonoScopicModeParms getMonoScopicModeParms(){
+    public MonoScopicModeParms getMonoScopicModeParms() {
         return monoScopicModeParms;
     }
-    
+
     /**
      * Set overall mono scopic mode parameters.
      * 
      * @param monoScopicModeParms
      *            New overall mono scopic mode parameters.
      */
-    public void setMonoScopicModeParms(MonoScopicModeParms monoScopicModeParms){
+    public void setMonoScopicModeParms(MonoScopicModeParms monoScopicModeParms) {
         this.monoScopicModeParms = monoScopicModeParms;
     }
-    
+
+    /**
+     * Get overall performance parameters.
+     * 
+     * @return Current overall performance parameters.
+     */
+    public PerformanceParms getPerformanceParms() {
+        return performanceParms;
+    }
+
+    /**
+     * Set overall performance parameters.
+     * 
+     * @param monoScopicModeParms
+     *            New overall performance parameters.
+     */
+    public void setPerformanceParms(PerformanceParms performanceParms) {
+        this.performanceParms = performanceParms;
+    }
+
     public VrAppSettings() {
         showLoadingIcon = true;
         useSrgbFramebuffer = false;
@@ -789,9 +779,10 @@ public class VrAppSettings {
         eyeBufferParms = new EyeBufferParms();
         headModelParms = new HeadModelParms();
         monoScopicModeParms = new MonoScopicModeParms();
+        performanceParms = new PerformanceParms();
     }
-    
-    public String toString(){
+
+    public String toString() {
         StringBuilder res = new StringBuilder();
         res.append("showLoadingIcon = " + showLoadingIcon);
         res.append(" useSrgbFramebuffer = " + useSrgbFramebuffer);
@@ -802,6 +793,7 @@ public class VrAppSettings {
         res.append(eyeBufferParms.toString());
         res.append(headModelParms.toString());
         res.append(monoScopicModeParms.toString());
+        res.append(performanceParms.toString());
         return res.toString();
     }
 }

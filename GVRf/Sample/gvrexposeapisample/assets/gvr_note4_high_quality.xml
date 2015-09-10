@@ -32,10 +32,12 @@ consideration on frame rate and power consumption. -->
             monoFullScreen="false"
             monoMode="false" />
 
+        <performance-parms
+            cpuLevel="4"
+            gpuLevel="4" />        
+        
         <mode-parms
             allowPowerSave="true"
-            cpuLevel="4"
-            gpuLevel="4"
             resetWindowFullScreen="true" />
 
         <eye-buffer-parms
@@ -43,9 +45,8 @@ consideration on frame rate and power consumption. -->
             depthFormat="DEPTH_24_STENCIL_8"
             fov-y="90.0"
             multiSamples="4"
-            resolution="1024"
-            textureFilter="TEXTURE_FILTER_ANISO_4"
-            widthScale="1" />
+            resolution="1024"            
+            resolveDepth="false" />
 
         <head-model-parms
             eyeHeight="DEFAULT"

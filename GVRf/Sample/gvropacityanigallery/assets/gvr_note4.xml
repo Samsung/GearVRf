@@ -16,6 +16,12 @@
  */
 -->
 
+
+<!--
+ This is a configuration file with default settings. You can assume that using this
+ one will receive the same effect as gvr_note4_empty.xml.
+-->
+
 <lens name="N4" >
 
     <vr-app-settings
@@ -31,9 +37,11 @@
 
         <mode-parms
             allowPowerSave="true"
-            cpuLevel="2"
-            gpuLevel="2"
             resetWindowFullScreen="true" />
+
+        <performance-parms
+            cpuLevel="2"
+            gpuLevel="2" />
 
         <eye-buffer-parms
             colorFormat="COLOR_8888"
@@ -41,8 +49,7 @@
             fov-y="90.0"
             multiSamples="1"
             resolution="DEFAULT"
-            textureFilter="TEXTURE_FILTER_BILINEAR"
-            widthScale="1" />
+            resolveDepth="false" />
 
         <head-model-parms
             eyeHeight="DEFAULT"
