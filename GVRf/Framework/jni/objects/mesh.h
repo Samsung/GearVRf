@@ -41,7 +41,10 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
-                    have_bounding_volume_(false), vaoInitiliased_(false) {
+                    have_bounding_volume_(false), vaoInitiliased_(false),
+                    vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
+                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID)
+    {
     }
 
     ~Mesh() {
@@ -62,11 +65,16 @@ public:
     }
 
     void deleteVaos() {
-        gl_delete.queueVertexArray(vaoID_);
-        gl_delete.queueBuffer(triangle_vboID_);
-        gl_delete.queueBuffer(vert_vboID_);
-        gl_delete.queueBuffer(norm_vboID_);
-        gl_delete.queueBuffer(tex_vboID_);
+        if (vaoID_ != GVR_INVALID)
+            gl_delete.queueVertexArray(vaoID_);
+        if (triangle_vboID_ != GVR_INVALID)
+            gl_delete.queueBuffer(triangle_vboID_);
+        if (vert_vboID_ != GVR_INVALID)
+            gl_delete.queueBuffer(vert_vboID_);
+        if (norm_vboID_ != GVR_INVALID)
+            gl_delete.queueBuffer(norm_vboID_);
+        if (tex_vboID_ != GVR_INVALID)
+            gl_delete.queueBuffer(tex_vboID_);
         have_bounding_volume_ = false;
     }
 
