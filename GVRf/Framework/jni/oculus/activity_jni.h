@@ -35,8 +35,7 @@ class KSensorHeadRotation;
 template <class R> class GVRActivityT : public OVR::VrAppInterface
 {
 public:
-    GVRActivityT( JNIEnv & jni_, jobject activityObject_);
-    ~GVRActivityT();
+    GVRActivityT(JNIEnv& jni);
 
     virtual void        Configure( OVR::ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
@@ -46,6 +45,7 @@ public:
     virtual bool        OnKeyEvent( const int keyCode, const int repeatCount, const OVR::KeyEventType eventType );
     bool                updateSensoredScene();
     void                setCameraRig(jlong cameraRig);
+    void                initJni();
 
     // When launched by an intent, we may be viewing a partial
     // scene for debugging, so always clear the screen to grey
@@ -68,10 +68,9 @@ private:
         viewManager->mvp_matrix = mvp;
     }
 
-    JNIEnv*             UiJni;            // for use by the Java UI thread
+    JNIEnv*             uiJni;            // for use by the Java UI thread
     OVR::Matrix4f       GetEyeView( const int eye, const float fovDegrees ) const;
 
-    jobject             javaObject;
     jclass              activityClass;    // must be looked up from main thread or FindClass() will fail
 
     jclass              vrAppSettingsClass;
