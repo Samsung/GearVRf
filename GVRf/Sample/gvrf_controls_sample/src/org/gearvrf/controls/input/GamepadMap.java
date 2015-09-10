@@ -23,6 +23,21 @@ import java.util.ArrayList;
 
 public class GamepadMap {
 
+    public static final int KEYCODE_BUTTON_L1 = KeyEvent.KEYCODE_BUTTON_L1;
+    public static final int KEYCODE_BUTTON_R1 = KeyEvent.KEYCODE_BUTTON_R1;
+    public static final int KEYCODE_BUTTON_X = KeyEvent.KEYCODE_BUTTON_X;
+    public static final int KEYCODE_BUTTON_Y = KeyEvent.KEYCODE_BUTTON_Y;
+    public static final int KEYCODE_BUTTON_A = KeyEvent.KEYCODE_BUTTON_A;
+    public static final int KEYCODE_BUTTON_B = KeyEvent.KEYCODE_BUTTON_B;
+
+    public static final int KEYCODE_DPAD_LEFT = KeyEvent.KEYCODE_DPAD_LEFT;
+    public static final int KEYCODE_DPAD_RIGHT = KeyEvent.KEYCODE_DPAD_RIGHT;
+    public static final int KEYCODE_DPAD_UP = KeyEvent.KEYCODE_DPAD_UP;
+    public static final int KEYCODE_DPAD_DOWN = KeyEvent.KEYCODE_DPAD_DOWN;
+
+    public static final int KEYCODE_BUTTON_SELECT = KeyEvent.KEYCODE_BUTTON_SELECT;
+    public static final int KEYCODE_BUTTON_START = KeyEvent.KEYCODE_BUTTON_START;
+
     public float axisX;
     public float axisY;
     public float axisHatX;
@@ -38,7 +53,7 @@ public class GamepadMap {
     public float centeredAxisRY;
 
     protected ArrayList<Integer> buttonsKeyCode;
-    public SparseArray<GamePadButton> buttons = new SparseArray<GamePadButton>();
+    public SparseArray<Button> buttons = new SparseArray<Button>();
 
     public GamepadMap() {
         super();
@@ -50,7 +65,7 @@ public class GamepadMap {
         populateKeys();
 
         for (int i : buttonsKeyCode) {
-            buttons.append(i, new GamePadButton());
+            buttons.append(i, new Button());
 
         }
 
@@ -78,7 +93,7 @@ public class GamepadMap {
     public void resetIntermadiateState() {
 
         for (Integer key : buttonsKeyCode) {
-            GamePadButton button = buttons.get(key);
+            Button button = buttons.get(key);
             button.down = false;
             button.up = false;
         }

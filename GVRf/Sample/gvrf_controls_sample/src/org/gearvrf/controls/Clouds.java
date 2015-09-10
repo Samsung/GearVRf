@@ -15,60 +15,58 @@
 
 package org.gearvrf.controls;
 
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.GVRRotationByAxisWithPivotAnimation;
-import org.gearvrf.controls.util.RenderingOrder;
+import org.gearvrf.controls.model.Cloud;
 
 public class Clouds extends GVRSceneObject {
 
-    public GVRSceneObject[] clouds;
+    public Cloud[] clouds;
     private final int NUMBER_OF_CLOUDS = 4;
     private final int FULL_ROTATION = 360;
-    private final int CLOUD_ANGLE = 30;
-    private final float CLOUD_OFFSET = 0.5f;
+
     private final int CLOUD_ROTATION_DURATION = 1800;
 
     public Clouds(GVRContext gvrContext, float cloudDistance, int numberOfClouds) {
         super(gvrContext);
 
-        GVRMesh[] mesh = new GVRMesh[NUMBER_OF_CLOUDS];
-        mesh[0] = gvrContext.createQuad(2.1f, 1.6f);
-        mesh[1] = gvrContext.createQuad(4.2f, 2.1f);
-        mesh[2] = gvrContext.createQuad(6.7f, 2.4f);
-        mesh[3] = gvrContext.createQuad(6.2f, 2.4f);
+        GVRMesh mesh = gvrContext.loadMesh(
+                new GVRAndroidResource(gvrContext, R.raw.cloud_mesh));
 
-        GVRTexture[] texture = new GVRTexture[NUMBER_OF_CLOUDS];
-        texture[0] = gvrContext.loadTexture(
-                new GVRAndroidResource(gvrContext, R.drawable.cloud_01));
-        texture[1] = gvrContext.loadTexture(
-                new GVRAndroidResource(gvrContext, R.drawable.cloud_02));
-        texture[2] = gvrContext.loadTexture(
-                new GVRAndroidResource(gvrContext, R.drawable.cloud_03));
-        texture[3] = gvrContext.loadTexture(
-                new GVRAndroidResource(gvrContext, R.drawable.cloud_04));
-        clouds = new GVRSceneObject[numberOfClouds];
+        clouds = new Cloud[numberOfClouds];
+        Resources res = gvrContext.getContext().getResources();
+        TypedArray cloudArray = res.obtainTypedArray(R.array.clouds);
+        TypedArray cloudTypeValues;
 
         for (int i = 0; i < numberOfClouds; i++) {
             float angle = FULL_ROTATION / numberOfClouds;
-            int random = i % NUMBER_OF_CLOUDS;
-            // int random = (int) (Math.random() * 3);
-            clouds[i] = new GVRSceneObject(gvrContext, mesh[random], texture[random]);
-            clouds[i].getTransform().setPositionZ(-cloudDistance);
+            int currentCloudIndex = i % NUMBER_OF_CLOUDS;
+
+            cloudTypeValues = res.obtainTypedArray(cloudArray.getResourceId(currentCloudIndex, 0));
+
+            clouds[i] = new Cloud(gvrContext, mesh, -cloudDistance, cloudTypeValues, angle * i);
+
             gvrContext.getMainScene().addSceneObject(clouds[i]);
-            clouds[i].getTransform().rotateByAxisWithPivot((float)
-                    (Math.random() + CLOUD_OFFSET) * CLOUD_ANGLE, 1, 0, 0, 0, 0, 0);
-            clouds[i].getTransform().rotateByAxisWithPivot(angle * i, 0, 1, 0, 0, 0, 0);
-            clouds[i].getRenderData().setRenderingOrder(RenderingOrder.CLOUDS);
-            GVRAnimation anim = new GVRRotationByAxisWithPivotAnimation(
-                    clouds[i], CLOUD_ROTATION_DURATION, FULL_ROTATION, 0, 1, 0, 0, 0, 0);
-            anim.start(gvrContext.getAnimationEngine());
+
+            rotateCloudsAroundCameraAnimation(gvrContext, clouds[i]);
 
         }
 
+    }
+
+    private void rotateCloudsAroundCameraAnimation(GVRContext gvrContext, Cloud cloud) {
+        GVRAnimation anim = new GVRRotationByAxisWithPivotAnimation(
+                cloud, CLOUD_ROTATION_DURATION, FULL_ROTATION, 0, 1, 0, 0, 0, 0);
+        anim.setRepeatCount(-1);
+        anim.setRepeatMode(GVRRepeatMode.REPEATED);
+        anim.start(gvrContext.getAnimationEngine());
     }
 }

@@ -1,0 +1,34 @@
+<resources>
+	    <string-array name="cloud01">
+	        <item name="scalex">2.1</item>
+	        <item name="scaley">1</item>
+	        <item name="scalez">1</item>
+	        <item name="texture">@drawable/cloud_01</item>
+	    </string-array>
+	   <string-array name="cloud02">
+	        <item name="scalex">4.2</item>
+	        <item name="scaley">2.1</item>
+	        <item name="scalez">1</item>
+	        <item name="texture">@drawable/cloud_02</item>
+	    </string-array>
+	    <string-array name="cloud03">
+	        <item name="scalex">6.7</item>
+	        <item name="scaley">2.4</item>
+	        <item name="scalez">1</item>
+	        <item name="texture">@drawable/cloud_03</item>
+	    </string-array>
+	    <string-array name="cloud04">
+	        <item name="scalex">6.2</item>
+	        <item name="scaley">2.4</item>
+	        <item name="scalez">1</item>
+	        <item name="texture">@drawable/cloud_04</item>
+	    </string-array>
+	
+  <!-- Clouds -->
+    <array name="clouds">
+        <item>@array/cloud01</item>
+        <item>@array/cloud02</item>
+        <item>@array/cloud03</item>
+        <item>@array/cloud04</item>
+    </array>
+</resources>

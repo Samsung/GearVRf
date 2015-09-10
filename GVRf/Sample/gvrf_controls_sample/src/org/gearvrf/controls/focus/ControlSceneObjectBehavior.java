@@ -12,41 +12,146 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gearvrf.controls.focus;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRPicker;
-import org.gearvrf.GVRSceneObject;
+import org.gearvrf.controls.cursor.ControlGazeController;
+import org.gearvrf.controls.input.GamepadInput;
+import org.gearvrf.controls.input.GamepadMap;
+import org.gearvrf.controls.input.TouchPadInput;
+import org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirection;
 
 import java.util.ArrayList;
 
 public class ControlSceneObjectBehavior {
 
+    public static ArrayList<ControlSceneObject> interactiveObjects = new ArrayList<ControlSceneObject>();
+
     public static void process(GVRContext context) {
 
         GVREyePointeeHolder[] eyePointeeHolders = GVRPicker.pickScene(context.getMainScene());
-
-        ArrayList<GVRSceneObject> needToDisableFocus = new ArrayList<GVRSceneObject>();
-
-        for (GVRSceneObject obj : context.getMainScene().getWholeSceneObjects()) {
+        ArrayList<ControlSceneObject> needToDisableFocus = new ArrayList<ControlSceneObject>();
+        for (ControlSceneObject obj : interactiveObjects) {
+            obj.onStep();
             needToDisableFocus.add(obj);
         }
 
-        for (GVREyePointeeHolder holder : eyePointeeHolders) {
-
-            if (ControlSceneObject.hasFocusMethods(holder.getOwnerObject())) {
-                ControlSceneObject controlObject = (ControlSceneObject) holder.getOwnerObject();
-                controlObject.setFocus(true);
-                controlObject.dispatchInFocus();
-                needToDisableFocus.remove(controlObject);
+        if (eyePointeeHolders.length == 0) {
+            ControlGazeController.disableInteractiveCursor();
+        } else {
+            for (GVREyePointeeHolder eph : eyePointeeHolders) {
+                for (ControlSceneObject object : interactiveObjects) {
+                    if (eph.getOwnerObject().equals(object)) {
+                        object.setFocus(true);
+                        needToDisableFocus.remove(object);
+                    }
+                }
             }
         }
 
-        for (GVRSceneObject obj : needToDisableFocus) {
-            if (ControlSceneObject.hasFocusMethods(obj)) {
-                ControlSceneObject control = (ControlSceneObject) obj;
-                control.setFocus(false);
+        for (ControlSceneObject obj : needToDisableFocus) {
+            obj.setFocus(false);
+        }
+
+        processTap(context);
+    }
+
+    private static void processTap(GVRContext context) {
+
+        for (ControlSceneObject object : interactiveObjects) {
+            if (object.hasFocus()) {
+
+                checkInput(object);
+            }
+        }
+    }
+
+    private static void checkInput(ControlSceneObject object) {
+        if (TouchPadInput.getCurrent().buttonState.isSingleTap()) {
+            object.singleTap();
+
+        }
+        handleTouchPad(object);
+        handleGamePad(object);
+    }
+
+    private static void handleGamePad(ControlSceneObject object) {
+        if (object.gamepadActionButtonslistener != null) {
+            hadleGamepadPressed(object);
+            hadleGamepadUp(object);
+            hadleGamepadDown(object);
+        }
+    }
+
+    private static void hadleGamepadDown(ControlSceneObject object) {
+        if (GamepadInput.getKeyDown(GamepadMap.KEYCODE_BUTTON_A)) {
+            object.gamepadActionButtonslistener.down(GamepadMap.KEYCODE_BUTTON_A);
+        }
+        if (GamepadInput.getKeyDown(GamepadMap.KEYCODE_BUTTON_B)) {
+            object.gamepadActionButtonslistener.down(GamepadMap.KEYCODE_BUTTON_B);
+        }
+        if (GamepadInput.getKeyDown(GamepadMap.KEYCODE_BUTTON_X)) {
+            object.gamepadActionButtonslistener.down(GamepadMap.KEYCODE_BUTTON_X);
+        }
+        if (GamepadInput.getKeyDown(GamepadMap.KEYCODE_BUTTON_Y)) {
+            object.gamepadActionButtonslistener.down(GamepadMap.KEYCODE_BUTTON_Y);
+        }
+
+    }
+
+    private static void hadleGamepadUp(ControlSceneObject object) {
+        if (GamepadInput.getKeyUp(GamepadMap.KEYCODE_BUTTON_A)) {
+            object.gamepadActionButtonslistener.up(GamepadMap.KEYCODE_BUTTON_A);
+        }
+        if (GamepadInput.getKeyUp(GamepadMap.KEYCODE_BUTTON_B)) {
+            object.gamepadActionButtonslistener.up(GamepadMap.KEYCODE_BUTTON_B);
+        }
+        if (GamepadInput.getKeyUp(GamepadMap.KEYCODE_BUTTON_X)) {
+            object.gamepadActionButtonslistener.up(GamepadMap.KEYCODE_BUTTON_X);
+        }
+        if (GamepadInput.getKeyUp(GamepadMap.KEYCODE_BUTTON_Y)) {
+            object.gamepadActionButtonslistener.up(GamepadMap.KEYCODE_BUTTON_Y);
+        }
+
+    }
+
+    private static void hadleGamepadPressed(ControlSceneObject object) {
+
+        if (GamepadInput.getKey(GamepadMap.KEYCODE_BUTTON_A)) {
+            object.gamepadActionButtonslistener.pressed(GamepadMap.KEYCODE_BUTTON_A);
+        }
+        if (GamepadInput.getKey(GamepadMap.KEYCODE_BUTTON_B)) {
+            object.gamepadActionButtonslistener.pressed(GamepadMap.KEYCODE_BUTTON_B);
+        }
+        if (GamepadInput.getKey(GamepadMap.KEYCODE_BUTTON_X)) {
+            object.gamepadActionButtonslistener.pressed(GamepadMap.KEYCODE_BUTTON_X);
+        }
+        if (GamepadInput.getKey(GamepadMap.KEYCODE_BUTTON_Y)) {
+            object.gamepadActionButtonslistener.pressed(GamepadMap.KEYCODE_BUTTON_Y);
+        }
+
+    }
+
+    private static void handleTouchPad(ControlSceneObject object) {
+        if (object.touchAndGesturelistener != null) {
+
+            if (TouchPadInput.getCurrent().buttonState.isLongPressed()) {
+                object.touchAndGesturelistener.longPressed();
+            }
+            if (TouchPadInput.getCurrent().buttonState.isDown()) {
+                object.touchAndGesturelistener.down();
+            }
+            if (TouchPadInput.getCurrent().buttonState.isUp()) {
+                object.touchAndGesturelistener.up();
+            }
+            if (TouchPadInput.getCurrent().buttonState.isPressed()) {
+                object.touchAndGesturelistener.pressed();
+            }
+            if (TouchPadInput.getCurrent().swipeDirection != SwipeDirection.Ignore) {
+                object.touchAndGesturelistener.swipe(TouchPadInput.getCurrent().swipeDirection);
             }
         }
 

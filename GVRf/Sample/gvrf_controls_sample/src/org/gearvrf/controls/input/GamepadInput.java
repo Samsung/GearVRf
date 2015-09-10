@@ -15,13 +15,9 @@
 
 package org.gearvrf.controls.input;
 
-import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import org.gearvrf.controls.Worm;
-import org.gearvrf.controls.Worm.MovementDirection;
 
 import java.util.ArrayList;
 
@@ -36,16 +32,14 @@ public final class GamepadInput {
         newGamepadMap.resetIntermadiateState();
 
         for (Integer key : oldGamepadMap.buttonsKeyCode) {
-            GamePadButton oldButton = oldGamepadMap.buttons.get(key);
-            GamePadButton newButton = newGamepadMap.buttons.get(key);
+            Button oldButton = oldGamepadMap.buttons.get(key);
+            Button newButton = newGamepadMap.buttons.get(key);
 
             updateIntermiteStates(newButton, oldButton);
-
         }
-
     }
 
-    private static void updateIntermiteStates(GamePadButton newButton, GamePadButton oldButton) {
+    private static void updateIntermiteStates(Button newButton, Button oldButton) {
 
         if (oldButton.pressed != newButton.pressed) {
             newButton.down = newButton.pressed;
@@ -91,7 +85,7 @@ public final class GamepadInput {
         return newGamepadMap.buttons.get(key).pressed;
     }
 
-    public static GamePadButton getButton(int key) {
+    public static Button getButton(int key) {
         return newGamepadMap.buttons.get(key);
     }
 
@@ -120,8 +114,6 @@ public final class GamepadInput {
     }
 
     public static boolean processJoystickInput(MotionEvent event, int historyPos) {
-
-        Log.d("processJoystickInput", "processJoystickInput");
 
         InputDevice mInputDevice = event.getDevice();
 
@@ -206,30 +198,4 @@ public final class GamepadInput {
         return newGamepadMap.buttonsKeyCode;
     }
 
-    public static void interactWithDPad(Worm worm) {
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X) >= 1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_X) >= 1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX) >= 1) {
-            Log.d("AAA", "RIGHT");
-            worm.rotateAroundCamera(.1f, -5f);
-            worm.rotateWorm(MovementDirection.Right);
-        }
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X) <= -1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_X) <= -1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX) <= -1) {
-            Log.d("AAA", "LEFT");
-            worm.rotateAroundCamera(.1f, 5f);
-            worm.rotateWorm(MovementDirection.Left);
-        }
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y) >= 1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y) >= 1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY) >= 1) {
-            Log.d("AAA", "DOWN");
-            worm.moveAlongCameraVector(.1f, -.225f);
-            worm.rotateWorm(MovementDirection.Down);
-        }
-        if (GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y) <= -1 || GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y) <= -1
-                || GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY) <= -1) {
-            Log.d("AAA", "UP");
-            worm.moveAlongCameraVector(.1f, .225f);
-            worm.rotateWorm(MovementDirection.Up);
-        }
-    }
 }

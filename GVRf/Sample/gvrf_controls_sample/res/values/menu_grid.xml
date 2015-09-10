@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="grid">
+        <item name="columnWidth">1</item>
+        <item name="horizontalSpacing">0.9</item>
+        <item name="numColumns">2</item>
+        <item name="numLines">4</item>
+        <item name="verticalSpacing">-0.23</item>
+    </string-array>
+    <string-array name="colors_grid">
+        <item name="columnWidth">1</item>
+        <item name="horizontalSpacing">0.38</item>
+        <item name="numColumns">4</item>
+        <item name="numLines">3</item>
+        <item name="verticalSpacing">-0.35</item>
+    </string-array>
+    <string-array name="menu_motion_item">
+        <item>Linear</item>
+        <item>Quad in</item>
+        <item>Expo in</item>
+        <item>Circular in</item>
+        <item>Bouncing</item>
+        <item>Quad out</item>
+        <item>Expo out</item>
+        <item>Circular out</item>
+    </string-array>
+</resources>

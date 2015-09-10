@@ -12,36 +12,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gearvrf.controls.focus;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.controls.cursor.ControlGazeController;
 
-
-public class ControlSceneObject extends GVRSceneObject {
+public abstract class ControlSceneObject extends GVRSceneObject {
 
     private boolean focus = false;
-    public FocusListener focusListener = null;
+    public String tag = null;
+    public boolean showInteractiveCursor = true;
+    protected TouchAndGestureImpl touchAndGesturelistener;
+    protected GamepadTouchImpl gamepadActionButtonslistener;
 
     public ControlSceneObject(GVRContext gvrContext) {
         super(gvrContext);
+        ControlSceneObjectBehavior.interactiveObjects.add(this);
     }
+    
 
     public ControlSceneObject(GVRContext gvrContext, float f, float g, GVRTexture t) {
         super(gvrContext, f, g, t);
+        ControlSceneObjectBehavior.interactiveObjects.add(this);
     }
 
     public void dispatchGainedFocus() {
-        if (this.focusListener != null) {
-            this.focusListener.gainedFocus(this);
+        gainedFocus();
+        if (showInteractiveCursor) {
+            ControlGazeController.enableInteractiveCursor();
         }
     }
 
     public void dispatchLostFocus() {
-        if (this.focusListener != null) {
-            focusListener.lostFocus(this);
-        }
+        lostFocus();
     }
 
     public void setFocus(boolean state) {
@@ -58,16 +64,36 @@ public class ControlSceneObject extends GVRSceneObject {
         }
     }
 
-    public void dispatchInFocus() {
-        if (this.focusListener != null) {
-            this.focusListener.inFocus(this);
+    public boolean hasFocus() {
+        return focus;
+    }
+
+    public void onStep() {
+    }
+
+    protected abstract void gainedFocus();
+
+    protected abstract void lostFocus();
+
+    protected void singleTap() {
+
+        if (touchAndGesturelistener != null) {
+
+            touchAndGesturelistener.singleTap();
+
         }
     }
 
-    public static boolean hasFocusMethods(GVRSceneObject obj) {
-        if (obj instanceof ControlSceneObject) {
-            return true;
-        }
-        return false;
+    public void setTouchAndGesturelistener(TouchAndGestureImpl listener) {
+        this.touchAndGesturelistener = listener;
     }
+
+    public GamepadTouchImpl getGamepadTouchListener() {
+        return gamepadActionButtonslistener;
+    }
+
+    public void setGamepadTouchListener(GamepadTouchImpl gamepadActionButtonslistener) {
+        this.gamepadActionButtonslistener = gamepadActionButtonslistener;
+    }
+
 }

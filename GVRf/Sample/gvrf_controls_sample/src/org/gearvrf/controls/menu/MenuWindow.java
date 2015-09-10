@@ -12,17 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf.controls.focus;
 
+package org.gearvrf.controls.menu;
+
+import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
+public abstract class MenuWindow extends GVRSceneObject {
 
-public interface FocusListener {
+    public MenuWindow(GVRContext gvrContext) {
+        super(gvrContext);
+    }
 
-    public void gainedFocus(GVRSceneObject object);
+    protected abstract void show();
 
-    public void lostFocus(GVRSceneObject object);
-
-    public void inFocus(GVRSceneObject object);
+    protected abstract void hide();
 
 }
