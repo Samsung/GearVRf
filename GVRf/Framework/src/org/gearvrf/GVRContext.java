@@ -673,6 +673,11 @@ public abstract class GVRContext {
             AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider) {
         try {
             GVRSceneObject newParentSceneObject = new GVRSceneObject(this);
+            if(node.getTransform(wrapperProvider) != null) {
+                float[] data = node.getTransform(wrapperProvider).m_data;
+                parentSceneObject.getTransform().setModelMatrix(transpose(data));
+                parentSceneObject.setName(node.getName());
+            }
             if (node.getNumMeshes() == 0) {
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
@@ -700,6 +705,27 @@ public abstract class GVRContext {
             // Error while recursing the Scene Graph
             e.printStackTrace();
         }
+    }
+    
+    private float[] transpose(float[] modelMatrix){
+        float[] transposed = new float[16];
+        transposed[0] = modelMatrix[0];
+        transposed[4] = modelMatrix[1];
+        transposed[8] = modelMatrix[2];
+        transposed[12] = modelMatrix[3];
+        transposed[1] = modelMatrix[4];
+        transposed[5] = modelMatrix[5];
+        transposed[9] = modelMatrix[6];
+        transposed[13] = modelMatrix[7];
+        transposed[2] = modelMatrix[8];
+        transposed[6] = modelMatrix[9];
+        transposed[10] = modelMatrix[10];
+        transposed[14] = modelMatrix[11];
+        transposed[3] = modelMatrix[12];
+        transposed[7] = modelMatrix[13];
+        transposed[11] = modelMatrix[14];
+        transposed[15] = modelMatrix[15];
+        return transposed;
     }
 
     /**
