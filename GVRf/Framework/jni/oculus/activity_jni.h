@@ -40,7 +40,7 @@ public:
     virtual void        Configure( OVR::ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
     virtual void        OneTimeShutdown();
-    virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegrees, ovrFrameParms & frameParms );
+    virtual OVR::Matrix4f    DrawEyeView( const int eye, const float fovDegreesX, const float fovDegreesY, ovrFrameParms & frameParms );
     virtual OVR::Matrix4f    Frame( const OVR::VrFrame & vrFrame );
     virtual bool        OnKeyEvent( const int keyCode, const int repeatCount, const OVR::KeyEventType eventType );
     bool                updateSensoredScene();
@@ -69,7 +69,7 @@ private:
     }
 
     JNIEnv*             uiJni;            // for use by the Java UI thread
-    OVR::Matrix4f       GetEyeView( const int eye, const float fovDegrees ) const;
+    OVR::Matrix4f       GetEyeView( const int eye, const float fovDegreesX, const float fovDegreesY ) const;
 
     jclass              activityClass;    // must be looked up from main thread or FindClass() will fail
 

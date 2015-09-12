@@ -18,7 +18,9 @@
 
 #include <vector>
 #include <pthread.h>
+#ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
+#endif
 
 #define GVR_INVALID 0
 

@@ -183,11 +183,16 @@ class GVRXMLParser {
                             } else if (attributeName.equals("resolveDepth")) {
                                 settings.eyeBufferParms.enableResolveDepth(Boolean
                                         .parseBoolean(attributeValue));
-                            } else if (attributeName.equals("resolution")) {
+                            } else if (attributeName.equals("resolutionWidth")) {
                                 int resolution = Integer
                                         .parseInt(attributeValue);
                                 settings.eyeBufferParms
-                                        .setResolution(resolution);
+                                        .setResolutionWidth(resolution);
+                            } else if (attributeName.equals("resolutionHeight")) {
+                                int resolution = Integer
+                                        .parseInt(attributeValue);
+                                settings.eyeBufferParms
+                                        .setResolutionHeight(resolution);
                             }
                         } else if (tagName.equals("head-model-parms")) {
                             if (attributeName.equals("interpupillaryDistance")) {
