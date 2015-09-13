@@ -39,7 +39,8 @@
             depthFormat="DEPTH_24"
             fov-y="90.0"
             multiSamples="1"
-            resolution="DEFAULT"
+            resolutionWidth="DEFAULT"
+            resolutionHeight="DEFAULT"
             textureFilter="TEXTURE_FILTER_BILINEAR"
             widthScale="1" />
 
