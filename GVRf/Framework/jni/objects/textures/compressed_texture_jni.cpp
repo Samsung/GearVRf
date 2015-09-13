@@ -23,14 +23,13 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-// Note that "asynchronous_textures" becomes "asynchronous_1textures"
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
         jobject obj, jint target, jint internalFormat,
         jint width, jint height, jint imageSize, jbyteArray bytes, jint dataOffset,
         jintArray jtexture_parameters);
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
+Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
         jobject obj, jint target);
 }
 ;
@@ -57,7 +56,7 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
+Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
     jobject obj, jint target) {
     return reinterpret_cast<jlong>(new CompressedTexture(target));
 }
