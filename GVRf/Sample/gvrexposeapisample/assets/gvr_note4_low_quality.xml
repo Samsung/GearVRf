@@ -48,7 +48,8 @@ of stable frame rate and power saving.
             depthFormat="DEPTH_24"
             fov-y="90.0"
             multiSamples="0"
-            resolution="512"
+            resolutionWidth="512"
+            resolutionHeight="512"
             resolveDepth="false" />
 
         <head-model-parms
