@@ -228,7 +228,7 @@ public class VrAppSettings {
         /**
          * Set resolution width.
          * 
-         * @param resolution
+         * @param resolutionWidth
          *            Resolution width to set.
          */
         public void setResolutionWidth(int resolutionWidth) {
@@ -238,7 +238,7 @@ public class VrAppSettings {
         /**
          * Set resolution height.
          * 
-         * @param resolution
+         * @param resolutionHeight
          *            Resolution height to set.
          */
         public void setResolutionHeight(int resolutionHeight) {
