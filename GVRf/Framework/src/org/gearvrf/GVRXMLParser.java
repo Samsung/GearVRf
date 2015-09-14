@@ -184,15 +184,15 @@ class GVRXMLParser {
                                 settings.eyeBufferParms.enableResolveDepth(Boolean
                                         .parseBoolean(attributeValue));
                             } else if (attributeName.equals("resolutionWidth")) {
-                                int resolution = Integer
+                                int resolutionWidth = Integer
                                         .parseInt(attributeValue);
                                 settings.eyeBufferParms
-                                        .setResolutionWidth(resolution);
+                                        .setResolutionWidth(resolutionWidth);
                             } else if (attributeName.equals("resolutionHeight")) {
-                                int resolution = Integer
+                                int resolutionHeight = Integer
                                         .parseInt(attributeValue);
                                 settings.eyeBufferParms
-                                        .setResolutionHeight(resolution);
+                                        .setResolutionHeight(resolutionHeight);
                             }
                         } else if (tagName.equals("head-model-parms")) {
                             if (attributeName.equals("interpupillaryDistance")) {
