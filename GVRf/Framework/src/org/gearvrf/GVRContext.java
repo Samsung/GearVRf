@@ -673,11 +673,6 @@ public abstract class GVRContext {
             AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider) {
         try {
             GVRSceneObject newParentSceneObject = new GVRSceneObject(this);
-            if(node.getTransform(wrapperProvider) != null) {
-                float[] data = node.getTransform(wrapperProvider).m_data;
-                parentSceneObject.getTransform().setModelMatrix(transpose(data));
-                parentSceneObject.setName(node.getName());
-            }
             if (node.getNumMeshes() == 0) {
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
@@ -695,6 +690,11 @@ public abstract class GVRContext {
                 }
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
+            }
+            if(node.getTransform(wrapperProvider) != null) {
+                float[] data = node.getTransform(wrapperProvider).m_data;
+                parentSceneObject.getTransform().setModelMatrix(transpose(data));
+                parentSceneObject.setName(node.getName());
             }
             for (int i = 0; i < node.getNumChildren(); i++) {
                 this.recurseAssimpNodes(assetRelativeFilename,
