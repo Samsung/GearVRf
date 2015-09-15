@@ -89,11 +89,13 @@ public class MainActivity extends GVRActivity implements
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (mDetector == null) {
+            return false;
+        }
         TouchPadInput.input(event);
         mDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
     }
-    
 
     @Override
     public boolean onSingleTap(MotionEvent e) {
@@ -101,7 +103,7 @@ public class MainActivity extends GVRActivity implements
             mLatestTap = System.currentTimeMillis();
             TouchPadInput.onSingleTap();
         }
-        
+
         return false;
     }
 
@@ -113,7 +115,7 @@ public class MainActivity extends GVRActivity implements
     @Override
     public boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection, float velocityX,
             float velocityY) {
-        TouchPadInput.onSwipe( swipeDirection);
+        TouchPadInput.onSwipe(swipeDirection);
 
         return false;
     }

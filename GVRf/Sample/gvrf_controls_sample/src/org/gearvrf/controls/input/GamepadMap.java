@@ -88,6 +88,8 @@ public class GamepadMap {
         buttonsKeyCode.add(KeyEvent.KEYCODE_BUTTON_SELECT);
         buttonsKeyCode.add(KeyEvent.KEYCODE_BUTTON_START);
 
+        buttonsKeyCode.add(KeyEvent.KEYCODE_BACK);
+
     }
 
     public void resetIntermadiateState() {

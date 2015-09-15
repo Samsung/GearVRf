@@ -126,6 +126,9 @@ public class VRSamplesTouchPadGesturesDetector extends Object implements
 
     public boolean onTouchEvent(MotionEvent event) {
 
+        if (mDetector == null) {
+            return false;
+        }
         return this.mDetector.onTouchEvent(event);
     }
 
