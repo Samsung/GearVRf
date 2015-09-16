@@ -99,8 +99,11 @@ public class VrAppSettings {
         // Defaults to FMT_8888.
         public ColorFormat colorFormat;
 
-        // Resolution for each eye buffer.
-        public int resolution;
+        // Resolution for eye buffer width.
+        public int resolutionWidth;
+
+        // Resolution for eye buffer height.
+        public int resolutionHeight;
         
         //Is depth buffer resolved to a texture or not.
         boolean resolveDepth;
@@ -205,22 +208,41 @@ public class VrAppSettings {
         }
 
         /**
-         * Get current resolution.
+         * Get current resolution width.
          * 
-         * @return Current resolution.
+         * @return Current resolution width.
          */
-        public int getResolution() {
-            return resolution;
+        public int getResolutionWidth() {
+            return resolutionWidth;
         }
 
         /**
-         * Set resolution.
+         * Get current resolution height.
          * 
-         * @param resolution
-         *            Resolution to set.
+         * @return Current resolution height.
          */
-        public void setResolution(int resolution) {
-            this.resolution = resolution;
+        public int getResolutionHeight() {
+            return resolutionHeight;
+        }
+
+        /**
+         * Set resolution width.
+         * 
+         * @param resolutionWidth
+         *            Resolution width to set.
+         */
+        public void setResolutionWidth(int resolutionWidth) {
+            this.resolutionWidth = resolutionWidth;
+        }
+
+        /**
+         * Set resolution height.
+         * 
+         * @param resolutionHeight
+         *            Resolution height to set.
+         */
+        public void setResolutionHeight(int resolutionHeight) {
+            this.resolutionHeight = resolutionHeight;
         }
 
         /**
@@ -283,7 +305,8 @@ public class VrAppSettings {
         public EyeBufferParms() {
             multiSamples = 2;
             resolveDepth = false;
-            resolution = -1;
+            resolutionWidth = -1;
+            resolutionHeight = -1;
             depthFormat = DepthFormat.DEPTH_24;
             colorFormat = ColorFormat.COLOR_8888;
             mFovY = 90.0f;
@@ -294,7 +317,8 @@ public class VrAppSettings {
             StringBuilder res = new StringBuilder();
             res.append(" multiSamples = " + this.multiSamples);
             res.append(" resolveDepth = " + this.resolveDepth);
-            res.append(" resolution = " + this.resolution);
+            res.append(" resolutionWidth = " + this.resolutionWidth);
+            res.append(" resolutionHeight = " + this.resolutionHeight);
             res.append(" depthFormat = " + this.depthFormat.name());
             res.append(" colorFormat = " + this.colorFormat.name());
             res.append(" fovY = " + this.mFovY);

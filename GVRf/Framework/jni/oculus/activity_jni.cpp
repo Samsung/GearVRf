@@ -170,12 +170,21 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
     jclass eyeParmsClass = env->GetObjectClass(eyeParmsSettings);
     settings.EyeBufferParms.multisamples = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "multiSamples", "I"));
     settings.EyeBufferParms.resolveDepth = env->GetBooleanField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolveDepth", "Z"));
-    jint resolution = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolution", "I"));
-    if(resolution == -1){
-        env->SetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolution", "I"), settings.EyeBufferParms.resolution);
+
+    jint resolutionWidth = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolutionWidth", "I"));
+    if(resolutionWidth == -1){
+        env->SetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolutionWidth", "I"), settings.EyeBufferParms.resolutionWidth);
     }else{
-        settings.EyeBufferParms.resolution = resolution;
+        settings.EyeBufferParms.resolutionWidth = resolutionWidth;
     }
+
+    jint resolutionHeight = env->GetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolutionHeight", "I"));
+    if(resolutionHeight == -1){
+        env->SetIntField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "resolutionHeight", "I"), settings.EyeBufferParms.resolutionHeight);
+    }else{
+        settings.EyeBufferParms.resolutionHeight = resolutionHeight;
+    }
+
     jobject depthFormat = env->GetObjectField(eyeParmsSettings, env->GetFieldID(eyeParmsClass, "depthFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$DepthFormat;"));
     jmethodID getValueID;
     getValueID = env->GetMethodID(env->GetObjectClass(depthFormat),"getValue","()I");
@@ -320,7 +329,8 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
         }
         logInfo << "; ResolveDepth = " << settings.EyeBufferParms.resolveDepth
                 << "; multiSample = " << settings.EyeBufferParms.multisamples
-                << "; resolution = " << settings.EyeBufferParms.resolution
+                << "; resolutionWidth = " << settings.EyeBufferParms.resolutionWidth
+                << "; resolutionHeight = " << settings.EyeBufferParms.resolutionHeight
                 << std::endl;
         logInfo << "====== Head Model Configuration ======" << std::endl;
         logInfo << "EyeHeight = " << settings.HeadModelParms.EyeHeight
@@ -354,15 +364,15 @@ template <class R> void GVRActivityT<R>::OneTimeShutdown()
     // Free GL resources
 }
 
-template <class R> OVR::Matrix4f GVRActivityT<R>::GetEyeView(const int eye, const float fovDegrees) const
+template <class R> OVR::Matrix4f GVRActivityT<R>::GetEyeView(const int eye, const float fovDegreesX, const float fovDegreesY) const
 {
-    const OVR::Matrix4f projectionMatrix = Scene.GetEyeProjectionMatrix( eye, fovDegrees );
+    const OVR::Matrix4f projectionMatrix = Scene.GetEyeProjectionMatrix( eye, fovDegreesX, fovDegreesY );
     const OVR::Matrix4f viewMatrix = Scene.GetEyeViewMatrix( eye );
     return ( projectionMatrix * viewMatrix );
 }
 
-template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, const float fovDegrees, ovrFrameParms & frameParms) {
-    const OVR::Matrix4f view = GetEyeView(eye, fovDegrees);
+template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, const float fovDegreesX, const float fovDegreesY, ovrFrameParms & frameParms) {
+    const OVR::Matrix4f view = GetEyeView(eye, fovDegreesX, fovDegreesY);
 
     // Transpose view matrix from oculus to mvp_matrix to rendering correctly with gvrf renderer.
     mvp_matrix = glm::mat4(view.M[0][0], view.M[1][0], view.M[2][0],
@@ -380,7 +390,7 @@ template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, con
     cameraRig_->getHeadTransform()->set_rotation(headRotation);
 
     JNIEnv* jni = app->GetVrJni();
-    jni->CallVoidMethod(app->GetJava()->ActivityObject, drawEyeViewMethodId, eye, fovDegrees);
+    jni->CallVoidMethod(app->GetJava()->ActivityObject, drawEyeViewMethodId, eye, fovDegreesY);
 
     if (eye == 1) {
         jni->CallVoidMethod(app->GetJava()->ActivityObject, afterDrawEyesMethodId);

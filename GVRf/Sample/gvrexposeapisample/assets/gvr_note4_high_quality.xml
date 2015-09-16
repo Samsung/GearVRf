@@ -45,7 +45,8 @@ consideration on frame rate and power consumption. -->
             depthFormat="DEPTH_24_STENCIL_8"
             fov-y="90.0"
             multiSamples="4"
-            resolution="1024"            
+            resolutionWidth="1024"            
+            resolutionHeight="1024"            
             resolveDepth="false" />
 
         <head-model-parms

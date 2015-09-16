@@ -80,7 +80,7 @@ class GVRLensInfo {
      */
     public int getFBOWidth() {
         if (!mCustomFBOSize)
-            return mAppSettings.getEyeBufferParms().getResolution();
+            return mAppSettings.getEyeBufferParms().getResolutionWidth();
         else
             return mFBOWidth;
     }
@@ -101,7 +101,7 @@ class GVRLensInfo {
      */
     public int getFBOHeight() {
         if (!mCustomFBOSize)
-            return mAppSettings.getEyeBufferParms().getResolution();
+            return mAppSettings.getEyeBufferParms().getResolutionHeight();
         else
             return mFBOHeight;
     }
