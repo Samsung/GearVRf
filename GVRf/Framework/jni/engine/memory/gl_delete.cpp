@@ -13,14 +13,25 @@
  * limitations under the License.
  */
 
-//#include "util/gvr_log.h"
+#include "util/gvr_log.h"
 #include "gl_delete.h"
+#include "util/gvr_cpp_stack_trace.h"
 
 namespace gvr {
 
 GlDelete gl_delete;
 
+void GlDelete::logInvalidParameter(const char *funcName) {
+    LOGW("GlDelete::%s is called with an invalid parameter", funcName);
+    printStackTrace();
+}
+
 void GlDelete::queueBuffer(GLuint buffer) {
+    if (buffer == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     buffers_.push_back(buffer);
 //    LOGD("queueBuffer(%d) buffers_.size() = %d", buffer, buffers_.size());
@@ -29,6 +40,11 @@ void GlDelete::queueBuffer(GLuint buffer) {
 }
 
 void GlDelete::queueFrameBuffer(GLuint buffer) {
+    if (buffer == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     frame_buffers_.push_back(buffer);
 //    LOGD("queueFrameBuffer(%d) frame_buffers_.size() = %d", buffer,
@@ -38,6 +54,11 @@ void GlDelete::queueFrameBuffer(GLuint buffer) {
 }
 
 void GlDelete::queueProgram(GLuint program) {
+    if (program == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     programs_.push_back(program);
 //    LOGD("queueProgram(%d) programs_.size() = %d", program, programs_.size());
@@ -46,6 +67,11 @@ void GlDelete::queueProgram(GLuint program) {
 }
 
 void GlDelete::queueRenderBuffer(GLuint buffer) {
+    if (buffer == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     render_buffers_.push_back(buffer);
 //    LOGD("queueRenderBuffer(%d) render_buffers_.size() = %d", buffer,
@@ -55,6 +81,11 @@ void GlDelete::queueRenderBuffer(GLuint buffer) {
 }
 
 void GlDelete::queueShader(GLuint shader) {
+    if (shader == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     shaders_.push_back(shader);
 //    LOGD("queueShader(%d) shaders_.size() = %d", shader, shaders_.size());
@@ -63,6 +94,11 @@ void GlDelete::queueShader(GLuint shader) {
 }
 
 void GlDelete::queueTexture(GLuint texture) {
+    if (texture == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     textures_.push_back(texture);
 //    LOGD("queueTexture(%d) textures_.size() = %d", texture, textures_.size());
@@ -71,6 +107,11 @@ void GlDelete::queueTexture(GLuint texture) {
 }
 
 void GlDelete::queueVertexArray(GLuint vertex_array) {
+    if (vertex_array == GVR_INVALID) {
+        logInvalidParameter(__func__);
+        return;
+    }
+
     lock();
     vertex_arrays_.push_back(vertex_array);
 //    LOGD("queueVertexArray(%d) vertex_arrays_.size() = %d", vertex_array,

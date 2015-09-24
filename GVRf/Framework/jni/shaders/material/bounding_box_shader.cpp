@@ -42,9 +42,8 @@ static const char FRAGMENT_SHADER[] = //
                 "}\n";
 
 BoundingBoxShader::BoundingBoxShader() :
-        program_(0), a_position_(0), u_mvp_(0) {
+        program_(0), u_mvp_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
 }
 
@@ -64,8 +63,7 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
     Mesh* mesh = render_data->mesh();
 
 #if _GVRF_USE_GLES3_
-    mesh->setVertexLoc(a_position_);
-    mesh->generateVAO(material->shader_type());
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));

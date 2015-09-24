@@ -9,8 +9,9 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "objects/recyclable_object.h"
+#include "objects/bounding_volume.h"
 
-typedef void (*GVRF_ExternalRenderer)(long data, const float* vertices,
+typedef void (*GVRF_ExternalRenderer)(long data, const gvr::BoundingVolume &bounding_volume,
                                       int vcount, const float* projection, int pcount);
 extern "C" void GVRF_installExternalRenderer(GVRF_ExternalRenderer renderer);
 

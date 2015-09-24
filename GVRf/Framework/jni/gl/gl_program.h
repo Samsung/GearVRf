@@ -20,7 +20,9 @@
 #ifndef GL_PROGRAM_H_
 #define GL_PROGRAM_H_
 
+#ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
+#endif
 
 #include "engine/memory/gl_delete.h"
 
@@ -43,9 +45,9 @@ public:
     GLProgram(const char** pVertexSourceStrings,
             const GLint* pVertexSourceStringLengths,
             const char** pFragmentSourceStrings,
-            const GLint* pFragmentSourceStringLengths) :
+            const GLint* pFragmentSourceStringLengths, int count) :
             id_(
-                    createProgram(2, pVertexSourceStrings,
+                    createProgram(count, pVertexSourceStrings,
                             pVertexSourceStringLengths, pFragmentSourceStrings,
                             pFragmentSourceStringLengths)) {
     }
@@ -114,6 +116,7 @@ public:
             checkGlError("glAttachShader");
             glAttachShader(program, pixelShader);
             checkGlError("glAttachShader");
+            bindCommonAttributes(program);
             glLinkProgram(program);
             GLint linkStatus = GL_FALSE;
             glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -135,8 +138,22 @@ public:
         return program;
     }
 
+    enum attributeBindLocation {
+        POSITION_ATTRIBUTE_LOCATION = 0,
+        TEXCOORD_ATTRIBUT_LOCATION = 1,
+        NORMAL_ATTRIBUTE_LOCATION = 2
+    };
+
 private:
     GLuint id_;
+
+    static void bindCommonAttributes(GLuint id)
+    {
+    	glBindAttribLocation (id, POSITION_ATTRIBUTE_LOCATION, "a_position");
+    	glBindAttribLocation (id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
+    	glBindAttribLocation (id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
+    }
+
 };
 }
 #endif

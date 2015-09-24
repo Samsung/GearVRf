@@ -57,115 +57,114 @@ int Renderer::getNumberTriangles() {
     return numberTriangles;
 }
 
+static std::vector<RenderData*> render_data_vector;
+
+void Renderer::cull(Scene *scene, Camera *camera, ShaderManager* shader_manager) {
+    glm::mat4 view_matrix = camera->getViewMatrix();
+    glm::mat4 projection_matrix = camera->getProjectionMatrix();
+    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
+
+    render_data_vector.clear();
+    std::vector<SceneObject*> scene_objects = scene->getWholeSceneObjects();
+
+    // do occlusion culling, if enabled
+    occlusion_cull(scene, scene_objects);
+
+    // do frustum culling, if enabled
+    frustum_cull(scene, camera, scene_objects, render_data_vector,
+            vp_matrix, shader_manager);
+
+    // do sorting based on render order
+    std::sort(render_data_vector.begin(), render_data_vector.end(),
+            compareRenderData);
+
+}
+
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
         ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,
         RenderTexture* post_effect_render_texture_a,
         RenderTexture* post_effect_render_texture_b) {
-    // there is no need to flat and sort every frame.
-    // however let's keep it as is and assume we are not changed
-    // This is not right way to do data conversion. However since GVRF doesn't support
-    // bone/weight/joint and other assimp data, we will put general model conversion
-    // on hold and do this kind of conversion fist
 
     numberDrawCalls = 0;
     numberTriangles = 0;
 
-    if (scene->getSceneDirtyFlag()) {
+    glm::mat4 view_matrix = camera->getViewMatrix();
+    glm::mat4 projection_matrix = camera->getProjectionMatrix();
+    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
-        glm::mat4 view_matrix = camera->getViewMatrix();
-        glm::mat4 projection_matrix = camera->getProjectionMatrix();
-        glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
+    std::vector<PostEffectData*> post_effects = camera->post_effect_data();
 
-        std::vector<SceneObject*> scene_objects = scene->getWholeSceneObjects();
-        std::vector<RenderData*> render_data_vector;
+    glEnable (GL_DEPTH_TEST);
+    glDepthFunc (GL_LEQUAL);
+    glEnable (GL_CULL_FACE);
+    glFrontFace (GL_CCW);
+    glCullFace (GL_BACK);
+    glEnable (GL_BLEND);
+    glBlendEquation (GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable (GL_POLYGON_OFFSET_FILL);
 
-        // do occlusion culling, if enabled
-        occlusion_cull(scene, scene_objects);
+    if (post_effects.size() == 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
-        // do frustum culling, if enabled
-        frustum_cull(scene, camera, scene_objects, render_data_vector,
-                vp_matrix, shader_manager);
+        glClearColor(camera->background_color_r(),
+                camera->background_color_g(), camera->background_color_b(),
+                camera->background_color_a());
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        // do sorting based on render order
-        std::sort(render_data_vector.begin(), render_data_vector.end(),
-                compareRenderData);
+        for (auto it = render_data_vector.begin();
+                it != render_data_vector.end(); ++it) {
+            renderRenderData(*it, view_matrix, projection_matrix,
+                    camera->render_mask(), shader_manager);
+        }
+    } else {
+        RenderTexture* texture_render_texture = post_effect_render_texture_a;
+        RenderTexture* target_render_texture;
 
-        std::vector<PostEffectData*> post_effects = camera->post_effect_data();
+        glBindFramebuffer(GL_FRAMEBUFFER,
+                texture_render_texture->getFrameBufferId());
+        glViewport(0, 0, texture_render_texture->width(),
+                texture_render_texture->height());
 
-        glEnable (GL_DEPTH_TEST);
-        glDepthFunc (GL_LEQUAL);
-        glEnable (GL_CULL_FACE);
-        glFrontFace (GL_CCW);
-        glCullFace (GL_BACK);
-        glEnable (GL_BLEND);
-        glBlendEquation (GL_FUNC_ADD);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable (GL_POLYGON_OFFSET_FILL);
+        glClearColor(camera->background_color_r(),
+                camera->background_color_g(), camera->background_color_b(),
+                camera->background_color_a());
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        if (post_effects.size() == 0) {
-            glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-
-            glClearColor(camera->background_color_r(),
-                    camera->background_color_g(), camera->background_color_b(),
-                    camera->background_color_a());
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-            for (auto it = render_data_vector.begin();
-                    it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, view_matrix, projection_matrix,
-                        camera->render_mask(), shader_manager);
-            }
-        } else {
-            RenderTexture* texture_render_texture = post_effect_render_texture_a;
-            RenderTexture* target_render_texture;
-
-            glBindFramebuffer(GL_FRAMEBUFFER,
-                    texture_render_texture->getFrameBufferId());
-            glViewport(0, 0, texture_render_texture->width(),
-                    texture_render_texture->height());
-
-            glClearColor(camera->background_color_r(),
-                    camera->background_color_g(), camera->background_color_b(),
-                    camera->background_color_a());
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-            for (auto it = render_data_vector.begin();
-                    it != render_data_vector.end(); ++it) {
-                renderRenderData(*it, view_matrix, projection_matrix,
-                        camera->render_mask(), shader_manager);
-            }
-
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
-
-            for (int i = 0; i < post_effects.size() - 1; ++i) {
-                if (i % 2 == 0) {
-                    texture_render_texture = post_effect_render_texture_a;
-                    target_render_texture = post_effect_render_texture_b;
-                } else {
-                    texture_render_texture = post_effect_render_texture_b;
-                    target_render_texture = post_effect_render_texture_a;
-                }
-                glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-                glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-
-                glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-                renderPostEffectData(camera, texture_render_texture,
-                        post_effects[i], post_effect_shader_manager);
-            }
-
-            glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            renderPostEffectData(camera, texture_render_texture,
-                    post_effects.back(), post_effect_shader_manager);
+        for (auto it = render_data_vector.begin();
+                it != render_data_vector.end(); ++it) {
+            renderRenderData(*it, view_matrix, projection_matrix,
+                    camera->render_mask(), shader_manager);
         }
 
-    } // flag checking
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
 
+        for (int i = 0; i < post_effects.size() - 1; ++i) {
+            if (i % 2 == 0) {
+                texture_render_texture = post_effect_render_texture_a;
+                target_render_texture = post_effect_render_texture_b;
+            } else {
+                texture_render_texture = post_effect_render_texture_b;
+                target_render_texture = post_effect_render_texture_a;
+            }
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
+            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            renderPostEffectData(camera, texture_render_texture,
+                    post_effects[i], post_effect_shader_manager);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        renderPostEffectData(camera, texture_render_texture,
+                post_effects.back(), post_effect_shader_manager);
+    }
 }
 
 void Renderer::occlusion_cull(Scene* scene,
@@ -231,10 +230,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
             continue;
         }
 
-        const float* bounding_box_info = currentMesh->getBoundingBoxInfo();
-        if (bounding_box_info == NULL) {
-            continue;
-        }
+        const BoundingVolume& bounding_volume = currentMesh->getBoundingVolume();
 
         glm::mat4 model_matrix_tmp(
                 render_data->owner_object()->transform()->getModelMatrix());
@@ -253,7 +249,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         build_frustum(frustum, mvp_matrix_array);
 
         // Check for being inside or outside frustum
-        bool is_inside = is_cube_in_frustum(frustum, bounding_box_info);
+        bool is_inside = is_cube_in_frustum(frustum, bounding_volume);
 
         // Only push those scene objects that are inside of the frustum
         if (!is_inside) {
@@ -262,9 +258,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         }
 
         // Transform the bounding sphere
-        const float *sphere_info = currentMesh->getBoundingSphereInfo();
-        glm::vec4 sphere_center(sphere_info[0], sphere_info[1], sphere_info[2],
-                1.0f);
+        glm::vec4 sphere_center(bounding_volume.center(), 1.0f);
         glm::vec4 transformed_sphere_center = mvp_matrix_tmp * sphere_center;
 
         // Calculate distance from camera
@@ -327,6 +321,7 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
 
             //Delete the generated bounding box mesh
             bounding_box_mesh->cleanUp();
+            delete bounding_box_render_data;
         }
 #endif
     }
@@ -427,14 +422,17 @@ void Renderer::build_frustum(float frustum[6][4], float mvp_matrix[16]) {
 }
 
 bool Renderer::is_cube_in_frustum(float frustum[6][4],
-        const float *vertex_limit) {
+        const BoundingVolume &bounding_volume) {
     int p;
-    float Xmin = vertex_limit[0];
-    float Ymin = vertex_limit[1];
-    float Zmin = vertex_limit[2];
-    float Xmax = vertex_limit[3];
-    float Ymax = vertex_limit[4];
-    float Zmax = vertex_limit[5];
+    glm::vec3 min_corner = bounding_volume.min_corner();
+    glm::vec3 max_corner = bounding_volume.max_corner();
+
+    float Xmin = min_corner[0];
+    float Ymin = min_corner[1];
+    float Zmin = min_corner[2];
+    float Xmax = max_corner[0];
+    float Ymax = max_corner[1];
+    float Zmax = max_corner[2];
 
     for (p = 0; p < 6; p++) {
         if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin)
@@ -584,6 +582,11 @@ void Renderer::renderRenderData(RenderData* render_data,
                         case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
                             shader_manager->getExternalRendererShader()->render(
                                     mvp_matrix, render_data);
+                            break;
+                        case Material::ShaderType::ASSIMP_SHADER:
+                            shader_manager->getAssimpShader()->render(
+                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                                    mvp_matrix, render_data, curr_material);
                             break;
                         default:
                             shader_manager->getCustomShader(

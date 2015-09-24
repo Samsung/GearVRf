@@ -57,6 +57,7 @@ public class GVRActivity extends VrActivity {
     private GVRViewManager mGVRViewManager = null;
     private GVRCamera mCamera;
     private VrAppSettings mAppSettings;
+    private long mPtr;
 
     static {
         System.loadLibrary("gvrf");
@@ -87,9 +88,11 @@ public class GVRActivity extends VrActivity {
         String fromPackageNameString = VrActivity
                 .getPackageStringFromIntent(intent);
         String uriString = VrActivity.getUriStringFromIntent(intent);
-
-        setAppPtr(nativeSetAppInterface(this, fromPackageNameString,
-                commandString, uriString));
+        
+        mPtr = nativeSetAppInterface(this, fromPackageNameString,
+                commandString, uriString);
+        
+        setAppPtr(mPtr);
 
         mDockEventReceiver = new DockEventReceiver(this, mRunOnDock, mRunOnUndock);
     }
@@ -213,6 +216,10 @@ public class GVRActivity extends VrActivity {
         return false;
     }
 
+    public long getAppPtr(){
+        return mPtr;
+    }
+    
     void drawFrame() {
         mGVRViewManager.onDrawFrame();
     }
@@ -305,6 +312,10 @@ public class GVRActivity extends VrActivity {
 
     public boolean onKeyMax(int keyCode) {
         return false;
+    }
+
+    boolean updateSensoredScene() {
+        return mGVRViewManager.updateSensoredScene();
     }
 
     private final Runnable mRunOnDock = new Runnable() {

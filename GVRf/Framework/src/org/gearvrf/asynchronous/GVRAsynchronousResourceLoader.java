@@ -17,6 +17,7 @@ package org.gearvrf.asynchronous;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -141,7 +142,7 @@ public class GVRAsynchronousResourceLoader {
                 public void run() {
                     try {
                         final CompressedTexture compressedTexture = CompressedTexture
-                                .load(resource.getStream(), false);
+                                .load(resource.getStream(), -1, false);
                         resource.closeStream();
                         // Create texture on GL thread
                         gvrContext.runOnGlThread(new Runnable() {
@@ -262,7 +263,6 @@ public class GVRAsynchronousResourceLoader {
         } else {
             // 'Sniff' out compressed textures on a thread from the thread-pool
             Threads.spawn(new Runnable() {
-
                 @Override
                 public void run() {
                     try {
@@ -402,6 +402,48 @@ public class GVRAsynchronousResourceLoader {
             FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
             AsyncCubemapTexture.loadTexture(gvrContext, result.callback,
+                    resource, priority, faceIndexMap);
+
+            return result;
+        }
+    }
+
+    /**
+     * Load a compressed cube map texture asynchronously.
+     *
+     * This is the implementation of
+     * {@link GVRContext#loadFutureCompressedCubemapTexture(GVRAndroidResource)} -
+     * it will usually be more convenient (and more efficient) to call that directly.
+     *
+     * @param gvrContext
+     *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
+     * @param resource
+     *            A steam containing a zip file which contains six bitmaps. The
+     *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.pkm", "negx.pkm", "posy.pkm", "negx.pkm",
+     *            "posz.pkm", and "negz.pkm", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     */
+    public static Future<GVRTexture> loadFutureCompressedCubemapTexture(
+            GVRContext gvrContext, ResourceCache<GVRTexture> textureCache,
+            GVRAndroidResource resource, int priority,
+            Map<String, Integer> faceIndexMap) {
+        GVRTexture cached = textureCache.get(resource);
+        if (cached != null) {
+            return new FutureWrapper<GVRTexture>(cached);
+        } else {
+            FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
+
+            AsyncCompressedCubemapTexture.loadTexture(gvrContext, result.callback,
                     resource, priority, faceIndexMap);
 
             return result;

@@ -329,6 +329,14 @@ public class GVRCameraRig extends GVRComponent {
         NativeCameraRig.attachCenterCamera(getNative(), camera.getNative());
     }
 
+    public void attachToParent(GVRSceneObject parentObject) {
+        parentObject.addChildObject(getOwnerObject());
+    }
+
+    public void detachFromParent(GVRSceneObject parentObject) {
+       parentObject.removeChildObject(getOwnerObject());
+    }
+
     /**
      * Resets the rotation of the camera rig by multiplying further rotations by
      * the inverse of the current rotation.

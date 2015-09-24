@@ -33,6 +33,7 @@
 #include "shaders/material/cubemap_reflection_shader.h"
 #include "shaders/material/texture_shader.h"
 #include "shaders/material/external_renderer_shader.h"
+#include "shaders/material/assimp_shader.h"
 #include "util/gvr_log.h"
 
 namespace gvr {
@@ -42,7 +43,7 @@ public:
             HybridObject(), bounding_box_shader_(),
             unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
             oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
-            cubemap_shader_(), cubemap_reflection_shader_(), texture_shader_(),
+            cubemap_shader_(), cubemap_reflection_shader_(), texture_shader_(), assimp_shader_(),
             external_renderer_shader_(), error_shader_(), latest_custom_shader_id_(
                     INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
     }
@@ -56,6 +57,7 @@ public:
         delete cubemap_reflection_shader_;
         delete texture_shader_;
         delete external_renderer_shader_;
+        delete assimp_shader_;
         delete error_shader_;
         // We don't delete the custom shaders, as their Java owner-objects will do that for us.
     }
@@ -119,6 +121,12 @@ public:
         }
         return external_renderer_shader_;
     }
+    AssimpShader* getAssimpShader() {
+        if (!assimp_shader_) {
+            assimp_shader_ = new AssimpShader();
+        }
+        return assimp_shader_;
+    }
     ErrorShader* getErrorShader() {
         if (!error_shader_) {
             error_shader_ = new ErrorShader();
@@ -161,6 +169,7 @@ private:
     CubemapReflectionShader* cubemap_reflection_shader_;
     TextureShader* texture_shader_;
     ExternalRendererShader* external_renderer_shader_;
+    AssimpShader* assimp_shader_;
     ErrorShader* error_shader_;
     int latest_custom_shader_id_;
     std::map<int, CustomShader*> custom_shaders_;

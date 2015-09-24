@@ -409,6 +409,15 @@ public class GVRTransform extends GVRComponent {
         setScale(1, 1, 1);
     }
 
+    @Override
+    public String toString() {
+        return "GVRTransform " + Integer.toHexString(hashCode()) + ", positionX = " + getPositionX()
+                + ", positionY = " + getPositionY() + ", positionZ = " + getPositionZ()
+                + ", scaleX = " + getScaleX() + ", scaleY = " + getScaleY() + ", scaleZ = "
+                + getScaleZ() + ", rotationW = " + getRotationW() + ", rotationX = "
+                + getRotationX() + ", rotationY = " + getRotationY() + ", rotationZ = "
+                + getRotationZ();
+    }
 }
 
 class NativeTransform {

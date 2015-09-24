@@ -29,12 +29,9 @@
 namespace gvr {
 CustomShader::CustomShader(std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), a_position_(0), a_normal_(0), a_tex_coord_(0), u_mvp_(0), u_right_(
+        program_(0), u_mvp_(0), u_right_(
                 0), texture_keys_(), attribute_float_keys_(), attribute_vec2_keys_(), attribute_vec3_keys_(), attribute_vec4_keys_(), uniform_float_keys_(), uniform_vec2_keys_(), uniform_vec3_keys_(), uniform_vec4_keys_(), uniform_mat4_keys_() {
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    a_normal_ = glGetAttribLocation(program_->id(), "a_normal");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_right_ = glGetUniformLocation(program_->id(), "u_right");
 }
@@ -116,18 +113,6 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, 
 #if _GVRF_USE_GLES3_
     glUseProgram(program_->id());
 
-    if (a_position_ != -1) {
-        mesh->setVertexLoc(a_position_);
-    }
-
-    if (a_normal_ != -1) {
-        mesh->setNormalLoc(a_normal_);
-    }
-
-    if (a_tex_coord_ != -1) {
-        mesh->setTexCoordLoc(a_tex_coord_);
-    }
-
     for (auto it = attribute_float_keys_.begin();
             it != attribute_float_keys_.end(); ++it) {
         mesh->setVertexAttribLocF(it->first, it->second);
@@ -148,7 +133,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, 
         mesh->setVertexAttribLocV4(it->first, it->second);
     }
 
-    mesh->generateVAO(material->shader_type());  // setup VAO
+    mesh->generateVAO();  // setup VAO
 
     ///////////// uniform /////////
     for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();

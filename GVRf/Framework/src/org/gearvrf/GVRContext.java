@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -28,6 +29,7 @@ import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRImportSettings;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
@@ -40,7 +42,6 @@ import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.AiWrapperProvider;
-import org.gearvrf.jassimp.AiMaterial.Property;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
@@ -690,6 +691,11 @@ public abstract class GVRContext {
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
             }
+            if(node.getTransform(wrapperProvider) != null) {
+                float[] data = node.getTransform(wrapperProvider).m_data;
+                parentSceneObject.getTransform().setModelMatrix(transpose(data));
+                parentSceneObject.setName(node.getName());
+            }
             for (int i = 0; i < node.getNumChildren(); i++) {
                 this.recurseAssimpNodes(assetRelativeFilename,
                         parentSceneObject, node.getChildren().get(i),
@@ -699,6 +705,27 @@ public abstract class GVRContext {
             // Error while recursing the Scene Graph
             e.printStackTrace();
         }
+    }
+    
+    private float[] transpose(float[] modelMatrix){
+        float[] transposed = new float[16];
+        transposed[0] = modelMatrix[0];
+        transposed[4] = modelMatrix[1];
+        transposed[8] = modelMatrix[2];
+        transposed[12] = modelMatrix[3];
+        transposed[1] = modelMatrix[4];
+        transposed[5] = modelMatrix[5];
+        transposed[9] = modelMatrix[6];
+        transposed[13] = modelMatrix[7];
+        transposed[2] = modelMatrix[8];
+        transposed[6] = modelMatrix[9];
+        transposed[10] = modelMatrix[10];
+        transposed[14] = modelMatrix[11];
+        transposed[3] = modelMatrix[12];
+        transposed[7] = modelMatrix[13];
+        transposed[11] = modelMatrix[14];
+        transposed[15] = modelMatrix[15];
+        return transposed;
     }
 
     /**
@@ -741,78 +768,69 @@ public abstract class GVRContext {
 
         AiMaterial material = this.getMeshMaterial(new GVRAndroidResource(this,
                 assetRelativeFilename), node.getName(), index);
+        
+        GVRMaterial meshMaterial = new GVRMaterial(this,
+                GVRShaderType.Assimp.ID);
+        
+        /* Feature set */
+        int assimpFeatureSet = 0x00000000;
+        
+        /* Diffuse color */
+        AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
+        meshMaterial.setDiffuseColor(diffuseColor.getRed(),
+                diffuseColor.getGreen(), diffuseColor.getBlue(),
+                diffuseColor.getAlpha());
 
-        Property property = material.getProperty("$tex.file");
-        if (property != null) {
-            int textureIndex = property.getIndex();
-            String texFileName = material.getTextureFile(AiTextureType.DIFFUSE,
-                    textureIndex);
+        /* Specular color */
+        AiColor specularColor = material.getSpecularColor(wrapperProvider);
+        meshMaterial.setSpecularColor(specularColor.getRed(),
+                specularColor.getGreen(), specularColor.getBlue(),
+                specularColor.getAlpha());
 
-            Future<GVRTexture> futureMeshTexture = this
-                    .loadFutureTexture(new GVRAndroidResource(this, texFileName));
+        /* Ambient color */
+        AiColor ambientColor = material.getAmbientColor(wrapperProvider);
+        meshMaterial.setAmbientColor(ambientColor.getRed(),
+                ambientColor.getGreen(), ambientColor.getBlue(),
+                ambientColor.getAlpha());
 
-            GVRSceneObject sceneObject = new GVRSceneObject(this, futureMesh,
-                    futureMeshTexture);
+        /* Emissive color */
+        AiColor emissiveColor = material.getEmissiveColor(wrapperProvider);
+        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                emissiveColor.getGreen(), emissiveColor.getBlue(),
+                emissiveColor.getAlpha());
 
-            return sceneObject;
+        /* Opacity */
+        float opacity = material.getOpacity();
+        meshMaterial.setOpacity(opacity);
 
-        } else {
-            // The case when there is no texture
-            // This block also takes care for the case when there
-            // are no texture or color for the mesh as the methods
-            // that are used for getting the colors of the material
-            // returns a default when they are not present
-            AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
-            AiColor ambientColor = material.getAmbientColor(wrapperProvider);
-            float opacity = material.getOpacity();
-
-            final String DIFFUSE_COLOR_KEY = "diffuse_color";
-            final String AMBIENT_COLOR_KEY = "ambient_color";
-            final String COLOR_OPACITY_KEY = "opacity";
-
-            final String VERTEX_SHADER = "attribute vec4 a_position;\n"
-                    + "uniform mat4 u_mvp;\n" + "void main() {\n"
-                    + "  gl_Position = u_mvp * a_position;\n" + "}\n";
-
-            final String FRAGMENT_SHADER = "precision mediump float;\n"
-                    + "uniform vec4 diffuse_color;\n" //
-                    + "uniform vec4 ambient_color;\n"
-                    + "uniform float opacity;\n"
-                    + "void main() {\n" //
-                    + "  gl_FragColor = ( diffuse_color * opacity ) + ambient_color;\n"
-                    + "}\n";
-
-            GVRCustomMaterialShaderId mShaderId;
-            GVRMaterialMap mCustomShader = null;
-
-            final GVRMaterialShaderManager shaderManager = this
-                    .getMaterialShaderManager();
-            mShaderId = shaderManager.addShader(VERTEX_SHADER, FRAGMENT_SHADER);
-            mCustomShader = shaderManager.getShaderMap(mShaderId);
-            mCustomShader.addUniformVec4Key("diffuse_color", DIFFUSE_COLOR_KEY);
-            mCustomShader.addUniformVec4Key("ambient_color", AMBIENT_COLOR_KEY);
-            mCustomShader.addUniformFloatKey("opacity", COLOR_OPACITY_KEY);
-
-            GVRMaterial meshMaterial = new GVRMaterial(this, mShaderId);
-
-            meshMaterial.setVec4(DIFFUSE_COLOR_KEY, diffuseColor.getRed(),
-                    diffuseColor.getGreen(), diffuseColor.getBlue(),
-                    diffuseColor.getAlpha());
-
-            meshMaterial.setVec4(AMBIENT_COLOR_KEY, ambientColor.getRed(),
-                    ambientColor.getGreen(), ambientColor.getBlue(),
-                    ambientColor.getAlpha());
-
-            meshMaterial.setFloat(COLOR_OPACITY_KEY, opacity);
-
-            GVRSceneObject sceneObject = new GVRSceneObject(this);
-            GVRRenderData sceneObjectRenderData = new GVRRenderData(this);
-            sceneObjectRenderData.setMesh(futureMesh);
-            sceneObjectRenderData.setMaterial(meshMaterial);
-            sceneObject.attachRenderData(sceneObjectRenderData);
-
-            return sceneObject;
+        /* Diffuse Texture */
+        String texDiffuseFileName = material.getTextureFile(
+                AiTextureType.DIFFUSE, 0);
+        if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+            try {
+                Future<GVRTexture> futureDiffuseTexture = this
+                        .loadFutureTexture(new GVRAndroidResource(this,
+                                texDiffuseFileName));
+                meshMaterial.setMainTexture(futureDiffuseTexture);
+                assimpFeatureSet = GVRShaderType.Assimp.setBit(
+                        assimpFeatureSet,
+                        GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
+            } catch (FileNotFoundException file) {
+                android.util.Log.e(TAG, "Couldn't find diffuse texture: "
+                        + texDiffuseFileName);
+            }
         }
+
+        /* Apply feature set to the material */
+        meshMaterial.setShaderFeatureSet(assimpFeatureSet);
+
+        GVRSceneObject sceneObject = new GVRSceneObject(this);
+        sceneObject.setName(node.getName());
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(this);
+        sceneObjectRenderData.setMesh(futureMesh);
+        sceneObjectRenderData.setMaterial(meshMaterial);
+        sceneObject.attachRenderData(sceneObjectRenderData);
+        return sceneObject;
     }
 
     /**
@@ -1013,7 +1031,6 @@ public abstract class GVRContext {
      *             {@link #loadTexture(GVRAndroidResource)}
      * 
      */
-    @SuppressWarnings("resource")
     public GVRBitmapTexture loadTexture(String fileName,
             GVRTextureParameters textureParameters) {
 
@@ -1178,6 +1195,17 @@ public abstract class GVRContext {
                     "Should not run GL functions from a non-GL thread!");
         }
 
+    }
+
+    /*
+     * To see if current thread is GL thread.
+     * 
+     * @return {@code true} if current thread is GL thread, {@code false} if
+     * current thread is not GL thread
+     */
+
+    public boolean isCurrentThreadGLThread() {
+        return Thread.currentThread().getId() == mGLThreadID;
     }
 
     /**
@@ -1984,6 +2012,48 @@ public abstract class GVRContext {
     public Future<GVRTexture> loadFutureCubemapTexture(
             GVRAndroidResource resource) {
         return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(this,
+                sTextureCache, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
+    }
+
+    /**
+     * Simple, high-level method to load a compressed cube map texture asynchronously,
+     * for use with {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
+     *
+     * @param resource
+     *            A steam containing a zip file which contains six compressed textures.
+     *            The six textures correspond to +x, -x, +y, -y, +z, and -z faces of
+     *            the cube map texture respectively. The default names of the
+     *            six images are "posx.pkm", "negx.pkm", "posy.pkm", "negx.pkm",
+     *            "posz.pkm", and "negz.pkm", which can be changed by calling
+     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     * @return A {@link Future} that you can pass to methods like
+     *         {@link GVRShaders#setMainTexture(Future)}
+     *
+     * @since 1.6.9
+     *
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
+     */
+    public Future<GVRTexture> loadFutureCompressedCubemapTexture(
+            GVRAndroidResource resource) {
+        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(this,
                 sTextureCache, resource, DEFAULT_PRIORITY,
                 GVRCubemapTexture.faceIndexMap);
     }

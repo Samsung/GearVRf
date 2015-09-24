@@ -101,9 +101,9 @@ class GVRMonoscopicViewManager extends GVRViewManager {
         GVRPerspectiveCamera.setDefaultFovY(gvrActivity.getAppSettings()
                 .getEyeBufferParms().getFovY());
         int fboWidth = gvrActivity.getAppSettings().getEyeBufferParms()
-                .getResolution();
+                .getResolutionWidth();
         int fboHeight = gvrActivity.getAppSettings().getEyeBufferParms()
-                .getResolution();
+                .getResolutionHeight();
         if (gvrActivity.getAppSettings().getMonoScopicModeParms()
                 .isMonoFullScreenMode()) {
             fboWidth = screenWidthPixels;
@@ -117,6 +117,10 @@ class GVRMonoscopicViewManager extends GVRViewManager {
         mViewportY = 0;
         mViewportWidth = fboWidth;
         mViewportHeight = fboHeight;
+
+        mLensInfo.setFBOWidth(mViewportWidth);
+        mLensInfo.setFBOHeight(mViewportHeight);
+
         if (fboWidth != screenWidthPixels) {
             mViewportX = (screenWidthPixels / 2) - (fboWidth / 2);
         }
@@ -133,14 +137,14 @@ class GVRMonoscopicViewManager extends GVRViewManager {
     void onDrawFrame() {
         // Log.v(TAG, "onDrawFrame");
         mFrameHandler.beforeDrawEyes();
-        mFrameHandler.onDrawFrame();
+        drawEyes();
         mFrameHandler.afterDrawEyes();
     }
 
-    @Override
-    protected void drawEyes() {
+    private void drawEyes() {
         // Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().predictAndSetRotation(3.5f / 60.0f);
+        GVRMonoscopicRenderer.cull(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle);
         GVRMonoscopicRenderer.renderCamera(mMainScene, mMainScene
                 .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
                 mViewportWidth, mViewportHeight, mRenderBundle);

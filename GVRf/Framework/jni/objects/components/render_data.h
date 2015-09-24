@@ -241,5 +241,23 @@ inline bool compareRenderData(RenderData* i, RenderData* j) {
     return i->rendering_order() < j->rendering_order();
 }
 
+inline bool compareRenderDataWithFrustumCulling(RenderData* i, RenderData* j) {
+    // if either i or j is a transparent object or an overlay object
+    if (i->rendering_order() >= RenderData::Transparent
+            || j->rendering_order() >= RenderData::Transparent) {
+        if (i->rendering_order() == j->rendering_order()) {
+            // if both are either transparent or both are overlays
+            // place them in reverse camera order from back to front
+            return i->camera_distance() < j->camera_distance();
+        } else {
+            // if one of them is a transparent or an overlay draw by rendering order
+            return i->rendering_order() < j->rendering_order();
+        }
+    }
+
+    // if both are neither transparent nor overlays, place them in camera order front to back
+    return i->camera_distance() > j->camera_distance();
+}
+
 }
 #endif

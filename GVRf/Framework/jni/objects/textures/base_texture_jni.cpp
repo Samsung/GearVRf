@@ -71,14 +71,18 @@ Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
     int imgW = loader.pOutImage.width;
     int imgH = loader.pOutImage.height;
     unsigned char *pixels = loader.pOutImage.bits;
-    return reinterpret_cast<jlong>(new BaseTexture(imgW, imgH, pixels, texture_parameters));
+    jlong result = reinterpret_cast<jlong>(new BaseTexture(imgW, imgH, pixels, texture_parameters));
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+    return result;
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters) {
 
     jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
-    return reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
+    jlong result =  reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+    return result;
 }
 
 JNIEXPORT jboolean JNICALL

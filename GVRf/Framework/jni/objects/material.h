@@ -44,11 +44,13 @@ public:
         CUBEMAP_REFLECTION_SHADER = 6,
         TEXTURE_SHADER = 7,
         EXTERNAL_RENDERER_SHADER = 8,
+        ASSIMP_SHADER = 9,
         TEXTURE_SHADER_NOLIGHT = 100
     };
 
     explicit Material(ShaderType shader_type) :
-            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_() {
+            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_(), shader_feature_set_(
+                    0) {
         switch (shader_type) {
         default:
             vec3s_["color"] = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -152,6 +154,14 @@ public:
         mat4s_[key] = matrix;
     }
 
+    int get_shader_feature_set() {
+        return shader_feature_set_;
+    }
+
+    void set_shader_feature_set(int feature_set) {
+        shader_feature_set_ = feature_set;
+    }
+
 private:
     Material(const Material& material);
     Material(Material&& material);
@@ -166,6 +176,7 @@ private:
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
+    unsigned int shader_feature_set_;
 };
 }
 #endif

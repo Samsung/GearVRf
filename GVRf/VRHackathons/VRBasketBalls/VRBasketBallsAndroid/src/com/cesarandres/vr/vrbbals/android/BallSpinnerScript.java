@@ -140,11 +140,11 @@ public class BallSpinnerScript extends GVRScript {
 		headTracker.getRenderData().setDepthTest(false);
 		headTracker.getRenderData().setRenderingOrder(100000);
 		mainCamera = scene.getMainCameraRig();
-		mainCamera.getOwnerObject().addChildObject(headTracker);
+		mainCamera.addChildObject(headTracker);
 
 		mainCamera.getLeftCamera().setBackgroundColor(r, g, b, 1.0f);
 		mainCamera.getRightCamera().setBackgroundColor(r, g, b, 1.0f);
-		mainCamera.getOwnerObject().getTransform().setPosition(0f, 0f, 0f);
+		mainCamera.getTransform().setPosition(0f, 0f, 0f);
 
 		root = new GVRSceneObject(ctx);
 		scene.addSceneObject(root);

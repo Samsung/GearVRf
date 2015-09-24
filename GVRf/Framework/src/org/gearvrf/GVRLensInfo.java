@@ -28,6 +28,11 @@ class GVRLensInfo {
     private final int mVerticalRealScreenPixels;
     private final float mRealScreenHeightMeters;
 
+    private int mFBOWidth;
+    private int mFBOHeight;
+
+    private boolean mCustomFBOSize;
+
     /**
      * Constructs a GVRLensInfo object with distortion data which requires a
      * valid, pre-processed GVRXMLParser object
@@ -54,6 +59,9 @@ class GVRLensInfo {
         mRealScreenHeightMeters = screenHeightMeters;
         mHorizontalRealScreenPixels = screenWidthPixels / 2;
         mVerticalRealScreenPixels = screenHeightPixels;
+
+        mCustomFBOSize = false;
+
         update();
     }
 
@@ -71,7 +79,19 @@ class GVRLensInfo {
      * @return current distortion FBO width value
      */
     public int getFBOWidth() {
-        return mAppSettings.getEyeBufferParms().getResolution() * mAppSettings.getEyeBufferParms().getWidthScale();
+        if (!mCustomFBOSize)
+            return mAppSettings.getEyeBufferParms().getResolutionWidth();
+        else
+            return mFBOWidth;
+    }
+
+    /**
+     * Sets the current distortion FBO width value
+     * @param width The width to be set
+     */
+    public void setFBOWidth(int width) {
+        mFBOWidth = width;
+        mCustomFBOSize = true;
     }
 
     /**
@@ -80,7 +100,19 @@ class GVRLensInfo {
      * @return current distortion FBO height value
      */
     public int getFBOHeight() {
-        return mAppSettings.getEyeBufferParms().getResolution();
+        if (!mCustomFBOSize)
+            return mAppSettings.getEyeBufferParms().getResolutionHeight();
+        else
+            return mFBOHeight;
+    }
+
+    /**
+     * Sets the current distortion FBO height value
+     * @param height The height to be set
+     */
+    public void setFBOHeight(int height) {
+        mFBOHeight = height;
+        mCustomFBOSize = true;
     }
 
     /**

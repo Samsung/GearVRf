@@ -51,11 +51,9 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 UnlitVerticalStereoShader::UnlitVerticalStereoShader() :
-        program_(0), a_position_(0), a_tex_coord_(0), u_mvp_(0), u_texture_(0), u_color_(
+        program_(0), u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0), u_right_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
@@ -80,6 +78,7 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
+    bool mono_rendering;
 
     if (texture->getTarget() != GL_TEXTURE_2D) {
         std::string error =
@@ -87,10 +86,14 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
         throw error;
     }
 
+    try {
+        mono_rendering = material->getFloat("mono_rendering") == 1;
+    } catch (std::string& error) {
+        mono_rendering = false;
+    }
+
 #if _GVRF_USE_GLES3_
-    mesh->setVertexLoc(a_position_);
-    mesh->setTexCoordLoc(a_tex_coord_);
-    mesh->generateVAO(Material::UNLIT_VERTICAL_STEREO_SHADER);
+    mesh->generateVAO();
 
     glUseProgram(program_->id());
 
@@ -100,7 +103,7 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-    glUniform1i(u_right_, right ? 1 : 0);
+    glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
     glBindVertexArray(mesh->getVAOId(Material::UNLIT_VERTICAL_STEREO_SHADER));
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
@@ -127,7 +130,7 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
 
     glUniform1f(u_opacity_, opacity);
 
-    glUniform1i(u_right_, right ? 1 : 0);
+    glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             mesh->triangles().data());

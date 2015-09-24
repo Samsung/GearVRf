@@ -26,14 +26,17 @@
 #define __gl2_h_
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
+#ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
 #include <GLES2/gl2ext.h>
 #include "GLES3/gl3ext.h"
+#endif
 
 #include "glm/glm.hpp"
 
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
+#include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
 
 namespace gvr {
@@ -77,6 +80,8 @@ public:
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
 
+    static void cull(Scene *scene, Camera *camera, ShaderManager* shader_manager);
+
     static void initializeStats();
     static void resetStats();
     static int getNumberDrawCalls();
@@ -97,8 +102,9 @@ private:
             std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
             ShaderManager* shader_manager);
     static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
+
     static bool is_cube_in_frustum(float frustum[6][4],
-            const float *vertex_limit);
+            const BoundingVolume &bounding_volume);
 
     static void set_face_culling(int cull_face);
 

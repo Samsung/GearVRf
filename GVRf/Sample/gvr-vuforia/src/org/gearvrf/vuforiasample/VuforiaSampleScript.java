@@ -1,13 +1,6 @@
 package org.gearvrf.vuforiasample;
 
-import org.gearvrf.FutureWrapper;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRRenderData.GVRRenderingOrder;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScript;
+import java.io.IOException;
 
 import android.opengl.Matrix;
 import android.util.Log;
@@ -20,111 +13,105 @@ import com.qualcomm.vuforia.Tool;
 import com.qualcomm.vuforia.Trackable;
 import com.qualcomm.vuforia.TrackableResult;
 
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRRenderTexture;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRScript;
+import org.gearvrf.GVRTexture;
+
 public class VuforiaSampleScript extends GVRScript {
 
-    private static final float CUBE_WIDTH = 20.0f;
-    private static final float SCALE_FACTOR = 5.0f;
-    private static final float BACKGROUND_OPACITY = 0.1f;
-    private GVRContext mGVRContext = null;
-    private GVRSceneObject bunny = null;
+    private static final String TAG = "gvr-vuforia";
 
+    private GVRContext gvrContext = null;
+    private GVRSceneObject teapot = null;
+    private GVRSceneObject passThroughObject = null;
+
+    static final int VUFORIA_CAMERA_WIDTH = 1280;
+    static final int VUFORIA_CAMERA_HEIGHT = 720;
+    
+    private volatile boolean init = false;
+
+    private GVRScene mainScene;
+    
+    private float[] vuforiaMVMatrix;
+    private float[] convertedMVMatrix;
+    private float[] gvrMVMatrix;
+    private float[] totalMVMatrix;
+
+    private boolean teapotVisible = false;
+    
     @Override
     public void onInit(GVRContext gvrContext) {
-        mGVRContext = gvrContext;
+        this.gvrContext = gvrContext;
+        mainScene = gvrContext.getMainScene();
 
-        GVRScene scene = mGVRContext.getMainScene();
+        createCameraPassThrough();
 
-        scene.getMainCameraRig().getLeftCamera()
-                .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
-        scene.getMainCameraRig().getRightCamera()
-                .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
+        createTeaPotObject();
 
-        FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-                gvrContext.createQuad(CUBE_WIDTH, CUBE_WIDTH));
+        vuforiaMVMatrix = new float[16];
+        convertedMVMatrix = new float[16];
+        gvrMVMatrix = new float[16];
+        totalMVMatrix = new float[16];
+        
+        init = true;
+    }
+    
+    public boolean isInit() {
+        return init;
+    }
 
-        GVRSceneObject frontFace = new GVRSceneObject(gvrContext, futureMesh,
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.front)));
-        frontFace.setName("front");
-        scene.addSceneObject(frontFace);
-        frontFace.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.5f);
-        frontFace.getRenderData().getMaterial().setOpacity(BACKGROUND_OPACITY);
-        frontFace.getRenderData().setRenderingOrder(
-                GVRRenderingOrder.TRANSPARENT);
+    private void createCameraPassThrough() {
+        passThroughObject = new GVRSceneObject(gvrContext, 16.0f / 9.0f, 1.0f);
 
-        GVRSceneObject backFace = new GVRSceneObject(gvrContext, futureMesh,
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.back)));
-        backFace.setName("back");
-        scene.addSceneObject(backFace);
-        backFace.getTransform().setPosition(0.0f, 0.0f, CUBE_WIDTH * 0.5f);
-        backFace.getTransform().rotateByAxis(180.0f, 0.0f, 1.0f, 0.0f);
-        backFace.getRenderData().getMaterial().setOpacity(BACKGROUND_OPACITY);
-        backFace.getRenderData().setRenderingOrder(
-                GVRRenderingOrder.TRANSPARENT);
+        passThroughObject.getTransform().setPosition(0.0f, 0.0f, -1000.0f);
+        passThroughObject.getTransform().setScaleX(1000f);
+        passThroughObject.getTransform().setScaleY(1000f);
 
-        GVRSceneObject leftFace = new GVRSceneObject(gvrContext, futureMesh,
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.left)));
-        leftFace.setName("left");
-        scene.addSceneObject(leftFace);
-        leftFace.getTransform().setPosition(-CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
-        leftFace.getTransform().rotateByAxis(90.0f, 0.0f, 1.0f, 0.0f);
-        leftFace.getRenderData().getMaterial().setOpacity(BACKGROUND_OPACITY);
-        leftFace.getRenderData().setRenderingOrder(
-                GVRRenderingOrder.TRANSPARENT);
+        GVRTexture passThroughTexture;
 
-        GVRSceneObject rightFace = new GVRSceneObject(gvrContext, futureMesh,
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.right)));
-        rightFace.setName("right");
-        scene.addSceneObject(rightFace);
-        rightFace.getTransform().setPosition(CUBE_WIDTH * 0.5f, 0.0f, 0.0f);
-        rightFace.getTransform().rotateByAxis(-90.0f, 0.0f, 1.0f, 0.0f);
-        rightFace.getRenderData().getMaterial().setOpacity(BACKGROUND_OPACITY);
-        rightFace.getRenderData().setRenderingOrder(
-                GVRRenderingOrder.TRANSPARENT);
+        passThroughTexture = new GVRRenderTexture(gvrContext,
+                VUFORIA_CAMERA_WIDTH, VUFORIA_CAMERA_HEIGHT);
 
-        GVRSceneObject topFace = new GVRSceneObject(gvrContext, futureMesh,
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.top)));
-        topFace.setName("top");
-        scene.addSceneObject(topFace);
-        topFace.getTransform().setPosition(0.0f, CUBE_WIDTH * 0.5f, 0.0f);
-        topFace.getTransform().rotateByAxis(90.0f, 1.0f, 0.0f, 0.0f);
-        topFace.getRenderData().getMaterial().setOpacity(BACKGROUND_OPACITY);
-        topFace.getRenderData()
-                .setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
+        GVRRenderData renderData = passThroughObject.getRenderData();
+        GVRMaterial material = new GVRMaterial(gvrContext);
+        renderData.setMaterial(material);
+        material.setMainTexture(passThroughTexture);
+        material.setShaderType(GVRShaderType.Texture.ID);
 
-        GVRSceneObject bottomFace = new GVRSceneObject(gvrContext, futureMesh,
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.bottom)));
-        bottomFace.setName("bottom");
-        scene.addSceneObject(bottomFace);
-        bottomFace.getTransform().setPosition(0.0f, -CUBE_WIDTH * 0.5f, 0.0f);
-        bottomFace.getTransform().rotateByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
-        bottomFace.getRenderData().getMaterial().setOpacity(BACKGROUND_OPACITY);
-        bottomFace.getRenderData().setRenderingOrder(
-                GVRRenderingOrder.TRANSPARENT);
+        // the following texture coordinate values are determined empirically
+        // and do not match what we expect them to be. but still they work :)
+        float[] texCoords = { 0.0f, 0.0f, 0.0f, 0.70f, 0.62f, 0.0f, 0.62f, 0.7f };
+        GVRMesh mesh = renderData.getMesh();
+        mesh.setTexCoords(texCoords);
+        renderData.setMesh(mesh);
 
-        bunny = new GVRSceneObject(gvrContext,
-                gvrContext.loadFutureMesh(new GVRAndroidResource(mGVRContext,
-                        R.raw.bunny)),
-                gvrContext.loadFutureTexture(new GVRAndroidResource(
-                        mGVRContext, R.drawable.texture)));
-        scene.addSceneObject(bunny);
-        bunny.getTransform().setScale(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
-        bunny.getTransform().setPosition(0.0f, 0.0f, -CUBE_WIDTH * 0.5f);
+        Renderer.getInstance().setVideoBackgroundTextureID(
+                passThroughTexture.getId());
 
-        for (GVRSceneObject so : mGVRContext.getMainScene()
-                .getWholeSceneObjects()) {
-            Log.v("", "scene object name : " + so.getName());
+        mainScene.getMainCameraRig().addChildObject(passThroughObject);
+    }
+
+    private void createTeaPotObject() {
+        try {
+            teapot = new GVRSceneObject(gvrContext,
+                    gvrContext.loadMesh(new GVRAndroidResource(gvrContext
+                            .getContext(), "teapot.obj")),
+                    gvrContext.loadTexture(new GVRAndroidResource(gvrContext
+                            .getContext(), "teapot_tex1.jpg")));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        mVuforiaMVMatrix = new float[16];
-        mConvertedMVMatrix = new float[16];
-        mGVRMVMatrix = new float[16];
-        mTotalMVMatrix = new float[16];
+        teapot.getTransform().setPosition(0f, 0f, -0.5f);
+        mainScene.addSceneObject(teapot);
     }
 
     private float[] convertMatrix = { 1f, 0f, 0f, 0f, 0f, -1f, 0f, 0f, 0f, 0f,
@@ -132,47 +119,79 @@ public class VuforiaSampleScript extends GVRScript {
 
     @Override
     public void onStep() {
-        FPSCounter.tick();
-
-        if (VuforiaSampleActivity.isVuforiaActive) {
-
-            vuforiaRederer = Renderer.getInstance();
-
-            State state = vuforiaRederer.begin();
-
-            // did we find any trackables this frame?
-            for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
-                TrackableResult result = state.getTrackableResult(tIdx);
-                Trackable trackable = result.getTrackable();
-                if (trackable.getId() == 1) {
-                    Matrix44F modelViewMatrix_Vuforia = Tool
-                            .convertPose2GLMatrix(result.getPose());
-                    mVuforiaMVMatrix = modelViewMatrix_Vuforia.getData();
-
-                    Matrix.multiplyMM(mConvertedMVMatrix, 0, convertMatrix, 0,
-                            mVuforiaMVMatrix, 0);
-
-                    float scaleFactor = ((ImageTarget) trackable).getSize()
-                            .getData()[0];
-                    Matrix.scaleM(mConvertedMVMatrix, 0, scaleFactor,
-                            scaleFactor, scaleFactor);
-
-                    mGVRMVMatrix = mGVRContext.getMainScene()
-                            .getMainCameraRig().getOwnerObject().getTransform()
-                            .getModelMatrix();
-
-                    Matrix.multiplyMM(mTotalMVMatrix, 0, mGVRMVMatrix, 0,
-                            mConvertedMVMatrix, 0);
-                    bunny.getTransform().setModelMatrix(mTotalMVMatrix);
-                    break;
-                }
-            }
+        if (VuforiaSampleActivity.isVuforiaActive()) {
+            Renderer.getInstance().begin();
+            Renderer.getInstance().bindVideoBackground(0);
+            Renderer.getInstance().end();
         }
     }
 
-    private Renderer vuforiaRederer;
-    private float[] mVuforiaMVMatrix;
-    private float[] mConvertedMVMatrix;
-    private float[] mGVRMVMatrix;
-    private float[] mTotalMVMatrix;
+	private void showTeapot() {
+		if (teapotVisible == false) {
+			mainScene.addSceneObject(teapot);
+			teapotVisible = true;
+		}
+	}
+
+	private void hideTeapot() {
+		if (teapotVisible) {
+			mainScene.removeSceneObject(teapot);
+			teapotVisible = false;
+		}
+	}
+
+    public void updateObjectPose(State state) {
+        // did we find any trackables this frame?
+        int numDetectedMarkers = state.getNumTrackableResults();
+
+		if (numDetectedMarkers == 0) {
+			hideTeapot();
+			return;
+		}
+
+        for (int tIdx = 0; tIdx < numDetectedMarkers; tIdx++) {
+            TrackableResult result = state.getTrackableResult(tIdx);
+            Trackable trackable = result.getTrackable();
+            if (trackable.getId() == 1 || trackable.getId() == 2) {
+                Matrix44F modelViewMatrix_Vuforia = Tool
+                        .convertPose2GLMatrix(result.getPose());
+                vuforiaMVMatrix = modelViewMatrix_Vuforia.getData();
+
+                Matrix.multiplyMM(convertedMVMatrix, 0, convertMatrix, 0,
+                        vuforiaMVMatrix, 0);
+
+                float scaleFactor = ((ImageTarget) trackable).getSize()
+                        .getData()[0];
+                Matrix.scaleM(convertedMVMatrix, 0, scaleFactor, scaleFactor,
+                        scaleFactor);
+
+                gvrMVMatrix = gvrContext.getMainScene().getMainCameraRig()
+                        .getHeadTransform().getModelMatrix();
+
+                Matrix.multiplyMM(totalMVMatrix, 0, gvrMVMatrix, 0,
+                        convertedMVMatrix, 0);
+                teapot.getTransform().setModelMatrix(totalMVMatrix);
+
+                showTeapot();
+                
+                break;
+            } else {
+				hideTeapot();
+			}
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void showMatrix(String name, float[] matrix) {
+        Log.d(TAG, name);
+        Log.d(TAG, String.format("%5.2f %5.2f %5.2f %5.2f", matrix[0],
+                matrix[4], matrix[8], matrix[12]));
+        Log.d(TAG, String.format("%5.2f %5.2f %5.2f %5.2f", matrix[1],
+                matrix[5], matrix[9], matrix[13]));
+        Log.d(TAG, String.format("%5.2f %5.2f %5.2f %5.2f", matrix[2],
+                matrix[6], matrix[10], matrix[14]));
+        Log.d(TAG, String.format("%5.2f %5.2f %5.2f %5.2f", matrix[3],
+                matrix[7], matrix[11], matrix[15]));
+        Log.d(TAG, "\n");
+    }
 }

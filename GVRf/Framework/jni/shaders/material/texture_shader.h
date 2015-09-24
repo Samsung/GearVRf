@@ -51,16 +51,11 @@ private:
     GLProgram* program_light_;
     GLProgram* program_no_light_;
 
-    GLuint a_position_no_light_;
-    GLuint a_tex_coord_no_light_;
     GLuint u_mvp_no_light_;
     GLuint u_texture_no_light_;
     GLuint u_color_no_light_;
     GLuint u_opacity_no_light_;
 
-    GLuint a_position_;
-    GLuint a_tex_coord_;
-    GLuint a_normal_;
     GLuint u_mv_;
     GLuint u_mv_it_;
     GLuint u_mvp_;

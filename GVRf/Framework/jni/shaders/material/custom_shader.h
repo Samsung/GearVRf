@@ -65,9 +65,6 @@ private:
 
 private:
     GLProgram* program_;
-    GLuint a_position_;
-    GLuint a_normal_;
-    GLuint a_tex_coord_;
     GLuint u_mvp_;
     GLuint u_right_;
     std::map<int, std::string> texture_keys_;
