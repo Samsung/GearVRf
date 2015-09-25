@@ -98,6 +98,7 @@ public class GVROrthogonalCamera extends GVRCamera {
     /**
      * @return Distance from the origin to the near clipping plane.
      */
+    @Override
     public float getNearClippingDistance() {
         return NativeOrthogonalCamera.getNearClippingDistance(getNative());
     }
@@ -108,6 +109,7 @@ public class GVROrthogonalCamera extends GVRCamera {
      * @param near
      *            Distance to the near clipping plane.
      */
+    @Override
     public void setNearClippingDistance(float near) {
         NativeOrthogonalCamera.setNearClippingDistance(getNative(), near);
     }
@@ -115,6 +117,7 @@ public class GVROrthogonalCamera extends GVRCamera {
     /**
      * @return Distance from the origin to the far clipping plane.
      */
+    @Override
     public float getFarClippingDistance() {
         return NativeOrthogonalCamera.getFarClippingDistance(getNative());
     }
@@ -125,6 +128,7 @@ public class GVROrthogonalCamera extends GVRCamera {
      * @param far
      *            Distance to the far clipping plane.
      */
+    @Override
     public void setFarClippingDistance(float far) {
         NativeOrthogonalCamera.setFarClippingDistance(getNative(), far);
     }

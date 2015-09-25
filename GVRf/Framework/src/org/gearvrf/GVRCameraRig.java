@@ -506,6 +506,49 @@ public class GVRCameraRig extends GVRComponent {
     public GVRTransform getHeadTransform() {
         return headTransformObject.getTransform();
     }
+
+    /**
+     * @return Distance from the origin to the near clipping plane for the
+     *         camera rig.
+     */
+    public float getNearClippingDistance() {
+        return leftCamera.getNearClippingDistance();
+    }
+
+    /**
+     * Sets the distance from the origin to the near clipping plane for the
+     * whole camera rig.
+     * 
+     * @param near
+     *            Distance to the near clipping plane.
+     */
+    public void setNearClippingDistance(float near) {
+        leftCamera.setNearClippingDistance(near);
+        centerCamera.setNearClippingDistance(near);
+        rightCamera.setNearClippingDistance(near);
+    }
+
+    /**
+     * @return Distance from the origin to the far clipping plane for the
+     *         camera rig.
+     */
+    public float getFarClippingDistance() {
+        return leftCamera.getFarClippingDistance();
+    }
+
+    /**
+     * Sets the distance from the origin to the far clipping plane for the
+     * whole camera rig.
+     * 
+     * @param far
+     *            Distance to the far clipping plane.
+     */
+    public void setFarClippingDistance(float far) {
+        leftCamera.setFarClippingDistance(far);
+        centerCamera.setFarClippingDistance(far);
+        rightCamera.setFarClippingDistance(far);
+    }
+
 }
 
 class NativeCameraRig {

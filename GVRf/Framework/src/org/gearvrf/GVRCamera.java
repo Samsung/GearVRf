@@ -297,6 +297,37 @@ public abstract class GVRCamera extends GVRComponent {
         }
         return 0;
     }
+
+    /**
+     * @return Distance from the origin to the near clipping plane for this
+     *         camera.
+     */
+    public abstract float getNearClippingDistance();
+
+    /**
+     * Sets the distance from the origin to the near clipping plane for this
+     * camera.
+     * 
+     * @param near
+     *            Distance to the near clipping plane.
+     */
+    public abstract void setNearClippingDistance(float near);
+
+    /**
+     * @return Distance from the origin to the far clipping plane for this
+     *         camera.
+     */
+    public abstract float getFarClippingDistance();
+
+    /**
+     * Sets the distance from the origin to the far clipping plane for this
+     * camera.
+     * 
+     * @param far
+     *            Distance to the far clipping plane.
+     */
+    public abstract void setFarClippingDistance(float far);
+
 }
 
 class NativeCamera {
