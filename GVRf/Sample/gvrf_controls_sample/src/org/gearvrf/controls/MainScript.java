@@ -16,8 +16,6 @@
 package org.gearvrf.controls;
 
 import android.graphics.Color;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCameraRig;
@@ -28,35 +26,47 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.controls.Worm.MovementDirection;
+import org.gearvrf.GVRTextureParameters;
+import org.gearvrf.GVRTextureParameters.TextureFilterType;
+import org.gearvrf.GVRTextureParameters.TextureWrapType;
+import org.gearvrf.controls.cursor.ControlGazeController;
 import org.gearvrf.controls.focus.ControlSceneObjectBehavior;
 import org.gearvrf.controls.gamepad.GamepadObject;
 import org.gearvrf.controls.input.GamepadInput;
-import org.gearvrf.controls.menu.Menu;
+import org.gearvrf.controls.input.TouchPadInput;
+import org.gearvrf.controls.menu.MenuBox;
+import org.gearvrf.controls.model.Apple;
+import org.gearvrf.controls.model.touchpad.TouchPad;
+import org.gearvrf.controls.shaders.TileShader;
+import org.gearvrf.controls.util.Constants;
 import org.gearvrf.controls.util.RenderingOrder;
-import org.gearvrf.controls.util.Util;
-import org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirection;
 
 public class MainScript extends GVRScript {
 
     private GVRContext mGVRContext;
     private GVRScene scene;
 
-    private Worm worm;
+    public static Worm worm;
     private GVRSceneObject skybox, surroundings, sun, ground, fence;
-    private GVRSceneObject clouds;
+    private Clouds clouds;
     private float GROUND_Y_POSITION = -1;
     private float SKYBOX_SIZE = 1;
     private float SUN_ANGLE_POSITION = 30;
     private float SUN_Y_POSITION = 10;
     private float CLOUDS_DISTANCE = 15;
-
     private float SCENE_SIZE = 0.75f;
     private float SCENE_Y = -1.0f;
-
-    private Menu mMenu = null;
+    private float GROUND_SIZE = 55;
+    private float SUN_SIZE = 25;
+    private int NUMBER_OF_CLOUDS = 8;
+    private float GROUND_TILES = 20;
 
     private GamepadObject gamepadObject;
+    private MenuBox menu;
+
+    TouchPad touchpad;
+
+    private Apple apple;
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -80,6 +90,7 @@ public class MainScript extends GVRScript {
         createSkybox();
         createClouds();
         createGround();
+        createGazeCursor();
 
         createSun();
         createSurroundings();
@@ -87,6 +98,35 @@ public class MainScript extends GVRScript {
         createFence();
         createMenu();
         createGamepad3D();
+
+        for (int i = 0; i < Constants.NUMBER_OF_APPLES; i++) {
+            createApple();
+        }
+
+        createTouchPad3D();
+    }
+
+    @Override
+    public SplashMode getSplashMode() {
+        return SplashMode.NONE;
+    }
+
+    private void createApple() {
+
+        apple = new Apple(mGVRContext);
+        mGVRContext.getMainScene().addSceneObject(apple);
+        apple.setAppleRandomPosition(mGVRContext);
+        apple.getTransform().setPositionY(Constants.APPLE_INICIAL_YPOS);
+        apple.playAnimation(mGVRContext);
+    }
+
+    private void createTouchPad3D() {
+        touchpad = new TouchPad(mGVRContext);
+        touchpad.getTransform().setPositionZ(-8.5f);
+        touchpad.getTransform().setPositionY(0.6f);
+        touchpad.getTransform().setScale(0.6f, 0.6f, 0.6f);
+        touchpad.getTransform().rotateByAxisWithPivot(90 + 45, 0, 1, 0, 0, 0, 0);
+        mGVRContext.getMainScene().addSceneObject(touchpad);
     }
 
     private void createFence() {
@@ -101,26 +141,38 @@ public class MainScript extends GVRScript {
         fence.getRenderData().setCullFace(GVRCullFaceEnum.None);
         fence.getRenderData().setRenderingOrder(RenderingOrder.FENCE);
         scene.addSceneObject(fence);
-
     }
 
     private void createWorm() {
 
         worm = new Worm(mGVRContext);
         scene.addSceneObject(worm);
+
     }
 
     private void createGround() {
 
-        GVRMesh mesh = mGVRContext.createQuad(55, 55);
-        GVRTexture texture = mGVRContext.loadTexture(
-                new GVRAndroidResource(mGVRContext, R.drawable.ground_tile));
+        GVRTextureParameters parameters = new GVRTextureParameters(mGVRContext);
+        parameters.setWrapSType(TextureWrapType.GL_REPEAT);
+        parameters.setWrapTType(TextureWrapType.GL_REPEAT);
+        parameters.setAnisotropicValue(16);
+        parameters.setMinFilterType(TextureFilterType.GL_LINEAR);
+        parameters.setMagFilterType(TextureFilterType.GL_LINEAR);
 
-        ground = new GVRSceneObject(mGVRContext, mesh, texture);
+        GVRMesh mesh = mGVRContext.createQuad(GROUND_SIZE, GROUND_SIZE);
+        GVRTexture texture = mGVRContext.loadTexture(
+                new GVRAndroidResource(mGVRContext, R.drawable.ground_512), parameters);
+
+        ground = new GVRSceneObject(mGVRContext, mesh, texture,
+                new TileShader(mGVRContext).getShaderId());
         ground.getTransform().setPositionY(GROUND_Y_POSITION);
         ground.getTransform().setScale(SCENE_SIZE, SCENE_SIZE, SCENE_SIZE);
+        ground.getTransform().setRotationByAxis(-45, 0, 0, 1);
         ground.getTransform().setRotationByAxis(-90, 1, 0, 0);
         ground.getRenderData().setRenderingOrder(RenderingOrder.GROUND);
+
+        ground.getRenderData().getMaterial().setFloat(TileShader.TILE_COUNT, GROUND_TILES);
+        ground.getRenderData().getMaterial().setTexture(TileShader.TEXTURE_KEY, texture);
         scene.addSceneObject(ground);
     }
 
@@ -139,7 +191,7 @@ public class MainScript extends GVRScript {
 
     private void createClouds() {
 
-        clouds = new Clouds(mGVRContext, CLOUDS_DISTANCE, 9);
+        clouds = new Clouds(mGVRContext, CLOUDS_DISTANCE, NUMBER_OF_CLOUDS);
     }
 
     private void createSurroundings() {
@@ -195,10 +247,9 @@ public class MainScript extends GVRScript {
 
     private void createSun() {
 
-        GVRMesh mesh = mGVRContext.createQuad(25, 25);
+        GVRMesh mesh = mGVRContext.createQuad(SUN_SIZE, SUN_SIZE);
         GVRTexture texture = mGVRContext.loadTexture(
                 new GVRAndroidResource(mGVRContext, R.drawable.sun));
-
         sun = new GVRSceneObject(mGVRContext, mesh, texture);
         sun.getTransform().setRotationByAxis(90, 1, 0, 0);
         sun.getTransform().setPositionY(SUN_Y_POSITION);
@@ -209,83 +260,40 @@ public class MainScript extends GVRScript {
 
     @Override
     public void onStep() {
+
         worm.chainMove(mGVRContext);
 
         GamepadInput.process();
+        TouchPadInput.process();
 
-        GamepadInput.interactWithDPad(worm);
+        touchpad.updateIndicator();
+
+        worm.interactWithDPad();
+        worm.animateWormByTouchPad();
         ControlSceneObjectBehavior.process(mGVRContext);
 
         if (gamepadObject != null) {
-
-            gamepadObject.getGamepadVirtual().handlerAnalogL(
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_X),
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_Y),
-                    0);
-
-            gamepadObject.getGamepadVirtual().handlerAnalogR(
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_RX),
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_RY),
-                    0);
-
-            gamepadObject.getGamepadVirtual().dpadTouch(
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_X),
-                    GamepadInput.getCenteredAxis(MotionEvent.AXIS_HAT_Y));
-
-            gamepadObject.getGamepadVirtual().handlerLRButtons(
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_L1),
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_R1));
-
-            gamepadObject.getGamepadVirtual().buttonsPressed(
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_X),
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_Y),
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_A),
-                    GamepadInput.getKey(KeyEvent.KEYCODE_BUTTON_B));
+            gamepadObject.inputControl();
         }
-    }
+        worm.checkWormEatingApple(mGVRContext);
 
-    public void animateWorm(
-            org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirection swipeDirection) {
-
-        float duration = 0.6f;
-        float movement = 0.75f;
-        float degree = 22.5f;
-
-        if (swipeDirection.name() == SwipeDirection.Up.name()) {
-            worm.moveAlongCameraVector(duration, movement);
-            worm.rotateWorm(MovementDirection.Up);
-
-        } else if (swipeDirection.name() == SwipeDirection.Down.name()) {
-            worm.moveAlongCameraVector(duration, -movement);
-            worm.rotateWorm(MovementDirection.Down);
-
-        } else if (swipeDirection.name() == SwipeDirection.Forward.name()) {
-            worm.rotateAroundCamera(duration, -degree);
-            worm.rotateWorm(MovementDirection.Right);
-
-        } else {
-            worm.rotateAroundCamera(duration, degree);
-            worm.rotateWorm(MovementDirection.Left);
-        }
     }
 
     private void createMenu() {
-        mMenu = new Menu(mGVRContext);
-        mMenu.getTransform().setScale(0.4f, 0.4f, 0.4f);
-        mMenu.getTransform().setPosition(0, -.5f, -3f);
-        mMenu.getRenderData().getMaterial().setOpacity(0.5f);
-        // scene.addSceneObject(mMenu);
+
+        menu = new MenuBox(mGVRContext);
+        scene.addSceneObject(menu);
+    }
+
+    private void createGazeCursor() {
+        ControlGazeController.setupGazeCursor(mGVRContext);
     }
 
     private void createGamepad3D() {
-        GVRCameraRig cameraObject = mGVRContext.getMainScene()
-                .getMainCameraRig();
         gamepadObject = new GamepadObject(mGVRContext);
 
-        gamepadObject.getTransform().setPosition(-3, 1.f, 8f);
-        float angle = Util.getYRotationAngle(gamepadObject, cameraObject);
-
-        gamepadObject.getTransform().rotateByAxis(angle, 0, 1, 0);
+        gamepadObject.getTransform().setPosition(0, 1.f, -8.5f);
+        gamepadObject.getTransform().rotateByAxisWithPivot(225, 0, 1, 0, 0, 0, 0);
 
         scene.addSceneObject(gamepadObject);
     }

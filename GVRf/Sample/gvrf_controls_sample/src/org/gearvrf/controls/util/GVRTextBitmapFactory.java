@@ -1,6 +1,3 @@
-
-package org.gearvrf.controls.util;
-
 /* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +13,10 @@ package org.gearvrf.controls.util;
  * limitations under the License.
  */
 
+package org.gearvrf.controls.util;
+
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -27,7 +27,7 @@ import android.graphics.Typeface;
 
 /**
  * A class which creates Bitmaps with texts on them.
- *
+ * 
  * @author hanseul
  */
 public class GVRTextBitmapFactory {
@@ -39,7 +39,7 @@ public class GVRTextBitmapFactory {
 
     /**
      * Creates a Bitmap with texts.
-     *
+     * 
      * @param width The width of the Bitmap.
      * @param height The height of the Bitmap.
      * @param text The text.
@@ -95,9 +95,9 @@ public class GVRTextBitmapFactory {
         return bitmap;
     }
 
-    public static Bitmap create(Context context, float width, float height, Text text, int test) { // spinner
+    public static Bitmap create(Context context, float width, float height, Text text, String font) {
 
-        Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), "fonts/futura-condensed-normal.ttf");
+        Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
 
         Bitmap bitmap = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
 
@@ -116,10 +116,105 @@ public class GVRTextBitmapFactory {
         paint.getTextBounds(text.text, 0, text.text.length(), rectText);
 
         canvas.drawColor(text.backgroundColor);
-
-        canvas.drawText(text.text, width / 2 - rectText.exactCenterX(), height / 2 - rectText.exactCenterY(), paint);
+        
+        if(text.align == Align.CENTER){
+        
+            canvas.drawText(text.text, width / 2 - rectText.exactCenterX(), height / 2 - rectText.exactCenterY(), paint);
+        
+        } else if(text.align == Align.LEFT){
+            
+            canvas.drawText(text.text, 0, height / 2 - rectText.exactCenterY(), paint);
+        }
 
         return bitmap;
     }
 
+    public static Bitmap create(Context context, int width, int height, Text text, String font) {
+        
+        Resources res = context.getResources();
+        float scale = res.getDisplayMetrics().density;
+        
+        Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
+
+        Bitmap bitmap = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setTypeface(myTypeface);
+        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(Style.FILL);
+        // text size in pixels
+        paint.setTextSize(text.textSize * scale);
+        paint.setFakeBoldText(true);
+        paint.setColor(text.textColor);
+        paint.setFilterBitmap(true);
+
+        Rect rectText = new Rect();
+        paint.getTextBounds(text.text, 0, text.text.length(), rectText);
+
+        canvas.drawColor(text.backgroundColor);
+        
+        if(text.align == Align.CENTER){
+        
+            canvas.drawText(text.text, width / 2 - rectText.exactCenterX(), height / 2 - rectText.exactCenterY(), paint);
+        
+        } else if(text.align == Align.LEFT){
+            
+            canvas.drawText(text.text, 0, height / 2 - rectText.exactCenterY(), paint);
+        }
+
+        return bitmap;
+    }
+    
+    public static Bitmap create(Context context, int width, int height, Text text, String font, int o) {
+        
+        Resources res = context.getResources();
+        float scale = res.getDisplayMetrics().density;
+        
+        Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
+
+        Bitmap bitmap = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setTypeface(myTypeface);
+        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(Style.FILL);
+        // text size in pixels
+        paint.setTextSize((int)text.textSize * scale);
+        paint.setFakeBoldText(true);
+        paint.setColor(text.textColor);
+        paint.setFilterBitmap(true);
+
+        Rect rectText = new Rect();
+        paint.getTextBounds(text.text, 0, text.text.length(), rectText);
+
+        canvas.drawColor(text.backgroundColor);
+        
+        if(text.align == Align.CENTER){
+        
+            canvas.drawText(text.text, width / 2 - rectText.exactCenterX(), height / 2 - rectText.exactCenterY(), paint);
+        
+        } else if(text.align == Align.LEFT){
+            
+            canvas.drawText(text.text, 0, height / 2 - rectText.exactCenterY(), paint);
+        }
+        
+        Paint bottomLine = new Paint();
+        bottomLine.setStrokeWidth(6f);
+        bottomLine.setColor(0xffff6f54);
+        bottomLine.setStyle(Paint.Style.STROKE);
+        bottomLine.setStrokeJoin(Paint.Join.ROUND);
+        
+        float x1 = 0;
+        float y1 = 38;
+        float x2 = 100;
+        float y2 = 38;
+
+        canvas.drawLine(x1, y1, x2, y2, bottomLine);
+        
+        return bitmap;
+    }
 }

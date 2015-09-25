@@ -13,30 +13,31 @@
  * limitations under the License.
  */
 
-package org.gearvrf.controls.input;
+package org.gearvrf.controls.interpolators;
 
-public class GamePadButton {
+import org.gearvrf.animation.GVRInterpolator;
 
-    protected boolean down;
-    protected boolean up;
-    protected boolean pressed;
+public class QuadIn implements GVRInterpolator {
 
-    public boolean isDown() {
-        return down;
+    private static QuadIn sInstance = null;
+
+    /** Get the (lazy-created) singleton */
+    public static synchronized QuadIn getInstance() {
+        if (sInstance == null) {
+            sInstance = new QuadIn();
+        }
+        return sInstance;
     }
 
-    public boolean isUp() {
-        return up;
-    }
+    @Override
+    public float mapRatio(float ratio) {
 
-    public boolean isPressed() {
-        return pressed;
-    }
+        float t = ratio;
+        float b = 0;
+        float c = 1;
+        float d = 1;
 
-    protected void replicateValues(GamePadButton button) {
-        this.down = button.down;
-        this.up = button.up;
-        this.pressed = button.pressed;
+        return c * (t /= d) * t + b;
     }
 
 }

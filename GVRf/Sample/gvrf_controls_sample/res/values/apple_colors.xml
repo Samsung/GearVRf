@@ -1,0 +1,62 @@
+<resources>
+	    <string-array name="color1">
+	        <item name="r">214</item>
+	        <item name="g">6</item>
+	        <item name="b">23</item>
+	     
+	    </string-array>
+	   <string-array name="color2">
+	        <item name="r">108</item>
+	        <item name="g">24</item>
+	        <item name="b">114</item>
+	     
+	    </string-array>
+	    <string-array name="color3">
+	        <item name="r">255</item>
+	        <item name="g">105</item>
+	        <item name="b">18</item>
+	     
+	    </string-array>
+	    <string-array name="color4">
+	        <item name="r">19</item>
+	        <item name="g">215</item>
+	        <item name="b">180</item>
+	     
+	    </string-array>
+	    <string-array name="color5">
+	        <item name="r">231</item>
+	        <item name="g">80</item>
+	        <item name="b">211</item>
+	     
+	    </string-array>
+	   <string-array name="color6">
+	        <item name="r">21</item>
+	        <item name="g">77</item>
+	        <item name="b">191</item>
+	     
+	    </string-array>
+	      <string-array name="color7">
+	        <item name="r">35</item>
+	        <item name="g">123</item>
+	        <item name="b">13</item>∂
+	     
+	    </string-array>
+	    <string-array name="color8">
+	        <item name="r">238</item>
+	        <item name="g">241</item>
+	        <item name="b">5</item>
+	     
+	    </string-array>
+	
+  <!-- Apple Colors -->
+    <array name="colors">
+        <item>@array/color1</item>
+        <item>@array/color2</item>
+        <item>@array/color3</item>
+        <item>@array/color4</item>
+        <item>@array/color5</item>
+        <item>@array/color6</item>
+        <item>@array/color7</item>
+        <item>@array/color8</item>
+    </array>
+</resources>

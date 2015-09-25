@@ -38,10 +38,10 @@
             colorFormat="COLOR_8888"
             depthFormat="DEPTH_24"
             fov-y="90.0"
-            multiSamples="1"
+            multiSamples="8"
             resolutionWidth="DEFAULT"
             resolutionHeight="DEFAULT"
-            textureFilter="TEXTURE_FILTER_BILINEAR"
+            textureFilter="TEXTURE_FILTER_ANISO_4"
             widthScale="1" />
 
         <head-model-parms

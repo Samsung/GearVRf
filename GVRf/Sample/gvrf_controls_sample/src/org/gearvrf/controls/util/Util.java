@@ -16,7 +16,6 @@
 package org.gearvrf.controls.util;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
 
 import org.gearvrf.GVRAndroidResource;
@@ -28,9 +27,6 @@ import org.gearvrf.GVRTransform;
 import org.gearvrf.controls.R;
 
 public class Util {
-
-    private static final String TAG = "vr-controls";
-    private static final boolean SHOW_LOG = true;
 
     public static float[] calculatePointBetweenTwoObjects(GVRSceneObject object1,
             GVRSceneObject object2, float desiredDistance) {
@@ -44,6 +40,16 @@ public class Util {
                 * object2.getTransform().getPositionZ();
 
         return point;
+    }
+
+    public static float[] normalizeColor(float[] colorToNormalize) {
+
+        float[] normalizedColor = colorToNormalize;
+        for (int i = 0; i < colorToNormalize.length; i++) {
+
+            normalizedColor[i] /= Constants.NORMALIZE_COLOR;
+        }
+        return normalizedColor;
     }
 
     public static double distance(GVRSceneObject object1, GVRSceneObject object2) {
@@ -83,20 +89,16 @@ public class Util {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show();
     }
 
-    public static void Log(String message) {
-        if (SHOW_LOG == false)
-            return;
-        Log.i(TAG, message);
-    }
-
-    public static void Log(String showingTag, String message) {
-        if (SHOW_LOG == false)
-            return;
-        Log.i(showingTag, message);
-    }
-
     public static GVRTexture transparentTexture(GVRContext context) {
         return context.loadTexture(new GVRAndroidResource(context, R.raw.empty));
+    }
+
+    public static GVRTexture whiteTexture(GVRContext context) {
+        return context.loadTexture(new GVRAndroidResource(context, R.drawable.white));
+    }
+
+    public static GVRTexture loadTexture(GVRContext context, int res) {
+        return context.loadTexture(new GVRAndroidResource(context, res));
     }
 
     public static float getYRotationAngle(GVRSceneObject rotatingObject, GVRSceneObject targetObject) {
@@ -111,6 +113,11 @@ public class Util {
                 - rotatingObject.getTransform().getPositionX(),
                 targetObject.getTransform().getPositionZ()
                         - rotatingObject.getTransform().getPositionZ()));
+    }
+
+    public static void lookAtYAxis(GVRSceneObject origin, GVRSceneObject destination) {
+        origin.getTransform().setRotationByAxis(
+                MathUtils.getYRotationAngle(origin, destination), 0, 1, 0);
     }
 
 }

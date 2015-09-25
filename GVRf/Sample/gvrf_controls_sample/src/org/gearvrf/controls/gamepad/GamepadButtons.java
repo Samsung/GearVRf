@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gearvrf.controls.gamepad;
 
 import android.util.SparseArray;

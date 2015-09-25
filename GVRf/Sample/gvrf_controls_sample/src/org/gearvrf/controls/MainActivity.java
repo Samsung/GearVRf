@@ -16,12 +16,12 @@
 package org.gearvrf.controls;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.controls.input.GamepadInput;
+import org.gearvrf.controls.input.TouchPadInput;
 import org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector;
 import org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirection;
 
@@ -30,6 +30,8 @@ public class MainActivity extends GVRActivity implements
 
     private VRSamplesTouchPadGesturesDetector mDetector = null;
     private MainScript mainScript;
+    private static final int TAP_INTERVAL = 300;
+    private long mLatestTap = 0;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -42,8 +44,6 @@ public class MainActivity extends GVRActivity implements
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
         boolean handled = false;
-        
-        Log.d("processJoystickInput", "dispatchKeyEvent ");
 
         GamepadInput.input(event);
 
@@ -56,8 +56,7 @@ public class MainActivity extends GVRActivity implements
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        
-        Log.d("processJoystickInput", "processJoystickInput");
+
         boolean handled = false;
 
         // Check that the event came from a game controller
@@ -90,24 +89,33 @@ public class MainActivity extends GVRActivity implements
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (mDetector == null) {
+            return false;
+        }
+        TouchPadInput.input(event);
         mDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
     }
 
     @Override
     public boolean onSingleTap(MotionEvent e) {
+        if (System.currentTimeMillis() > mLatestTap + TAP_INTERVAL) {
+            mLatestTap = System.currentTimeMillis();
+            TouchPadInput.onSingleTap();
+        }
+
         return false;
     }
 
     @Override
     public void onLongPress(MotionEvent e) {
+        TouchPadInput.onLongPress();
     }
 
     @Override
     public boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection, float velocityX,
             float velocityY) {
-
-        mainScript.animateWorm(swipeDirection);
+        TouchPadInput.onSwipe(swipeDirection);
 
         return false;
     }
