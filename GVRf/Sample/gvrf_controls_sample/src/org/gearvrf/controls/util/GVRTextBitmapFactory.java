@@ -136,7 +136,7 @@ public class GVRTextBitmapFactory {
         
         Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
 
-        Bitmap bitmap = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
         Canvas canvas = new Canvas(bitmap);
 
@@ -164,57 +164,6 @@ public class GVRTextBitmapFactory {
             canvas.drawText(text.text, 0, height / 2 - rectText.exactCenterY(), paint);
         }
 
-        return bitmap;
-    }
-    
-    public static Bitmap create(Context context, int width, int height, Text text, String font, int o) {
-        
-        Resources res = context.getResources();
-        float scale = res.getDisplayMetrics().density;
-        
-        Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
-
-        Bitmap bitmap = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
-
-        Canvas canvas = new Canvas(bitmap);
-
-        Paint paint = new Paint();
-        paint.setTypeface(myTypeface);
-        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        paint.setStyle(Style.FILL);
-        // text size in pixels
-        paint.setTextSize((int)text.textSize * scale);
-        paint.setFakeBoldText(true);
-        paint.setColor(text.textColor);
-        paint.setFilterBitmap(true);
-
-        Rect rectText = new Rect();
-        paint.getTextBounds(text.text, 0, text.text.length(), rectText);
-
-        canvas.drawColor(text.backgroundColor);
-        
-        if(text.align == Align.CENTER){
-        
-            canvas.drawText(text.text, width / 2 - rectText.exactCenterX(), height / 2 - rectText.exactCenterY(), paint);
-        
-        } else if(text.align == Align.LEFT){
-            
-            canvas.drawText(text.text, 0, height / 2 - rectText.exactCenterY(), paint);
-        }
-        
-        Paint bottomLine = new Paint();
-        bottomLine.setStrokeWidth(6f);
-        bottomLine.setColor(0xffff6f54);
-        bottomLine.setStyle(Paint.Style.STROKE);
-        bottomLine.setStrokeJoin(Paint.Join.ROUND);
-        
-        float x1 = 0;
-        float y1 = 38;
-        float x2 = 100;
-        float y2 = 38;
-
-        canvas.drawLine(x1, y1, x2, y2, bottomLine);
-        
         return bitmap;
     }
 }

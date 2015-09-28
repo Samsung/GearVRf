@@ -22,5 +22,4 @@ public interface GamepadTouch {
     void down(Integer code);
 
     void pressed(Integer code);
-
 }

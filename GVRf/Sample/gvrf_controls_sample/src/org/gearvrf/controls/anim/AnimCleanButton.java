@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.controls.menu.motion;
+package org.gearvrf.controls.anim;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -23,71 +23,61 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.controls.R;
 import org.gearvrf.controls.menu.MenuControlSceneObject;
-import org.gearvrf.controls.model.Apple.Motion;
 import org.gearvrf.controls.shaders.ButtonShader;
 import org.gearvrf.controls.util.RenderingOrder;
 import org.gearvrf.controls.util.Text;
 
-public class MotionButton extends MenuControlSceneObject {
+public class AnimCleanButton extends MenuControlSceneObject {
 
     private final int IDLE_STATE = 0;
     private final int HOVER_STATE = 1;
     private final int SELECTED_STATE = 2;
 
-    private boolean select = false;
-   
-    private  int WIDTH = 0;
-    private  int HEIGHT = 0;
-    
-    private float quadWidth = .91f;
-    private float quadHeigth = .22f;
-  
+    private int WIDTH = 0;
+    private int HEIGHT = 0;
+
+    private float quadWidth = .4f;
+    private float quadHeigth = .2f;
+
     private String title;
-    private Motion motion;
-    
-    public MotionButton(GVRContext gvrContext, String title, Motion motion) {
+
+    public AnimCleanButton(GVRContext gvrContext, String title) {
         super(gvrContext);
-        
-        this.motion = motion;
+
         this.title = title;
-        
+
         GVRMesh sMesh = getGVRContext().createQuad(quadWidth, quadHeigth);
-        
-        WIDTH = (int)(100.0f * quadWidth);
+
+        WIDTH = (int) (100.0f * quadWidth);
         HEIGHT = (int) (100.0f * quadHeigth);
-   
+
         attachRenderData(new GVRRenderData(gvrContext));
-        getRenderData().setMaterial(new GVRMaterial(gvrContext, new ButtonShader(gvrContext).getShaderId()));
+        getRenderData().setMaterial(
+                new GVRMaterial(gvrContext, new ButtonShader(gvrContext).getShaderId()));
         getRenderData().setMesh(sMesh);
-        
+
         createTextures();
 
         getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, IDLE_STATE);
-        getRenderData().setRenderingOrder(RenderingOrder.MENU_FRAME_TEXT);
-        
+        getRenderData().setRenderingOrder(RenderingOrder.MOVE_BUTON);
+
         attachEyePointeeHolder();
     }
 
-    public Motion getMotion() {
-        return motion;
-    }
-
     private void createTextures() {
-       
-        Text text = new Text(title, Align.LEFT, 3.5f, Color.parseColor("#ffffff"), Color.parseColor("#00000000"), 45);
+
+        Text text = new Text(title, Align.CENTER, 3f, Color.parseColor("#000000"),
+                Color.parseColor("#ffffff"), 45);
         String font = "fonts/samsung-if-bold.ttf";
-        
+
         GVRBitmapTexture bitmapIddle = new GVRBitmapTexture(getGVRContext(),
                 create(getGVRContext().getContext(), WIDTH, HEIGHT, text, font));
 
@@ -95,7 +85,7 @@ public class MotionButton extends MenuControlSceneObject {
                 getGVRContext().loadTexture(new GVRAndroidResource(getGVRContext(), R.raw.empty)));
         getRenderData().getMaterial().setTexture(ButtonShader.STATE1_TEXT_TEXTURE, bitmapIddle);
 
-        text.textSize = 4.3f;
+        text.textSize = 3.3f;
 
         GVRBitmapTexture bitmapHover = new GVRBitmapTexture(getGVRContext(),
                 create(getGVRContext().getContext(), WIDTH, HEIGHT, text, font));
@@ -103,8 +93,6 @@ public class MotionButton extends MenuControlSceneObject {
         getRenderData().getMaterial().setTexture(ButtonShader.STATE2_BACKGROUND_TEXTURE,
                 getGVRContext().loadTexture(new GVRAndroidResource(getGVRContext(), R.raw.empty)));
         getRenderData().getMaterial().setTexture(ButtonShader.STATE2_TEXT_TEXTURE, bitmapHover);
-
-        text.textColor = 0xfff8DF35;
 
         GVRBitmapTexture bitmapSelected = new GVRBitmapTexture(getGVRContext(),
                 create(getGVRContext().getContext(), WIDTH, HEIGHT, text, font));
@@ -116,60 +104,70 @@ public class MotionButton extends MenuControlSceneObject {
 
     @Override
     protected void gainedFocus() {
-        if (!select) {
-            getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, HOVER_STATE);
-        }
+        getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, HOVER_STATE);
     }
 
     @Override
     protected void lostFocus() {
-        if (!select) {
-            getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, IDLE_STATE);
-        }
+        getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, IDLE_STATE);
     }
 
     @Override
     protected void singleTap() {
         super.singleTap();
         getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, SELECTED_STATE);
-        select = true;
     }
 
-    public void unselect() {
-        getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, IDLE_STATE);
-        select = false;
-    }
-    
-    public void select(){
-        getRenderData().getMaterial().setFloat(ButtonShader.TEXTURE_SWITCH, SELECTED_STATE);
-        select = true;
-    }
-    
     public static Bitmap create(Context context, int width, int height, Text text, String font) {
-        
-        Resources res = context.getResources();
-        float scale = res.getDisplayMetrics().density;
-        
+
         Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
 
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Resources res = context.getResources();
+        float scale = res.getDisplayMetrics().density;
+
+        Bitmap bitmap = Bitmap.createBitmap((int) width, (int) height, Bitmap.Config.ARGB_8888);
 
         Canvas canvas = new Canvas(bitmap);
 
+        final Paint paint2 = new Paint();
+        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        final RectF rectF = new RectF(rect);
+        final float roundPx = 12;
+
+        paint2.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint2.setColor(text.backgroundColor);
+        canvas.drawRoundRect(rectF, roundPx, roundPx, paint2);
+
+        paint2.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, rect, rect, paint2);
+
         Paint paint = new Paint();
-        paint.setTypeface(myTypeface);
+        paint.setTypeface(myTypeface/*
+                                     * Typeface.create(Typeface.DEFAULT,
+                                     * Typeface.BOLD)
+                                     */);
         paint.setFlags(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Style.FILL);
         paint.setTextSize(text.textSize * scale);
+        paint.setFakeBoldText(true);
         paint.setColor(text.textColor);
-        
+        paint.setFilterBitmap(true);
+
         Rect rectText = new Rect();
         paint.getTextBounds(text.text, 0, text.text.length(), rectText);
 
-        canvas.drawColor(text.backgroundColor);
-            
-        canvas.drawText(text.text, 0, height / 1.5f, paint);
+        canvas.drawText(text.text, width / 2 - rectText.exactCenterX(),
+                height / 1.5f /*- rectText.exactCenterY()*/, paint);
 
         return bitmap;
+    }
+
+    @Override
+    public void unselect() {
+    }
+
+    @Override
+    public void select() {
     }
 }

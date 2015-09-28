@@ -1,4 +1,5 @@
-<!--/* Copyright 2015 Samsung Electronics Co., LTD
+<!--
+/* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,15 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */-->
+ */
+-->
 
 <resources>
 
     <string name="app_name">GVR Controls Sample</string>
-    
-	<string name="motion">MOTION</string>
-	<string name="color">COLOR</string>
-	<string name="rotation">ROTATION</string>
-	<string name="scale">SCALE</string>
+    <string name="motion">MOTION</string>
+    <string name="color">COLOR</string>
+    <string name="rotation">ROTATION</string>
+    <string name="scale">SCALE</string>
+    <string name="clear_button">Clear</string>
 
 </resources>

@@ -18,8 +18,12 @@ package org.gearvrf.controls.menu.rotation;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRotationByAxisAnimation;
+import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.R;
+import org.gearvrf.controls.anim.StarPreviewInfo;
 
 public class RotationGroup extends GVRSceneObject {
     private static final float SCALE_FACTOR = 0.7f;
@@ -38,6 +42,8 @@ public class RotationGroup extends GVRSceneObject {
         place.getTransform().setScale(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
         place.addChildObject(star);
         place.addChildObject(base);
+        
+        StarPreviewInfo.putStarReference(place);
     }
 
     private void createBase() {
@@ -52,21 +58,36 @@ public class RotationGroup extends GVRSceneObject {
     }
 
     private void createStar() {
+        
         GVRAndroidResource starMeshRes = new GVRAndroidResource(getGVRContext(), R.raw.star);
         GVRAndroidResource starTextRes = new GVRAndroidResource(getGVRContext(),
                 R.drawable.star_diffuse);
 
         star = new GVRSceneObject(getGVRContext(), starMeshRes, starTextRes);
         star.getTransform().setPositionY(0.5f);
-
     }
 
-    public void rotate(float angleFactor) {
-
-        GVRRotationByAxisAnimation rotationAnimation = new GVRRotationByAxisAnimation(place, 0.1f,
-                angleFactor, 0, 1, 0);
+    public void rotate(final float angleFactor) {
+        
+        GVRRotationByAxisAnimation rotationAnimation = new GVRRotationByAxisAnimation(place, 0.1f, angleFactor, 0, 1, 0);
+        
+        rotationAnimation.setOnFinish(new GVROnFinish() {
+            
+            @Override
+            public void finished(GVRAnimation arg0) {
+                
+                MainScript.enableAnimationStar();
+                
+                if(angleFactor > 0){
+                    
+                    StarPreviewInfo.changeRotationFactor(StarPreviewInfo.Direction.left);
+                } else {
+                    
+                    StarPreviewInfo.changeRotationFactor(StarPreviewInfo.Direction.right);
+                }
+            }
+        });
+        
         rotationAnimation.start(getGVRContext().getAnimationEngine());
-
     }
-
 }

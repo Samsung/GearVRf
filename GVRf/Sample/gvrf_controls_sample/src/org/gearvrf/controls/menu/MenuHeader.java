@@ -27,13 +27,14 @@ import org.gearvrf.controls.menu.MenuHeaderItem.headerType;
 import org.gearvrf.controls.menu.color.ColorsMenu;
 import org.gearvrf.controls.menu.motion.MotionMenu;
 import org.gearvrf.controls.menu.rotation.RotationMenu;
+import org.gearvrf.controls.menu.scale.ScaleMenu;
 import org.gearvrf.controls.util.RenderingOrder;
 import org.gearvrf.controls.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MenuHeader extends ControlSceneObject {
+public class MenuHeader extends ControlSceneObject implements ItemSelectedListener {
 
     private static final int MENU_WINDOW_INDEX = 4;
     private static final float Z_HOVER_ANIMATION_OFFSET = 0.25f;
@@ -88,50 +89,19 @@ public class MenuHeader extends ControlSceneObject {
 
     private void createMenuItems(GVRContext gvrContext) {
 
-        motion = new MenuHeaderItem(gvrContext, res.getString(R.string.motion), headerType.MOTION,
-                new ItemSelectedListener() {
+        motion = new MenuHeaderItem(gvrContext, res.getString(R.string.motion), headerType.MOTION, this);
+        color = new MenuHeaderItem(gvrContext, res.getString(R.string.color), headerType.COLOR, this);
+        scale = new MenuHeaderItem(gvrContext, res.getString(R.string.scale), headerType.SCALE, this);
+        rotation = new MenuHeaderItem(gvrContext, res.getString(R.string.rotation), headerType.ROTATION, this);
 
-                    @Override
-                    public void selected(ControlSceneObject object) {
-                        resetMenuState(object);
-                    }
-                });
-
-        color = new MenuHeaderItem(gvrContext, res.getString(R.string.color), headerType.COLOR,
-                new ItemSelectedListener() {
-
-                    @Override
-                    public void selected(ControlSceneObject object) {
-                        resetMenuState(object);
-                    }
-                });
-
-        scale = new MenuHeaderItem(gvrContext, res.getString(R.string.scale), headerType.SCALE,
-                new ItemSelectedListener() {
-
-                    @Override
-                    public void selected(ControlSceneObject object) {
-                        resetMenuState(object);
-                    }
-                });
-
-        rotation = new MenuHeaderItem(gvrContext, res.getString(R.string.rotation),
-                headerType.ROTATION, new ItemSelectedListener() {
-
-                    @Override
-                    public void selected(ControlSceneObject object) {
-                        resetMenuState(object);
-                    }
-                });
-        
         setGamePadListener(motion);
         setGamePadListener(color);
         setGamePadListener(scale);
         setGamePadListener(rotation);
     }
-    
-    public void setGamePadListener(final MenuHeaderItem item){
-        
+
+    public void setGamePadListener(final MenuHeaderItem item) {
+
         item.setGamepadTouchListener(new GamepadTouchImpl() {
 
             @Override
@@ -142,7 +112,7 @@ public class MenuHeader extends ControlSceneObject {
                         code == GamepadMap.KEYCODE_BUTTON_B ||
                         code == GamepadMap.KEYCODE_BUTTON_X ||
                         code == GamepadMap.KEYCODE_BUTTON_Y) {
-                 
+
                     resetMenuState(item);
                     item.select();
                 }
@@ -265,5 +235,10 @@ public class MenuHeader extends ControlSceneObject {
     @Override
     protected void singleTap() {
         super.singleTap();
+    }
+
+    @Override
+    public void selected(ControlSceneObject object) {
+        resetMenuState(object);
     }
 }

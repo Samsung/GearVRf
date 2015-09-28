@@ -23,6 +23,7 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRInterpolator;
 import org.gearvrf.animation.GVRRelativeMotionAnimation;
 import org.gearvrf.animation.GVRRepeatMode;
+import org.gearvrf.controls.anim.AnimationsTime;
 import org.gearvrf.controls.model.Apple;
 import org.gearvrf.controls.shaders.ColorSwapShader;
 
@@ -30,7 +31,6 @@ public class MenuPreview extends GVRSceneObject {
 
     private final float APPLE_SCALE = 0.5f;
     private final float APPLE_INITIAL_POSITION_Y = 0.2f;
-    private final float ANIMATION_DURATION = 0.85f;
     private final float Y_ANIMATION_DELTA = -0.7f;
 
     private Apple apple;
@@ -55,7 +55,7 @@ public class MenuPreview extends GVRSceneObject {
         apple.getTransform().setPositionY(APPLE_INITIAL_POSITION_Y);
         apple.getRenderData().getMaterial().setOpacity(1f);
 
-        appleAnimation = new GVRRelativeMotionAnimation(apple, ANIMATION_DURATION, 0,
+        appleAnimation = new GVRRelativeMotionAnimation(apple, AnimationsTime.getDropTime(), 0,
                 Y_ANIMATION_DELTA, 0)
                 .setInterpolator(animationInterpolator)
                 .setRepeatMode(GVRRepeatMode.REPEATED)
@@ -81,5 +81,10 @@ public class MenuPreview extends GVRSceneObject {
         apple.getTransform().setPositionY(APPLE_INITIAL_POSITION_Y);
         apple.getRenderData().getMaterial().setOpacity(0f);
         getGVRContext().getAnimationEngine().stop(appleAnimation);
+    }
+    
+    public void animationsTime(){
+        getGVRContext().getAnimationEngine().stop(appleAnimation);
+        startAppleAnimation();
     }
 }

@@ -26,6 +26,12 @@ public class RenderingOrder {
     public static final int GRASS = 4;
     public static final int FLOWERS = 5;
     public static final int WORM = 15;
+    public static final int WORM_SHADOW_HEADER = 13;
+    public static final int WORM_SHADOW_MIDDLE = 11;
+    public static final int WORM_SHADOW_END = 12;
+    public static final int STAR = 1;
+    public static final int APPLE= 17;
+    public static final int APPLE_SHADOW= 10;
 
     public static final int ORDER_RENDERING_SKYBOX = 0;
 
@@ -45,4 +51,6 @@ public class RenderingOrder {
     public static final int MENU_HEADER_TEXT = 25;
     
     public static final int MENU_BUTTON_COLOR = 23;
+    
+    public static final int MOVE_BUTON = 2000;
 }

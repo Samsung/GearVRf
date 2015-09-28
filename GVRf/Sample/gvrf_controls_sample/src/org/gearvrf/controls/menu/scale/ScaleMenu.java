@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.controls.menu;
+package org.gearvrf.controls.menu.scale;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
@@ -22,9 +22,17 @@ import org.gearvrf.animation.GVRRelativeMotionAnimation;
 import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.R;
 import org.gearvrf.controls.Worm;
+import org.gearvrf.controls.anim.AnimationsTime;
+import org.gearvrf.controls.anim.ScaleWorm;
+import org.gearvrf.controls.focus.ControlSceneObject;
 import org.gearvrf.controls.focus.GamepadTouchImpl;
 import org.gearvrf.controls.focus.TouchAndGestureImpl;
 import org.gearvrf.controls.input.GamepadMap;
+import org.gearvrf.controls.menu.ItemSelectedListener;
+import org.gearvrf.controls.menu.MenuWindow;
+import org.gearvrf.controls.menu.RadioButtonSceneObject;
+import org.gearvrf.controls.menu.RadioGrupoSceneObject;
+import org.gearvrf.controls.menu.TouchableButton;
 
 import java.util.ArrayList;
 
@@ -41,18 +49,21 @@ public class ScaleMenu extends MenuWindow {
     private TouchableButton minusSign;
     private TouchableButton plusSign;
 
+    private RadioGrupoSceneObject radioGroup;
+
     public ScaleMenu(GVRContext gvrContext) {
         super(gvrContext);
         addWorm(gvrContext);
 
         addScaleSigns(gvrContext);
+
+        attachRadioGroup();
     }
 
     private void addWorm(GVRContext gvrContext) {
         worm = new Worm(gvrContext);
         worm.getTransform().setPositionZ(2.7f);
-        worm.getTransform().setPositionY(0.22f);
-//        worm.getTransform().setPositionX(-0.1f);
+        worm.getTransform().setPositionY(0.20f);
 
         worm.getHead().getParent().getTransform().setPositionY(WORM_Y_POSITION);
         worm.getMiddle().getTransform().setPositionY(WORM_Y_POSITION);
@@ -66,6 +77,27 @@ public class ScaleMenu extends MenuWindow {
 
         worm.getEnd().getTransform().setPositionX(WORM_END_X_POSITION);
         worm.getEnd().getTransform().rotateByAxis(90, 0, 1, 0);
+        
+        ScaleWorm.putWormPreviewReference(worm);
+    }
+
+    private void attachRadioGroup() {
+
+        radioGroup = new RadioGrupoSceneObject(getGVRContext(), new ItemSelectedListener() {
+
+            @Override
+            public void selected(ControlSceneObject object) {
+
+                RadioButtonSceneObject button = (RadioButtonSceneObject) object;
+
+                AnimationsTime.setScaleTime(button.getSecond());
+            }
+            
+        }, 0.2f, 0.5f, 1f);
+
+        radioGroup.getTransform().setPosition(-.5f, -1.24f, 0f);
+
+        addChildObject(radioGroup);
     }
 
     private void addScaleSigns(GVRContext gvrContext) {
@@ -86,18 +118,13 @@ public class ScaleMenu extends MenuWindow {
 
     private void addMinusSignTouchListener(GVRContext gvrContext) {
         minusSign.setTouchAndGesturelistener(new TouchAndGestureImpl() {
+
             @Override
             public void pressed() {
                 super.pressed();
-                minusSign.pressButton();
-               
-                if (canScaleLess()){
-                
-                    scaleWorms(-WORM_SCALE_FACTOR);
-                
-                    new GVRRelativeMotionAnimation(worm, .1f, 0, 0.01f, 0).start(getGVRContext()
-                        .getAnimationEngine());
-                }
+
+                ScaleWorm.setLastSize();
+                pressedMinus(-1);
             }
 
             @Override
@@ -110,21 +137,14 @@ public class ScaleMenu extends MenuWindow {
 
     private void addMinusSignGamepadListener() {
         minusSign.setGamepadTouchListener(new GamepadTouchImpl() {
+
             @Override
             public void pressed(Integer code) {
                 super.pressed(code);
-                if (isActionButton(code)) {
-                   
-                    minusSign.pressButton();
-                    
-                    if (canScaleLess()){
-                       
-                        scaleWorms(-WORM_SCALE_FACTOR);
-                        
-                        new GVRRelativeMotionAnimation(worm, .1f, 0, 0.01f, 0).start(getGVRContext()
-                            .getAnimationEngine());
-                    }
-                }
+
+                ScaleWorm.setLastSize();
+
+                pressedMinus(code);
             }
 
             @Override
@@ -151,23 +171,19 @@ public class ScaleMenu extends MenuWindow {
 
     private void addPlusSignTouchListener() {
         plusSign.setTouchAndGesturelistener(new TouchAndGestureImpl() {
+
             @Override
             public void pressed() {
                 super.pressed();
-                plusSign.pressButton();
-                
-                if (canScaleMore()){
-                    
-                    scaleWorms(WORM_SCALE_FACTOR);
-                    
-                    new GVRRelativeMotionAnimation(worm, .1f, 0, -0.01f, 0).start(getGVRContext()
-                            .getAnimationEngine());
-                }
+
+                ScaleWorm.setLastSize();
+                pressedPlus(-1);
             }
 
             @Override
             public void up() {
                 super.up();
+
                 plusSign.unPressButton();
             }
         });
@@ -175,26 +191,20 @@ public class ScaleMenu extends MenuWindow {
 
     private void addPlusSignGamepadListener() {
         plusSign.setGamepadTouchListener(new GamepadTouchImpl() {
+
             @Override
             public void pressed(Integer code) {
                 super.pressed(code);
-               
-                if (isActionButton(code)) {
-                    plusSign.pressButton();
-                    
-                    if (canScaleMore()){
-                       
-                        scaleWorms(WORM_SCALE_FACTOR);
-                        
-                        new GVRRelativeMotionAnimation(worm, .1f, 0, -0.01f, 0).start(getGVRContext()
-                                .getAnimationEngine());
-                    }
-                }
+
+                ScaleWorm.setLastSize();
+
+                pressedPlus(code);
             }
 
             @Override
             public void up(Integer code) {
                 super.up(code);
+
                 if (isActionButton(code)) {
                     plusSign.unPressButton();
                 }
@@ -213,6 +223,9 @@ public class ScaleMenu extends MenuWindow {
 
     @Override
     protected void show() {
+        
+        radioGroup.show();
+        
         removeChildObject(worm);
         addChildObject(worm);
 
@@ -225,30 +238,90 @@ public class ScaleMenu extends MenuWindow {
 
     @Override
     protected void hide() {
+        
+        radioGroup.hide();
+        
         removeChildObject(worm);
         removeChildObject(minusSign);
         removeChildObject(plusSign);
     }
 
-    private void scaleWorms(float scaleFactor) {
+    private boolean scaleWorms(float scaleFactor) {
+        boolean bool = true;
+        float scale = worm.getHead().getTransform().getScaleX() + scaleFactor;
+        if (scale < .4f) {
+            scaleFactor = .4f - worm.getHead().getTransform().getScaleX();
+            bool = false;
+        } else if (scale > 1.2f) {
+            scaleFactor = 1.2f - worm.getHead().getTransform().getScaleX();
+            bool = false;
+        }
 
         worm.moveWorm(scaleFactor);
         worm.scaleWorm(scaleFactor);
         
-        MainScript.worm.scaleWorm(scaleFactor);
+        MainScript.animationColor.showPlayButton();
+        return bool;
     }
 
     private boolean canScaleLess() {
-        return worm.getHead().getTransform().getScaleX() > .4f;
+        return worm.getHead().getTransform().getScaleX() > .405f;
     }
 
     private boolean canScaleMore() {
-        return worm.getHead().getTransform().getScaleX() < 1.2f;
+        return worm.getHead().getTransform().getScaleX() < 1.195f;
     }
 
     private boolean isActionButton(Integer code) {
         return code == GamepadMap.KEYCODE_BUTTON_A || code == GamepadMap.KEYCODE_BUTTON_B
                 || code == GamepadMap.KEYCODE_BUTTON_X
                 || code == GamepadMap.KEYCODE_BUTTON_Y;
+    }
+
+    private void pressedMinus(Integer code) {
+
+        minusSign.pressButton();
+
+        if (code != -1) {
+
+            if (isActionButton(code)) {
+                less();
+            }
+
+        } else {
+            less();
+        }
+    }
+
+    private void pressedPlus(Integer code) {
+
+        plusSign.pressButton();
+
+        if (code != -1) {
+
+            if (isActionButton(code)) {
+                plus();
+            }
+
+        } else {
+            plus();
+        }
+    }
+
+    private void less() {
+
+        if (canScaleLess()) {
+            if(scaleWorms(-WORM_SCALE_FACTOR))
+                new GVRRelativeMotionAnimation(worm, .1f, -0.015f, 0.015f, 0).start(getGVRContext()
+                    .getAnimationEngine());
+        }
+    }
+
+    private void plus() {
+        if (canScaleMore()) {
+            if(scaleWorms(WORM_SCALE_FACTOR))
+                new GVRRelativeMotionAnimation(worm, .1f, 0.015f, -0.015f, 0).start(getGVRContext()
+                    .getAnimationEngine());
+        }
     }
 }

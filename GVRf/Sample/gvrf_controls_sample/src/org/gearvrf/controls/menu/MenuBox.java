@@ -50,9 +50,7 @@ public class MenuBox extends GVRSceneObject {
             public void singleTap() {
                 super.singleTap();
                 closeMenu();
-
             }
-
         });
 
         closeButton.setGamepadTouchListener(new GamepadTouchImpl() {
@@ -67,13 +65,11 @@ public class MenuBox extends GVRSceneObject {
                         code == GamepadMap.KEYCODE_BUTTON_Y) {
 
                     closeMenu();
-
                 }
             }
-
         });
 
-        closeButton.getTransform().setPositionY(0.7f);
+        closeButton.getTransform().setPositionY(0.45f);
     }
 
     private void closeMenu() {
@@ -103,9 +99,14 @@ public class MenuBox extends GVRSceneObject {
     }
 
     private void attachEmptyFrame() {
+        
+        GVRSceneObject wrapper = new GVRSceneObject(getGVRContext());
 
         frameWrapper = new MenuFrame(getGVRContext());
         frameWrapper.getTransform().setPosition(0f, FRAME_INITITAL_POSITION_Y, 0f);
-        addChildObject(frameWrapper);
+        
+        wrapper.addChildObject(frameWrapper);
+        
+        addChildObject(wrapper);
     }
 }
