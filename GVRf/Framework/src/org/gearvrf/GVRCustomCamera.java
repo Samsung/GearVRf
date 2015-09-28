@@ -30,6 +30,48 @@ public class GVRCustomCamera extends GVRCamera {
         NativeCustomCamera.setProjectionMatrix(getNative(), x1, y1, z1, w1, x2,
                 y2, z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
+
+    /**
+     * @return Distance from the origin to the near clipping plane.
+     * Note: this is a no-op for this class and will return 0.0f.
+     */
+    @Override
+    public float getNearClippingDistance() {
+        return 0.0f;
+    }
+
+    /**
+     * Sets the distance from the origin to the near clipping plane.
+     * Note: this is a no-op for this class.
+     * 
+     * @param near
+     *            Distance to the near clipping plane.
+     */
+    @Override
+    public void setNearClippingDistance(float near) {
+        return;
+    }
+
+    /**
+     * @return Distance from the origin to the far clipping plane.
+     * Note: this is a no-op for this class and will return 0.0f.
+     */
+    @Override
+    public float getFarClippingDistance() {
+        return 0.0f;
+    }
+
+    /**
+     * Sets the distance from the origin to the far clipping plane.
+     * Note: this is a no-op for this class.
+     * 
+     * @param far
+     *            Distance to the far clipping plane.
+     */
+    @Override
+    public void setFarClippingDistance(float far) {
+        return;
+    }
 }
 
 class NativeCustomCamera {
