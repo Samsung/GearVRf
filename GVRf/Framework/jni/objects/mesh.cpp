@@ -180,12 +180,11 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 void Mesh::generateVAO() {
 #if _GVRF_USE_GLES3_
 
-    if (vaoInitiliased_)
-        return;
+
     GLuint tmpID;
 
-    if (vao_dirty_) {
-         deleteVaos();
+    if (!vao_dirty_) {
+         return;
     }
 
     if (vertices_.size() == 0 && normals_.size() == 0
@@ -285,7 +284,6 @@ void Mesh::generateVAO() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     vao_dirty_ = false;
-    vaoInitiliased_ = true;
 #endif
 }
 

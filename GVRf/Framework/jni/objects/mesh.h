@@ -44,7 +44,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
-                    have_bounding_volume_(false), vaoInitiliased_(false),
+                    have_bounding_volume_(false), vao_dirty_(true),
                     vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
                     norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID)
     {
@@ -79,10 +79,7 @@ public:
         if (tex_vboID_ != GVR_INVALID)
             gl_delete.queueBuffer(tex_vboID_);
         have_bounding_volume_ = false;
-    }
-
-    std::vector<glm::vec3>& vertices() {
-        return vertices_;
+        vao_dirty_ = true;
     }
 
     const std::vector<glm::vec3>& vertices() const {
@@ -93,16 +90,14 @@ public:
         vertices_ = vertices;
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
+        vao_dirty_ = true;
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
         vertices_ = std::move(vertices);
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
-    }
-
-    std::vector<glm::vec3>& normals() {
-        return normals_;
+        vao_dirty_ = true;
     }
 
     const std::vector<glm::vec3>& normals() const {
@@ -111,14 +106,12 @@ public:
 
     void set_normals(const std::vector<glm::vec3>& normals) {
         normals_ = normals;
+        vao_dirty_ = true;
     }
 
     void set_normals(std::vector<glm::vec3>&& normals) {
         normals_ = std::move(normals);
-    }
-
-    std::vector<glm::vec2>& tex_coords() {
-        return tex_coords_;
+        vao_dirty_ = true;
     }
 
     const std::vector<glm::vec2>& tex_coords() const {
@@ -135,31 +128,18 @@ public:
         vao_dirty_ = true;
     }
 
-    std::vector<unsigned short>& triangles() {
-        return triangles_;
-    }
-
     const std::vector<unsigned short>& triangles() const {
         return triangles_;
     }
 
     void set_triangles(const std::vector<unsigned short>& triangles) {
         triangles_ = triangles;
+        vao_dirty_ = true;
     }
 
     void set_triangles(std::vector<unsigned short>&& triangles) {
         triangles_ = std::move(triangles);
-    }
-
-    std::vector<float>& getFloatVector(std::string key) {
-        auto it = float_vectors_.find(key);
-        if (it != float_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getFloatVector() : " + key
-                    + " not found";
-            throw error;
-        }
+        vao_dirty_ = true;
     }
 
     const std::vector<float>& getFloatVector(std::string key) const {
@@ -175,16 +155,7 @@ public:
 
     void setFloatVector(std::string key, const std::vector<float>& vector) {
         float_vectors_[key] = vector;
-    }
-
-    std::vector<glm::vec2>& getVec2Vector(std::string key) {
-        auto it = vec2_vectors_.find(key);
-        if (it != vec2_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec2Vector() : " + key + " not found";
-            throw error;
-        }
+        vao_dirty_ = true;
     }
 
     const std::vector<glm::vec2>& getVec2Vector(std::string key) const {
@@ -199,16 +170,7 @@ public:
 
     void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
         vec2_vectors_[key] = vector;
-    }
-
-    std::vector<glm::vec3>& getVec3Vector(std::string key) {
-        auto it = vec3_vectors_.find(key);
-        if (it != vec3_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec3Vector() : " + key + " not found";
-            throw error;
-        }
+        vao_dirty_ = true;
     }
 
     const std::vector<glm::vec3>& getVec3Vector(std::string key) const {
@@ -223,16 +185,7 @@ public:
 
     void setVec3Vector(std::string key, const std::vector<glm::vec3>& vector) {
         vec3_vectors_[key] = vector;
-    }
-
-    std::vector<glm::vec4>& getVec4Vector(std::string key) {
-        auto it = vec4_vectors_.find(key);
-        if (it != vec4_vectors_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Mesh::getVec4Vector() : " + key + " not found";
-            throw error;
-        }
+        vao_dirty_ = true;
     }
 
     const std::vector<glm::vec4>& getVec4Vector(std::string key) const {
@@ -247,6 +200,7 @@ public:
 
     void setVec4Vector(std::string key, const std::vector<glm::vec4>& vector) {
         vec4_vectors_[key] = vector;
+        vao_dirty_ = true;
     }
 
     const BoundingVolume& getBoundingVolume() const { return bounding_volume; }
@@ -259,18 +213,22 @@ public:
 
     void setVertexAttribLocF(GLuint location, std::string key) {
         attribute_float_keys_[location] = key;
+        vao_dirty_ = true;
     }
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
+        vao_dirty_ = true;
     }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
+        vao_dirty_ = true;
     }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
+        vao_dirty_ = true;
     }
 
     // generate VAO
@@ -309,7 +267,6 @@ private:
 
     // add vertex array object and VBO
 
-    bool   vaoInitiliased_;
     GLuint vaoID_;
     GLuint triangle_vboID_;
     GLuint vert_vboID_;
