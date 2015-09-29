@@ -16,7 +16,7 @@
 package org.gearvrf;
 
 /** A {@link GVRCamera camera} with a perspective projection. */
-public class GVRPerspectiveCamera extends GVRCamera {
+public class GVRPerspectiveCamera extends GVRCamera implements GVRCameraClippingDistanceInterface {
     /**
      * Constructor.
      * 

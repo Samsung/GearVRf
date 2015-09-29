@@ -512,7 +512,10 @@ public class GVRCameraRig extends GVRComponent {
      *         camera rig.
      */
     public float getNearClippingDistance() {
-        return leftCamera.getNearClippingDistance();
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface) {
+            return ((GVRCameraClippingDistanceInterface)leftCamera).getNearClippingDistance();
+        }
+        return 0.0f;
     }
 
     /**
@@ -523,9 +526,13 @@ public class GVRCameraRig extends GVRComponent {
      *            Distance to the near clipping plane.
      */
     public void setNearClippingDistance(float near) {
-        leftCamera.setNearClippingDistance(near);
-        centerCamera.setNearClippingDistance(near);
-        rightCamera.setNearClippingDistance(near);
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface &&
+           centerCamera instanceof GVRCameraClippingDistanceInterface &&
+           rightCamera instanceof GVRCameraClippingDistanceInterface) {
+            ((GVRCameraClippingDistanceInterface)leftCamera).setNearClippingDistance(near);
+            centerCamera.setNearClippingDistance(near);
+            ((GVRCameraClippingDistanceInterface)rightCamera).setNearClippingDistance(near);
+        }
     }
 
     /**
@@ -533,7 +540,10 @@ public class GVRCameraRig extends GVRComponent {
      *         camera rig.
      */
     public float getFarClippingDistance() {
-        return leftCamera.getFarClippingDistance();
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface) {
+            return ((GVRCameraClippingDistanceInterface)leftCamera).getFarClippingDistance();
+        }
+        return 0.0f;
     }
 
     /**
@@ -544,9 +554,13 @@ public class GVRCameraRig extends GVRComponent {
      *            Distance to the far clipping plane.
      */
     public void setFarClippingDistance(float far) {
-        leftCamera.setFarClippingDistance(far);
-        centerCamera.setFarClippingDistance(far);
-        rightCamera.setFarClippingDistance(far);
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface &&
+           centerCamera instanceof GVRCameraClippingDistanceInterface &&
+           rightCamera instanceof GVRCameraClippingDistanceInterface) {
+            ((GVRCameraClippingDistanceInterface)leftCamera).setFarClippingDistance(far);
+            centerCamera.setFarClippingDistance(far);
+            ((GVRCameraClippingDistanceInterface)rightCamera).setFarClippingDistance(far);
+        }
     }
 
 }
