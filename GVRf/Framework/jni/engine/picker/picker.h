@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <memory>
+#include "glm/glm.hpp"
 
 namespace gvr {
 class Scene;
@@ -43,6 +44,9 @@ public:
     static float pickSceneObject(
             const SceneObject* scene_object,
             const CameraRig* camera_rig);
+    static glm::vec3 pickSceneObjectAgainstBoundingBox(
+            const SceneObject* scene_object, float ox, float oy, float oz,
+            float dx, float dy, float dz);
 };
 
 }
