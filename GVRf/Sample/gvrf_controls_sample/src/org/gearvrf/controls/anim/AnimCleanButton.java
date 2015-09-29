@@ -29,6 +29,12 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
 import org.gearvrf.controls.R;
 import org.gearvrf.controls.menu.MenuControlSceneObject;
 import org.gearvrf.controls.shaders.ButtonShader;

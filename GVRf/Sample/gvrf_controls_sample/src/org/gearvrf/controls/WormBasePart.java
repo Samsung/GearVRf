@@ -15,6 +15,11 @@
 
 package org.gearvrf.controls;
 
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.controls.anim.AnimationsTime;
 import org.gearvrf.controls.animation.GVRColorSwapAnimation;
 import org.gearvrf.controls.shaders.ColorSwapShader;

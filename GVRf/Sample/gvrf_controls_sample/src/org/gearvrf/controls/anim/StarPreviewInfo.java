@@ -15,6 +15,8 @@
 
 package org.gearvrf.controls.anim;
 
+import org.gearvrf.GVRSceneObject;
+
 public class StarPreviewInfo {
 
     public enum Direction {

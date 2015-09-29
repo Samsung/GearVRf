@@ -15,6 +15,13 @@
 
 package org.gearvrf.controls;
 
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
+
 
 public class WormShadow extends GVRSceneObject {
 

@@ -15,6 +15,10 @@
 
 package org.gearvrf.controls.anim;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.animation.GVRRelativeMotionAnimation;
+import org.gearvrf.animation.GVRScaleAnimation;
 import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.util.Util;
 

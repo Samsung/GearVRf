@@ -17,6 +17,11 @@ package org.gearvrf.controls.anim;
 
 import android.content.res.Resources;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVROnFinish;
+import org.gearvrf.animation.GVRRelativeMotionAnimation;
 import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.R;
 import org.gearvrf.controls.focus.GamepadTouchImpl;

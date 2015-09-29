@@ -15,6 +15,8 @@
 
 package org.gearvrf.controls.menu;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.controls.focus.GamepadTouchImpl;
 import org.gearvrf.controls.focus.TouchAndGestureImpl;
 import org.gearvrf.controls.input.GamepadMap;
