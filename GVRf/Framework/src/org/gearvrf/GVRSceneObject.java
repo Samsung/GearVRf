@@ -46,6 +46,7 @@ public class GVRSceneObject extends GVRHybridObject {
     private GVRCameraRig mCameraRig;
     private GVREyePointeeHolder mEyePointeeHolder;
     private GVRSceneObject mParent;
+    private GVRBaseSensor mSensor;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
 
     /**
@@ -698,6 +699,61 @@ public class GVRSceneObject extends GVRHybridObject {
      */
     public Iterable<GVRSceneObject> children() {
         return new Children(this);
+    }    
+
+    /**
+     * Add a {@link GVRBaseSensor} node to the object.
+     * 
+     * Note that the attached sensor affects this node and its descendants.
+     * 
+     * @param sensor
+     *            The {@link GVRBaseSensor} to be added to the object node.
+     *            
+     * @return <code>true</code> if the sensor was added successfully;
+     *         <code>false</code> otherwise, this could possibly be due to the
+     *         {@link GVRInputManager} not being set.
+     */
+    public boolean addSensor(GVRBaseSensor sensor) {
+        GVRInputManager inputManager = getGVRContext().getInputManager();
+        if (inputManager == null) {
+            return false;
+        }
+        mSensor = sensor;
+        getGVRContext().getInputManager().addSensor(sensor);
+        return true;
+    }
+
+    /**
+     * Get the {@link GVRBaseSensor} if available.
+     * 
+     * @return The {@link GVRBaseSensor} attached to the node if available,
+     *         <code>null</code> otherwise.
+     */
+    public GVRBaseSensor getSensor() {
+        return mSensor;
+    }
+
+    /**
+     * Remove the {@link GVRBaseSensor} from the object.
+     * 
+     * @return <code>true</code> if the sensor is successfully removed from the
+     *         object; <code>false</code> otherwise, this could possibly be due
+     *         to the {@link GVRInputManager} not being set.
+     */
+    public boolean removeSensor() {
+        GVRInputManager inputManager = getGVRContext().getInputManager();
+
+        if (inputManager == null) {
+            return false;
+        }
+
+        if (mSensor != null) {
+            inputManager.removeSensor(mSensor);
+            mSensor = null;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

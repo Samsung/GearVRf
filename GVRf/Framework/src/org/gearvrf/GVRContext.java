@@ -2133,6 +2133,33 @@ public abstract class GVRContext {
     public abstract GVRScene getNextMainScene(Runnable onSwitchMainScene);
 
     /**
+     * Use this call internally to retrieve the currently attached
+     * {@link GVRInputManager}
+     * 
+     * @return The currently attached {@link GVRInputManager} if not null;
+     *         <code>null</code> otherwise.
+     */
+    abstract GVRInputManager getInputManager();
+
+    /**
+     * Returns a {@link GVRInputManager} to use with the provided
+     * {@link GVRScene}.
+     * 
+     * Successive calls to this method using a different {@link GVRScene}
+     * replaces the current {@link GVRScene} attached to the
+     * {@link GVRInputManager} and returns the same {@link GVRInputManager}.
+     * 
+     * Alternatively the {@link GVRScene} can be changed using
+     * {@link GVRInputManager#setScene(GVRScene)}
+     * 
+     * @param scene
+     *            The {@link GVRScene} used to process the input.
+     * @return A {@link GVRInputManager} to use to dispatch {@link InputEvent}s
+     *         to the specified {@link GVRScene} object.
+     */
+    public abstract GVRInputManager setupInputManagerForScene(GVRScene scene);
+
+    /**
      * Is the key pressed?
      * 
      * @param keyCode
