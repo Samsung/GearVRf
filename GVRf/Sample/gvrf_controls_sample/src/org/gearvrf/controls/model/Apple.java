@@ -30,8 +30,11 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRInterpolator;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.animation.GVRRelativeMotionAnimation;
+import org.gearvrf.animation.GVRScaleAnimation;
 import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.R;
+import org.gearvrf.controls.WormShadow;
+import org.gearvrf.controls.anim.AnimationsTime;
 import org.gearvrf.controls.interpolators.Bounce;
 import org.gearvrf.controls.interpolators.CircularIn;
 import org.gearvrf.controls.interpolators.CircularOut;
@@ -41,13 +44,15 @@ import org.gearvrf.controls.interpolators.QuadIn;
 import org.gearvrf.controls.interpolators.QuadOut;
 import org.gearvrf.controls.shaders.ColorSwapShader;
 import org.gearvrf.controls.util.Constants;
+import org.gearvrf.controls.util.RenderingOrder;
 import org.gearvrf.controls.util.Util;
 
 import java.util.ArrayList;
 
 public class Apple extends GVRSceneObject {
 
-    public final float ANIMATION_DURATION = 2.5f;
+    // public final float ANIMATION_DURATION =
+    // AnimationsTime.getDropTime();//2.5f;
     public final float OPACITY_ANIMATION_DURATION = 2;
     public final float Y_ANIMATION_DELTA = -5;
     private final float APPLE_SCALE = 0.75f;
@@ -55,6 +60,7 @@ public class Apple extends GVRSceneObject {
     private final static float CAMERA_DIRECTION_THREASHOLD = 0.75f;
     public static ArrayList<Apple> appleList = new ArrayList<Apple>();
     public Star star;
+    private WormShadow shadow;
 
     public static int currentMotion = 0;
 
@@ -70,6 +76,8 @@ public class Apple extends GVRSceneObject {
         setAppleRenderData(gvrContext);
         setAppleShaderParameters(gvrContext);
         star = new Star(gvrContext);
+        shadow = new WormShadow(gvrContext, 0.27f, 0.27f, RenderingOrder.APPLE_SHADOW);
+        shadow.getTransform().setScale(2, 2, 2);
         gvrContext.getMainScene().addSceneObject(star);
     }
 
@@ -84,6 +92,7 @@ public class Apple extends GVRSceneObject {
         renderData.setMaterial(material);
         this.attachRenderData(renderData);
 
+        getRenderData().setRenderingOrder(RenderingOrder.APPLE);
     }
 
     public void setAppleShaderParameters(GVRContext gvrContext) {
@@ -172,11 +181,17 @@ public class Apple extends GVRSceneObject {
 
     public void playAnimation(GVRContext gvrContext) {
 
-        GVRAnimation anim = new GVRRelativeMotionAnimation(this, ANIMATION_DURATION, 0,
+        GVRAnimation anim = new GVRRelativeMotionAnimation(this, AnimationsTime.getDropTime(), 0,
                 -Constants.APPLE_INICIAL_YPOS - 1, 0);
         anim.setInterpolator(defineInterpolator(motion));
         anim.start(gvrContext.getAnimationEngine());
+        playShadowAnimation();
         playOpacityAnimation(gvrContext);
+    }
+
+    private void playShadowAnimation() {
+        new GVRScaleAnimation(shadow, AnimationsTime.getDropTime(), 2f).setInterpolator(defineInterpolator(motion)).start(
+                getGVRContext().getAnimationEngine());
     }
 
     public void playOpacityAnimation(GVRContext gvrContext) {
@@ -241,8 +256,11 @@ public class Apple extends GVRSceneObject {
 
         }
         else {
-            if (!appleList.contains(this))
+            if (!appleList.contains(this)) {
                 addApple(this);
+                shadow.getTransform().setPosition((float) instanceApple.getX(), -0.9999f, (float) instanceApple.getZ());
+                getGVRContext().getMainScene().addSceneObject(shadow);
+            }
         }
     }
 
@@ -282,6 +300,8 @@ public class Apple extends GVRSceneObject {
         this.getTransform().rotateByAxisWithPivot(angle, 0, 1, 0, 0, 0, 0);
         instanceApple = new Vector3D(this.getTransform().getPositionX(), this
                 .getTransform().getPositionY(), this.getTransform().getPositionZ());
+        shadow.getTransform().setPosition((float) instanceApple.getX(), -0.9999f, (float) instanceApple.getZ());
+        shadow.getTransform().setScale(1, 1, 1);
         return instanceApple;
     }
 }

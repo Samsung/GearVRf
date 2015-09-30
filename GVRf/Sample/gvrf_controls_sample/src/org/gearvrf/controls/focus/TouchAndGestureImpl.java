@@ -20,33 +20,20 @@ import org.gearvrf.controls.util.VRSamplesTouchPadGesturesDetector.SwipeDirectio
 public class TouchAndGestureImpl implements TouchAndGesture {
 
     @Override
-    public void up() {
-
-    }
+    public void up() {}
 
     @Override
-    public void singleTap() {
-
-    }
+    public void singleTap() {}
 
     @Override
-    public void down() {
-
-    }
+    public void down() {}
 
     @Override
-    public void pressed() {
-
-    }
+    public void pressed() {}
 
     @Override
-    public void longPressed() {
-
-    }
+    public void longPressed() {}
 
     @Override
-    public void swipe(SwipeDirection swipeDirection) {
-
-    }
-
+    public void swipe(SwipeDirection swipeDirection) {}
 }

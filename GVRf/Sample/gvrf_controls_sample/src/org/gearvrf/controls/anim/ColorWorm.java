@@ -13,17 +13,12 @@
  * limitations under the License.
  */
 
-package org.gearvrf.controls;
+package org.gearvrf.controls.anim;
 
-public class RenderingOrder {
+import org.gearvrf.controls.util.ColorControls.Color;
 
-    public static final int SKYBOX = 0;
-    public static final int CLOUDS = 1;
-    public static final int SUN = 2;
-    public static final int GROUND = 2;
-    public static final int WOOD = 2;
-    public static final int FENCE = 3;
-    public static final int GRASS = 4;
-    public static final int FLOWERS = 5;
-    public static final int WORM = 15;
+public class ColorWorm {
+
+    public static Color lastColor;
+    public static Color currentColor;
 }

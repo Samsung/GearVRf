@@ -27,6 +27,7 @@ public class MenuColorsPreview extends GVRSceneObject {
     private final float WORM_HEAD_X_POSITION = -0.15f;
     private final float WORM_MIDDLE_X_POSITION = 0f;
     private final float WORM_END_X_POSITION = 0.16f;
+    private final float WORM_Y_POSITION = -.85f;
 
     private final float WORM_SCALE = 1.2f;
 
@@ -36,6 +37,10 @@ public class MenuColorsPreview extends GVRSceneObject {
         super(gvrContext, mesh, texture);
 
         worm = new Worm(gvrContext);
+        
+        worm.getHead().getParent().getTransform().setPositionY(WORM_Y_POSITION);
+        worm.getMiddle().getTransform().setPositionY(WORM_Y_POSITION);
+        worm.getEnd().getTransform().setPositionY(WORM_Y_POSITION);
 
         worm.getHead().getTransform().setPositionX(WORM_HEAD_X_POSITION);
         worm.getHead().getTransform().rotateByAxis(90, 0, 1, 0);

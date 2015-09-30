@@ -31,13 +31,14 @@ import org.gearvrf.controls.util.RenderingOrder;
 public class MenuFrame extends GVRSceneObject {
     
     private static final float ANIMATION_TIME = 0.4f;
-    private static final float PIVOT_OFFSET_Y = .9f;
     private static final float ANIMATION_FRAME_RESIZE = .8f;
     private static final float FRAME_POSITION_Z = -.02f;
-    private static final float FRAME_EXPAND_SCALE_X = 135f;
+    
+    private static final float FRAME_EXPAND_SCALE_X = 160f;
+    private static final float PIVOT_OFFSET_Y = .8f;
 
     private GVRSceneObject mMenuFrame;
-    private boolean isOpen = false;
+    public static boolean isOpen = false;
 
     private GVRScaleAnimation scaleCollapse;
     private GVRRelativeMotionAnimation rmCollapse;
@@ -89,6 +90,7 @@ public class MenuFrame extends GVRSceneObject {
             });
 
             isOpen = true;
+           
         } else {
             menuHeader.show();
         }
@@ -136,6 +138,7 @@ public class MenuFrame extends GVRSceneObject {
             });
 
             rmCollapse.start(getGVRContext().getAnimationEngine());
+           
             isOpen = false;
         }
     }

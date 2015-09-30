@@ -29,6 +29,9 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.GVRTextureParameters.TextureFilterType;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
+import org.gearvrf.controls.anim.ActionWormAnimation;
+import org.gearvrf.controls.anim.ColorWorm;
+import org.gearvrf.controls.anim.StarBoxSceneObject;
 import org.gearvrf.controls.cursor.ControlGazeController;
 import org.gearvrf.controls.focus.ControlSceneObjectBehavior;
 import org.gearvrf.controls.gamepad.GamepadObject;
@@ -67,6 +70,8 @@ public class MainScript extends GVRScript {
     TouchPad touchpad;
 
     private Apple apple;
+    public static ActionWormAnimation animationColor;
+    private static StarBoxSceneObject starBox;
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -104,8 +109,52 @@ public class MainScript extends GVRScript {
         }
 
         createTouchPad3D();
+        
+        createStar();
+        enableAnimationWorm();
     }
+    
+    public static void animWormReset(){
+        animationColor.resetAnimationState();
+    }
+    
+    public static void animationColor(org.gearvrf.controls.util.ColorControls.Color color){
+        
+        ColorWorm.lastColor = worm.getColor();
+        ColorWorm.currentColor = color;
+        animationColor.showPlayButton();
+    }
+    
+    public static void enableAnimationStar(){
+        starBox.showPlayButton();
+    }
+    
+    public void createStar(){
+        
+        GVRSceneObject object = new GVRSceneObject(mGVRContext);
+        
+        starBox = new StarBoxSceneObject(mGVRContext);
+        
+        starBox.getTransform().setPosition(0, .4f, 8.5f);
+        starBox.getTransform().rotateByAxisWithPivot(125, 0, 1, 0, 0, 0, 0);
+        
+        object.addChildObject(starBox);
 
+        scene.addSceneObject(object);
+    }
+    
+    public void enableAnimationWorm(){
+        
+        GVRSceneObject wormParent = worm.getWormParentation();
+            
+        animationColor = new ActionWormAnimation(mGVRContext);
+       
+        GVRSceneObject object = new GVRSceneObject(mGVRContext);
+        object.addChildObject(animationColor);
+    
+        wormParent.addChildObject(object);
+    }
+    
     @Override
     public SplashMode getSplashMode() {
         return SplashMode.NONE;
@@ -146,8 +195,8 @@ public class MainScript extends GVRScript {
     private void createWorm() {
 
         worm = new Worm(mGVRContext);
+        worm.enableShadow();
         scene.addSceneObject(worm);
-
     }
 
     private void createGround() {

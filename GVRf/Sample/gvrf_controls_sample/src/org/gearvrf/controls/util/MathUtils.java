@@ -172,4 +172,23 @@ public class MathUtils {
         quat[3] = lhs[3] * rhs[3] - lhs[0] * rhs[0] - lhs[1] * rhs[1] - lhs[2] * rhs[2];
         return quat;
     }
+    
+    public static float getYAngleEuler(GVRSceneObject object) {
+
+        // xAngle = atan2(2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z) //GVRF y
+        // yAngle = atan2(2*x*w - 2*y*z, 1 - 2*x*x - 2*z*z) //GVRF x
+        // zAngle = asin(2*x*y + 2*z*w) //GVRF
+
+        // http://www.tinkerforge.com/en/doc/Software/Bricks/IMU_Brick_CSharp.html
+
+        float xq = object.getTransform().getRotationX();
+        float yq = object.getTransform().getRotationY();
+        float zq = object.getTransform().getRotationZ();
+        float wq = object.getTransform().getRotationW();
+
+        double yAngle = Math.atan2(2 * yq * wq - 2 * xq * zq, 1 - 2 * yq * yq - 2 * zq * zq);
+
+        return (float) yAngle;
+    }
+
 }

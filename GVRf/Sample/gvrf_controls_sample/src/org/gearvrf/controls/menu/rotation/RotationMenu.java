@@ -18,11 +18,17 @@ package org.gearvrf.controls.menu.rotation;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.R;
+import org.gearvrf.controls.anim.AnimationsTime;
+import org.gearvrf.controls.focus.ControlSceneObject;
 import org.gearvrf.controls.focus.GamepadTouchImpl;
 import org.gearvrf.controls.focus.TouchAndGestureImpl;
 import org.gearvrf.controls.input.GamepadMap;
+import org.gearvrf.controls.menu.ItemSelectedListener;
 import org.gearvrf.controls.menu.MenuWindow;
+import org.gearvrf.controls.menu.RadioButtonSceneObject;
+import org.gearvrf.controls.menu.RadioGrupoSceneObject;
 import org.gearvrf.controls.menu.TouchableButton;
 
 import java.util.ArrayList;
@@ -37,12 +43,14 @@ public class RotationMenu extends MenuWindow {
     private RotationGroup rotationGroup;
     private TouchableButton leftButton;
     private TouchableButton rightButton;
+    private RadioGrupoSceneObject radioGroup;
 
     public RotationMenu(GVRContext gvrContext) {
         super(gvrContext);
         addRotaionGroup(gvrContext);
 
         addRotationButtons(gvrContext);
+        attachRadioGroup();
     }
 
     private void addRotaionGroup(GVRContext gvrContext) {
@@ -51,7 +59,26 @@ public class RotationMenu extends MenuWindow {
         rotationGroup.getTransform().setRotationByAxis(10, 1, 0, 0);
         rotationGroup.getTransform().setPositionZ(0.6f);
         rotationGroup.getTransform().setPositionY(GROUP_Y_POSITION);
+    }
+    
+    private void attachRadioGroup() {
 
+        radioGroup =  new RadioGrupoSceneObject(getGVRContext(), new ItemSelectedListener() {
+            
+            @Override
+            public void selected(ControlSceneObject object) {
+                
+                MainScript.enableAnimationStar();
+                
+                RadioButtonSceneObject button = (RadioButtonSceneObject)object;
+                AnimationsTime.setRotationTime(button.getSecond());
+            }
+            
+        }, 0.2f, 0.5f, 1);
+        
+        radioGroup.getTransform().setPosition(-.5f, -1.24f, 0f);
+        
+        addChildObject(radioGroup);
     }
 
     private void addRotationButtons(GVRContext gvrContext) {
@@ -73,7 +100,7 @@ public class RotationMenu extends MenuWindow {
 
     private void addLeftTouchListener(GVRContext gvrContext) {
         leftButton.setTouchAndGesturelistener(new TouchAndGestureImpl() {
-
+            
             @Override
             public void pressed() {
                 super.pressed();
@@ -171,6 +198,9 @@ public class RotationMenu extends MenuWindow {
 
     @Override
     protected void show() {
+        
+        radioGroup.show();
+        
         removeChildObject(rotationGroup);
         addChildObject(rotationGroup);
 
@@ -183,6 +213,9 @@ public class RotationMenu extends MenuWindow {
 
     @Override
     protected void hide() {
+        
+        radioGroup.hide();
+        
         removeChildObject(rotationGroup);
         removeChildObject(leftButton);
         removeChildObject(rightButton);
@@ -196,5 +229,4 @@ public class RotationMenu extends MenuWindow {
         return code == GamepadMap.KEYCODE_BUTTON_A || code == GamepadMap.KEYCODE_BUTTON_B || code == GamepadMap.KEYCODE_BUTTON_X
                 || code == GamepadMap.KEYCODE_BUTTON_Y;
     }
-
 }

@@ -15,9 +15,16 @@
 
 package org.gearvrf.controls.menu;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.Paint.Style;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBitmapTexture;
@@ -38,12 +45,13 @@ class MenuHeaderItem extends ControlSceneObject {
     private final int HOVER_STATE = 1;
     private final int SELECTED_STATE = 2;
     
-    private static final int TEXT_TEXTURE_WIDTH = 100;
-    private static final int TEXT_TEXTURE_HEIGHT = 40;
     private static final String TEXT_FONT_TYPE = "fonts/samsung-f-bik.ttf";
-
-    private static final float WIDTH = 0.85f;
-    private static final float HEIGHT = 0.26f;
+    
+    private  int WIDTH = 0;
+    private  int HEIGHT = 0;
+    
+    private float quadWidth = .85f;
+    private float quadHeigth = 0.245f;
     
     private boolean isSelected = false;
     private headerType type;
@@ -60,8 +68,11 @@ class MenuHeaderItem extends ControlSceneObject {
         this.onTapListener = onTapListener;
         this.type = type;
         
-        GVRMesh sMesh = getGVRContext().createQuad(WIDTH, HEIGHT);
-
+        GVRMesh sMesh = getGVRContext().createQuad(quadWidth, quadHeigth);
+        
+        WIDTH = (int)(100.0f * quadWidth);
+        HEIGHT = (int) (100.0f * quadHeigth);
+        
         attachRenderData(new GVRRenderData(gvrContext));
         getRenderData().setMaterial(new GVRMaterial(gvrContext, new ButtonShader(gvrContext).getShaderId()));
         getRenderData().setMesh(sMesh);
@@ -75,12 +86,13 @@ class MenuHeaderItem extends ControlSceneObject {
     
     private void createTextures(GVRContext gvrContext, String title) {
         
-        Text text = new Text(title, Align.CENTER, 4, Color.parseColor("#4b4b4b"), Color.parseColor("#00ffffff"), 255);
+        Text text = new Text(title, Align.CENTER, 2.8f, Color.parseColor("#4b4b4b"), Color.parseColor("#ffffff"), 255);
         
         GVRBitmapTexture bitmapIddle = new GVRBitmapTexture(getGVRContext(), createText(text, false));
 
         getRenderData().getMaterial().setTexture(ButtonShader.STATE1_BACKGROUND_TEXTURE,
                 gvrContext.loadTexture(new GVRAndroidResource(gvrContext, R.raw.empty)));
+        
         getRenderData().getMaterial().setTexture(ButtonShader.STATE1_TEXT_TEXTURE, bitmapIddle);
 
         text.textColor = 0xffff6f54;
@@ -89,14 +101,14 @@ class MenuHeaderItem extends ControlSceneObject {
 
         getRenderData().getMaterial().setTexture(ButtonShader.STATE2_BACKGROUND_TEXTURE,
                 gvrContext.loadTexture(new GVRAndroidResource(gvrContext, R.raw.empty)));
+        
         getRenderData().getMaterial().setTexture(ButtonShader.STATE2_TEXT_TEXTURE, bitmapHover);
-
-        text.textColor = 0xffff6f54;
 
         GVRBitmapTexture bitmapSelected = new GVRBitmapTexture(getGVRContext(), createText(text, true));
 
         getRenderData().getMaterial().setTexture(ButtonShader.STATE3_BACKGROUND_TEXTURE,
                 gvrContext.loadTexture(new GVRAndroidResource(gvrContext, R.raw.empty)));
+        
         getRenderData().getMaterial().setTexture(ButtonShader.STATE3_TEXT_TEXTURE, bitmapSelected);
         
         getRenderData().setRenderingOrder(RenderingOrder.MENU_HEADER_TEXT);
@@ -105,9 +117,9 @@ class MenuHeaderItem extends ControlSceneObject {
     public Bitmap createText(Text text, boolean showBottomLine){
         
         if(showBottomLine){
-            return GVRTextBitmapFactory.create(getGVRContext().getContext(), TEXT_TEXTURE_WIDTH, TEXT_TEXTURE_HEIGHT, text, TEXT_FONT_TYPE,0);
+            return create(getGVRContext().getContext(), WIDTH, HEIGHT, text, TEXT_FONT_TYPE);
         } else {
-            return GVRTextBitmapFactory.create(getGVRContext().getContext(), TEXT_TEXTURE_WIDTH, TEXT_TEXTURE_HEIGHT, text, TEXT_FONT_TYPE);
+            return GVRTextBitmapFactory.create(getGVRContext().getContext(), WIDTH, HEIGHT, text, TEXT_FONT_TYPE);
         }
     }
     
@@ -162,5 +174,53 @@ class MenuHeaderItem extends ControlSceneObject {
     
     public headerType getHeaderType() {
         return type;
+    }
+    
+  public static Bitmap create(Context context, int width, int height, Text text, String font) {
+        
+        Typeface myTypeface = Typeface.createFromAsset(context.getAssets(), font);
+        
+        Resources res = context.getResources();
+        float scale = res.getDisplayMetrics().density;
+        
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(Style.FILL);
+        paint.setTypeface(myTypeface);
+        paint.setTextSize(text.textSize * scale);
+        paint.setFakeBoldText(true);
+        paint.setColor(text.textColor);
+        paint.setFilterBitmap(true);
+
+        Rect rectText = new Rect();
+        paint.getTextBounds(text.text, 0, text.text.length(), rectText);
+
+        canvas.drawColor(text.backgroundColor);
+        
+        if(text.align == Align.CENTER){
+            canvas.drawText(text.text, width / 2 - rectText.exactCenterX(), height / 2 - rectText.exactCenterY(), paint);
+        } else if(text.align == Align.LEFT){
+            canvas.drawText(text.text, 0, height / 2 - rectText.exactCenterY(), paint);
+        }
+        
+        Paint bottomLine = new Paint();
+        bottomLine.setStrokeWidth(3.5f);
+        bottomLine.setColor(0xffff6f54);
+        bottomLine.setStyle(Paint.Style.STROKE);
+        bottomLine.setStrokeJoin(Paint.Join.ROUND);
+        
+        float x1 = 0;
+        float x2 = width;
+
+        float y1 = 22.9f;
+        float y2 = y1;
+
+        canvas.drawLine(x1, y1, x2, y2, bottomLine);
+        
+        return bitmap;
     }
 }

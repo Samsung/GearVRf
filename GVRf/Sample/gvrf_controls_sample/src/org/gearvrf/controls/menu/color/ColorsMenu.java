@@ -21,10 +21,14 @@ import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.controls.MainScript;
 import org.gearvrf.controls.R;
+import org.gearvrf.controls.anim.AnimationsTime;
+import org.gearvrf.controls.anim.ColorWorm;
 import org.gearvrf.controls.focus.ControlSceneObject;
 import org.gearvrf.controls.menu.GridSceneObjects;
 import org.gearvrf.controls.menu.ItemSelectedListener;
 import org.gearvrf.controls.menu.MenuWindow;
+import org.gearvrf.controls.menu.RadioButtonSceneObject;
+import org.gearvrf.controls.menu.RadioGrupoSceneObject;
 import org.gearvrf.controls.util.ColorControls.Color;
 
 public class ColorsMenu extends MenuWindow {
@@ -39,32 +43,35 @@ public class ColorsMenu extends MenuWindow {
 
     private MenuColorsPreview previewArea;
     private GridSceneObjects mGrid;
+    private RadioGrupoSceneObject radioGroup;
 
     public ColorsMenu(GVRContext gvrContext) {
         super(gvrContext);
 
-        createPreviewBox();
+        createPreviewBox(); 
 
         attachGrid();
+        
+        attachRadioGroup();
     }
 
     private void attachGrid() {
 
         ParseColorItem parse = new ParseColorItem(getGVRContext());
 
-        mGrid = new GridSceneObjects(getGVRContext(), parse.getList(),
-                R.array.colors_grid,
+        mGrid = new GridSceneObjects(getGVRContext(), parse.getList(), R.array.colors_grid,
                 new ItemSelectedListener() {
-
+            
                     @Override
                     public void selected(ControlSceneObject object) {
 
                         ColorsButton colorButton = (ColorsButton) object;
                         Color color = colorButton.getColor();
-
-                        MainScript.worm.changeColor(color);
-
                         previewArea.changeColorTo(color);
+                        
+                        ColorWorm.lastColor = MainScript.worm.getColor();
+                        ColorWorm.currentColor = color;  
+                        MainScript.animationColor.showPlayButton();
                     }
                 });
 
@@ -75,7 +82,7 @@ public class ColorsMenu extends MenuWindow {
     private void createPreviewBox() {
         previewArea = new MenuColorsPreview(getGVRContext(), getGVRContext().createQuad(1.2f, 1),
                 getGVRContext().loadTexture(
-                        new GVRAndroidResource(this.getGVRContext(), R.drawable.camera)));
+                        new GVRAndroidResource(this.getGVRContext(), R.raw.empty)));
 
         previewArea.getTransform().setPosition(PREVIEW_POSITION_X, PREVIEW_POSITION_Y,
                 PREVIEW_POSITION_Z);
@@ -84,9 +91,28 @@ public class ColorsMenu extends MenuWindow {
 
         addChildObject(previewArea);
     }
+    
+    private void attachRadioGroup() {
+
+        radioGroup =  new RadioGrupoSceneObject(getGVRContext(), new ItemSelectedListener() {
+            
+            @Override
+            public void selected(ControlSceneObject object) {
+                
+                RadioButtonSceneObject button = (RadioButtonSceneObject)object;
+                AnimationsTime.setChangeColorTime(button.getSecond());
+            }
+        }, 0.2f, 0.5f, 5);
+        
+        radioGroup.getTransform().setPosition(-1.37f, -1.24f, PREVIEW_POSITION_Z);
+        
+        addChildObject(radioGroup);
+    }
 
     @Override
     public void show() {
+        
+        radioGroup.show();
 
         removeChildObject(mGrid);
         removeChildObject(previewArea);
@@ -102,6 +128,8 @@ public class ColorsMenu extends MenuWindow {
 
     @Override
     public void hide() {
+        
+        radioGroup.hide();
 
         removeChildObject(mGrid);
 
