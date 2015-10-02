@@ -30,6 +30,7 @@ public class GVRCustomCamera extends GVRCamera {
         NativeCustomCamera.setProjectionMatrix(getNative(), x1, y1, z1, w1, x2,
                 y2, z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
+
 }
 
 class NativeCustomCamera {
