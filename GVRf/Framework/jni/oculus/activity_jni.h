@@ -35,8 +35,8 @@ class KSensorHeadRotation;
 template <class R> class GVRActivityT : public OVR::VrAppInterface
 {
 public:
-    GVRActivityT(JNIEnv& jni);
 
+    GVRActivityT(JNIEnv& jni);
     virtual void        Configure( OVR::ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );
     virtual void        OneTimeShutdown();
@@ -57,7 +57,7 @@ public:
 
     GVRViewManager*     viewManager;
 
-    Camera*             camera;
+    Camera*             camera = nullptr;
     CameraRig*          cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
     bool                sensoredSceneUpdated_ = false;
     R                   headRotationProvider_;
@@ -71,24 +71,24 @@ private:
     JNIEnv*             uiJni;            // for use by the Java UI thread
     OVR::Matrix4f       GetEyeView( const int eye, const float fovDegreesX, const float fovDegreesY ) const;
 
-    jclass              activityClass;    // must be looked up from main thread or FindClass() will fail
+    jclass              activityClass = nullptr;    // must be looked up from main thread or FindClass() will fail
 
-    jclass              vrAppSettingsClass;
-    jclass              eyeBufferParmsClass;
+    jclass              vrAppSettingsClass = nullptr;
+    jclass              eyeBufferParmsClass = nullptr;
 
-    jmethodID           getAppSettingsMethodId;
+    jmethodID           getAppSettingsMethodId = nullptr;
 
-    jmethodID           oneTimeInitMethodId;
-    jmethodID           oneTimeShutdownMethodId;
+    jmethodID           oneTimeInitMethodId = nullptr;
+    jmethodID           oneTimeShutdownMethodId = nullptr;
 
-    jmethodID           drawFrameMethodId;
+    jmethodID           drawFrameMethodId = nullptr;
 
-    jmethodID           beforeDrawEyesMethodId;
-    jmethodID           drawEyeViewMethodId;
-    jmethodID           afterDrawEyesMethodId;
+    jmethodID           beforeDrawEyesMethodId = nullptr;
+    jmethodID           drawEyeViewMethodId = nullptr;
+    jmethodID           afterDrawEyesMethodId = nullptr;
 
-    jmethodID           onKeyEventNativeMethodId;
-    jmethodID           updateSensoredSceneMethodId;
+    jmethodID           onKeyEventNativeMethodId = nullptr;
+    jmethodID           updateSensoredSceneMethodId = nullptr;
 
     jclass              GetGlobalClassReference( const char * className ) const;
     jmethodID           GetMethodID( const char * name, const char * signature );
@@ -96,8 +96,8 @@ private:
 };
 
 
-typedef GVRActivityT<OculusHeadRotation> GVRActivity;
-//typedef GVRActivityT<KSensorHeadRotation> GVRActivity;
+//typedef GVRActivityT<OculusHeadRotation> GVRActivity;
+typedef GVRActivityT<KSensorHeadRotation> GVRActivity;
 
 class KSensorHeadRotation {
 public:
@@ -124,6 +124,13 @@ public:
         if (nullptr != sensor_.get()) {
             sensor_->stop();
             sensor_.reset(nullptr);
+        }
+    }
+    void onToggleYawCorrection(const OVR::VrAppInterface& vrApp) {
+        if (nullptr != sensor_.get()) {
+            sensor_->yawCorrectionEnabled = !sensor_->yawCorrectionEnabled;
+            LOGI("ksensor: yawCorrectionEnabled %d", sensor_->yawCorrectionEnabled);
+            vrApp.app->CreateToast("yaw correction enabled %d", sensor_->yawCorrectionEnabled);
         }
     }
 
@@ -157,6 +164,8 @@ public:
     }
     void onUndock() {
         docked_ = false;
+    }
+    void onToggleYawCorrection(const OVR::VrAppInterface&) {
     }
 };
 

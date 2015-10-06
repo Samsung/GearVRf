@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /*
  * k_sensor.h
  *
@@ -30,6 +29,9 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <vector>
+
+#include <android/sensor.h>
 
 #include "math/quaternion.hpp"
 #include "math/vector.hpp"
@@ -48,21 +50,23 @@ public:
     void start();
 
     template<typename Target> void convertTo(Target& target) {
-        std::unique_lock<std::mutex> lock(update_mutex_, std::try_to_lock);
+        std::unique_lock < std::mutex > lock(update_mutex_, std::try_to_lock);
         if (lock.owns_lock()) {
-            target.update(latest_time_,
-                q_.w, q_.x, q_.y, q_.z,
-                last_corrected_gyro_.x, last_corrected_gyro_.y, last_corrected_gyro_.z);
+            target.update(latest_time_, q_.w, q_.x, q_.y, q_.z, last_corrected_gyro_.x, last_corrected_gyro_.y,
+                    last_corrected_gyro_.z);
         }
     }
+    bool yawCorrectionEnabled = true;   //temporary flag
 
 private:
     bool update();
     bool pollSensor(KTrackerSensorZip* data);
     void process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q);
     void updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q);
-    vec3 gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT, Quaternion& q);
+    std::pair<vec3, bool> tilt_correction(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q, vec3& magneticField);
     void readerThreadFunc();
+    bool getLatestMagneticField();
+    void yawCorrectionWithMagnetometer(Quaternion& q, float deltaT);
 
 private:
     int fd_;
@@ -82,6 +86,13 @@ private:
     std::thread processing_thread_;
     std::atomic<bool> processing_flag_;
     std::mutex update_mutex_;
+    std::pair<vec3, Quaternion> referencePoint_;
+
+    float yawCorrectionTimer = 0;
+    ASensorEventQueue* magneticSensorQueue = nullptr;
+    ASensorRef magneticSensor = nullptr;
+    vec3 magnetic = vec3(0, 0, 0);
+    vec3 magneticBias = vec3(0, 0, 0);
 };
 }
 
