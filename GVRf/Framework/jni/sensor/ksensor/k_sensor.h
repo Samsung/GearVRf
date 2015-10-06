@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /*
  * k_sensor.h
  *
@@ -30,6 +29,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <android/sensor.h>
 
 #include "math/quaternion.hpp"
 #include "math/vector.hpp"
@@ -43,15 +43,15 @@ class KTrackerMessage;
 class KSensor {
 public:
     KSensor();
+    ~KSensor();
     void stop();
     void start();
 
     template<typename Target> void convertTo(Target& target) {
         std::unique_lock<std::mutex> lock(update_mutex_, std::try_to_lock);
         if (lock.owns_lock()) {
-            target.update(latest_time_,
-                q_.w, q_.x, q_.y, q_.z,
-                last_corrected_gyro_.x, last_corrected_gyro_.y, last_corrected_gyro_.z);
+            target.update(latest_time_, q_.w, q_.x, q_.y, q_.z, last_corrected_gyro_.x, last_corrected_gyro_.y,
+                    last_corrected_gyro_.z);
         }
     }
 
@@ -64,6 +64,8 @@ private:
     void readerThreadFunc();
     vec3 applyGyroFilter(const vec3& rawGyro, const float currentTemperature);
     void readFactoryCalibration();
+    bool getLatestMagneticField();
+    Quaternion applyMagnetometerCorrection(Quaternion& q, const vec3& accelerometer, const vec3& gyro, float deltaT);
 
 private:
     int fd_;
@@ -85,6 +87,13 @@ private:
     std::mutex update_mutex_;
     vec3 gyroOffset_;
     float sensorTemperature_ = std::numeric_limits<float>::quiet_NaN();
+    std::pair<vec3, Quaternion> referencePoint_;
+
+    float yawCorrectionTimer = 0;
+    ASensorEventQueue* magneticSensorQueue = nullptr;
+    ASensorRef magneticSensor = nullptr;
+    vec3 magnetic;
+    vec3 magneticBias;
 
     bool factoryCalibration = false;
     vec3 factoryAccelOffset_;
@@ -94,7 +103,6 @@ private:
     float factoryTemperature_ = 0.0f;
 
     static const int KGyroNoiseFilterCapacity = 6000;
-    static const double KRadiansToDegrees;
 };
 
 class KSensorFactoryCalibration {
