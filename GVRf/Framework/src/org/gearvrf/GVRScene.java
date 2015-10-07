@@ -144,6 +144,33 @@ public class GVRScene extends GVRHybridObject {
     }
 
     /**
+     * Performs case-sensitive search
+     * 
+     * @param name
+     * @return null if nothing was found or name was null/empty
+     */
+    public GVRSceneObject[] getSceneObjectsByName(final String name) {
+        if (null == name || name.isEmpty()) {
+            return null;
+        }
+
+        final List<GVRSceneObject> matches = new ArrayList<GVRSceneObject>();
+        GVRScene.getSceneObjectsByName(matches, mSceneObjects, name);
+
+        return 0 != matches.size() ? matches.toArray(new GVRSceneObject[matches.size()]) : null;
+    }
+
+    static void getSceneObjectsByName(final List<GVRSceneObject> matches,
+            final List<GVRSceneObject> children, final String name) {
+        for (final GVRSceneObject child : children) {
+            if (name.equals(child.getName())) {
+                matches.add(child);
+            }
+            getSceneObjectsByName(matches, child.rawGetChildren(), name);
+        }
+    }
+
+    /**
      * Sets the frustum culling for the {@link GVRScene}.
      */
     public void setFrustumCulling(boolean flag) {

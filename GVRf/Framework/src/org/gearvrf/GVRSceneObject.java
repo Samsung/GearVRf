@@ -563,6 +563,26 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Performs case-sensitive search
+     * 
+     * @param name
+     * @return null if nothing was found or name was null/empty
+     */
+    public GVRSceneObject[] getSceneObjectsByName(final String name) {
+        if (null == name || name.isEmpty()) {
+            return null;
+        }
+
+        final List<GVRSceneObject> matches = new ArrayList<GVRSceneObject>();
+        if (name.equals(getName())) {
+            matches.add(this);
+        }
+        GVRScene.getSceneObjectsByName(matches, mChildren, name);
+
+        return 0 != matches.size() ? matches.toArray(new GVRSceneObject[matches.size()]) : null;
+    }
+
+    /**
      * Check if {@code otherObject} is colliding with this object.
      * 
      * @param otherObject
