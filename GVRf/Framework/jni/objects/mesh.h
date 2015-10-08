@@ -80,6 +80,7 @@ public:
             gl_delete.queueBuffer(tex_vboID_);
         have_bounding_volume_ = false;
         vao_dirty_ = true;
+        vaoID_ = triangle_vboID_ = vert_vboID_ = norm_vboID_ = tex_vboID_ = GVR_INVALID;
     }
 
     const std::vector<glm::vec3>& vertices() const {

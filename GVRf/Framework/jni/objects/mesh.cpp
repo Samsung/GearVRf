@@ -187,6 +187,8 @@ void Mesh::generateVAO() {
          return;
     }
 
+    deleteVaos();
+
     if (vertices_.size() == 0 && normals_.size() == 0
             && tex_coords_.size() == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
