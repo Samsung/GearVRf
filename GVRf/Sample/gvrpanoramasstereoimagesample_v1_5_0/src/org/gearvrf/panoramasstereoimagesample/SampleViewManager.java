@@ -60,10 +60,10 @@ public class SampleViewManager extends GVRScript {
 
             leftScreen = new GVRSceneObject(gvrContext, mesh,
                     gvrContext.loadTexture(new GVRAndroidResource(mGVRContext,
-                            "sample_20140509_l.bmp")));
+                            "sample_20140509_l.png")));
             rightScreen = new GVRSceneObject(gvrContext, mesh,
                     gvrContext.loadTexture(new GVRAndroidResource(mGVRContext,
-                            "sample_20140509_r.bmp")));
+                            "sample_20140509_r.png")));
         } catch (IOException e) {
             e.printStackTrace();
             leftScreen = null;
