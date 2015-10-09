@@ -191,7 +191,7 @@ public class ViewerScript extends GVRScript {
 
             GVRTexture default_tex = mGVRContext
                     .loadTexture(new GVRAndroidResource(mGVRContext,
-                            "car/default.bmp"));
+                            "car/default.png"));
             mCarTireMaterial = new GVRMaterial(mGVRContext,
                     mDiffuseShader2.getShaderId());
             mCarTireMaterial.setVec4(DiffuseShader2.COLOR_KEY, 0.1f, 0.1f,
@@ -510,7 +510,7 @@ public class ViewerScript extends GVRScript {
                             "watch/watch.png"));
             ThumbnailTextures[3] = mGVRContext
                     .loadTexture(new GVRAndroidResource(mGVRContext,
-                            "car/car.bmp"));
+                            "car/car.png"));
             ThumbnailTextures[4] = mGVRContext
                     .loadTexture(new GVRAndroidResource(mGVRContext,
                             "robot/robot.jpg"));
