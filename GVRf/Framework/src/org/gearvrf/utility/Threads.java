@@ -56,6 +56,11 @@ public abstract class Threads {
     private static final int HIGH_BACKGROUND_THREAD_PRIORITY = BACKGROUND_THREAD_PRIORITY + 1;
 
     /**
+     * Default thread stack size.
+     */
+    /*package*/ static final long DEFAULT_THREAD_STACK_SIZE = 128 * 1024;
+
+    /**
      * This is the default timeout (in milliseconds) when you create a
      * {@link ThreadLimiter#ThreadLimiter(int, ThreadPolicyProvider)
      * ThreadLimiter} without an

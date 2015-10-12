@@ -26,7 +26,9 @@ public class GrowBeforeQueueThreadPoolExecutor extends ThreadPoolExecutor {
 
             @Override
             public final Thread newThread(final Runnable r) {
-                return new Thread(r, prefix + "-" + threadNumber.getAndIncrement());
+                return new Thread(null /* ThreadGroup */, r,
+                        prefix + "-" + threadNumber.getAndIncrement(),
+                        Threads.DEFAULT_THREAD_STACK_SIZE);
             }
         });
     }
