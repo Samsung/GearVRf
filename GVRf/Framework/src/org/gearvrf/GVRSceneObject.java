@@ -583,6 +583,25 @@ public class GVRSceneObject extends GVRHybridObject {
     }
 
     /**
+     * Performs case-sensitive depth-first search
+     * 
+     * @param name
+     * @return first match in the graph; null if nothing was found or name was null/empty;
+     * in case there might be multiple matches consider using getSceneObjectsByName
+     */
+    public GVRSceneObject getSceneObjectByName(final String name) {
+        if (null == name || name.isEmpty()) {
+            return null;
+        }
+
+        GVRSceneObject scene = GVRScene.getSceneObjectByName(mChildren, name);
+        if (null == scene && name.equals(getName())) {
+            scene = this;
+        }
+        return scene;
+    }
+
+    /**
      * Check if {@code otherObject} is colliding with this object.
      * 
      * @param otherObject
