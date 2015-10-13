@@ -508,6 +508,7 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
+        
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
                 this, new GVRAndroidResource(this, assetRelativeFilename),
                 settings);
@@ -636,7 +637,7 @@ public abstract class GVRContext {
 
         // Recurse through the entire hierarchy to attache all the meshes as
         // Scene Object
-        this.recurseAssimpNodes(assetRelativeFilename, wholeSceneObject,
+        this.recurseAssimpNodes(assimpImporter, assetRelativeFilename, wholeSceneObject,
                 rootNode, wrapperProvider);
 
         return wholeSceneObject;
@@ -665,39 +666,44 @@ public abstract class GVRContext {
      *            AiWrapperProvider for unwrapping Jassimp properties.
      * 
      */
+
     @SuppressWarnings("resource")
     private void recurseAssimpNodes(
+            GVRAssimpImporter assimpImporter,
             String assetRelativeFilename,
             GVRSceneObject parentSceneObject,
             AiNode node,
             AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider) {
+  
         try {
             GVRSceneObject newParentSceneObject = new GVRSceneObject(this);
+
             if (node.getNumMeshes() == 0) {
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
             } else if (node.getNumMeshes() == 1) {
                 // add the scene object to the scene graph
                 GVRSceneObject sceneObject = createSceneObject(
-                        assetRelativeFilename, node, 0, wrapperProvider);
+                        assimpImporter, assetRelativeFilename, node, 0, wrapperProvider);
                 parentSceneObject.addChildObject(sceneObject);
                 parentSceneObject = sceneObject;
             } else {
                 for (int i = 0; i < node.getNumMeshes(); i++) {
                     GVRSceneObject sceneObject = createSceneObject(
-                            assetRelativeFilename, node, i, wrapperProvider);
+                            assimpImporter, assetRelativeFilename, node, i, wrapperProvider);
                     newParentSceneObject.addChildObject(sceneObject);
                 }
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
-            }
+           }
             if(node.getTransform(wrapperProvider) != null) {
                 float[] data = node.getTransform(wrapperProvider).m_data;
                 parentSceneObject.getTransform().setModelMatrix(transpose(data));
                 parentSceneObject.setName(node.getName());
             }
+            
             for (int i = 0; i < node.getNumChildren(); i++) {
-                this.recurseAssimpNodes(assetRelativeFilename,
+                this.recurseAssimpNodes(assimpImporter, assetRelativeFilename,
                         parentSceneObject, node.getChildren().get(i),
                         wrapperProvider);
             }
@@ -756,22 +762,21 @@ public abstract class GVRContext {
      *             File does not exist or cannot be read
      */
     private GVRSceneObject createSceneObject(
+            GVRAssimpImporter assimpImporter,
             String assetRelativeFilename,
             AiNode node,
             int index,
             AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider)
             throws IOException {
-
+        
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-                this.getNodeMesh(new GVRAndroidResource(this,
-                        assetRelativeFilename), node.getName(), index));
+                this.getNodeMesh(assimpImporter, node.getName(), index));
 
-        AiMaterial material = this.getMeshMaterial(new GVRAndroidResource(this,
-                assetRelativeFilename), node.getName(), index);
+        AiMaterial material = this.getMeshMaterial(assimpImporter, node.getName(), index);
         
         GVRMaterial meshMaterial = new GVRMaterial(this,
                 GVRShaderType.Assimp.ID);
-        
+     
         /* Feature set */
         int assimpFeatureSet = 0x00000000;
         
@@ -820,7 +825,7 @@ public abstract class GVRContext {
                         + texDiffuseFileName);
             }
         }
-
+ 
         /* Apply feature set to the material */
         meshMaterial.setShaderFeatureSet(assimpFeatureSet);
 
@@ -838,11 +843,9 @@ public abstract class GVRContext {
      * 
      * @return The mesh, encapsulated as a {@link GVRMesh}.
      */
-    public GVRMesh getNodeMesh(GVRAndroidResource androidResource,
+    public GVRMesh getNodeMesh(GVRAssimpImporter assimpImporter,
             String nodeName, int meshIndex) {
-        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource,
-                GVRImportSettings.getRecommendedSettings());
+
         return assimpImporter.getNodeMesh(nodeName, meshIndex);
     }
 
@@ -851,11 +854,8 @@ public abstract class GVRContext {
      * 
      * @return The material, encapsulated as a {@link AiMaterial}.
      */
-    public AiMaterial getMeshMaterial(GVRAndroidResource androidResource,
+    public AiMaterial getMeshMaterial(GVRAssimpImporter assimpImporter,
             String nodeName, int meshIndex) {
-        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
-                this, androidResource,
-                GVRImportSettings.getRecommendedSettings());
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
 
