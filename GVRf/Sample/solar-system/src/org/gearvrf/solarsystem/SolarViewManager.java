@@ -160,9 +160,11 @@ public class SolarViewManager extends GVRScript {
     }
 
     void onTap() {
-        // toggle whether stats are displayed.
-        boolean statsEnabled = mMainScene.getStatsEnabled();
-        mMainScene.setStatsEnabled(!statsEnabled);
+        if (null != mMainScene) {
+            // toggle whether stats are displayed.
+            boolean statsEnabled = mMainScene.getStatsEnabled();
+            mMainScene.setStatsEnabled(!statsEnabled);
+        }
     }
 
     private List<GVRAnimation> mAnimations = new ArrayList<GVRAnimation>();
