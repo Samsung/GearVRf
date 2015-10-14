@@ -74,12 +74,14 @@ public class JassimpModelLoaderViewManager extends GVRScript {
 
         ModelPosition astroBoyModelPosition = new ModelPosition();
 
-        astroBoyModelPosition.setPosition(0.0f, -4.0f, -5.0f);
+        astroBoyModelPosition.setPosition(0.0f, -0.4f, -0.5f);
+
+        astroBoyModel.getTransform().setScale(3, 3, 3);
 
         astroBoyModel.getTransform().setPosition(astroBoyModelPosition.x,
                 astroBoyModelPosition.y, astroBoyModelPosition.z);
         astroBoyModel.getTransform()
-                .setRotationByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
+                .setRotationByAxis(180.0f, 0.0f, 1.0f, 0.0f);
 
         ModelPosition benchModelPosition = new ModelPosition();
 
