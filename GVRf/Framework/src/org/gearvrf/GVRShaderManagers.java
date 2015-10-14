@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import java.io.FileNotFoundException;
@@ -156,10 +155,10 @@ public interface GVRShaderManagers<MAP, ID> {
      * Builds a shader program from the supplied vertex and fragment shader
      * code.
      * 
-     * This overload is used inside of {@link #addShader(int, int)}
-     * and {@link #addShader(String, String)}. It may not be
-     * incredibly useful to application code, but has been exposed because
-     * there's no real reason to keep it hidden.
+     * This overload is used inside of {@link #addShader(int, int)} and
+     * {@link #addShader(String, String)}. It may not be incredibly useful to
+     * application code, but has been exposed because there's no real reason to
+     * keep it hidden.
      * 
      * @param vertexShader_stream
      *            GLSL source code for a vertex shader. Stream will be closed

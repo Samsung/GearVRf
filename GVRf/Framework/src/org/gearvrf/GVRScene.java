@@ -13,13 +13,25 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
+import org.gearvrf.utility.Log;
+import org.gearvrf.debug.GVRConsole;
 
 /** The scene graph */
 public class GVRScene extends GVRHybridObject {
+    @SuppressWarnings("unused")
+    private static final String TAG = Log.tag(GVRScene.class);
+
+    private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
+    private GVRCameraRig mMainCameraRig;
+    private StringBuilder mStatMessage = new StringBuilder();
+
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -31,22 +43,20 @@ public class GVRScene extends GVRHybridObject {
 
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
+
         GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
         rightCamera.setRenderMask(GVRRenderMaskBit.Right);
-        GVRSceneObject leftCameraObject = new GVRSceneObject(gvrContext);
-        leftCameraObject.attachCamera(leftCamera);
-        GVRSceneObject rightCameraObject = new GVRSceneObject(gvrContext);
-        rightCameraObject.attachCamera(rightCamera);
 
-        GVRSceneObject cameraRigObject = new GVRSceneObject(gvrContext);
+        GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
+        centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
+
         GVRCameraRig cameraRig = new GVRCameraRig(gvrContext);
         cameraRig.attachLeftCamera(leftCamera);
         cameraRig.attachRightCamera(rightCamera);
-        cameraRigObject.attachCameraRig(cameraRig);
+        cameraRig.attachCenterCamera(centerCamera);
 
-        addSceneObject(cameraRigObject);
-        cameraRigObject.addChildObject(leftCameraObject);
-        cameraRigObject.addChildObject(rightCameraObject);
+        addSceneObject(cameraRig.getOwnerObject());
+
         setMainCameraRig(cameraRig);
     }
 
@@ -54,35 +64,38 @@ public class GVRScene extends GVRHybridObject {
         super(gvrContext, ptr);
     }
 
-    static GVRScene factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRScene(gvrContext, ptr)
-                : (GVRScene) wrapper;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
-    }
-
     /**
-     * Add an {@linkplain GVRSceneObject scene object} 
+     * Add an {@linkplain GVRSceneObject scene object}
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to add.
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
-        NativeScene.addSceneObject(getPtr(), sceneObject.getPtr());
+        mSceneObjects.add(sceneObject);
+        NativeScene.addSceneObject(getNative(), sceneObject.getNative());
     }
 
     /**
-     * Remove a {@linkplain GVRSceneObject scene object} 
+     * Remove a {@linkplain GVRSceneObject scene object}
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to remove.
      */
     public void removeSceneObject(GVRSceneObject sceneObject) {
-        NativeScene.removeSceneObject(getPtr(), sceneObject.getPtr());
+        mSceneObjects.remove(sceneObject);
+        NativeScene.removeSceneObject(getNative(), sceneObject.getNative());
+    }
+
+    /**
+     * The top-level scene objects.
+     * 
+     * @return A read-only list containing all the 'root' scene objects (those
+     *         that were added directly to the scene).
+     * 
+     * @since 2.0.0
+     */
+    public List<GVRSceneObject> getSceneObjects() {
+        return Collections.unmodifiableList(mSceneObjects);
     }
 
     /**
@@ -90,8 +103,7 @@ public class GVRScene extends GVRHybridObject {
      *         on the screen.
      */
     public GVRCameraRig getMainCameraRig() {
-        long ptr = NativeScene.getMainCameraRig(getPtr());
-        return ptr == 0 ? null : GVRCameraRig.factory(getGVRContext(), ptr);
+        return mMainCameraRig;
     }
 
     /**
@@ -102,7 +114,13 @@ public class GVRScene extends GVRHybridObject {
      *            The {@link GVRCameraRig camera rig} to render with.
      */
     public void setMainCameraRig(GVRCameraRig cameraRig) {
-        NativeScene.setMainCameraRig(getPtr(), cameraRig.getPtr());
+        mMainCameraRig = cameraRig;
+        NativeScene.setMainCameraRig(getNative(), cameraRig.getNative());
+
+        final GVRContext gvrContext = getGVRContext();
+        if (this == gvrContext.getMainScene()) {
+            gvrContext.getActivity().setCameraRig(getMainCameraRig());
+        }
     }
 
     /**
@@ -110,25 +128,193 @@ public class GVRScene extends GVRHybridObject {
      *         array.
      */
     public GVRSceneObject[] getWholeSceneObjects() {
-        long[] ptrs = NativeScene.getWholeSceneObjects(getPtr());
-        GVRSceneObject[] sceneObjects = new GVRSceneObject[ptrs.length];
-        for (int i = 0; i < ptrs.length; ++i) {
-            sceneObjects[i] = GVRSceneObject.factory(getGVRContext(), ptrs[i]);
+        List<GVRSceneObject> list = new ArrayList<GVRSceneObject>(mSceneObjects);
+        for (GVRSceneObject child : mSceneObjects) {
+            addChildren(list, child);
         }
-        return sceneObjects;
+        return list.toArray(new GVRSceneObject[list.size()]);
+    }
+
+    private void addChildren(List<GVRSceneObject> list,
+            GVRSceneObject sceneObject) {
+        for (GVRSceneObject child : sceneObject.rawGetChildren()) {
+            list.add(child);
+            addChildren(list, child);
+        }
+    }
+
+    /**
+     * Performs case-sensitive search
+     * 
+     * @param name
+     * @return null if nothing was found or name was null/empty
+     */
+    public GVRSceneObject[] getSceneObjectsByName(final String name) {
+        if (null == name || name.isEmpty()) {
+            return null;
+        }
+
+        final List<GVRSceneObject> matches = new ArrayList<GVRSceneObject>();
+        GVRScene.getSceneObjectsByName(matches, mSceneObjects, name);
+
+        return 0 != matches.size() ? matches.toArray(new GVRSceneObject[matches.size()]) : null;
+    }
+
+    static void getSceneObjectsByName(final List<GVRSceneObject> matches,
+            final List<GVRSceneObject> children, final String name) {
+        for (final GVRSceneObject child : children) {
+            if (name.equals(child.getName())) {
+                matches.add(child);
+            }
+            getSceneObjectsByName(matches, child.rawGetChildren(), name);
+        }
+    }
+
+    /**
+     * Performs case-sensitive depth-first search
+     * 
+     * @param name
+     * @return first match in the graph; null if nothing was found or name was null/empty;
+     * in case there might be multiple matches consider using getSceneObjectsByName
+     */
+    public GVRSceneObject getSceneObjectByName(final String name) {
+        if (null == name || name.isEmpty()) {
+            return null;
+        }
+
+        return GVRScene.getSceneObjectByName(mSceneObjects, name);
+    }
+
+    static GVRSceneObject getSceneObjectByName(final List<GVRSceneObject> children, final String name) {
+        for (final GVRSceneObject child : children) {
+            final GVRSceneObject scene = getSceneObjectByName(child.rawGetChildren(), name);
+            if (null != scene) {
+                return scene;
+            }
+            if (name.equals(child.getName())) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sets the frustum culling for the {@link GVRScene}.
+     */
+    public void setFrustumCulling(boolean flag) {
+        NativeScene.setFrustumCulling(getNative(), flag);
+    }
+
+    /**
+     * Sets the occlusion query for the {@link GVRScene}.
+     */
+    public void setOcclusionQuery(boolean flag) {
+        NativeScene.setOcclusionQuery(getNative(), flag);
+    }
+
+    private GVRConsole mStatsConsole = null;
+    private boolean mStatsEnabled = false;
+    private boolean pendingStats = false;
+
+    /**
+     * Returns whether displaying of stats is enabled for this scene.
+     * 
+     * @return whether displaying of stats is enabled for this scene.
+     */
+    public boolean getStatsEnabled() {
+        return mStatsEnabled;
+    }
+
+    /**
+     * Set whether to enable display of stats for this scene.
+     * 
+     * @param enabled
+     *            Flag to indicate whether to enable display of stats.
+     */
+    public void setStatsEnabled(boolean enabled) {
+        pendingStats = enabled;
+    }
+
+    void updateStatsEnabled() {
+        if (mStatsEnabled == pendingStats) {
+            return;
+        }
+
+        mStatsEnabled = pendingStats;
+        if (mStatsEnabled && mStatsConsole == null) {
+            mStatsConsole = new GVRConsole(getGVRContext(),
+                    GVRConsole.EyeMode.BOTH_EYES);
+            mStatsConsole.setCanvasWidthHeight(512, 512);
+            mStatsConsole.setXOffset(125.0f);
+            mStatsConsole.setYOffset(125.0f);
+        }
+
+        if (mStatsEnabled && mStatsConsole != null) {
+            mStatsConsole.setEyeMode(GVRConsole.EyeMode.BOTH_EYES);
+        } else if (!mStatsEnabled && mStatsConsole != null) {
+            mStatsConsole.setEyeMode(GVRConsole.EyeMode.NEITHER_EYE);
+        }
+    }
+
+    void resetStats() {
+        updateStatsEnabled();
+        if (mStatsEnabled) {
+            mStatsConsole.clear();
+            NativeScene.resetStats(getNative());
+        }
+    }
+
+    void updateStats() {
+        if (mStatsEnabled) {
+            int numberDrawCalls = NativeScene.getNumberDrawCalls(getNative());
+            int numberTriangles = NativeScene.getNumberTriangles(getNative());
+
+            mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
+            mStatsConsole.writeLine("Triangles: %d", numberTriangles);
+
+            if (mStatMessage.length() > 0)
+                mStatsConsole.writeLine("%s", mStatMessage.toString());
+        }
+    }
+
+    /**
+     * Add an additional string to stats message for this scene.
+     * 
+     * @param message
+     *            String to add to stats message.
+     */
+    public void addStatMessage(String message) {
+        if (mStatMessage.length() > 0) {
+            mStatMessage.delete(0, mStatMessage.length());
+        }
+        mStatMessage.append(message);
+    }
+
+    /**
+     * Remove the stats message from this scene.
+     * 
+     */
+    public void killStatMessage() {
+        mStatMessage.delete(0, mStatMessage.length());
     }
 }
 
 class NativeScene {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native void addSceneObject(long scene, long sceneObject);
+    static native void addSceneObject(long scene, long sceneObject);
 
-    public static native void removeSceneObject(long scene, long sceneObject);
+    static native void removeSceneObject(long scene, long sceneObject);
 
-    public static native long getMainCameraRig(long scene);
+    public static native void setFrustumCulling(long scene, boolean flag);
 
-    public static native void setMainCameraRig(long scene, long cameraRig);
+    public static native void setOcclusionQuery(long scene, boolean flag);
 
-    public static native long[] getWholeSceneObjects(long scene);
+    static native void setMainCameraRig(long scene, long cameraRig);
+
+    public static native void resetStats(long scene);
+
+    public static native int getNumberDrawCalls(long scene);
+
+    public static native int getNumberTriangles(long scene);
 }

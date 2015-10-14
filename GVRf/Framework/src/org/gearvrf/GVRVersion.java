@@ -45,5 +45,48 @@ public class GVRVersion {
      */
     public static final String V_1_6_5 = "1.6.5";
 
-    public static final String CURRENT = V_1_6_5;
+    /**
+     * Add high-level
+     * {@link GVRPicker#findObjects(GVRScene, float, float, float, float, float, float)}
+     * method.
+     */
+    public static final String V_1_6_6 = "1.6.6";
+
+    /** Simpler asynch */
+    public static final String V_1_6_7 = "1.6.7";
+
+    /**
+     * Add API ({@link GVRContext#captureScreen3D(GVRScreenshot3DCallback)}) to
+     * capture 3D screenshot.
+     * 
+     * Add high-level {@link GVRSceneObject#GVRSceneObject(GVRContext,
+     * Future<GVRMesh>, Future<GVRTexture>)} constructor.
+     * 
+     * Add {@link FutureWrapper} to generate required Future<T> for the new
+     * constructor.
+     */
+    public static final String V_1_6_8 = "1.6.8";
+
+    /**
+     * Add cube map texture support.
+     */
+    public static final String V_1_6_9 = "1.6.9";
+
+    /**
+     * No more reference counting - Java objects control native objects'
+     * lifecycles.
+     */
+    public static final String V_2_0_0 = "2.0.0";
+    
+    /**
+     * Optimize memory management by getting rid of {@code finalize()} method.
+     * Add support for Future<{@link GVREyePointee}>s. Add
+     * {@link GVRContext#getActivity()}.
+     */
+    public static final String V_2_0_1 = "2.0.1";
+
+    /** Resource caching */
+    public static final String V_2_0_2 = "2.0.2";
+
+    public static final String CURRENT = V_2_0_2;
 }

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
 import org.apache.commons.math3.complex.Quaternion;

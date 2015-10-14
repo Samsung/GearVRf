@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import java.io.IOException;
@@ -23,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader.Reader;
 
 import android.opengl.GLES20;
@@ -34,7 +34,8 @@ import android.opengl.GLES20;
  * 
  * <p>
  * Get an instance by calling one of the {@code load()} overloads; register a
- * new loader by calling {@link #register(GVRCompressedTextureLoader)}.
+ * new loader by calling
+ * {@link GVRCompressedTextureLoader#register(GVRCompressedTextureLoader)}.
  * 
  * <p>
  * Note that {@link #toTexture(GVRContext, int)} <em>must</em> be called from
@@ -76,7 +77,8 @@ class CompressedTexture {
      * Currently only support containers with mipmap chains - not containers
      * with unrelated textures.
      */
-    protected final ByteBuffer data;
+    private final ByteBuffer data;
+    private final int dataOffset;
 
     protected CompressedTexture(int internalformat, int width, int height,
             int imageSize, int levels, ByteBuffer data) {
@@ -86,11 +88,46 @@ class CompressedTexture {
         this.imageSize = imageSize;
         this.levels = levels;
         this.data = data;
+
+        /*
+         * Initial position is the data offset in backing array. We cannot use
+         * ByteBuffer.arrayOffset() which is always 0.
+         */
+        this.dataOffset = data.position();
+    }
+
+    /*
+     * Get backing array.
+     */
+    protected byte[] getArray() {
+        return data.array();
+    }
+
+    /*
+     * Get offset of data in backing array.
+     */
+    protected int getArrayOffset() {
+        return dataOffset;
+    }
+
+    /*
+     * Get the ByteBuffer.
+     */
+    protected ByteBuffer getData() {
+        return data;
     }
 
     GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
         return new GVRCompressedTexture(gvrContext, internalformat, width,
-                height, imageSize, data.array(), levels, quality);
+                height, imageSize, getArray(), getArrayOffset(), levels, quality);
+    }
+
+    // Texture parameters
+    GVRCompressedTexture toTexture(GVRContext gvrContext, int quality,
+            GVRTextureParameters textureParameters) {
+        return new GVRCompressedTexture(gvrContext, internalformat, width,
+                height, imageSize, getArray(), getArrayOffset(), levels, quality,
+                textureParameters);
     }
 
     /**
@@ -99,6 +136,8 @@ class CompressedTexture {
      * 
      * @param stream
      *            InputStream containing a compressed texture file
+     * @param maxLength
+     *            Max length to read. -1 for unlimited.
      * @param closeStream
      *            Close {@code stream} on exit?
      * @return Normally, one and only one {@link GVRCompressedTextureLoader}
@@ -110,11 +149,14 @@ class CompressedTexture {
      * @throws IOException
      *             Does not catch any internal exceptions
      */
-    static CompressedTexture load(InputStream stream, boolean closeStream)
+    static CompressedTexture load(InputStream stream, int maxLength,
+                                  boolean closeStream)
             throws IOException {
         byte[] data;
         try {
-            data = readBytes(stream);
+            data = maxLength >= 0
+                ? readBytes(stream, maxLength)
+                : readBytes(stream);
         } finally {
             if (closeStream) {
                 stream.close();
@@ -143,6 +185,63 @@ class CompressedTexture {
             }
             return valid.parse(data, reader);
         }
+    }
+
+    static GVRCompressedTextureLoader sniff(InputStream stream)
+            throws IOException {
+        byte[] data = readBytes(stream,
+                GVRCompressedTextureLoader.maximumHeaderLength);
+
+        Reader reader = new Reader(data);
+
+        GVRCompressedTextureLoader valid = null;
+        List<GVRCompressedTextureLoader> loaders = GVRCompressedTextureLoader
+                .getLoaders();
+        synchronized (loaders) {
+            for (GVRCompressedTextureLoader loader : loaders) {
+                if (loader.sniff(data, reader)) {
+                    if (valid != null) {
+                        throw new IllegalArgumentException(
+                                "Multiple loaders think this smells right");
+                    }
+                    valid = loader;
+                }
+                reader.reset();
+            }
+            return valid;
+        }
+    }
+
+    static CompressedTexture parse(InputStream stream, boolean closeStream,
+            GVRCompressedTextureLoader loader) throws IOException {
+        byte[] data;
+        try {
+            data = readBytes(stream);
+        } finally {
+            if (closeStream) {
+                stream.close();
+            }
+        }
+
+        return loader.parse(data, new Reader(data));
+    }
+
+    private static byte[] readBytes(InputStream stream, final int bytes)
+            throws IOException {
+        byte[] result = new byte[bytes], buffer = new byte[bytes];
+        int length = 0;
+
+        for (int read = 0; read >= 0 && length < bytes; read = stream
+                .read(buffer)) {
+            if (read > 0) {
+                for (int index = 0; index < read && length < bytes;) {
+                    result[length++] = buffer[index++];
+                }
+            }
+        }
+        buffer = null;
+
+        return result;
     }
 
     private static byte[] readBytes(InputStream stream) throws IOException {

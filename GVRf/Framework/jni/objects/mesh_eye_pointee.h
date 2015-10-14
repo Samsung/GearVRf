@@ -30,14 +30,14 @@ class Mesh;
 
 class MeshEyePointee: public EyePointee {
 public:
-    MeshEyePointee(std::shared_ptr<Mesh>&& mesh);
+    MeshEyePointee(Mesh* mesh);
     ~MeshEyePointee();
 
-    std::shared_ptr<Mesh> mesh() const {
+    Mesh* mesh() const {
         return mesh_;
     }
 
-    void set_mesh(std::shared_ptr<Mesh> mesh) {
+    void set_mesh(Mesh* mesh) {
         mesh_ = mesh;
     }
 
@@ -52,7 +52,7 @@ private:
     MeshEyePointee& operator=(MeshEyePointee&& mesh_eye_pointee);
 
 private:
-    std::shared_ptr<Mesh> mesh_;
+    Mesh* mesh_;
 };
 }
 #endif

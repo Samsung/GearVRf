@@ -13,8 +13,22 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.ArrayList;
+
+import org.gearvrf.GVRRenderPass;
+import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+
+import android.util.Log;
+import static android.opengl.GLES30.*;
+
+import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.utility.Threads;
 
 /**
  * One of the key GVRF classes: Encapsulates the data associated with rendering
@@ -24,6 +38,14 @@ package org.gearvrf;
  * material}, camera association, rendering order, and various other parameters.
  */
 public class GVRRenderData extends GVRComponent {
+
+    private GVRMesh mMesh;
+    private ArrayList<GVRRenderPass> mRenderPassList;
+    private static final String TAG = "GearVRf";
+    private GVRLight mLight;
+    
+    /** Just for {@link #getMeshEyePointee()} */
+    private Future<GVRMesh> mFutureMesh;
 
     /**
      * Rendering hints.
@@ -79,29 +101,26 @@ public class GVRRenderData extends GVRComponent {
      */
     public GVRRenderData(GVRContext gvrContext) {
         super(gvrContext, NativeRenderData.ctor());
+        
+        GVRRenderPass basePass = new GVRRenderPass(gvrContext);
+        mRenderPassList = new ArrayList<GVRRenderPass>();
+        addPass(basePass);
+        isLightEnabled = false;
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
-    }
-
-    static GVRRenderData factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRRenderData(gvrContext, ptr)
-                : (GVRRenderData) wrapper;
-    }
-
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
+        
+        GVRRenderPass basePass = new GVRRenderPass(gvrContext);
+        mRenderPassList = new ArrayList<GVRRenderPass>();
+        addPass(basePass);
     }
 
     /**
      * @return The {@link GVRMesh mesh} being rendered.
      */
     public GVRMesh getMesh() {
-        long ptr = NativeRenderData.getMesh(getPtr());
-        return ptr == 0 ? null : GVRMesh.factory(getGVRContext(), ptr);
+        return mMesh;
     }
 
     /**
@@ -111,16 +130,198 @@ public class GVRRenderData extends GVRComponent {
      *            The mesh to be rendered.
      */
     public void setMesh(GVRMesh mesh) {
-        NativeRenderData.setMesh(getPtr(), mesh.getPtr());
+        synchronized (this) {
+            mMesh = mesh;
+            mFutureMesh = null;
+        }
+        NativeRenderData.setMesh(getNative(), mesh.getNative());
     }
 
+    /**
+     * Asynchronously set the {@link GVRMesh mesh} to be rendered.
+     * 
+     * Uses a background thread from the thread pool to wait for the
+     * {@code Future.get()} method; unless you are loading dozens of meshes
+     * asynchronously, the extra overhead should be modest compared to the cost
+     * of loading a mesh.
+     * 
+     * @param mesh
+     *            The mesh to be rendered.
+     * 
+     * @since 1.6.7
+     */
+    public void setMesh(final Future<GVRMesh> mesh) {
+        synchronized (this) {
+            mFutureMesh = mesh;
+        }
+        Threads.spawn(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    setMesh(mesh.get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * Return a {@code Future<GVREyePointee>} or {@code null}.
+     * 
+     * If you use {@link #setMesh(Future)}, trying to create a
+     * {@link GVRMeshEyePointee} in the 'normal' (synchronous) way will fail,
+     * because this {@link GVRRenderData} won't have a mesh yet. This method
+     * prevents that problem by returning an {@code Future} tied to the current
+     * mesh status:
+     * <ul>
+     * <li>If you have already set a mesh, you will get a {@code Future} with
+     * {@code get()} methods that return immediately.
+     * <li>If you are currently waiting on a {@code Future<GVRMesh>}, you will
+     * get a 'true' {@code Future} that waits for the {@code Future<GVRMesh>}.
+     * <li>If you have neither, you will get {@code null}.
+     * </ul>
+     * 
+     * <p>
+     * This overload will return a {@code Future<GVREyePointee>} that uses the
+     * mesh's bounding box; use the {@link #getMeshEyePointee(boolean)} overload
+     * if you would prefer to use the actual mesh. With complicated meshes, it's
+     * cheaper - though less accurate - to use the bounding box.
+     * 
+     * @return Either a {@code Future<GVREyePointee>} or {@code null}.
+     */
+    public Future<GVREyePointee> getMeshEyePointee() {
+        return getMeshEyePointee(true);
+    }
+
+    /**
+     * Return a {@code Future<GVREyePointee>} or {@code null}.
+     * 
+     * If you use {@link #setMesh(Future)}, trying to create a
+     * {@link GVRMeshEyePointee} in the 'normal' (synchronous) way will fail,
+     * because this {@link GVRRenderData} won't have a mesh yet. This method
+     * prevents that problem by returning an {@code Future} tied to the current
+     * mesh status:
+     * <ul>
+     * <li>If you have already set a mesh, you will get a {@code Future} with
+     * {@code get()} methods that return immediately.
+     * <li>If you are currently waiting on a {@code Future<GVRMesh>}, you will
+     * get a 'true' {@code Future} that waits for the {@code Future<GVRMesh>}.
+     * <li>If you have neither, you will get {@code null}.
+     * </ul>
+     * 
+     * @param useBoundingBox
+     *            When {@code true}, will use {@link GVRMesh#getBoundingBox()};
+     *            when {@code false} will use {@code mesh} directly. With
+     *            complicated meshes, it's cheaper - though less accurate - to
+     *            use the bounding box.
+     * 
+     * @return Either a {@code Future<GVREyePointee>} or {@code null}.
+     */
+    public Future<GVREyePointee> getMeshEyePointee(boolean useBoundingBox) {
+        synchronized (this) {
+            if (mMesh != null) {
+                // Wrap an eye pointee around the mesh,
+                // return a non-blocking wrapper
+                GVRMeshEyePointee eyePointee = new GVRMeshEyePointee(mMesh,
+                        useBoundingBox);
+                return new FutureWrapper<GVREyePointee>(eyePointee);
+            } else if (mFutureMesh != null) {
+                // Return a true (blocking) Future, tied to the Future<GVRMesh>
+                return new FutureMeshEyePointee(mFutureMesh, useBoundingBox);
+            } else {
+                // No mesh
+                return null;
+            }
+        }
+    }
+
+    private static class FutureMeshEyePointee implements Future<GVREyePointee> {
+
+        private final Future<GVRMesh> mFutureMesh;
+        private final boolean mUseBoundingBox;
+
+        private FutureMeshEyePointee(Future<GVRMesh> futureMesh,
+                boolean useBoundingBox) {
+            mFutureMesh = futureMesh;
+            mUseBoundingBox = useBoundingBox;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return isDone() ? false : mFutureMesh.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public GVRMeshEyePointee get() throws InterruptedException,
+                ExecutionException {
+            GVRMesh mesh = mFutureMesh.get();
+            return new GVRMeshEyePointee(mesh, mUseBoundingBox);
+        }
+
+        @Override
+        public GVRMeshEyePointee get(long timeout, TimeUnit unit)
+                throws InterruptedException, ExecutionException,
+                TimeoutException {
+            GVRMesh mesh = mFutureMesh.get(timeout, unit);
+            return new GVRMeshEyePointee(mesh, mUseBoundingBox);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return mFutureMesh.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return mFutureMesh.isDone();
+        }
+    }
+
+    /**
+     * Add a render {@link GVRRenderPass pass} to this RenderData.
+     * @param pass
+     */
+    public void addPass(GVRRenderPass pass) {
+        mRenderPassList.add(pass);
+        NativeRenderData.addPass(getNative(), pass.getNative());
+    }
+    
+    /**
+     * Get a Rendering {@link GVRRenderPass Pass} for this Mesh
+     * @param passIndex The index of the RenderPass to get.
+     * @return
+     */
+    public GVRRenderPass getPass(int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            return mRenderPassList.get(passIndex);
+        } else {
+            Log.e(TAG, "Trying to get invalid pass. Pass " + passIndex + " was not created.");
+            return null;
+        }
+    }
+    
     /**
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
      */
     public GVRMaterial getMaterial() {
-        long ptr = NativeRenderData.getMaterial(getPtr());
-        return ptr == 0 ? null : new GVRMaterial(getGVRContext(), ptr);
+        return getMaterial(0);
+    }
+    
+    /**
+     * @param The {@link GVRRenderPass pass} index to retrieve material from.
+     * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
+     *         being rendered with.
+     */
+    public GVRMaterial getMaterial(int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            return mRenderPassList.get(passIndex).getMaterial();
+        } else {
+            Log.e(TAG, "Trying to get material from invalid pass. Pass " + passIndex + " was not created.");
+            return null;
+        }
     }
 
     /**
@@ -130,7 +331,102 @@ public class GVRRenderData extends GVRComponent {
      *            The {@link GVRMaterial material} for rendering.
      */
     public void setMaterial(GVRMaterial material) {
-        NativeRenderData.setMaterial(getPtr(), material.getPtr());
+        setMaterial(material, 0);
+    }
+
+    /**
+     * Set the {@link GVRMaterial material} this pass will be rendered with.
+     * 
+     * @param material
+     *            The {@link GVRMaterial material} for rendering.
+     * @param passIndex
+     *            The rendering pass this material will be assigned to.
+     * 
+     */
+    public void setMaterial(GVRMaterial material, int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            mRenderPassList.get(passIndex).setMaterial(material);
+        } else {
+            Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
+        }
+        
+    }
+
+    /**
+     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is being lit
+     *         by.
+     */
+    public GVRLight getLight() {
+        return mLight;
+    }
+
+    /**
+     * Set the {@link GVRLight light} the mesh will be lit by.
+     * 
+     * @param light
+     *            The {@link GVRLight light} for rendering.
+     */
+    public void setLight(GVRLight light) {
+        boolean supportsLight = false;
+        
+        for (int pass = 0; pass < mRenderPassList.size(); ++pass) {
+            if (mRenderPassList.get(pass).getMaterial().getShaderType() == GVRShaderType.Texture.ID) {
+                supportsLight = true;
+                break;
+            }
+        }
+        
+        if (!supportsLight) {
+            throw new UnsupportedOperationException(
+                    "Only Texture shader can has light.");
+        }
+        
+        mLight = light;
+        NativeRenderData.setLight(getNative(), light.getNative());
+        isLightEnabled = true;
+    }
+
+    /**
+     * Enable lighting effect for the render_data. Note that it is different to
+     * GVRLight.enable(). GVRLight.enable turn on a light, while this method
+     * enable the lighting effect for the render_data. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     */
+    public void enableLight() {
+        if (mLight == null) {
+            throw new UnsupportedOperationException("No light is added yet.");
+        }
+        NativeRenderData.enableLight(getNative());
+        isLightEnabled = true;
+    }
+
+    /**
+     * Disable lighting effect for the render_data. Note that it is different to
+     * GVRLight.disable(). GVRLight.disable turn off a light, while this method
+     * disable the lighting effect for the render_data. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     */
+    public void disableLight() {
+        if (mLight == null) {
+            throw new UnsupportedOperationException("No light is added yet.");
+        }
+        NativeRenderData.disableLight(getNative());
+        isLightEnabled = false;
+    }
+
+    /**
+     * Get the enable/disable status for the lighting effect. Note that it is
+     * different to enable/disable status of the light. The lighting effect is
+     * applied if and only if {@code mLight} is enabled (i.e. on) AND the
+     * lighting effect is enabled for the render_data.
+     * 
+     * @return true if lighting effect is enabled, false if lighting effect is
+     *         disabled.
+     */
+    public boolean isLightEnabled() {
+        return isLightEnabled;
     }
 
     /**
@@ -140,7 +436,7 @@ public class GVRRenderData extends GVRComponent {
      * @see GVRRenderMaskBit
      */
     public int getRenderMask() {
-        return NativeRenderData.getRenderMask(getPtr());
+        return NativeRenderData.getRenderMask(getNative());
     }
 
     /**
@@ -151,7 +447,7 @@ public class GVRRenderData extends GVRComponent {
      * @see GVRRenderMaskBit
      */
     public void setRenderMask(int renderMask) {
-        NativeRenderData.setRenderMask(getPtr(), renderMask);
+        NativeRenderData.setRenderMask(getNative(), renderMask);
     }
 
     /**
@@ -159,7 +455,7 @@ public class GVRRenderData extends GVRComponent {
      * @see GVRRenderingOrder
      */
     public int getRenderingOrder() {
-        return NativeRenderData.getRenderingOrder(getPtr());
+        return NativeRenderData.getRenderingOrder(getNative());
     }
 
     /**
@@ -169,26 +465,89 @@ public class GVRRenderData extends GVRComponent {
      *            See {@link GVRRenderingOrder}
      */
     public void setRenderingOrder(int renderingOrder) {
-        NativeRenderData.setRenderingOrder(getPtr(), renderingOrder);
+        NativeRenderData.setRenderingOrder(getNative(), renderingOrder);
     }
 
     /**
+     * @deprecated Use {@code getCullFace() } instead.
+     * @see #getCullFace() 
      * @return {@code true} if {@code GL_CULL_FACE} is enabled, {@code false} if
      *         not.
      */
     public boolean getCullTest() {
-        return NativeRenderData.getCullTest(getPtr());
+        return getCullFace(0) != GVRCullFaceEnum.None;
     }
 
     /**
+     * @return current face to be culled See {@link GVRCullFaceEnum}.
+     */
+    public GVRCullFaceEnum getCullFace() {
+        return getCullFace(0);
+    }
+
+    /**
+     * @param passIndex
+     *            The rendering pass index to query cull face state.
+     * @return current face to be culled See {@link GVRCullFaceEnum}.
+     */
+    public GVRCullFaceEnum getCullFace(int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            return mRenderPassList.get(passIndex).getCullFace();
+        } else {
+            Log.e(TAG, "Trying to get cull face from invalid pass. Pass " + passIndex + " was not created.");
+            return GVRCullFaceEnum.Back;
+        }
+    }
+
+    /**
+     * @deprecated Use {@code setCullFace(GVRCullFaceEnum cullFace)} instead.
+     * @see #setCullFace(int cullFace)
      * Set the {@code GL_CULL_FACE} option
      * 
      * @param cullTest
      *            {@code true} if {@code GL_CULL_FACE} should be enabled,
      *            {@code false} if not.
+     * @param pass
      */
     public void setCullTest(boolean cullTest) {
-        NativeRenderData.setCullTest(getPtr(), cullTest);
+        if (cullTest) {
+            setCullFace(GVRCullFaceEnum.Back);
+        } else {
+            setCullFace(GVRCullFaceEnum.None);
+        }
+
+    }
+
+    /**
+     * Set the face to be culled
+     * 
+     * @param cullFace
+     *            {@code GVRCullFaceEnum.Back} Tells Graphics API to discard
+     *            back faces, {@code GVRCullFaceEnum.Front} Tells Graphics API
+     *            to discard front faces, {@code GVRCullFaceEnum.None} Tells
+     *            Graphics API to not discard any face
+     */
+    public void setCullFace(GVRCullFaceEnum cullFace) {
+        setCullFace(cullFace, 0);
+    }
+
+    /**
+     * Set the face to be culled
+     * 
+     * @param cullFace
+     *            {@code GVRCullFaceEnum.Back} Tells Graphics API to discard
+     *            back faces, {@code GVRCullFaceEnum.Front} Tells Graphics API
+     *            to discard front faces, {@code GVRCullFaceEnum.None} Tells
+     *            Graphics API to not discard any face
+     * @param passIndex
+     *            The rendering pass to set cull face state
+     */
+    public void setCullFace(GVRCullFaceEnum cullFace, int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
+            mRenderPassList.get(passIndex).setCullFace(cullFace);
+        } else {
+            Log.e(TAG, "Trying to set cull face to a invalid pass. Pass " + passIndex + " was not created.");
+        }
     }
 
     /**
@@ -196,7 +555,7 @@ public class GVRRenderData extends GVRComponent {
      *         {@code false} if not.
      */
     public boolean getOffset() {
-        return NativeRenderData.getOffset(getPtr());
+        return NativeRenderData.getOffset(getNative());
     }
 
     /**
@@ -207,7 +566,7 @@ public class GVRRenderData extends GVRComponent {
      *            enabled, {@code false} if not.
      */
     public void setOffset(boolean offset) {
-        NativeRenderData.setOffset(getPtr(), offset);
+        NativeRenderData.setOffset(getNative(), offset);
     }
 
     /**
@@ -216,7 +575,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public float getOffsetFactor() {
-        return NativeRenderData.getOffsetFactor(getPtr());
+        return NativeRenderData.getOffsetFactor(getNative());
     }
 
     /**
@@ -230,7 +589,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public void setOffsetFactor(float offsetFactor) {
-        NativeRenderData.setOffsetFactor(getPtr(), offsetFactor);
+        NativeRenderData.setOffsetFactor(getNative(), offsetFactor);
     }
 
     /**
@@ -239,7 +598,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public float getOffsetUnits() {
-        return NativeRenderData.getOffsetUnits(getPtr());
+        return NativeRenderData.getOffsetUnits(getNative());
     }
 
     /**
@@ -253,7 +612,7 @@ public class GVRRenderData extends GVRComponent {
      * @see #setOffset(boolean)
      */
     public void setOffsetUnits(float offsetUnits) {
-        NativeRenderData.setOffsetUnits(getPtr(), offsetUnits);
+        NativeRenderData.setOffsetUnits(getNative(), offsetUnits);
     }
 
     /**
@@ -261,7 +620,7 @@ public class GVRRenderData extends GVRComponent {
      *         if not.
      */
     public boolean getDepthTest() {
-        return NativeRenderData.getDepthTest(getPtr());
+        return NativeRenderData.getDepthTest(getNative());
     }
 
     /**
@@ -272,7 +631,7 @@ public class GVRRenderData extends GVRComponent {
      *            {@code false} if not.
      */
     public void setDepthTest(boolean depthTest) {
-        NativeRenderData.setDepthTest(getPtr(), depthTest);
+        NativeRenderData.setDepthTest(getNative(), depthTest);
     }
 
     /**
@@ -280,7 +639,7 @@ public class GVRRenderData extends GVRComponent {
      *         not.
      */
     public boolean getAlphaBlend() {
-        return NativeRenderData.getAlphaBlend(getPtr());
+        return NativeRenderData.getAlphaBlend(getNative());
     }
 
     /**
@@ -291,52 +650,78 @@ public class GVRRenderData extends GVRComponent {
      *            {@code false} if not.
      */
     public void setAlphaBlend(boolean alphaBlend) {
-        NativeRenderData.setAlphaBlend(getPtr(), alphaBlend);
+        NativeRenderData.setAlphaBlend(getNative(), alphaBlend);
     }
+
+    /**
+     * @return The OpenGL draw mode (e.g. GL_TRIANGLES).
+     */
+    public int getDrawMode() {
+        return NativeRenderData.getDrawMode(getNative());
+    }
+
+    /**
+     * Set the draw mode for this mesh. Default is GL_TRIANGLES.
+     * 
+     * @param drawMode
+     */
+    public void setDrawMode(int drawMode) {
+        if (drawMode != GL_POINTS && drawMode != GL_LINES
+                && drawMode != GL_LINE_STRIP && drawMode != GL_LINE_LOOP
+                && drawMode != GL_TRIANGLES && drawMode != GL_TRIANGLE_STRIP
+                && drawMode != GL_TRIANGLE_FAN) {
+            throw new IllegalArgumentException(
+                    "drawMode must be one of GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN, GL_TRIANGLE_STRIP.");
+        }
+        NativeRenderData.setDrawMode(getNative(), drawMode);
+    }
+
+    private boolean isLightEnabled;
 }
 
 class NativeRenderData {
-    public static native long ctor();
+    static native long ctor();
 
-    public static native long getMesh(long renderData);
+    static native void setMesh(long renderData, long mesh);
 
-    public static native void setMesh(long renderData, long mesh);
+    static native void addPass(long renderData, long renderPass);
 
-    public static native long getMaterial(long renderData);
+    static native void setLight(long renderData, long light);
 
-    public static native void setMaterial(long renderData, long material);
+    static native void enableLight(long renderData);
 
-    public static native int getRenderMask(long renderData);
+    static native void disableLight(long renderData);
 
-    public static native void setRenderMask(long renderData, int renderMask);
+    static native int getRenderMask(long renderData);
 
-    public static native int getRenderingOrder(long renderData);
+    static native void setRenderMask(long renderData, int renderMask);
 
-    public static native void setRenderingOrder(long renderData,
-            int renderingOrder);
+    static native int getRenderingOrder(long renderData);
 
-    public static native boolean getCullTest(long renderData);
+    static native void setRenderingOrder(long renderData, int renderingOrder);
+    
+    static native boolean getOffset(long renderData);
 
-    public static native void setCullTest(long renderData, boolean cullTest);
+    static native void setOffset(long renderData, boolean offset);
 
-    public static native boolean getOffset(long renderData);
+    static native float getOffsetFactor(long renderData);
 
-    public static native void setOffset(long renderData, boolean offset);
+    static native void setOffsetFactor(long renderData, float offsetFactor);
 
-    public static native float getOffsetFactor(long renderData);
+    static native float getOffsetUnits(long renderData);
 
-    public static native void setOffsetFactor(long renderData,
-            float offsetFactor);
+    static native void setOffsetUnits(long renderData, float offsetUnits);
 
-    public static native float getOffsetUnits(long renderData);
+    static native boolean getDepthTest(long renderData);
 
-    public static native void setOffsetUnits(long renderData, float offsetUnits);
+    static native void setDepthTest(long renderData, boolean depthTest);
 
-    public static native boolean getDepthTest(long renderData);
-
-    public static native void setDepthTest(long renderData, boolean depthTest);
-
-    public static native boolean getAlphaBlend(long renderData);
+    static native boolean getAlphaBlend(long renderData);
 
     public static native void setAlphaBlend(long renderData, boolean alphaBlend);
+
+    public static native int getDrawMode(long renderData);
+
+    public static native void setDrawMode(long renderData, int draw_mode);
+
 }

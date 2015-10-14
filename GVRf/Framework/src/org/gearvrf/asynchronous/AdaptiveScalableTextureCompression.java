@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import static org.gearvrf.asynchronous.GLESX.*;
@@ -35,6 +34,11 @@ class AdaptiveScalableTextureCompression extends GVRCompressedTextureLoader {
     // };
 
     private static final int MAGIC_NUMBER = 0x5CA1AB13;
+
+    @Override
+    public int headerLength() {
+        return 16;
+    }
 
     @Override
     public boolean sniff(byte[] data, Reader reader) {

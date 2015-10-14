@@ -23,13 +23,13 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-// Note that "asynchronous_textures" becomes "asynchronous_1textures"
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
         jobject obj, jint target, jint internalFormat,
-        jint width, jint height, jint imageSize, jbyteArray bytes);
+        jint width, jint height, jint imageSize, jbyteArray bytes, jint dataOffset,
+        jintArray jtexture_parameters);
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
+Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
         jobject obj, jint target);
 }
 ;
@@ -37,22 +37,28 @@ Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstru
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
     jobject obj, jint target, jint internalFormat,
-    jint width, jint height, jint imageSize, jbyteArray bytes) {
+    jint width, jint height, jint imageSize, jbyteArray bytes, jint dataOffset,
+    jintArray jtexture_parameters) {
 
-jbyte* data = env->GetByteArrayElements(bytes, 0);
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
 
-CompressedTexture* texture =
-new CompressedTexture(target, internalFormat, width, height, imageSize, data);
+    jbyte* data = env->GetByteArrayElements(bytes, 0);
 
-env->ReleaseByteArrayElements(bytes, data, 0);
+    CompressedTexture* texture =
+            new CompressedTexture(target, internalFormat, width, height, imageSize,
+                                  (const char*)data, dataOffset, texture_parameters);
 
-return reinterpret_cast<jlong>(new std::shared_ptr<CompressedTexture>(texture));
+    env->ReleaseByteArrayElements(bytes, data, 0);
+
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+
+    return reinterpret_cast<jlong>(texture);
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_asynchronous_1textures_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
+Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
     jobject obj, jint target) {
-return reinterpret_cast<jlong>(new std::shared_ptr<CompressedTexture>(new CompressedTexture(target)));
+    return reinterpret_cast<jlong>(new CompressedTexture(target));
 }
 
 }

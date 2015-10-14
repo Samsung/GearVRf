@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /** Specialized {@linkplain org.gearvrf.GVRSceneObject scene objects}  */
 package org.gearvrf.scene_objects;
 

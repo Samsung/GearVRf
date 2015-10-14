@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.concurrent.Future;
 
 /**
  * The API shared by {@link GVRMaterial} and {@link GVRPostEffect}.
@@ -28,10 +29,9 @@ package org.gearvrf;
  * <td>{@link GVRMaterial} {@code implements} {@link GVRShaders}</td>
  * </tr>
  * <tr>
- * <td>{@link GVRPostEffectShaderManager} {@code implements} {@link GVRShaderManagers}
- * </td>
- * <td>{@link GVRPostEffectMap} {@code implements} {@link GVRShaderMaps}
- * </td>
+ * <td>{@link GVRPostEffectShaderManager} {@code implements}
+ * {@link GVRShaderManagers}</td>
+ * <td>{@link GVRPostEffectMap} {@code implements} {@link GVRShaderMaps}</td>
  * <td>{@link GVRPostEffect} {@code implements} {@link GVRShaders}</td>
  * </tr>
  * </table>
@@ -67,36 +67,28 @@ public interface GVRShaders<ID> {
      * Bind a different {@link GVRTexture texture} to the {@code main_texture}
      * shader uniform.
      * 
-     * <p>
-     * <em>Note</em>: {@linkplain GVRTexture GVR textures} are reference
-     * counted. While you can freely change the texture associated with a
-     * {@link GVRMaterial} or a {@link GVRPostEffect}, a sequence like
-     * 
-     * <pre>
-     * GVRTexture currentTexture = material.getMainTexture();
-     * material.setMainTexture(otherTexture);
-     * // ...
-     * material.setMainTexture(currentTexture);
-     * </pre>
-     * 
-     * may not do what you expect. The {@code setMainTexture(otherTexture)} call
-     * will decrement the reference count on {@code currentTexture}: If the
-     * reference count goes to 0, the texture will be released, and the
-     * {@code setMainTexture(currentTexture)} call will leave the
-     * {@link GVRMaterial} invisible (or will break the
-     * {@link GVRPostEffect}). You can prevent this by adding a new
-     * reference
-     * 
-     * <pre>
-     * material.setTexture(&quot;any_name_you're_not_otherwise_using&quot;, currentTexture);
-     * </pre>
-     * 
-     * before you call {@code setMainTexture(otherTexture)}.
-     * 
      * @param texture
      *            The {@link GVRTexture} to bind.
      */
     public void setMainTexture(GVRTexture texture);
+
+    /**
+     * Asynchronously bind a different {@link GVRTexture texture} to the
+     * {@code main_texture} shader uniform.
+     * 
+     * Uses a background thread from the thread pool to wait for the
+     * {@code Future.get()} method; unless you are loading dozens of textures
+     * asynchronously, the extra overhead should be modest compared to the cost
+     * of loading a texture.
+     * 
+     * @param texture
+     *            A future texture, from one of the the
+     *            {@link GVRContext#loadFutureTexture(GVRAndroidResource)}
+     *            methods
+     * 
+     * @since 1.6.7
+     */
+    public void setMainTexture(Future<GVRTexture> texture);
 
     /**
      * Get the {@link GVRTexture texture} currently bound to the shader uniform
@@ -111,17 +103,30 @@ public interface GVRShaders<ID> {
     /**
      * Bind a {@link GVRTexture texture} to the shader uniform {@code key}.
      * 
-     * <p>
-     * Note that this will increment the reference count of the new texture, and
-     * decrement the reference count of any current texture. See
-     * {@link #setMainTexture(GVRTexture)} for more details.
-     * 
      * @param key
      *            Name of the shader uniform to bind the texture to.
      * @param texture
      *            The {@link GVRTexture texture} to bind.
      */
     public void setTexture(String key, GVRTexture texture);
+
+    /**
+     * Asynchronously bind a {@link GVRTexture texture} to the shader uniform
+     * {@code key}.
+     * 
+     * Uses a background thread from the thread pool to wait for the
+     * {@code Future.get()} method; unless you are loading dozens of textures
+     * asynchronously, the extra overhead should be modest compared to the cost
+     * of loading a texture.
+     * 
+     * @param key
+     *            Name of the shader uniform to bind the texture to.
+     * @param texture
+     *            The {@link GVRTexture texture} to bind.
+     * 
+     * @since 1.6.7
+     */
+    public void setTexture(String key, Future<GVRTexture> texture);
 
     /**
      * Get the {@code float} bound to the shader uniform {@code key}.
@@ -210,4 +215,14 @@ public interface GVRShaders<ID> {
      *            Fourth component of the vector.
      */
     public void setVec4(String key, float x, float y, float z, float w);
+
+    /**
+     * Bind a {@code mat4} to the shader uniform {@code key}.
+     * 
+     * @param key
+     *            Name of the shader uniform to bind the data to.
+     */
+    public void setMat4(String key, float x1, float y1, float z1, float w1,
+            float x2, float y2, float z2, float w2, float x3, float y3,
+            float z3, float w3, float x4, float y4, float z4, float w4);
 }

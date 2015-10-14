@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.utility;
 
 /** {@link android.util.Log} with String.format() pattern */

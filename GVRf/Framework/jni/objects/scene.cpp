@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Holds scene objects. Can be used by engines.
  ***************************************************************************/
@@ -24,30 +23,27 @@
 
 namespace gvr {
 Scene::Scene() :
-        HybridObject(), scene_objects_(), main_camera_rig_() {
-	dirtyFlag_ = 0;
+        HybridObject(), scene_objects_(), main_camera_rig_(), frustum_flag_(
+                false), dirtyFlag_(0), occlusion_flag_(false) {
 }
 
 Scene::~Scene() {
 }
 
-void Scene::addSceneObject(const std::shared_ptr<SceneObject>& scene_object) {
+void Scene::addSceneObject(SceneObject* scene_object) {
     scene_objects_.push_back(scene_object);
 }
 
-void Scene::removeSceneObject(
-        const std::shared_ptr<SceneObject>& scene_object) {
+void Scene::removeSceneObject(SceneObject* scene_object) {
     scene_objects_.erase(
             std::remove(scene_objects_.begin(), scene_objects_.end(),
                     scene_object), scene_objects_.end());
 }
 
-std::vector<std::shared_ptr<SceneObject>> Scene::getWholeSceneObjects() {
-    std::vector < std::shared_ptr < SceneObject >> scene_objects =
-            scene_objects_;
+std::vector<SceneObject*> Scene::getWholeSceneObjects() {
+    std::vector<SceneObject*> scene_objects(scene_objects_);
     for (int i = 0; i < scene_objects.size(); ++i) {
-        std::vector < std::shared_ptr
-                < SceneObject >> children(scene_objects[i]->children());
+        std::vector<SceneObject*> children(scene_objects[i]->children());
         for (auto it = children.begin(); it != children.end(); ++it) {
             scene_objects.push_back(*it);
         }

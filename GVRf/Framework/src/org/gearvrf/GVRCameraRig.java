@@ -13,11 +13,20 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import static org.gearvrf.utility.Assert.*;
 
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent {
+    private GVRSceneObject headTransformObject;
+
+    private GVRCamera leftCamera, rightCamera;
+    private GVRPerspectiveCamera centerCamera;
+
+    private GVRSceneObject leftCameraObject, rightCameraObject;
+    private GVRSceneObject centerCameraObject;
+
     /** Ways to use the rotation sensor data. */
     public abstract static class GVRCameraRigType {
         /** Rotates freely. Default. */
@@ -51,36 +60,58 @@ public class GVRCameraRig extends GVRComponent {
     /** Constructs a camera rig without cameras attached. */
     public GVRCameraRig(GVRContext gvrContext) {
         super(gvrContext, NativeCameraRig.ctor());
+        init(gvrContext);
     }
 
     private GVRCameraRig(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        init(gvrContext);
     }
 
-    static GVRCameraRig factory(GVRContext gvrContext, long ptr) {
-        GVRHybridObject wrapper = wrapper(ptr);
-        return wrapper == null ? new GVRCameraRig(gvrContext, ptr)
-                : (GVRCameraRig) wrapper;
-    }
+    /** Constructor helper */
+    private void init(GVRContext gvrContext) {
+        /*
+         * Create an object hierarchy
+         *
+         *             [camera rig object]
+         *                     |
+         *           [head transform object]
+         *            /        |          \
+         * [left cam obj] [right cam obj] [center cam obj]
+         *
+         * 1. camera rig object: used for camera rig moving and turning via
+         *    CameraRig.getTransform()
+         * 2. head transform object: used internally to do sensor-based rotation
+         */
 
-    @Override
-    protected final boolean registerWrapper() {
-        return true;
+        setOwnerObject(new GVRSceneObject(gvrContext));
+        getOwnerObject().attachCameraRig(this);
+
+        headTransformObject = new GVRSceneObject(gvrContext);
+        getOwnerObject().addChildObject(headTransformObject);
+
+        leftCameraObject = new GVRSceneObject(gvrContext);
+        rightCameraObject = new GVRSceneObject(gvrContext);
+        centerCameraObject = new GVRSceneObject(gvrContext);
+
+        headTransformObject.addChildObject(leftCameraObject);
+        headTransformObject.addChildObject(rightCameraObject);
+        headTransformObject.addChildObject(centerCameraObject);
     }
 
     /** @return The {@link GVRCameraRigType type} of the camera rig. */
     public int getCameraRigType() {
-        return NativeCameraRig.getCameraRigType(getPtr());
+        return NativeCameraRig.getCameraRigType(getNative());
     }
 
     /**
      * Set the {@link GVRCameraRigType type} of the camera rig.
-     *
+     * 
      * @param cameraRigType
      *            The rig {@link GVRCameraRigType type}.
      */
     public void setCameraRigType(int cameraRigType) {
-        NativeCameraRig.setCameraRigType(getPtr(), cameraRigType);
+        NativeCameraRig.setCameraRigType(getNative(), cameraRigType);
     }
 
     /**
@@ -89,8 +120,7 @@ public class GVRCameraRig extends GVRComponent {
      *         not.
      */
     public GVRCamera getLeftCamera() {
-        long ptr = NativeCameraRig.getLeftCamera(getPtr());
-        return ptr == 0 ? null : GVRCamera.factory(getGVRContext(), ptr);
+        return leftCamera;
     }
 
     /**
@@ -99,8 +129,16 @@ public class GVRCameraRig extends GVRComponent {
      *         not.
      */
     public GVRCamera getRightCamera() {
-        long ptr = NativeCameraRig.getRightCamera(getPtr());
-        return ptr == 0 ? null : GVRCamera.factory(getGVRContext(), ptr);
+        return rightCamera;
+    }
+
+    /**
+     * @return Get the center {@link GVRPerspectiveCamera camera}, if one has been
+     *         {@link #attachCenterCamera(GVRPerspectiveCamera) attached}; {@code null} if
+     *         not.
+     */
+    public GVRPerspectiveCamera getCenterCamera() {
+        return centerCamera;
     }
 
     /**
@@ -113,7 +151,7 @@ public class GVRCameraRig extends GVRComponent {
 
     /**
      * Sets the global default distance separating the left and right cameras.
-     *
+     * 
      * @param distance
      *            Global default separation.
      */
@@ -126,17 +164,17 @@ public class GVRCameraRig extends GVRComponent {
      *         rig.
      */
     public float getCameraSeparationDistance() {
-        return NativeCameraRig.getCameraSeparationDistance(getPtr());
+        return NativeCameraRig.getCameraSeparationDistance(getNative());
     }
 
     /**
      * Set the distance separating the left and right cameras of the camera rig.
-     *
+     * 
      * @param distance
      *            Separation distance.
      */
     public void setCameraSeparationDistance(float distance) {
-        NativeCameraRig.setCameraSeparationDistance(getPtr(), distance);
+        NativeCameraRig.setCameraSeparationDistance(getNative(), distance);
     }
 
     /**
@@ -145,19 +183,21 @@ public class GVRCameraRig extends GVRComponent {
      * @return The {@code float} value associated with {@code key}.
      */
     public float getFloat(String key) {
-        return NativeCameraRig.getFloat(getPtr(), key);
+        return NativeCameraRig.getFloat(getNative(), key);
     }
 
     /**
      * Map {@code value} to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map {@code value} to.
      * @param value
      *            The {@code float} value to map.
      */
     public void setFloat(String key, float value) {
-        NativeCameraRig.setFloat(getPtr(), key, value);
+        checkStringNotNullOrEmpty("key", key);
+        checkFloatNotNaNOrInfinity("value", value);
+        NativeCameraRig.setFloat(getNative(), key, value);
     }
 
     /**
@@ -167,12 +207,12 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key}.
      */
     public float[] getVec2(String key) {
-        return NativeCameraRig.getVec2(getPtr(), key);
+        return NativeCameraRig.getVec2(getNative(), key);
     }
 
     /**
      * Map a two-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -181,7 +221,8 @@ public class GVRCameraRig extends GVRComponent {
      *            'Y' component of vector.
      */
     public void setVec2(String key, float x, float y) {
-        NativeCameraRig.setVec2(getPtr(), key, x, y);
+        checkStringNotNullOrEmpty("key", key);
+        NativeCameraRig.setVec2(getNative(), key, x, y);
     }
 
     /**
@@ -191,12 +232,12 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key}.
      */
     public float[] getVec3(String key) {
-        return NativeCameraRig.getVec3(getPtr(), key);
+        return NativeCameraRig.getVec3(getNative(), key);
     }
 
     /**
      * Map a three-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -207,7 +248,8 @@ public class GVRCameraRig extends GVRComponent {
      *            'Z' component of vector.
      */
     public void setVec3(String key, float x, float y, float z) {
-        NativeCameraRig.setVec3(getPtr(), key, x, y, z);
+        checkStringNotNullOrEmpty("key", key);
+        NativeCameraRig.setVec3(getNative(), key, x, y, z);
     }
 
     /**
@@ -217,12 +259,12 @@ public class GVRCameraRig extends GVRComponent {
      *         {@code key} .
      */
     public float[] getVec4(String key) {
-        return NativeCameraRig.getVec4(getPtr(), key);
+        return NativeCameraRig.getVec4(getNative(), key);
     }
 
     /**
      * Map a four-component {@code float} vector to {@code key}.
-     *
+     * 
      * @param key
      *            Key to map the vector to.
      * @param x
@@ -235,35 +277,64 @@ public class GVRCameraRig extends GVRComponent {
      *            'W' component of vector.
      */
     public void setVec4(String key, float x, float y, float z, float w) {
-        NativeCameraRig.setVec4(getPtr(), key, x, y, z, w);
+        checkStringNotNullOrEmpty("key", key);
+        NativeCameraRig.setVec4(getNative(), key, x, y, z, w);
     }
 
     /**
      * Attach a {@link GVRCamera camera} as the left camera of the camera rig.
-     *
+     * 
      * @param camera
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachLeftCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null)
-        {
-            throw new IllegalArgumentException("Owner object not set correctly");
+        if (camera.hasOwnerObject()) {
+            camera.getOwnerObject().detachCamera();
         }
-        NativeCameraRig.attachLeftCamera(getPtr(), camera.getPtr());
+
+        leftCameraObject.attachCamera(camera);
+        leftCamera = camera;
+        NativeCameraRig.attachLeftCamera(getNative(), camera.getNative());
     }
 
     /**
      * Attach a {@link GVRCamera camera} as the right camera of the camera rig.
-     *
+     * 
      * @param camera
      *            {@link GVRCamera Camera} to attach.
      */
     public void attachRightCamera(GVRCamera camera) {
-        if (camera.getOwnerObject() == null)
-        {
-            throw new IllegalArgumentException("Owner object not set correctly");
+        if (camera.hasOwnerObject()) {
+            camera.getOwnerObject().detachCamera();
         }
-        NativeCameraRig.attachRightCamera(getPtr(), camera.getPtr());
+
+        rightCameraObject.attachCamera(camera);
+        rightCamera = camera;
+        NativeCameraRig.attachRightCamera(getNative(), camera.getNative());
+    }
+
+    /**
+     * Attach a {@link GVRPerspectiveCamera camera} as the center camera of the camera rig.
+     * 
+     * @param camera
+     *            {@link GVRPerspectiveCamera Camera} to attach.
+     */
+    public void attachCenterCamera(GVRPerspectiveCamera camera) {
+        if (camera.hasOwnerObject()) {
+            camera.getOwnerObject().detachCamera();
+        }
+
+        centerCameraObject.attachCamera(camera);
+        centerCamera = camera;
+        NativeCameraRig.attachCenterCamera(getNative(), camera.getNative());
+    }
+
+    public void attachToParent(GVRSceneObject parentObject) {
+        parentObject.addChildObject(getOwnerObject());
+    }
+
+    public void detachFromParent(GVRSceneObject parentObject) {
+       parentObject.removeChildObject(getOwnerObject());
     }
 
     /**
@@ -274,7 +345,7 @@ public class GVRCameraRig extends GVRComponent {
      * {@link #resetYawPitch()}.
      */
     public void reset() {
-        NativeCameraRig.reset(getPtr());
+        NativeCameraRig.reset(getNative());
     }
 
     /**
@@ -285,7 +356,7 @@ public class GVRCameraRig extends GVRComponent {
      * {@link #resetYawPitch()}.
      */
     public void resetYaw() {
-        NativeCameraRig.resetYaw(getPtr());
+        NativeCameraRig.resetYaw(getNative());
     }
 
     /**
@@ -296,7 +367,7 @@ public class GVRCameraRig extends GVRComponent {
      * {@link #resetYaw()}.
      */
     public void resetYawPitch() {
-        NativeCameraRig.resetYawPitch(getPtr());
+        NativeCameraRig.resetYawPitch(getNative());
     }
 
     /**
@@ -304,7 +375,7 @@ public class GVRCameraRig extends GVRComponent {
      * should only be done in response to
      * {@link RotationSensorListener#onRotationSensor(long, float, float, float, float, float, float, float)
      * RotationSensorListener.onRotationSensor()}.
-     *
+     * 
      * @param timeStamp
      *            Clock-time when the data was received, in nanoseconds.
      * @param w
@@ -324,33 +395,174 @@ public class GVRCameraRig extends GVRComponent {
      */
     void setRotationSensorData(long timeStamp, float w, float x, float y,
             float z, float gyroX, float gyroY, float gyroZ) {
-        NativeCameraRig.setRotationSensorData(getPtr(), timeStamp, w, x, y, z,
-                gyroX, gyroY, gyroZ);
+        NativeCameraRig.setRotationSensorData(getNative(), timeStamp, w, x, y,
+                z, gyroX, gyroY, gyroZ);
     }
 
     /**
      * Predict what the orientation of the camera rig will be at {@code time}
      * based on the current rotation and angular velocity.
-     *
+     * 
      * @param time
      *            Time to predict orientation for, in seconds.
      * @see #setRotationSensorData(long, float, float, float, float, float,
      *      float, float)
      */
-    void predict(float time) {
-        NativeCameraRig.predict(getPtr(), time);
+    void predictAndSetRotation(float time) {
+        NativeCameraRig.predictAndSetRotation(getNative(), time);
     }
 
     /**
      * The direction the camera rig is looking at. In other words, the direction
      * of the local -z axis.
-     *
+     * 
      * @return Array with 3 floats corresponding to a normalized direction
      *         vector. ([0] : x, [1] : y, [2] : z)
      */
     public float[] getLookAt() {
-        return NativeCameraRig.getLookAt(getPtr());
+        return NativeCameraRig.getLookAt(getNative());
     }
+
+    /**
+     * Replace the current {@link GVRTransform transform} for owner object of
+     * the camera rig.
+     * 
+     * @param transform
+     *            New transform.
+     */
+    void attachTransform(GVRTransform transform) {
+        if (getOwnerObject() != null) {
+            getOwnerObject().attachTransform(transform);
+        }
+    }
+
+    /**
+     * Remove the object's (owner object of camera rig) {@link GVRTransform
+     * transform}.
+     * 
+     */
+    void detachTransform() {
+        if (getOwnerObject() != null) {
+            getOwnerObject().detachTransform();
+        }
+    }
+
+    /**
+     * Get the {@link GVRTransform}.
+     * 
+     * 
+     * @return The current {@link GVRTransform transform} of owner object of
+     *         camera rig. Applying transform to owner object of camera rig
+     *         moves it. If no transform is currently attached to the object,
+     *         returns {@code null}.
+     */
+    public GVRTransform getTransform() {
+        if (getOwnerObject() != null) {
+            return getOwnerObject().getTransform();
+        }
+        return null;
+    }
+
+    /**
+     * Add {@code child} as a child of this camera rig owner object.
+     * 
+     * @param child
+     *            {@link GVRSceneObject Object} to add as a child of this camera
+     *            rig owner object.
+     */
+    public void addChildObject(GVRSceneObject child) {
+        headTransformObject.addChildObject(child);
+    }
+
+    /**
+     * Remove {@code child} as a child of this camera rig owner object.
+     * 
+     * @param child
+     *            {@link GVRSceneObject Object} to remove as a child of this
+     *            camera rig owner object.
+     */
+    public void removeChildObject(GVRSceneObject child) {
+        headTransformObject.removeChildObject(child);
+    }
+
+    /**
+     * Get the number of child objects that belongs to owner object of this
+     * camera rig.
+     * 
+     * @return Number of {@link GVRSceneObject objects} added as children of
+     *         this camera rig owner object.
+     */
+    public int getChildrenCount() {
+        return headTransformObject.getChildrenCount();
+    }
+
+    /**
+     * Get the head {@link GVRTransform transform} for setting sensor data. In contrast,
+     * use {@link #getTransform()} for additional camera positioning, such as the game
+     * character moving and turning.
+     *
+     * @return The head {@link GVRTransform transform} object.
+     */
+    public GVRTransform getHeadTransform() {
+        return headTransformObject.getTransform();
+    }
+
+    /**
+     * @return Distance from the origin to the near clipping plane for the
+     *         camera rig.
+     */
+    public float getNearClippingDistance() {
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface) {
+            return ((GVRCameraClippingDistanceInterface)leftCamera).getNearClippingDistance();
+        }
+        return 0.0f;
+    }
+
+    /**
+     * Sets the distance from the origin to the near clipping plane for the
+     * whole camera rig.
+     * 
+     * @param near
+     *            Distance to the near clipping plane.
+     */
+    public void setNearClippingDistance(float near) {
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface &&
+           centerCamera instanceof GVRCameraClippingDistanceInterface &&
+           rightCamera instanceof GVRCameraClippingDistanceInterface) {
+            ((GVRCameraClippingDistanceInterface)leftCamera).setNearClippingDistance(near);
+            centerCamera.setNearClippingDistance(near);
+            ((GVRCameraClippingDistanceInterface)rightCamera).setNearClippingDistance(near);
+        }
+    }
+
+    /**
+     * @return Distance from the origin to the far clipping plane for the
+     *         camera rig.
+     */
+    public float getFarClippingDistance() {
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface) {
+            return ((GVRCameraClippingDistanceInterface)leftCamera).getFarClippingDistance();
+        }
+        return 0.0f;
+    }
+
+    /**
+     * Sets the distance from the origin to the far clipping plane for the
+     * whole camera rig.
+     * 
+     * @param far
+     *            Distance to the far clipping plane.
+     */
+    public void setFarClippingDistance(float far) {
+        if(leftCamera instanceof GVRCameraClippingDistanceInterface &&
+           centerCamera instanceof GVRCameraClippingDistanceInterface &&
+           rightCamera instanceof GVRCameraClippingDistanceInterface) {
+            ((GVRCameraClippingDistanceInterface)leftCamera).setFarClippingDistance(far);
+            centerCamera.setFarClippingDistance(far);
+            ((GVRCameraClippingDistanceInterface)rightCamera).setFarClippingDistance(far);
+        }
+    }
+
 }
 
 class NativeCameraRig {
@@ -359,10 +571,6 @@ class NativeCameraRig {
     static native int getCameraRigType(long cameraRig);
 
     static native void setCameraRigType(long cameraRig, int cameraRigType);
-
-    static native long getLeftCamera(long cameraRig);
-
-    static native long getRightCamera(long cameraRig);
 
     static native float getDefaultCameraSeparationDistance();
 
@@ -395,6 +603,8 @@ class NativeCameraRig {
 
     static native void attachRightCamera(long cameraRig, long camera);
 
+    static native void attachCenterCamera(long cameraRig, long camera);
+
     static native void reset(long cameraRig);
 
     static native void resetYaw(long cameraRig);
@@ -405,7 +615,7 @@ class NativeCameraRig {
             float w, float x, float y, float z, float gyroX, float gyroY,
             float gyroZ);
 
-    static native void predict(long cameraRig, float time);
+    static native void predictAndSetRotation(long cameraRig, float time);
 
     static native float[] getLookAt(long cameraRig);
 }

@@ -3,6 +3,8 @@
 	<name>Framework</name>
 	<comment></comment>
 	<projects>
+		<project>LibOVR</project>
+		<project>VrAppFramework</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
+
 import org.gearvrf.utility.Colors;
+import org.gearvrf.utility.Threads;
+import static org.gearvrf.utility.Assert.*;
 
 import android.graphics.Color;
 
@@ -62,37 +67,85 @@ import android.graphics.Color;
 public class GVRMaterial extends GVRHybridObject implements
         GVRShaders<GVRMaterialShaderId> {
 
+    private int mShaderFeatureSet;
+    private GVRMaterialShaderId shaderId;
+    final private Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
+
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
 
-        public abstract static class Unlit {
+        public abstract static class UnlitHorizontalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     0);
         }
 
-        public abstract static class UnlitHorizontalStereo {
+        public abstract static class UnlitVerticalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     1);
         }
 
-        public abstract static class UnlitVerticalStereo {
+        public abstract static class OES {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     2);
         }
 
-        public abstract static class OES {
+        public abstract static class OESHorizontalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     3);
         }
 
-        public abstract static class OESHorizontalStereo {
+        public abstract static class OESVerticalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     4);
         }
 
-        public abstract static class OESVerticalStereo {
+        public abstract static class Cubemap {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     5);
+        }
+
+        public abstract static class CubemapReflection {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    6);
+        }
+
+        public abstract static class Texture {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    7);
+        }
+
+        public abstract static class ExternalRenderer {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    8);
+        }
+
+        public abstract static class Assimp {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    9);
+
+            /*
+             * Set this feature enum if diffuse texture is present in Assimp
+             * material Diffuse texture maps to main_texture in GearVRf
+             */
+            public static int AS_DIFFUSE_TEXTURE = 0x00000000;
+
+            /*
+             * Set this feature enum if specular texture is present in Assimp
+             * material
+             */
+            public static int AS_SPECULAR_TEXTURE = 0x00000001;
+
+            public static int setBit(int number, int index) {
+                return (number |= 1 << index);
+            }
+
+            public static boolean isSet(int number, int index) {
+                return ((number & (1 << index)) != 0);
+            }
+
+            public static int clearBit(int number, int index) {
+                return (number &= ~(1 << index));
+            }
         }
     };
 
@@ -101,23 +154,33 @@ public class GVRMaterial extends GVRHybridObject implements
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
-     * @param shaderType
+     * @param shaderId
      *            Id of a {@linkplain GVRShaderType stock} or
      *            {@linkplain GVRMaterialShaderManager custom} shader.
      */
-    public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderType) {
-        super(gvrContext, NativeMaterial.ctor(shaderType.ID));
+    public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
+        super(gvrContext, NativeMaterial.ctor(shaderId.ID));
+        this.shaderId = shaderId;
+        // if texture shader is used, set lighting coefficients to OpenGL default
+        // values
+        if (shaderId == GVRShaderType.Texture.ID) {
+            setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
+            setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
+            setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
+            setSpecularExponent(0.0f);
+        }
+        this.mShaderFeatureSet = 0;
     }
 
     /**
      * A convenience overload: builds a {@link GVRMaterial} that uses the most
-     * common stock shader, the {@linkplain GVRShaderType.Unlit 'unlit'} shader.
+     * common stock shader, the {@linkplain GVRShaderType.Texture 'texture'} shader.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
      */
     public GVRMaterial(GVRContext gvrContext) {
-        this(gvrContext, GVRShaderType.Unlit.ID);
+        this(gvrContext, GVRShaderType.Texture.ID);
     }
 
     GVRMaterial(GVRContext gvrContext, long ptr) {
@@ -125,8 +188,7 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public GVRMaterialShaderId getShaderType() {
-        final int shaderType = NativeMaterial.getShaderType(getPtr());
-        return GVRMaterialShaderId.get(shaderType);
+        return shaderId;
     }
 
     /**
@@ -136,7 +198,8 @@ public class GVRMaterial extends GVRHybridObject implements
      *            The new shader id.
      */
     public void setShaderType(GVRMaterialShaderId shaderId) {
-        NativeMaterial.setShaderType(getPtr(), shaderId.ID);
+        this.shaderId = shaderId;
+        NativeMaterial.setShaderType(getNative(), shaderId.ID);
     }
 
     public GVRTexture getMainTexture() {
@@ -144,6 +207,10 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public void setMainTexture(GVRTexture texture) {
+        setTexture(MAIN_TEXTURE, texture);
+    }
+
+    public void setMainTexture(Future<GVRTexture> texture) {
         setTexture(MAIN_TEXTURE, texture);
     }
 
@@ -176,7 +243,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * By convention, GVRF shaders can use a {@code vec3} uniform named
      * {@code color}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
      * shader,} this allows you to add an overlay color on top of the texture.
-     * Values are between {@code 0.0f} and {@code 1.0f}, inclusive. .
+     * Values are between {@code 0.0f} and {@code 1.0f}, inclusive.
      * 
      * @param r
      *            Red
@@ -200,6 +267,148 @@ public class GVRMaterial extends GVRHybridObject implements
         setColor(Colors.byteToGl(Color.red(color)), //
                 Colors.byteToGl(Color.green(color)), //
                 Colors.byteToGl(Color.blue(color)));
+    }
+
+    /**
+     * Get the {@code materialAmbientColor} uniform.
+     * 
+     * By convention, GVRF shaders can use a {@code vec4} uniform named
+     * {@code materialAmbientColor}. With the {@linkplain GVRShaderType.Lit 
+     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * texture.
+     * 
+     * @return The current {@code vec4 materialAmbientColor} as a four-element
+     *         array
+     */
+    public float[] getAmbientColor() {
+        return getVec4("ambient_color");
+    }
+
+    /**
+     * Set the {@code materialAmbientColor} uniform for lighting.
+     * 
+     * By convention, GVRF shaders can use a {@code vec4} uniform named
+     * {@code materialAmbientColor}. With the {@linkplain GVRShaderType.Lit 
+     * 'lit' shader,} this allows you to add an overlay ambient light color on
+     * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
+     * inclusive.
+     * 
+     * @param r
+     *            Red
+     * @param g
+     *            Green
+     * @param b
+     *            Blue
+     * @param a
+     *            Alpha
+     */
+    public void setAmbientColor(float r, float g, float b, float a) {
+        setVec4("ambient_color", r, g, b, a);
+    }
+
+    /**
+     * Get the {@code materialDiffuseColor} uniform.
+     * 
+     * By convention, GVRF shaders can use a {@code vec4} uniform named
+     * {@code materialDiffuseColor}. With the {@linkplain GVRShaderType.Lit 
+     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * texture.
+     * 
+     * @return The current {@code vec4 materialDiffuseColor} as a four-element
+     *         array
+     */
+    public float[] getDiffuseColor() {
+        return getVec4("diffuse_color");
+    }
+
+    /**
+     * Set the {@code materialDiffuseColor} uniform for lighting.
+     * 
+     * By convention, GVRF shaders can use a {@code vec4} uniform named
+     * {@code materialDiffuseColor}. With the {@linkplain GVRShaderType.Lit 
+     * 'lit' shader,} this allows you to add an overlay diffuse light color on
+     * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
+     * inclusive.
+     * 
+     * @param r
+     *            Red
+     * @param g
+     *            Green
+     * @param b
+     *            Blue
+     * @param a
+     *            Alpha
+     */
+    public void setDiffuseColor(float r, float g, float b, float a) {
+        setVec4("diffuse_color", r, g, b, a);
+    }
+
+    /**
+     * Get the {@code materialSpecularColor} uniform.
+     * 
+     * By convention, GVRF shaders can use a {@code vec4} uniform named
+     * {@code materialSpecularColor}. With the {@linkplain GVRShaderType.Lit 
+     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * texture.
+     * 
+     * @return The current {@code vec4 materialSpecularColor} as a four-element
+     *         array
+     */
+    public float[] getSpecularColor() {
+        return getVec4("specular_color");
+    }
+
+    /**
+     * Set the {@code materialSpecularColor} uniform for lighting.
+     * 
+     * By convention, GVRF shaders can use a {@code vec4} uniform named
+     * {@code materialSpecularColor}. With the {@linkplain GVRShaderType.Lit 
+     * 'lit' shader,} this allows you to add an overlay specular light color on
+     * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
+     * inclusive.
+     * 
+     * @param r
+     *            Red
+     * @param g
+     *            Green
+     * @param b
+     *            Blue
+     * @param a
+     *            Alpha
+     */
+    public void setSpecularColor(float r, float g, float b, float a) {
+        setVec4("specular_color", r, g, b, a);
+    }
+
+    /**
+     * Get the {@code materialSpecularExponent} uniform.
+     * 
+     * By convention, GVRF shaders can use a {@code float} uniform named
+     * {@code materialSpecularExponent}. With the {@linkplain GVRShaderType.Lit
+     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * texture.
+     * 
+     * @return The current {@code vec4 materialSpecularExponent} as a float
+     *         value.
+     */
+    public float getSpecularExponent() {
+        return getFloat("specular_exponent");
+    }
+
+    /**
+     * Set the {@code materialSpecularExponent} uniform for lighting.
+     * 
+     * By convention, GVRF shaders can use a {@code float} uniform named
+     * {@code materialSpecularExponent}. With the {@linkplain GVRShaderType.Lit
+     * 'lit' shader,} this allows you to add an overlay specular light color on
+     * top of the texture. Values are between {@code 0.0f} and {@code 128.0f},
+     * inclusive.
+     * 
+     * @param exp
+     *            Specular exponent
+     */
+    public void setSpecularExponent(float exp) {
+        setFloat("specular_exponent", exp);
     }
 
     /**
@@ -252,48 +461,65 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public GVRTexture getTexture(String key) {
-        long ptr = NativeMaterial.getTexture(getPtr(), key);
-        if (ptr == 0) {
-            return null;
-        } else {
-            return GVRTexture.factory(getGVRContext(), ptr);
-        }
+        return textures.get(key);
     }
 
     public void setTexture(String key, GVRTexture texture) {
-        NativeMaterial.setTexture(getPtr(), key, texture.getPtr());
+        checkStringNotNullOrEmpty("key", key);
+        checkNotNull("texture", texture);
+        textures.put(key, texture);
+        NativeMaterial.setTexture(getNative(), key, texture.getNative());
+    }
+
+    public void setTexture(final String key, final Future<GVRTexture> texture) {
+        Threads.spawn(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    setTexture(key, texture.get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public float getFloat(String key) {
-        return NativeMaterial.getFloat(getPtr(), key);
+        return NativeMaterial.getFloat(getNative(), key);
     }
 
     public void setFloat(String key, float value) {
-        NativeMaterial.setFloat(getPtr(), key, value);
+        checkStringNotNullOrEmpty("key", key);
+        checkFloatNotNaNOrInfinity("value", value);
+        NativeMaterial.setFloat(getNative(), key, value);
     }
 
     public float[] getVec2(String key) {
-        return NativeMaterial.getVec2(getPtr(), key);
+        return NativeMaterial.getVec2(getNative(), key);
     }
 
     public void setVec2(String key, float x, float y) {
-        NativeMaterial.setVec2(getPtr(), key, x, y);
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setVec2(getNative(), key, x, y);
     }
 
     public float[] getVec3(String key) {
-        return NativeMaterial.getVec3(getPtr(), key);
+        return NativeMaterial.getVec3(getNative(), key);
     }
 
     public void setVec3(String key, float x, float y, float z) {
-        NativeMaterial.setVec3(getPtr(), key, x, y, z);
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setVec3(getNative(), key, x, y, z);
     }
 
     public float[] getVec4(String key) {
-        return NativeMaterial.getVec4(getPtr(), key);
+        return NativeMaterial.getVec4(getNative(), key);
     }
 
     public void setVec4(String key, float x, float y, float z, float w) {
-        NativeMaterial.setVec4(getPtr(), key, x, y, z, w);
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setVec4(getNative(), key, x, y, z, w);
     }
 
     /**
@@ -305,43 +531,67 @@ public class GVRMaterial extends GVRHybridObject implements
     public void setMat4(String key, float x1, float y1, float z1, float w1,
             float x2, float y2, float z2, float w2, float x3, float y3,
             float z3, float w3, float x4, float y4, float z4, float w4) {
-        NativeMaterial.setMat4(getPtr(), key, x1, y1, z1, w1, x2, y2, z2, w2,
-                x3, y3, z3, w3, x4, y4, z4, w4);
+        checkStringNotNullOrEmpty("key", key);
+        NativeMaterial.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2, z2,
+                w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
+    
+    /**
+     * Set the feature set for pre-built shader's. Pre-built shader could be
+     * written to support all the properties of a material system with
+     * preprocessor macro to On/Off features. feature set would determine which
+     * properties are available for current model. Currently only Assimp shader
+     * has support for feature set.
+     * 
+     * @param featureSet
+     *            Feature set for this material.
+     */
+    public void setShaderFeatureSet(int featureSet) {
+        this.mShaderFeatureSet = featureSet;
+        NativeMaterial.setShaderFeatureSet(getNative(), featureSet);
+    }
+    
+    /**
+     * Get the feature set associated with this material.
+     * 
+     * @return An integer representing the feature set.
+     * 
+     */
+    public int getShaderFeatureSet() {
+        return mShaderFeatureSet;
+    }
+
 }
 
 class NativeMaterial {
-    public static native long ctor(int shaderType);
+    static native long ctor(int shaderType);
 
-    public static native int getShaderType(long material);
+    static native void setShaderType(long material, long shaderType);
 
-    public static native void setShaderType(long material, long shaderType);
+    static native void setTexture(long material, String key, long texture);
 
-    public static native long getTexture(long material, String key);
+    static native float getFloat(long material, String key);
 
-    public static native void setTexture(long material, String key, long texture);
+    static native void setFloat(long material, String key, float value);
 
-    public static native float getFloat(long material, String key);
+    static native float[] getVec2(long material, String key);
 
-    public static native void setFloat(long material, String key, float value);
+    static native void setVec2(long material, String key, float x, float y);
 
-    public static native float[] getVec2(long material, String key);
+    static native float[] getVec3(long material, String key);
 
-    public static native void setVec2(long material, String key, float x,
-            float y);
+    static native void setVec3(long material, String key, float x, float y,
+            float z);
 
-    public static native float[] getVec3(long material, String key);
+    static native float[] getVec4(long material, String key);
 
-    public static native void setVec3(long material, String key, float x,
-            float y, float z);
+    static native void setVec4(long material, String key, float x, float y,
+            float z, float w);
 
-    public static native float[] getVec4(long material, String key);
+    static native void setMat4(long material, String key, float x1, float y1,
+            float z1, float w1, float x2, float y2, float z2, float w2,
+            float x3, float y3, float z3, float w3, float x4, float y4,
+            float z4, float w4);
 
-    public static native void setVec4(long material, String key, float x,
-            float y, float z, float w);
-
-    public static native void setMat4(long material, String key, float x1,
-            float y1, float z1, float w1, float x2, float y2, float z2,
-            float w2, float x3, float y3, float z3, float w3, float x4,
-            float y4, float z4, float w4);
+    static native void setShaderFeatureSet(long material, int featureSet);
 }

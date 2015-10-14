@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="color01">#006cb329</color>
+    <color name="color02">#001b9466</color>
+    <color name="color03">#003a5697</color>
+    <color name="color04">#006d37a5</color>
+    <color name="color05">#002e81b8</color>
+    <color name="color06">#008b4923</color>
+    <color name="color07">#00c9601d</color>
+    <color name="color08">#00a72a2a</color>
+    <color name="color09">#00a14584</color>
+    <color name="color10">#00ddb109</color>
+    <color name="color11">#008d8d8d</color>
+    <color name="color12">#00383838</color>
+
+    <array name="worm_colors">
+        <item>@color/color10</item>
+        <item>@color/color01</item>
+        <item>@color/color05</item>
+        <item>@color/color07</item>
+        <item>@color/color02</item>
+        <item>@color/color03</item>
+        <item>@color/color08</item>
+        <item>@color/color09</item>
+        <item>@color/color11</item>
+        <item>@color/color06</item>
+        <item>@color/color04</item>
+        <item>@color/color12</item>
+    </array>
+
+</resources>

@@ -27,15 +27,28 @@ extern "C" {
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
         jlong jtexture);
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
+        jlong jtexture, jintArray jtexture_parameters);
 }
 ;
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
         jlong jtexture) {
-    std::shared_ptr<Texture> texture =
-            *reinterpret_cast<std::shared_ptr<Texture>*>(jtexture);
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
     return texture->getId();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
+        jlong jtexture, jintArray jtexture_parameters) {
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
+
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters, 0);
+    texture->updateTextureParameters(texture_parameters);
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+
 }
 
 }

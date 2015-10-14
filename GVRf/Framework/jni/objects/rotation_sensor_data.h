@@ -30,13 +30,16 @@ public:
     RotationSensorData() :
             time_stamp_(0), quaterion_(), gyro_() {
     }
+
     RotationSensorData(long long time_stamp, float w, float x, float y, float z,
             float gyro_x, float gyro_y, float gyro_z) :
             time_stamp_(time_stamp), quaterion_(w, x, y, z), gyro_(gyro_x,
                     gyro_y, gyro_z) {
     }
+
     ~RotationSensorData() {
     }
+
     long long time_stamp() const {
         return time_stamp_;
     }
@@ -52,12 +55,28 @@ public:
     glm::vec3 gyro() {
         return gyro_;
     }
+
     RotationSensorData& operator=(RotationSensorData&& rotation_sensor_data) {
         time_stamp_ = rotation_sensor_data.time_stamp_;
         quaterion_ = std::move(rotation_sensor_data.quaterion_);
         gyro_ = std::move(rotation_sensor_data.gyro_);
 
         return *this;
+    }
+
+    void update(long long time_stamp, float w, float x, float y, float z, float gyro_x, float gyro_y, float gyro_z) {
+        time_stamp_ = time_stamp;
+        quaterion_.w = w;
+        quaterion_.x = x;
+        quaterion_.y = y;
+        quaterion_.z = z;
+        gyro_.x = gyro_x;
+        gyro_.y = gyro_y;
+        gyro_.z = gyro_z;
+    }
+
+    bool hasBeenUpdated() {
+        return 0 != time_stamp_;
     }
 
 private:

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /** Schedule Runnables to run on the GL thread, in the future.
  * 
  * This is an optional component of GVRF: You need to {@linkplain 

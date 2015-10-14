@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Links textures and shaders.
  ***************************************************************************/
@@ -36,16 +35,22 @@ class Color;
 class Material: public HybridObject {
 public:
     enum ShaderType {
-        UNLIT_SHADER = 0,
-        UNLIT_HORIZONTAL_STEREO_SHADER = 1,
-        UNLIT_VERTICAL_STEREO_SHADER = 2,
-        OES_SHADER = 3,
-        OES_HORIZONTAL_STEREO_SHADER = 4,
-        OES_VERTICAL_STEREO_SHADER = 5
+        UNLIT_HORIZONTAL_STEREO_SHADER = 0,
+        UNLIT_VERTICAL_STEREO_SHADER = 1,
+        OES_SHADER = 2,
+        OES_HORIZONTAL_STEREO_SHADER = 3,
+        OES_VERTICAL_STEREO_SHADER = 4,
+        CUBEMAP_SHADER = 5,
+        CUBEMAP_REFLECTION_SHADER = 6,
+        TEXTURE_SHADER = 7,
+        EXTERNAL_RENDERER_SHADER = 8,
+        ASSIMP_SHADER = 9,
+        TEXTURE_SHADER_NOLIGHT = 100
     };
 
     explicit Material(ShaderType shader_type) :
-            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_() {
+            shader_type_(shader_type), textures_(), floats_(), vec2s_(), vec3s_(), vec4s_(), shader_feature_set_(
+                    0) {
         switch (shader_type) {
         default:
             vec3s_["color"] = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -65,7 +70,7 @@ public:
         shader_type_ = shader_type;
     }
 
-    const std::shared_ptr<Texture>& getTexture(std::string key) {
+    Texture* getTexture(std::string key) const {
         auto it = textures_.find(key);
         if (it != textures_.end()) {
             return it->second;
@@ -76,7 +81,7 @@ public:
         }
     }
 
-    void setTexture(std::string key, const std::shared_ptr<Texture> texture) {
+    void setTexture(std::string key, Texture* texture) {
         textures_[key] = texture;
     }
 
@@ -149,6 +154,14 @@ public:
         mat4s_[key] = matrix;
     }
 
+    int get_shader_feature_set() {
+        return shader_feature_set_;
+    }
+
+    void set_shader_feature_set(int feature_set) {
+        shader_feature_set_ = feature_set;
+    }
+
 private:
     Material(const Material& material);
     Material(Material&& material);
@@ -157,12 +170,13 @@ private:
 
 private:
     ShaderType shader_type_;
-    std::map<std::string, std::shared_ptr<Texture>> textures_;
+    std::map<std::string, Texture*> textures_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec2> vec2s_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
+    unsigned int shader_feature_set_;
 };
 }
 #endif

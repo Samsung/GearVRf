@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Contains a ai_scene of Assimp.
  ***************************************************************************/
@@ -21,12 +20,30 @@
 #ifndef ASSIMP_SCENE_H_
 #define ASSIMP_SCENE_H_
 
+#include <android/bitmap.h>
 #include <memory>
+#include <vector>
+#include <string>
+#include <map>
 
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-
+#include "objects/components/perspective_camera.h"
+#include "objects/components/camera_rig.h"
+#include "objects/textures/base_texture.h"
+#include "objects/components/transform.h"
+#include "objects/components/component.h"
+#include "objects/components/camera.h"
 #include "objects/hybrid_object.h"
+#include "objects/scene_object.h"
+#include "assimp/Importer.hpp"
+#include "objects/material.h"
+#include "assimp/material.h"
+#include "objects/scene.h"
+#include "assimp/scene.h"
+#include "util/gvr_log.h"
+#include "glm/glm.hpp"
+#include "assimp/cimport.h"
+
+#include "jassimp.h"
 
 namespace gvr {
 class Mesh;
@@ -42,10 +59,18 @@ public:
     }
 
     unsigned int getNumberOfMeshes() {
-        return assimp_importer_->GetScene()->mNumMeshes;
+        if (assimp_importer_->GetScene() != 0) {
+            return assimp_importer_->GetScene()->mNumMeshes;
+        }
+        LOGE("_ASSIMP_SCENE_NOT_FOUND_");
+        return 0;
     }
 
-    std::shared_ptr<Mesh> getMesh(int index);
+    Mesh* getMesh(int index);
+
+    const aiScene* getAssimpScene() {
+        return assimp_importer_->GetScene();
+    }
 
 private:
     Assimp::Importer* assimp_importer_;

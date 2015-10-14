@@ -30,10 +30,12 @@
 #include "glm/gtx/quaternion.hpp"
 
 #include "objects/components/component.h"
+#include "objects/components/transform.h"
 #include "objects/rotation_sensor_data.h"
 
 namespace gvr {
 class Camera;
+class PerspectiveCamera;
 
 class CameraRig: public Component {
 public:
@@ -52,20 +54,16 @@ public:
         camera_rig_type_ = camera_rig_type;
     }
 
-    std::shared_ptr<Camera> left_camera() {
+    Camera* left_camera() const {
         return left_camera_;
     }
 
-    const std::shared_ptr<Camera>& left_camera() const {
-        return left_camera_;
-    }
-
-    std::shared_ptr<Camera> right_camera() {
+    Camera* right_camera() const {
         return right_camera_;
     }
 
-    const std::shared_ptr<Camera>& right_camera() const {
-        return right_camera_;
+    PerspectiveCamera* center_camera() const {
+        return center_camera_;
     }
 
     static float default_camera_separation_distance() {
@@ -139,14 +137,18 @@ public:
         vec4s_[key] = vector;
     }
 
-    void attachLeftCamera(const std::shared_ptr<Camera>& left_camera);
-    void attachRightCamera(const std::shared_ptr<Camera>& right_camera);
+    void attachLeftCamera(Camera* const left_camera);
+    void attachRightCamera(Camera* const right_camera);
+    void attachCenterCamera(PerspectiveCamera* const center_camera);
     void reset();
     void resetYaw();
     void resetYawPitch();
     void setRotationSensorData(long long time_stamp, float w, float x, float y,
             float z, float gyro_x, float gyro_y, float gyro_z);
-    void predict(float time);
+    glm::quat predict(float time);
+    glm::quat predict(float time, const RotationSensorData& rotationSensorData);
+    void predictAndSetRotation(float time);
+    Transform* getHeadTransform() const; // for rotation/k-sensor
     glm::vec3 getLookAt() const;
 
 private:
@@ -154,13 +156,15 @@ private:
     CameraRig(CameraRig&& camera_rig);
     CameraRig& operator=(const CameraRig& camera_rig);
     CameraRig& operator=(CameraRig&& camera_rig);
+    void setRotation(const glm::quat& transform_rotation);
 
 private:
     static const CameraRigType DEFAULT_CAMERA_RIG_TYPE = FREE;
     static const int MAX_BUFFER_SIZE = 4;
     CameraRigType camera_rig_type_;
-    std::shared_ptr<Camera> left_camera_;
-    std::shared_ptr<Camera> right_camera_;
+    Camera* left_camera_;
+    Camera* right_camera_;
+    PerspectiveCamera* center_camera_;
     static float default_camera_separation_distance_;
     float camera_separation_distance_;
     std::map<std::string, float> floats_;
@@ -169,7 +173,6 @@ private:
     std::map<std::string, glm::vec4> vec4s_;
     glm::quat complementary_rotation_;
     RotationSensorData rotation_sensor_data_;
-    std::vector<glm::quat> rotation_buffer_;
 };
 
 }

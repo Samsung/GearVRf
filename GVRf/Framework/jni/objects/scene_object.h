@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Objects in a scene.
  ***************************************************************************/
@@ -27,6 +26,8 @@
 
 #include "objects/hybrid_object.h"
 #include "objects/components/transform.h"
+#include "objects/bounding_volume.h"
+#include "util/gvr_gl.h"
 
 namespace gvr {
 class Camera;
@@ -47,59 +48,107 @@ public:
         name_ = name;
     }
 
-    void attachTransform(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<Transform>& transform);
+    void set_in_frustum(bool in_frustum = true) {
+        in_frustum_ = in_frustum;
+    }
+
+    bool in_frustum() const {
+        return in_frustum_;
+    }
+
+    void set_visible(bool visibility);
+    bool visible() const {
+        return visible_;
+    }
+
+    void set_query_issued(bool issued = true) {
+        query_currently_issued_ = issued;
+    }
+
+    bool is_query_issued() {
+        return query_currently_issued_;
+    }
+
+    void attachTransform(SceneObject* self, Transform* transform);
     void detachTransform();
 
-    std::shared_ptr<Transform> transform() const {
+    Transform* transform() const {
         return transform_;
     }
 
-    void attachRenderData(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<RenderData>& render_data);
+    void attachRenderData(SceneObject* self, RenderData* render_data);
     void detachRenderData();
 
-    std::shared_ptr<RenderData> render_data() const {
+    RenderData* render_data() const {
         return render_data_;
     }
 
-    void attachCamera(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<Camera>& camera);
+    void attachCamera(SceneObject* self, Camera* camera);
     void detachCamera();
 
-    std::shared_ptr<Camera> camera() const {
+    Camera* camera() const {
         return camera_;
     }
 
-    void attachCameraRig(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<CameraRig>& camera_rig);
+    void attachCameraRig(SceneObject* self, CameraRig* camera_rig);
     void detachCameraRig();
 
-    std::shared_ptr<CameraRig> camera_rig() const {
+    CameraRig* camera_rig() const {
         return camera_rig_;
     }
 
-    void attachEyePointeeHolder(const std::shared_ptr<SceneObject>& self,
-            const std::shared_ptr<EyePointeeHolder>& eye_pointee_holder);
+    void attachEyePointeeHolder(SceneObject* self,
+            EyePointeeHolder* eye_pointee_holder);
     void detachEyePointeeHolder();
 
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder() const {
+    EyePointeeHolder* eye_pointee_holder() const {
         return eye_pointee_holder_;
     }
 
-    std::shared_ptr<SceneObject> parent() const {
-        return parent_.lock();
+    SceneObject* parent() const {
+        return parent_;
     }
 
-    std::vector<std::shared_ptr<SceneObject>> children() const {
+    const std::vector<SceneObject*>& children() const {
         return children_;
     }
 
-    void addChildObject(std::shared_ptr<SceneObject> self,
-            std::shared_ptr<SceneObject> child);
-    void removeChildObject(std::shared_ptr<SceneObject> child);
+    void addChildObject(SceneObject* self, SceneObject* child);
+    void removeChildObject(SceneObject* child);
     int getChildrenCount() const;
-    const std::shared_ptr<SceneObject>& getChildByIndex(int index);
+    SceneObject* getChildByIndex(int index);
+    GLuint *get_occlusion_array() {
+        return queries_;
+    }
+    bool isColliding(SceneObject* scene_object);
+
+    void setLODRange(float minRange, float maxRange) {
+        lod_min_range_ = minRange * minRange;
+        lod_max_range_ = maxRange * maxRange;
+        using_lod_ = true;
+    }
+
+    float getLODMinRange() {
+        return lod_min_range_;
+    }
+
+    float getLODMaxRange() {
+        return lod_max_range_;
+    }
+
+    bool inLODRange(float distance_from_camera) {
+        if(!using_lod_) {
+            return true;
+        }
+        if(distance_from_camera >= lod_min_range_ &&
+           distance_from_camera < lod_max_range_) {
+            return true;
+        }
+        return false;
+    }
+
+    void dirtyBoundingVolume();
+    BoundingVolume& getBoundingVolume();
 
 private:
     SceneObject(const SceneObject& scene_object);
@@ -109,13 +158,27 @@ private:
 
 private:
     std::string name_;
-    std::shared_ptr<Transform> transform_;
-    std::shared_ptr<RenderData> render_data_;
-    std::shared_ptr<Camera> camera_;
-    std::shared_ptr<CameraRig> camera_rig_;
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder_;
-    std::weak_ptr<SceneObject> parent_;
-    std::vector<std::shared_ptr<SceneObject>> children_;
+    Transform* transform_;
+    RenderData* render_data_;
+    Camera* camera_;
+    CameraRig* camera_rig_;
+    EyePointeeHolder* eye_pointee_holder_;
+    SceneObject* parent_;
+    std::vector<SceneObject*> children_;
+    float lod_min_range_;
+    float lod_max_range_;
+    bool using_lod_;
+    BoundingVolume bounding_volume_;
+    bool bounding_volume_dirty_;
+
+    //Flags to check for visibility of a node and
+    //whether there are any pending occlusion queries on it
+    const int check_frames_ = 12;
+    int vis_count_;
+    bool visible_;
+    bool in_frustum_;
+    bool query_currently_issued_;
+    GLuint *queries_;
 };
 
 }

@@ -28,13 +28,10 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
-        jobject obj, jobject bitmap);
-JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename);
+        jobject obj, jobject asset_manager, jstring filename, jintArray jtexture_parameters);
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj);
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters);
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata);
@@ -42,21 +39,10 @@ Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bitmapConstructor(JNIEnv * env,
-        jobject obj, jobject bitmap) {
-    try {
-        jlong res_texture = reinterpret_cast<jlong>(new std::shared_ptr<
-                BaseTexture>(new BaseTexture(env, bitmap)));
-        return res_texture;
-    } catch (const std::string &err) {
-        printJavaCallStack(env, err);
-        throw err;
-    }
-}
-
-JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
-        jobject obj, jobject asset_manager, jstring filename) {
+        jobject obj, jobject asset_manager, jstring filename, jintArray jtexture_parameters) {
+
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
 
     const char* native_string = env->GetStringUTFChars(filename, 0);
     AAssetManager* mgr = AAssetManager_fromJava(env, asset_manager);
@@ -85,21 +71,24 @@ Java_org_gearvrf_NativeBaseTexture_fileConstructor(JNIEnv * env,
     int imgW = loader.pOutImage.width;
     int imgH = loader.pOutImage.height;
     unsigned char *pixels = loader.pOutImage.bits;
-    return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
-            new BaseTexture(imgW, imgH, pixels)));
+    jlong result = reinterpret_cast<jlong>(new BaseTexture(imgW, imgH, pixels, texture_parameters));
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+    return result;
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<BaseTexture>(
-            new BaseTexture()));
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters) {
+
+    jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
+    jlong result =  reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
+    env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
+    return result;
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata) {
-    std::shared_ptr<BaseTexture> texture = *reinterpret_cast<std::shared_ptr<
-            BaseTexture>*>(jtexture);
+    BaseTexture* texture = reinterpret_cast<BaseTexture*>(jtexture);
     jbyte* data = env->GetByteArrayElements(jdata, 0);
     jboolean result = texture->update(width, height, data);
     env->ReleaseByteArrayElements(jdata, data, 0);

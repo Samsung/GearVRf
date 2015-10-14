@@ -13,109 +13,110 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import android.util.LongSparseArray;
+import org.gearvrf.utility.Log;
 
-/** Base wrapper class for GVRF C++ classes */
-public class GVRHybridObject {
+/**
+ * Root of the GVRF object hierarchy.
+ * 
+ * Descendant classes all have native (JNI) implementations; this base class
+ * manages the native lifecycles.
+ */
+public abstract class GVRHybridObject implements Closeable {
 
-    private static final int REGISTRATIONS_BETWEEN_DEREFERENCE_SCANS = 250;
-
-    /** Enables a 1:1 mapping between native objects and Java wrappers */
-    protected static final LongSparseArray<GVRHybridObject> sWrappers = new LongSparseArray<GVRHybridObject>();
-
-    static {
-        GVRContext.addResetOnRestartHandler(new Runnable() {
-
-            @Override
-            public void run() {
-                sWrappers.clear();
-            }
-        });
-    }
-
-    private static int sRegistrationCount = 0;
-
-    /** Returns an existing wrapper, or {@code null} */
-    protected static GVRHybridObject wrapper(long ptr) {
-        final long nativePointer = NativeHybridObject.getNativePointer(ptr);
-        synchronized (sWrappers) {
-            int index = sWrappers.indexOfKey(nativePointer);
-            if (index >= 0) {
-                // We have a wrapper for the nativePointer - we should delete
-                // the `new std::shared_ptr`, so that we don't waste its memory
-                // and so that (even more importantly!) we don't accumulate a
-                // spurious reference count to the native object
-                NativeHybridObject.delete(ptr);
-            }
-            return index < 0 ? null : sWrappers.valueAt(index);
-        }
-    }
+    private static final String TAG = Log.tag(GVRHybridObject.class);
 
     /*
-     * Connects the object to the reference queues handling memory.
+     * Instance fields
      */
+
     private final GVRContext mGVRContext;
+    /**
+     * This is not {@code final}: the first call to {@link #close()} sets
+     * {@link #mNativePointer} to 0, so that {@link #close()} can safely be
+     * called multiple times.
+     */
+    private long mNativePointer;
 
     /*
-     * The way to access the c++ instance.
+     * Constructors
      */
-    private final GVRReference mReference;
 
-    GVRHybridObject(GVRContext gvrContext, long ptr) {
-        mGVRContext = gvrContext;
-
-        GVRReferenceQueue referenceQueue = gvrContext.getReferenceQueue();
-        if (this instanceof GVRRecyclableObject) {
-            mReference = new GVRRecyclableReference(ptr,
-                    (GVRRecyclableObject) this,
-                    referenceQueue.getRecyclableQueue());
-        } else {
-            mReference = new GVRHybridReference(ptr, this,
-                    referenceQueue.getHybridReferenceQueue());
-        }
-
-        /*
-         * Needed to save the reference from being garbage collected before the
-         * linked hybrid object gets collected.
-         */
-        referenceQueue.addReference(mReference);
-
-        if (registerWrapper()) {
-            // 'Register' fully initialized object, so that getX() calls can
-            // return this (possibly sub-classed) object, not a new wrapper
-            final long nativePointer = NativeHybridObject.getNativePointer(ptr);
-            synchronized (sWrappers) {
-                sWrappers.put(nativePointer, this);
-
-                if ((++sRegistrationCount % REGISTRATIONS_BETWEEN_DEREFERENCE_SCANS) == 0) {
-                    sRegistrationCount = 0;
-                    synchronized (sDereferenceThread) {
-                        sDereferenceThread.notify();
-                    }
-                }
-            }
-        }
+    /**
+     * Normal constructor
+     * 
+     * @param gvrContext
+     *            The current GVRF context
+     * @param nativePointer
+     *            The native pointer, returned by the native constructor
+     */
+    protected GVRHybridObject(GVRContext gvrContext, long nativePointer) {
+        this(gvrContext, nativePointer, null);
     }
 
     /**
-     * We don't need to worry about object identity for every
-     * {@link GVRHybridObject} descendant, just the ones that we can retrieve
-     * through APIs like {@link GVRSceneObject#getCamera()} or
-     * {@link GVRSceneObject#getChildByIndex(int)}. Classes that hide their
-     * {@code  (GVRContext gvrContext, long ptr)} constructor behind a
-     * {@code factory(GVRContext gvrContext, long ptr)} method should override
-     * {@link #registerWrapper()} to return {@code true}.
+     * Special constructor, for descendants like {#link GVRMeshEyePointee} that
+     * need to 'unregister' instances.
      * 
-     * @return Whether or not we should register wrapper classes, so that we can
-     *         get the original instances back later
+     * @param gvrContext
+     *            The current GVRF context
+     * @param nativePointer
+     *            The native pointer, returned by the native constructor
+     * @param cleanupHandlers
+     *            Cleanup handler(s).
+     * 
+     *            <p>
+     *            Normally, this will be a {@code private static} class
+     *            constant, so that there is only one {@code List} per class.
+     *            Descendants that supply a {@code List} and <em>also</em> have
+     *            descendants that supply a {@code List} should use
+     *            {@link CleanupHandlerListManager} to maintain a
+     *            {@code Map<List<NativeCleanupHandler>, List<NativeCleanupHandler>>}
+     *            whose keys are descendant lists and whose values are unique
+     *            concatenated lists - see {@link GVREyePointeeHolder} for an
+     *            example.
      */
-    protected boolean registerWrapper() {
+    protected GVRHybridObject(GVRContext gvrContext, long nativePointer,
+            List<NativeCleanupHandler> cleanupHandlers) {
+        mGVRContext = gvrContext;
+        mNativePointer = nativePointer;
+
+        sReferenceSet
+                .add(new GVRReference(this, nativePointer, cleanupHandlers));
+    }
+
+    /*
+     * Instance methods
+     */
+
+    /**
+     * Set or clear the keep-wrapper flag.
+     * 
+     * @deprecated This is a no-op as of version 2.0, and will be removed
+     *             sometime in (or after) Q4 2015.
+     */
+    public void setKeepWrapper(boolean keep) {
+    }
+
+    /**
+     * Get the current state of the keep-wrapper flag.
+     * 
+     * @deprecated As of version 2.0 this always returns {@code false}, and will
+     *             be removed sometime in (or after) Q4 2015.
+     */
+    public boolean getKeepWrapper() {
         return false;
     }
 
@@ -133,9 +134,13 @@ public class GVRHybridObject {
      * 
      * <p>
      * This is an internal method that may be useful in diagnostic code.
+     * 
+     * @deprecated As of version 2.0, this is synonymous with
+     *             {@link #getNative()}, and will be removed sometime in (or
+     *             after) Q4 2015.
      */
     public long getPtr() {
-        return mReference.getPtr();
+        return getNative();
     }
 
     /**
@@ -145,11 +150,13 @@ public class GVRHybridObject {
      * This is an internal method that may be useful in diagnostic code.
      */
     public long getNative() {
-        return mReference.getNative();
+        return mNativePointer;
     }
 
     @Override
     public boolean equals(Object o) {
+        // FIXME Since there is a 1:1 relationship between wrappers and native
+        // objects, `return this == o` should be all we need ...
         if (this == o) {
             return true;
         }
@@ -158,7 +165,13 @@ public class GVRHybridObject {
         }
         if (o instanceof GVRHybridObject) {
             GVRHybridObject other = (GVRHybridObject) o;
-            return NativeHybridObject.equals(getPtr(), other.getPtr());
+            boolean nativeEquality = getNative() == other.getNative();
+            if (nativeEquality) {
+                Log.d(TAG, "%s.equals(%s), but %s %c= %s", //
+                        this, o, //
+                        this, (this == o) ? '=' : '!', o);
+            }
+            return nativeEquality;
         } else {
             return false;
         }
@@ -175,16 +188,142 @@ public class GVRHybridObject {
      * 
      * <p>
      * This is an internal method that may be useful in diagnostic code.
+     * 
+     * @deprecated This is meaningless, as of version 2.0, and will be removed
+     *             sometime in (or after) Q4 2015.
      */
     public int getUseCount() {
-        return NativeHybridObject.getUseCount(getPtr());
+        return 0;
     }
 
-    private static class DereferenceThread extends Thread {
+    /*
+     * Native memory management
+     */
 
-        DereferenceThread() {
-            super("Dereference thread");
-            setPriority(MIN_PRIORITY);
+    /**
+     * Our {@linkplain GVRReference references} are placed on this queue, once
+     * they've been finalized
+     */
+    private static final ReferenceQueue<GVRHybridObject> sReferenceQueue = new ReferenceQueue<GVRHybridObject>();
+    /**
+     * We need hard references to {@linkplain GVRReference our references} -
+     * otherwise, the references get garbage collected (usually before their
+     * objects) and never get enqueued.
+     */
+    private static final Set<GVRReference> sReferenceSet = new HashSet<GVRReference>();
+
+    static {
+        new GVRFinalizeThread();
+    }
+
+    /** Optional after-finalization callback to 'deregister' native pointers. */
+    protected interface NativeCleanupHandler {
+        /**
+         * Remove the native pointer from any maps or other data structures.
+         * 
+         * Do note that the Java 'owner object' has already been finalized.
+         * 
+         * @param nativePointer
+         *            The native pointer associated with a Java object that has
+         *            already been garbage collected.
+         */
+        void nativeCleanup(long nativePointer);
+    }
+
+    /**
+     * Small class to help descendants keep the number of lists of native
+     * cleanup handlers to a minimum.
+     * 
+     * Maintains a prefix list (the static list that the descendant class passes
+     * to {@link GVRHybridObject#GVRHybridObject(GVRContext, long, List)}) and a
+     * {@code Map} of suffixes: the {@code Map} lets there be one list per
+     * descendant class that adds a list of cleanup handler(s), instead of
+     * (potentially) one list per instance.
+     * 
+     * See the usage in {@link GVREyePointeeHolder}.
+     */
+    protected static class CleanupHandlerListManager {
+        private final List<NativeCleanupHandler> mPrefixList;
+
+        private final Map<List<NativeCleanupHandler>, List<NativeCleanupHandler>> //
+        mUniqueCopies = new HashMap<List<NativeCleanupHandler>, List<NativeCleanupHandler>>();
+
+        /**
+         * Typically, descendants have a single (static) list of cleanup
+         * handlers: pass that list to this constructor.
+         * 
+         * @param prefixList
+         *            List of cleanup handler(s)
+         */
+        protected CleanupHandlerListManager(
+                List<NativeCleanupHandler> prefixList) {
+            mPrefixList = prefixList;
+        }
+
+        /**
+         * Descendants that add a cleanup handler list use this method to create
+         * unique concatenations of their list with any of <em>their</em>
+         * descendants' list(s).
+         * 
+         * @param suffix
+         *            Descendant's (static) list
+         * @return A unique concatenation
+         */
+        protected List<NativeCleanupHandler> getUniqueConcatenation(
+                List<NativeCleanupHandler> suffix) {
+            if (suffix == null) {
+                return mPrefixList;
+            }
+
+            List<NativeCleanupHandler> concatenation = mUniqueCopies
+                    .get(suffix);
+            if (concatenation == null) {
+                concatenation = new ArrayList<NativeCleanupHandler>(
+                        mPrefixList.size() + suffix.size());
+                concatenation.addAll(mPrefixList);
+                concatenation.addAll(suffix);
+                mUniqueCopies.put(suffix, concatenation);
+            }
+            return concatenation;
+        }
+    }
+
+    private static class GVRReference extends PhantomReference<GVRHybridObject> {
+
+        // private static final String TAG = Log.tag(GVRReference.class);
+
+        private long mNativePointer;
+        private final List<NativeCleanupHandler> mCleanupHandlers;
+
+        private GVRReference(GVRHybridObject object, long nativePointer,
+                List<NativeCleanupHandler> cleanupHandlers) {
+            super(object, sReferenceQueue);
+
+            mNativePointer = nativePointer;
+            mCleanupHandlers = cleanupHandlers;
+        }
+
+        private void close() {
+            if (mNativePointer != 0) {
+                if (mCleanupHandlers != null) {
+                    for (NativeCleanupHandler handler : mCleanupHandlers) {
+                        handler.nativeCleanup(mNativePointer);
+                    }
+                }
+                NativeHybridObject.delete(mNativePointer);
+            }
+
+            sReferenceSet.remove(this);
+        }
+    }
+
+    private static class GVRFinalizeThread extends Thread {
+
+        // private static final String TAG = Log.tag(GVRFinalizeThread.class);
+
+        private GVRFinalizeThread() {
+            setName("GVRF Finalize Thread");
+            setPriority(MAX_PRIORITY);
             start();
         }
 
@@ -192,58 +331,56 @@ public class GVRHybridObject {
         public void run() {
             try {
                 while (true) {
-
-                    synchronized (sDereferenceThread) {
-                        // Wait for 'enough' registrations
-                        sDereferenceThread.wait();
-                    }
-
-                    removeSingleReferences();
+                    GVRReference reference = (GVRReference) sReferenceQueue
+                            .remove();
+                    reference.close();
                 }
             } catch (InterruptedException e) {
-            }
-        }
-
-        private void removeSingleReferences() {
-            final List<GVRRecyclableObject> recyclables = new ArrayList<GVRRecyclableObject>();
-            synchronized (sWrappers) {
-                for (int index = sWrappers.size() - 1; index >= 0; --index) {
-                    GVRHybridObject wrapper = sWrappers.valueAt(index);
-                    if (wrapper.getUseCount() == 1) {
-                        sWrappers.removeAt(index);
-                        if (wrapper instanceof GVRRecyclableObject) {
-                            recyclables.add((GVRRecyclableObject) wrapper);
-                        }
-                    }
-                }
-            }
-
-            if (recyclables.size() > 0) {
-                // Pass list to GL thread, outside of synchronized block
-                GVRContext gvrContext = recyclables.get(0).getGVRContext();
-                gvrContext.runOnGlThread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        for (GVRRecyclableObject recyclable : recyclables) {
-                            NativeRecyclableObject.recycle(recyclable.getPtr());
-                        }
-
-                    }
-                });
+                e.printStackTrace();
             }
         }
     }
 
-    private static DereferenceThread sDereferenceThread = new DereferenceThread();
+    /**
+     * Close this object, releasing any native resources.
+     * 
+     * Most objects will be automatically closed when Java's garbage collector
+     * detects that they are no longer being used: Explicitly closing an object
+     * that's still linked into the scene graph will almost certainly crash your
+     * GVRF app. You should only {@code close()} transient objects (especially
+     * those that use lots of memory, like large textures) that you
+     * <em>know</em> are no longer being used.
+     * 
+     * @since 2.0.0
+     */
+    @Override
+    public final void close() throws IOException {
+        if (mNativePointer != 0L) {
+            GVRReference reference = findReference(mNativePointer);
+            if (reference != null) {
+                reference.close();
+                mNativePointer = 0L;
+            }
+        }
+    }
+
+    /**
+     * Explicitly close()ing an object is going to be relatively rare - most
+     * native memory will be freed when the owner-objects are garbage collected.
+     * Doing a lookup in these rare cases means that we can avoid giving every @link
+     * {@link GVRHybridObject} a hard reference to its {@link GVRReference}.
+     */
+    private static GVRReference findReference(long nativePointer) {
+        for (GVRReference reference : sReferenceSet) {
+            if (reference.mNativePointer == nativePointer) {
+                return reference;
+            }
+        }
+        // else
+        return null;
+    }
 }
 
 class NativeHybridObject {
-    static native void delete(long hybridObject);
-
-    static native boolean equals(long hybridObject, long other);
-
-    static native int getUseCount(long hybridObject);
-
-    static native long getNativePointer(long hybridObject);
+    static native void delete(long nativePointer);
 }

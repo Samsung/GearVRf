@@ -16,16 +16,20 @@
 package org.gearvrf;
 
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.DockEventReceiver;
+import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.oculusvr.vrlib.VrActivity;
+import com.oculus.vrappframework.VrActivity;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -41,15 +45,31 @@ public class GVRActivity extends VrActivity {
 
     private static final String TAG = Log.tag(GVRActivity.class);
 
+    // these values are copy of enum KeyEventType in VrAppFramework/Native_Source/Input.h
+    public static final int KEY_EVENT_NONE = 0;
+    public static final int KEY_EVENT_SHORT_PRESS = 1;
+    public static final int KEY_EVENT_DOUBLE_TAP = 2;
+    public static final int KEY_EVENT_LONG_PRESS = 3;
+    public static final int KEY_EVENT_DOWN = 4;
+    public static final int KEY_EVENT_UP = 5;
+    public static final int KEY_EVENT_MAX = 6;
+
     private GVRViewManager mGVRViewManager = null;
+    private GVRCamera mCamera;
+    private VrAppSettings mAppSettings;
+    private long mPtr;
 
     static {
         System.loadLibrary("gvrf");
     }
 
-    public static native long nativeSetAppInterface(VrActivity act);
+    public static native long nativeSetAppInterface(VrActivity act,
+            String fromPackageName, String commandString, String uriString);
 
     static native void nativeSetCamera(long appPtr, long camera);
+    static native void nativeSetCameraRig(long appPtr, long cameraRig);
+    static native void nativeOnDock(long appPtr);
+    static native void nativeOnUndock(long appPtr);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,9 +80,29 @@ public class GVRActivity extends VrActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
+        mAppSettings = new VrAppSettings();
         super.onCreate(savedInstanceState);
-        appPtr = nativeSetAppInterface(this);
+
+        Intent intent = getIntent();
+        String commandString = VrActivity.getCommandStringFromIntent(intent);
+        String fromPackageNameString = VrActivity
+                .getPackageStringFromIntent(intent);
+        String uriString = VrActivity.getUriStringFromIntent(intent);
+        
+        mPtr = nativeSetAppInterface(this, fromPackageNameString,
+                commandString, uriString);
+        
+        setAppPtr(mPtr);
+
+        mDockEventReceiver = new DockEventReceiver(this, mRunOnDock, mRunOnUndock);
+    }
+
+    protected void onInitAppSettings(VrAppSettings appSettings) {
+
+    }
+
+    public VrAppSettings getAppSettings(){
+        return mAppSettings;
     }
 
     @Override
@@ -71,6 +111,9 @@ public class GVRActivity extends VrActivity {
         if (mGVRViewManager != null) {
             mGVRViewManager.onPause();
         }
+        if (null != mDockEventReceiver) {
+            mDockEventReceiver.stop();
+        }
     }
 
     @Override
@@ -78,6 +121,9 @@ public class GVRActivity extends VrActivity {
         super.onResume();
         if (mGVRViewManager != null) {
             mGVRViewManager.onResume();
+        }
+        if (null != mDockEventReceiver) {
+            mDockEventReceiver.start();
         }
     }
 
@@ -112,14 +158,68 @@ public class GVRActivity extends VrActivity {
      */
     public void setScript(GVRScript gvrScript, String distortionDataFileName) {
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            mGVRViewManager = new GVRViewManager(this, gvrScript,
-                    distortionDataFileName);
+
+            GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
+                    distortionDataFileName, mAppSettings);
+            onInitAppSettings(mAppSettings);
+            if (isVrSupported() && !mAppSettings.getMonoScopicModeParms().isMonoScopicMode()) {
+                mGVRViewManager = new GVRViewManager(this, gvrScript, xmlParser);
+            } else {
+                mGVRViewManager = new GVRMonoscopicViewManager(this, gvrScript,
+                        xmlParser);
+            }
         } else {
             throw new IllegalArgumentException(
                     "You can not set orientation to portrait for GVRF apps.");
         }
     }
 
+    /**
+     * Sets whether to force rendering to be single-eye, monoscopic view.
+     * 
+     * @param force
+     *            If true, will create a GVRMonoscopicViewManager when
+     *            {@linkplain setScript setScript()} is called. If false, will
+     *            proceed to auto-detect whether the device supports VR
+     *            rendering and choose the appropriate ViewManager. This call
+     *            will only have an effect if it is called before
+     *            {@linkplain #setScript(GVRScript, String) setScript()}.
+     *            
+     * @deprecated
+     * 
+     */
+    @Deprecated
+    public void setForceMonoscopic(boolean force) {
+        mAppSettings.monoScopicModeParms.setMonoScopicMode(force);
+    }
+
+    /**
+     * Returns whether a monoscopic view was asked to be forced during
+     * {@linkplain #setScript(GVRScript, String) setScript()}.
+     * 
+     * @see setForceMonoscopic
+     * @deprecated
+     */
+    @Deprecated
+    public boolean getForceMonoscopic() {
+        return mAppSettings.monoScopicModeParms.isMonoScopicMode();
+    }
+
+    private boolean isVrSupported() {
+        if ((Build.MODEL.contains("SM-N910"))
+                || (Build.MODEL.contains("SM-N916"))
+                || (Build.MODEL.contains("SM-G920"))
+                || (Build.MODEL.contains("SM-G925"))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public long getAppPtr(){
+        return mPtr;
+    }
+    
     void drawFrame() {
         mGVRViewManager.onDrawFrame();
     }
@@ -146,7 +246,13 @@ public class GVRActivity extends VrActivity {
     }
 
     void setCamera(GVRCamera camera) {
-        nativeSetCamera(appPtr, camera.getPtr());
+        mCamera = camera;
+
+        nativeSetCamera(getAppPtr(), camera.getNative());
+    }
+
+    void setCameraRig(GVRCameraRig cameraRig) {
+        nativeSetCameraRig(getAppPtr(), cameraRig.getNative());
     }
 
     @Override
@@ -165,4 +271,66 @@ public class GVRActivity extends VrActivity {
         return handled;
     }
 
+    boolean onKeyEventNative(int keyCode, int eventType) {
+
+        /*
+         * Currently VrLib does not call Java onKeyDown()/onKeyUp() in the
+         * Activity class. In stead, it calls VrAppInterface->OnKeyEvent if
+         * defined in the native side, to give a chance to the app before it
+         * intercepts. With this implementation, the developers can expect
+         * consistently their key event methods are called as usual in case they
+         * want to use the events. The parameter eventType matches with the
+         * native side. It can be more than two, DOWN and UP, if the native
+         * supports in the future.
+         */
+
+        switch (eventType) {
+        case KEY_EVENT_SHORT_PRESS:
+            return onKeyShortPress(keyCode);
+        case KEY_EVENT_DOUBLE_TAP:
+            return onKeyDoubleTap(keyCode);
+        case KEY_EVENT_LONG_PRESS:
+            return onKeyLongPress(keyCode, new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
+        case KEY_EVENT_DOWN:
+            return onKeyDown(keyCode, new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
+        case KEY_EVENT_UP:
+            return onKeyUp(keyCode, new KeyEvent(KeyEvent.ACTION_UP, keyCode));
+        case KEY_EVENT_MAX:
+            return onKeyMax(keyCode);
+        default:
+            return false;
+        }
+    }
+
+    public boolean onKeyShortPress(int keyCode) {
+        return false;
+    }
+
+    public boolean onKeyDoubleTap(int keyCode) {
+        return false;
+    }
+
+    public boolean onKeyMax(int keyCode) {
+        return false;
+    }
+
+    boolean updateSensoredScene() {
+        return mGVRViewManager.updateSensoredScene();
+    }
+
+    private final Runnable mRunOnDock = new Runnable() {
+        @Override
+        public void run() {
+            nativeOnDock(getAppPtr());
+        }
+    };
+
+    private final Runnable mRunOnUndock = new Runnable() {
+        @Override
+        public void run() {
+            nativeOnUndock(getAppPtr());
+        }
+    };
+
+    private DockEventReceiver mDockEventReceiver;
 }

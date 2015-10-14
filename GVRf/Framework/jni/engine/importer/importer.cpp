@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Imports a scene file using Assimp.
  ***************************************************************************/
@@ -21,21 +20,25 @@
 #include "importer.h"
 
 namespace gvr {
-std::shared_ptr<AssimpImporter> Importer::readFileFromAssets(char* buffer,
-        long size) {
+AssimpImporter* Importer::readFileFromAssets(char* buffer, long size,
+        const char * filename, int settings) {
     Assimp::Importer* importer = new Assimp::Importer();
-    importer->ReadFileFromMemory(buffer, size,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
-    return std::shared_ptr < AssimpImporter > (new AssimpImporter(importer));
+    char* hint = 0;
+
+    if (filename != 0) {
+        hint = strrchr(filename, '.');
+        if (hint && hint != filename) {
+            hint = hint + 1;
+        }
+    }
+    importer->ReadFileFromMemory(buffer, size, settings, hint);
+
+    return new AssimpImporter(importer);
 }
 
-std::shared_ptr<AssimpImporter> Importer::readFileFromSDCard(std::string str) {
+AssimpImporter* Importer::readFileFromSDCard(const char * filename, int settings) {
     Assimp::Importer* importer = new Assimp::Importer();
-    const char* c_str = str.c_str();
-    importer->ReadFile(str,
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
-    importer->ReadFileFromMemory(c_str, str.size(),
-            aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs, 0);
-    return std::shared_ptr < AssimpImporter > (new AssimpImporter(importer));
+    importer->ReadFile(filename, settings);
+    return new AssimpImporter(importer);
 }
 }

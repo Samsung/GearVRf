@@ -39,8 +39,7 @@ public:
     ErrorShader();
     ~ErrorShader();
     void recycle();
-    void render(const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
 
 private:
     ErrorShader(const ErrorShader& error_shader);
@@ -50,7 +49,6 @@ private:
 
 private:
     GLProgram* program_;
-    GLuint a_position_;
     GLuint u_mvp_;
     GLuint u_color_;
 };

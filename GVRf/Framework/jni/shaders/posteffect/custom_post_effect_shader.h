@@ -30,6 +30,7 @@
 #include "glm/glm.hpp"
 
 #include "objects/recyclable_object.h"
+#include "objects/components/camera.h"
 
 namespace gvr {
 class GLProgram;
@@ -47,8 +48,10 @@ public:
     void addVec2Key(std::string variable_name, std::string key);
     void addVec3Key(std::string variable_name, std::string key);
     void addVec4Key(std::string variable_name, std::string key);
-    void render(std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<PostEffectData> post_effect_data,
+    void addMat4Key(std::string variable_name, std::string key);
+    void render(Camera* camera,
+            RenderTexture* render_texture,
+            PostEffectData* post_effect_data,
             std::vector<glm::vec3>& vertices,
             std::vector<glm::vec2>& tex_coords,
             std::vector<unsigned short>& triangles);
@@ -69,11 +72,14 @@ private:
     GLuint a_position_;
     GLuint a_tex_coord_;
     GLuint u_texture_;
+    GLuint u_projection_matrix_;
+    GLuint u_right_eye_;
     std::map<int, std::string> texture_keys_;
     std::map<int, std::string> float_keys_;
     std::map<int, std::string> vec2_keys_;
     std::map<int, std::string> vec3_keys_;
     std::map<int, std::string> vec4_keys_;
+    std::map<int, std::string> mat4_keys_;
 
     // add vertex array object
     GLuint vaoID_;

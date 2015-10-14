@@ -21,9 +21,11 @@ import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
 import org.gearvrf.utility.Log;
+
 public class SampleViewManager extends GVRScript {
 
     private static final String TAG = "SampleViewManager";
@@ -40,28 +42,37 @@ public class SampleViewManager extends GVRScript {
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
 
+        GVRMesh mesh = null;
         GVRSceneObject leftScreen = null;
         GVRSceneObject rightScreen = null;
+
+        /*
+         * This sample places its resources in the assets folder, not in
+         * res/drawable and res/raw. This means that the named file may not
+         * actually exist when we try to load resources, throwing an
+         * IOException.
+         */
         try {
-            // we assume that the mesh is valid, so loadMesh will not return
-            // null
-            GVRMesh mesh = mGVRContext.loadMesh(new GVRAndroidResource(
-                    mGVRContext, "cylinder.obj"));
+            // If "cylinder.obj" exists - but is not a valid ASSIMP mesh file -
+            // loadMesh() will return null.
+            mesh = mGVRContext.loadMesh(new GVRAndroidResource(mGVRContext,
+                    "cylinder.obj"));
 
             leftScreen = new GVRSceneObject(gvrContext, mesh,
                     gvrContext.loadTexture(new GVRAndroidResource(mGVRContext,
-                            "sample_20140509_l.bmp")));
+                            "sample_20140509_l.png")));
             rightScreen = new GVRSceneObject(gvrContext, mesh,
                     gvrContext.loadTexture(new GVRAndroidResource(mGVRContext,
-                            "sample_20140509_r.bmp")));
+                            "sample_20140509_r.png")));
         } catch (IOException e) {
             e.printStackTrace();
             leftScreen = null;
             rightScreen = null;
         }
-        if (leftScreen == null || rightScreen == null) {
+
+        if (mesh == null || leftScreen == null || rightScreen == null) {
             mActivity.finish();
-            Log.e(TAG, "Texture was not loaded. Stopping application!");
+            Log.e(TAG, "Error loading resources - stopping application!");
         }
 
         // activity was stored in order to stop the application if the mesh is
@@ -69,8 +80,10 @@ public class SampleViewManager extends GVRScript {
         // chance of memory leak.
         mActivity = null;
 
-        mGVRContext.getMainScene().addSceneObject(leftScreen);
-        mGVRContext.getMainScene().addSceneObject(rightScreen);
+        GVRScene mainScene = mGVRContext.getNextMainScene();
+
+        mainScene.addSceneObject(leftScreen);
+        mainScene.addSceneObject(rightScreen);
     }
 
     @Override

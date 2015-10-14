@@ -27,13 +27,29 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-include ../../ovr_mobile_sdk/VRLib/import_vrlib.mk
-include ../../ovr_mobile_sdk/VRLib/cflags.mk
+ifndef OVR_MOBILE_SDK
+	OVR_MOBILE_SDK=../../ovr_mobile_sdk
+endif
+
+#include $(OVR_MOBILE_SDK)/VRLib/import_vrlib.mk
+#include $(OVR_MOBILE_SDK)/VRLib/cflags.mk
+include $(OVR_MOBILE_SDK)/cflags.mk
+#$(call import-module,$(OVR_MOBILE_SDK)/LibOVR/Projects/Android/jni)
+#$(call import-module,$(OVR_MOBILE_SDK)/VrApi/Projects/AndroidPrebuilt/jni)
+#$(call import-module,$(OVR_MOBILE_SDK)/VrAppFramework/Projects/Android/jni)
+
+
 
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrAppFramework/Src
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/LibOVRKernel/Include
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/LibOVRKernel/Src
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrApi/Include
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrAppSupport/Src
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
@@ -67,6 +83,8 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/engine/picker/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/engine/renderer/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/engine/memory/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/gl/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/*.cpp)	
@@ -76,6 +94,8 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/textures/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/oculus/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/monoscopic/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/sensor/ksensor/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
@@ -89,7 +109,11 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 #LOCAL_STATIC_LIBRARIES += staticAssimp
-LOCAL_SHARED_LIBRARIES := assimp
+LOCAL_SHARED_LIBRARIES += assimp
+LOCAL_SHARED_LIBRARIES += vrapi
+LOCAL_STATIC_LIBRARIES += vrappframework
+LOCAL_STATIC_LIBRARIES += libovr
+LOCAL_STATIC_LIBRARIES += libvrmodel
 
 LOCAL_ARM_NEON := true
 
@@ -102,7 +126,12 @@ LOCAL_CFLAGS := -Wattributes
 # include ld libraries defined in oculus's cflags.mk
 #LOCAL_LDLIBS += -ljnigraphics -lm_hard
 #softFP
-LOCAL_LDLIBS += -ljnigraphics 
+LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 #LOCAL_LDLIBS += -L../libs/armeabi-v7a/ 
 
 include $(BUILD_SHARED_LIBRARY)
+
+$(call import-module,LibOVRKernel/Projects/AndroidPrebuilt/jni)
+$(call import-module,VrApi/Projects/AndroidPrebuilt/jni)
+$(call import-module,VrAppFramework/Projects/AndroidPrebuilt/jni)
+$(call import-module,VrAppSupport/VrModel/Projects/Android/jni)

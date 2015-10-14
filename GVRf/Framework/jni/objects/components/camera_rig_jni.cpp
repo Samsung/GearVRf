@@ -37,12 +37,6 @@ Java_org_gearvrf_NativeCameraRig_getCameraRigType(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setCameraRigType(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jint camera_rig_type);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCameraRig_getLeftCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCameraRig_getRightCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCameraRig_getDefaultCameraSeparationDistance(
         JNIEnv * env, jobject obj);
@@ -97,6 +91,10 @@ Java_org_gearvrf_NativeCameraRig_attachRightCamera(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jlong jcamera);
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCameraRig_attachCenterCamera(JNIEnv * env,
+        jobject obj, jlong jcamera_rig, jlong jcamera);
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_reset(JNIEnv * env,
         jobject obj, jlong jcamera_rig);
 
@@ -115,58 +113,34 @@ Java_org_gearvrf_NativeCameraRig_setRotationSensorData(
         jfloat gyro_z);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env,
+Java_org_gearvrf_NativeCameraRig_predictAndSetRotation(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jfloat time);
+
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
         jobject obj, jlong jcamera_rig);
-}
-;
+
+}; // extern "C"
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv * env,
         jobject obj) {
-    std::shared_ptr<CameraRig> camera_rig(new CameraRig());
-    return reinterpret_cast<jlong>(new std::shared_ptr<CameraRig>(camera_rig));
+    return reinterpret_cast<jlong>(new CameraRig());
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeCameraRig_getCameraRigType(JNIEnv * env,
         jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     return static_cast<jint>(camera_rig->camera_rig_type());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setCameraRigType(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jint camera_rig_type) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     camera_rig->set_camera_rig_type(
             static_cast<CameraRig::CameraRigType>(camera_rig_type));
-}
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCameraRig_getLeftCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
-    std::shared_ptr<Camera> left_camera(camera_rig->left_camera());
-    return left_camera.get() == NULL ?
-            0 :
-            reinterpret_cast<jlong>(new std::shared_ptr<Camera>(left_camera));
-}
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCameraRig_getRightCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
-    std::shared_ptr<Camera> right_camera(camera_rig->right_camera());
-    return right_camera.get() == NULL ?
-            0 :
-            reinterpret_cast<jlong>(new std::shared_ptr<Camera>(right_camera));
 }
 
 JNIEXPORT jfloat JNICALL
@@ -184,24 +158,21 @@ Java_org_gearvrf_NativeCameraRig_setDefaultCameraSeparationDistance(
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCameraRig_getCameraSeparationDistance(
         JNIEnv * env, jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     return camera_rig->camera_separation_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setCameraSeparationDistance(
         JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat distance) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     camera_rig->set_camera_separation_distance(distance);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCameraRig_getFloat(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     jfloat camera_rig_float = camera_rig->getFloat(native_key);
@@ -212,8 +183,7 @@ Java_org_gearvrf_NativeCameraRig_getFloat(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setFloat(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key, jfloat value) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     camera_rig->setFloat(native_key, value);
@@ -223,8 +193,7 @@ Java_org_gearvrf_NativeCameraRig_setFloat(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getVec2(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     try {
@@ -244,8 +213,7 @@ Java_org_gearvrf_NativeCameraRig_getVec2(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setVec2(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     camera_rig->setVec2(native_key, glm::vec2(x, y));
@@ -255,8 +223,7 @@ Java_org_gearvrf_NativeCameraRig_setVec2(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getVec3(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     try {
@@ -277,8 +244,7 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setVec3(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y,
         jfloat z) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     camera_rig->setVec3(native_key, glm::vec3(x, y, z));
@@ -288,8 +254,7 @@ Java_org_gearvrf_NativeCameraRig_setVec3(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getVec4(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     try {
@@ -310,8 +275,7 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setVec4(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y,
         jfloat z, jfloat w) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     camera_rig->setVec4(native_key, glm::vec4(x, y, z, w));
@@ -321,44 +285,45 @@ Java_org_gearvrf_NativeCameraRig_setVec4(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_attachLeftCamera(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jlong jcamera) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera_rig->attachLeftCamera(camera);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_attachRightCamera(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jlong jcamera) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera_rig->attachRightCamera(camera);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCameraRig_attachCenterCamera(JNIEnv * env,
+        jobject obj, jlong jcamera_rig, jlong jcamera) {
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
+    PerspectiveCamera* camera = reinterpret_cast<PerspectiveCamera*>(jcamera);
+    camera_rig->attachCenterCamera(camera);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_reset(JNIEnv * env,
         jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     camera_rig->reset();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_resetYaw(JNIEnv * env,
         jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     camera_rig->resetYaw();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_resetYawPitch(JNIEnv * env,
         jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     camera_rig->resetYawPitch();
 }
 
@@ -367,25 +332,22 @@ Java_org_gearvrf_NativeCameraRig_setRotationSensorData(
         JNIEnv * env, jobject obj, jlong jcamera_rig, jlong time_stamp,
         jfloat w, jfloat x, jfloat y, jfloat z, jfloat gyro_x, jfloat gyro_y,
         jfloat gyro_z) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     camera_rig->setRotationSensorData(time_stamp, w, x, y, z, gyro_x, gyro_y,
             gyro_z);
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env,
+Java_org_gearvrf_NativeCameraRig_predictAndSetRotation(JNIEnv * env,
         jobject obj, jlong jcamera_rig, jfloat time) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
-    camera_rig->predict(time);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
+    camera_rig->predictAndSetRotation(time);
 }
 
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
         jobject obj, jlong jcamera_rig) {
-    std::shared_ptr<CameraRig> camera_rig = *reinterpret_cast<std::shared_ptr<
-            CameraRig>*>(jcamera_rig);
+    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
     glm::vec3 look_at_vector = camera_rig->getLookAt();
     jsize size = sizeof(glm::vec3) / sizeof(jfloat);
     if (size != 3) {

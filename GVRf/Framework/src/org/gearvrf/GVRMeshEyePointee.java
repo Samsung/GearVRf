@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /**
  * An actual eye pointee.
@@ -32,8 +30,10 @@ package org.gearvrf;
  * tested against.
  */
 public class GVRMeshEyePointee extends GVREyePointee {
+    private GVRMesh mMesh;
+
     /**
-     * Constructor.
+     * Base constructor.
      * 
      * When the mesh is complicated, it will be cheaper - though less accurate -
      * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
@@ -43,10 +43,47 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      * @param mesh
      *            The {@link GVRMesh} that the picking ray will test against.
-     * 
      */
     public GVRMeshEyePointee(GVRContext gvrContext, GVRMesh mesh) {
-        super(gvrContext, NativeMeshEyePointee.ctor(mesh.getPtr()));
+        super(gvrContext, NativeMeshEyePointee.ctor(mesh.getNative()));
+        mMesh = mesh;
+    }
+
+    /**
+     * Simple constructor.
+     * 
+     * When the mesh is complicated, it will be cheaper - though less accurate -
+     * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
+     * 
+     * @param mesh
+     *            The {@link GVRMesh} that the picking ray will test against.
+     */
+    public GVRMeshEyePointee(GVRMesh mesh) {
+        this(mesh.getGVRContext(), mesh);
+    }
+
+    /**
+     * Constructor that can use the mesh's bounding box.
+     * 
+     * When the mesh is complicated, it will be cheaper - though less accurate -
+     * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
+     * 
+     * @param mesh
+     *            The {@link GVRMesh} that the picking ray will test against.
+     * @param useBoundingBox
+     *            When {@code true}, will use {@link GVRMesh#getBoundingBox()
+     *            mesh.getBoundingBox()}; when {@code false} will use
+     *            {@code mesh} directly.
+     */
+    /*
+     * TODO How much accuracy do we lose with bounding boxes?
+     * 
+     * Would it make sense for the useBoundingBox parameter to be a tri-state
+     * enum: mesh, box, box-then-mesh?
+     */
+    public GVRMeshEyePointee(GVRMesh mesh, boolean useBoundingBox) {
+        this(mesh.getGVRContext(), useBoundingBox ? mesh.getBoundingBox()
+                : mesh);
     }
 
     /**
@@ -56,8 +93,7 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      */
     public GVRMesh getMesh() {
-        return GVRMesh.factory(getGVRContext(),
-                NativeMeshEyePointee.getMesh(getPtr()));
+        return mMesh;
     }
 
     /**
@@ -68,14 +104,13 @@ public class GVRMeshEyePointee extends GVREyePointee {
      * 
      */
     public void setMesh(GVRMesh mesh) {
-        NativeMeshEyePointee.setMesh(getPtr(), mesh.getPtr());
+        mMesh = mesh;
+        NativeMeshEyePointee.setMesh(getNative(), mesh.getNative());
     }
 }
 
 class NativeMeshEyePointee {
-    public static native long ctor(long mesh);
+    static native long ctor(long mesh);
 
-    public static native long getMesh(long meshEyePointee);
-
-    public static native void setMesh(long meshEyePointee, long mesh);
+    static native void setMesh(long meshEyePointee, long mesh);
 }

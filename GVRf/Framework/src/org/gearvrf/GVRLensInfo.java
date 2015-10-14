@@ -13,45 +13,55 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import org.gearvrf.utility.VrAppSettings;
 
 /**
  * This class holds distortion parameters (from an XML file, read by
  * {@link GVRXMLParser}) and is used in {@link GVRViewManager}.
  */
 class GVRLensInfo {
-    private final int mFBOWidth;
-    private final int mFBOHeight;
-    private final int mMSAA;
+    private final VrAppSettings mAppSettings;
     private final float mRealScreenWidthMeters;
     private final int mHorizontalRealScreenPixels;
     private final int mVerticalRealScreenPixels;
     private final float mRealScreenHeightMeters;
 
+    private int mFBOWidth;
+    private int mFBOHeight;
+
+    private boolean mCustomFBOSize;
+
     /**
-     * Constructs a GVRLensInfo object with distortion data which requires a valid, pre-processed
-     * GVRXMLParser object
+     * Constructs a GVRLensInfo object with distortion data which requires a
+     * valid, pre-processed GVRXMLParser object
      * 
-     * @param screenWidthPixels the screen width in pixels
-     * @param screenHeightPixels the screen height in pixels
-     * @param screenWidthMeters the screen width in meters
-     * @param screenHeightMeters the screen height in meters
-     * @param xmlParser other parameters holds in GVRXMLParser
+     * @param screenWidthPixels
+     *            the screen width in pixels
+     * @param screenHeightPixels
+     *            the screen height in pixels
+     * @param screenWidthMeters
+     *            the screen width in meters
+     * @param screenHeightMeters
+     *            the screen height in meters
+     * @param xmlParser
+     *            other parameters holds in GVRXMLParser
      */
     public GVRLensInfo(int screenWidthPixels, int screenHeightPixels,
             float screenWidthMeters, float screenHeightMeters,
-            GVRXMLParser xmlParser) {
+            VrAppSettings appSettings) {
         /*
          * Sets values which don't need combinations.
          */
-        mFBOWidth = xmlParser.getFBOWidth();
-        mFBOHeight = xmlParser.getFBOHeight();
-        mMSAA = xmlParser.getMSAA();
+        mAppSettings = appSettings;
         mRealScreenWidthMeters = screenWidthMeters * 0.5f;
         mRealScreenHeightMeters = screenHeightMeters;
         mHorizontalRealScreenPixels = screenWidthPixels / 2;
         mVerticalRealScreenPixels = screenHeightPixels;
+
+        mCustomFBOSize = false;
+
         update();
     }
 
@@ -69,7 +79,19 @@ class GVRLensInfo {
      * @return current distortion FBO width value
      */
     public int getFBOWidth() {
-        return mFBOWidth;
+        if (!mCustomFBOSize)
+            return mAppSettings.getEyeBufferParms().getResolutionWidth();
+        else
+            return mFBOWidth;
+    }
+
+    /**
+     * Sets the current distortion FBO width value
+     * @param width The width to be set
+     */
+    public void setFBOWidth(int width) {
+        mFBOWidth = width;
+        mCustomFBOSize = true;
     }
 
     /**
@@ -78,7 +100,19 @@ class GVRLensInfo {
      * @return current distortion FBO height value
      */
     public int getFBOHeight() {
-        return mFBOHeight;
+        if (!mCustomFBOSize)
+            return mAppSettings.getEyeBufferParms().getResolutionHeight();
+        else
+            return mFBOHeight;
+    }
+
+    /**
+     * Sets the current distortion FBO height value
+     * @param height The height to be set
+     */
+    public void setFBOHeight(int height) {
+        mFBOHeight = height;
+        mCustomFBOSize = true;
     }
 
     /**
@@ -87,7 +121,8 @@ class GVRLensInfo {
      * @return current distortion MSAA value
      */
     public int getMSAA() {
-        return mMSAA;
+        return mAppSettings.getEyeBufferParms().getMultiSamples() < 0 ? 0
+                : mAppSettings.getEyeBufferParms().getMultiSamples();
     }
 
     /**

@@ -27,6 +27,9 @@
 #include <sys/ioctl.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <thread>
+#include <atomic>
+#include <mutex>
 
 #include "math/quaternion.hpp"
 #include "math/vector.hpp"
@@ -41,17 +44,25 @@ class KSensor {
 public:
     KSensor();
     ~KSensor();
-    bool update();
-    long long getLatestTime();
-    Quaternion getSensorQuaternion();
-    vec3 getAngularVelocity();
-    void closeSensor();
+    void stop();
+    void start();
+
+    template<typename Target> void convertTo(Target& target) {
+        std::unique_lock<std::mutex> lock(update_mutex_, std::try_to_lock);
+        if (lock.owns_lock()) {
+            target.update(latest_time_,
+                q_.w, q_.x, q_.y, q_.z,
+                last_corrected_gyro_.x, last_corrected_gyro_.y, last_corrected_gyro_.z);
+        }
+    }
 
 private:
+    bool update();
     bool pollSensor(KTrackerSensorZip* data);
-    void process(KTrackerSensorZip* data);
-    void updateQ(KTrackerMessage *msg);
-    vec3 gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT);
+    void process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q);
+    void updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q);
+    vec3 gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT, Quaternion& q);
+    void readerThreadFunc();
 
 private:
     int fd_;
@@ -68,6 +79,9 @@ private:
     vec3 last_corrected_gyro_;
     vec3 gyro_offset_;
     SensorFilter<float> tilt_filter_;
+    std::thread processing_thread_;
+    std::atomic<bool> processing_flag_;
+    std::mutex update_mutex_;
 };
 }
 

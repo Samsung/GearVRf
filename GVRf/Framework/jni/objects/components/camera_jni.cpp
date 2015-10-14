@@ -73,100 +73,88 @@ Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv * env,
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCamera_getBackgroundColorR(JNIEnv * env,
         jobject obj, jlong jcamera) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     return camera->background_color_r();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_setBackgroundColorR(JNIEnv * env,
         jobject obj, jlong jcamera, jfloat r) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera->set_background_color_r(r);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCamera_getBackgroundColorG(JNIEnv * env,
         jobject obj, jlong jcamera) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     return camera->background_color_g();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_setBackgroundColorG(JNIEnv * env,
         jobject obj, jlong jcamera, jfloat g) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera->set_background_color_g(g);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCamera_getBackgroundColorB(JNIEnv * env,
         jobject obj, jlong jcamera) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     return camera->background_color_b();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_setBackgroundColorB(JNIEnv * env,
         jobject obj, jlong jcamera, jfloat b) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera->set_background_color_b(b);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCamera_getBackgroundColorA(JNIEnv * env,
         jobject obj, jlong jcamera) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     return camera->background_color_a();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_setBackgroundColorA(JNIEnv * env,
         jobject obj, jlong jcamera, jfloat a) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera->set_background_color_a(a);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeCamera_getRenderMask(JNIEnv * env,
         jobject obj, jlong jcamera) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     return camera->render_mask();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_setRenderMask(JNIEnv * env,
         jobject obj, jlong jcamera, jint render_mask) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
     camera->set_render_mask(render_mask);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_addPostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
-    std::shared_ptr<PostEffectData> post_effect_data =
-            *reinterpret_cast<std::shared_ptr<PostEffectData>*>(jpost_effect_data);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
+    PostEffectData* post_effect_data =
+            reinterpret_cast<PostEffectData*>(jpost_effect_data);
     camera->addPostEffect(post_effect_data);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data) {
-    std::shared_ptr<Camera> camera =
-            *reinterpret_cast<std::shared_ptr<Camera>*>(jcamera);
-    std::shared_ptr<PostEffectData> post_effect_data =
-            *reinterpret_cast<std::shared_ptr<PostEffectData>*>(jpost_effect_data);
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
+    PostEffectData* post_effect_data =
+            reinterpret_cast<PostEffectData*>(jpost_effect_data);
     camera->removePostEffect(post_effect_data);
 }
 }

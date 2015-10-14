@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Containing data about how to position an object.
  ***************************************************************************/
@@ -35,14 +34,29 @@ Transform::Transform() :
 Transform::~Transform() {
 }
 
-void Transform::invalidate() {
+void Transform::invalidate(bool rotationUpdated) {
     if (model_matrix_.isValid()) {
         model_matrix_.invalidate();
-        std::vector < std::shared_ptr
-                < SceneObject >> children(owner_object()->children());
+        std::vector<SceneObject*> children(owner_object()->children());
         for (auto it = children.begin(); it != children.end(); ++it) {
-            (*it)->transform()->invalidate();
+            (*it)->transform()->invalidate(false);
         }
+    }
+    if (rotationUpdated) {
+        // scale rotation_ if needed to avoid overflow
+        static const float threshold = sqrt(FLT_MAX) / 2.0f;
+        static const float scale_factor = 0.5f / sqrt(FLT_MAX);
+        if (rotation_.w > threshold || rotation_.x > threshold
+                || rotation_.y > threshold || rotation_.z > threshold) {
+            rotation_.w *= scale_factor;
+            rotation_.x *= scale_factor;
+            rotation_.y *= scale_factor;
+            rotation_.z *= scale_factor;
+        }
+    }
+
+    if(owner_object()) {
+        owner_object()->dirtyBoundingVolume();
     }
 }
 
@@ -100,27 +114,27 @@ void Transform::setModelMatrix(glm::mat4 matrix) {
     position_ = new_position;
     scale_ = new_scale;
     rotation_ = glm::quat_cast(rotation_mat);
-    invalidate();
+    invalidate(true);
 }
 
 void Transform::translate(float x, float y, float z) {
     position_ += glm::vec3(x, y, z);
-    invalidate();
+    invalidate(false);
 }
 
 void Transform::setRotationByAxis(float angle, float x, float y, float z) {
     rotation_ = glm::angleAxis(angle, glm::vec3(x, y, z));
-    invalidate();
+    invalidate(true);
 }
 
 void Transform::rotate(float w, float x, float y, float z) {
     rotation_ = glm::quat(w, x, y, z) * rotation_;
-    invalidate();
+    invalidate(true);
 }
 
 void Transform::rotateByAxis(float angle, float x, float y, float z) {
     rotation_ = glm::angleAxis(angle, glm::vec3(x, y, z)) * rotation_;
-    invalidate();
+    invalidate(true);
 }
 
 void Transform::rotateByAxisWithPivot(float angle, float axis_x, float axis_y,
@@ -132,7 +146,7 @@ void Transform::rotateByAxisWithPivot(float angle, float axis_x, float axis_y,
     glm::vec3 relative_position = position_ - pivot;
     relative_position = glm::rotate(axis_rotation, relative_position);
     position_ = relative_position + pivot;
-    invalidate();
+    invalidate(true);
 }
 
 void Transform::rotateWithPivot(float w, float x, float y, float z,
@@ -143,7 +157,7 @@ void Transform::rotateWithPivot(float w, float x, float y, float z,
     glm::vec3 relative_position = position_ - pivot;
     relative_position = glm::rotate(rotation, relative_position);
     position_ = relative_position + pivot;
-    invalidate();
+    invalidate(true);
 }
 
 }

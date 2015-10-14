@@ -1,4 +1,21 @@
+/////////////////////////
+// Ignored Folders      /
+/////////////////////////
 bin/
 gen/
 obj/
-*.so
+ovr_mobile_sdk/
+.metadata/
+.recommenders/
+
+////////////////////////
+// Ignored Extensions  /
+////////////////////////
+*.prefs
+
+/////////////////////////
+// Ignored Files        /
+/////////////////////////
+lint.xml
+oculussig_*
+proguard-project.txt

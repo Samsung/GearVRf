@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.animation;
 
 import org.gearvrf.GVRPostEffect;
@@ -26,7 +25,8 @@ public abstract class GVRPostEffectAnimation extends GVRAnimation {
     /**
      * Sets the {@code protected final GVRPostEffectData mPostEffectData} field.
      * 
-     * @param target {@link GVRPostEffect} to animate
+     * @param target
+     *            {@link GVRPostEffect} to animate
      * @param duration
      *            The animation duration, in seconds.
      */

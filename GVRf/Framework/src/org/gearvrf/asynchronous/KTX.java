@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.asynchronous;
 
 import static android.opengl.GLES20.*;
@@ -50,6 +49,11 @@ class KTX extends GVRCompressedTextureLoader {
     private static final int[] SIGNATURE = {
             // '«', 'K', 'T', 'X', ' ', '1', '1', '»', '\r', '\n', '\x1A', '\n'
             0xAB4B5458, 0x203131BB, 0x0D0A1A0A };
+
+    @Override
+    public int headerLength() {
+        return (SIGNATURE.length + 13) * Reader.INTEGER_BYTES;
+    }
 
     @Override
     public boolean sniff(byte[] data, Reader reader) {
@@ -162,12 +166,13 @@ class KTX extends GVRCompressedTextureLoader {
             GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
                     GVRCompressedTexture.GL_TARGET, levels, quality);
 
+            ByteBuffer data = getData();
             ByteOrder defaultOrder = data.order();
             ByteOrder dataOrder = littleEndian ? ByteOrder.LITTLE_ENDIAN
                     : ByteOrder.BIG_ENDIAN;
 
             result.rebind();
-            
+
             for (int fileLevel = 0; fileLevel < levels; ++fileLevel) {
                 data.order(dataOrder);
                 int imageSize = data.getInt();
@@ -188,7 +193,7 @@ class KTX extends GVRCompressedTextureLoader {
                         Math.max(1, height >> fileLevel), 0, imageSize, data);
                 data.position(data.position() + imageSize + imagePadding);
             }
-            
+
             result.unbind();
             return result;
         }

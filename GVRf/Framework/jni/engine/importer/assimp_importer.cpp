@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Contains a ai_scene of Assimp.
  ***************************************************************************/
@@ -23,8 +22,14 @@
 #include "objects/mesh.h"
 
 namespace gvr {
-std::shared_ptr<Mesh> AssimpImporter::getMesh(int index) {
+Mesh* AssimpImporter::getMesh(int index) {
     Mesh* mesh = new Mesh();
+
+    if (assimp_importer_->GetScene() == 0) {
+        LOGE("_ASSIMP_SCENE_NOT_FOUND_");
+        delete mesh;
+        return 0;
+    }
 
     aiMesh* ai_mesh = assimp_importer_->GetScene()->mMeshes[index];
 
@@ -62,10 +67,18 @@ std::shared_ptr<Mesh> AssimpImporter::getMesh(int index) {
             triangles.push_back(ai_mesh->mFaces[i].mIndices[0]);
             triangles.push_back(ai_mesh->mFaces[i].mIndices[1]);
             triangles.push_back(ai_mesh->mFaces[i].mIndices[2]);
+        } else if (ai_mesh->mFaces[i].mNumIndices == 4) {
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[0]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[1]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[2]);
+
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[2]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[3]);
+            triangles.push_back(ai_mesh->mFaces[i].mIndices[0]);
         }
     }
     mesh->set_triangles(std::move(triangles));
 
-    return std::shared_ptr < Mesh > (mesh);
+    return mesh;
 }
 }

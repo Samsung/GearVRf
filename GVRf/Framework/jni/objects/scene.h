@@ -26,30 +26,51 @@
 
 
 #include "objects/hybrid_object.h"
+#include "components/camera_rig.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
-class CameraRig;
 class SceneObject;
 
 class Scene: public HybridObject {
 public:
     Scene();
     virtual ~Scene();
-    void addSceneObject(const std::shared_ptr<SceneObject>& scene_object);
-    void removeSceneObject(const std::shared_ptr<SceneObject>& scene_object);
-    const std::vector<std::shared_ptr<SceneObject>>& scene_objects() {
+    void addSceneObject(SceneObject* scene_object);
+    void removeSceneObject(SceneObject* scene_object);
+    const std::vector<SceneObject*>& scene_objects() {
         return scene_objects_;
     }
-    const std::shared_ptr<CameraRig>& main_camera_rig() {
+    const CameraRig* main_camera_rig() {
         return main_camera_rig_;
     }
-    void set_main_camera_rig(const std::shared_ptr<CameraRig>& camera_rig) {
+    void set_main_camera_rig(CameraRig* camera_rig) {
         main_camera_rig_ = camera_rig;
     }
-    std::vector<std::shared_ptr<SceneObject>> getWholeSceneObjects();
+    std::vector<SceneObject*> getWholeSceneObjects();
 
     int getSceneDirtyFlag() { return 1 || dirtyFlag_;  /* force to be true */}
     void setSceneDirtyFlag(int dirtyBits) { dirtyFlag_ |= dirtyBits; }
+
+    void set_frustum_culling( bool frustum_flag){ frustum_flag_ = frustum_flag; }
+    bool get_frustum_culling(){ return frustum_flag_; }
+
+    void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
+    bool get_occlusion_culling(){ return occlusion_flag_; }
+
+    void resetStats() {
+        if (!statsInitialized) {
+            Renderer::initializeStats();
+            statsInitialized = true;
+        }
+        Renderer::resetStats();
+    }
+    int getNumberDrawCalls() {
+        return Renderer::getNumberDrawCalls();
+    }
+    int getNumberTriangles() {
+        return Renderer::getNumberTriangles();
+    }
 
 private:
     Scene(const Scene& scene);
@@ -58,10 +79,14 @@ private:
     Scene& operator=(Scene&& scene);
 
 private:
-    std::vector<std::shared_ptr<SceneObject>> scene_objects_;
-    std::shared_ptr<CameraRig> main_camera_rig_;
+    std::vector<SceneObject*> scene_objects_;
+    CameraRig* main_camera_rig_;
 
     int dirtyFlag_;
+    bool frustum_flag_;
+    bool occlusion_flag_;
+    bool statsInitialized = false;
+
 };
 
 }

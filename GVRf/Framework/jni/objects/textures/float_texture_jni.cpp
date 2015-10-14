@@ -34,14 +34,13 @@ Java_org_gearvrf_NativeFloatTexture_update(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeFloatTexture_ctor(JNIEnv * env,
     jobject obj) {
-return reinterpret_cast<jlong>(new std::shared_ptr<FloatTexture>(
-                new FloatTexture()));
+return reinterpret_cast<jlong>(new FloatTexture());
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeFloatTexture_update(JNIEnv * env,
     jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata) {
-    std::shared_ptr<FloatTexture> texture = *reinterpret_cast<std::shared_ptr<FloatTexture>*>(jtexture);
+    FloatTexture* texture = reinterpret_cast<FloatTexture*>(jtexture);
     jfloat* data = env->GetFloatArrayElements(jdata, 0);
     jboolean result = texture->update(width, height, data);
     env->ReleaseFloatArrayElements(jdata, data, 0);

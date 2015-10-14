@@ -40,7 +40,7 @@ class SplashScreen extends GVRSceneObject {
         Log.d(TAG, "currentTime = %,d, timeout = %,d", currentTime, mTimeout);
     }
 
-    void close() {
+    void closeSplashScreen() {
         mCloseRequested = true;
         Log.d(TAG, "close()");
     }

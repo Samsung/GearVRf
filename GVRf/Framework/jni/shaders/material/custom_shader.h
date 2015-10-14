@@ -36,6 +36,7 @@ namespace gvr {
 
 class GLProgram;
 class RenderData;
+class Material;
 
 class CustomShader: public RecyclableObject {
 public:
@@ -53,8 +54,7 @@ public:
     void addUniformVec3Key(std::string variable_name, std::string key);
     void addUniformVec4Key(std::string variable_name, std::string key);
     void addUniformMat4Key(std::string variable_name, std::string key);
-    void render(const glm::mat4& mvp_matrix,
-            std::shared_ptr<RenderData> render_data, bool right);
+    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material, bool right);
     static int getGLTexture(int n);
 
 private:
@@ -65,9 +65,6 @@ private:
 
 private:
     GLProgram* program_;
-    GLuint a_position_;
-    GLuint a_normal_;
-    GLuint a_tex_coord_;
     GLuint u_mvp_;
     GLuint u_right_;
     std::map<int, std::string> texture_keys_;

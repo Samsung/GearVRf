@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.video;
 
 import java.io.IOException;
@@ -21,23 +20,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVREyePointeeHolder;
-import org.gearvrf.GVRMaterial;
+import org.gearvrf.*;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRMeshEyePointee;
-import org.gearvrf.GVRPicker;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRRenderData.GVRRenderingOrder;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScript;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.util.FPSCounter;
 
 import android.content.res.AssetFileDescriptor;
@@ -146,6 +132,14 @@ public class VideoScript extends GVRScript {
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
 
+        GVRScene mainScene = gvrContext.getNextMainScene(new Runnable() {
+
+            @Override
+            public void run() {
+                mMediaPlayer.start();
+            }
+        });
+
         mRadiosityShader = new RadiosityShader(gvrContext);
         mAdditiveShader = new AdditiveShader(gvrContext);
         mScreenShader = new ScreenShader(gvrContext);
@@ -167,7 +161,6 @@ public class VideoScript extends GVRScript {
             afd.close();
             mMediaPlayer.prepare();
             mMediaPlayer.setSurface(new Surface(mVideoSurfaceTexture));
-            mMediaPlayer.start();
 
             /*
              * Head tracker
@@ -182,8 +175,7 @@ public class VideoScript extends GVRScript {
                     GVRRenderingOrder.OVERLAY);
             mHeadTracker.getRenderData().setDepthTest(false);
             mHeadTracker.getRenderData().setRenderingOrder(100000);
-            gvrContext.getMainScene().getMainCameraRig().getOwnerObject()
-                    .addChildObject(mHeadTracker);
+            mainScene.getMainCameraRig().addChildObject(mHeadTracker);
 
             /*
              * FXGear Background
@@ -292,7 +284,7 @@ public class VideoScript extends GVRScript {
             mCinema[0].addChildObject(mScreenL);
             mCinema[0].addChildObject(mScreenR);
 
-            gvrContext.getMainScene().addSceneObject(mCinema[0]);
+            mainScene.addSceneObject(mCinema[0]);
 
             /*
              * Oculus Background
@@ -400,7 +392,7 @@ public class VideoScript extends GVRScript {
             mCinema[1].getTransform().rotateByAxisWithPivot(90.0f, 0.0f, 1.0f,
                     0.0f, 0.0f, 0.0f, 0.0f);
 
-            gvrContext.getMainScene().addSceneObject(mCinema[1]);
+            mainScene.addSceneObject(mCinema[1]);
             for (int i = 0; i < mCinema[1].getChildrenCount(); i++)
                 mCinema[1].getChildByIndex(i).getRenderData().setRenderMask(0);
 
@@ -417,6 +409,14 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/play-active.png"));
             mPlayPauseButton = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.7f, 0.7f), mInactivePause);
+            mPlayPauseButton.getRenderData().getMaterial()
+                    .setTexture("active_play", mActivePlay);
+            mPlayPauseButton.getRenderData().getMaterial()
+                    .setTexture("inactive_play", mInactivePlay);
+            mPlayPauseButton.getRenderData().getMaterial()
+                    .setTexture("active_pause", mActivePause);
+            mPlayPauseButton.getRenderData().getMaterial()
+                    .setTexture("inactive_pause", mInactivePause);
             mPlayPauseButton.getTransform().setPosition(0.0f, -0.8f, -8.0f);
             mPlayPauseButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -428,7 +428,7 @@ public class VideoScript extends GVRScript {
             playPauseHolder.addPointee(new GVRMeshEyePointee(gvrContext,
                     mPlayPauseButton.getRenderData().getMesh()));
             mPlayPauseButton.attachEyePointeeHolder(playPauseHolder);
-            gvrContext.getMainScene().addSceneObject(mPlayPauseButton);
+            mainScene.addSceneObject(mPlayPauseButton);
 
             mInactiveFront = gvrContext.loadTexture(new GVRAndroidResource(
                     mGVRContext, "button/front-inactive.png"));
@@ -436,6 +436,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/front-active.png"));
             mFrontButton = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.7f, 0.7f), mInactiveFront);
+            mFrontButton.getRenderData().getMaterial()
+                    .setTexture("active_front", mActiveFront);
+            mFrontButton.getRenderData().getMaterial()
+                    .setTexture("inactive_front", mInactiveFront);
             mFrontButton.getTransform().setPosition(1.2f, -0.8f, -8.0f);
             mFrontButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -447,7 +451,7 @@ public class VideoScript extends GVRScript {
             frontHolder.addPointee(new GVRMeshEyePointee(gvrContext,
                     mFrontButton.getRenderData().getMesh()));
             mFrontButton.attachEyePointeeHolder(frontHolder);
-            gvrContext.getMainScene().addSceneObject(mFrontButton);
+            mainScene.addSceneObject(mFrontButton);
 
             mInactiveBack = gvrContext.loadTexture(new GVRAndroidResource(
                     mGVRContext, "button/back-inactive.png"));
@@ -455,6 +459,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/back-active.png"));
             mBackButton = new GVRSceneObject(gvrContext, gvrContext.createQuad(
                     0.7f, 0.7f), mInactiveBack);
+            mBackButton.getRenderData().getMaterial()
+                    .setTexture("active_back", mActiveBack);
+            mBackButton.getRenderData().getMaterial()
+                    .setTexture("inactive_back", mInactiveBack);
             mBackButton.getTransform().setPosition(-1.2f, -0.8f, -8.0f);
             mBackButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -465,7 +473,7 @@ public class VideoScript extends GVRScript {
             backHolder.addPointee(new GVRMeshEyePointee(gvrContext, mBackButton
                     .getRenderData().getMesh()));
             mBackButton.attachEyePointeeHolder(backHolder);
-            gvrContext.getMainScene().addSceneObject(mBackButton);
+            mainScene.addSceneObject(mBackButton);
 
             mInactiveImax = gvrContext.loadTexture(new GVRAndroidResource(
                     mGVRContext, "button/imaxoutline.png"));
@@ -473,6 +481,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/imaxselect.png"));
             mImaxButton = new GVRSceneObject(gvrContext, gvrContext.createQuad(
                     0.9f, 0.35f), mInactiveImax);
+            mImaxButton.getRenderData().getMaterial()
+                    .setTexture("active_imax", mActiveImax);
+            mImaxButton.getRenderData().getMaterial()
+                    .setTexture("inactive_imax", mInactiveImax);
             mImaxButton.getTransform().setPosition(2.5f, -0.9f, -7.5f);
             mImaxButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -483,7 +495,7 @@ public class VideoScript extends GVRScript {
             imaxHolder.addPointee(new GVRMeshEyePointee(gvrContext, mImaxButton
                     .getRenderData().getMesh()));
             mImaxButton.attachEyePointeeHolder(imaxHolder);
-            gvrContext.getMainScene().addSceneObject(mImaxButton);
+            mainScene.addSceneObject(mImaxButton);
 
             mInactiveSelect = gvrContext.loadTexture(new GVRAndroidResource(
                     mGVRContext, "button/selectionoutline.png"));
@@ -491,6 +503,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "button/selectionselect.png"));
             mSelectButton = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(0.9f, 0.35f), mInactiveSelect);
+            mSelectButton.getRenderData().getMaterial()
+                    .setTexture("active_select", mActiveSelect);
+            mSelectButton.getRenderData().getMaterial()
+                    .setTexture("inactive_select", mInactiveSelect);
             mSelectButton.getTransform().setPosition(-2.5f, -0.9f, -7.5f);
             mSelectButton.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT + 1);
@@ -502,7 +518,7 @@ public class VideoScript extends GVRScript {
             selectHolder.addPointee(new GVRMeshEyePointee(gvrContext,
                     mSelectButton.getRenderData().getMesh()));
             mSelectButton.attachEyePointeeHolder(selectHolder);
-            gvrContext.getMainScene().addSceneObject(mSelectButton);
+            mainScene.addSceneObject(mSelectButton);
 
             mButtonBoard = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(8.2f, 1.35f),
@@ -511,19 +527,19 @@ public class VideoScript extends GVRScript {
             mButtonBoard.getTransform().setPosition(-0.1f, -0.6f, -8.0f);
             mButtonBoard.getRenderData().setRenderingOrder(
                     GVRRenderingOrder.TRANSPARENT);
-            gvrContext.getMainScene().addSceneObject(mButtonBoard);
+            mainScene.addSceneObject(mButtonBoard);
 
             /*
              * Seek bar
              */
             mSeekbar = new Seekbar(gvrContext);
-            gvrContext.getMainScene().addSceneObject(mSeekbar);
+            mainScene.addSceneObject(mSeekbar);
 
             /*
              * Global menus
              */
             mGlobalMenuRoot = new GVRSceneObject(gvrContext);
-            gvrContext.getMainScene().addSceneObject(mGlobalMenuRoot);
+            mainScene.addSceneObject(mGlobalMenuRoot);
 
             mInactiveReorient = gvrContext.loadTexture(new GVRAndroidResource(
                     mGVRContext, "global/reorient-inactive.png"));
@@ -531,6 +547,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "global/reorient-active.png"));
             mGlobalReorient = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(3.775f, 1.875f), mInactiveReorient);
+            mGlobalReorient.getRenderData().getMaterial()
+                    .setTexture("active_reorient", mActiveReorient);
+            mGlobalReorient.getRenderData().getMaterial()
+                    .setTexture("inactive_reorient", mInactiveReorient);
             mGlobalReorient.getTransform().setPosition(0.0f, 2.0f, -15.0f);
             mGlobalReorient.getRenderData().setDepthTest(false);
             mGlobalReorient.getRenderData().setRenderingOrder(
@@ -551,6 +571,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "global/passthrough-active.png"));
             mGlobalPassthrough = new GVRSceneObject(gvrContext,
                     gvrContext.createQuad(3.775f, 1.875f), mInactivePassthrough);
+            mGlobalPassthrough.getRenderData().getMaterial()
+                    .setTexture("active_passthrough", mActivePassThrough);
+            mGlobalPassthrough.getRenderData().getMaterial()
+                    .setTexture("inactive_passthrough", mInactivePassthrough);
             mGlobalPassthrough.getTransform().setPosition(0.0f, 0.0f, -15.0f);
             mGlobalPassthrough.getRenderData().setDepthTest(false);
             mGlobalPassthrough.getRenderData().setRenderingOrder(
@@ -570,6 +594,10 @@ public class VideoScript extends GVRScript {
                     mGVRContext, "global/home-active.png"));
             mGlobalHome = new GVRSceneObject(gvrContext, gvrContext.createQuad(
                     3.775f, 1.875f), mInactiveHome);
+            mGlobalHome.getRenderData().getMaterial()
+                    .setTexture("active_home", mActiveHome);
+            mGlobalHome.getRenderData().getMaterial()
+                    .setTexture("inactive_home", mInactiveHome);
             mGlobalHome.getTransform().setPosition(0.0f, -2.0f, -15.0f);
             mGlobalHome.getRenderData().setDepthTest(false);
             mGlobalHome.getRenderData().setRenderingOrder(
@@ -636,9 +664,7 @@ public class VideoScript extends GVRScript {
 
             mCameraSurfaceTexture = new SurfaceTexture(
                     passThroughTexture.getId());
-            gvrContext.getMainScene().getMainCameraRig().getOwnerObject()
-                    .addChildObject(mPassThroughObject);
-
+            mainScene.getMainCameraRig().addChildObject(mPassThroughObject);
         } catch (IOException e) {
             e.printStackTrace();
             mActivity.finish();
@@ -1014,9 +1040,9 @@ public class VideoScript extends GVRScript {
             if (isLongButtonPressed) {
                 mIsGlobalMenuOn = true;
                 float yaw = mGVRContext.getMainScene().getMainCameraRig()
-                        .getOwnerObject().getTransform().getRotationYaw();
+                        .getTransform().getRotationYaw();
                 float pitch = mGVRContext.getMainScene().getMainCameraRig()
-                        .getOwnerObject().getTransform().getRotationPitch();
+                        .getTransform().getRotationPitch();
                 if (Math.abs(pitch) >= 90.0f) {
                     if (yaw > 0.0)
                         yaw = 180.0f - yaw;
@@ -1057,23 +1083,27 @@ public class VideoScript extends GVRScript {
         }
     }
 
-    public void onButtonDown() {
+    void onPause() {
+        mMediaPlayer.pause();
+    }
+
+    void onButtonDown() {
         mIsButtonDown = true;
     }
 
-    public void onLongButtonPress() {
+    void onLongButtonPress() {
         mIsLongButtonPressed = true;
     }
 
-    public void onTouchEvent(MotionEvent event) {
+    void onTouchEvent(MotionEvent event) {
         mIsTouched = true;
     }
 
-    public void onSingleTap(MotionEvent e) {
+    void onSingleTap(MotionEvent e) {
         mIsSingleTapped = true;
     }
 
-    public void setBatteryLevel(int level) {
+    void setBatteryLevel(int level) {
         mBatteryLevel = level;
     }
 

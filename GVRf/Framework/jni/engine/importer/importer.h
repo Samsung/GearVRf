@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Imports a scene file using Assimp.
  ***************************************************************************/
@@ -35,9 +34,9 @@ private:
     Importer();
 
 public:
-    static std::shared_ptr<AssimpImporter> readFileFromAssets(char* buffer,
-            long size);
-    static std::shared_ptr<AssimpImporter> readFileFromSDCard(std::string str);
+
+    static AssimpImporter* readFileFromAssets(char* buffer, long size, const char * filename, int settings);
+    static AssimpImporter* readFileFromSDCard(const char * filename, int settings);
 };
 }
 #endif

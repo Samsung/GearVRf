@@ -22,19 +22,26 @@
 
 #include "gl/gl_program.h"
 #include "objects/post_effect_data.h"
+#include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
 #include "util/gvr_gl.h"
+#include "engine/memory/gl_delete.h"
+
 
 namespace gvr {
 CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(), float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_() {
+        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(), float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_(), mat4_keys_() {
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     checkGlError("glGetAttribLocation");
     a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
     checkGlError("glGetAttribLocation");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
+    checkGlError("glGetUniformLocation");
+    u_projection_matrix_ = glGetUniformLocation(program_->id(), "u_projection_matrix");
+    checkGlError("glGetUniformLocation");
+    u_right_eye_ = glGetUniformLocation(program_->id(), "u_right_eye");
     checkGlError("glGetUniformLocation");
 
     vaoID_ = 0;
@@ -47,7 +54,7 @@ CustomPostEffectShader::~CustomPostEffectShader() {
     }
 
     if (vaoID_ != 0) {
-    	glDeleteVertexArrays(1, &vaoID_);
+    	gl_delete.queueVertexArray(vaoID_);
     	vaoID_ = 0;
     }
 }
@@ -86,9 +93,15 @@ void CustomPostEffectShader::addVec4Key(std::string variable_name,
     vec4_keys_[location] = key;
 }
 
-void CustomPostEffectShader::render(
-        std::shared_ptr<RenderTexture> render_texture,
-        std::shared_ptr<PostEffectData> post_effect_data,
+void CustomPostEffectShader::addMat4Key(std::string variable_name,
+        std::string key) {
+    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
+    mat4_keys_[location] = key;
+}
+
+void CustomPostEffectShader::render(Camera* camera,
+        RenderTexture* render_texture,
+        PostEffectData* post_effect_data,
         std::vector<glm::vec3>& vertices, std::vector<glm::vec2>& tex_coords,
         std::vector<unsigned short>& triangles) {
     glUseProgram(program_->id());
@@ -131,10 +144,19 @@ void CustomPostEffectShader::render(
         glUniform1i(u_texture_, texture_index++);
     }
 
+    if (u_projection_matrix_ != -1) {
+        glm::mat4 view = camera->getViewMatrix();
+        glUniformMatrix4fv(u_projection_matrix_, 1, GL_TRUE, glm::value_ptr(view));
+    }
+
+    if (u_right_eye_ != -1) {
+        bool right = camera->render_mask() & RenderData::RenderMaskBit::Right;
+        glUniform1i(u_right_eye_, right ? 1 : 0);
+    }
+
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
-        std::shared_ptr<Texture> texture = post_effect_data->getTexture(
-                it->second);
+        Texture* texture = post_effect_data->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
@@ -156,6 +178,11 @@ void CustomPostEffectShader::render(
     for (auto it = vec4_keys_.begin(); it != vec4_keys_.end(); ++it) {
         glm::vec4 v = post_effect_data->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
+    }
+
+    for (auto it = mat4_keys_.begin(); it != mat4_keys_.end(); ++it) {
+        glm::mat4 m = post_effect_data->getMat4(it->second);
+        glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
     glBindVertexArray(vaoID_);
@@ -184,10 +211,19 @@ void CustomPostEffectShader::render(
         glUniform1i(u_texture_, texture_index++);
     }
 
+    if (u_projection_matrix_ != -1) {
+        glm::mat4 view = camera->getViewMatrix();
+        glUniformMatrix4fv(u_projection_matrix_, 1, GL_TRUE, glm::value_ptr(view));
+    }
+
+    if (u_right_eye_ != -1) {
+        bool right = camera->render_mask() & RenderData::RenderMaskBit::Right;
+        glUniform1i(u_right_eye_, right ? 1 : 0);
+    }
+
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
-        std::shared_ptr<Texture> texture = post_effect_data->getTexture(
-                it->second);
+        Texture* texture = post_effect_data->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
@@ -209,6 +245,11 @@ void CustomPostEffectShader::render(
     for (auto it = vec4_keys_.begin(); it != vec4_keys_.end(); ++it) {
         glm::vec4 v = post_effect_data->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
+    }
+
+    for (auto it = mat4_keys_.begin(); it != mat4_keys_.end(); ++it) {
+        glm::mat4 m = post_effect_data->getMat4(it->second);
+        glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT,

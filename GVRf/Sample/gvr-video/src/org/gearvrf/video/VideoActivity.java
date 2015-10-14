@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.video;
 
 import android.content.BroadcastReceiver;
@@ -30,7 +29,6 @@ import org.gearvrf.GVRActivity;
 import org.gearvrf.util.VRTouchPadGestureDetector;
 import org.gearvrf.util.VRTouchPadGestureDetector.OnTouchPadGestureListener;
 import org.gearvrf.util.VRTouchPadGestureDetector.SwipeDirection;
-
 
 public class VideoActivity extends GVRActivity implements
         OnTouchPadGestureListener {
@@ -59,6 +57,12 @@ public class VideoActivity extends GVRActivity implements
         setScript(mScript, "gvr_note4.xml");
         registerReceiver(mBatteryReceiver, new IntentFilter(
                 Intent.ACTION_BATTERY_CHANGED));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mScript.onPause();
     }
 
     @Override
@@ -104,6 +108,20 @@ public class VideoActivity extends GVRActivity implements
     public boolean onSwipe(MotionEvent e, SwipeDirection swipeDirection,
             float velocityX, float velocityY) {
         Log.v("", "onSwipe");
+        return false;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return false;
+    }
+    
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            onBackPressed();
+            return true;
+        }
         return false;
     }
 }

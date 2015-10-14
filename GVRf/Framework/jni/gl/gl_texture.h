@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * RAII class for GL textures.
  ***************************************************************************/
@@ -21,7 +20,19 @@
 #ifndef GL_TEXTURE_H_
 #define GL_TEXTURE_H_
 
+#ifndef GL_EXT_texture_filter_anisotropic
+#define GL_EXT_texture_filter_anisotropic 1
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+#endif /* GL_EXT_texture_filter_anisotropic */
+
+#ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
+#endif
+
+#include "util/gvr_log.h"
+
+#include "engine/memory/gl_delete.h"
 
 namespace gvr {
 class GLTexture {
@@ -37,8 +48,38 @@ public:
         glBindTexture(target, 0);
     }
 
+    explicit GLTexture(GLenum target, int* texture_parameters) :
+            target_(target) {
+        // Sets the new MIN FILTER
+        GLenum min_filter_type_ = texture_parameters[0];
+
+        // Sets the MAG FILTER
+        GLenum mag_filter_type_ = texture_parameters[1];
+
+        // Sets the wrap parameter for texture coordinate S
+        GLenum wrap_s_type_ = texture_parameters[3];
+
+        // Sets the wrap parameter for texture coordinate S
+        GLenum wrap_t_type_ = texture_parameters[4];
+
+        glGenTextures(1, &id_);
+        glBindTexture(target, id_);
+
+        // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
+        if (texture_parameters[2] > 1.0f) {
+            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                    (float) texture_parameters[2]);
+        }
+
+        glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
+        glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
+        glBindTexture(target, 0);
+    }
+
     ~GLTexture() {
-        glDeleteTextures(1, &id_);
+        gl_delete.queueTexture(id_);
     }
 
     GLuint id() const {

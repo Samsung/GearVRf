@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
+import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
-import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
@@ -67,6 +67,13 @@ abstract class AsyncBitmapTexture {
     static void loadTexture(GVRContext gvrContext,
             BitmapTextureCallback callback, GVRAndroidResource resource,
             int priority) {
+        Throttler.registerCallback(gvrContext, TEXTURE_CLASS, callback,
+                resource, priority);
+    }
+
+    static void loadTexture(GVRContext gvrContext,
+            CancelableCallback<GVRTexture> callback,
+            GVRAndroidResource resource, int priority) {
         Throttler.registerCallback(gvrContext, TEXTURE_CLASS, callback,
                 resource, priority);
     }
@@ -464,7 +471,6 @@ abstract class AsyncBitmapTexture {
         public void getBounds(Options options) {
             BitmapFactory.decodeStream(stream, null, options);
         }
-
     }
 
     private static void setInSampleSize(Options options, int requestedWidth,
@@ -593,10 +599,12 @@ abstract class AsyncBitmapTexture {
                 || requestedHeight == 0 //
                 || sampledWidth <= Math.abs(requestedWidth)
                 || sampledHeight <= Math.abs(requestedHeight)) {
-            Log.d(TAG,
-                    "Can't use slice decoder: sampledWidth = %.0f, requestedWidth = %d; sampledHeight = %.0f, requestedHeight = %d",
-                    sampledWidth, requestedWidth, sampledHeight,
-                    requestedHeight);
+            if (VERBOSE_DECODE) {
+                Log.d(TAG,
+                        "Can't use slice decoder: sampledWidth = %.0f, requestedWidth = %d; sampledHeight = %.0f, requestedHeight = %d",
+                        sampledWidth, requestedWidth, sampledHeight,
+                        requestedHeight);
+            }
             return shim.decode(options);
         }
 
@@ -709,6 +717,9 @@ abstract class AsyncBitmapTexture {
 
         DecodeStreamHelper(InputStream stream) {
             mStream = stream;
+            if (mStream.markSupported()) {
+                mStream.mark(Integer.MAX_VALUE);
+            }
         }
 
         @Override
@@ -716,6 +727,7 @@ abstract class AsyncBitmapTexture {
                 int requestedHeight) {
             AsyncBitmapTexture.setInSampleSize(options, requestedWidth,
                     requestedHeight, new GetStreamBounds(mStream));
+            rewind();
         }
 
         @Override
@@ -727,7 +739,13 @@ abstract class AsyncBitmapTexture {
 
         @Override
         public void rewind() {
-            // Do nothing for plain InputStreams
+            if (mStream.markSupported()) {
+                try {
+                    mStream.reset();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         private final InputStream mStream;

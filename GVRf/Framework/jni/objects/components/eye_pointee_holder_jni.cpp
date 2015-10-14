@@ -28,6 +28,7 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_ctor(JNIEnv * env,
         jobject obj);
+
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_getEnable(JNIEnv * env,
         jobject obj, jlong jeye_pointee_holder);
@@ -56,31 +57,30 @@ Java_org_gearvrf_NativeEyePointeeHolder_isPointed(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<EyePointeeHolder>(
-            new EyePointeeHolder()));
+    return reinterpret_cast<jlong>(new EyePointeeHolder());
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_getEnable(JNIEnv * env,
         jobject obj, jlong jeye_pointee_holder) {
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
-            *reinterpret_cast<std::shared_ptr<EyePointeeHolder>*>(jeye_pointee_holder);
+    EyePointeeHolder* eye_pointee_holder =
+            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
     return static_cast<jboolean>(eye_pointee_holder->enable());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_setEnable(JNIEnv * env,
         jobject obj, jlong jeye_pointee_holder, jboolean enable) {
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
-            *reinterpret_cast<std::shared_ptr<EyePointeeHolder>*>(jeye_pointee_holder);
+    EyePointeeHolder* eye_pointee_holder =
+            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
     eye_pointee_holder->set_enable(static_cast<jboolean>(enable));
 }
 
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_getHit(JNIEnv * env,
         jobject obj, jlong jeye_pointee_holder) {
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
-            *reinterpret_cast<std::shared_ptr<EyePointeeHolder>*>(jeye_pointee_holder);
+    EyePointeeHolder* eye_pointee_holder =
+            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
     glm::vec3 hit = eye_pointee_holder->hit();
     jsize size = sizeof(hit) / sizeof(jfloat);
     if (size != 3) {
@@ -95,10 +95,9 @@ Java_org_gearvrf_NativeEyePointeeHolder_getHit(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_addPointee(JNIEnv * env,
         jobject obj, jlong jeye_pointee_holder, jlong jeye_pointee) {
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
-            *reinterpret_cast<std::shared_ptr<EyePointeeHolder>*>(jeye_pointee_holder);
-    std::shared_ptr<EyePointee> eye_pointee = *reinterpret_cast<std::shared_ptr<
-            EyePointee>*>(jeye_pointee);
+    EyePointeeHolder* eye_pointee_holder =
+            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
+    EyePointee* eye_pointee = reinterpret_cast<EyePointee*>(jeye_pointee);
     eye_pointee_holder->addPointee(eye_pointee);
 }
 
@@ -106,10 +105,9 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_removePointee(
         JNIEnv * env, jobject obj, jlong jeye_pointee_holder,
         jlong jeye_pointee) {
-    std::shared_ptr<EyePointeeHolder> eye_pointee_holder =
-            *reinterpret_cast<std::shared_ptr<EyePointeeHolder>*>(jeye_pointee_holder);
-    std::shared_ptr<EyePointee> eye_pointee = *reinterpret_cast<std::shared_ptr<
-            EyePointee>*>(jeye_pointee);
+    EyePointeeHolder* eye_pointee_holder =
+            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
+    EyePointee* eye_pointee = reinterpret_cast<EyePointee*>(jeye_pointee);
     eye_pointee_holder->removePointee(eye_pointee);
 }
 

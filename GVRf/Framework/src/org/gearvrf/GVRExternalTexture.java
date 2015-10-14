@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
-
 
 /**
  * Wrapper for a {@code GL_TEXTURE_EXTERNAL_OES} texture. This is typically used
@@ -37,5 +35,5 @@ public class GVRExternalTexture extends GVRTexture {
 }
 
 class NativeExternalTexture {
-    public static native long ctor();
+    static native long ctor();
 }

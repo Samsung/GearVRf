@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Renders a scene, a screen.
  ***************************************************************************/
@@ -27,13 +26,18 @@
 #define __gl2_h_
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
+#ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
 #include <GLES2/gl2ext.h>
 #include "GLES3/gl3ext.h"
+#endif
 
 #include "glm/glm.hpp"
 
 #include "objects/eye_type.h"
+#include "objects/mesh.h"
+#include "objects/bounding_volume.h"
+#include "gl/gl_program.h"
 
 namespace gvr {
 class Camera;
@@ -50,31 +54,59 @@ private:
     Renderer();
 
 public:
-    static void renderCamera(std::shared_ptr<Scene> scene,
-            std::shared_ptr<Camera> camera,
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<ShaderManager> shader_manager,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b);
+    static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
+            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
 
-    static void renderCamera(std::shared_ptr<Scene> scene,
-            std::shared_ptr<Camera> camera,
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<ShaderManager> shader_manager,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_a,
-            std::shared_ptr<RenderTexture> post_effect_render_texture_b,
-            glm::mat4 vp_matrix);
+    static void renderCamera(Scene* scene, Camera* camera,
+            RenderTexture* render_texture, ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
+
+    static void renderCamera(Scene* scene, Camera* camera, int viewportX,
+            int viewportY, int viewportWidth, int viewportHeight,
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
+
+    static void renderCamera(Scene* scene, Camera* camera,
+            ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
+
+    static void cull(Scene *scene, Camera *camera, ShaderManager* shader_manager);
+
+    static void initializeStats();
+    static void resetStats();
+    static int getNumberDrawCalls();
+    static int getNumberTriangles();
 
 private:
-    static void renderRenderData(std::shared_ptr<RenderData> render_data,
-            const glm::mat4& vp_matrix, int render_mask,
-            std::shared_ptr<ShaderManager> shader_manager);
-    static void renderPostEffectData(
-            std::shared_ptr<RenderTexture> render_texture,
-            std::shared_ptr<PostEffectData> post_effect_data,
-            std::shared_ptr<PostEffectShaderManager> post_effect_shader_manager);
+    static void renderRenderData(RenderData* render_data,
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager);
+    static void renderPostEffectData(Camera* camera,
+            RenderTexture* render_texture, PostEffectData* post_effect_data,
+            PostEffectShaderManager* post_effect_shader_manager);
+
+    static void occlusion_cull(Scene* scene,
+            std::vector<SceneObject*> scene_objects);
+    static void frustum_cull(Scene* scene, Camera *camera,
+            std::vector<SceneObject*> scene_objects,
+            std::vector<RenderData*>& render_data_vector, glm::mat4 vp_matrix,
+            ShaderManager* shader_manager);
+    static void build_frustum(float frustum[6][4], float mvp_matrix[16]);
+
+    static bool is_cube_in_frustum(float frustum[6][4],
+            const BoundingVolume &bounding_volume);
+
+    static void set_face_culling(int cull_face);
 
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);

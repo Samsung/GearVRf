@@ -76,8 +76,7 @@ Java_org_gearvrf_NativePerspectiveCamera_setAspectRatio(
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<PerspectiveCamera>(
-            new PerspectiveCamera()));
+    return reinterpret_cast<jlong>(new PerspectiveCamera());
 }
 
 JNIEXPORT jfloat JNICALL
@@ -107,56 +106,56 @@ Java_org_gearvrf_NativePerspectiveCamera_setDefaultAspectRatio(
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_getNearClippingDistance(
         JNIEnv * env, jobject obj, jlong jperspective_camera) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     return perspective_camera->near_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_setNearClippingDistance(
         JNIEnv * env, jobject obj, jlong jperspective_camera, jfloat near) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     perspective_camera->set_near_clipping_distance(near);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_getFarClippingDistance(
         JNIEnv * env, jobject obj, jlong jperspective_camera) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     return perspective_camera->far_clipping_distance();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_setFarClippingDistance(
         JNIEnv * env, jobject obj, jlong jperspective_camera, jfloat far) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     perspective_camera->set_far_clipping_distance(far);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_getFovY(JNIEnv * env,
         jobject obj, jlong jperspective_camera) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     return perspective_camera->fov_y();
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_setFovY(JNIEnv * env,
         jobject obj, jlong jperspective_camera, jfloat fov_y) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     perspective_camera->set_fov_y(fov_y);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_getAspectRatio(
         JNIEnv * env, jobject obj, jlong jperspective_camera) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     return perspective_camera->aspect_ratio();
 }
 
@@ -164,8 +163,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativePerspectiveCamera_setAspectRatio(
         JNIEnv * env, jobject obj, jlong jperspective_camera,
         jfloat aspect_ratio) {
-    std::shared_ptr<PerspectiveCamera> perspective_camera =
-            *reinterpret_cast<std::shared_ptr<PerspectiveCamera>*>(jperspective_camera);
+    PerspectiveCamera* perspective_camera =
+            reinterpret_cast<PerspectiveCamera*>(jperspective_camera);
     perspective_camera->set_aspect_ratio(aspect_ratio);
 }
 }

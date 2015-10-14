@@ -18,16 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVREyePointeeHolder;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRMeshEyePointee;
-import org.gearvrf.GVRPicker;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScript;
+import org.gearvrf.*;
+import org.gearvrf.GVRPicker.GVRPickedObject;
 import org.gearvrf.utility.Log;
 
 public class SampleViewManager extends GVRScript {
@@ -56,9 +48,12 @@ public class SampleViewManager extends GVRScript {
     @Override
     public void onInit(GVRContext gvrContext) {
         mGVRContext = gvrContext;
-        mGVRContext.getMainScene().getMainCameraRig().getLeftCamera()
+
+        GVRScene mainScene = mGVRContext.getNextMainScene();
+
+        mainScene.getMainCameraRig().getLeftCamera()
                 .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
-        mGVRContext.getMainScene().getMainCameraRig().getRightCamera()
+        mainScene.getMainCameraRig().getRightCamera()
                 .setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
         mColorShader = new ColorShader(mGVRContext);
 
@@ -68,49 +63,49 @@ public class SampleViewManager extends GVRScript {
         GVRSceneObject object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(0.0f, 3.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(0.0f, -3.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(-3.0f, 0.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(3.0f, 0.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(3.0f, 3.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(3.0f, -3.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(-3.0f, 3.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorBoard(1.0f, 1.0f);
         object.getTransform().setPosition(-3.0f, -3.0f, -5.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         /*
@@ -130,20 +125,21 @@ public class SampleViewManager extends GVRScript {
             Log.e(TAG, "Mesh was not loaded. Stopping application!");
         }
         // activity was stored in order to stop the application if the mesh is
-        // not loaded. Since we don't need anymore, we set it to null to reduce chance of memory leak.
+        // not loaded. Since we don't need anymore, we set it to null to reduce
+        // chance of memory leak.
         mActivity = null;
 
         // These 2 are testing by the whole mesh.
         object = getColorMesh(1.0f, mesh);
         object.getTransform().setPosition(0.0f, 0.0f, -2.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorMesh(1.0f, mesh);
         object.getTransform().setPosition(3.0f, 3.0f, -2.0f);
         attachDefaultEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         object.getRenderData().setCullTest(false);
         mObjects.add(object);
 
@@ -151,13 +147,13 @@ public class SampleViewManager extends GVRScript {
         object = getColorMesh(2.0f, mesh);
         object.getTransform().setPosition(-5.0f, 0.0f, -2.0f);
         attachBoundingBoxEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
 
         object = getColorMesh(1.0f, mesh);
         object.getTransform().setPosition(0.0f, -5.0f, -2.0f);
         attachBoundingBoxEyePointee(object);
-        mGVRContext.getMainScene().addSceneObject(object);
+        mainScene.addSceneObject(object);
         mObjects.add(object);
     }
 
@@ -170,10 +166,10 @@ public class SampleViewManager extends GVRScript {
                             UNPICKED_COLOR_G, UNPICKED_COLOR_B,
                             UNPICKED_COLOR_A);
         }
-        for (GVREyePointeeHolder eph : GVRPicker.pickScene(mGVRContext
+        for (GVRPickedObject pickedObject : GVRPicker.findObjects(mGVRContext
                 .getMainScene())) {
             for (GVRSceneObject object : mObjects) {
-                if (eph.getOwnerObject().equals(object)) {
+                if (pickedObject.getHitObject().equals(object)) {
                     object.getRenderData()
                             .getMaterial()
                             .setVec4(ColorShader.COLOR_KEY, PICKED_COLOR_R,
@@ -211,12 +207,7 @@ public class SampleViewManager extends GVRScript {
     }
 
     private void attachDefaultEyePointee(GVRSceneObject sceneObject) {
-        GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
-                mGVRContext);
-        GVRMeshEyePointee eyePointee = new GVRMeshEyePointee(mGVRContext,
-                sceneObject.getRenderData().getMesh());
-        eyePointeeHolder.addPointee(eyePointee);
-        sceneObject.attachEyePointeeHolder(eyePointeeHolder);
+        sceneObject.attachEyePointeeHolder();
     }
 
     private void attachBoundingBoxEyePointee(GVRSceneObject sceneObject) {

@@ -33,8 +33,7 @@ Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<ExternalTexture>(
-            new ExternalTexture()));
+    return reinterpret_cast<jlong>(new ExternalTexture());
 }
 
 }

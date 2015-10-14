@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Containing data about how to render an object.
  ***************************************************************************/
@@ -24,13 +23,16 @@
 #include <memory>
 #include <vector>
 
+#include "gl/gl_program.h"
 #include "glm/glm.hpp"
 
 #include "objects/components/component.h"
+#include "objects/render_pass.h"
 
 namespace gvr {
 class Mesh;
 class Material;
+class Light;
 
 class RenderData: public Component {
 public:
@@ -42,39 +44,79 @@ public:
         Left = 0x1, Right = 0x2
     };
 
+    enum CullFace {
+        CullBack = 0, CullFront, CullNone
+    };
+
     RenderData() :
-            Component(), mesh_(0), material_(0), render_mask_(
+            Component(), mesh_(0), light_(0), use_light_(false), render_mask_(
                     DEFAULT_RENDER_MASK), rendering_order_(
-                    DEFAULT_RENDERING_ORDER), cull_test_(true), offset_(false), offset_factor_(
+                    DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
-                    true) {
+                    true), draw_mode_(GL_TRIANGLES) {
     }
 
     ~RenderData() {
+        render_pass_list_.clear();
     }
 
-    std::shared_ptr<Mesh> mesh() {
+    Mesh* mesh() const {
         return mesh_;
     }
 
-    const std::shared_ptr<Mesh>& mesh() const {
-        return mesh_;
-    }
-
-    void set_mesh(const std::shared_ptr<Mesh>& mesh) {
+    void set_mesh(Mesh* mesh) {
         mesh_ = mesh;
     }
 
-    std::shared_ptr<Material> material() {
-        return material_;
+    void add_pass(RenderPass* render_pass) {
+        render_pass_list_.push_back(render_pass);
     }
 
-    const std::shared_ptr<Material>& material() const {
-        return material_;
+    const RenderPass* pass(int pass) const {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            return render_pass_list_[pass];
+        }
+
+        return nullptr;
     }
 
-    void set_material(const std::shared_ptr<Material>& material) {
-        material_ = material;
+    const int pass_count() const {
+        return render_pass_list_.size();
+    }
+
+    Material* material(int pass) const {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            return render_pass_list_[pass]->material();
+        }
+
+        return nullptr;
+    }
+
+    void set_material(Material* material, int pass) {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            render_pass_list_[pass]->set_material(material);
+        }
+    }
+
+    Light* light() const {
+        return light_;
+    }
+
+    void set_light(Light* light) {
+        light_ = light;
+        use_light_ = true;
+    }
+
+    void enable_light() {
+        use_light_ = true;
+    }
+
+    void disable_light() {
+        use_light_ = false;
+    }
+
+    bool light_enabled() {
+        return use_light_;
     }
 
     int render_mask() const {
@@ -93,12 +135,18 @@ public:
         rendering_order_ = rendering_order;
     }
 
-    bool cull_test() const {
-        return cull_test_;
+    bool cull_face(int pass = 0) const {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            return render_pass_list_[pass]->cull_face();
+        }
+
+        return nullptr;
     }
 
-    void set_cull_test(bool cull_test) {
-        cull_test_ = cull_test;
+    void set_cull_face(int cull_face, int pass) {
+        if (pass >= 0 && pass < render_pass_list_.size()) {
+            render_pass_list_[pass]->set_cull_face(cull_face);
+        }
     }
 
     bool offset() const {
@@ -141,6 +189,23 @@ public:
         alpha_blend_ = alpha_blend;
     }
 
+    GLenum draw_mode() const {
+        return draw_mode_;
+    }
+
+    void set_camera_distance(float distance) {
+        camera_distance_ = distance;
+    }
+
+    float camera_distance() const {
+        return camera_distance_;
+    }
+
+
+    void set_draw_mode(GLenum draw_mode) {
+        draw_mode_ = draw_mode;
+    }
+
 private:
     RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -150,21 +215,48 @@ private:
 private:
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
-    std::shared_ptr<Mesh> mesh_;
-    std::shared_ptr<Material> material_;
+    Mesh* mesh_;
+    std::vector<RenderPass*> render_pass_list_;
+    Light* light_;
+    bool use_light_;
     int render_mask_;
     int rendering_order_;
-    bool cull_test_;
     bool offset_;
     float offset_factor_;
     float offset_units_;
     bool depth_test_;
     bool alpha_blend_;
+    GLenum draw_mode_;
+    float camera_distance_;
 };
 
-inline bool compareRenderData(std::shared_ptr<RenderData> i,
-        std::shared_ptr<RenderData> j) {
+inline bool compareRenderData(RenderData* i, RenderData* j) {
+    // if it is a transparent object, sort by camera distance.
+    if(i->rendering_order() == j->rendering_order() &&
+       i->rendering_order() >= RenderData::Transparent &&
+       i->rendering_order() < RenderData::Overlay) {
+        return i->camera_distance() > j->camera_distance();
+    }
+
     return i->rendering_order() < j->rendering_order();
+}
+
+inline bool compareRenderDataWithFrustumCulling(RenderData* i, RenderData* j) {
+    // if either i or j is a transparent object or an overlay object
+    if (i->rendering_order() >= RenderData::Transparent
+            || j->rendering_order() >= RenderData::Transparent) {
+        if (i->rendering_order() == j->rendering_order()) {
+            // if both are either transparent or both are overlays
+            // place them in reverse camera order from back to front
+            return i->camera_distance() < j->camera_distance();
+        } else {
+            // if one of them is a transparent or an overlay draw by rendering order
+            return i->rendering_order() < j->rendering_order();
+        }
+    }
+
+    // if both are neither transparent nor overlays, place them in camera order front to back
+    return i->camera_distance() > j->camera_distance();
 }
 
 }

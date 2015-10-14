@@ -13,8 +13,14 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.gearvrf.utility.Log;
 
 /**
  * Finds the scene objects you are pointing to.
@@ -31,6 +37,8 @@ package org.gearvrf;
  * pointee holder to a scene object.
  */
 public class GVRPicker {
+    private static final String TAG = Log.tag(GVRPicker.class);
+
     private GVRPicker() {
     }
 
@@ -46,6 +54,28 @@ public class GVRPicker {
      * bottom to 1 at the top. To construct a picking ray originating at the
      * user's head and pointing into the scene along the camera lookat vector,
      * pass in 0, 0, 0 for the origin and 0, 0, -1 for the direction.
+     * 
+     * <p>
+     * <em>Note:</em> The {@linkplain GVREyePointeeHolder#getHit() hit location}
+     * is stored in the native eye pointee holder during the ray casting
+     * operation: <em>It is only valid until the next ray cast operation.</em>
+     * That is, either the {@linkplain #pickScene(GVRScene) short pickScene()},
+     * or the
+     * {@linkplain #pickScene(GVRScene, float, float, float, float, float, float)
+     * long pickScene()}, or
+     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} calls will invalidate previous hit data. There are two
+     * ways to avoid getting invalid hit data:
+     * <ul>
+     * <li>Use the high-level
+     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} method, which returns a list of {@link GVRPickedObject}:
+     * each picked object pairs a {@link GVRSceneObject} with the hit data.
+     * <li>Write your code so that you never call ray casting operation until
+     * you have retrieved the previous operations hit data. (This is easy, if
+     * you only ever do picking from the GL thread. It's significantly harder if
+     * you are using multiple threads.)
+     * </ul>
      * 
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
@@ -76,19 +106,50 @@ public class GVRPicker {
      */
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene,
             float ox, float oy, float oz, float dx, float dy, float dz) {
-        long[] ptrs = NativePicker.pickScene(scene.getPtr(), ox, oy, oz, dx,
-                dy, dz);
-        GVREyePointeeHolder[] eyePointeeHolders = new GVREyePointeeHolder[ptrs.length];
-        for (int i = 0; i < ptrs.length; ++i) {
-            eyePointeeHolders[i] = GVREyePointeeHolder.factory(
-                    scene.getGVRContext(), ptrs[i]);
+        sFindObjectsLock.lock();
+        try {
+            long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz,
+                    dx, dy, dz);
+            GVREyePointeeHolder[] eyePointeeHolders = new GVREyePointeeHolder[ptrs.length];
+            GVRContext gvrContext = scene.getGVRContext();
+            for (int i = 0, length = ptrs.length; i < length; ++i) {
+                Log.d(TAG, "pickScene(): ptrs[%d] = %x", i, ptrs[i]);
+                eyePointeeHolders[i] = GVREyePointeeHolder.lookup(gvrContext,
+                        ptrs[i]);
+                Log.d(TAG, "pickScene(): eyePointeeHolders[%d] = %s", i,
+                        eyePointeeHolders[i]);
+            }
+            return eyePointeeHolders;
+        } finally {
+            sFindObjectsLock.unlock();
         }
-        return eyePointeeHolders;
     }
 
     /**
      * Tests the {@link GVRSceneObject}s contained within scene against the
      * camera rig's lookat vector.
+     * 
+     * <p>
+     * <em>Note:</em> The {@linkplain GVREyePointeeHolder#getHit() hit location}
+     * is stored in the native eye pointee holder during the ray casting
+     * operation: <em>It is only valid until the next ray cast operation.</em>
+     * That is, either the {@linkplain #pickScene(GVRScene) short pickScene()},
+     * or the
+     * {@linkplain #pickScene(GVRScene, float, float, float, float, float, float)
+     * long pickScene()}, or
+     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} calls will invalidate previous hit data. There are two
+     * ways to avoid getting invalid hit data:
+     * <ul>
+     * <li>Use the high-level
+     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} method, which returns a list of {@link GVRPickedObject}:
+     * each picked object pairs a {@link GVRSceneObject} with the hit data.
+     * <li>Write your code so that you never call ray casting operation until
+     * you have retrieved the previous operations hit data. (This is easy, if
+     * you only ever do picking from the GL thread. It's significantly harder if
+     * you are using multiple threads.)
+     * </ul>
      * 
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
@@ -117,14 +178,169 @@ public class GVRPicker {
      */
     public static final float pickSceneObject(GVRSceneObject sceneObject,
             GVRCameraRig cameraRig) {
-        return NativePicker.pickSceneObject(sceneObject.getPtr(),
-                cameraRig.getPtr());
+        return NativePicker.pickSceneObject(sceneObject.getNative(),
+                cameraRig.getNative());
     }
+
+    /**
+     * Casts a ray into the scene graph, and returns the objects it intersects.
+     * 
+     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
+     * {@code [dx, dy, dz]}.
+     * 
+     * <p>
+     * The ray origin may be [0, 0, 0] and the direction components should be
+     * normalized from -1 to 1: Note that the y direction runs from -1 at the
+     * bottom to 1 at the top. To construct a picking ray originating at the
+     * user's head and pointing into the scene along the camera lookat vector,
+     * pass in 0, 0, 0 for the origin and 0, 0, -1 for the direction.
+     * 
+     * <p>
+     * This method is higher-level and easier to use than
+     * {@link #pickScene(GVRScene, float, float, float, float, float, float)
+     * pickScene():} Not only does it return the hit scene object (not its
+     * holder) and the hit location directly, it is thread safe in a way that
+     * the lower-level methods are not: The
+     * {@linkplain GVREyePointeeHolder#getHit() hit location} is stored in the
+     * native eye pointee holder during the ray casting operation and it is only
+     * valid until the next ray cast operation. This method guarantees that only
+     * one thread at a time is doing a ray cast into a particular scene graph,
+     * and it extracts the hit data during within its synchronized block. You
+     * can then examine the return list without worrying about another thread
+     * corrupting your hit data.
+     * 
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     * 
+     * @param ox
+     *            The x coordinate of the ray origin.
+     * 
+     * @param oy
+     *            The y coordinate of the ray origin.
+     * 
+     * @param oz
+     *            The z coordinate of the ray origin.
+     * 
+     * @param dx
+     *            The x vector of the ray direction.
+     * 
+     * @param dy
+     *            The y vector of the ray direction.
+     * 
+     * @param dz
+     *            The z vector of the ray direction.
+     * @return A list of {@link GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link GVRPickedObject} contains the object
+     *         within the {@link GVREyePointeeHolder} along with the hit
+     *         location. (Note that the hit location is actually the point where
+     *         the cast ray intersected the holder's axis-aligned bounding box,
+     *         which may not be exactly where the ray would intersect the scene
+     *         object itself.)
+     * 
+     * @since 1.6.6
+     */
+    public static final List<GVRPickedObject> findObjects(GVRScene scene,
+            float ox, float oy, float oz, float dx, float dy, float dz) {
+        sFindObjectsLock.lock();
+        try {
+            GVRContext gvrContext = scene.getGVRContext();
+
+            long[] pointers = NativePicker.pickScene(scene.getNative(), ox, oy,
+                    oz, dx, dy, dz);
+            List<GVRPickedObject> result = new ArrayList<GVRPickedObject>(
+                    pointers.length);
+            for (long pointer : pointers) {
+                GVREyePointeeHolder holder = GVREyePointeeHolder.lookup(
+                        gvrContext, pointer);
+                result.add(new GVRPickedObject(holder));
+            }
+            return result;
+        } finally {
+            sFindObjectsLock.unlock();
+        }
+    }
+
+    /**
+     * Tests the {@link GVRSceneObject}s contained within scene against the
+     * camera rig's lookat vector.
+     * 
+     * <p>
+     * This method uses higher-level function
+     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} internally.
+     * 
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     * 
+     * @return A list of {@link GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link GVRPickedObject} contains the object
+     *         within the {@link GVREyePointeeHolder} along with the hit
+     *         location.
+     * 
+     */
+    public static final List<GVRPickedObject> findObjects(GVRScene scene) {
+        return findObjects(scene, 0, 0, 0, 0, 0, -1.0f);
+    }
+
+    /**
+     * The result of a
+     * {@link GVRPicker#findObjects(GVRScene, float, float, float, float, float, float)
+     * findObjects()} call.
+     * 
+     * @since 1.6.6
+     */
+    public static class GVRPickedObject {
+        private final GVRSceneObject sceneObject;
+        private final float[] hitLocation;
+
+        private GVRPickedObject(GVREyePointeeHolder holder) {
+            sceneObject = holder.getOwnerObject();
+            hitLocation = holder.getHit();
+        }
+
+        /**
+         * The {@link GVRSceneObject} within the eye pointee holder's bounding
+         * box - the object that the ray intersected.
+         * 
+         * @return {@link GVREyePointeeHolder#getOwnerObject()}
+         */
+        public GVRSceneObject getHitObject() {
+            return sceneObject;
+        }
+
+        /**
+         * The hit location, as an [x, y, z] array.
+         * 
+         * @return A copy of the {@link GVREyePointeeHolder#getHit()} result:
+         *         changing the result will not change the
+         *         {@link GVRPickedObject picked object's} hit data.
+         */
+        public float[] getHitLocation() {
+            return Arrays.copyOf(hitLocation, hitLocation.length);
+        }
+
+        /** The x coordinate of the hit location */
+        public float getHitX() {
+            return hitLocation[0];
+        }
+
+        /** The x coordinate of the hit location */
+        public float getHitY() {
+            return hitLocation[1];
+        }
+
+        /** The x coordinate of the hit location */
+        public float getHitZ() {
+            return hitLocation[2];
+        }
+    }
+
+    static final ReentrantLock sFindObjectsLock = new ReentrantLock();
 }
 
 final class NativePicker {
-    public static native long[] pickScene(long scene, float ox, float oy,
-            float oz, float dx, float dy, float dz);
+    static native long[] pickScene(long scene, float ox, float oy, float oz,
+            float dx, float dy, float dz);
 
-    public static native float pickSceneObject(long sceneObject, long cameraRig);
+    static native float pickSceneObject(long sceneObject, long cameraRig);
 }
