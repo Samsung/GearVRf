@@ -111,7 +111,6 @@ public class VuforiaSampleScript extends GVRScript {
         }
 
         teapot.getTransform().setPosition(0f, 0f, -0.5f);
-        mainScene.addSceneObject(teapot);
     }
 
     private float[] convertMatrix = { 1f, 0f, 0f, 0f, 0f, -1f, 0f, 0f, 0f, 0f,
@@ -162,6 +161,7 @@ public class VuforiaSampleScript extends GVRScript {
 
                 float scaleFactor = ((ImageTarget) trackable).getSize()
                         .getData()[0];
+                Matrix.rotateM(convertedMVMatrix, 0, 90, 1, 0, 0);
                 Matrix.scaleM(convertedMVMatrix, 0, scaleFactor, scaleFactor,
                         scaleFactor);
 
