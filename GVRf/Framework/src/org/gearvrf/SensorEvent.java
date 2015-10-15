@@ -1,0 +1,179 @@
+package org.gearvrf;
+
+import android.util.Log;
+
+/**
+ * This class contains all the information corresponding to a given
+ * {@link GVRBaseSensor}.
+ * 
+ * When GVRf detects cases where a given {@link GVRBaseSensor} is activated by
+ * user interaction. The {@link SensorEventListener} is triggered and a
+ * {@link SensorEvent} is delivered to the application.
+ * 
+ * Make sure that the app consumes the {@link SensorEvent} data within the
+ * callback as these objects are recycled.
+ *
+ */
+public class SensorEvent {
+    private static final String TAG = SensorEvent.class.getSimpleName();
+    private boolean isActive;
+    private float[] hitPoint;
+    private boolean isOver;
+    private GVRSceneObject object;
+    private int pointerId;
+
+    // We take a leaf out of the MotionEvent book to implement linked
+    // recycling of objects.
+    private static final int MAX_RECYCLED = 10;
+    private static final Object recyclerLock = new Object();
+
+    private static int recyclerUsed;
+    private static SensorEvent recyclerTop;
+    private SensorEvent next;
+
+    /**
+     * Set the active flag on the {@link SensorEvent}
+     * 
+     * @param isActive
+     *            The active flag value.
+     */
+    void setActive(boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    /**
+     * 
+     * Set the pointer id on the {@link SensorEvent}
+     * 
+     * @param pointerId
+     *            The id of the pointer that created this event
+     */
+    void setPointerId(int pointerId) {
+        this.pointerId = pointerId;
+    }
+
+    /**
+     * Set the coordinates of the intersection between the input ray and the
+     * affected object with the {@link GVRBaseSensor}.
+     * 
+     * @param hitPoint
+     *            The coordinates of the hit point.
+     */
+    void setHitPoint(float[] hitPoint) {
+        this.hitPoint = hitPoint;
+    }
+
+    /**
+     * The {@link GVRSceneObject} that triggered this {@link SensorEvent}.
+     * 
+     * @param object
+     *            The affected object.
+     */
+    void setObject(GVRSceneObject object) {
+        this.object = object;
+    }
+
+    /**
+     * This flag denotes that the user input pointer "is over" the affected
+     * object.
+     * 
+     * @param isOver
+     *            The value of the "is over" flag.
+     */
+    void setOver(boolean isOver) {
+        this.isOver = isOver;
+    }
+
+    /**
+     * Use this call to retrieve the affected object.
+     * 
+     * @return The affected {@link GVRSceneObject} that caused this
+     *         {@link SensorEvent} to be triggered.
+     */
+    public GVRSceneObject getObject() {
+        return object;
+    }
+
+    /**
+     * Use this flag to detect if the input pointer "is over" the
+     * {@link GVRSceneObject}.
+     * 
+     * @return <code>true</code> if the input is over the corresponding
+     *         {@link GVRSceneObject}. The {@link SensorEventListener} delivers
+     *         multiple "is over" events when <code>true</code> and only one
+     *         event when "is over" is <code>false</code>.
+     * 
+     */
+    public boolean isOver() {
+        return isOver;
+    }
+
+    /**
+     * Returns the hit point of the input and the affected
+     * {@link GVRSceneObject}
+     * 
+     * @return The coordinates where the input intersects with the
+     *         {@link GVRSceneObject}.
+     */
+    public float[] getHitPoint() {
+        return hitPoint;
+    }
+
+    /**
+     * Returns the active status of the {@link SensorEvent}.
+     * 
+     * @return <code>true</code> when the provided input has an active state and
+     *         <code>false</code> otherwise.
+     * 
+     *         This usually denotes a button press on a given input event. The
+     *         actual interaction that causes the active state is defined by the
+     *         input provided to the {@link GVRInputManager}.
+     */
+    public boolean isActive() {
+        return isActive;
+    }
+
+    /**
+     * Returns the pointer id of the pointer that generated this event.
+     * 
+     * @return The id of the pointer that generated this event.
+     */
+    public int getPointerId() {
+        return pointerId;
+    }
+
+    /**
+     * Use this method to return a {@link SensorEvent} for use.
+     * 
+     * @return
+     */
+    static SensorEvent obtain() {
+        final SensorEvent event;
+        synchronized (recyclerLock) {
+            event = recyclerTop;
+            if (event == null) {
+                return new SensorEvent();
+            }
+            recyclerTop = event.next;
+            recyclerUsed -= 1;
+        }
+        event.next = null;
+        return event;
+    }
+
+    /**
+     * Recycle the {@link SensorEvent} object.
+     * 
+     * Make sure that the object is not used after this call.
+     */
+    final void recycle() {
+        synchronized (recyclerLock) {
+            if (recyclerUsed < MAX_RECYCLED) {
+                recyclerUsed++;
+                next = recyclerTop;
+                recyclerTop = this;
+            }
+        }
+    }
+
+}

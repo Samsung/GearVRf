@@ -1,0 +1,11 @@
+GVRf IO
+
+This folder contains files required to implement User Interaction with GVRf using external input sources.
+
+The Standard Translation Library (or STL) is a helper library provides reuseable classes to help developers
+integrate input devices faster.
+
+The ControllerSample folder contains a sample program that demonstrates using a Samsung Gamepad with GVRf.
+It makes use of the STL to generate InputEvents for the GVRInputManager. 
+Note: Make sure that the controller is paired with the Samsung Device before launching the app.
+
