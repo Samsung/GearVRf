@@ -260,6 +260,8 @@ bool load_scene_node(JNIEnv *env, const aiNode *assimp_node, jobject parent,
     if (NULL != loaded_node) {
         *loaded_node = jassimp_node;
     }
+    else
+    	DeleteLocalRef jassimp_node_ref(env, jassimp_node);
 
     return true;
 }
