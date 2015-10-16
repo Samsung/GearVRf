@@ -443,18 +443,30 @@ template <class R> OVR::Matrix4f GVRActivityT<R>::Frame( const OVR::VrFrame & vr
     return view2;
 }
 
+static timespec startTime={0,0};
+
 template <class R> bool GVRActivityT<R>::OnKeyEvent(const int keyCode, const int repeatCode,
         const OVR::KeyEventType eventType) {
-
-    bool handled = app->GetVrJni()->CallBooleanMethod(app->GetJava()->ActivityObject,
-            onKeyEventNativeMethodId, keyCode, (int)eventType);
-
-    // if not handled back key long press, show global menu
-    if (handled == false && keyCode == 4 && eventType == OVR::KEY_EVENT_LONG_PRESS) {
-        app->StartSystemActivity(PUI_GLOBAL_MENU);
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if (now.tv_sec - startTime.tv_sec > 1) {
+        startTime = now;
+    } else {
+        return true;
     }
 
-    return handled;
+    headRotationProvider_.onToggleYawCorrection(*this);
+    return true;
+
+//    bool handled = app->GetVrJni()->CallBooleanMethod(app->GetJava()->ActivityObject,
+//            onKeyEventNativeMethodId, keyCode, (int)eventType);
+//
+//    // if not handled back key long press, show global menu
+//    if (handled == false && keyCode == 4 && eventType == OVR::KEY_EVENT_LONG_PRESS) {
+//        app->StartSystemActivity(PUI_GLOBAL_MENU);
+//    }
+//
+//    return handled;
 }
 
 template <class R> bool GVRActivityT<R>::updateSensoredScene() {
