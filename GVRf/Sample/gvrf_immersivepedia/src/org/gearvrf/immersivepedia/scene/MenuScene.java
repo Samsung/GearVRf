@@ -31,7 +31,6 @@ import org.gearvrf.immersivepedia.MainScript;
 import org.gearvrf.immersivepedia.R;
 import org.gearvrf.immersivepedia.focus.OnClickListener;
 import org.gearvrf.immersivepedia.util.AudioClip;
-import org.gearvrf.immersivepedia.util.Loader;
 
 public class MenuScene extends GVRScene {
 
@@ -128,31 +127,16 @@ public class MenuScene extends GVRScene {
         };
     }
 
-    // private void createSkybox() {
-    //
-    // GVRMesh mesh = getGVRContext().loadMesh(new
-    // GVRAndroidResource(getGVRContext(), R.raw.skybox_esphere));
-    // GVRTexture texture = getGVRContext().loadTexture(new
-    // GVRAndroidResource(getGVRContext(), R.drawable.menu_skybox));
-    // GVRSceneObject skybox = new GVRSceneObject(getGVRContext(), mesh,
-    // texture);
-    // skybox.getTransform().setScale(1, 1, 1);
-    // skybox.getRenderData().setRenderingOrder(0);
-    // addSceneObject(skybox);
-    // }
-
     private GVRSceneObject createSkybox() {
 
-        GVRMesh mesh =  getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.environment_walls_mesh));
-        GVRTexture texture = getGVRContext().loadTexture(Loader.loadResourceFromFile(getGVRContext(),
-                "menu_walls_tex_diffuse.png", 0));
+        GVRMesh mesh = getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.environment_walls_mesh));
+        GVRTexture texture = getGVRContext().loadTexture(new GVRAndroidResource(getGVRContext(), R.drawable.menu_walls_tex_diffuse));
         GVRSceneObject skybox = new GVRSceneObject(getGVRContext(), mesh, texture);
         skybox.getTransform().rotateByAxisWithPivot(-90, 1, 0, 0, 0, 0, 0);
         skybox.getRenderData().setRenderingOrder(0);
 
         GVRMesh meshGround = getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.environment_ground_mesh));
-        GVRTexture textureGround = getGVRContext().loadTexture(Loader.loadResourceFromFile(getGVRContext(),
-                "menu_ground_tex_diffuse.png", 0));
+        GVRTexture textureGround = getGVRContext().loadTexture(new GVRAndroidResource(getGVRContext(), R.drawable.menu_ground_tex_diffuse));
         GVRSceneObject skyboxGround = new GVRSceneObject(getGVRContext(), meshGround, textureGround);
         skyboxGround.getRenderData().setRenderingOrder(0);
 

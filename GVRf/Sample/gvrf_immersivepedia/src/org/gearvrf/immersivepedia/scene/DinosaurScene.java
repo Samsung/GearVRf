@@ -15,9 +15,10 @@
 
 package org.gearvrf.immersivepedia.scene;
 
+import java.io.IOException;
+
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -30,18 +31,11 @@ import org.gearvrf.immersivepedia.model.GalleryDinosaurGroup;
 import org.gearvrf.immersivepedia.model.RotateDinosaurGroup;
 import org.gearvrf.immersivepedia.model.TextDinosaurGroup;
 import org.gearvrf.immersivepedia.model.VideoDinosaurGroup;
-import org.gearvrf.immersivepedia.util.Loader;
-
-import java.io.IOException;
-import java.util.EnumSet;
+import org.gearvrf.immersivepedia.util.FPSCounter;
 
 public class DinosaurScene extends GVRScene {
 
     public static final float CAMERA_Y = 1.6f;
-    private EnumSet<GVRImportSettings> additionalSettings = EnumSet
-            .of(GVRImportSettings.CALCULATE_SMOOTH_NORMALS);
-    private EnumSet<GVRImportSettings> settings = GVRImportSettings
-            .getRecommendedSettingsWith(additionalSettings);
 
     GVRScene scene;
 
@@ -65,7 +59,6 @@ public class DinosaurScene extends GVRScene {
 
         hide();
         addSceneObject(createBlueSkybox()); //
-
     }
 
     private void createRotateDinosaurGroup() throws IOException {
@@ -104,6 +97,7 @@ public class DinosaurScene extends GVRScene {
     }
 
     public void onStep() {
+        FPSCounter.tick();
         if (this.videoDinosaur != null) {
             this.videoDinosaur.onStep();
         }
@@ -129,32 +123,25 @@ public class DinosaurScene extends GVRScene {
 
     private GVRSceneObject createSkybox() {
 
-        GVRMesh mesh =  getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.environment_walls_mesh));
-        GVRTexture texture = getGVRContext().loadTexture(Loader.loadResourceFromFile(getGVRContext(),
-                "environment_walls_tex_diffuse.png", 0));
+        GVRMesh mesh = getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.environment_walls_mesh));
+        GVRTexture texture = getGVRContext().loadTexture(new GVRAndroidResource(gvrContext, R.drawable.environment_walls_tex_diffuse));
         GVRSceneObject skybox = new GVRSceneObject(getGVRContext(), mesh, texture);
         skybox.getTransform().rotateByAxisWithPivot(-90, 1, 0, 0, 0, 0, 0);
         skybox.getRenderData().setRenderingOrder(0);
 
         GVRMesh meshGround = getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.environment_ground_mesh));
-        GVRTexture textureGround = getGVRContext().loadTexture(Loader.loadResourceFromFile(getGVRContext(),
-                "environment_ground_tex_diffuse.png", 0));
+        GVRTexture textureGround = getGVRContext().loadTexture(new GVRAndroidResource(gvrContext, R.drawable.environment_ground_tex_diffuse));
         GVRSceneObject skyboxGround = new GVRSceneObject(getGVRContext(), meshGround, textureGround);
         skyboxGround.getRenderData().setRenderingOrder(0);
-        
+
         GVRMesh meshFx = getGVRContext().loadMesh(new GVRAndroidResource(getGVRContext(), R.raw.windows_fx_mesh));
-        GVRTexture textureFx = getGVRContext().loadTexture(Loader.loadResourceFromFile(getGVRContext(),
-                "windows_fx_tex_diffuse.png", 0));
+        GVRTexture textureFx = getGVRContext().loadTexture(new GVRAndroidResource(gvrContext, R.drawable.windows_fx_tex_diffuse));
         GVRSceneObject skyboxFx = new GVRSceneObject(getGVRContext(), meshFx, textureFx);
         skyboxGround.getRenderData().setRenderingOrder(0);
 
         skybox.addChildObject(skyboxFx);
         skybox.addChildObject(skyboxGround);
-          
-        
-        
-        
-        
+
         return skybox;
     }
 

@@ -15,6 +15,8 @@
 
 package org.gearvrf.immersivepedia.model;
 
+import java.io.IOException;
+
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
@@ -31,7 +33,6 @@ import org.gearvrf.immersivepedia.focus.SwipeIndicator;
 import org.gearvrf.immersivepedia.props.Totem;
 import org.gearvrf.immersivepedia.util.AudioClip;
 import org.gearvrf.immersivepedia.util.PlayPauseButton;
-import java.io.IOException;
 
 public class RotateDinosaurGroup extends GVRSceneObject implements OnGestureListener {
 
@@ -131,7 +132,7 @@ public class RotateDinosaurGroup extends GVRSceneObject implements OnGestureList
         animation.setRepeatMode(1);
         animation.setRepeatCount(-1);
         isPlaying = true;
-       swipeIndicator.setStop(true);
+        swipeIndicator.setStop(true);
 
     }
 
