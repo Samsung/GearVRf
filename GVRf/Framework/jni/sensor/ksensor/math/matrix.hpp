@@ -299,6 +299,13 @@ struct Matrix4 {
         m.w.w = 0;
         return m;
     }
+    Vector3<T> Transform(const Vector3<T>& v) const
+    {
+        const T rcpW = T(1) / ( w.x * v.x + w.y * v.y + w.z * v.z + w.w );
+        return Vector3<T>((x.x * v.x + x.y * v.y + x.z * v.z + x.w) * rcpW,
+                          (y.x * v.x + y.y * v.y + y.z * v.z + y.w) * rcpW,
+                          (z.x * v.x + z.y * v.y + z.z * v.z + z.w) * rcpW);
+    }
     static Matrix4<T> Translate(const Vector3<T>& v) {
         Matrix4 m;
         m.x.x = 1;
