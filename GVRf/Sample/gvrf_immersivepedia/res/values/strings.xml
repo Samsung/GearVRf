@@ -1,0 +1,21 @@
+<resources>
+
+    <string name="app_name">immersivepedia</string>
+    <string name="ankylosaurus_text">Ankylosaurus measured up to 6.25 m (20.5 feet) in length, 1.7 m (5.6 feet) in height, and weighed 6 tonnes (13,000 lb). It was a quadrupedal animal, with a broad, robust body.</string>
+    <string name="ankylosaurus_title">Ankylosaurus</string>
+    <string name="styrocosaurus_text">Styrocosaurus ROCKS !!!</string>
+    <string name="styrocosaurus_title">Styrocosaurus</string>
+        <string name="rotate">Rotate</string>
+    <string name="trex_text">TRex ROCKS !!!</string>
+    <string name="trex_title">TRex</string>
+    <string name="empty"></string>
+    <string name="unavailable">Unavailable</string>
+    <string name="dinosaurs">Dinosaurs</string>
+    <string name="birds">Birds</string>
+    <string name="fishes">Fishes</string>
+    <string name="mammals">Mammals</string>
+    <string name="video_totem">Video</string>
+    <string name="rotate_totem">Rotate</string>
+    <string name="gallery_totem">Gallery</string>
+    <string name="text_totem">Text</string>
+</resources>
