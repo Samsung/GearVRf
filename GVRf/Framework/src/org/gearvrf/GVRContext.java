@@ -15,20 +15,18 @@
 
 package org.gearvrf;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.EnumSet;
 
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
-import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
@@ -774,7 +772,7 @@ public abstract class GVRContext {
 
         AiMaterial material = this.getMeshMaterial(assimpImporter, node.getName(), index);
         
-        GVRMaterial meshMaterial = new GVRMaterial(this,
+        final GVRMaterial meshMaterial = new GVRMaterial(this,
                 GVRShaderType.Assimp.ID);
      
         /* Feature set */
@@ -809,21 +807,28 @@ public abstract class GVRContext {
         meshMaterial.setOpacity(opacity);
 
         /* Diffuse Texture */
-        String texDiffuseFileName = material.getTextureFile(
+        final String texDiffuseFileName = material.getTextureFile(
                 AiTextureType.DIFFUSE, 0);
         if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
-            try {
-                Future<GVRTexture> futureDiffuseTexture = this
-                        .loadFutureTexture(new GVRAndroidResource(this,
-                                texDiffuseFileName));
-                meshMaterial.setMainTexture(futureDiffuseTexture);
-                assimpFeatureSet = GVRShaderType.Assimp.setBit(
-                        assimpFeatureSet,
-                        GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
-            } catch (FileNotFoundException file) {
-                android.util.Log.e(TAG, "Couldn't find diffuse texture: "
-                        + texDiffuseFileName);
-            }
+            loadTexture(new TextureCallback() {
+                @Override
+                public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
+                    meshMaterial.setMainTexture(texture);
+                    final int features = GVRShaderType.Assimp.setBit(
+                            meshMaterial.getShaderFeatureSet(),
+                            GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
+                    meshMaterial.setShaderFeatureSet(features);
+                }
+                @Override
+                public void failed(Throwable t, GVRAndroidResource androidResource) {
+                    Log.e(TAG, "Error loading diffuse texture %s; exception: %s",
+                        texDiffuseFileName, t.getMessage());
+                }
+                @Override
+                public boolean stillWanted(GVRAndroidResource androidResource) {
+                    return true;
+                }
+            }, new GVRAndroidResource(this, texDiffuseFileName));
         }
  
         /* Apply feature set to the material */
