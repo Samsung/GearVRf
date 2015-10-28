@@ -123,7 +123,6 @@ public class Totem extends FocusableSceneObject implements FocusListener {
                 MathUtils.getViewContainerMeasurement(
                         getGVRContext(), TEXT_WIDTH), MathUtils.getViewContainerMeasurement(getGVRContext(), TEXT_HEIGHT), text);
         textTitle.setTextSize(22);
-        textTitle.setBackGround(gvrContext.getActivity().getDrawable(R.drawable.empty));
         textTitle.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
         textTitle.getTransform().setPosition(0f, .6f, -0.1f);
         textTitle.getTransform().rotateByAxis(-180, 0, 1, 0);
