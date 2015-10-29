@@ -138,9 +138,11 @@ public:
     glm::quat getPrediction(GVRActivityT<OculusHeadRotation>& gvrActivity, const ovrFrameParms& frameParms, const float time) {
         if (docked_) {
             ovrMobile* ovr = gvrActivity.app->GetOvrMobile();
-            const ovrTracking& ovrTracking = vrapi_GetPredictedTracking(ovr, vrapi_GetPredictedDisplayTime(ovr, frameParms.FrameIndex));
+            ovrTracking tracking = vrapi_GetPredictedTracking(ovr, vrapi_GetPredictedDisplayTime(ovr, frameParms.FrameIndex));
+            ovrHeadModelParms headModelParms = vrapi_DefaultHeadModelParms();
+            tracking = vrapi_ApplyHeadModel(&headModelParms, &tracking);
 
-            const ovrQuatf& orientation = ovrTracking.HeadPose.Pose.Orientation;
+            const ovrQuatf& orientation = tracking.HeadPose.Pose.Orientation;
             glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
             return glm::conjugate(glm::inverse(quat));
         } else if (nullptr != gvrActivity.cameraRig_) {
