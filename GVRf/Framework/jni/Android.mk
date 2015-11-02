@@ -111,9 +111,10 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 #LOCAL_STATIC_LIBRARIES += staticAssimp
 LOCAL_SHARED_LIBRARIES += assimp
 LOCAL_SHARED_LIBRARIES += vrapi
+LOCAL_STATIC_LIBRARIES += systemutils
+LOCAL_STATIC_LIBRARIES += vrmodel
 LOCAL_STATIC_LIBRARIES += vrappframework
-LOCAL_STATIC_LIBRARIES += libovr
-LOCAL_STATIC_LIBRARIES += libvrmodel
+LOCAL_STATIC_LIBRARIES += libovrkernel
 
 LOCAL_ARM_NEON := true
 
@@ -134,4 +135,5 @@ include $(BUILD_SHARED_LIBRARY)
 $(call import-module,LibOVRKernel/Projects/AndroidPrebuilt/jni)
 $(call import-module,VrApi/Projects/AndroidPrebuilt/jni)
 $(call import-module,VrAppFramework/Projects/AndroidPrebuilt/jni)
-$(call import-module,VrAppSupport/VrModel/Projects/Android/jni)
+$(call import-module,VrAppSupport/SystemUtils/Projects/AndroidPrebuilt/jni)
+$(call import-module,VrAppSupport/VrModel/Projects/AndroidPrebuilt/jni)
