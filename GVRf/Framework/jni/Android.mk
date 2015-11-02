@@ -28,7 +28,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 
 ifndef OVR_MOBILE_SDK
-	OVR_MOBILE_SDK=../../ovr_mobile_sdk
+	OVR_MOBILE_SDK=../../ovr_sdk_mobile
 endif
 
 #include $(OVR_MOBILE_SDK)/VRLib/import_vrlib.mk
