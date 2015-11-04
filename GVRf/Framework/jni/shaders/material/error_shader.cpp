@@ -74,7 +74,7 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
     glUniform4f(u_color_, r, g, b, a);
 
     glBindVertexArray(mesh->getVAOId(material->shader_type()));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 #else
@@ -88,8 +88,8 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
 
     glUniform4f(u_color_, r, g, b, a);
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
     checkGlError("ErrorShader::render");
 }

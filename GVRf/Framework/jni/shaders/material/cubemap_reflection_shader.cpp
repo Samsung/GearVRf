@@ -149,7 +149,7 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
     glUniform1f(u_opacity_, opacity);
 
     glBindVertexArray(mesh->getVAOId(Material::CUBEMAP_REFLECTION_SHADER));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 #else
@@ -176,8 +176,8 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
 
     glUniform1f(u_opacity_, opacity);
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
 
     checkGlError("CubemapReflectionShader::render");

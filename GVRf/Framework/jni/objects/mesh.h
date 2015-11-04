@@ -43,7 +43,7 @@ namespace gvr {
 class Mesh: public HybridObject {
 public:
     Mesh() :
-            vertices_(), normals_(), tex_coords_(), triangles_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
+            vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
                     have_bounding_volume_(false), vao_dirty_(true),
                     vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
                     norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID)
@@ -61,8 +61,8 @@ public:
         normals.swap(normals_);
         std::vector<glm::vec2> tex_coords;
         tex_coords.swap(tex_coords_);
-        std::vector<unsigned short> triangles;
-        triangles.swap(triangles_);
+        std::vector<unsigned short> indices;
+        indices.swap(indices_);
 
         deleteVaos();
     }
@@ -130,16 +130,30 @@ public:
     }
 
     const std::vector<unsigned short>& triangles() const {
-        return triangles_;
+        return indices_;
     }
 
     void set_triangles(const std::vector<unsigned short>& triangles) {
-        triangles_ = triangles;
+        indices_ = triangles;
         vao_dirty_ = true;
     }
 
     void set_triangles(std::vector<unsigned short>&& triangles) {
-        triangles_ = std::move(triangles);
+        indices_ = std::move(triangles);
+        vao_dirty_ = true;
+    }
+
+    const std::vector<unsigned short>& indices() const {
+        return indices_;
+    }
+
+    void set_indices(const std::vector<unsigned short>& indices) {
+        indices_ = indices;
+        vao_dirty_ = true;
+    }
+
+    void set_indices(std::vector<unsigned short>&& indices) {
+        indices_ = std::move(indices);
         vao_dirty_ = true;
     }
 
@@ -258,7 +272,7 @@ private:
     std::map<std::string, std::vector<glm::vec2>> vec2_vectors_;
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
     std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
-    std::vector<unsigned short> triangles_;
+    std::vector<unsigned short> indices_;
 
     // add location slot map
     std::map<int, std::string> attribute_float_keys_;
