@@ -166,6 +166,7 @@ void SceneObject::removeChildObject(SceneObject* child) {
                 children_.end());
         child->parent_ = NULL;
     }
+    child->transform()->invalidate(false);
     dirtyBoundingVolume();
 }
 
