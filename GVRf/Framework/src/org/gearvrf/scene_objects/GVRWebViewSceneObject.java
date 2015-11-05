@@ -34,6 +34,8 @@ import android.webkit.WebView;
  * {@linkplain GVRSceneObject Scene object} that shows a web page, using the
  * Android {@link WebView}.
  */
+
+@Deprecated
 public class GVRWebViewSceneObject extends GVRSceneObject implements
         GVRDrawFrameListener {
     private static final int REFRESH_INTERVAL = 30; // frames

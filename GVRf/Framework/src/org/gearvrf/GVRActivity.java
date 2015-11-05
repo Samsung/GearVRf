@@ -26,6 +26,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -59,6 +61,10 @@ public class GVRActivity extends VrActivity {
     private VrAppSettings mAppSettings;
     private long mPtr;
 
+    // Group of views that are going to be drawn
+    // by some GVRViewSceneObject to the scene.
+    private ViewGroup mRenderableViewGroup = null;
+
     static {
         System.loadLibrary("gvrf");
     }
@@ -91,10 +97,12 @@ public class GVRActivity extends VrActivity {
         
         mPtr = nativeSetAppInterface(this, fromPackageNameString,
                 commandString, uriString);
-        
+
         setAppPtr(mPtr);
 
         mDockEventReceiver = new DockEventReceiver(this, mRunOnDock, mRunOnUndock);
+
+        mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
     }
 
     protected void onInitAppSettings(VrAppSettings appSettings) {
@@ -316,6 +324,25 @@ public class GVRActivity extends VrActivity {
 
     boolean updateSensoredScene() {
         return mGVRViewManager.updateSensoredScene();
+    }
+
+    /**
+     * It is a convenient function to add a {@link GVRView} to Android hierarchy view.
+     * UI thread will call {@link GVRView#draw(android.graphics.Canvas)} to refresh the view
+     * when necessary.
+     *
+     * @param view Is a {@link GVRView} that draw itself into some {@link GVRViewSceneObject}.
+     */
+    public void registerView(View view) {
+        mRenderableViewGroup.addView(view);
+    }
+
+    /**
+     * Remove a child view of Android hierarchy view .
+     * @param view View to be removed.
+     */
+    public void unregisterView(View view) {
+        mRenderableViewGroup.removeView(view);
     }
 
     private final Runnable mRunOnDock = new Runnable() {

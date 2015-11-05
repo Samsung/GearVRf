@@ -26,6 +26,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.gearvrf.GVRActivity;
+import org.gearvrf.scene_objects.view.GVRView;
+import org.gearvrf.scene_objects.view.GVRWebView;
 
 public class SceneObjectActivity extends GVRActivity {
     private static final String TAG = "SceneObjectActivity";
@@ -37,7 +39,7 @@ public class SceneObjectActivity extends GVRActivity {
     private float yangle = 0;
     private float xangle = 0;
     private long lastDownTime = 0;
-    private WebView webView;
+    private GVRWebView webView;
     private Camera camera;
 
     /** Called when the activity is first created. */
@@ -53,7 +55,7 @@ public class SceneObjectActivity extends GVRActivity {
     }
 
     private void createWebView() {
-        webView = new WebView(this);
+        webView = new GVRWebView(this);
         webView.setInitialScale(100);
         webView.measure(2000, 1000);
         webView.layout(0, 0, 2000, 1000);
@@ -96,7 +98,7 @@ public class SceneObjectActivity extends GVRActivity {
         }
     }
 
-    WebView getWebView() {
+    GVRView getWebView() {
         return webView;
     }
 
