@@ -334,4 +334,6 @@ vec3 KSensor::applyTiltCorrection(const vec3& gyro, const vec3& accel, const flo
     return gyroCorrected;
 }
 
+const double KSensor::KRadiansToDegrees = 180/M_PI;
+
 }

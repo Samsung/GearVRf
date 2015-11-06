@@ -93,7 +93,7 @@ private:
     float factoryTemperature_ = 0.0f;
 
     static const int KGyroNoiseFilterCapacity = 6000;
-    static const int KRadiansToDegrees = 180/M_PI;
+    static const double KRadiansToDegrees;
 };
 
 class KSensorFactoryCalibration {
