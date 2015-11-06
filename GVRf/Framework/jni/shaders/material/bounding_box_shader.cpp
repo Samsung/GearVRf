@@ -69,7 +69,7 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
 
     glBindVertexArray(mesh->getVAOId(material->shader_type()));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 
@@ -80,8 +80,8 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
     glEnableVertexAttribArray(a_position_);
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
 
     checkGlError("BoundingBoxShader::render");
