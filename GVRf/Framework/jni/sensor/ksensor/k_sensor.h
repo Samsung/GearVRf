@@ -63,6 +63,7 @@ private:
     vec3 applyTiltCorrection(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q);
     void readerThreadFunc();
     vec3 applyGyroFilter(const vec3& rawGyro, const float currentTemperature);
+    void readFactoryCalibration();
 
 private:
     int fd_;
