@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #ifndef KTRACKER_SENSOR_FILTER_H_
 #define KTRACKER_SENSOR_FILTER_H_
 
@@ -42,25 +41,26 @@ public:
     }
 
     ~CircularBuffer() {
-        delete Elements;
+        free(Elements);
     }
 
-private:
-    // Make the class non-copyable
-    CircularBuffer(const CircularBuffer& other);
-    CircularBuffer& operator=(const CircularBuffer& other);
+    CircularBuffer(const CircularBuffer& other) = delete;
+    CircularBuffer& operator=(const CircularBuffer& other) = delete;
 
 public:
     // Add a new element to the filter
-    void AddElement(const T &e) {
+    T addElement(const T &e) {
         LastIdx = (LastIdx + 1) % Capacity;
+        T previous = Elements[LastIdx];
         Elements[LastIdx] = e;
-        if (Count < Capacity)
+        if (Count < Capacity) {
             Count++;
+        }
+        return previous;
     }
 
     // Get element i.  0 is the most recent, 1 is one step ago, 2 is two steps ago, ...
-    T GetPrev(int i = 0) const {
+    T getPrev(int i = 0) const {
         if (i >= Count) // return 0 if the filter doesn't have enough elements
             return T();
         int idx = (LastIdx - i);
@@ -73,39 +73,56 @@ public:
 // A base class for filters that maintains a buffer of sensor data taken over time and implements
 // various simple filters, most of which are linear functions of the data history.
 // Maintains the running sum of its elements for better performance on large capacity values
-template<typename T>
-class SensorFilter: public CircularBuffer<T> {
-protected:
+template<typename T> class SensorFilter: private CircularBuffer<T> {
+private:
     T RunningTotal;               // Cached sum of the elements
 
 public:
-    SensorFilter(int capacity = CircularBuffer<T>::DefaultFilterCapacity) :
-            CircularBuffer<T>(capacity), RunningTotal() {
+    SensorFilter(int capacity) : CircularBuffer<T>(capacity), RunningTotal() {
     }
-    ;
 
     // Add a new element to the filter
     // Updates the running sum value
-    void AddElement(const T &e) {
-        int NextIdx = (this->LastIdx + 1) % this->Capacity;
-        RunningTotal += (e - this->Elements[NextIdx]);
-        CircularBuffer<T>::AddElement(e);
+    void push(const T &e) {
+        T previous = this->addElement(e);
+        if (this->Count == this->Capacity) {
+            RunningTotal -= previous;
+        }
+        RunningTotal += e;
+
         if (this->LastIdx == 0) {
             // update the cached total to avoid error accumulation
             RunningTotal = T();
-            for (int i = 0; i < this->Count; i++)
+            for (int i = 0; i < this->Count; i++) {
                 RunningTotal += this->Elements[i];
+            }
         }
     }
 
+    T peekBack() const {
+        return this->getPrev(0);
+    }
+
     // Simple statistics
-    T Total() const {
+    T total() const {
         return RunningTotal;
     }
 
-    T Mean() const {
-        return (this->Count == 0) ? T() : (Total() / (float) this->Count);
+    T mean() const {
+        return (this->Count == 0) ? T() : (total() / (float) this->Count);
     }
+
+    int size() const {
+        return this->Count;
+    }
+
+    void clear() {
+        RunningTotal = T();
+        this->Count = 0;
+        this->LastIdx = -1;
+    }
+
+    SensorFilter() = delete;
 };
 
 }

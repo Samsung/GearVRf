@@ -94,9 +94,7 @@ struct Vector2 {
 
 template<typename T>
 struct Vector3 {
-    Vector3() {
-    }
-    Vector3(T x, T y, T z) :
+    Vector3(T x = 0, T y = 0, T z = 0) :
             x(x), y(y), z(z) {
     }
     Vector3(const Vector2<T>& v, T k) :
@@ -182,9 +180,7 @@ struct Vector3 {
 
 template<typename T>
 struct Vector4 {
-    Vector4() {
-    }
-    Vector4(T x, T y, T z, T w) :
+    Vector4(T x = 0, T y = 0, T z = 0, T w = 0) :
             x(x), y(y), z(z), w(w) {
     }
     Vector4(const Vector2<T>& v, T k, T w) :

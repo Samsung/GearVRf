@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 /*
  * k_sensor.cpp
  *
@@ -26,23 +25,46 @@
 #include "util/gvr_log.h"
 #include "util/gvr_time.h"
 #include <chrono>
-#include <assert.h>
+#include "math/matrix.hpp"
 
 namespace gvr {
 
+#define HIDIOCGFEATURE(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x07, len)
+//#define LOG_SUMMARY
+//#define LOG_GYRO_FILTER
+
 void KSensor::readerThreadFunc() {
-    LOGV("ksensor reader starting up");
+    LOGV("k_sensor: reader starting up");
 
     Quaternion q;
     KTrackerSensorZip data;
 
+    if (!factoryCalibration) {
+        factoryCalibration = true;
+        KSensorFactoryCalibration ksfc;
+        int handle = open("/dev/ovr0", O_RDONLY);
+        if (handle < 0) {
+            return;
+        }
+
+        int r = ioctl(handle, HIDIOCGFEATURE(ksfc.PacketSize), ksfc.buffer_);
+        if (0 > r) {
+            LOGI("k_sensor: ioctl to get factory calibration failed!");
+            return;
+        } else {
+            close(handle);
+            ksfc.unpack();
+            factoryAccelMatrix_ = ksfc.accelMatrix_;
+            factoryGyroMatrix_ = ksfc.gyroMatrix_;
+            factoryAccelOffset_ = ksfc.accelOffset_;
+            gyroOffset_ = factoryGyroOffset_ = ksfc.gyroOffset_;
+            factoryTemperature_ = ksfc.temperature_;
+        }
+    }
+
+    fd_ = open("/dev/ovr0", O_RDONLY);
     while (processing_flag_) {
         if (!pollSensor(&data)) {
-            if (fd_ >= 0) {
-                close(fd_);
-                fd_ = -1;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }
 
@@ -65,37 +87,23 @@ void KSensor::readerThreadFunc() {
 }
 
 KSensor::KSensor() :
-        fd_(-1), q_(), first_(true), step_(0), first_real_time_delta_(0.0f), last_timestamp_(
-                0), full_timestamp_(0), last_sample_count_(0), latest_time_(0), last_acceleration_(
-                0.0f, 0.0f, 0.0f), last_rotation_rate_(0.0f, 0.0f, 0.0f), last_corrected_gyro_(
-                0.0f, 0.0f, 0.0f), gyro_offset_(0.0f, 0.0f, 0.0f), tilt_filter_(),
-                processing_flag_(true), processing_thread_() {
-}
-
-KSensor::~KSensor() {
+        fd_(-1), q_(), first_(true), step_(0), first_real_time_delta_(0.0f), last_timestamp_(0), full_timestamp_(0), last_sample_count_(
+                0), latest_time_(0), last_acceleration_(0.0f, 0.0f, 0.0f), processing_thread_(), gyroFilter_(
+                KGyroNoiseFilterCapacity), tiltFilter_(25), processing_flag_(true) {
 }
 
 void KSensor::start() {
-	processing_thread_ = std::thread(&KSensor::readerThreadFunc, this);
+    processing_thread_ = std::thread(&KSensor::readerThreadFunc, this);
 }
 
 void KSensor::stop() {
     processing_flag_ = false;
-    if(processing_thread_.joinable()) {
+    if (processing_thread_.joinable()) {
         processing_thread_.join();
     }
 }
 
 bool KSensor::pollSensor(KTrackerSensorZip* data) {
-    if (fd_ < 0) {
-        fd_ = open("/dev/ovr0", O_RDONLY);
-    }
-    if (fd_ < 0) {
-        return false;
-    }
-
-    //thr priority
-
     struct pollfd pfds;
     pfds.fd = fd_;
     pfds.events = POLLIN;
@@ -105,51 +113,35 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
     if (n > 0 && (pfds.revents & POLLIN)) {
         int r = read(fd_, buffer, 100);
         if (r < 0) {
-            LOGI("OnSensorEvent() read error %d", r);
+            LOGI("k_sensor: read error %d", r);
             return false;
         }
 
         data->SampleCount = buffer[1];
-        data->Timestamp = (uint16_t)(*(buffer + 3) << 8)
-                | (uint16_t)(*(buffer + 2));
-        data->LastCommandID = (uint16_t)(*(buffer + 5) << 8)
-                | (uint16_t)(*(buffer + 4));
-        data->Temperature = (int16_t)(*(buffer + 7) << 8)
-                | (int16_t)(*(buffer + 6));
+        data->Timestamp = (uint16_t) (*(buffer + 3) << 8) | (uint16_t) (*(buffer + 2));
+        data->LastCommandID = (uint16_t) (*(buffer + 5) << 8) | (uint16_t) (*(buffer + 4));
+        data->Temperature = (int16_t) (*(buffer + 7) << 8) | (int16_t) (*(buffer + 6));
 
-        for (int i = 0; i < (data->SampleCount > 3 ? 3 : data->SampleCount);
-                ++i) {
+        for (int i = 0; i < (data->SampleCount > 3 ? 3 : data->SampleCount); ++i) {
             struct {
                 int32_t x :21;
             } s;
 
-            data->Samples[i].AccelX = s.x = (buffer[0 + 8 + 16 * i] << 13)
-                    | (buffer[1 + 8 + 16 * i] << 5)
+            data->Samples[i].AccelX = s.x = (buffer[0 + 8 + 16 * i] << 13) | (buffer[1 + 8 + 16 * i] << 5)
                     | ((buffer[2 + 8 + 16 * i] & 0xF8) >> 3);
-            data->Samples[i].AccelY = s.x = ((buffer[2 + 8 + 16 * i] & 0x07)
-                    << 18) | (buffer[3 + 8 + 16 * i] << 10)
-                    | (buffer[4 + 8 + 16 * i] << 2)
-                    | ((buffer[5 + 8 + 16 * i] & 0xC0) >> 6);
-            data->Samples[i].AccelZ = s.x = ((buffer[5 + 8 + 16 * i] & 0x3F)
-                    << 15) | (buffer[6 + 8 + 16 * i] << 7)
+            data->Samples[i].AccelY = s.x = ((buffer[2 + 8 + 16 * i] & 0x07) << 18) | (buffer[3 + 8 + 16 * i] << 10)
+                    | (buffer[4 + 8 + 16 * i] << 2) | ((buffer[5 + 8 + 16 * i] & 0xC0) >> 6);
+            data->Samples[i].AccelZ = s.x = ((buffer[5 + 8 + 16 * i] & 0x3F) << 15) | (buffer[6 + 8 + 16 * i] << 7)
                     | (buffer[7 + 8 + 16 * i] >> 1);
 
-            data->Samples[i].GyroX = s.x = (buffer[0 + 16 + 16 * i] << 13)
-                    | (buffer[1 + 16 + 16 * i] << 5)
+            data->Samples[i].GyroX = s.x = (buffer[0 + 16 + 16 * i] << 13) | (buffer[1 + 16 + 16 * i] << 5)
                     | ((buffer[2 + 16 + 16 * i] & 0xF8) >> 3);
-            data->Samples[i].GyroY = s.x = ((buffer[2 + 16 + 16 * i] & 0x07)
-                    << 18) | (buffer[3 + 16 + 16 * i] << 10)
-                    | (buffer[4 + 16 + 16 * i] << 2)
-                    | ((buffer[5 + 16 + 16 * i] & 0xC0) >> 6);
-            data->Samples[i].GyroZ = s.x = ((buffer[5 + 16 + 16 * i] & 0x3F)
-                    << 15) | (buffer[6 + 16 + 16 * i] << 7)
+            data->Samples[i].GyroY = s.x = ((buffer[2 + 16 + 16 * i] & 0x07) << 18) | (buffer[3 + 16 + 16 * i] << 10)
+                    | (buffer[4 + 16 + 16 * i] << 2) | ((buffer[5 + 16 + 16 * i] & 0xC0) >> 6);
+            data->Samples[i].GyroZ = s.x = ((buffer[5 + 16 + 16 * i] & 0x3F) << 15) | (buffer[6 + 16 + 16 * i] << 7)
                     | (buffer[7 + 16 + 16 * i] >> 1);
-
         }
 
-        data->MagX = (int16_t)(*(buffer + 57) << 8) | (int16_t)(*(buffer + 56));
-        data->MagY = (int16_t)(*(buffer + 59) << 8) | (int16_t)(*(buffer + 58));
-        data->MagZ = (int16_t)(*(buffer + 61) << 8) | (int16_t)(*(buffer + 60));
         return true;
     }
     return false;
@@ -180,8 +172,7 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion&
             // The timestamp rolled around the 16 bit counter, so FullTimeStamp
             // needs a high word increment.
             full_timestamp_ += 0x10000;
-            timestampDelta = ((((int) data->Timestamp) + 0x10000)
-                    - (int) last_timestamp_);
+            timestampDelta = ((((int) data->Timestamp) + 0x10000) - (int) last_timestamp_);
         } else {
             timestampDelta = (data->Timestamp - last_timestamp_);
         }
@@ -202,14 +193,12 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion&
         // This will be considered the absolute time of the last sample in
         // the message.  If we are double or tripple stepping the samples,
         // their absolute times will be adjusted backwards.
-        absoluteTimeSeconds = full_timestamp_ * timeUnit
-                + first_real_time_delta_;
+        absoluteTimeSeconds = full_timestamp_ * timeUnit + first_real_time_delta_;
 
         // If we missed a small number of samples, replicate the last sample.
         if ((timestampDelta > last_sample_count_) && (timestampDelta <= 254)) {
             KTrackerMessage sensors;
-            sensors.TimeDelta = (timestampDelta - last_sample_count_)
-                    * timeUnit;
+            sensors.TimeDelta = (timestampDelta - last_sample_count_) * timeUnit;
             sensors.Acceleration = last_acceleration_;
             sensors.RotationRate = last_rotation_rate_;
 
@@ -219,6 +208,7 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion&
 
     KTrackerMessage sensors;
     int iterations = data->SampleCount;
+    sensors.Temperature = data->Temperature * 0.01f;
 
     if (data->SampleCount > 3) {
         iterations = 3;
@@ -227,11 +217,12 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion&
         sensors.TimeDelta = timeUnit;
     }
 
+    const float scale = 0.0001f;
     for (int i = 0; i < iterations; ++i) {
-        sensors.Acceleration = vec3(data->Samples[i].AccelX,
-                data->Samples[i].AccelY, data->Samples[i].AccelZ) * 0.0001f;
-        sensors.RotationRate = vec3(data->Samples[i].GyroX,
-                data->Samples[i].GyroY, data->Samples[i].GyroZ) * 0.0001f;
+        sensors.Acceleration = vec3(data->Samples[i].AccelX * scale, data->Samples[i].AccelY * scale,
+                data->Samples[i].AccelZ * scale);
+        sensors.RotationRate = vec3(data->Samples[i].GyroX * scale, data->Samples[i].GyroY * scale,
+                data->Samples[i].GyroZ * scale);
 
         updateQ(&sensors, corrected_gyro, q);
 
@@ -246,74 +237,103 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion&
 }
 
 void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q) {
-    // Put the sensor readings into convenient local variables
-    vec3 gyro = msg->RotationRate;
-    vec3 accel = msg->Acceleration;
-    const float DeltaT = msg->TimeDelta;
-    vec3 gyroCorrected = gyrocorrect(gyro, accel, DeltaT, q);
-    corrected_gyro = gyroCorrected;
+    vec3 filteredGyro = applyGyroFilter(msg->RotationRate, msg->Temperature);
 
-    // Update the orientation quaternion based on the corrected angular velocity vector
-    float gyro_length = gyroCorrected.Length();
-    if (gyro_length != 0.0f) {
-        float angle = gyro_length * DeltaT;
-        q = q * Quaternion(cos(angle * 0.5f), gyroCorrected.Normalized() * sin(angle * 0.5f));
+    const float deltaT = msg->TimeDelta;
+    corrected_gyro = applyTiltCorrection(filteredGyro, msg->Acceleration, deltaT, q);
+
+    float gyroLength = filteredGyro.Length();
+    if (gyroLength != 0.0f) {
+        q = q * Quaternion::CreateFromAxisAngle(corrected_gyro.Normalized(), gyroLength * deltaT);
     }
 
-    step_++;
+#ifdef LOG_SUMMARY
+    if (0 == step_ % 1000) {
+        LOGI("k_sensor: summary: yaw angle %f; gyro offset %f %f %f; temperature %f; gyro filter sizes %d",
+                q.ToEulerAngle().y * KRadiansToDegrees, gyroOffset_.x, gyroOffset_.y, gyroOffset_.z, msg->Temperature,
+                gyroFilter_.size());
+    }
+#endif
 
+    step_++;
     // Normalize error
     if (step_ % 500 == 0) {
         q.Normalize();
     }
 }
 
-vec3 KSensor::gyrocorrect(vec3 gyro, vec3 accel, const float DeltaT, Quaternion& q) {
-    // Small preprocessing
-    Quaternion Qinv = q.Inverted();
-    vec3 up = Qinv.Rotate(vec3(0, 1, 0));
+/**
+ * Tries to determine the gyro noise and subtract it from the actual reading to
+ * reduce the amount of yaw drift.
+ */
+vec3 KSensor::applyGyroFilter(const vec3& rawGyro, const float currentTemperature) {
+    const int gyroFilterSize = gyroFilter_.size();
+    if (gyroFilterSize > KGyroNoiseFilterCapacity / 2) {
+        gyroOffset_ = gyroFilter_.mean();
+        sensorTemperature_ = currentTemperature;
+    }
+
+    if (gyroFilterSize > 0) {
+        if (!isnan(sensorTemperature_) && sensorTemperature_ != currentTemperature) {
+            gyroFilter_.clear();
+            sensorTemperature_ = currentTemperature;
+
+#ifdef LOG_GYRO_FILTER
+            LOGI("k_sensor: clear gyro filter due to temperature change");
+#endif
+        } else {
+            const vec3& mean = gyroFilter_.mean();
+            // magic values that happen to work
+            if (rawGyro.Length() > 1.25f * 0.349066f || (rawGyro - mean).Length() > 0.018f) {
+                gyroFilter_.clear();
+
+#ifdef LOG_GYRO_FILTER
+                LOGI("k_sensor: clear gyro filter due to motion %f %f", rawGyro.Length(), (rawGyro - mean).Length());
+#endif
+            }
+        }
+    }
+
+    const float alpha = 0.4f;
+    const vec3 avg = (0 == gyroFilterSize) ? rawGyro : rawGyro * alpha + gyroFilter_.peekBack() * (1 - alpha);
+    gyroFilter_.push(avg);
+
+    return factoryGyroMatrix_.Transform(rawGyro - gyroOffset_);
+}
+
+vec3 KSensor::applyTiltCorrection(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q) {
     vec3 gyroCorrected = gyro;
 
-    bool EnableGravity = true;
-    bool valid_accel = accel.Length() > 0.001f;
-
-    if (EnableGravity && valid_accel) {
-        gyroCorrected -= gyro_offset_;
+    if (accel.Length() > 0.001f) {
+        Quaternion Qinv = q.Inverted();
+        vec3 up = Qinv.Rotate(vec3(0, 1, 0));
 
         const float spikeThreshold = 0.01f;
-        const float gravityThreshold = 0.1f;
-        float proportionalGain = 0.25f, integralGain = 0.0f;
+        float proportionalGain = 0.25f;
 
         vec3 accel_normalize = accel.Normalized();
         vec3 up_normalize = up.Normalized();
         vec3 correction = accel_normalize.Cross(up_normalize);
         float cosError = accel_normalize.Dot(up_normalize);
-        const float Tolerance = 0.00001f;
-        vec3 tiltCorrection = correction
-                * sqrtf(2.0f / (1 + cosError + Tolerance));
 
         if (step_ > 5) {
             // Spike detection
             float tiltAngle = up.Angle(accel);
-            tilt_filter_.AddElement(tiltAngle);
-            if (tiltAngle > tilt_filter_.Mean() + spikeThreshold)
-                proportionalGain = integralGain = 0;
-            // Acceleration detection
-            const float gravity = 9.8f;
-            if (fabs(accel.Length() / gravity - 1) > gravityThreshold)
-                integralGain = 0;
+            tiltFilter_.push(tiltAngle);
+            if (tiltAngle > tiltFilter_.mean() + spikeThreshold) {
+                proportionalGain = 0;
+            }
         } else {
             // Apply full correction at the startup
             proportionalGain = 1 / DeltaT;
-            integralGain = 0;
         }
 
-        gyroCorrected += (tiltCorrection * proportionalGain);
-        gyro_offset_ -= (tiltCorrection * integralGain * DeltaT);
-    } else {
-        LOGE("invalidaccel");
+        gyroCorrected += (correction * proportionalGain);
     }
 
     return gyroCorrected;
 }
+
+const double KSensor::KRadiansToDegrees = 180/M_PI;
+
 }
