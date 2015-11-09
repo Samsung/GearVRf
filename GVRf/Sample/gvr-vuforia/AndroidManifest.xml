@@ -43,6 +43,7 @@
         <activity
             android:name="org.gearvrf.vuforiasample.VuforiaSampleActivity"
             android:screenOrientation="landscape"
+            android:launchMode="singleTask"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
