@@ -5,6 +5,7 @@ bin/
 gen/
 obj/
 ovr_mobile_sdk/
+ovr_sdk_mobile/
 .metadata/
 .recommenders/
 
@@ -12,6 +13,7 @@ ovr_mobile_sdk/
 // Ignored Extensions  /
 ////////////////////////
 *.prefs
+*.so
 
 /////////////////////////
 // Ignored Files        /
@@ -19,3 +21,6 @@ ovr_mobile_sdk/
 lint.xml
 oculussig_*
 proguard-project.txt
+SystemUtils.jar
+VrApi.jar
+VrAppFramework.jar
