@@ -15,6 +15,7 @@
         <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/>
         <activity android:name="LODTestActivity"
                   android:screenOrientation="landscape"
+                  android:launchMode="singleTask"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
