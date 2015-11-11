@@ -83,12 +83,12 @@ glm::mat4 Transform::getModelMatrix() {
 
 void Transform::setModelMatrix(glm::mat4 matrix) {
 
-	glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);
+    glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);
 
     glm::vec3 Xaxis(matrix[0][0],matrix[0][1],matrix[0][2]);
     glm::vec3 Yaxis(matrix[1][0],matrix[1][1],matrix[1][2]);
     glm::vec3 Zaxis(matrix[2][0],matrix[2][1],matrix[2][2]);
-
+ 
     double zs=glm::dot(glm::cross(Xaxis,Yaxis),Zaxis);
     double ys=glm::dot(glm::cross(Zaxis,Xaxis),Yaxis);
     double xs=glm::dot(glm::cross(Yaxis,Zaxis),Xaxis);
