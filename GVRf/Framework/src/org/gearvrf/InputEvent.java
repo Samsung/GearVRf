@@ -88,10 +88,9 @@ public class InputEvent {
     }
 
     /**
+     * Get the Z axis value for the {@link InputEvent}.
      * 
-     * Get the X axis value for the {@link InputEvent}.
-     * 
-     * @return The value of the X axis.
+     * @return The value of the Z axis.
      * 
      */
     public float getZ() {

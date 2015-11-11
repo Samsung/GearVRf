@@ -20,7 +20,6 @@ import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject.IntervalFrequency;
 import org.gearvrf.utility.Log;
 import org.gearvrf.stl.STLController.ControllerListener;
-//import org.gearvrf.stl.STLMouse.MouseListener;
 import android.graphics.Color;
 import android.opengl.Matrix;
 import android.util.SparseArray;
@@ -35,7 +34,7 @@ public class InputScript extends GVRScript implements ControllerListener {
 
     private static final float[] UP_VECTOR = { 0.0f, 1.0f, 0.0f, 1.0f };
     private static final float[] RIGHT_VECTOR = { 1.0f, 0.0f, 0.0f, 1.0f };
-    private static final float[] INITIAL_CURSOR_POISTION = { 0.0f, 0.0f,
+    private static final float[] INITIAL_CURSOR_POSITION = { 0.0f, 0.0f,
             -7.0f };
 
     private static final float MAX_RADIUS_SQUARE = 30.0f * 30.0f;
@@ -56,7 +55,12 @@ public class InputScript extends GVRScript implements ControllerListener {
 
     private GVRInputManager inputManager;
     private GVRScene mainScene;
-    private boolean intialized = false;
+    private boolean initialized = false;
+
+    // Variables for FPS
+    private int frames = 0;
+    private long startTimeMillis = 0;
+    private final long interval = 100;
 
     InputScript() {
         cursors = new SparseArray<Cursor>();
@@ -122,16 +126,16 @@ public class InputScript extends GVRScript implements ControllerListener {
             Cursor cursor = cursors.get(pointerId);
             if (cursor == null) {
                 cursor = new Cursor(mGVRContext, shaderManager);
-                cursor.getTransform().setPosition(INITIAL_CURSOR_POISTION[0],
-                        INITIAL_CURSOR_POISTION[1], INITIAL_CURSOR_POISTION[2]);
+                cursor.getTransform().setPosition(INITIAL_CURSOR_POSITION[0],
+                        INITIAL_CURSOR_POSITION[1], INITIAL_CURSOR_POSITION[2]);
                 cursors.append(pointerId, cursor);
                 mainScene.addSceneObject(cursor);
-                inputManager.setupPointer(pointerId, INITIAL_CURSOR_POISTION[0],
-                        INITIAL_CURSOR_POISTION[1], INITIAL_CURSOR_POISTION[2]);
+                inputManager.setupPointer(pointerId, INITIAL_CURSOR_POSITION[0],
+                        INITIAL_CURSOR_POSITION[1], INITIAL_CURSOR_POSITION[2]);
             }
         }
 
-        intialized = true;
+        initialized = true;
     }
 
     private class CubeSensor extends GVRBaseSensor
@@ -207,15 +211,11 @@ public class InputScript extends GVRScript implements ControllerListener {
         // tick(); uncomment for FPS
     }
 
-    public static float square(float x) {
+    private static float square(float x) {
         return x * x;
     }
 
-    private static int frames = 0;
-    private static long startTimeMillis = 0;
-    private static final long interval = 100;
-
-    public static void tick() {
+    private void tick() {
         ++frames;
         if (System.currentTimeMillis() - startTimeMillis >= interval) {
             Log.d(TAG, "FPS : " + frames / (interval / 1000.0f));
@@ -223,8 +223,6 @@ public class InputScript extends GVRScript implements ControllerListener {
             startTimeMillis = System.currentTimeMillis();
         }
     }
-
-    public static final float HALF_FOV = (float) Math.toDegrees(Math.PI / 4.0);
 
     private boolean checkBounds(float[] point) {
         float lhs = square(point[0]) + square(point[1]) + square(point[2]);
@@ -301,7 +299,7 @@ public class InputScript extends GVRScript implements ControllerListener {
         // EventHandlerThread created by the STL library.
         // In this case we are not holding up either the Main UI
         // or GL thread.
-        if (intialized) {
+        if (initialized) {
             Cursor cursor = cursors.get(id);
             if (cursor == null) {
                 Log.d(TAG, "Cursor is null for id %d", 0);
@@ -339,7 +337,7 @@ public class InputScript extends GVRScript implements ControllerListener {
         float sensitivity = (50f + SPEED) / 100f;
 
         if (x != 0 || y != 0) {
-            float angle = (float) Math.atan2(y, x);            
+            float angle = (float) Math.atan2(y, x);
             float displacementX = (float) Math.cos(angle);
             float displacementY = (float) Math.sin(angle);
             cursor.getTransform().setRotation(1.0f, 0.0f, 0.0f, 0.0f);
@@ -372,27 +370,23 @@ public class InputScript extends GVRScript implements ControllerListener {
 
     }
 
-    public float getDistance(float x, float y, float z) {
-        return (float) Math.sqrt(x * x + y * y + z * z);
-    }
-
     @Override
     public void onControllerAdded(final int id) {
-        if (intialized) {
+        if (initialized) {
             mGVRContext.runOnGlThread(new Runnable() {
                 @Override
                 public void run() {
                     // add a cursor object
                     Cursor cursor = new Cursor(mGVRContext, shaderManager);
                     cursor.getTransform().setPosition(
-                            INITIAL_CURSOR_POISTION[0],
-                            INITIAL_CURSOR_POISTION[1],
-                            INITIAL_CURSOR_POISTION[2]);
+                            INITIAL_CURSOR_POSITION[0],
+                            INITIAL_CURSOR_POSITION[1],
+                            INITIAL_CURSOR_POSITION[2]);
                     cursors.append(id, cursor);
                     mainScene.addSceneObject(cursor);
-                    inputManager.setupPointer(id, INITIAL_CURSOR_POISTION[0],
-                            INITIAL_CURSOR_POISTION[1],
-                            INITIAL_CURSOR_POISTION[2]);
+                    inputManager.setupPointer(id, INITIAL_CURSOR_POSITION[0],
+                            INITIAL_CURSOR_POSITION[1],
+                            INITIAL_CURSOR_POSITION[2]);
                 }
             });
         } else {
@@ -403,7 +397,7 @@ public class InputScript extends GVRScript implements ControllerListener {
 
     @Override
     public void onControllerRemoved(int id) {
-        if (intialized) {
+        if (initialized) {
             final Cursor cursor = cursors.get(id);
             if (cursor != null) {
                 mGVRContext.runOnGlThread(new Runnable() {
