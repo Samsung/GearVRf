@@ -60,6 +60,13 @@ JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMesh_getFloatVector(JNIEnv * env,
         jobject obj, jlong jmesh, jstring key);
 
+JNIEXPORT jcharArray JNICALL
+Java_org_gearvrf_NativeMesh_getIndices(JNIEnv * env,
+        jobject obj, jlong jmesh);
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeMesh_setIndices(JNIEnv * env,
+        jobject obj, jlong jmesh, jcharArray indices);
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMesh_setFloatVector(JNIEnv * env,
         jobject obj, jlong jmesh, jstring key, jfloatArray float_vector);
@@ -202,6 +209,32 @@ Java_org_gearvrf_NativeMesh_setTriangles(JNIEnv * env,
     }
     mesh->set_triangles(native_triangles);
     env->ReleaseCharArrayElements(triangles, jtriangles_pointer, 0);
+}
+
+JNIEXPORT jcharArray JNICALL
+Java_org_gearvrf_NativeMesh_getIndices(JNIEnv * env,
+        jobject obj, jlong jmesh) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    const std::vector<unsigned short>& indices = mesh->indices();
+    jcharArray jindices = env->NewCharArray(indices.size());
+    env->SetCharArrayRegion(jindices, 0, indices.size(), indices.data());
+    return jindices;
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeMesh_setIndices(JNIEnv * env,
+        jobject obj, jlong jmesh, jcharArray indices) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    jchar* jindices_pointer = env->GetCharArrayElements(indices, 0);
+    unsigned short* indices_pointer =
+            static_cast<unsigned short*>(jindices_pointer);
+    int indices_length = env->GetArrayLength(indices);
+    std::vector<unsigned short> native_indices;
+    for (int i = 0; i < indices_length; ++i) {
+        native_indices.push_back(indices_pointer[i]);
+    }
+    mesh->set_indices(native_indices);
+    env->ReleaseCharArrayElements(indices, jindices_pointer, 0);
 }
 
 JNIEXPORT jfloatArray JNICALL

@@ -29,6 +29,8 @@
 
 namespace gvr {
 
+//#define USE_FEATURE_KSENSOR
+
 class OculusHeadRotation;
 class KSensorHeadRotation;
 
@@ -96,8 +98,11 @@ private:
 };
 
 
+#ifdef USE_FEATURE_KSENSOR
+typedef GVRActivityT<KSensorHeadRotation> GVRActivity;
+#else
 typedef GVRActivityT<OculusHeadRotation> GVRActivity;
-//typedef GVRActivityT<KSensorHeadRotation> GVRActivity;
+#endif
 
 class KSensorHeadRotation {
 public:

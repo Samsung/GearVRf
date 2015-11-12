@@ -181,7 +181,7 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, 
     }
 
     glBindVertexArray(mesh->getVAOId(material->shader_type()));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 #else
@@ -280,8 +280,8 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, 
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
 
     checkGlError("CustomShader::render");

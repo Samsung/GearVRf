@@ -134,13 +134,13 @@ template <class PredictionTrait> jclass GVRActivityT<PredictionTrait>::GetGlobal
 template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
 {
     //General settings.
-    JNIEnv *env = app->GetVrJni();
+    JNIEnv *env = app->GetJava()->Env;
     jobject vrSettings = env->CallObjectMethod(app->GetJava()->ActivityObject,
             getAppSettingsMethodId);
     jint framebufferPixelsWide = env->GetIntField(vrSettings,
             env->GetFieldID(vrAppSettingsClass, "framebufferPixelsWide", "I"));
     if (framebufferPixelsWide == -1) {
-        app->GetVrJni()->SetIntField(vrSettings,
+        app->GetJava()->Env->SetIntField(vrSettings,
                 env->GetFieldID(vrAppSettingsClass, "framebufferPixelsWide",
                         "I"), settings.FramebufferPixelsWide);
     } else {
@@ -354,12 +354,12 @@ template <class R> void GVRActivityT<R>::Configure(OVR::ovrSettings & settings)
 
 template <class R> void GVRActivityT<R>::OneTimeInit(const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI)
 {
-    app->GetVrJni()->CallVoidMethod(app->GetJava()->ActivityObject, oneTimeInitMethodId );
+    app->GetJava()->Env->CallVoidMethod(app->GetJava()->ActivityObject, oneTimeInitMethodId );
 }
 
 template <class R> void GVRActivityT<R>::OneTimeShutdown()
 {
-    app->GetVrJni()->CallVoidMethod(app->GetJava()->ActivityObject, oneTimeShutdownMethodId);
+    app->GetJava()->Env->CallVoidMethod(app->GetJava()->ActivityObject, oneTimeShutdownMethodId);
 
     // Free GL resources
 }
@@ -389,7 +389,7 @@ template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, con
     glm::quat headRotation = headRotationProvider_.getPrediction(*this, frameParms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
     cameraRig_->getHeadTransform()->set_rotation(headRotation);
 
-    JNIEnv* jni = app->GetVrJni();
+    JNIEnv* jni = app->GetJava()->Env;
     jni->CallVoidMethod(app->GetJava()->ActivityObject, drawEyeViewMethodId, eye, fovDegreesY);
 
     if (eye == 1) {
@@ -412,7 +412,7 @@ template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, con
 
 template <class R> OVR::Matrix4f GVRActivityT<R>::Frame( const OVR::VrFrame & vrFrame )
 {
-    JNIEnv* jni = app->GetVrJni();
+    JNIEnv* jni = app->GetJava()->Env;
     jni->CallVoidMethod(app->GetJava()->ActivityObject, beforeDrawEyesMethodId);
     jni->CallVoidMethod(app->GetJava()->ActivityObject, drawFrameMethodId);
 
@@ -446,7 +446,7 @@ template <class R> OVR::Matrix4f GVRActivityT<R>::Frame( const OVR::VrFrame & vr
 template <class R> bool GVRActivityT<R>::OnKeyEvent(const int keyCode, const int repeatCode,
         const OVR::KeyEventType eventType) {
 
-    bool handled = app->GetVrJni()->CallBooleanMethod(app->GetJava()->ActivityObject,
+    bool handled = app->GetJava()->Env->CallBooleanMethod(app->GetJava()->ActivityObject,
             onKeyEventNativeMethodId, keyCode, (int)eventType);
 
     // if not handled back key long press, show global menu
@@ -458,7 +458,7 @@ template <class R> bool GVRActivityT<R>::OnKeyEvent(const int keyCode, const int
 }
 
 template <class R> bool GVRActivityT<R>::updateSensoredScene() {
-    return app->GetVrJni()->CallBooleanMethod(app->GetJava()->ActivityObject, updateSensoredSceneMethodId);
+    return app->GetJava()->Env->CallBooleanMethod(app->GetJava()->ActivityObject, updateSensoredSceneMethodId);
 }
 
 template <class R> void GVRActivityT<R>::setCameraRig(jlong cameraRig) {

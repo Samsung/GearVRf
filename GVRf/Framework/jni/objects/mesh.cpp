@@ -55,47 +55,47 @@ Mesh* Mesh::getBoundingBox() {
     mesh->vertices_.push_back(glm::vec3(min_x, max_y, max_z));
     mesh->vertices_.push_back(glm::vec3(max_x, max_y, max_z));
 
-    mesh->triangles_.push_back(0);
-    mesh->triangles_.push_back(2);
-    mesh->triangles_.push_back(1);
-    mesh->triangles_.push_back(1);
-    mesh->triangles_.push_back(2);
-    mesh->triangles_.push_back(3);
+    mesh->indices_.push_back(0);
+    mesh->indices_.push_back(2);
+    mesh->indices_.push_back(1);
+    mesh->indices_.push_back(1);
+    mesh->indices_.push_back(2);
+    mesh->indices_.push_back(3);
 
-    mesh->triangles_.push_back(1);
-    mesh->triangles_.push_back(3);
-    mesh->triangles_.push_back(7);
-    mesh->triangles_.push_back(1);
-    mesh->triangles_.push_back(7);
-    mesh->triangles_.push_back(5);
+    mesh->indices_.push_back(1);
+    mesh->indices_.push_back(3);
+    mesh->indices_.push_back(7);
+    mesh->indices_.push_back(1);
+    mesh->indices_.push_back(7);
+    mesh->indices_.push_back(5);
 
-    mesh->triangles_.push_back(4);
-    mesh->triangles_.push_back(5);
-    mesh->triangles_.push_back(6);
-    mesh->triangles_.push_back(5);
-    mesh->triangles_.push_back(7);
-    mesh->triangles_.push_back(6);
+    mesh->indices_.push_back(4);
+    mesh->indices_.push_back(5);
+    mesh->indices_.push_back(6);
+    mesh->indices_.push_back(5);
+    mesh->indices_.push_back(7);
+    mesh->indices_.push_back(6);
 
-    mesh->triangles_.push_back(0);
-    mesh->triangles_.push_back(6);
-    mesh->triangles_.push_back(2);
-    mesh->triangles_.push_back(0);
-    mesh->triangles_.push_back(4);
-    mesh->triangles_.push_back(6);
+    mesh->indices_.push_back(0);
+    mesh->indices_.push_back(6);
+    mesh->indices_.push_back(2);
+    mesh->indices_.push_back(0);
+    mesh->indices_.push_back(4);
+    mesh->indices_.push_back(6);
 
-    mesh->triangles_.push_back(0);
-    mesh->triangles_.push_back(1);
-    mesh->triangles_.push_back(5);
-    mesh->triangles_.push_back(0);
-    mesh->triangles_.push_back(5);
-    mesh->triangles_.push_back(4);
+    mesh->indices_.push_back(0);
+    mesh->indices_.push_back(1);
+    mesh->indices_.push_back(5);
+    mesh->indices_.push_back(0);
+    mesh->indices_.push_back(5);
+    mesh->indices_.push_back(4);
 
-    mesh->triangles_.push_back(2);
-    mesh->triangles_.push_back(7);
-    mesh->triangles_.push_back(3);
-    mesh->triangles_.push_back(2);
-    mesh->triangles_.push_back(6);
-    mesh->triangles_.push_back(7);
+    mesh->indices_.push_back(2);
+    mesh->indices_.push_back(7);
+    mesh->indices_.push_back(3);
+    mesh->indices_.push_back(2);
+    mesh->indices_.push_back(6);
+    mesh->indices_.push_back(7);
 
     return mesh;
 }
@@ -202,9 +202,9 @@ void Mesh::generateVAO() {
     glGenBuffers(1, &triangle_vboID_);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-            sizeof(unsigned short) * triangles_.size(), &triangles_[0],
+            sizeof(unsigned short) * indices_.size(), &indices_[0],
             GL_STATIC_DRAW);
-    numTriangles_ = triangles_.size() / 3;
+    numTriangles_ = indices_.size() / 3;
 
     if (vertices_.size()) {
         glGenBuffers(1, &vert_vboID_);

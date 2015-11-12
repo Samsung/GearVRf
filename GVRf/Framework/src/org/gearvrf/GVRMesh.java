@@ -123,6 +123,8 @@ public class GVRMesh extends GVRHybridObject {
      * </code>
      * 
      * @return Array with the packed triangle index data.
+     *
+     * @deprecated use {@link #getIndices()} instead.
      */
     public char[] getTriangles() {
         return NativeMesh.getTriangles(getNative());
@@ -139,10 +141,32 @@ public class GVRMesh extends GVRHybridObject {
      * 
      * @param triangles
      *            Array containing the packed triangle index data.
+     * @deprecated use {@link #setIndices()} instead.
      */
     public void setTriangles(char[] triangles) {
         checkDivisibleDataLength("triangles", triangles, 3);
         NativeMesh.setTriangles(getNative(), triangles);
+    }
+
+    /**
+     * Get the vertex indices of the mesh. The indices for each
+     * vertex to be referenced.
+     * 
+     * @return Array with the packed index data.
+     */
+    public char[] getIndices() {
+        return NativeMesh.getIndices(getNative());
+    }
+
+    /**
+     * Sets the vertex indices of the mesh. The indices for each
+     * vertex.
+     * 
+     * @param indices
+     *            Array containing the packed index data.
+     */
+    public void setIndices(char[] indices) {
+        NativeMesh.setIndices(getNative(), indices);
     }
 
     /**
@@ -316,6 +340,10 @@ class NativeMesh {
     static native char[] getTriangles(long mesh);
 
     static native void setTriangles(long mesh, char[] triangles);
+
+    static native char[] getIndices(long mesh);
+
+    static native void setIndices(long mesh, char[] indices);
 
     static native float[] getFloatVector(long mesh, String key);
 

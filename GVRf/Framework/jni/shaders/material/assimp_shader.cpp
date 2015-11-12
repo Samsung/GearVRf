@@ -207,7 +207,7 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     glUniform1f(u_opacity_, opacity);
 
     glBindVertexArray(mesh->getVAOId(Material::ASSIMP_SHADER));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 #else
@@ -237,8 +237,8 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
 
     checkGlError("AssimpShader::render");

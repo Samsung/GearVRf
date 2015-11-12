@@ -271,7 +271,7 @@ void TextureShader::render(const glm::mat4& mv_matrix,
         glBindVertexArray(mesh->getVAOId(Material::TEXTURE_SHADER_NOLIGHT));
     }
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 
@@ -294,8 +294,8 @@ void TextureShader::render(const glm::mat4& mv_matrix,
 
     glUniform1f(u_opacity_, opacity);
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
 
     checkGlError("TextureShader::render");

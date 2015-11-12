@@ -107,7 +107,7 @@ void OESVerticalStereoShader::render(const glm::mat4& mvp_matrix,
     glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
     glBindVertexArray(mesh->getVAOId(Material::OES_VERTICAL_STEREO_SHADER));
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
 #else
@@ -133,8 +133,8 @@ void OESVerticalStereoShader::render(const glm::mat4& mvp_matrix,
 
     glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
-    glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
-            mesh->triangles().data());
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
+            mesh->indices().data());
 #endif
     checkGlError("OESVerticalStereoShader::render");
 }
