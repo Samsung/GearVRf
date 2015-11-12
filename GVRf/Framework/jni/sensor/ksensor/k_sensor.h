@@ -60,7 +60,7 @@ private:
     bool pollSensor(KTrackerSensorZip* data);
     void process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q);
     void updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q);
-    vec3 applyTiltCorrection(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q);
+    std::pair<vec3, float> applyTiltCorrection(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q);
     void readerThreadFunc();
     vec3 applyGyroFilter(const vec3& rawGyro, const float currentTemperature);
     void readFactoryCalibration();

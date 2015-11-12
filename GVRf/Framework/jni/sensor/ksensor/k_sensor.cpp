@@ -246,14 +246,13 @@ void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro,
     vec3 filteredGyro = applyGyroFilter(msg->RotationRate, msg->Temperature);
 
     const float deltaT = msg->TimeDelta;
-    corrected_gyro = applyTiltCorrection(filteredGyro, msg->Acceleration,
+    std::pair<vec3, float> axisAndMagnitude = applyTiltCorrection(filteredGyro, msg->Acceleration,
             deltaT, q);
 
-    float gyroLength = filteredGyro.Length();
-    if (gyroLength != 0.0f) {
+    if (0.0f != axisAndMagnitude.second) {
         q = q
-                * Quaternion::CreateFromAxisAngle(corrected_gyro.Normalized(),
-                        gyroLength * deltaT);
+                * Quaternion::CreateFromAxisAngle(axisAndMagnitude.first,
+                        axisAndMagnitude.second * deltaT);
     }
 
 #ifdef LOG_SUMMARY
@@ -318,38 +317,38 @@ vec3 KSensor::applyGyroFilter(const vec3& rawGyro,
     return factoryGyroMatrix_.Transform(rawGyro - gyroOffset_);
 }
 
-vec3 KSensor::applyTiltCorrection(const vec3& gyro, const vec3& accel,
+std::pair<vec3, float> KSensor::applyTiltCorrection(const vec3& gyro, const vec3& accel,
         const float DeltaT, Quaternion& q) {
-    vec3 gyroCorrected = gyro;
-
-    if (accel.Length() > 0.001f) {
-        Quaternion Qinv = q.Inverted();
-        vec3 up = Qinv.Rotate(vec3(0, 1, 0));
-
-        const float spikeThreshold = 0.01f;
-        float proportionalGain = 0.25f;
-
-        vec3 accel_normalize = accel.Normalized();
-        vec3 up_normalize = up.Normalized();
-        vec3 correction = accel_normalize.Cross(up_normalize);
-        float cosError = accel_normalize.Dot(up_normalize);
-
-        if (step_ > 5) {
-            // Spike detection
-            float tiltAngle = up.Angle(accel);
-            tiltFilter_.push(tiltAngle);
-            if (tiltAngle > tiltFilter_.mean() + spikeThreshold) {
-                proportionalGain = 0;
-            }
-        } else {
-            // Apply full correction at the startup
-            proportionalGain = 1 / DeltaT;
-        }
-
-        gyroCorrected += (correction * proportionalGain);
+    if (accel.Length() <= 0.001f) {
+        return std::make_pair(gyro.Normalized(), gyro.Length());
     }
 
-    return gyroCorrected;
+    Quaternion Qinv = q.Inverted();
+    vec3 up = Qinv.Rotate(vec3(0, 1, 0));
+
+    vec3 accel_normalize = accel.Normalized();
+    vec3 up_normalize = up.Normalized();
+    vec3 correction = accel_normalize.Cross(up_normalize);
+
+    float proportionalGain = 0.25f;
+    const int startupThreshold = 5;
+    if (step_ > startupThreshold) {
+        // Spike detection
+        float tiltAngle = up.Angle(accel);
+        tiltFilter_.push(tiltAngle);
+
+        const float spikeThreshold = 0.01f;
+        if (tiltAngle > tiltFilter_.mean() + spikeThreshold) {
+            proportionalGain = 0;
+        }
+    } else {
+        // Apply full correction at the startup
+        proportionalGain = 1 / DeltaT;
+    }
+
+    vec3 gyroCorrected = gyro + (correction * proportionalGain);
+    float magnitude = startupThreshold < step_ ? gyro.Length() : gyroCorrected.Length();
+    return std::make_pair(gyroCorrected.Normalized(), magnitude);
 }
 
 void KSensor::readFactoryCalibration() {
