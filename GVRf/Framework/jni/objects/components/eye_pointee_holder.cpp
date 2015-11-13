@@ -42,15 +42,21 @@ void EyePointeeHolder::removePointee(EyePointee* pointee) {
 
 EyePointData EyePointeeHolder::isPointed(const glm::mat4& view_matrix, float ox,
         float oy, float oz, float dx, float dy, float dz) {
-    glm::mat4 mv_matrix = view_matrix
-            * owner_object()->transform()->getModelMatrix();
     EyePointData holder_data;
-    for (auto it = pointees_.begin(); it != pointees_.end(); ++it) {
-        EyePointData data = (*it)->isPointed(mv_matrix, ox, oy, oz, dx, dy, dz);
-        if (data.distance() < holder_data.distance()) {
-            holder_data = data;
+    const SceneObject* ownerObject = owner_object();
+    if (nullptr != ownerObject) {
+        Transform* transform = ownerObject->transform();
+        if (nullptr != transform) {
+            glm::mat4 mv_matrix = view_matrix * transform->getModelMatrix();
+            for (auto it = pointees_.begin(); it != pointees_.end(); ++it) {
+                EyePointData data = (*it)->isPointed(mv_matrix, ox, oy, oz, dx, dy, dz);
+                if (data.distance() < holder_data.distance()) {
+                    holder_data = data;
+                }
+            }
         }
     }
+
     return holder_data;
 }
 
