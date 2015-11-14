@@ -24,7 +24,7 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeFloatTexture_ctor(JNIEnv * env,
-        jobject obj);
+        jobject obj,jintArray jtexture_parameters);
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeFloatTexture_update(JNIEnv * env,
         jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata);
@@ -33,8 +33,10 @@ Java_org_gearvrf_NativeFloatTexture_update(JNIEnv * env,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeFloatTexture_ctor(JNIEnv * env,
-    jobject obj) {
-return reinterpret_cast<jlong>(new FloatTexture());
+    jobject obj,jintArray jtexture_parameters) {
+
+	jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
+	return reinterpret_cast<jlong>(new FloatTexture(texture_parameters));
 }
 
 JNIEXPORT jboolean JNICALL

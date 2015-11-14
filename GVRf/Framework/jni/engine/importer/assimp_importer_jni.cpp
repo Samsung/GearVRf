@@ -39,6 +39,10 @@ Java_org_gearvrf_NativeAssimpImporter_getNodeMesh(JNIEnv * env,
 JNIEXPORT jobject JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMeshMaterial(JNIEnv * env,
         jobject obj, jlong jassimp_importer, jstring jnode_name, jint index);
+
+JNIEXPORT jintArray JNICALL
+Java_org_gearvrf_NativeAssimpImporter_getTextureWrapMode(
+        JNIEnv * env, jobject obj, jlong jassimp_importer);
 }
 
 JNIEXPORT jint JNICALL
@@ -48,6 +52,34 @@ Java_org_gearvrf_NativeAssimpImporter_getNumberOfMeshes(
             reinterpret_cast<AssimpImporter*>(jassimp_importer);
     return assimp_importer->getNumberOfMeshes();
 }
+
+JNIEXPORT jintArray JNICALL
+Java_org_gearvrf_NativeAssimpImporter_getTextureWrapMode(
+        JNIEnv * env, jobject obj, jlong jassimp_importer) {
+    AssimpImporter* assimp_importer =
+            reinterpret_cast<AssimpImporter*>(jassimp_importer);
+    const aiScene *assimp_scene = assimp_importer->getAssimpScene();
+    int *TextureWrapModes=assimp_scene->mTextureWrapModes;
+
+    if(TextureWrapModes==NULL)
+    	return NULL;
+
+    jintArray result;
+    result = (env)->NewIntArray(3);
+    if (result == NULL) {
+        return NULL;
+    }
+    jint fill[3];
+
+    fill[WrapU] = TextureWrapModes[WrapU] ;
+    fill[WrapV] = TextureWrapModes[WrapV] ;
+    fill[WrapW] = TextureWrapModes[WrapW] ;
+
+    (env)->SetIntArrayRegion(result, 0, 3, fill);
+    return result;
+
+}
+
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMesh(JNIEnv * env,

@@ -29,8 +29,8 @@ class CompressedTexture: public Texture {
 public:
 
     // The constructor to use when loading a mipmap chain, from Java
-    explicit CompressedTexture(GLenum target) :
-            Texture(new GLTexture(target)), target(target) {
+    explicit CompressedTexture(GLenum target,int* texture_parameters) :
+            Texture(new GLTexture(target,texture_parameters)), target(target) {
         glBindTexture(target, gl_texture_->id());
     }
 

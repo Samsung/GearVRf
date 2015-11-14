@@ -26,23 +26,25 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env,
-        jobject obj, jint width, jint height);
+        jobject obj, jint width, jint height,jintArray jtexture_parameters);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env,
-        jobject obj, jint width, jint height, jint sample_count);
+        jobject obj, jint width, jint height, jint sample_count,jintArray jtexture_parameters);
 }
 ;
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env,
-        jobject obj, jint width, jint height) {
-    return reinterpret_cast<jlong>(new RenderTexture(width, height));
+        jobject obj, jint width, jint height,jintArray jtexture_parameters) {
+	jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
+    return reinterpret_cast<jlong>(new RenderTexture(width, height,texture_parameters));
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env,
-        jobject obj, jint width, jint height, jint sample_count) {
-    return reinterpret_cast<jlong>(new RenderTexture(width, height, sample_count));
+        jobject obj, jint width, jint height, jint sample_count,jintArray jtexture_parameters) {
+	jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
+    return reinterpret_cast<jlong>(new RenderTexture(width, height, sample_count,texture_parameters));
 }
 
 }

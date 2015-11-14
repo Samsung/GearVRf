@@ -83,7 +83,7 @@ public class GVRCompressedTexture extends GVRTexture {
 
     GVRCompressedTexture(GVRContext gvrContext, int target, int levels,
             int quality) {
-        super(gvrContext, NativeCompressedTexture.mipmappedConstructor(target));
+        super(gvrContext, NativeCompressedTexture.mipmappedConstructor(target,gvrContext.DEFAULT_TEXTURE_PARAMETERS.getCurrentValuesArray()));
         mLevels = levels;
         mQuality = GVRCompressedTexture.clamp(quality);
 
@@ -166,5 +166,5 @@ class NativeCompressedTexture {
             int width, int height, int imageSize, byte[] data, int dataOffset,
             int[] textureParameterValues);
 
-    static native long mipmappedConstructor(int target);
+    static native long mipmappedConstructor(int target,int[] textureParameterValues);
 }
