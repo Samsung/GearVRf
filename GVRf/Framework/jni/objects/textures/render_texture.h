@@ -30,8 +30,8 @@ namespace gvr {
 
 class RenderTexture: public Texture {
 public:
-    explicit RenderTexture(int width, int height);
-    explicit RenderTexture(int width, int height, int sample_count);
+    explicit RenderTexture(int width, int height,int* texture_parameters);
+    explicit RenderTexture(int width, int height, int sample_count,int* texture_parameters);
 
     ~RenderTexture() {
         if (gl_texture_ != 0 || gl_render_buffer_ != 0

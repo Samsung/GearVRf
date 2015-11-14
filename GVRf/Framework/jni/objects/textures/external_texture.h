@@ -31,8 +31,8 @@ namespace gvr {
 
 class ExternalTexture: public Texture {
 public:
-    ExternalTexture() :
-            Texture(new GLTexture(TARGET)) {
+    ExternalTexture(int* texture_parameters) :
+            Texture(new GLTexture(TARGET,texture_parameters)) {
     }
 
     GLenum getTarget() const {

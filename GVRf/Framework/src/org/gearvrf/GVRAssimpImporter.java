@@ -57,6 +57,10 @@ class GVRAssimpImporter extends GVRHybridObject {
         return NativeAssimpImporter.getAssimpScene(getNative());
     }
 
+   
+    int[] getTextureWrapMode(){  	
+    	return NativeAssimpImporter.getTextureWrapMode(getNative());
+    }
     /**
      * Retrieves the particular mesh for the given node.
      * 
@@ -82,6 +86,8 @@ class GVRAssimpImporter extends GVRHybridObject {
 class NativeAssimpImporter {
     static native int getNumberOfMeshes(long assimpImporter);
 
+    static native int[] getTextureWrapMode(long assimpImporter);
+    
     static native long getMesh(long assimpImporter, int index);
 
     static native AiScene getAssimpScene(long assimpImporter);

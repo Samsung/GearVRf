@@ -26,14 +26,15 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
-        jobject obj);
+        jobject obj,jintArray jtexture_parameters);
 }
 ;
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
-        jobject obj) {
-    return reinterpret_cast<jlong>(new ExternalTexture());
+        jobject obj,jintArray jtexture_parameters) {
+	jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
+    return reinterpret_cast<jlong>(new ExternalTexture(texture_parameters));
 }
 
 }

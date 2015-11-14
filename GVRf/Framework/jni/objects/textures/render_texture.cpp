@@ -23,8 +23,8 @@
 #include "eglextension/msaa/msaa.h"
 
 namespace gvr {
-RenderTexture::RenderTexture(int width, int height) :
-        Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
+RenderTexture::RenderTexture(int width, int height,int* texture_parameters) :
+        Texture(new GLTexture(TARGET,texture_parameters)), width_(width), height_(height), sample_count_(
                 0), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_(
                 new GLFrameBuffer()) {
     glBindTexture(TARGET, gl_texture_->id());
@@ -45,8 +45,8 @@ RenderTexture::RenderTexture(int width, int height) :
             GL_RENDERBUFFER, gl_render_buffer_->id());
 }
 
-RenderTexture::RenderTexture(int width, int height, int sample_count) :
-        Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
+RenderTexture::RenderTexture(int width, int height, int sample_count,int* texture_parameters) :
+        Texture(new GLTexture(TARGET,texture_parameters)), width_(width), height_(height), sample_count_(
                 sample_count), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_(
                 new GLFrameBuffer()) {
     glBindTexture(TARGET, gl_texture_->id());

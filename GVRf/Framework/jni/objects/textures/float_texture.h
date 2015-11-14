@@ -26,8 +26,8 @@
 namespace gvr {
 class FloatTexture: public Texture {
 public:
-    explicit FloatTexture() :
-            Texture(new GLTexture(TARGET)) {
+    explicit FloatTexture(int* texture_parameters) :
+            Texture(new GLTexture(TARGET,texture_parameters)) {
     }
 
     bool update(int width, int height, float* data) {

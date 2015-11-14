@@ -118,6 +118,9 @@ struct aiNode
 	  * format. Importers that don't document any metadata don't write any. 
 	  */
 	C_STRUCT aiMetadata* mMetaData;
+	
+	/* Geometric Transformations of the node */
+	aiMatrix4x4 mGeomTransformation;
 
 #ifdef __cplusplus
 	/** Constructor */
@@ -264,7 +267,13 @@ struct aiNode
  */
 #define AI_SCENE_FLAGS_TERRAIN 0x10
 
+enum aiTextureWrapAxis
+{
+	WrapU=0,
+	WrapV,
+	WrapW
 
+};
 // -------------------------------------------------------------------------------
 /** The root structure of the imported data. 
  * 
@@ -374,6 +383,7 @@ struct aiScene
 	* the scene.
 	*/
 	C_STRUCT aiCamera** mCameras;
+	int *mTextureWrapModes;
 
 #ifdef __cplusplus
 

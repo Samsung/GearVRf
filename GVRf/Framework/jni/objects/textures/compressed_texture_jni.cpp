@@ -30,7 +30,7 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
-        jobject obj, jint target);
+        jobject obj, jint target, jintArray jtexture_parameters);
 }
 ;
 
@@ -57,8 +57,9 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
-    jobject obj, jint target) {
-    return reinterpret_cast<jlong>(new CompressedTexture(target));
+    jobject obj, jint target,jintArray jtexture_parameters) {
+	jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
+    return reinterpret_cast<jlong>(new CompressedTexture(target,texture_parameters));
 }
 
 }

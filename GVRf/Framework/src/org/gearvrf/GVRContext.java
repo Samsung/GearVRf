@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -28,6 +29,7 @@ import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRTextureParameters.TextureWrapType;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
@@ -48,8 +50,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLES20;
 import android.view.KeyEvent;
-
+import java.util.Arrays;
 /**
  * Like the Android {@link Context} class, {@code GVRContext} provides core
  * services, and global information about an application environment.
@@ -130,6 +133,34 @@ public abstract class GVRContext {
     public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(
             this);
 
+    /* *
+     * Store the mapping of integers with wrap modes   
+     */
+    public HashMap<Integer,TextureWrapType>WrapmodeMap=
+    		new HashMap<Integer,TextureWrapType>(){{
+    			put(0, TextureWrapType.GL_REPEAT);
+                put(1, TextureWrapType.GL_CLAMP_TO_EDGE);
+                put(2, TextureWrapType.GL_MIRRORED_REPEAT);
+    }};
+
+    /*
+     * Enums to store the wrap axes 
+     *
+     */
+	public enum GVRTextureWrapAxis
+	{
+		WrapS(0),WrapT(1),WrapU (2);
+	    private int wrapAxis;
+
+	    GVRTextureWrapAxis(int wrapAxis) {
+	         this.wrapAxis = wrapAxis;
+	    }
+
+	    public int getWrapAxis() {
+	         return wrapAxis;
+	    }
+
+	};
     // true or false based on the support for anisotropy
     public boolean isAnisotropicSupported;
 
@@ -637,7 +668,22 @@ public abstract class GVRContext {
         // Scene Object
         this.recurseAssimpNodes(assimpImporter, assetRelativeFilename, wholeSceneObject,
                 rootNode, wrapperProvider);
-
+        
+        int []wrapmodes=assimpImporter.getTextureWrapMode();
+        
+         /*
+          *  if it is null that mean its a not fbx file 
+         	GVRf has only support for S and T axis but wrapmodes[] has data for 3 axes
+         
+         */
+		 if(wrapmodes!=null) 	
+         {
+        	 GVRContext context=assimpImporter.getGVRContext();
+        	 context.DEFAULT_TEXTURE_PARAMETERS.setWrapSType(WrapmodeMap.get(wrapmodes[GVRTextureWrapAxis.WrapS.getWrapAxis()]));
+        	 context.DEFAULT_TEXTURE_PARAMETERS.setWrapTType(WrapmodeMap.get(wrapmodes[GVRTextureWrapAxis.WrapT.getWrapAxis()]));
+         }
+        
+        
         return wholeSceneObject;
     }
 
