@@ -11,6 +11,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
+
 import org.gearvrf.utility.Log;
 
 public class GVRJassimpAdapter {
@@ -51,12 +52,11 @@ public class GVRJassimpAdapter {
             mesh.setNormals(normalsArray);
         }
 
-        // TexCoords (UV only)
+        // TexCoords
         final int coordIdx = 0;
         FloatBuffer fbuf = aiMesh.getTexCoordBuffer(coordIdx);
         if (fbuf != null) {
             FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
-
             if (aiMesh.getNumUVComponents(coordIdx) == 2) {
                 FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(coordIdx);
                 coords.put(coordsSource);

@@ -37,6 +37,7 @@ import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.jassimp.AiColor;
 import org.gearvrf.jassimp.AiMaterial;
 import org.gearvrf.jassimp.AiNode;
+import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
@@ -528,9 +529,16 @@ public abstract class GVRContext {
         return wholeSceneObject;
     }
 
-    public GVRSceneObject getAssimpModelNew(String externalFilename) throws IOException {
+    public GVRSceneObject loadJassimpModel(String externalFile) throws IOException {
+        return loadJassimpModel(externalFile, GVRImportSettings.getRecommendedSettings());
+    }
+
+    public GVRSceneObject loadJassimpModel(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
-        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFilename);
+        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
+            GVRJassimpAdapter.get().toJassimpSettings(settings));
+        if (assimpScene == null)
+            return null;
         return new GVRJassimpSceneObject(this, assimpScene);
     }
 
