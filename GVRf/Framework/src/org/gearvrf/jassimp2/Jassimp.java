@@ -45,6 +45,8 @@ import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.Set;
 
+import android.content.res.AssetManager;
+
 
 
 /**
@@ -94,8 +96,35 @@ public final class Jassimp {
         return aiImportFile(filename, AiPostProcessSteps.toRawValue(
                 postProcessing));
     }
-    
-    
+
+    /**
+     * Imports a file via assimp without post processing.
+     *
+     * @param filename the file to import
+     * @return the loaded scene
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importAssetFile(String filename, AssetManager assetManager) throws IOException {
+
+        return importAssetFile(filename, EnumSet.noneOf(AiPostProcessSteps.class), assetManager);
+    }
+
+    /**
+     * Imports an Android asset file via assimp.
+     * 
+     * @param filename the file to import
+     * @param postProcessing post processing flags
+     * @param Android asset manager
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importAssetFile(String filename,
+            Set<AiPostProcessSteps> postProcessing, AssetManager assetManager) throws IOException {
+
+        return aiImportAssetFile(filename, AiPostProcessSteps.toRawValue(
+                postProcessing), assetManager);
+    }
+
     /**
      * Returns the size of a struct or ptimitive.<p>
      * 
@@ -275,8 +304,19 @@ public final class Jassimp {
      */
     private static native AiScene aiImportFile(String filename, 
             long postProcessing) throws IOException;
-    
-    
+
+    /**
+     * The native interface.
+     *
+     * @param filename the asset file to load
+     * @param postProcessing post processing flags
+     * @param Android asset manager
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    private static native AiScene aiImportAssetFile(String filename,
+               long postProcessing, AssetManager assetManager) throws IOException;
+
     /**
      * The active wrapper provider.
      */

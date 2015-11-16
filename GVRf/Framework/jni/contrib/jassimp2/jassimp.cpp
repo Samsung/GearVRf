@@ -3,6 +3,7 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 
+#include "android/asset_manager_jni.h"
 
 #ifdef JNI_LOG
 #ifdef ANDROID
@@ -304,7 +305,7 @@ static bool copyBuffer(JNIEnv *env, jobject jMesh, const char* jBufferName, void
 
 	if (env->GetDirectBufferCapacity(jBuffer) != size)
 	{
-		lprintf("invalid direct buffer, expected %u, got %llu\n", size, env->GetDirectBufferCapacity(jBuffer));
+		lprintf("invalid direct buffer, expected %u, got %llu\n", (unsigned)size, env->GetDirectBufferCapacity(jBuffer));
 		return false;
 	}
 
@@ -337,7 +338,7 @@ static bool copyBufferArray(JNIEnv *env, jobject jMesh, const char* jBufferName,
 
 	if (env->GetDirectBufferCapacity(jBuffer) != size)
 	{
-		lprintf("invalid direct buffer, expected %u, got %llu\n", size, env->GetDirectBufferCapacity(jBuffer));
+		lprintf("invalid direct buffer, expected %u, got %llu\n", (unsigned)size, env->GetDirectBufferCapacity(jBuffer));
 		return false;
 	}
 
@@ -496,7 +497,7 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 				if (faceBufferPos != faceBufferSize)
 				{
 					/* this should really not happen */
-					lprintf("faceBufferPos %u, faceBufferSize %u\n", faceBufferPos, faceBufferSize);
+					lprintf("faceBufferPos %u, faceBufferSize %u\n", (unsigned)faceBufferPos, (unsigned)faceBufferSize);
 					env->FatalError("error copying face data");
 					exit(-1);
 				}
@@ -649,7 +650,7 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 				if (coordBufferOffset != coordBufferSize)
 				{
 					/* this should really not happen */
-					lprintf("coordBufferPos %u, coordBufferSize %u\n", coordBufferOffset, coordBufferSize);
+					lprintf("coordBufferPos %u, coordBufferSize %u\n", (unsigned)coordBufferOffset, (unsigned)coordBufferSize);
 					env->FatalError("error copying coord data");
 					exit(-1);
 				}
@@ -1461,19 +1462,73 @@ JNIEXPORT jstring JNICALL Java_org_gearvrf_jassimp2_Jassimp_getErrorString
 	return env->NewStringUTF(err);
 }
 
+static char *extractAsset(AAssetManager* mgr, const char *name, int *pBufferSize)
+{
+	// Open file
+	AAsset* asset = AAssetManager_open(mgr, name, AASSET_MODE_UNKNOWN);
 
-JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportFile
-  (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess)
+	char *pBuffer = NULL;
+
+	if (asset != NULL) {
+		// Find size
+		off_t assetSize = AAsset_getLength(asset);
+
+		// Prepare input buffer
+		if (pBufferSize)
+			*pBufferSize = assetSize;
+		pBuffer = new char[assetSize];
+
+		if (pBuffer) {
+			// Store input buffer
+			AAsset_read(asset, pBuffer, assetSize);
+
+			// Close
+			AAsset_close(asset);
+
+			lprintf("Assimp", "Asset extracted");
+		}
+	} else {
+		lprintf("Asset not found: %s", name);
+		return 0;
+	}
+	return pBuffer;
+}
+
+static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject assetManager)
 {
 	jobject jScene = NULL;
 
 	/* convert params */
 	const char* cFilename = env->GetStringUTFChars(jFilename, NULL);
 
-	lprintf("opening file: %s\n", cFilename);
+	lprintf("opening file: %s%s\n", cFilename, assetManager ? " from android assets" : "");
 
 	/* do import */
-	const aiScene *cScene = aiImportFile(cFilename, (unsigned int) postProcess);
+	const aiScene *cScene;
+	if (assetManager) {
+		AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
+
+		int assetSize;
+		char *pBuffer = extractAsset(mgr, cFilename, &assetSize);
+		if (!pBuffer)
+			return NULL;
+
+		char* extension = 0;
+		if (cFilename != 0) {
+			extension = strrchr(cFilename, '.');
+			if (extension && extension != cFilename) {
+				extension++;
+			}
+		}
+
+		cScene = aiImportFileFromMemory(pBuffer, assetSize, (unsigned int) postProcess,
+				extension);
+
+		delete pBuffer;
+	} else {
+		cScene = aiImportFile(cFilename, (unsigned int) postProcess);
+	}
+
 	lprintf("jassimp aiImportFile done");
 	if (!cScene)
 	{
@@ -1556,4 +1611,16 @@ end:
 	lprintf("return from native\n");
 
 	return jScene;
+}
+
+JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportAssetFile
+  (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject assetManager)
+{
+	return importHelper(env, jClazz, jFilename, postProcess, assetManager);
+}
+
+JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportFile
+  (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess)
+{
+	return importHelper(env, jClazz, jFilename, postProcess, NULL);
 }

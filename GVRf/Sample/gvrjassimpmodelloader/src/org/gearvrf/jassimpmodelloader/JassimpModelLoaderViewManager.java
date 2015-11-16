@@ -66,11 +66,10 @@ public class JassimpModelLoaderViewManager extends GVRScript {
         mainCameraRig.getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
         // Model with texture
-        GVRSceneObject astroBoyModel = gvrContext
-                .getAssimpModel("astro_boy.dae");
+        GVRSceneObject astroBoyModel = gvrContext.loadJassimpModel("astro_boy.dae");
 
         // Model with color
-        GVRSceneObject benchModel = gvrContext.getAssimpModel("bench.dae");
+        GVRSceneObject benchModel = gvrContext.loadJassimpModel("bench.dae");
 
         ModelPosition astroBoyModelPosition = new ModelPosition();
 

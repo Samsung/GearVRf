@@ -32,13 +32,12 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
-import org.gearvrf.jassimp.AiScene;
-import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.jassimp.AiColor;
 import org.gearvrf.jassimp.AiMaterial;
 import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
+import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
@@ -529,14 +528,27 @@ public abstract class GVRContext {
         return wholeSceneObject;
     }
 
-    public GVRSceneObject loadJassimpModel(String externalFile) throws IOException {
-        return loadJassimpModel(externalFile, GVRImportSettings.getRecommendedSettings());
+    public GVRSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
+        return loadJassimpModelFromSD(externalFile, GVRImportSettings.getRecommendedSettings());
     }
 
-    public GVRSceneObject loadJassimpModel(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
+    public GVRSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
             GVRJassimpAdapter.get().toJassimpSettings(settings));
+        if (assimpScene == null)
+            return null;
+        return new GVRJassimpSceneObject(this, assimpScene);
+    }
+
+    public GVRSceneObject loadJassimpModel(String assetFile) throws IOException {
+        return loadJassimpModel(assetFile, GVRImportSettings.getRecommendedSettings());
+    }
+
+    public GVRSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
+        Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importAssetFile(assetFile,
+            GVRJassimpAdapter.get().toJassimpSettings(settings), mContext.getAssets());
         if (assimpScene == null)
             return null;
         return new GVRJassimpSceneObject(this, assimpScene);
