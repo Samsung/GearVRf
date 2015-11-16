@@ -97,6 +97,9 @@ public class Camera2RenderscriptManager extends GVRScript
 
 	public void onPause()
 	{
-		mCameraHelper.closeCamera();
+		if( mCameraHelper != null )
+		{
+			mCameraHelper.closeCamera();
+		}
 	}
 }

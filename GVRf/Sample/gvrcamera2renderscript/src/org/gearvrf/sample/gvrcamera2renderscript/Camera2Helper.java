@@ -145,7 +145,7 @@ public class Camera2Helper {
 	};
 	
 	protected void updatePreview() {
-		mPreviewBuilder.set(CaptureRequest.CONTROL_MODE,CameraMetadata.CONTROL_MODE_OFF);
+		mPreviewBuilder.set(CaptureRequest.CONTROL_MODE,CameraMetadata.CONTROL_MODE_AUTO);
 		
 		HandlerThread thread = new HandlerThread("CameraPreview");
 		thread.start();
