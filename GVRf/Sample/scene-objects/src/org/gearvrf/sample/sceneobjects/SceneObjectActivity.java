@@ -72,7 +72,7 @@ public class SceneObjectActivity extends GVRActivity {
         return context.getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_CAMERA);
     }
-    
+
     private long prevTime = 0;
     private int numFrames = 0;
     private PreviewCallback previewCallback = new PreviewCallback() {
@@ -82,23 +82,23 @@ public class SceneObjectActivity extends GVRActivity {
          * The byte data comes from the android camera in the yuv format. so we
          * need to convert it to rgba format.
          */
-		public void onPreviewFrame(byte[] data, Camera camera) {
-			numFrames++;
-			if (numFrames == 100) {
-				Parameters params = SceneObjectActivity.this.camera
-						.getParameters();
-				params.setAutoWhiteBalanceLock(true);
-				params.setAutoExposureLock(true);
-				SceneObjectActivity.this.camera.setParameters(params);
-			}
-			long currentTime = System.currentTimeMillis();
-			Log.d(TAG,
-					"Preview Frame rate "
-							+ Math.round(1000 / (currentTime - prevTime)));
-			prevTime = currentTime;
-			camera.addCallbackBuffer(previewCallbackBuffer);
-		}
-	};
+        public void onPreviewFrame(byte[] data, Camera camera) {
+            numFrames++;
+            if (numFrames == 100) {
+                Parameters params = SceneObjectActivity.this.camera
+                        .getParameters();
+                params.setAutoWhiteBalanceLock(true);
+                params.setAutoExposureLock(true);
+                SceneObjectActivity.this.camera.setParameters(params);
+            }
+            long currentTime = System.currentTimeMillis();
+            Log.d(TAG,
+                    "Preview Frame rate "
+                            + Math.round(1000 / (currentTime - prevTime)));
+            prevTime = currentTime;
+            camera.addCallbackBuffer(previewCallbackBuffer);
+        }
+    };
 
     private byte[] previewCallbackBuffer = null;
     private void createCameraView() {
@@ -114,47 +114,19 @@ public class SceneObjectActivity extends GVRActivity {
             camera = Camera.open();
             if (camera != null) {
                 Parameters params = camera.getParameters();
-                
-				// check if the device supports vr mode preview
-				if ("true".equalsIgnoreCase(params.get("vrmode-supported"))) {
-					Log.v(TAG, "VR Mode supported!");
 
-					// set vr mode
-					params.set("vrmode", 1);
-					
-					// true if the apps intend to record videos using MediaRecorder
-				    params.setRecordingHint(true); 
-
-					// set preview size
-					//params.setPreviewSize(640, 480);
-
-					// set fast-fps-mode: 0 for 30fps, 1 for 60 fps, 
-                    // 2 for 120 fps
-					params.set("fast-fps-mode", 1);
-					params.setPreviewFpsRange(60000, 60000);
-
-					// for auto focus
-					params.set("focus-mode", "continuous-video");
-
-					params.setVideoStabilization(false);
-					if ("true".equalsIgnoreCase(params.get("ois-supported"))) {
-						params.set("ois", "center");
-					}
-				}
-
-				camera.setParameters(params);
-				int bufferSize = params.getPreviewSize().height
-						* params.getPreviewSize().width
-						* ImageFormat
-								.getBitsPerPixel(params.getPreviewFormat()) / 8;
-				previewCallbackBuffer = new byte[bufferSize];
-				camera.addCallbackBuffer(previewCallbackBuffer);
-				camera.setPreviewCallbackWithBuffer(previewCallback);
-				camera.startPreview();
-			}
-		} catch (Exception exception) {
-			android.util.Log.d(TAG, "Camera not available or is in use");
-		}
+                int bufferSize = params.getPreviewSize().height
+                        * params.getPreviewSize().width
+                        * ImageFormat
+                                .getBitsPerPixel(params.getPreviewFormat()) / 8;
+                previewCallbackBuffer = new byte[bufferSize];
+                camera.addCallbackBuffer(previewCallbackBuffer);
+                camera.setPreviewCallbackWithBuffer(previewCallback);
+                camera.startPreview();
+            }
+        } catch (Exception exception) {
+            android.util.Log.d(TAG, "Camera not available or is in use");
+        }
     }
 
     GVRView getWebView() {
@@ -170,7 +142,7 @@ public class SceneObjectActivity extends GVRActivity {
         super.onPause();
         mViewManager.onPause();
         if (camera != null) {
-        	camera.setPreviewCallback(null);
+            camera.setPreviewCallback(null);
             camera.stopPreview();
             camera.release();
             camera = null;

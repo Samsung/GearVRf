@@ -26,8 +26,11 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 
+import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
+import org.gearvrf.utility.Log;
 
 /**
  * A {@linkplain GVRSceneObject scene object} that shows live video from one of
@@ -35,8 +38,13 @@ import android.hardware.Camera;
  */
 public class GVRCameraSceneObject extends GVRSceneObject implements
         GVRDrawFrameListener {
+    
+    private static String TAG = GVRSceneObject.class.getSimpleName();
     private final SurfaceTexture mSurfaceTexture;
     private boolean mPaused = false;
+    private Camera camera;
+    private Activity activity;
+    private boolean cameraSetUpStatus;
 
     /**
      * Create a {@linkplain GVRSceneObject scene object} (with arbitrarily
@@ -44,6 +52,8 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      * 
      * @param gvrContext
      *            current {@link GVRContext}
+     * @param activity
+     *            the parent {@link Activity} that created this scene object.
      * @param mesh
      *            an arbitrarily complex {@link GVRMesh} object - see
      *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
@@ -54,8 +64,8 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *            should be sure to call it before you call
      *            {@link Camera#startPreview()}.
      */
-    public GVRCameraSceneObject(GVRContext gvrContext, GVRMesh mesh,
-            Camera camera) {
+    public GVRCameraSceneObject(GVRContext gvrContext, Activity activity,
+            GVRMesh mesh, Camera camera) {
         super(gvrContext, mesh);
         gvrContext.registerDrawFrameListener(this);
         GVRTexture texture = new GVRExternalTexture(gvrContext);
@@ -63,9 +73,11 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);
 
+        this.activity = activity;
+        this.camera = camera;
         mSurfaceTexture = new SurfaceTexture(texture.getId());
         try {
-            camera.setPreviewTexture(mSurfaceTexture);
+            this.camera.setPreviewTexture(mSurfaceTexture);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,6 +89,8 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      * 
      * @param gvrContext
      *            current {@link GVRContext}
+     * @param activity
+     *            the parent {@link Activity} that created this scene object.
      * @param width
      *            the scene rectangle's width
      * @param height
@@ -87,9 +101,9 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *            should be sure to call it before you call
      *            {@link Camera#startPreview()}.
      */
-    public GVRCameraSceneObject(GVRContext gvrContext, float width,
-            float height, Camera camera) {
-        this(gvrContext, gvrContext.createQuad(width, height), camera);
+    public GVRCameraSceneObject(GVRContext gvrContext, Activity activity,
+            float width, float height, Camera camera) {
+        this(gvrContext, activity, gvrContext.createQuad(width, height), camera);
     }
 
     /**
@@ -123,5 +137,77 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
         if (!mPaused) {
             mSurfaceTexture.updateTexImage();
         }
+    }
+
+    
+    /**
+     * Configure high fps settings in the camera for VR mode
+     * 
+     * @param fpsMode
+     *            integer indicating the desired fps. 0 means 30 fps, 1 means 60
+     *            fps, and 2 means 120 fps. Any other value is invalid.
+     */
+    public boolean setUpCameraForVrMode(final int fpsMode) {
+        
+        cameraSetUpStatus = false;
+
+        if (fpsMode < 0 || fpsMode > 2) {
+            Log.e(TAG,
+                    "Invalid fpsMode: %d. It can only take values 0, 1, or 2.", fpsMode);
+        } else {
+            activity.runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    Parameters params = camera.getParameters();
+
+                    // check if the device supports vr mode preview
+                    if ("true".equalsIgnoreCase(params.get("vrmode-supported"))) {
+
+                        Log.v(TAG, "VR Mode supported!");
+
+                        // set vr mode
+                        params.set("vrmode", 1);
+
+                        // true if the apps intend to record videos using
+                        // MediaRecorder
+                        params.setRecordingHint(true);
+
+                        // set preview size
+                        // params.setPreviewSize(640, 480);
+
+                        // set fast-fps-mode: 0 for 30fps, 1 for 60 fps,
+                        // 2 for 120 fps
+                        params.set("fast-fps-mode", fpsMode);
+                        
+                        switch (fpsMode) {
+                        case 0: // 30 fps
+                            params.setPreviewFpsRange(30000, 30000);
+                            break;
+                        case 1: // 60 fps
+                            params.setPreviewFpsRange(60000, 60000);
+                            break;
+                        case 2: // 120 fps
+                            params.setPreviewFpsRange(120000, 120000);
+                            break;
+                        default:
+                        }
+
+                        // for auto focus
+                        params.set("focus-mode", "continuous-video");
+
+                        params.setVideoStabilization(false);
+                        if ("true".equalsIgnoreCase(params.get("ois-supported"))) {
+                            params.set("ois", "center");
+                        }
+
+                        camera.setParameters(params);
+                        cameraSetUpStatus = true;
+                    }
+                }
+            });
+        }
+
+        return cameraSetUpStatus;
     }
 }

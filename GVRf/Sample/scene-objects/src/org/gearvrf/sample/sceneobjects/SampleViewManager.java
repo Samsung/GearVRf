@@ -89,7 +89,8 @@ public class SampleViewManager extends GVRScript {
                 true, material);
         GVRViewSceneObject webViewObject = createWebViewObject(gvrContext);
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
-                gvrContext, 3.6f, 2.0f, mActivity.getCamera());
+                gvrContext, mActivity, 3.6f, 2.0f, mActivity.getCamera());
+        cameraObject.setUpCameraForVrMode(1); // set up 60 fps camera preview.
         GVRVideoSceneObject videoObject = createVideoObject(gvrContext);
         GVRTextViewSceneObject textViewSceneObject = new GVRTextViewSceneObject(
                 gvrContext, mActivity, "Hello World!");
@@ -124,16 +125,16 @@ public class SampleViewManager extends GVRScript {
         videoObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
         textViewSceneObject.getTransform().setPosition(0.0f, 0.0f, -2.0f);
 
-		// add the scene objects to the scene graph.
-        // deal differently with camera scene object: we want it to move 
+        // add the scene objects to the scene graph.
+        // deal differently with camera scene object: we want it to move
         // with the camera.
-		for (GVRSceneObject object : objectList) {
-			if (object instanceof GVRCameraSceneObject) {
-				scene.getMainCameraRig().addChildObject(object);
-			} else {
-				scene.addSceneObject(object);
-			}
-		}
+        for (GVRSceneObject object : objectList) {
+            if (object instanceof GVRCameraSceneObject) {
+                scene.getMainCameraRig().addChildObject(object);
+            } else {
+                scene.addSceneObject(object);
+            }
+        }
     }
 
     private GVRVideoSceneObject createVideoObject(GVRContext gvrContext) {
