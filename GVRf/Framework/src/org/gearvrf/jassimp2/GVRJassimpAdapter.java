@@ -3,8 +3,10 @@ package org.gearvrf.jassimp2;
 import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.gearvrf.GVRContext;
@@ -17,20 +19,31 @@ import org.gearvrf.utility.Log;
 public class GVRJassimpAdapter {
     private static final String TAG = GVRJassimpAdapter.class.getSimpleName();
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
-    private static GVRJassimpAdapter sAdapter;
+    private static GVRJassimpAdapter sInstance;
+    private List<INodeFactory> mNodeFactories;
+
+    public interface INodeFactory {
+        GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
+    }
 
     private GVRJassimpAdapter() {
+        mNodeFactories = new ArrayList<INodeFactory>();
     }
 
     public synchronized static GVRJassimpAdapter get() {
-        if (sAdapter == null) {
-            sAdapter = new GVRJassimpAdapter();
+        if (sInstance == null) {
+            sInstance = new GVRJassimpAdapter();
         }
-        return sAdapter;
+        return sInstance;
     }
 
-    public static void set(GVRJassimpAdapter newAdapter) {
-        sAdapter = newAdapter;
+    public void addNodeFactory(INodeFactory factory) {
+        // Insert new factory in front of the list to support overriding
+        mNodeFactories.add(0, factory);
+    }
+
+    public void removeNodeFactory(INodeFactory factory) {
+        mNodeFactories.remove(factory);
     }
 
     public GVRMesh createMesh(GVRContext ctx, AiMesh aiMesh) {
@@ -85,8 +98,18 @@ public class GVRJassimpAdapter {
     }
 
     public GVRSceneObject createSceneObject(GVRContext ctx, AiNode node) {
-        GVRSceneObject sceneObject = new GVRSceneObject(ctx);
+        GVRSceneObject sceneObject = null;
+
+        for (INodeFactory factory : mNodeFactories) {
+            sceneObject = factory.createSceneObject(ctx, node);
+            if (sceneObject != null)
+                return sceneObject;
+        }
+
+        // Default
+        sceneObject = new GVRSceneObject(ctx);
         sceneObject.setName(node.getName());
+
         return sceneObject;
     }
 
