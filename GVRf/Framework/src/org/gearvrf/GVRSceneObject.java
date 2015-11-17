@@ -17,11 +17,14 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.utility.Log;
 
 /**
  * One of the key GVRF classes: a scene object.
@@ -38,7 +41,7 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
  */
-public class GVRSceneObject extends GVRHybridObject {
+public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
 
     private GVRTransform mTransform;
     private GVRRenderData mRenderData;
@@ -784,10 +787,96 @@ public class GVRSceneObject extends GVRHybridObject {
         }
     }
 
+    private void findChildrenByName(String name, List<GVRSceneObject> objects,
+            boolean onlyFirst, Set<GVRSceneObject> visited) {
+        if (visited.contains(this))
+            return;
+
+        visited.add(this);
+
+        for (GVRSceneObject child : mChildren) {
+            String childName = child.getName();
+            if (name.equals(childName)) {
+                objects.add(child);
+                if (onlyFirst)
+                    return;
+            }
+
+            child.findChildrenByName(name, objects, onlyFirst, visited);
+            if (onlyFirst && !objects.isEmpty())
+                return;
+        }
+    }
+
+    /**
+     * Searches for the all children with the specified name.
+     *
+     * @param name the name of the children.
+     * @return the children found
+     */
+    public List<GVRSceneObject> findAllChildrenByName(String name) {
+        List<GVRSceneObject> objects = new ArrayList<GVRSceneObject>();
+        Set<GVRSceneObject> visited = new HashSet<GVRSceneObject>();
+        findChildrenByName(name, objects, false, visited);
+        return objects;
+    }
+
+    /**
+     * Searches for the first child with the specified name.
+     * 
+     * @param name the name of the child.
+     * @return the child found
+     */
+    public GVRSceneObject findChildByName(String name) {
+        List<GVRSceneObject> objects = new ArrayList<GVRSceneObject>();
+        Set<GVRSceneObject> visited = new HashSet<GVRSceneObject>();
+        findChildrenByName(name, objects, true, visited);
+        return objects.isEmpty() ? null : objects.get(0);
+    }
+
     /**
      * Called when the scene object has been loaded from a model.
      */
     public void onLoaded() {
+    }
+
+    /**
+     * Generate debug dump of the tree from the scene object.
+     * It should include a newline character at the end.
+     * 
+     * @param sb the {@code StringBuffer} to dump the object.
+     * @param indent indentation level as number of spaces.
+     */
+    public void prettyPrint(StringBuffer sb, int indent) {
+        sb.append(Log.getSpaces(indent));
+        sb.append(getClass().getSimpleName());
+        sb.append(" [name=");
+        sb.append(this.getName());
+        sb.append("]");
+        sb.append(System.lineSeparator());
+
+        if (mRenderData == null) {
+            sb.append(Log.getSpaces(indent + 2));
+            sb.append("RenderData: null");
+            sb.append(System.lineSeparator());
+        } else {
+            mRenderData.prettyPrint(sb, indent + 2);
+        }
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("Transform: "); sb.append(mTransform);
+        sb.append(System.lineSeparator());
+
+        // dump its children
+        for (GVRSceneObject child : getChildren()) {
+            child.prettyPrint(sb, indent + 2);
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        prettyPrint(sb, 0);
+        return sb.toString();
     }
 }
 
@@ -818,6 +907,10 @@ class NativeSceneObject {
             long eyePointeeHolder);
 
     static native void detachEyePointeeHolder(long sceneObject);
+
+    static native void attachBone(long sceneObject, long bone);
+
+    static native void detachBone(long sceneObject);
 
     static native long setParent(long sceneObject, long parent);
 

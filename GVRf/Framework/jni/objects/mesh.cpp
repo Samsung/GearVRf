@@ -289,4 +289,44 @@ void Mesh::generateVAO() {
 #endif
 }
 
+void Mesh::generateBoneArrayBuffers() {
+    if (!bone_data_dirty_) {
+        return;
+    }
+
+    // delete
+    if (boneVboID_ != GVR_INVALID) {
+        gl_delete.queueBuffer(boneVboID_);
+        boneVboID_ = GVR_INVALID;
+    }
+
+    int nVertices = vertices().size();
+    if (!vertexBoneData_.getNumBones() || !nVertices) {
+        LOGV("no bones or vertices");
+        return;
+    }
+
+    glBindVertexArray(vaoID_);
+
+    // BoneID
+    GLuint boneVboID;
+    glGenBuffers(1, &boneVboID);
+    glBindBuffer(GL_ARRAY_BUFFER, boneVboID);
+    glBufferData(GL_ARRAY_BUFFER,
+            sizeof(vertexBoneData_.boneData[0]) * vertexBoneData_.boneData.size(),
+            &vertexBoneData_.boneData[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(getBoneIndicesLoc());
+    glVertexAttribIPointer(getBoneIndicesLoc(), 4, GL_INT, sizeof(VertexBoneData::BoneData), (const GLvoid*) 0);
+
+    // BoneWeight
+    glEnableVertexAttribArray(getBoneWeightsLoc());
+    glVertexAttribPointer(getBoneWeightsLoc(), 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData::BoneData),
+            (const GLvoid*) (sizeof(VertexBoneData::BoneData::ids)));
+
+    boneVboID_ = boneVboID;
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 }

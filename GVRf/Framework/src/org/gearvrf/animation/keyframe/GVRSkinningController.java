@@ -1,0 +1,187 @@
+package org.gearvrf.animation.keyframe;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import org.gearvrf.GVRBone;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRVertexBoneData;
+import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
+
+/**
+ * Controls skeletal animation (skinning). 
+ */
+public class GVRSkinningController {
+    private static final String TAG = GVRSkinningController.class.getSimpleName();
+
+    protected GVRContext gvrContext;
+    protected GVRSceneObject sceneRoot;
+    protected GVRKeyFrameAnimation animation;
+
+    protected SceneAnimNode animRoot;
+    protected Map<String, SceneAnimNode> nodeByName;
+    protected Map<GVRSceneObject, List<GVRBone>> boneMap;
+
+    protected class SceneAnimNode {
+        GVRSceneObject sceneObject;
+        SceneAnimNode parent;
+        List<SceneAnimNode> children;
+        Matrix4f localTransform;
+        Matrix4f globalTransform;
+        int channelId;
+
+        SceneAnimNode(GVRSceneObject sceneObject, SceneAnimNode parent) {
+            this.sceneObject = sceneObject;
+            this.parent = parent;
+            children = new ArrayList<SceneAnimNode>();
+            localTransform = new Matrix4f();
+            globalTransform = new Matrix4f();
+            channelId = -1;
+        }
+    }
+
+    /**
+     * Constructs the skeleton for a list of {@link GVRSceneObject}.
+     *
+     * @param gvrContext The GVR context.
+     * @param sceneRoot The scene root.
+     * @param animation The animation object.
+     */
+    public GVRSkinningController(GVRSceneObject sceneRoot, GVRKeyFrameAnimation animation) {
+        this.sceneRoot = sceneRoot;
+        this.animation = animation;
+
+        nodeByName = new TreeMap<String, SceneAnimNode>();
+        boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
+
+        animRoot = createAnimationTree(sceneRoot, null);
+    }
+
+    protected SceneAnimNode createAnimationTree(GVRSceneObject node, SceneAnimNode parent) {
+        SceneAnimNode internalNode = new SceneAnimNode(node, parent);
+        nodeByName.put(node.getName(), internalNode);
+
+        // Bind-pose local transform
+        internalNode.localTransform.set(node.getTransform().getLocalModelMatrix4f());
+        internalNode.globalTransform.set(internalNode.localTransform);
+
+        // Global transform
+        if (parent != null) {
+            parent.globalTransform.mul(internalNode.globalTransform, internalNode.globalTransform);
+        }
+
+        // Find channel Id
+        if (animation != null) {
+            internalNode.channelId = animation.findChannel(node.getName());
+        }
+
+        setupBone(node);
+
+        for (GVRSceneObject child : node.getChildren()) {
+            SceneAnimNode animChild = createAnimationTree(child, internalNode);
+            internalNode.children.add(animChild);
+        }
+
+        return internalNode;
+    }
+
+    protected void setupBone(GVRSceneObject node) {
+        GVRMesh mesh;
+        if (node.getRenderData() != null && (mesh = node.getRenderData().getMesh()) != null) {
+            Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertices().length / 3);
+
+            GVRVertexBoneData vertexBoneData = mesh.getVertexBoneData();
+
+            for (GVRBone bone : mesh.getBones()) {
+                bone.setSceneObject(node);
+
+                GVRSceneObject skeletalNode = sceneRoot.findChildByName(bone.getName());
+                if (skeletalNode == null) {
+                    Log.w(TAG, "what? cannot find the skeletal node for bone: %s", bone.toString());
+                    continue;
+                }
+
+                // Create look-up table for bones
+                List<GVRBone> boneList = boneMap.get(skeletalNode);
+                if (boneList == null) {
+                    boneList = new ArrayList<GVRBone>();
+                    boneMap.put(skeletalNode, boneList);
+                }
+                boneList.add(bone);
+            }
+
+            // Normalize vertex
+            vertexBoneData.normalizeWeights();
+        }
+    }
+
+    /**
+     * Update bone transforms at each animation step.
+     */
+    public void animate(float timeInSeconds) {
+        float ticksPerSecond;
+        float timeInTicks;
+        Matrix4f[] animationTransform = null;
+
+        if (animation.mTicksPerSecond != 0) {
+            ticksPerSecond = (float) animation.mTicksPerSecond;
+        } else {
+            ticksPerSecond = 25.0f;
+        }
+        timeInTicks = timeInSeconds * ticksPerSecond;
+
+        float animationTime = timeInTicks % animation.mDurationTicks; // auto-repeat
+        animationTransform = animation.getTransforms(animationTime);
+
+        updateTransforms(animRoot, new Matrix4f(), animationTransform);
+
+        for (Entry<GVRSceneObject, List<GVRBone>> ent : boneMap.entrySet()) {
+            // Transform all bone splits (a bone can be split into multiple instances if they influence
+            // different meshes)
+            for (GVRBone bone : ent.getValue()) {
+                updateBoneMatrices(bone);
+            }   
+        }
+    }
+
+    protected void updateTransforms(SceneAnimNode node, Matrix4f parentTransform, Matrix4f[] animationTransform) {
+        if (node.channelId != -1) {
+            node.localTransform.set(animationTransform[node.channelId]);
+        } else {
+            // Default local transform
+            node.localTransform.set(node.sceneObject.getTransform().getLocalModelMatrix4f());
+        }
+
+        parentTransform.mul(node.localTransform, node.globalTransform);
+
+        for (SceneAnimNode child : node.children) {
+            updateTransforms(child, node.globalTransform, animationTransform);
+        }
+    }
+
+    protected void updateBoneMatrices(GVRBone bone) {
+        Matrix4f finalMatrix = new Matrix4f().set(bone.getOffsetMatrix());
+
+        getGlobalTransform(bone.getName()).mul(finalMatrix, finalMatrix);
+
+        Matrix4f globalInverse = new Matrix4f().set(getGlobalTransform(bone.getSceneObject())).invert();
+        globalInverse.mul(finalMatrix, finalMatrix);
+
+        bone.setFinalTransformMatrix(finalMatrix);
+    }
+
+    private Matrix4f getGlobalTransform(String name) {
+        return nodeByName.get(name).globalTransform;
+    }
+
+    private Matrix4f getGlobalTransform(GVRSceneObject sceneObject) {
+        return getGlobalTransform(sceneObject.getName());
+    }
+}

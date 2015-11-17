@@ -32,8 +32,10 @@
 #define ISSET(num, i)                    ((num & (1 << i)) != 0)
 #define CLEARBIT(num, i)                 num = (num & ~(1 << i))
 
-#define AS_DIFFUSE_TEXTURE                0x00000000
-#define AS_SPECULAR_TEXTURE               0x00000001
+// Indices of feature bits
+#define AS_DIFFUSE_TEXTURE                0
+#define AS_SPECULAR_TEXTURE               1
+#define AS_SKINNING                       2
 
 /*
  * As the features are incremented, need to increase AS_TOTAL_FEATURE_COUNT
@@ -44,8 +46,8 @@
  * AS_TOTAL_GL_PROGRAM_COUNT = 8
  *
  */
-#define AS_TOTAL_FEATURE_COUNT            2
-#define AS_TOTAL_GL_PROGRAM_COUNT         4
+#define AS_TOTAL_FEATURE_COUNT            3
+#define AS_TOTAL_GL_PROGRAM_COUNT         (1 << AS_TOTAL_FEATURE_COUNT)
 
 namespace gvr {
 class GLProgram;
@@ -77,6 +79,10 @@ private:
     GLuint u_ambient_color_;
     GLuint u_color_;
     GLuint u_opacity_;
+
+    // Bones
+    GLuint a_bone_indices_;
+    GLuint a_bone_weights_;
 };
 
 }

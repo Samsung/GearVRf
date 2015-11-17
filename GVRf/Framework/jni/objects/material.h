@@ -45,6 +45,7 @@ public:
         TEXTURE_SHADER = 7,
         EXTERNAL_RENDERER_SHADER = 8,
         ASSIMP_SHADER = 9,
+        DISTORTION_SHADER = 90, // this shader is implemented and loaded in the distorter
         TEXTURE_SHADER_NOLIGHT = 100
     };
 

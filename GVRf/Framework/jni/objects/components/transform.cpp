@@ -81,6 +81,15 @@ glm::mat4 Transform::getModelMatrix() {
     return model_matrix_.element();
 }
 
+glm::mat4 Transform::getLocalModelMatrix() {
+    glm::mat4 translation_matrix = glm::translate(glm::mat4(), position_);
+    glm::mat4 rotation_matrix = glm::mat4_cast(rotation_);
+    glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
+    glm::mat4 trs_matrix = translation_matrix * rotation_matrix
+            * scale_matrix;
+    return trs_matrix;
+}
+
 void Transform::setModelMatrix(glm::mat4 matrix) {
 
 	glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);

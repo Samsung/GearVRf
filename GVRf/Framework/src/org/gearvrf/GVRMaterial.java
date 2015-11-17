@@ -123,17 +123,23 @@ public class GVRMaterial extends GVRHybridObject implements
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     9);
 
-            /*
+            /**
              * Set this feature enum if diffuse texture is present in Assimp
              * material Diffuse texture maps to main_texture in GearVRf
              */
-            public static int AS_DIFFUSE_TEXTURE = 0x00000000;
+            public static int AS_DIFFUSE_TEXTURE = 0;
 
-            /*
+            /**
              * Set this feature enum if specular texture is present in Assimp
              * material
              */
-            public static int AS_SPECULAR_TEXTURE = 0x00000001;
+            public static int AS_SPECULAR_TEXTURE = 1;
+
+            /**
+             * Set this feature enum if skinning info is present in Assimp
+             * material
+             */
+            public static int AS_SKINNING = 2;
 
             public static int setBit(int number, int index) {
                 return (number |= 1 << index);

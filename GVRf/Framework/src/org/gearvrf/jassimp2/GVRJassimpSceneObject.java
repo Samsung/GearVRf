@@ -2,6 +2,8 @@ package org.gearvrf.jassimp2;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.FutureWrapper;
@@ -14,15 +16,30 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.Log;
+import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
 public class GVRJassimpSceneObject extends GVRSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
     protected AiScene scene;
+    protected List<GVRKeyFrameAnimation> animations;
 
     public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene) {
         super(gvrContext);
-        this.scene = scene;
-        recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider));
+        animations = new ArrayList<GVRKeyFrameAnimation>();
+
+        if (scene != null) {
+            this.scene = scene;
+            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider));
+
+            // Animations
+            for (AiAnimation aiAnim : scene.getAnimations()) {
+                animations.add(GVRJassimpAdapter.get().createAnimation(aiAnim, this));
+            }
+        }
+    }
+
+    public List<GVRKeyFrameAnimation> getAnimations() {
+        return animations;
     }
 
     private void recurseAssimpNodes(
@@ -103,7 +120,7 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
 
         /* Feature set */
         int assimpFeatureSet = 0x00000000;
-        
+
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
         meshMaterial.setDiffuseColor(diffuseColor.getRed(),
@@ -149,6 +166,13 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
             }
         }
  
+        /* Skinning */
+        if (aiMesh.hasBones()) {
+            assimpFeatureSet = GVRShaderType.Assimp.setBit(
+                    assimpFeatureSet,
+                    GVRShaderType.Assimp.AS_SKINNING);
+        }
+
         /* Apply feature set to the material */
         meshMaterial.setShaderFeatureSet(assimpFeatureSet);
 
@@ -159,5 +183,14 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
         sceneObject.attachRenderData(sceneObjectRenderData);
 
         return sceneObject;
+    }
+
+    @Override
+    public void prettyPrint(StringBuffer sb, int indent) {
+        super.prettyPrint(sb, indent);
+        // dump its animations
+        for (GVRKeyFrameAnimation anim : animations) {
+            anim.prettyPrint(sb, indent + 2);
+        }
     }
 }

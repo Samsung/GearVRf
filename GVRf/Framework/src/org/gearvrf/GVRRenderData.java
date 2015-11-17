@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import org.gearvrf.GVRRenderPass;
 import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
 
-import android.util.Log;
 import static android.opengl.GLES30.*;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
 /**
@@ -37,13 +37,13 @@ import org.gearvrf.utility.Threads;
  * This includes the {@link GVRMesh mesh} itself, the mesh's {@link GVRMaterial
  * material}, camera association, rendering order, and various other parameters.
  */
-public class GVRRenderData extends GVRComponent {
+public class GVRRenderData extends GVRComponent implements PrettyPrint {
 
     private GVRMesh mMesh;
     private ArrayList<GVRRenderPass> mRenderPassList;
     private static final String TAG = "GearVRf";
     private GVRLight mLight;
-    
+
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
 
@@ -691,6 +691,39 @@ public class GVRRenderData extends GVRComponent {
         } else {
             NativeRenderData.setTextureCapturer(getNative(), 0);
         }
+    }
+
+    @Override
+    public void prettyPrint(StringBuffer sb, int indent) {
+        GVRMesh mesh = null;
+        if (mMesh != null) {
+            mesh = mMesh;
+        } else if (this.mFutureMesh != null) {
+            try {
+                mesh = mFutureMesh.get();
+            } catch (Exception e) {
+            }
+        }
+        if (mesh != null) {
+            sb.append(Log.getSpaces(indent));
+            sb.append("Mesh: ");
+            mesh.prettyPrint(sb, indent);
+        }
+
+        sb.append(Log.getSpaces(indent));
+        sb.append("Light: " + mLight);
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent));
+        sb.append("Light enabled: " + isLightEnabled);
+        sb.append(System.lineSeparator());
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        prettyPrint(sb, 0);
+        return sb.toString();
     }
 
     private boolean isLightEnabled;

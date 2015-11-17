@@ -287,6 +287,16 @@ public class GVRTransform extends GVRComponent {
     }
 
     /**
+     * Get the 4x4 single local transform matrix.
+     * 
+     * @return An array of 16 {@code float}s representing a 4x4 matrix in
+     *         OpenGL-compatible column-major format.
+     */
+    public float[] getLocalModelMatrix() {
+        return NativeTransform.getLocalModelMatrix(getNative());
+    }
+
+    /**
      * Get the 4x4 single matrix.
      *
      * @return An a {@code Matrix4f} representing a 4x4 matrix as a JOML
@@ -295,6 +305,18 @@ public class GVRTransform extends GVRComponent {
     public Matrix4f getModelMatrix4f() {
         Matrix4f modelMatrix = new Matrix4f();
         modelMatrix.set(getModelMatrix());
+        return modelMatrix;
+    }
+
+    /**
+     * Get the 4x4 single single local matrix.
+     *
+     * @return An a {@code Matrix4f} representing a 4x4 matrix as a JOML
+     *         {@code Matrix4f} object.
+     */
+    public Matrix4f getLocalModelMatrix4f() {
+        Matrix4f modelMatrix = new Matrix4f();
+        modelMatrix.set(getLocalModelMatrix());
         return modelMatrix;
     }
 
@@ -520,6 +542,8 @@ class NativeTransform {
     static native void setScaleZ(long transform, float z);
 
     static native float[] getModelMatrix(long transform);
+
+    static native float[] getLocalModelMatrix(long transform);
 
     static native void setModelMatrix(long tranform, float[] mat);
 
