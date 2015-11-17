@@ -74,7 +74,6 @@ public class SceneObjectActivity extends GVRActivity {
     }
 
     private long prevTime = 0;
-    private int numFrames = 0;
     private PreviewCallback previewCallback = new PreviewCallback() {
 
         @Override
@@ -83,14 +82,6 @@ public class SceneObjectActivity extends GVRActivity {
          * need to convert it to rgba format.
          */
         public void onPreviewFrame(byte[] data, Camera camera) {
-            numFrames++;
-            if (numFrames == 100) {
-                Parameters params = SceneObjectActivity.this.camera
-                        .getParameters();
-                params.setAutoWhiteBalanceLock(true);
-                params.setAutoExposureLock(true);
-                SceneObjectActivity.this.camera.setParameters(params);
-            }
             long currentTime = System.currentTimeMillis();
             Log.d(TAG,
                     "Preview Frame rate "
