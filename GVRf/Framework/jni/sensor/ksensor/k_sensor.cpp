@@ -30,17 +30,12 @@
 
 namespace gvr {
 
+#define FEATURE_MAGNETOMETER_YAW_CORRECTION
+
 #define HIDIOCGFEATURE(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x07, len)
 //#define LOG_SUMMARY
 //#define LOG_GYRO_FILTER
 //#define LOG_MAGNETOMETER_CORRECTION
-
-const float KVerySmallValue = 0.00001f;
-
-const float KYawDriftCorrection_TiltCorrectionWaitInSeconds = 5.0;
-const float KYawDriftCorrection_MaxTiltDifference = 0.15f;
-const float KYawCorrectionMaxRadians = glm::radians(0.07f);
-const float KYawDriftCorrection_AngularVelocityThreshold = glm::radians(5.0f);
 
 float acosx(const float angle);
 
@@ -261,7 +256,9 @@ void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q)
     }
 #endif
 
+#ifdef FEATURE_MAGNETOMETER_YAW_CORRECTION
     q = applyMagnetometerCorrection(q, msg->Acceleration, filteredGyro, deltaT);
+#endif
 
     step_++;
     // Normalize error
@@ -385,8 +382,10 @@ Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const v
     }
 
     yawCorrectionTimer += deltaT;
-    if (yawCorrectionTimer < KYawDriftCorrection_TiltCorrectionWaitInSeconds
-            || gyro.Length() >= KYawDriftCorrection_AngularVelocityThreshold) {
+    const float tiltCorrectionWaitInSeconds = 5.0;
+    static const float angularVelocityThreshold = glm::radians(5.0f);
+    if (yawCorrectionTimer < tiltCorrectionWaitInSeconds
+            || gyro.Length() >= angularVelocityThreshold) {
 #ifdef LOG_MAGNETOMETER_CORRECTION
         LOGI("ksensor: no yaw correction applied");
 #endif
@@ -398,67 +397,69 @@ Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const v
         return orientation;
     }
 
-    bool rememberReferencePoint = true;
-    // get the angle between the remembered orientation and this orientation
-    float angleRadians = 2 * acosx(fabs(orientation.Dot(referencePoint_.second)));
+    if (0 != referencePoint_.first.Length()) {
+        // get the angle between the remembered orientation and this orientation
+        float angleRadians = 2 * acosx(fabs(orientation.Dot(referencePoint_.second)));
 
-    Quaternion correctedOrientation = orientation;
-    if (angleRadians < glm::radians(5.0f) && 0 != referencePoint_.first.Length()) {
-        //use always the most up-to-date bias for improved calibration
-        vec3 worldFrame = orientation.Rotate(magnetic - magneticBias);
-        if (worldFrame.x * worldFrame.x + worldFrame.z * worldFrame.z < KVerySmallValue) {
+        Quaternion correctedOrientation = orientation;
+        if (angleRadians < glm::radians(5.0f)) {
+            //use always the most up-to-date bias for improved calibration
+            vec3 worldFrame = orientation.Rotate(magnetic - magneticBias);
+            const float epsilon = 0.00001f;
+            if (worldFrame.x * worldFrame.x + worldFrame.z * worldFrame.z < epsilon) {
 #ifdef LOG_MAGNETOMETER_CORRECTION
-            LOGI("k_sensor: horizontal component too small");
+                LOGI("k_sensor: horizontal component too small");
 #endif
-            return orientation;
-        }
-        worldFrame.Normalize();
+                return orientation;
+            }
+            worldFrame.Normalize();
 
-        vec3 referenceWorldFrame = referencePoint_.second.Rotate(referencePoint_.first - magneticBias);
-        referenceWorldFrame.Normalize();
+            vec3 referenceWorldFrame = referencePoint_.second.Rotate(referencePoint_.first - magneticBias);
+            referenceWorldFrame.Normalize();
 
-        if (fabs(referenceWorldFrame.y - worldFrame.y) > KYawDriftCorrection_MaxTiltDifference) {
+            const float maxTiltDifference = 0.15f;
+            if (fabs(referenceWorldFrame.y - worldFrame.y) > maxTiltDifference) {
 #ifdef LOG_MAGNETOMETER_CORRECTION
-            LOGI("k_sensor: too big of a tilt difference");
+                LOGI("k_sensor: too big of a tilt difference");
 #endif
-            return orientation;
-        }
+                return orientation;
+            }
 
-        // compute in the horizontal plane
-        referenceWorldFrame.y = worldFrame.y = 0;
-        float errorAngleInRadians = referenceWorldFrame.Angle(worldFrame);
-        if (isnan(errorAngleInRadians)) {
-            return orientation;
-        }
-        if (worldFrame.Cross(referenceWorldFrame).y < 0.0f) {
-            errorAngleInRadians *= -1.0f;
-        }
+            // compute in the horizontal plane
+            referenceWorldFrame.y = worldFrame.y = 0;
+            float errorAngleInRadians = referenceWorldFrame.Angle(worldFrame);
+            if (isnan(errorAngleInRadians)) {
+                return orientation;
+            }
+            if (worldFrame.Cross(referenceWorldFrame).y < 0.0f) {
+                errorAngleInRadians *= -1.0f;
+            }
 
-        float correction = errorAngleInRadians * KYawCorrectionMaxRadians / 5.0f;
-        correction = std::max(-KYawCorrectionMaxRadians, std::min(KYawCorrectionMaxRadians, correction));
-        correction *= deltaT;
-        correctedOrientation = Quaternion::CreateFromAxisAngle(vec3(0.0f, 1.0f, 0.0f), correction) * orientation;
+            static const float maxCorrectionRadians = glm::radians(0.07f);
+            static const float gain = maxCorrectionRadians / 5.0f;
+            float correction = errorAngleInRadians * gain;
+            correction = std::max(-maxCorrectionRadians, std::min(maxCorrectionRadians, correction));
+            correction *= deltaT;
+            correctedOrientation = Quaternion::CreateFromAxisAngle(vec3(0.0f, 1.0f, 0.0f), correction) * orientation;
 
 #ifdef LOG_MAGNETOMETER_CORRECTION
-        if (0 == step_ % 1500) {
-            LOGI("k_sensor: magnetometer correction: %f degrees; angle to reference %f; reference yaw: %f; current yaw: %f; corrected yaw: %f",
-                    glm::degrees(correction), glm::degrees(errorAngleInRadians),
-                    glm::degrees(referencePoint_.second.ToEulerAngle().y),
-                    glm::degrees(orientation.ToEulerAngle().y),
-                    glm::degrees(correctedOrientation.ToEulerAngle().y));
-        }
+            if (0 == step_ % 1500) {
+                LOGI("k_sensor: magnetometer correction: %f degrees; angle to reference %f; reference yaw: %f; current yaw: %f; corrected yaw: %f",
+                        glm::degrees(correction), glm::degrees(errorAngleInRadians),
+                        glm::degrees(referencePoint_.second.ToEulerAngle().y),
+                        glm::degrees(orientation.ToEulerAngle().y),
+                        glm::degrees(correctedOrientation.ToEulerAngle().y));
+            }
 #endif
-
-        rememberReferencePoint = false;
+            return correctedOrientation;
+        }
     }
 
-    if (rememberReferencePoint) {
-        referencePoint_ = std::make_pair(magnetic, orientation);
+    referencePoint_ = std::make_pair(magnetic, orientation);
 #ifdef LOG_MAGNETOMETER_CORRECTION
         LOGI("k_sensor: saving reference point at uncorrected yaw %f", glm::degrees(orientation.ToEulerAngle().y));
 #endif
-    }
-    return correctedOrientation;
+    return orientation;
 }
 
 const int TYPE_MAGNETIC_FIELD_UNCALIBRATED = 14;
