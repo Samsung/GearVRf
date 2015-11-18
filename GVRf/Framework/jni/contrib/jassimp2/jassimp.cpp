@@ -405,11 +405,12 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			return false;
 		}
 
-		if (!setObjectField(env, jMesh, "m_name", "Ljava/lang/String;", env->NewStringUTF(cMesh->mName.C_Str())))
+		jstring nameString = env->NewStringUTF(cMesh->mName.C_Str());
+		DeleteLocalRef refNameString(env, nameString);
+		if (!setObjectField(env, jMesh, "m_name", "Ljava/lang/String;", nameString))
 		{
 			return false;
 		}
-
 
 		/* determine face buffer size */
 		bool isPureTriangle = cMesh->mPrimitiveTypes == aiPrimitiveType_TRIANGLE;
@@ -697,7 +698,9 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			}
 
 			/* set bone data */
-			if (!setObjectField(env, jBone, "m_name", "Ljava/lang/String;", env->NewStringUTF(cBone->mName.C_Str())))
+			jstring boneNameString = env->NewStringUTF(cBone->mName.C_Str());
+			DeleteLocalRef refNameString(env, boneNameString);
+			if (!setObjectField(env, jBone, "m_name", "Ljava/lang/String;", boneNameString))
 			{
 				return false;
 			}
@@ -927,7 +930,9 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			DeleteLocalRef refProperty(env, jProperty);
 
 			jvalue constructorParams[5];
-			constructorParams[0].l = env->NewStringUTF(cProperty->mKey.C_Str());
+			jstring keyString = env->NewStringUTF(cProperty->mKey.C_Str());
+			DeleteLocalRef refKeyString(env, keyString);
+			constructorParams[0].l = keyString;
 			constructorParams[1].i = cProperty->mSemantic;
 			constructorParams[2].i = cProperty->mIndex;
 			constructorParams[3].i = cProperty->mType;
@@ -1108,7 +1113,9 @@ static bool loadAnimations(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		DeleteLocalRef refAnimation(env, jAnimation);
 
 		jvalue newAnimParams[3];
-		newAnimParams[0].l = env->NewStringUTF(cAnimation->mName.C_Str());
+		jstring nameString = env->NewStringUTF(cAnimation->mName.C_Str());
+		DeleteLocalRef refNameString(env, nameString);
+		newAnimParams[0].l = nameString;
 		newAnimParams[1].d = cAnimation->mDuration;
 		newAnimParams[2].d = cAnimation->mTicksPerSecond;
 
@@ -1142,7 +1149,9 @@ static bool loadAnimations(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			DeleteLocalRef refNodeAnim(env, jNodeAnim);
 
 			jvalue newNodeAnimParams[6];
-			newNodeAnimParams[0].l = env->NewStringUTF(cNodeAnim->mNodeName.C_Str());
+			jstring animationName = env->NewStringUTF(cNodeAnim->mNodeName.C_Str());
+			DeleteLocalRef refAnimationName(env, animationName);
+			newNodeAnimParams[0].l = animationName;
 			newNodeAnimParams[1].i = cNodeAnim->mNumPositionKeys;
 			newNodeAnimParams[2].i = cNodeAnim->mNumRotationKeys;
 			newNodeAnimParams[3].i = cNodeAnim->mNumScalingKeys;
@@ -1267,7 +1276,9 @@ static bool loadLights(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		jobject jLight;
 		DeleteLocalRef refLight(env, jLight);
 		jvalue params[12];
-		params[0].l = env->NewStringUTF(cLight->mName.C_Str());;
+		jstring lightName = env->NewStringUTF(cLight->mName.C_Str());
+		DeleteLocalRef refLightName(env, lightName);
+		params[0].l = lightName;
 		params[1].i = cLight->mType;
 		params[2].l = jPosition;
 		params[3].l = jDirection;
@@ -1356,7 +1367,9 @@ static bool loadCameras(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		DeleteLocalRef refCamera(env, jCamera);
 
 		jvalue params[8];
-		params[0].l = env->NewStringUTF(cCamera->mName.C_Str());
+		jstring cameraName = env->NewStringUTF(cCamera->mName.C_Str());
+		DeleteLocalRef refCameraName(env, cameraName);
+		params[0].l = cameraName;
 		params[1].l = jPosition;
 		params[2].l = jUp;
 		params[3].l = jLookAt;
