@@ -43,7 +43,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
     private final SurfaceTexture mSurfaceTexture;
     private boolean mPaused = false;
     private Camera camera;
-    private Activity activity;
+    private GVRContext gvrContext;
     private boolean cameraSetUpStatus;
 
     /**
@@ -52,8 +52,6 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      * 
      * @param gvrContext
      *            current {@link GVRContext}
-     * @param activity
-     *            the parent {@link Activity} that created this scene object.
      * @param mesh
      *            an arbitrarily complex {@link GVRMesh} object - see
      *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
@@ -64,8 +62,8 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *            should be sure to call it before you call
      *            {@link Camera#startPreview()}.
      */
-    public GVRCameraSceneObject(GVRContext gvrContext, Activity activity,
-            GVRMesh mesh, Camera camera) {
+    public GVRCameraSceneObject(GVRContext gvrContext, GVRMesh mesh,
+            Camera camera) {
         super(gvrContext, mesh);
         gvrContext.registerDrawFrameListener(this);
         GVRTexture texture = new GVRExternalTexture(gvrContext);
@@ -73,7 +71,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);
 
-        this.activity = activity;
+        this.gvrContext = gvrContext;
         this.camera = camera;
         mSurfaceTexture = new SurfaceTexture(texture.getId());
         try {
@@ -89,8 +87,6 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      * 
      * @param gvrContext
      *            current {@link GVRContext}
-     * @param activity
-     *            the parent {@link Activity} that created this scene object.
      * @param width
      *            the scene rectangle's width
      * @param height
@@ -101,9 +97,9 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *            should be sure to call it before you call
      *            {@link Camera#startPreview()}.
      */
-    public GVRCameraSceneObject(GVRContext gvrContext, Activity activity,
-            float width, float height, Camera camera) {
-        this(gvrContext, activity, gvrContext.createQuad(width, height), camera);
+    public GVRCameraSceneObject(GVRContext gvrContext, float width,
+            float height, Camera camera) {
+        this(gvrContext, gvrContext.createQuad(width, height), camera);
     }
 
     /**
@@ -144,8 +140,11 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      * Configure high fps settings in the camera for VR mode
      * 
      * @param fpsMode
-     *            integer indicating the desired fps. 0 means 30 fps, 1 means 60
+     *            integer indicating the desired fps: 0 means 30 fps, 1 means 60
      *            fps, and 2 means 120 fps. Any other value is invalid.
+     * @return  A boolean indicating the status of the method call. It may be false due 
+     *          to multiple reasons including: 1) supplying invalid fpsMode as the input
+     *          parameter, 2) VR mode not supported.
      */
     public boolean setUpCameraForVrMode(final int fpsMode) {
         
@@ -155,7 +154,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
             Log.e(TAG,
                     "Invalid fpsMode: %d. It can only take values 0, 1, or 2.", fpsMode);
         } else {
-            activity.runOnUiThread(new Runnable() {
+            gvrContext.getActivity().runOnUiThread(new Runnable() {
 
                 @Override
                 public void run() {
