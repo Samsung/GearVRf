@@ -19,5 +19,6 @@ public class Camera2RenderscriptActivity extends GVRActivity
     protected void onPause() {
         super.onPause();
         mManger.onPause();
+        finish();
     }
 }
