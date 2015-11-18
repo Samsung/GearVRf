@@ -1482,11 +1482,11 @@ static char *extractAsset(AAssetManager* mgr, const char *name, int *pBufferSize
 			// Store input buffer
 			AAsset_read(asset, pBuffer, assetSize);
 
-			// Close
-			AAsset_close(asset);
-
 			lprintf("Assimp", "Asset extracted");
 		}
+
+        // Close
+        AAsset_close(asset);
 	} else {
 		lprintf("Asset not found: %s", name);
 		return 0;

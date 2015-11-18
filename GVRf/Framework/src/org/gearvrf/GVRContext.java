@@ -481,6 +481,8 @@ public abstract class GVRContext {
      * 
      * @throws IOException
      *             File does not exist or cannot be read
+     *
+     * @deprecated Replaced by {@link #loadJassimpModel}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename)
             throws IOException {
@@ -506,6 +508,8 @@ public abstract class GVRContext {
      * 
      * @throws IOException
      *             File does not exist or cannot be read
+     *
+     * @deprecated Replaced by {@link #loadJassimpModel(String, EnumSet)}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {

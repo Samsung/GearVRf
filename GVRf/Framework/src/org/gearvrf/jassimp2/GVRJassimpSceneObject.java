@@ -55,7 +55,7 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
                 recurseAssimpNodes(sceneObject, child);
             }
 
-            // Inform the loaded object
+            // Inform the loaded object after it has been attached to the scene graph
             sceneObject.onLoaded();
         } catch (Exception e) {
             // Error while recursing the Scene Graph
@@ -157,9 +157,6 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
         sceneObjectRenderData.setMesh(futureMesh);
         sceneObjectRenderData.setMaterial(meshMaterial);
         sceneObject.attachRenderData(sceneObjectRenderData);
-
-        /* Inform the new object */
-        sceneObject.onLoaded();
 
         return sceneObject;
     }
