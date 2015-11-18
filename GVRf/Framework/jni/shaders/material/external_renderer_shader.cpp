@@ -4,9 +4,11 @@
 
 #include "external_renderer_shader.h"
 
+#include "glm/gtc/matrix_transform.hpp"
 #include "objects/material.h"
 #include "objects/mesh.h"
 #include "objects/components/render_data.h"
+#include "objects/components/texture_capturer.h"
 #include "objects/textures/texture.h"
 #include "objects/textures/external_renderer_texture.h"
 #include "util/gvr_gl.h"
@@ -20,7 +22,9 @@ void GVRF_installExternalRenderer(GVRF_ExternalRenderer fct) {
 
 namespace gvr {
 
-void ExternalRendererShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
+void ExternalRendererShader::render(
+        const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
+        const glm::mat4& mvp_matrix, RenderData* render_data) {
     if (externalRenderer == NULL) {
         LOGE("External renderer not installed");
         return;
@@ -44,6 +48,11 @@ void ExternalRendererShader::render(const glm::mat4& mvp_matrix, RenderData* ren
         return;
     }
 
+    if (mesh->vertices().empty()) {
+        LOGE("No vertices!?");
+        return;
+    }
+
     {
         const glm::vec3& min_corner = mesh->getBoundingVolume().min_corner();
         scratchBuffer[0] = min_corner[0];
@@ -55,11 +64,40 @@ void ExternalRendererShader::render(const glm::mat4& mvp_matrix, RenderData* ren
         scratchBuffer[5] = max_corner[2];
     }
 
-    externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
-                     scratchBuffer, 6,
-                     glm::value_ptr(mvp_matrix), 16,
-                     glm::value_ptr(*mesh->tex_coords().data()), mesh->tex_coords().size() * 2,
-                     material->getFloat("opacity"));
+    TextureCapturer *capturer(render_data->get_texture_capturer());
+    if (!capturer || !capturer->getAndClearPendingCapture()) {
+        // Original rendering
+        externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
+                         scratchBuffer, 6,
+                         glm::value_ptr(mvp_matrix), 16,
+                         glm::value_ptr(*mesh->tex_coords().data()), mesh->tex_coords().size() * 2,
+                         material->getFloat("opacity"));
+    } else {
+        // Capture texture in RenderTexture
+        capturer->beginCapture();
+
+        const std::vector<glm::vec3>& vertices(mesh->vertices());
+        if (!vertices.empty()) {
+            float halfWidth = fabs(vertices[0][0]);
+            float halfHeight = fabs(vertices[0][1]);
+
+            glm::mat4 mvp = capturer->getMvpMatrix(halfWidth, halfHeight);
+            externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
+                    scratchBuffer, 6,
+                    glm::value_ptr(mvp), 16,
+                    glm::value_ptr(*mesh->tex_coords().data()), mesh->tex_coords().size() * 2,
+                    1.0);
+        }
+
+        capturer->startReadBack();
+        capturer->endCapture();
+
+        // Render to original target
+        capturer->render(mv_matrix, mv_it_matrix, mvp_matrix, render_data);
+
+        // Callback
+        capturer->callback(TCCB_NEW_CAPTURE, 0);
+    }
 
     checkGlError("ExternalRendererShader::render");
 }

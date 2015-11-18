@@ -25,8 +25,9 @@
 namespace gvr {
 RenderTexture::RenderTexture(int width, int height) :
         Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
-                0), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_(
+                0), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_ (
                 new GLFrameBuffer()) {
+    initialize(width, height);
     glBindTexture(TARGET, gl_texture_->id());
     glTexImage2D(TARGET, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, 0);
@@ -49,6 +50,7 @@ RenderTexture::RenderTexture(int width, int height, int sample_count) :
         Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
                 sample_count), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_(
                 new GLFrameBuffer()) {
+    initialize(width, height);
     glBindTexture(TARGET, gl_texture_->id());
     glTexImage2D(TARGET, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, 0);
@@ -66,6 +68,60 @@ RenderTexture::RenderTexture(int width, int height, int sample_count) :
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
             GL_RENDERBUFFER, gl_render_buffer_->id());
+}
+
+void RenderTexture::startReadBack() {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_frame_buffer_->id());
+    glViewport(0, 0, width_, height_);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TARGET,
+            gl_texture_->id(), 0);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    glReadPixels(0, 0, width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    readback_started_ = true;
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+}
+
+bool RenderTexture::readRenderResult(uint32_t *readback_buffer, long capacity) {
+    long neededCapacity = width_ * height_;
+    if (!readback_buffer) {
+        LOGE("RenderTexture::readRenderResult: readback_buffer is null");
+        return false;
+    }
+
+    if (capacity < neededCapacity) {
+        LOGE("RenderTexture::readRenderResult: buffer capacity too small "
+             "(capacity %ld, needed %ld)", capacity, neededCapacity);
+        return false;
+    }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_frame_buffer_->id());
+    glViewport(0, 0, width_, height_);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TARGET,
+            gl_texture_->id(), 0);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    if (!readback_started_) {
+        glReadPixels(0, 0, width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    }
+
+    int *buf = (int *)glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, neededCapacity * 4,
+             GL_MAP_READ_BIT);
+    if (buf) {
+        memcpy(readback_buffer, buf, neededCapacity * 4);
+    }
+
+    readback_started_ = false;
+
+    glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    return true;
 }
 
 }
