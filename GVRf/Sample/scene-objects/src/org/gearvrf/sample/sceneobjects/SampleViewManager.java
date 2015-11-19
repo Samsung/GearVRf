@@ -89,7 +89,7 @@ public class SampleViewManager extends GVRScript {
                 true, material);
         GVRViewSceneObject webViewObject = createWebViewObject(gvrContext);
         GVRCameraSceneObject cameraObject = new GVRCameraSceneObject(
-                gvrContext, mActivity, 3.6f, 2.0f, mActivity.getCamera());
+                gvrContext, 3.6f, 2.0f, mActivity.getCamera());
         cameraObject.setUpCameraForVrMode(1); // set up 60 fps camera preview.
         GVRVideoSceneObject videoObject = createVideoObject(gvrContext);
         GVRTextViewSceneObject textViewSceneObject = new GVRTextViewSceneObject(
