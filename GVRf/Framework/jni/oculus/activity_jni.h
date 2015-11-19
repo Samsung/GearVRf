@@ -73,24 +73,24 @@ private:
     JNIEnv*             uiJni;            // for use by the Java UI thread
     OVR::Matrix4f       GetEyeView( const int eye, const float fovDegreesX, const float fovDegreesY ) const;
 
-    jclass              activityClass;    // must be looked up from main thread or FindClass() will fail
+    jclass              activityClass = nullptr;    // must be looked up from main thread or FindClass() will fail
 
-    jclass              vrAppSettingsClass;
-    jclass              eyeBufferParmsClass;
+    jclass              vrAppSettingsClass = nullptr;
+    jclass              eyeBufferParmsClass = nullptr;
 
-    jmethodID           getAppSettingsMethodId;
+    jmethodID           getAppSettingsMethodId = nullptr;
 
-    jmethodID           oneTimeInitMethodId;
-    jmethodID           oneTimeShutdownMethodId;
+    jmethodID           oneTimeInitMethodId = nullptr;
+    jmethodID           oneTimeShutdownMethodId = nullptr;
 
-    jmethodID           drawFrameMethodId;
+    jmethodID           drawFrameMethodId = nullptr;
 
-    jmethodID           beforeDrawEyesMethodId;
-    jmethodID           drawEyeViewMethodId;
-    jmethodID           afterDrawEyesMethodId;
+    jmethodID           beforeDrawEyesMethodId = nullptr;
+    jmethodID           drawEyeViewMethodId = nullptr;
+    jmethodID           afterDrawEyesMethodId = nullptr;
 
-    jmethodID           onKeyEventNativeMethodId;
-    jmethodID           updateSensoredSceneMethodId;
+    jmethodID           onKeyEventNativeMethodId = nullptr;
+    jmethodID           updateSensoredSceneMethodId = nullptr;
 
     jclass              GetGlobalClassReference( const char * className ) const;
     jmethodID           GetMethodID( const char * name, const char * signature );

@@ -26,16 +26,21 @@
 #include "util/gvr_time.h"
 #include <chrono>
 #include "math/matrix.hpp"
+#include <glm/glm.hpp>
 
 namespace gvr {
+
+#define FEATURE_MAGNETOMETER_YAW_CORRECTION
 
 #define HIDIOCGFEATURE(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x07, len)
 //#define LOG_SUMMARY
 //#define LOG_GYRO_FILTER
+//#define LOG_MAGNETOMETER_CORRECTION
+
+float acosx(const float angle);
 
 void KSensor::readerThreadFunc() {
     LOGV("k_sensor: reader starting up");
-
     readFactoryCalibration();
 
     while (0 > (fd_ = open("/dev/ovr0", O_RDONLY))) {
@@ -73,11 +78,19 @@ void KSensor::readerThreadFunc() {
 }
 
 KSensor::KSensor() :
-        fd_(-1), q_(), first_(true), step_(0), first_real_time_delta_(0.0f), last_timestamp_(
-                0), full_timestamp_(0), last_sample_count_(0), latest_time_(0), last_acceleration_(
-                0.0f, 0.0f, 0.0f), processing_thread_(), gyroFilter_(
+        fd_(-1), q_(), first_(true), step_(0), first_real_time_delta_(0.0f), last_timestamp_(0), full_timestamp_(0), last_sample_count_(
+                0), latest_time_(0), last_acceleration_(0.0f, 0.0f, 0.0f), processing_thread_(), gyroFilter_(
                 KGyroNoiseFilterCapacity), tiltFilter_(25), processing_flag_(
-                true) {
+        true) {
+}
+
+KSensor::~KSensor() {
+    ASensorManager* sensorManager = ASensorManager_getInstance();
+
+    if (nullptr != magneticSensorQueue) {
+        ASensorEventQueue_disableSensor(magneticSensorQueue, magneticSensor);
+        ASensorManager_destroyEventQueue(sensorManager, magneticSensorQueue);
+    }
 }
 
 void KSensor::start() {
@@ -106,39 +119,27 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
         }
 
         data->SampleCount = buffer[1];
-        data->Timestamp = (uint16_t) (*(buffer + 3) << 8)
-                | (uint16_t) (*(buffer + 2));
-        data->LastCommandID = (uint16_t) (*(buffer + 5) << 8)
-                | (uint16_t) (*(buffer + 4));
-        data->Temperature = (int16_t) (*(buffer + 7) << 8)
-                | (int16_t) (*(buffer + 6));
+        data->Timestamp = (uint16_t) (*(buffer + 3) << 8) | (uint16_t) (*(buffer + 2));
+        data->LastCommandID = (uint16_t) (*(buffer + 5) << 8) | (uint16_t) (*(buffer + 4));
+        data->Temperature = (int16_t) (*(buffer + 7) << 8) | (int16_t) (*(buffer + 6));
 
-        for (int i = 0; i < (data->SampleCount > 3 ? 3 : data->SampleCount);
-                ++i) {
+        for (int i = 0; i < (data->SampleCount > 3 ? 3 : data->SampleCount); ++i) {
             struct {
                 int32_t x :21;
             } s;
 
-            data->Samples[i].AccelX = s.x = (buffer[0 + 8 + 16 * i] << 13)
-                    | (buffer[1 + 8 + 16 * i] << 5)
+            data->Samples[i].AccelX = s.x = (buffer[0 + 8 + 16 * i] << 13) | (buffer[1 + 8 + 16 * i] << 5)
                     | ((buffer[2 + 8 + 16 * i] & 0xF8) >> 3);
-            data->Samples[i].AccelY = s.x = ((buffer[2 + 8 + 16 * i] & 0x07)
-                    << 18) | (buffer[3 + 8 + 16 * i] << 10)
-                    | (buffer[4 + 8 + 16 * i] << 2)
-                    | ((buffer[5 + 8 + 16 * i] & 0xC0) >> 6);
-            data->Samples[i].AccelZ = s.x = ((buffer[5 + 8 + 16 * i] & 0x3F)
-                    << 15) | (buffer[6 + 8 + 16 * i] << 7)
+            data->Samples[i].AccelY = s.x = ((buffer[2 + 8 + 16 * i] & 0x07) << 18) | (buffer[3 + 8 + 16 * i] << 10)
+                    | (buffer[4 + 8 + 16 * i] << 2) | ((buffer[5 + 8 + 16 * i] & 0xC0) >> 6);
+            data->Samples[i].AccelZ = s.x = ((buffer[5 + 8 + 16 * i] & 0x3F) << 15) | (buffer[6 + 8 + 16 * i] << 7)
                     | (buffer[7 + 8 + 16 * i] >> 1);
 
-            data->Samples[i].GyroX = s.x = (buffer[0 + 16 + 16 * i] << 13)
-                    | (buffer[1 + 16 + 16 * i] << 5)
+            data->Samples[i].GyroX = s.x = (buffer[0 + 16 + 16 * i] << 13) | (buffer[1 + 16 + 16 * i] << 5)
                     | ((buffer[2 + 16 + 16 * i] & 0xF8) >> 3);
-            data->Samples[i].GyroY = s.x = ((buffer[2 + 16 + 16 * i] & 0x07)
-                    << 18) | (buffer[3 + 16 + 16 * i] << 10)
-                    | (buffer[4 + 16 + 16 * i] << 2)
-                    | ((buffer[5 + 16 + 16 * i] & 0xC0) >> 6);
-            data->Samples[i].GyroZ = s.x = ((buffer[5 + 16 + 16 * i] & 0x3F)
-                    << 15) | (buffer[6 + 16 + 16 * i] << 7)
+            data->Samples[i].GyroY = s.x = ((buffer[2 + 16 + 16 * i] & 0x07) << 18) | (buffer[3 + 16 + 16 * i] << 10)
+                    | (buffer[4 + 16 + 16 * i] << 2) | ((buffer[5 + 16 + 16 * i] & 0xC0) >> 6);
+            data->Samples[i].GyroZ = s.x = ((buffer[5 + 16 + 16 * i] & 0x3F) << 15) | (buffer[6 + 16 + 16 * i] << 7)
                     | (buffer[7 + 16 + 16 * i] >> 1);
         }
 
@@ -147,8 +148,7 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
     return false;
 }
 
-void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro,
-        Quaternion& q) {
+void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q) {
     const float timeUnit = (1.0f / 1000.f);
 
     struct timespec tp;
@@ -173,8 +173,7 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro,
             // The timestamp rolled around the 16 bit counter, so FullTimeStamp
             // needs a high word increment.
             full_timestamp_ += 0x10000;
-            timestampDelta = ((((int) data->Timestamp) + 0x10000)
-                    - (int) last_timestamp_);
+            timestampDelta = ((((int) data->Timestamp) + 0x10000) - (int) last_timestamp_);
         } else {
             timestampDelta = (data->Timestamp - last_timestamp_);
         }
@@ -195,14 +194,12 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro,
         // This will be considered the absolute time of the last sample in
         // the message.  If we are double or tripple stepping the samples,
         // their absolute times will be adjusted backwards.
-        absoluteTimeSeconds = full_timestamp_ * timeUnit
-                + first_real_time_delta_;
+        absoluteTimeSeconds = full_timestamp_ * timeUnit + first_real_time_delta_;
 
         // If we missed a small number of samples, replicate the last sample.
         if ((timestampDelta > last_sample_count_) && (timestampDelta <= 254)) {
             KTrackerMessage sensors;
-            sensors.TimeDelta = (timestampDelta - last_sample_count_)
-                    * timeUnit;
+            sensors.TimeDelta = (timestampDelta - last_sample_count_) * timeUnit;
             sensors.Acceleration = last_acceleration_;
             sensors.RotationRate = last_rotation_rate_;
 
@@ -223,11 +220,10 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro,
 
     const float scale = 0.0001f;
     for (int i = 0; i < iterations; ++i) {
-        sensors.Acceleration = vec3(data->Samples[i].AccelX * scale,
-                data->Samples[i].AccelY * scale,
+        sensors.Acceleration = vec3(data->Samples[i].AccelX * scale, data->Samples[i].AccelY * scale,
                 data->Samples[i].AccelZ * scale);
-        sensors.RotationRate = vec3(data->Samples[i].GyroX * scale,
-                data->Samples[i].GyroY * scale, data->Samples[i].GyroZ * scale);
+        sensors.RotationRate = vec3(data->Samples[i].GyroX * scale, data->Samples[i].GyroY * scale,
+                data->Samples[i].GyroZ * scale);
 
         updateQ(&sensors, corrected_gyro, q);
 
@@ -241,8 +237,7 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro,
     last_rotation_rate_ = sensors.RotationRate;
 }
 
-void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro,
-        Quaternion& q) {
+void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q) {
     vec3 filteredGyro = applyGyroFilter(msg->RotationRate, msg->Temperature);
 
     const float deltaT = msg->TimeDelta;
@@ -250,19 +245,19 @@ void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro,
             deltaT, q);
 
     if (0.0f != axisAndMagnitude.second) {
-        q = q
-                * Quaternion::CreateFromAxisAngle(axisAndMagnitude.first,
-                        axisAndMagnitude.second * deltaT);
+        q = q * Quaternion::CreateFromAxisAngle(axisAndMagnitude.first, axisAndMagnitude.second * deltaT);
     }
 
 #ifdef LOG_SUMMARY
     if (0 == step_ % 1000) {
-        LOGI(
-                "k_sensor: summary: yaw angle %f; gyro offset %f %f %f; temperature %f; gyro filter sizes %d",
-                q.ToEulerAngle().y * KRadiansToDegrees, gyroOffset_.x,
-                gyroOffset_.y, gyroOffset_.z, msg->Temperature,
+        LOGI("k_sensor: summary: yaw angle %f; gyro offset %f %f %f; temperature %f; gyro filter sizes %d",
+                glm::degrees(q.ToEulerAngle().y), gyroOffset_.x, gyroOffset_.y, gyroOffset_.z, msg->Temperature,
                 gyroFilter_.size());
     }
+#endif
+
+#ifdef FEATURE_MAGNETOMETER_YAW_CORRECTION
+    q = applyMagnetometerCorrection(q, msg->Acceleration, filteredGyro, deltaT);
 #endif
 
     step_++;
@@ -276,8 +271,7 @@ void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro,
  * Tries to determine the gyro noise and subtract it from the actual reading to
  * reduce the amount of yaw drift.
  */
-vec3 KSensor::applyGyroFilter(const vec3& rawGyro,
-        const float currentTemperature) {
+vec3 KSensor::applyGyroFilter(const vec3& rawGyro, const float currentTemperature) {
     const int gyroFilterSize = gyroFilter_.size();
     if (gyroFilterSize > KGyroNoiseFilterCapacity / 2) {
         gyroOffset_ = gyroFilter_.mean();
@@ -285,8 +279,7 @@ vec3 KSensor::applyGyroFilter(const vec3& rawGyro,
     }
 
     if (gyroFilterSize > 0) {
-        if (!isnan(sensorTemperature_)
-                && sensorTemperature_ != currentTemperature) {
+        if (!isnan(sensorTemperature_) && sensorTemperature_ != currentTemperature) {
             gyroFilter_.clear();
             sensorTemperature_ = currentTemperature;
 
@@ -296,8 +289,7 @@ vec3 KSensor::applyGyroFilter(const vec3& rawGyro,
         } else {
             const vec3& mean = gyroFilter_.mean();
             // magic values that happen to work
-            if (rawGyro.Length() > 1.25f * 0.349066f
-                    || (rawGyro - mean).Length() > 0.018f) {
+            if (rawGyro.Length() > 1.25f * 0.349066f || (rawGyro - mean).Length() > 0.018f) {
                 gyroFilter_.clear();
 
 #ifdef LOG_GYRO_FILTER
@@ -308,10 +300,7 @@ vec3 KSensor::applyGyroFilter(const vec3& rawGyro,
     }
 
     const float alpha = 0.4f;
-    const vec3 avg =
-            (0 == gyroFilterSize) ?
-                    rawGyro :
-                    rawGyro * alpha + gyroFilter_.peekBack() * (1 - alpha);
+    const vec3 avg = (0 == gyroFilterSize) ? rawGyro : rawGyro * alpha + gyroFilter_.peekBack() * (1 - alpha);
     gyroFilter_.push(avg);
 
     return factoryGyroMatrix_.Transform(rawGyro - gyroOffset_);
@@ -379,6 +368,165 @@ void KSensor::readFactoryCalibration() {
     }
 }
 
-const double KSensor::KRadiansToDegrees = 180 / M_PI;
+/**
+ * Using the phone magnetometer as it is continuously calibrated.
+ */
+Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const vec3& accelerometer, const vec3& gyro,
+        float deltaT) {
+    const float gravityThreshold = 0.1f;
+    const float gravity = 9.80665f;
+    if (fabs(accelerometer.Length() / gravity - 1) > gravityThreshold) {
+        //linear acceleration detection
+        yawCorrectionTimer = 0;
+        return orientation;
+    }
+
+    yawCorrectionTimer += deltaT;
+    const float tiltCorrectionWaitInSeconds = 5.0;
+    static const float angularVelocityThreshold = glm::radians(5.0f);
+    if (yawCorrectionTimer < tiltCorrectionWaitInSeconds
+            || gyro.Length() >= angularVelocityThreshold) {
+#ifdef LOG_MAGNETOMETER_CORRECTION
+        LOGI("ksensor: no yaw correction applied");
+#endif
+        return orientation;
+    }
+
+    getLatestMagneticField();
+    if (0 == magnetic.Length()) {
+        return orientation;
+    }
+
+    if (0 != referencePoint_.first.Length()) {
+        // get the angle between the remembered orientation and this orientation
+        float angleRadians = 2 * acosx(fabs(orientation.Dot(referencePoint_.second)));
+
+        Quaternion correctedOrientation = orientation;
+        if (angleRadians < glm::radians(5.0f)) {
+            //use always the most up-to-date bias for improved calibration
+            vec3 worldFrame = orientation.Rotate(magnetic - magneticBias);
+            const float epsilon = 0.00001f;
+            if (worldFrame.x * worldFrame.x + worldFrame.z * worldFrame.z < epsilon) {
+#ifdef LOG_MAGNETOMETER_CORRECTION
+                LOGI("k_sensor: horizontal component too small");
+#endif
+                return orientation;
+            }
+            worldFrame.Normalize();
+
+            vec3 referenceWorldFrame = referencePoint_.second.Rotate(referencePoint_.first - magneticBias);
+            referenceWorldFrame.Normalize();
+
+            const float maxTiltDifference = 0.15f;
+            if (fabs(referenceWorldFrame.y - worldFrame.y) > maxTiltDifference) {
+#ifdef LOG_MAGNETOMETER_CORRECTION
+                LOGI("k_sensor: too big of a tilt difference");
+#endif
+                return orientation;
+            }
+
+            // compute in the horizontal plane
+            referenceWorldFrame.y = worldFrame.y = 0;
+            float errorAngleInRadians = referenceWorldFrame.Angle(worldFrame);
+            if (isnan(errorAngleInRadians)) {
+                return orientation;
+            }
+            if (worldFrame.Cross(referenceWorldFrame).y < 0.0f) {
+                errorAngleInRadians *= -1.0f;
+            }
+
+            static const float maxCorrectionRadians = glm::radians(0.07f);
+            static const float gain = maxCorrectionRadians / 5.0f;
+            float correction = errorAngleInRadians * gain;
+            correction = std::max(-maxCorrectionRadians, std::min(maxCorrectionRadians, correction));
+            correction *= deltaT;
+            correctedOrientation = Quaternion::CreateFromAxisAngle(vec3(0.0f, 1.0f, 0.0f), correction) * orientation;
+
+#ifdef LOG_MAGNETOMETER_CORRECTION
+            if (0 == step_ % 1500) {
+                LOGI("k_sensor: magnetometer correction: %f degrees; angle to reference %f; reference yaw: %f; current yaw: %f; corrected yaw: %f",
+                        glm::degrees(correction), glm::degrees(errorAngleInRadians),
+                        glm::degrees(referencePoint_.second.ToEulerAngle().y),
+                        glm::degrees(orientation.ToEulerAngle().y),
+                        glm::degrees(correctedOrientation.ToEulerAngle().y));
+            }
+#endif
+            return correctedOrientation;
+        }
+    }
+
+    referencePoint_ = std::make_pair(magnetic, orientation);
+#ifdef LOG_MAGNETOMETER_CORRECTION
+        LOGI("k_sensor: saving reference point at uncorrected yaw %f", glm::degrees(orientation.ToEulerAngle().y));
+#endif
+    return orientation;
+}
+
+const int TYPE_MAGNETIC_FIELD_UNCALIBRATED = 14;
+bool KSensor::getLatestMagneticField() {
+    bool fieldRetrieved = false;
+    if (nullptr == magneticSensorQueue) {
+        // Initialize on same thread as read.
+        ASensorManager* sensorManager = ASensorManager_getInstance();
+
+        ALooper* looper = ALooper_forThread();
+        if (looper == nullptr) {
+            looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
+        }
+
+        magneticSensor = ASensorManager_getDefaultSensor(sensorManager, TYPE_MAGNETIC_FIELD_UNCALIBRATED);
+        if (nullptr != magneticSensor) {
+            magneticSensorQueue = ASensorManager_createEventQueue(sensorManager, looper, 1, NULL, NULL);
+
+            auto error = ASensorEventQueue_enableSensor(magneticSensorQueue, magneticSensor);
+            if (0 > error) {
+                LOGE("k_sensor: error: enableSensor failed with %d", error);
+            } else {
+                error = ASensorEventQueue_setEventRate(magneticSensorQueue, magneticSensor,
+                        ASensor_getMinDelay(magneticSensor));
+                if (0 > error) {
+                    LOGE("k_sensor: error: setEventRate failed with %d", error);
+                }
+            }
+        } else {
+            LOGE("k_sensor: error: getDefaultSensor failed for sensor type %d", TYPE_MAGNETIC_FIELD_UNCALIBRATED);
+        }
+    }
+
+    int ident;  // Identifier.
+    int events;
+
+    while ((ident = ALooper_pollAll(0, NULL, &events, NULL) >= 0)) {
+        if (ident == 1) {
+            ASensorEvent event;
+            while (ASensorEventQueue_getEvents(magneticSensorQueue, &event, 1) > 0) {
+                if (event.type == TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
+                    magnetic.x = event.uncalibrated_magnetic.x_uncalib;
+                    magnetic.y = event.uncalibrated_magnetic.y_uncalib;
+                    magnetic.z = event.uncalibrated_magnetic.z_uncalib;
+                    magneticBias.x = event.uncalibrated_magnetic.x_bias;
+                    magneticBias.y = event.uncalibrated_magnetic.y_bias;
+                    magneticBias.z = event.uncalibrated_magnetic.z_bias;
+                    fieldRetrieved = true;
+                }
+            }
+        }
+    }
+
+    return fieldRetrieved;
+}
+
+/**
+ * @param angle in radians
+ */
+float acosx(const float angle) {
+    if (angle > 1) {
+        return 0;
+    } else if (angle < -1) {
+        return M_PI;
+    } else {
+        return acos(angle);
+    }
+}
 
 }
