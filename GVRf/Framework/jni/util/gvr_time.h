@@ -22,12 +22,23 @@
 #define GVR_TIME_H_
 
 #include "time.h"
+#include "util/gvr_log.h"
 
 namespace gvr {
 
 static long long getCurrentTime() {
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts); // Works on Linux
+    long long time = static_cast<long long>(ts.tv_sec)
+            * static_cast<long long>(1000000000)
+            + static_cast<long long>(ts.tv_nsec);
+    return time;
+}
+
+static long long getNanoTime() {
+    timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
     long long time = static_cast<long long>(ts.tv_sec)
             * static_cast<long long>(1000000000)
             + static_cast<long long>(ts.tv_nsec);
