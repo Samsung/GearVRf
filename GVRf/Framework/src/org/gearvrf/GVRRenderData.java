@@ -678,9 +678,12 @@ public class GVRRenderData extends GVRComponent {
 
     /**
      * Set the capturer for this texture. If capturer is null, the existing capturer
-     * is removed.
+     * is removed. Whether the capturer takes effect depends on the shader associated
+     * with {@code GVRMaterial}. In order to support the texture capturer, a native
+     * shader should check {@code RenderData::get_texture_capturer}. See {@code
+     * ExternalRendererShader} as an example.
      *
-     * @param capturer
+     * @param capturer The capturer.
      */
     public void setTextureCapturer(GVRTextureCapturer capturer) {
         if (capturer != null)

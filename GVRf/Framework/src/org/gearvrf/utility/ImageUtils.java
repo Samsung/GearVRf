@@ -2,14 +2,26 @@ package org.gearvrf.utility;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
+/**
+ * Utilities for basic image I/O and manipulation.
+ */
 public class ImageUtils
 {
+    /**
+     * Generates a {@code Bitmap} from a byte array containing {@code width} *
+     * {@code height} pixels. The pixel format is RGBA in little endian. The
+     * alpha value is not used in the result bitmap. The bitmap is also
+     * vertically flipped.
+     *
+     * @param byteArray The input byte array.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @return The generated {@code Bitmap} object.
+     */
     public static Bitmap generateBitmapFlipV(final byte[] byteArray, final int width,
             final int height) {
         int[] pixels = new int[width * height];
@@ -29,12 +41,29 @@ public class ImageUtils
                 Bitmap.Config.ARGB_8888);
     }
 
+    /**
+     * Generates a {@code Bitmap} from a int array containing {@code width} *
+     * {@code height} pixels. The pixel format is in ARGB_8888 format for
+     * Android.
+     *
+     * @param argbIntBuffer The int array containing pixels values.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @return The generated {@code Bitmap} object.
+     */
     public static Bitmap generateBitmap(final int[] argbIntBuffer,
             final int width, final int height) {
         return Bitmap.createBitmap(argbIntBuffer,
                                    width, height, Bitmap.Config.ARGB_8888);
     }
 
+    /**
+     * Saves a {@code Bitmap} as a PNG file.
+     *
+     * @param filename The file path on the file system.
+     * @param bitmap The input {@code Bitmap} object.
+     * @return {@code true} if successful.
+     */
     public static boolean saveBitmapAsPNG(String filename, Bitmap bitmap) {
         FileOutputStream outStream = null;
         try {

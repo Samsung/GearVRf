@@ -15,13 +15,11 @@
 
 package org.gearvrf;
 
-import java.nio.IntBuffer;
-
 /** Frame Buffer object. */
 public class GVRRenderTexture extends GVRTexture {
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size.
-     * 
+     *
      * @param gvrContext
      *            Current gvrContext
      * @param width
@@ -86,7 +84,7 @@ public class GVRRenderTexture extends GVRTexture {
      * @return true if successful.
      */
     boolean readRenderResult(int[] readbackBuffer) {
-      return NativeRenderTexture.readRenderResult(getNative(), readbackBuffer);
+        return NativeRenderTexture.readRenderResult(getNative(), readbackBuffer);
     }
 
     private int mWidth, mHeight;
