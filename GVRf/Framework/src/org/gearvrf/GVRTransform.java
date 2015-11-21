@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.joml.Matrix4f;
+
 /**
  * One of the key GVRF classes: Encapsulates a 4x4 matrix that controls how GL
  * draws a mesh.
@@ -285,6 +287,18 @@ public class GVRTransform extends GVRComponent {
     }
 
     /**
+     * Get the 4x4 single matrix.
+     *
+     * @return An a {@code Matrix4f} representing a 4x4 matrix as a JOML
+     *         {@code Matrix4f} object.
+     */
+    public Matrix4f getModelMatrix4f() {
+        Matrix4f modelMatrix = new Matrix4f();
+        modelMatrix.set(getModelMatrix());
+        return modelMatrix;
+    }
+
+    /**
      * Set the 4x4 model matrix and set current scaling, rotation, and
      * transformation based on this model matrix.
      * 
@@ -297,6 +311,18 @@ public class GVRTransform extends GVRComponent {
             throw new IllegalArgumentException("Size not equal to 16.");
         }
         NativeTransform.setModelMatrix(getNative(), mat);
+    }
+
+    /**
+     * Set the 4x4 model matrix and set current scaling, rotation, and
+     * transformation based on this model matrix.
+     *
+     * @param mat
+     *            A {@code Matrix4f} representing a 4x4 matrix in
+     *            OpenGL-compatible column-major format.
+     */
+    public void setModelMatrix(Matrix4f mat) {
+        setModelMatrix(mat.get(new float[16]));
     }
 
     /**
