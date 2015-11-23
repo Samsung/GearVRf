@@ -214,14 +214,32 @@ public class GVRActivity extends VrActivity {
     }
 
     private boolean isVrSupported() {
-        if ((Build.MODEL.contains("SM-N910"))
-                || (Build.MODEL.contains("SM-N916"))
-                || (Build.MODEL.contains("SM-G920"))
-                || (Build.MODEL.contains("SM-G925"))) {
+        if (isNote4() || isS6() || isS6Edge() || isS6EdgePlus() || isNote5()) {
             return true;
         }
 
         return false;
+    }
+
+    public boolean isNote4() {
+        return Build.MODEL.contains("SM-N910")
+                || Build.MODEL.contains("SM-N916");
+    }
+
+    public boolean isS6() {
+        return Build.MODEL.contains("SM-G920");
+    }
+
+    public boolean isS6Edge() {
+        return Build.MODEL.contains("SM-G925");
+    }
+    
+    public boolean isS6EdgePlus() {
+        return Build.MODEL.contains("SM-G928");
+    }
+    
+    public boolean isNote5() {
+        return Build.MODEL.contains("SM-N920");
     }
 
     public long getAppPtr(){
