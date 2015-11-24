@@ -686,10 +686,11 @@ public class GVRRenderData extends GVRComponent {
      * @param capturer The capturer.
      */
     public void setTextureCapturer(GVRTextureCapturer capturer) {
-        if (capturer != null)
+        if (capturer != null) {
             NativeRenderData.setTextureCapturer(getNative(), capturer.getNative());
-        else
+        } else {
             NativeRenderData.setTextureCapturer(getNative(), 0);
+        }
     }
 
     private boolean isLightEnabled;
