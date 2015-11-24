@@ -17,7 +17,6 @@ package org.gearvrf;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -35,11 +34,13 @@ import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.jassimp.AiColor;
 import org.gearvrf.jassimp.AiMaterial;
-import org.gearvrf.jassimp.AiMatrix4f;
 import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
-import org.gearvrf.jassimp.AiWrapperProvider;
+import org.gearvrf.jassimp.GVROldWrapperProvider;
+import org.gearvrf.jassimp2.GVRJassimpAdapter;
+import org.gearvrf.jassimp2.GVRJassimpSceneObject;
+import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
@@ -480,12 +481,16 @@ public abstract class GVRContext {
      * 
      * @throws IOException
      *             File does not exist or cannot be read
+     *
+     * @deprecated Replaced by {@link #loadJassimpModel}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename)
             throws IOException {
         return getAssimpModel(assetRelativeFilename,
                 GVRImportSettings.getRecommendedSettings());
     }
+
+    GVROldWrapperProvider wrapperProvider = new GVROldWrapperProvider();
 
     /**
      * Simple, high-level method to load a scene as {@link GVRSceneObject} from
@@ -503,6 +508,8 @@ public abstract class GVRContext {
      * 
      * @throws IOException
      *             File does not exist or cannot be read
+     *
+     * @deprecated Replaced by {@link #loadJassimpModel(String, EnumSet)}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
@@ -510,135 +517,45 @@ public abstract class GVRContext {
         GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
                 this, new GVRAndroidResource(this, assetRelativeFilename),
                 settings);
-
+        
         GVRSceneObject wholeSceneObject = new GVRSceneObject(this);
 
         AiScene assimpScene = assimpImporter.getAssimpScene();
-
-        AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider = new AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]>() {
-
-            /**
-             * Wraps a RGBA color.
-             * <p>
-             * 
-             * A color consists of 4 float values (r,g,b,a) starting from offset
-             * 
-             * @param buffer
-             *            the buffer to wrap
-             * @param offset
-             *            the offset into buffer
-             * @return the wrapped color
-             */
-            @Override
-            public AiColor wrapColor(ByteBuffer buffer, int offset) {
-                AiColor color = new AiColor(buffer, offset);
-                return color;
-            }
-
-            /**
-             * Wraps a 4x4 matrix of floats.
-             * <p>
-             * 
-             * The calling code will allocate a new array for each invocation of
-             * this method. It is safe to store a reference to the passed in
-             * array and use the array to store the matrix data.
-             * 
-             * @param data
-             *            the matrix data in row-major order
-             * @return the wrapped matrix
-             */
-            @Override
-            public AiMatrix4f wrapMatrix4f(float[] data) {
-
-                AiMatrix4f transformMatrix = new AiMatrix4f(data);
-                return transformMatrix;
-            }
-
-            /**
-             * Wraps a quaternion.
-             * <p>
-             * 
-             * A quaternion consists of 4 float values (w,x,y,z) starting from
-             * offset
-             * 
-             * @param buffer
-             *            the buffer to wrap
-             * @param offset
-             *            the offset into buffer
-             * @return the wrapped quaternion
-             */
-            @Override
-            public byte[] wrapQuaternion(ByteBuffer buffer, int offset) {
-                byte[] quaternion = new byte[4];
-                buffer.get(quaternion, offset, 4);
-                return quaternion;
-            }
-
-            /**
-             * Wraps a scene graph node.
-             * <p>
-             * 
-             * See {@link AiNode} for a description of the scene graph structure
-             * used by assimp.
-             * <p>
-             * 
-             * The parent node is either null or an instance returned by this
-             * method. It is therefore safe to cast the passed in parent object
-             * to the implementation specific type
-             * 
-             * @param parent
-             *            the parent node
-             * @param matrix
-             *            the transformation matrix
-             * @param meshReferences
-             *            array of mesh references (indexes)
-             * @param name
-             *            the name of the node
-             * @return the wrapped scene graph node
-             */
-            @Override
-            public AiNode wrapSceneNode(Object parent, Object matrix,
-                    int[] meshReferences, String name) {
-
-                AiNode node = new AiNode(null, matrix, meshReferences, name);
-
-                return node;
-            }
-
-            /**
-             * Wraps a vector.
-             * <p>
-             * 
-             * Most vectors are 3-dimensional, i.e., with 3 components. The
-             * exception are texture coordinates, which may be 1- or
-             * 2-dimensional. A vector consists of numComponents floats (x,y,z)
-             * starting from offset
-             * 
-             * @param buffer
-             *            the buffer to wrap
-             * @param offset
-             *            the offset into buffer
-             * @param numComponents
-             *            the number of components
-             * @return the wrapped vector
-             */
-            @Override
-            public byte[] wrapVector3f(ByteBuffer buffer, int offset,
-                    int numComponents) {
-                byte[] warpedVector = new byte[numComponents];
-                buffer.get(warpedVector, offset, numComponents);
-                return warpedVector;
-            }
-        };
 
         AiNode rootNode = assimpScene.getSceneRoot(wrapperProvider);
 
         // Recurse through the entire hierarchy to attache all the meshes as
         // Scene Object
-        this.recurseAssimpNodes(assimpImporter, assetRelativeFilename, wholeSceneObject,
-                rootNode, wrapperProvider);
+        recurseAssimpNodes(assimpImporter, assetRelativeFilename, wholeSceneObject,
+                rootNode, wrapperProvider) ;
 
         return wholeSceneObject;
+    }
+
+    public GVRSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
+        return loadJassimpModelFromSD(externalFile, GVRImportSettings.getRecommendedSettings());
+    }
+
+    public GVRSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
+        Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
+            GVRJassimpAdapter.get().toJassimpSettings(settings));
+        if (assimpScene == null)
+            return null;
+        return new GVRJassimpSceneObject(this, assimpScene);
+    }
+
+    public GVRSceneObject loadJassimpModel(String assetFile) throws IOException {
+        return loadJassimpModel(assetFile, GVRImportSettings.getRecommendedSettings());
+    }
+
+    public GVRSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
+        Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importAssetFile(assetFile,
+            GVRJassimpAdapter.get().toJassimpSettings(settings), mContext.getAssets());
+        if (assimpScene == null)
+            return null;
+        return new GVRJassimpSceneObject(this, assimpScene);
     }
 
     /**
@@ -671,8 +588,7 @@ public abstract class GVRContext {
             String assetRelativeFilename,
             GVRSceneObject parentSceneObject,
             AiNode node,
-            AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider) {
-  
+            GVROldWrapperProvider wrapperProvider) {
         try {
             GVRSceneObject newParentSceneObject = new GVRSceneObject(this);
 
@@ -693,11 +609,11 @@ public abstract class GVRContext {
                 }
                 parentSceneObject.addChildObject(newParentSceneObject);
                 parentSceneObject = newParentSceneObject;
-           }
-            if(node.getTransform(wrapperProvider) != null) {
-                float[] data = node.getTransform(wrapperProvider).m_data;
-                parentSceneObject.getTransform().setModelMatrix(transpose(data));
-                parentSceneObject.setName(node.getName());
+            }
+
+            if (node.getTransform(wrapperProvider) != null) {
+                parentSceneObject.getTransform().setModelMatrix(
+                		GVROldWrapperProvider.transpose(node.getTransform(wrapperProvider).toByteBuffer()));
             }
             
             for (int i = 0; i < node.getNumChildren(); i++) {
@@ -710,7 +626,7 @@ public abstract class GVRContext {
             e.printStackTrace();
         }
     }
-    
+
     private float[] transpose(float[] modelMatrix){
         float[] transposed = new float[16];
         transposed[0] = modelMatrix[0];
@@ -764,7 +680,7 @@ public abstract class GVRContext {
             String assetRelativeFilename,
             AiNode node,
             int index,
-            AiWrapperProvider<byte[], AiMatrix4f, AiColor, AiNode, byte[]> wrapperProvider)
+            GVROldWrapperProvider wrapperProvider)
             throws IOException {
         
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(

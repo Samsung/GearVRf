@@ -783,6 +783,12 @@ public class GVRSceneObject extends GVRHybridObject {
             removeChildObject(childComponent.getOwnerObject());
         }
     }
+
+    /**
+     * Called when the scene object has been loaded from a model.
+     */
+    public void onLoaded() {
+    }
 }
 
 class NativeSceneObject {

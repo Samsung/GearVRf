@@ -55,6 +55,12 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include/Compiler
 
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/jassimp2
+# Uncomment for logs
+# LOCAL_CFLAGS += -DANDROID -DJNI_LOG
+FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/jassimp2/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/libpng
 FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/libpng/*.c)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)

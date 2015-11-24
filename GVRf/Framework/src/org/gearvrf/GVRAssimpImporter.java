@@ -15,6 +15,10 @@
 
 package org.gearvrf;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.EnumSet;
+
 import org.gearvrf.jassimp.AiMaterial;
 import org.gearvrf.jassimp.AiScene;
 
@@ -76,7 +80,6 @@ class GVRAssimpImporter extends GVRHybridObject {
         return NativeAssimpImporter.getMeshMaterial(getNative(), nodeName,
                 meshIndex);
     }
-
 }
 
 class NativeAssimpImporter {
