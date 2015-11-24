@@ -153,7 +153,7 @@ public class GVRTextureCapturer extends GVRHybridObject {
                     processingCapturedTexture = true;
                 }
 
-                getGVRContext().runOnGlThread(new Runnable() {
+                getGVRContext().runOnGlThreadPostRender(1 /* delay 1 frame */, new Runnable() {
                     @Override
                     public void run()
                     {

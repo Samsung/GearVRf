@@ -2162,6 +2162,22 @@ public abstract class GVRContext {
     public abstract void runOnGlThread(Runnable runnable);
 
     /**
+     * Enqueues a callback to be run in the GL thread after rendering a frame.
+     *
+     * This is how you take data generated on a background thread (or the main
+     * (GUI) thread) and pass it to the coprocessor, using calls that must be
+     * made from the GL thread (aka the "GL context"). The callback queue is
+     * processed after a frame has been rendered.
+     *
+     * @param delayFrames
+     *            Number of frames to delay the task. 0 means current frame.
+     * @param runnable
+     *            A bit of code that must run on the GL thread after rendering
+     *            a frame.
+     */
+    public abstract void runOnGlThreadPostRender(int delayFrames, Runnable runnable);
+
+    /**
      * Subscribes a {@link GVRDrawFrameListener}.
      * 
      * Each frame listener is called, once per frame, after any pending
