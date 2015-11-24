@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
 
 import android.graphics.Bitmap;
 
@@ -156,24 +157,30 @@ public class GVRTextureCapturer extends GVRHybridObject {
                     @Override
                     public void run()
                     {
-                        Bitmap capturedBitmap = null;
-                        try {
-                            boolean readOk = captureTexture.readRenderResult(readBackBuffer);
-                            if (!readOk)
-                                return;
-
-                            capturedBitmap = ImageUtils.generateBitmap(readBackBuffer,
-                                                                       width, height);
-
-                            // Wait for all listeners before processing another frame
-                            for (TextureCapturerListener l : mListeners) {
-                                l.onTextureCaptured(capturedBitmap);
-                            }
-                        } finally {
+                        boolean readOk = captureTexture.readRenderResult(readBackBuffer);
+                        if (!readOk) {
                             synchronized (processingLock) {
                                 processingCapturedTexture = false;
                             }
+                            return;
                         }
+
+                        Threads.spawn(new Runnable() {
+                            @Override
+                            public void run()
+                            {
+                                Bitmap capturedBitmap = ImageUtils.generateBitmap(readBackBuffer,
+                                                                                  width, height);
+                                // Wait for all listeners before processing another frame
+                                for (TextureCapturerListener l : mListeners) {
+                                    l.onTextureCaptured(capturedBitmap);
+                                }
+
+                                synchronized (processingLock) {
+                                    processingCapturedTexture = false;
+                                }
+                            }
+                        });
                     }
                 });
                 break;
