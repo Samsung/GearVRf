@@ -117,9 +117,24 @@ public class GVRRenderData extends GVRComponent {
     }
 
     /**
-     * @return The {@link GVRMesh mesh} being rendered.
+     * @return The {@link GVRMesh mesh} being rendered. If there is
+     * a pending future mesh, it is resolved.
+     *
+     * @throws ExecutionException 
+     * @throws InterruptedException 
      */
     public GVRMesh getMesh() {
+        if (mFutureMesh != null) {
+            try
+            {
+                mMesh = mFutureMesh.get();
+                setMesh(mMesh);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
         return mMesh;
     }
 
