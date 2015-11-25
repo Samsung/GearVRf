@@ -74,6 +74,11 @@ void KSensor::readerThreadFunc() {
         fd_ = -1;
     }
 
+    if (nullptr != magneticSensorQueue) {
+        ASensorEventQueue_disableSensor(magneticSensorQueue, magneticSensor);
+        ASensorManager_destroyEventQueue(ASensorManager_getInstance(), magneticSensorQueue);
+    }
+
     LOGV("k_sensor: reader shut down");
 }
 
