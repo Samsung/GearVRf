@@ -29,8 +29,49 @@ public class GVRLight extends GVRHybridObject {
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         isEnabled = true;
+        name="";       
+        this.lightType=GVRLightType.GVRLightSource_SPOT;
     }
 
+    
+    /*
+     *  Get the {@code light_name}
+     *  this is to make the parameters to be same as that of assimp's aiLight structure.
+     *  
+     *  @return The name of light source
+     */
+    public String getLightName(){
+    	return this.name;
+    }
+    /*
+     *  Set the name of light
+     *  It is to allow the user to set the name of  light manually from the model file
+     *  
+     *  @param name: name of light
+     */
+
+    public void SetLightName(String name){
+    	this.name=name;
+    }
+    
+    /*  Get the type of light 
+     *  Different types are mentioned below in the enum
+     * 
+     */
+    
+    public GVRLightType getLightType(){
+    	return this.lightType;
+    }
+    
+    /*
+     * Set the type of light source
+     * 
+     * @param type: type of light source 
+     */
+    public void SetLightType(GVRLightType type){
+    	this.lightType=type;
+    }
+    
     /**
      * Get the {@code light_pos} uniform.
      * 
@@ -192,6 +233,22 @@ public class GVRLight extends GVRHybridObject {
     }
 
     /**
+     *  It defines type of light 
+     *
+     */
+    public enum GVRLightType{
+    	GVRLightSource_UNDEFINED(0),GVRLightSource_DIRECTIONAL(1),GVRLightSource_POINT(2),
+    	GVRLightSource_SPOT(3),GVRLightSource_AMBIENT(4);
+    	
+    	private int lightValue;
+    	GVRLightType(int value){
+    		this.lightValue=value;
+    	}
+    	public int getLightType(){
+    		return lightValue;
+    	}
+    }
+    /**
      * Get the enable/disable status for the light.
      * 
      * @return true if light is enabled, false if light is disabled.
@@ -233,6 +290,8 @@ public class GVRLight extends GVRHybridObject {
     }
 
     private boolean isEnabled;
+    private String name;
+    private GVRLightType lightType;
 }
 
 class NativeLight {
