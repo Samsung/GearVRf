@@ -49,17 +49,6 @@ public class Minimal360Video extends GVRScript
         GVRSphereSceneObject sphere = new GVRSphereSceneObject(gvrContext, false);
         GVRMesh mesh = sphere.getRenderData().getMesh();
 
-        /*
-        // retrieve first file from default oculus video folder
-        String downloadsPath = Environment.getExternalStoragePublicDirectory( "Oculus/360Videos/" ).toString();
-        File f = new File( downloadsPath );
-        File file[] = f.listFiles();
-
-        Uri videoURI = Uri.fromFile( file[ 0 ] );
-
-        MediaPlayer mediaPlayer = MediaPlayer.create( gvrContext.getContext(), videoURI );
-        */
-
         // create mediaplayer instance
         MediaPlayer mediaPlayer = new MediaPlayer();
         AssetFileDescriptor afd;
