@@ -90,12 +90,6 @@ KSensor::KSensor() :
 }
 
 KSensor::~KSensor() {
-    ASensorManager* sensorManager = ASensorManager_getInstance();
-
-    if (nullptr != magneticSensorQueue) {
-        ASensorEventQueue_disableSensor(magneticSensorQueue, magneticSensor);
-        ASensorManager_destroyEventQueue(sensorManager, magneticSensorQueue);
-    }
 }
 
 void KSensor::start() {
