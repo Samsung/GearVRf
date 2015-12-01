@@ -13,7 +13,6 @@
  * limitations under the License.
  */-->
 
-<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.gearvrf.samples.Minimal360Photo"
       android:versionCode="1"
