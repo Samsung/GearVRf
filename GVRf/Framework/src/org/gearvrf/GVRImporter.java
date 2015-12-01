@@ -22,6 +22,18 @@ import java.util.EnumSet;
 import android.content.res.AssetManager;
 
 import org.gearvrf.GVRImportSettings;
+import org.gearvrf.GVRAndroidResource.TextureCallback;
+import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.jassimp.AiColor;
+import org.gearvrf.jassimp.AiMaterial;
+import org.gearvrf.jassimp.AiNode;
+import org.gearvrf.jassimp.AiScene;
+import org.gearvrf.jassimp.AiTextureType;
+import org.gearvrf.jassimp.GVROldWrapperProvider;
+import org.gearvrf.jassimp2.GVRJassimpAdapter;
+import org.gearvrf.jassimp2.GVRJassimpSceneObject;
+import org.gearvrf.jassimp2.Jassimp;
+import org.gearvrf.utility.Log;
 
 /**
  * {@link GVRImporter} provides methods for importing 3D models and making them
@@ -31,7 +43,7 @@ import org.gearvrf.GVRImportSettings;
  * {@code assets} and {@code res/raw}) and from directories on the device's SD
  * card that the application has permission to read.
  */
-class GVRImporter {
+final class GVRImporter {
     private GVRImporter() {
     }
 
@@ -103,6 +115,235 @@ class GVRImporter {
         long nativeValue = NativeImporter.readFileFromSDCard(filename, GVRImportSettings.getAssimpImportFlags(settings));
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
+
+    static GVRSceneObject loadJassimpModelFromSD(final GVRContext context, String externalFile,
+            EnumSet<GVRImportSettings> settings) throws IOException {
+        Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
+                GVRJassimpAdapter.get().toJassimpSettings(settings));
+        if (assimpScene == null) {
+            return null;
+        }
+        return new GVRJassimpSceneObject(context, assimpScene);
+    }
+
+    static GVRSceneObject loadJassimpModel(final GVRContext context, String assetFile,
+            EnumSet<GVRImportSettings> settings) throws IOException {
+        Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importAssetFile(assetFile,
+                GVRJassimpAdapter.get().toJassimpSettings(settings),
+                context.getContext().getAssets());
+        if (assimpScene == null) {
+            return null;
+        }
+        return new GVRJassimpSceneObject(context, assimpScene);
+    }
+
+    static GVRSceneObject getAssimpModel(final GVRContext context, String assetRelativeFilename,
+            EnumSet<GVRImportSettings> settings) throws IOException {
+
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
+                context, new GVRAndroidResource(context, assetRelativeFilename),
+                settings);
+
+        GVRSceneObject wholeSceneObject = new GVRSceneObject(context);
+
+        AiScene assimpScene = assimpImporter.getAssimpScene();
+
+        AiNode rootNode = assimpScene.getSceneRoot(sWrapperProvider);
+
+        // Recurse through the entire hierarchy to attache all the meshes as
+        // Scene Object
+        recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, wholeSceneObject,
+                rootNode, sWrapperProvider);
+
+        return wholeSceneObject;
+    }
+
+    /**
+     * Helper method to recurse through all the assimp nodes and get all their
+     * meshes that can be used to create {@link GVRSceneObject} to be attached
+     * to the set of complete scene objects for the assimp model.
+     * 
+     * @param assetRelativeFilename A filename, relative to the {@code assets}
+     *            directory. The file can be in a sub-directory of the
+     *            {@code assets} directory: {@code "foo/bar.png"} will open the
+     *            file {@code assets/foo/bar.png}
+     * @param wholeSceneObject A reference of the {@link GVRSceneObject}, to
+     *            which all other scene objects are attached.
+     * @param node A reference to the AiNode for which we want to recurse all
+     *            its children and meshes.
+     * @param sWrapperProvider AiWrapperProvider for unwrapping Jassimp
+     *            properties.
+     */
+    @SuppressWarnings("resource")
+    private static void recurseAssimpNodes(
+            final GVRContext context,
+            GVRAssimpImporter assimpImporter,
+            String assetRelativeFilename,
+            GVRSceneObject parentSceneObject,
+            AiNode node,
+            GVROldWrapperProvider wrapperProvider) {
+        try {
+            GVRSceneObject newParentSceneObject = new GVRSceneObject(context);
+
+            if (node.getNumMeshes() == 0) {
+                parentSceneObject.addChildObject(newParentSceneObject);
+                parentSceneObject = newParentSceneObject;
+            } else if (node.getNumMeshes() == 1) {
+                // add the scene object to the scene graph
+                GVRSceneObject sceneObject = createSceneObject(
+                        context, assimpImporter, assetRelativeFilename, node, 0, wrapperProvider);
+                parentSceneObject.addChildObject(sceneObject);
+                parentSceneObject = sceneObject;
+            } else {
+                for (int i = 0; i < node.getNumMeshes(); i++) {
+                    GVRSceneObject sceneObject = createSceneObject(
+                            context, assimpImporter, assetRelativeFilename, node, i, wrapperProvider);
+                    newParentSceneObject.addChildObject(sceneObject);
+                }
+                parentSceneObject.addChildObject(newParentSceneObject);
+                parentSceneObject = newParentSceneObject;
+            }
+
+            if (node.getTransform(wrapperProvider) != null) {
+                parentSceneObject.getTransform().setModelMatrix(
+                        GVROldWrapperProvider
+                                .transpose(node.getTransform(wrapperProvider).toByteBuffer()));
+            }
+
+            for (int i = 0; i < node.getNumChildren(); i++) {
+                recurseAssimpNodes(context, assimpImporter, assetRelativeFilename,
+                        parentSceneObject, node.getChildren().get(i),
+                        wrapperProvider);
+            }
+        } catch (Exception e) {
+            // Error while recursing the Scene Graph
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Helper method to create a new {@link GVRSceneObject} with the mesh at the
+     * index {@link index} of the node mesh array with a color or texture
+     * material.
+     * 
+     * @param assetRelativeFilename A filename, relative to the {@code assets}
+     *            directory. The file can be in a sub-directory of the
+     *            {@code assets} directory: {@code "foo/bar.png"} will open the
+     *            file {@code assets/foo/bar.png}
+     * @param node A reference to the AiNode for which we want to recurse all
+     *            its children and meshes.
+     * @param index The index of the mesh in the array of meshes for that node.
+     * @param sWrapperProvider AiWrapperProvider for unwrapping Jassimp
+     *            properties.
+     * @return The new {@link GVRSceneObject} with the mesh at the index
+     *         {@link index} for the node {@link node}
+     * @throws IOException File does not exist or cannot be read
+     */
+    private static GVRSceneObject createSceneObject(
+            final GVRContext context,
+            GVRAssimpImporter assimpImporter,
+            String assetRelativeFilename,
+            AiNode node,
+            int index,
+            GVROldWrapperProvider wrapperProvider)
+                    throws IOException {
+
+        FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
+                context.getNodeMesh(assimpImporter, node.getName(), index));
+
+        AiMaterial material = getMeshMaterial(assimpImporter, node.getName(), index);
+
+        final GVRMaterial meshMaterial = new GVRMaterial(context,
+                GVRShaderType.Assimp.ID);
+
+        /* Feature set */
+        int assimpFeatureSet = 0x00000000;
+
+        /* Diffuse color */
+        AiColor diffuseColor = material.getDiffuseColor(wrapperProvider);
+        meshMaterial.setDiffuseColor(diffuseColor.getRed(),
+                diffuseColor.getGreen(), diffuseColor.getBlue(),
+                diffuseColor.getAlpha());
+
+        /* Specular color */
+        AiColor specularColor = material.getSpecularColor(wrapperProvider);
+        meshMaterial.setSpecularColor(specularColor.getRed(),
+                specularColor.getGreen(), specularColor.getBlue(),
+                specularColor.getAlpha());
+
+        /* Ambient color */
+        AiColor ambientColor = material.getAmbientColor(wrapperProvider);
+        meshMaterial.setAmbientColor(ambientColor.getRed(),
+                ambientColor.getGreen(), ambientColor.getBlue(),
+                ambientColor.getAlpha());
+
+        /* Emissive color */
+        AiColor emissiveColor = material.getEmissiveColor(wrapperProvider);
+        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                emissiveColor.getGreen(), emissiveColor.getBlue(),
+                emissiveColor.getAlpha());
+
+        /* Opacity */
+        float opacity = material.getOpacity();
+        meshMaterial.setOpacity(opacity);
+
+        /* Diffuse Texture */
+        final String texDiffuseFileName = material.getTextureFile(
+                AiTextureType.DIFFUSE, 0);
+        if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+            context.loadTexture(new TextureCallback() {
+                @Override
+                public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
+                    meshMaterial.setMainTexture(texture);
+                    final int features = GVRShaderType.Assimp.setBit(
+                            meshMaterial.getShaderFeatureSet(),
+                            GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
+                    meshMaterial.setShaderFeatureSet(features);
+                }
+
+                @Override
+                public void failed(Throwable t, GVRAndroidResource androidResource) {
+                    Log.e(TAG, "Error loading diffuse texture %s; exception: %s",
+                            texDiffuseFileName, t.getMessage());
+                }
+
+                @Override
+                public boolean stillWanted(GVRAndroidResource androidResource) {
+                    return true;
+                }
+            }, new GVRAndroidResource(context, texDiffuseFileName));
+        }
+
+        /* Apply feature set to the material */
+        meshMaterial.setShaderFeatureSet(assimpFeatureSet);
+
+        GVRSceneObject sceneObject = new GVRSceneObject(context);
+        sceneObject.setName(node.getName());
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(context);
+        sceneObjectRenderData.setMesh(futureMesh);
+        sceneObjectRenderData.setMaterial(meshMaterial);
+        sceneObject.attachRenderData(sceneObjectRenderData);
+        return sceneObject;
+    }
+
+    /**
+     * Retrieves the material for the mesh of the given node..
+     * 
+     * @return The material, encapsulated as a {@link AiMaterial}.
+     */
+    static AiMaterial getMeshMaterial(GVRAssimpImporter assimpImporter,
+            String nodeName, int meshIndex) {
+        return assimpImporter.getMeshMaterial(nodeName, meshIndex);
+    }
+
+    /**
+     * State-less, should be fine having one instance
+     */
+    private final static GVROldWrapperProvider sWrapperProvider = new GVROldWrapperProvider();
+
+    private final static String TAG = "GVRImporter";
 }
 
 class NativeImporter {
