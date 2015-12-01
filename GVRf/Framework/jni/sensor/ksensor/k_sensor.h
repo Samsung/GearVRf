@@ -89,7 +89,8 @@ private:
     float sensorTemperature_ = std::numeric_limits<float>::quiet_NaN();
     std::pair<vec3, Quaternion> referencePoint_;
 
-    float yawCorrectionTimer = 0;
+    float tiltCorrectionTimer = 0;
+    float magnetometerCorrectionTimer = 0;
     ASensorEventQueue* magneticSensorQueue = nullptr;
     ASensorRef magneticSensor = nullptr;
     vec3 magnetic;
