@@ -24,12 +24,17 @@ import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
+
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScript.SplashMode;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+
+import org.gearvrf.plugins.widget.GVRWidgetPluginActivity;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
@@ -108,6 +113,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
 
     private native void cull(long scene, long camera, long shader_manager);
+
     private native void renderCamera(long appPtr, long scene, long camera,
             long shaderManager, long postEffectShaderManager,
             long postEffectRenderTextureA, long postEffectRenderTextureB);
@@ -480,8 +486,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             } else {
                 // if mScreenshotCenterCallback is not null, capture center eye
                 if (mScreenshotCenterCallback != null) {
-                    GVRPerspectiveCamera centerCamera = mainCameraRig.getCenterCamera();
-                        
+                    GVRPerspectiveCamera centerCamera = mainCameraRig
+                            .getCenterCamera();
+
                     renderCamera(mActivity.getAppPtr(), mMainScene,
                             centerCamera, mRenderBundle);
 
@@ -531,8 +538,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {
 
-        GVRPerspectiveCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
-        cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
+        GVRPerspectiveCamera centerCamera = mMainScene.getMainCameraRig()
+                .getCenterCamera();
+        cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle
+                .getMaterialShaderManager().getNative());
 
         if (mCurrentEye == 1) {
             mActivity.setCamera(mMainScene.getMainCameraRig().getLeftCamera());
@@ -578,7 +587,19 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
 
             try {
-                mScript.onInit(GVRViewManager.this);
+
+                if (mScript.mPlugin == null
+                        || !(mScript.mPlugin instanceof GVRWidgetPluginActivity))
+                    mScript.onInit(GVRViewManager.this);
+                else {
+                    // get the egl contect here, plugin creation wil happen
+                    // after this, which will give us widget texture to call
+                    // init,
+                    // otherwise deadlock!!
+                    mScript.mEglContext = ((EGL10) EGLContext.getEGL())
+                            .eglGetCurrentContext();
+                    performLateInitialisation();
+                }
             } catch (Throwable t) {
                 t.printStackTrace();
                 mActivity.finish();
@@ -751,7 +772,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             final GVRCameraRig cameraRig = mMainScene.getMainCameraRig();
 
             if (null != cameraRig
-                    && (mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
+                    && (mSensoredScene == null || !mMainScene
+                            .equals(mSensoredScene))) {
                 cameraRig.resetYaw();
                 mSensoredScene = mMainScene;
                 return true;
@@ -836,5 +858,24 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     GVRRenderBundle getRenderBundle() {
         return mRenderBundle;
+    }
+
+    private void performLateInitialisation() throws Throwable {
+        // quirky implementation, revisit TBD
+        // must wait on the same thread
+        int failsafe = 0;
+        while (!mScript.mPlugin.isInitialised() && failsafe < 10) {
+            try {
+                Thread.sleep(500);
+                failsafe++;
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            // handler.post(this);
+        }
+
+        mScript.onInit(GVRViewManager.this);
+
     }
 }

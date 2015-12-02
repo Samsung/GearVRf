@@ -59,7 +59,8 @@ int Renderer::getNumberTriangles() {
 
 static std::vector<RenderData*> render_data_vector;
 
-void Renderer::cull(Scene *scene, Camera *camera, ShaderManager* shader_manager) {
+void Renderer::cull(Scene *scene, Camera *camera,
+        ShaderManager* shader_manager) {
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
@@ -71,8 +72,8 @@ void Renderer::cull(Scene *scene, Camera *camera, ShaderManager* shader_manager)
     occlusion_cull(scene, scene_objects);
 
     // do frustum culling, if enabled
-    frustum_cull(scene, camera, scene_objects, render_data_vector,
-            vp_matrix, shader_manager);
+    frustum_cull(scene, camera, scene_objects, render_data_vector, vp_matrix,
+            shader_manager);
 
     // do sorting based on render order
     std::sort(render_data_vector.begin(), render_data_vector.end(),
@@ -110,9 +111,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
         glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
-        glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(),
-                camera->background_color_a());
+        glClearColor(camera->background_color_r(), camera->background_color_g(),
+                camera->background_color_b(), camera->background_color_a());
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         for (auto it = render_data_vector.begin();
@@ -129,9 +129,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         glViewport(0, 0, texture_render_texture->width(),
                 texture_render_texture->height());
 
-        glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(),
-                camera->background_color_a());
+        glClearColor(camera->background_color_r(), camera->background_color_g(),
+                camera->background_color_b(), camera->background_color_a());
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         for (auto it = render_data_vector.begin();
@@ -230,7 +229,8 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
             continue;
         }
 
-        const BoundingVolume& bounding_volume = currentMesh->getBoundingVolume();
+        const BoundingVolume& bounding_volume =
+                currentMesh->getBoundingVolume();
 
         glm::mat4 model_matrix_tmp(
                 render_data->owner_object()->transform()->getModelMatrix());
@@ -584,8 +584,12 @@ void Renderer::renderRenderData(RenderData* render_data,
                                     mvp_matrix, render_data);
                             break;
                         case Material::ShaderType::ASSIMP_SHADER:
-                            shader_manager->getAssimpShader()->render(
-                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                            shader_manager->getAssimpShader()->render(mv_matrix,
+                                    glm::inverseTranspose(mv_matrix),
+                                    mvp_matrix, render_data, curr_material);
+                            break;
+                        case Material::ShaderType::UNLIT_FBO_SHADER:
+                            shader_manager->getUnlitFboShader()->render(
                                     mvp_matrix, render_data, curr_material);
                             break;
                         default:
@@ -597,7 +601,9 @@ void Renderer::renderRenderData(RenderData* render_data,
                         }
                     } catch (std::string error) {
                         LOGE(
-                                "Error detected in Renderer::renderRenderData; name : %s, error : %s", render_data->owner_object()->name().c_str(), error.c_str());
+                                "Error detected in Renderer::renderRenderData; name : %s, error : %s",
+                                render_data->owner_object()->name().c_str(),
+                                error.c_str());
                         shader_manager->getErrorShader()->render(mvp_matrix,
                                 render_data);
                     }
@@ -654,8 +660,8 @@ void Renderer::renderPostEffectData(Camera* camera,
             break;
         }
     } catch (std::string error) {
-        LOGE(
-                "Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
+        LOGE("Error detected in Renderer::renderPostEffectData; error : %s",
+                error.c_str());
     }
 }
 
