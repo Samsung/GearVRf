@@ -147,6 +147,11 @@ public class GVRMaterial extends GVRHybridObject implements
                 return (number &= ~(1 << index));
             }
         }
+
+        public abstract static class UnlitFBO {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    10);
+        }
     };
 
     /**
@@ -161,7 +166,8 @@ public class GVRMaterial extends GVRHybridObject implements
     public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
         super(gvrContext, NativeMaterial.ctor(shaderId.ID));
         this.shaderId = shaderId;
-        // if texture shader is used, set lighting coefficients to OpenGL default
+        // if texture shader is used, set lighting coefficients to OpenGL
+        // default
         // values
         if (shaderId == GVRShaderType.Texture.ID) {
             setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -174,7 +180,8 @@ public class GVRMaterial extends GVRHybridObject implements
 
     /**
      * A convenience overload: builds a {@link GVRMaterial} that uses the most
-     * common stock shader, the {@linkplain GVRShaderType.Texture 'texture'} shader.
+     * common stock shader, the {@linkplain GVRShaderType.Texture 'texture'}
+     * shader.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
@@ -535,7 +542,7 @@ public class GVRMaterial extends GVRHybridObject implements
         NativeMaterial.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2, z2,
                 w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
-    
+
     /**
      * Set the feature set for pre-built shader's. Pre-built shader could be
      * written to support all the properties of a material system with
@@ -550,7 +557,7 @@ public class GVRMaterial extends GVRHybridObject implements
         this.mShaderFeatureSet = featureSet;
         NativeMaterial.setShaderFeatureSet(getNative(), featureSet);
     }
-    
+
     /**
      * Get the feature set associated with this material.
      * 
