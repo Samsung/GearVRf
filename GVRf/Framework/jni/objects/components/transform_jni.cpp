@@ -135,6 +135,13 @@ Java_org_gearvrf_NativeTransform_rotateByAxisWithPivot(
         JNIEnv * env, jobject obj, jlong jtransform, jfloat angle,
         jfloat axis_x, jfloat axis_y, jfloat axis_z, jfloat pivot_x,
         jfloat pivot_y, jfloat pivot_z);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTransform_rotateWithPivot(
+        JNIEnv * env, jobject obj, jlong jtransform, jfloat quat_w,
+        jfloat quat_x, jfloat quat_y, jfloat quat_z, jfloat pivot_x,
+        jfloat pivot_y, jfloat pivot_z);
+
 }
 ;
 
@@ -362,5 +369,16 @@ Java_org_gearvrf_NativeTransform_rotateByAxisWithPivot(
     transform->rotateByAxisWithPivot(angle, axis_x, axis_y, axis_z, pivot_x,
             pivot_y, pivot_z);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTransform_rotateWithPivot(
+        JNIEnv * env, jobject obj, jlong jtransform, jfloat quat_w,
+        jfloat quat_x, jfloat quat_y, jfloat quat_z, jfloat pivot_x,
+        jfloat pivot_y, jfloat pivot_z) {
+    Transform* transform = reinterpret_cast<Transform*>(jtransform);
+    transform->rotateWithPivot(quat_w, quat_x, quat_y, quat_z, pivot_x,
+            pivot_y, pivot_z);
+}
+
 
 }
