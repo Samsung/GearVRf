@@ -100,8 +100,8 @@ private:
     bool factoryCalibration = false;
     glm::vec3 factoryAccelOffset_;
     glm::vec3 factoryGyroOffset_;
-    mat4 factoryAccelMatrix_;
-    mat4 factoryGyroMatrix_;
+    glm::mat4 factoryAccelMatrix_;
+    glm::mat4 factoryGyroMatrix_;
     float factoryTemperature_ = 0.0f;
 
     jobject activity_;
@@ -120,8 +120,8 @@ public:
 
     glm::vec3 accelOffset_;
     glm::vec3 gyroOffset_;
-    mat4 accelMatrix_;
-    mat4 gyroMatrix_;
+    glm::mat4 accelMatrix_;
+    glm::mat4 gyroMatrix_;
     float temperature_ = 0;
 
     KSensorFactoryCalibration() {
@@ -143,25 +143,21 @@ public:
         gyroOffset_.y = (float) y * 1e-4f;
         gyroOffset_.z = (float) z * 1e-4f;
 
-        float accelMatrixTemp[4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
         for (int i = 0; i < 3; i++) {
             unpack(buffer_ + 19 + 8 * i, &x, &y, &z);
-            accelMatrixTemp[i][0] = (float) x / sensorMax;
-            accelMatrixTemp[i][1] = (float) y / sensorMax;
-            accelMatrixTemp[i][2] = (float) z / sensorMax;
-            accelMatrixTemp[i][i] += 1.0f;
+            accelMatrix_[i][0] = (float) x / sensorMax;
+            accelMatrix_[i][1] = (float) y / sensorMax;
+            accelMatrix_[i][2] = (float) z / sensorMax;
+            accelMatrix_[i][i] += 1.0f;
         }
-        accelMatrix_ = mat4(&accelMatrixTemp[0][0]);
 
-        float gyroMatrixTemp[4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
         for (int i = 0; i < 3; i++) {
             unpack(buffer_ + 43 + 8 * i, &x, &y, &z);
-            gyroMatrixTemp[i][0] = (float) x / sensorMax;
-            gyroMatrixTemp[i][1] = (float) y / sensorMax;
-            gyroMatrixTemp[i][2] = (float) z / sensorMax;
-            gyroMatrixTemp[i][i] += 1.0f;
+            gyroMatrix_[i][0] = (float) x / sensorMax;
+            gyroMatrix_[i][1] = (float) y / sensorMax;
+            gyroMatrix_[i][2] = (float) z / sensorMax;
+            gyroMatrix_[i][i] += 1.0f;
         }
-        gyroMatrix_ = mat4(&gyroMatrixTemp[0][0]);
 
         temperature_ = (float) decodeInt16t(buffer_ + 67) / 100.0f;
     }

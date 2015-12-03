@@ -17,7 +17,10 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/geometric.hpp>
-#include "matrix.hpp"
+
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
 
 template<typename T>
 struct QuaternionT {
@@ -37,7 +40,6 @@ struct QuaternionT {
     QuaternionT<T> Scaled(T scale) const;
     QuaternionT<T> Inverted() const;
     T Dot(const QuaternionT<T>& q) const;
-    Matrix3<T> ToMatrix() const;
     vec4 ToVector() const;
     QuaternionT<T> operator=(const QuaternionT<T>& q);
     QuaternionT<T> operator-(const QuaternionT<T>& q) const;
@@ -166,38 +168,6 @@ inline QuaternionT<T> QuaternionT<T>::Inverted() const {
 template<typename T>
 inline T QuaternionT<T>::Dot(const QuaternionT<T>& q) const {
     return x * q.x + y * q.y + z * q.z + w * q.w;
-}
-
-template<typename T>
-inline Matrix3<T> QuaternionT<T>::ToMatrix() const {
-    const T s = 2;
-    T xs, ys, zs;
-    T wx, wy, wz;
-    T xx, xy, xz;
-    T yy, yz, zz;
-    xs = x * s;
-    ys = y * s;
-    zs = z * s;
-    wx = w * xs;
-    wy = w * ys;
-    wz = w * zs;
-    xx = x * xs;
-    xy = x * ys;
-    xz = x * zs;
-    yy = y * ys;
-    yz = y * zs;
-    zz = z * zs;
-    Matrix3<T> m;
-    m.x.x = 1 - (yy + zz);
-    m.y.x = xy - wz;
-    m.z.x = xz + wy;
-    m.x.y = xy + wz;
-    m.y.y = 1 - (xx + zz);
-    m.z.y = yz - wx;
-    m.x.z = xz - wy;
-    m.y.z = yz + wx;
-    m.z.z = 1 - (xx + yy);
-    return m;
 }
 
 template<typename T>

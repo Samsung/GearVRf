@@ -25,7 +25,6 @@
 #include "util/gvr_log.h"
 #include "util/gvr_time.h"
 #include <chrono>
-#include "math/matrix.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <jni.h>
@@ -289,6 +288,14 @@ void KSensor::updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, Quaternio
     }
 }
 
+glm::vec3 transform(const glm::mat4& m, const glm::vec3& v)
+{
+    const auto rcpW = 1 / ( m[3][0] * v.x + m[3][1] * v.y + m[3][2] * v.z + m[3][3] );
+    return glm::vec3((m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z + m[0][3]) * rcpW,
+                      (m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z + m[1][3]) * rcpW,
+                      (m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z + m[2][3]) * rcpW);
+}
+
 /**
  * Tries to determine the gyro noise and subtract it from the actual reading to
  * reduce the amount of yaw drift.
@@ -329,7 +336,7 @@ glm::vec3 KSensor::applyGyroFilter(const glm::vec3& rawGyro, const float current
     const glm::vec3 avg = (0 == gyroFilterSize) ? rawGyro : rawGyro * alpha + gyroFilter_.peekBack() * (1 - alpha);
     gyroFilter_.push(avg);
 
-    return factoryGyroMatrix_.Transform(rawGyro - gyroOffset_);
+    return transform(factoryGyroMatrix_, rawGyro - gyroOffset_);
 }
 
 std::pair<glm::vec3, float> KSensor::applyTiltCorrection(const glm::vec3& gyro, const glm::vec3& accel,
