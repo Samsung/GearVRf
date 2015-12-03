@@ -15,6 +15,8 @@
 
 
 #pragma once
+#include <glm/glm.hpp>
+#include <glm/geometric.hpp>
 #include "matrix.hpp"
 
 template<typename T>
@@ -26,9 +28,9 @@ struct QuaternionT {
 
     QuaternionT();
     QuaternionT(T x, T y, T z, T w);
-    QuaternionT(T w, Vector3<T> v);
+    QuaternionT(T w, glm::vec3 v);
 
-    Vector3<T> Imag() const;
+    glm::vec3 Imag() const;
     QuaternionT<T> Slerp(T mu, const QuaternionT<T>& q) const;
     QuaternionT<T> Rotated(const QuaternionT<T>& b) const;
     QuaternionT<T> Multiplied(const QuaternionT<T>& q2) const;
@@ -36,7 +38,7 @@ struct QuaternionT {
     QuaternionT<T> Inverted() const;
     T Dot(const QuaternionT<T>& q) const;
     Matrix3<T> ToMatrix() const;
-    Vector4<T> ToVector() const;
+    vec4 ToVector() const;
     QuaternionT<T> operator=(const QuaternionT<T>& q);
     QuaternionT<T> operator-(const QuaternionT<T>& q) const;
     QuaternionT<T> operator+(const QuaternionT<T>& q) const;
@@ -47,14 +49,14 @@ struct QuaternionT {
     void Normalize();
     void Rotate(const QuaternionT<T>& q);
     void Conjugate();
-    Vector3<T> Rotate(const Vector3<T>& v) const;
-    Vector3<T> ToEulerAngle() const;
+    glm::vec3 Rotate(const glm::vec3& v) const;
+    glm::vec3 ToEulerAngle() const;
 
-    static QuaternionT<T> CreateFromVectors(const Vector3<T>& v0,
-            const Vector3<T>& v1);
-    static QuaternionT<T> CreateFromAxisAngle(const Vector3<T>& axis,
+    static QuaternionT<T> CreateFromVectors(const glm::vec3& v0,
+            const glm::vec3& v1);
+    static QuaternionT<T> CreateFromAxisAngle(const glm::vec3& axis,
             float radians);
-    static QuaternionT<T> CreateFromEulerAngle(const Vector3<T>& axis);
+    static QuaternionT<T> CreateFromEulerAngle(const glm::vec3& axis);
 };
 
 template<typename T>
@@ -68,13 +70,13 @@ inline QuaternionT<T>::QuaternionT(T x, T y, T z, T w) :
 }
 
 template<typename T>
-inline QuaternionT<T>::QuaternionT(T w, Vector3<T> v) :
+inline QuaternionT<T>::QuaternionT(T w, glm::vec3 v) :
         x(v.x), y(v.y), z(v.z), w(w) {
 }
 
 template<typename T>
-inline Vector3<T> QuaternionT<T>::Imag() const {
-    return Vector3<T>(x, y, z);
+inline glm::vec3 QuaternionT<T>::Imag() const {
+    return glm::vec3(x, y, z);
 }
 
 // Ken Shoemake's famous method.
@@ -199,8 +201,8 @@ inline Matrix3<T> QuaternionT<T>::ToMatrix() const {
 }
 
 template<typename T>
-inline Vector4<T> QuaternionT<T>::ToVector() const {
-    return Vector4<T>(x, y, z, w);
+inline vec4 QuaternionT<T>::ToVector() const {
+    return vec4(x, y, z, w);
 }
 template<typename T>
 QuaternionT<T> QuaternionT<T>::operator=(const QuaternionT<T>& q) {
@@ -239,16 +241,19 @@ bool QuaternionT<T>::operator!=(const QuaternionT<T>& q) const {
     return !(*this == q);
 }
 
+const float Pi = 4 * std::atan(1.0f);
+const float TwoPi = 2 * Pi;
+
 // Compute the quaternion that rotates from a to b, avoiding numerical instability.
 // Taken from "The Shortest Arc Quaternion" by Stan Melax in "Game Programming Gems".
 template<typename T>
-inline QuaternionT<T> QuaternionT<T>::CreateFromVectors(const Vector3<T>& v0,
-        const Vector3<T>& v1) {
+inline QuaternionT<T> QuaternionT<T>::CreateFromVectors(const glm::vec3& v0,
+        const glm::vec3& v1) {
     if (v0 == -v1)
-        return QuaternionT<T>::CreateFromAxisAngle(vec3(1, 0, 0), Pi);
+        return QuaternionT<T>::CreateFromAxisAngle(glm::vec3(1, 0, 0), Pi);
 
-    Vector3<T> c = v0.Cross(v1);
-    T d = v0.Dot(v1);
+    glm::vec3 c = glm::cross(v0, v1);
+    T d = glm::dot(v0, v1);
     T s = std::sqrt((1 + d) * 2);
 
     QuaternionT<T> q;
@@ -261,7 +266,7 @@ inline QuaternionT<T> QuaternionT<T>::CreateFromVectors(const Vector3<T>& v0,
 
 template<typename T>
 inline QuaternionT<T> QuaternionT<T>::CreateFromAxisAngle(
-        const Vector3<T>& axis, float radians) {
+        const glm::vec3& axis, float radians) {
     QuaternionT<T> q;
     q.w = std::cos(radians / 2);
     q.x = q.y = q.z = std::sin(radians / 2);
@@ -292,8 +297,8 @@ inline void QuaternionT<T>::Rotate(const QuaternionT<T>& q2) {
 }
 
 template<typename T>
-inline Vector3<T> QuaternionT<T>::ToEulerAngle() const {
-    Vector3<T> v;
+inline glm::vec3 QuaternionT<T>::ToEulerAngle() const {
+    glm::vec3 v;
 
     T Q[3] = { x, y, z };  //Quaternion components x,y,z
 
@@ -334,7 +339,7 @@ inline Vector3<T> QuaternionT<T>::ToEulerAngle() const {
 }
 
 template<typename T>
-inline Vector3<T> QuaternionT<T>::Rotate(const Vector3<T>& v) const {
+inline glm::vec3 QuaternionT<T>::Rotate(const glm::vec3& v) const {
     return ((*this * QuaternionT<T>(v.x, v.y, v.z, T(0))) * Inverted()).Imag();
 }
 
@@ -353,20 +358,3 @@ inline void QuaternionT<T>::Conjugate() {
 
 typedef QuaternionT<float> Quaternion;
 
-//@ref http://gamedev.stackexchange.com/a/13439
-template<typename T>
-inline QuaternionT<T> QuaternionT<T>::CreateFromEulerAngle(
-        const Vector3<T>& euler_angle) {
-
-    QuaternionT<T> qAroundX = QuaternionT<T>::CreateFromAxisAngle(
-            Vector3<T>(1.0f, 0.0f, 0.0f), DEGTORAD(euler_angle.x));
-    QuaternionT<T> qAroundY = QuaternionT<T>::CreateFromAxisAngle(
-            Vector3<T>(0.0f, 1.0f, 0.0f), DEGTORAD(euler_angle.y));
-    QuaternionT<T> qAroundZ = QuaternionT<T>::CreateFromAxisAngle(
-            Vector3<T>(0.0f, 0.0f, 1.0f), DEGTORAD(euler_angle.z));
-    Quaternion qRes = qAroundZ.Multiplied(qAroundX).Multiplied(qAroundY); //1108
-
-    qRes.Normalize();
-
-    return qRes;
-}

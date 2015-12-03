@@ -17,8 +17,6 @@
 #ifndef KTRACKER_DATA_INFO_H_
 #define KTRACKER_DATA_INFO_H_
 
-#include "math/vector.hpp"
-
 namespace gvr {
 
 struct KTrackerSensorRawData {
@@ -38,9 +36,9 @@ struct KTrackerSensorZip {
 };
 
 struct KTrackerMessage {
-    vec3 Acceleration;
-    vec3 RotationRate;
-    vec3 MagneticField;
+    glm::vec3 Acceleration;
+    glm::vec3 RotationRate;
+    glm::vec3 MagneticField;
     float Temperature;
     float TimeDelta;
     double AbsoluteTimeSeconds;

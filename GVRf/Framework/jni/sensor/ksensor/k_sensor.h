@@ -31,8 +31,9 @@
 #include <mutex>
 #include <android/sensor.h>
 
+#include <glm/glm.hpp>
 #include "math/quaternion.hpp"
-#include "math/vector.hpp"
+#include <jni.h>
 
 #include "ktracker_sensor_filter.h"
 
@@ -42,7 +43,7 @@ class KTrackerMessage;
 
 class KSensor {
 public:
-    KSensor();
+    KSensor(JNIEnv& env, jobject activity);
     ~KSensor();
     void stop();
     void start();
@@ -58,14 +59,14 @@ public:
 private:
     bool update();
     bool pollSensor(KTrackerSensorZip* data);
-    void process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q);
-    void updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q);
-    std::pair<vec3, float> applyTiltCorrection(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q);
+    void process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, Quaternion& q);
+    void updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, Quaternion& q);
+    std::pair<glm::vec3, float> applyTiltCorrection(const glm::vec3& gyro, const glm::vec3& accel, const float DeltaT, Quaternion& q);
     void readerThreadFunc();
-    vec3 applyGyroFilter(const vec3& rawGyro, const float currentTemperature);
+    glm::vec3 applyGyroFilter(const glm::vec3& rawGyro, const float currentTemperature);
     void readFactoryCalibration();
     bool getLatestMagneticField();
-    Quaternion applyMagnetometerCorrection(Quaternion& q, const vec3& accelerometer, const vec3& gyro, float deltaT);
+    Quaternion applyMagnetometerCorrection(Quaternion& q, const glm::vec3& accelerometer, const glm::vec3& gyro, float deltaT);
 
 private:
     int fd_;
@@ -77,31 +78,35 @@ private:
     uint32_t full_timestamp_;
     uint8_t last_sample_count_;
     long long latest_time_;
-    vec3 last_acceleration_;
-    vec3 last_rotation_rate_;
-    vec3 last_corrected_gyro_;
+    glm::vec3 last_acceleration_;
+    glm::vec3 last_rotation_rate_;
+    glm::vec3 last_corrected_gyro_;
     SensorFilter<float> tiltFilter_;
-    SensorFilter<vec3> gyroFilter_;
+    SensorFilter<glm::vec3> gyroFilter_;
     std::thread processing_thread_;
     std::atomic<bool> processing_flag_;
     std::mutex update_mutex_;
-    vec3 gyroOffset_;
+    glm::vec3 gyroOffset_;
     float sensorTemperature_ = std::numeric_limits<float>::quiet_NaN();
-    std::pair<vec3, Quaternion> referencePoint_;
+    std::pair<glm::vec3, Quaternion> referencePoint_;
 
     float tiltCorrectionTimer = 0;
     float magnetometerCorrectionTimer = 0;
     ASensorEventQueue* magneticSensorQueue = nullptr;
     ASensorRef magneticSensor = nullptr;
-    vec3 magnetic;
-    vec3 magneticBias;
+    glm::vec3 magnetic;
+    glm::vec3 magneticBias;
 
     bool factoryCalibration = false;
-    vec3 factoryAccelOffset_;
-    vec3 factoryGyroOffset_;
+    glm::vec3 factoryAccelOffset_;
+    glm::vec3 factoryGyroOffset_;
     mat4 factoryAccelMatrix_;
     mat4 factoryGyroMatrix_;
     float factoryTemperature_ = 0.0f;
+
+    jobject activity_;
+    JavaVM* jvm_;
+    jclass gvrActivityClass_;
 
     static const int KGyroNoiseFilterCapacity = 6000;
 };
@@ -113,8 +118,8 @@ public:
     };
     uint8_t buffer_[PacketSize];
 
-    vec3 accelOffset_;
-    vec3 gyroOffset_;
+    glm::vec3 accelOffset_;
+    glm::vec3 gyroOffset_;
     mat4 accelMatrix_;
     mat4 gyroMatrix_;
     float temperature_ = 0;

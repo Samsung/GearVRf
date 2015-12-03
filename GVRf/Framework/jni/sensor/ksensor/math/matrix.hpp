@@ -15,7 +15,10 @@
 
 
 #pragma once
-#include "vector.hpp"
+#include <glm/glm.hpp>
+using glm::vec3;
+using glm::vec2;
+using glm::vec4;
 
 template<typename T>
 struct Matrix2 {
@@ -159,8 +162,8 @@ struct Matrix4 {
         m.w.w = w.x * b.x.w + w.y * b.y.w + w.z * b.z.w + w.w * b.w.w;
         return m;
     }
-    Vector4<T> operator *(const Vector4<T>& b) const {
-        Vector4<T> v;
+    vec4 operator *(const vec4& b) const {
+        vec4 v;
         v.x = x.x * b.x + x.y * b.y + x.z * b.z + x.w * b.w;
         v.y = y.x * b.x + y.y * b.y + y.z * b.z + y.w * b.w;
         v.z = z.x * b.x + z.y * b.y + z.z * b.z + z.w * b.w;
@@ -210,75 +213,204 @@ struct Matrix4 {
         m.z.z = z.z;
         return m;
     }
-
     Matrix4 Inverse() const {
+//    	Matrix4 m;
+//    	m.x.x = x.x; m.x.y = y.x; m.x.z = z.x; m.x.w = 0;
+//    	m.y.x = x.y; m.y.y = y.y; m.y.z = z.y; m.y.w = 0;
+//    	m.z.x = x.z; m.z.y = y.z; m.z.z = z.z; m.z.w = 0;
+//    	m.w.x = -((m.x.x * w.x) + (m.y.x * w.y) + (m.z.x * w.z));
+//    	m.w.y = -((m.x.y * w.x) + (m.y.y * w.y) + (m.z.y * w.z));
+//    	m.w.z = -((m.x.z * w.x) + (m.y.z * w.y) + (m.z.z * w.z));
+//    	m.w.w = 0;
+//
+//    	//inconplete
+//    	return m;
 
+//
+// Inversion by Cramer's rule.  Code taken from an Intel publication
+//
         double Result[4][4];
+        double tmp[12]; /* temp array for pairs */
+//    	double src[16]; /* array of transpose source matrix */
         float const* src; /* array of transpose source matrix */
-        double det, invDet; /* determinant */
-
-        // set src
+        double det; /* determinant */
+#define UINT unsigned int
+        /* transpose matrix */
+//    	for (UINT i = 0; i < 4; i++)
+//    	{
+//    		src[i + 0 ] = (*this)[i][0];
+//    		src[i + 4 ] = (*this)[i][1];
+//    		src[i + 8 ] = (*this)[i][2];
+//    		src[i + 12] = (*this)[i][3];
+//    	}
+        //baek
         src = Transposed().Pointer();
 
-        // computing
-        double subfactor01 = src[10] * src[15] - src[11] * src[14];
-        double subfactor23 = src[9] * src[15] - src[11] * src[13];
-        double subfactor45 = src[9] * src[14] - src[10] * src[13];
-        double subfactor67 = src[8] * src[15] - src[11] * src[12];
-        double subfactor89 = src[8] * src[14] - src[10] * src[12];
-        double subfactor1011 = src[8] * src[13] - src[9] * src[12];
+        /* calculate pairs for first 8 elements (cofactors) */
+        tmp[0] = src[10] * src[15];
+        tmp[1] = src[11] * src[14];
+        tmp[2] = src[9] * src[15];
+        tmp[3] = src[11] * src[13];
+        tmp[4] = src[9] * src[14];
+        tmp[5] = src[10] * src[13];
+        tmp[6] = src[8] * src[15];
+        tmp[7] = src[11] * src[12];
+        tmp[8] = src[8] * src[14];
+        tmp[9] = src[10] * src[12];
+        tmp[10] = src[8] * src[13];
+        tmp[11] = src[9] * src[12];
+        /* calculate first 8 elements (cofactors) */
+        Result[0][0] = tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7];
+        Result[0][0] -= tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7];
+        Result[0][1] = tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7];
+        Result[0][1] -= tmp[0] * src[4] + tmp[7] * src[6] + tmp[8] * src[7];
+        Result[0][2] = tmp[2] * src[4] + tmp[7] * src[5] + tmp[10] * src[7];
+        Result[0][2] -= tmp[3] * src[4] + tmp[6] * src[5] + tmp[11] * src[7];
+        Result[0][3] = tmp[5] * src[4] + tmp[8] * src[5] + tmp[11] * src[6];
+        Result[0][3] -= tmp[4] * src[4] + tmp[9] * src[5] + tmp[10] * src[6];
+        Result[1][0] = tmp[1] * src[1] + tmp[2] * src[2] + tmp[5] * src[3];
+        Result[1][0] -= tmp[0] * src[1] + tmp[3] * src[2] + tmp[4] * src[3];
+        Result[1][1] = tmp[0] * src[0] + tmp[7] * src[2] + tmp[8] * src[3];
+        Result[1][1] -= tmp[1] * src[0] + tmp[6] * src[2] + tmp[9] * src[3];
+        Result[1][2] = tmp[3] * src[0] + tmp[6] * src[1] + tmp[11] * src[3];
+        Result[1][2] -= tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3];
+        Result[1][3] = tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2];
+        Result[1][3] -= tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2];
+        /* calculate pairs for second 8 elements (cofactors) */
+        tmp[0] = src[2] * src[7];
+        tmp[1] = src[3] * src[6];
+        tmp[2] = src[1] * src[7];
+        tmp[3] = src[3] * src[5];
+        tmp[4] = src[1] * src[6];
+        tmp[5] = src[2] * src[5];
 
-        Result[0][0] = subfactor01 * src[5] - subfactor23 * src[6] + subfactor45 * src[7];
-        Result[0][1] = -subfactor01 * src[4] + subfactor67 * src[6] - subfactor89 * src[7];
-        Result[0][2] = subfactor23 * src[4] - subfactor67 * src[5] + subfactor1011 * src[7];
-        Result[0][3] = -subfactor45 * src[4] + subfactor89 * src[5] - subfactor1011 * src[6];
-        Result[1][0] = -subfactor01 * src[1] + subfactor23 * src[2] - subfactor45 * src[3];
-        Result[1][1] = subfactor01 * src[0] - subfactor67 * src[2] + subfactor89 * src[3];
-        Result[1][2] = -subfactor23 * src[0] + subfactor67 * src[1] - subfactor1011 * src[3];
-        Result[1][3] = subfactor45 * src[0] - subfactor89 * src[1] + subfactor1011 * src[2];
+        tmp[6] = src[0] * src[7];
+        tmp[7] = src[3] * src[4];
+        tmp[8] = src[0] * src[6];
+        tmp[9] = src[2] * src[4];
+        tmp[10] = src[0] * src[5];
+        tmp[11] = src[1] * src[4];
+        /* calculate second 8 elements (cofactors) */
+        Result[2][0] = tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15];
+        Result[2][0] -= tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15];
+        Result[2][1] = tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15];
+        Result[2][1] -= tmp[0] * src[12] + tmp[7] * src[14] + tmp[8] * src[15];
+        Result[2][2] = tmp[2] * src[12] + tmp[7] * src[13] + tmp[10] * src[15];
+        Result[2][2] -= tmp[3] * src[12] + tmp[6] * src[13] + tmp[11] * src[15];
+        Result[2][3] = tmp[5] * src[12] + tmp[8] * src[13] + tmp[11] * src[14];
+        Result[2][3] -= tmp[4] * src[12] + tmp[9] * src[13] + tmp[10] * src[14];
+        Result[3][0] = tmp[2] * src[10] + tmp[5] * src[11] + tmp[1] * src[9];
+        Result[3][0] -= tmp[4] * src[11] + tmp[0] * src[9] + tmp[3] * src[10];
+        Result[3][1] = tmp[8] * src[11] + tmp[0] * src[8] + tmp[7] * src[10];
+        Result[3][1] -= tmp[6] * src[10] + tmp[9] * src[11] + tmp[1] * src[8];
+        Result[3][2] = tmp[6] * src[9] + tmp[11] * src[11] + tmp[3] * src[8];
+        Result[3][2] -= tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9];
+        Result[3][3] = tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9];
+        Result[3][3] -= tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8];
+        /* calculate determinant */
+        det = src[0] * Result[0][0] + src[1] * Result[0][1]
+                + src[2] * Result[0][2] + src[3] * Result[0][3];
+        /* calculate matrix inverse */
+        det = 1.0f / det;
 
-
-        // computing
-        subfactor01 = src[2] * src[7] - src[3] * src[6];
-        subfactor23 = src[1] * src[7] - src[3] * src[5];
-        subfactor45 = src[1] * src[6] - src[2] * src[5];
-        subfactor67 = src[0] * src[7] - src[3] * src[4];
-        subfactor89 = src[0] * src[6] - src[2] * src[4];
-        subfactor1011 = src[0] * src[5] - src[1] * src[4];
-
-        Result[2][0] = subfactor01 * src[13] - subfactor23 * src[14] + subfactor45 * src[15];
-        Result[2][1] = -subfactor01 * src[12] + subfactor67 * src[14] - subfactor89 * src[15];
-        Result[2][2] = subfactor23 * src[12] - subfactor67 * src[13] + subfactor1011 * src[15];
-        Result[2][3] = -subfactor45 * src[12] + subfactor89 * src[13] - subfactor1011 * src[14];
-        Result[3][0] =  - subfactor01 * src[9] + subfactor23 * src[10] - subfactor45 * src[11];
-        Result[3][1] = subfactor01 * src[8] - subfactor67 * src[10] + subfactor89 * src[11];
-        Result[3][2] = - subfactor23 * src[8] + subfactor67 * src[9] - subfactor1011 * src[11];
-        Result[3][3] = subfactor45 * src[8] - subfactor89 * src[9] + subfactor1011 * src[10];
-
-        // to calculate final inverse matrix
-        det = Result[0][0] * src[0] + Result[0][1] * src[1] +
-              Result[0][2] * src[2] + Result[0][3] * src[3];
-        invDet = 1.0f / det;
-
-        Matrix4 inverse;
-        float* fmat = (float*) inverse.Pointer();
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                fmat[i * 4 + j] = float(Result[i][j] * invDet);
+        Matrix4 FloatResult;
+        float* fmat = (float*) FloatResult.Pointer();
+        for (UINT i = 0; i < 4; i++) {
+            for (UINT j = 0; j < 4; j++) {
+//    			FloatResult[i][j] = float(Result[i][j] * det);
+                //baek
+                fmat[i * 4 + j] = float(Result[i][j] * det);
             }
         }
 
-        return inverse;
-    }
+#undef UINT
+        return FloatResult;
 
+        //
+        // Inversion by LU decomposition, alternate implementation
+        //
+        /*int i, j, k;
+
+         for (i = 1; i < 4; i++)
+         {
+         _Entries[0][i] /= _Entries[0][0];
+         }
+
+         for (i = 1; i < 4; i++)
+         {
+         for (j = i; j < 4; j++)
+         {
+         float sum = 0.0;
+         for (k = 0; k < i; k++)
+         {
+         sum += _Entries[j][k] * _Entries[k][i];
+         }
+         _Entries[j][i] -= sum;
+         }
+         if (i == 4-1) continue;
+         for (j=i+1; j < 4; j++)
+         {
+         float sum = 0.0;
+         for (int k = 0; k < i; k++)
+         sum += _Entries[i][k]*_Entries[k][j];
+         _Entries[i][j] =
+         (_Entries[i][j]-sum) / _Entries[i][i];
+         }
+         }
+
+         //
+         // Invert L
+         //
+         for ( i = 0; i < 4; i++ )
+         {
+         for ( int j = i; j < 4; j++ )
+         {
+         float x = 1.0;
+         if ( i != j )
+         {
+         x = 0.0;
+         for ( int k = i; k < j; k++ )
+         x -= _Entries[j][k]*_Entries[k][i];
+         }
+         _Entries[j][i] = x / _Entries[j][j];
+         }
+         }
+
+         //
+         // Invert U
+         //
+         for ( i = 0; i < 4; i++ )
+         {
+         for ( j = i; j < 4; j++ )
+         {
+         if ( i == j ) continue;
+         float sum = 0.0;
+         for ( int k = i; k < j; k++ )
+         sum += _Entries[k][j]*( (i==k) ? 1.0f : _Entries[i][k] );
+         _Entries[i][j] = -sum;
+         }
+         }
+
+         //
+         // Final Inversion
+         //
+         for ( i = 0; i < 4; i++ )
+         {
+         for ( int j = 0; j < 4; j++ )
+         {
+         float sum = 0.0;
+         for ( int k = ((i>j)?i:j); k < 4; k++ )
+         sum += ((j==k)?1.0f:_Entries[j][k])*_Entries[k][i];
+         _Entries[j][i] = sum;
+         }
+         }*/
+    }
     const T* Pointer() const {
         return &x.x;
     }
-
     static Matrix4<T> Identity() {
         return Matrix4();
     }
-
     static Matrix4<T> Zeros() {
         Matrix4 m;
         m.x.x = 0;
@@ -299,14 +431,14 @@ struct Matrix4 {
         m.w.w = 0;
         return m;
     }
-    Vector3<T> Transform(const Vector3<T>& v) const
+    glm::vec3 Transform(const glm::vec3& v) const
     {
         const T rcpW = T(1) / ( w.x * v.x + w.y * v.y + w.z * v.z + w.w );
-        return Vector3<T>((x.x * v.x + x.y * v.y + x.z * v.z + x.w) * rcpW,
+        return glm::vec3((x.x * v.x + x.y * v.y + x.z * v.z + x.w) * rcpW,
                           (y.x * v.x + y.y * v.y + y.z * v.z + y.w) * rcpW,
                           (z.x * v.x + z.y * v.y + z.z * v.z + z.w) * rcpW);
     }
-    static Matrix4<T> Translate(const Vector3<T>& v) {
+    static Matrix4<T> Translate(const vec3& v) {
         Matrix4 m;
         m.x.x = 1;
         m.x.y = 0;
@@ -386,7 +518,7 @@ struct Matrix4 {
         m.w.w = 1;
         return m;
     }
-    static Matrix4<T> Scale(const Vector3<T>& v) {
+    static Matrix4<T> Scale(const vec3& v) {
         Matrix4 m;
         m.x.x = v.x;
         m.x.y = 0;
@@ -529,38 +661,60 @@ struct Matrix4 {
         m.w.w = 1;
         return m;
     }
-
-    static Matrix4<T> LookAt(const Vector3<T>& eye, const Vector3<T>& target,
-            const Vector3<T>& up) {
-        Vector3<T> z = (eye - target).Normalized();
-        Vector3<T> x = up.Cross(z).Normalized();
-        Vector3<T> y = z.Cross(x).Normalized();
+//    static Matrix4<T> Perspective(T fovy, T aspect, T near, T far) {
+//    	T radians = fovy * 3.14159f / 180.0f;
+//    	T top = near * std::tan(radians);
+//    	T bottom = -top;
+//    	T left = bottom * aspect;
+//    	T right = top * aspect;
+//    	return Frustum(left, right, bottom, top, near, far);
+//    }
+//    static Matrix4<T> Frustum(T left, T right, T bottom, T top, T near, T far)
+//    {
+//        T a = 2 * near / (right - left);
+//        T b = 2 * near / (top - bottom);
+//        T c = (right + left) / (right - left);
+//        T d = (top + bottom) / (top - bottom);
+//        T e = - (far + near) / (far - near);
+//        T f = -2 * far * near / (far - near);
+//        Matrix4 m;
+//        m.x.x = a; m.x.y = 0; m.x.z = 0; m.x.w = 0;
+//        m.y.x = 0; m.y.y = b; m.y.z = 0; m.y.w = 0;
+//        m.z.x = c; m.z.y = d; m.z.z = e; m.z.w = -1;
+//        m.w.x = 0; m.w.y = 0; m.w.z = f; m.w.w = 1;
+//        return m;
+//    }
+    static Matrix4<T> LookAt(const vec3& eye, const vec3& target,
+            const vec3& up) {
+        vec3 z = glm::normalize(eye - target);
+        vec3 x = glm::normalize(glm::cross(up,z));
+        vec3 y = glm::normalize(glm::cross(z, x));
 
         Matrix4<T> m;
-        m.x = Vector4<T>(x, 0);
-        m.y = Vector4<T>(y, 0);
-        m.z = Vector4<T>(z, 0);
-        m.w = Vector4<T>(0, 0, 0, 1);
+        m.x = vec4(x, 0);
+        m.y = vec4(y, 0);
+        m.z = vec4(z, 0);
+        m.w = vec4(0, 0, 0, 1);
 
-        Vector4<T> eyePrime = m * Vector4<T>(-eye, 1);
+        vec4 eyePrime = m * vec4(-eye, 1);
         m = m.Transposed();
         m.w = eyePrime;
 
         return m;
     }
-    static Matrix4<T> LookAtWithVector(const Vector3<T>& eye,
-            const Vector3<T>& lookVector, const Vector3<T>& up) {
-        Vector3<T> z = lookVector.Normalized();
-        Vector3<T> x = up.Cross(z).Normalized();
-        Vector3<T> y = z.Cross(x).Normalized();
+    static Matrix4<T> LookAtWithVector(const vec3& eye,
+            const vec3& lookVector, const vec3& up) {
+        vec3 z = glm::normalize(lookVector);
+        vec3 x = glm::normalize(glm::cross(up, z));
+        vec3 y = glm::normalize(glm::cross(z, x));
 
         Matrix4<T> m;
-        m.x = Vector4<T>(x, 0);
-        m.y = Vector4<T>(y, 0);
-        m.z = Vector4<T>(z, 0);
-        m.w = Vector4<T>(0, 0, 0, 1);
+        m.x = vec4(x, 0);
+        m.y = vec4(y, 0);
+        m.z = vec4(z, 0);
+        m.w = vec4(0, 0, 0, 1);
 
-        Vector4<T> eyePrime = m * Vector4<T>(-eye, 1);
+        vec4 eyePrime = m * vec4(-eye, 1);
         m = m.Transposed();
         m.w = eyePrime;
 
