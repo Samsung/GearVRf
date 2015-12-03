@@ -36,10 +36,11 @@ namespace gvr {
 //#define LOG_SUMMARY
 //#define LOG_GYRO_FILTER
 //#define LOG_MAGNETOMETER_CORRECTION
+//#define LOG_TILE_CORRECTION
 
 float acosx(const float angle);
 
-const float KTiltCorrectionWaitInSeconds = 1.0;
+const float KTiltCorrectionWaitInSeconds = 2.0;
 
 void KSensor::readerThreadFunc() {
     LOGV("k_sensor: reader starting up");
@@ -322,8 +323,7 @@ std::pair<vec3, float> KSensor::applyTiltCorrection(const vec3& gyro, const vec3
     vec3 correction = accel_normalize.Cross(up_normalize);
 
     float proportionalGain = 0.25f;
-    bool fullCorrectionEnabled = tiltCorrectionTimer < KTiltCorrectionWaitInSeconds
-            && correction.Length() > 0.22f;
+    bool fullCorrectionEnabled = tiltCorrectionTimer < KTiltCorrectionWaitInSeconds;
     if (!fullCorrectionEnabled) {
         // Spike detection
         float tiltAngle = up.Angle(accel);
@@ -335,7 +335,10 @@ std::pair<vec3, float> KSensor::applyTiltCorrection(const vec3& gyro, const vec3
         }
     } else {
         // Apply full correction at the startup
-        proportionalGain = 1 / deltaT;
+        proportionalGain = KTiltCorrectionWaitInSeconds/tiltCorrectionTimer;
+#ifdef LOG_TILE_CORRECTION
+        LOGI("k_sensor: full tilt correction applied; %f", proportionalGain);
+#endif
     }
 
     vec3 gyroCorrected = gyro + (correction * proportionalGain);
