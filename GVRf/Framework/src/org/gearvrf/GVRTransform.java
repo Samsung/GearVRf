@@ -397,6 +397,31 @@ public class GVRTransform extends GVRComponent {
                 axisZ, pivotX, pivotY, pivotZ);
     }
 
+    /**
+     * Modify the transform's current rotation in quaternion terms, around a
+     * pivot other than the origin.
+     * 
+     * @param quatW
+     *            'W' component of the rotation quaternion.
+     * @param quatX
+     *            'X' component of the rotation quaternion.
+     * @param quatY
+     *            'Y' component of the rotation quaternion.
+     * @param quatZ
+     *            'Z' component of the rotation quaternion.
+     * @param pivotX
+     *            'X' component of the pivot's location.
+     * @param pivotY
+     *            'Y' component of the pivot's location.
+     * @param pivotZ
+     *            'Z' component of the pivot's location.
+     */
+    public void rotateWithPivot(float quatW, float quatX, float quatY,
+            float quatZ, float pivotX, float pivotY, float pivotZ) {
+        NativeTransform.rotateWithPivot(getNative(), quatW, quatX, quatY,
+                quatZ, pivotX, pivotY, pivotZ);
+    }
+
 
     /**
      * Reset the transform
@@ -485,4 +510,9 @@ class NativeTransform {
     static native void rotateByAxisWithPivot(long transform, float angle,
             float axisX, float axisY, float axisZ, float pivotX, float pivotY,
             float pivotZ);
+
+    static native void rotateWithPivot(long transform, float quatW,
+            float quatX, float quatY, float quatZ, float pivotX, float pivotY,
+            float pivotZ);
+
 }
