@@ -47,7 +47,10 @@ public:
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(target, 0);
     }
-
+    explicit GLTexture(GLenum target, int _texture) :
+            target_(target) {
+        id_ = _texture;
+    }
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
         // Sets the new MIN FILTER

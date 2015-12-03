@@ -15,7 +15,10 @@
 
 package org.gearvrf;
 
+import javax.microedition.khronos.egl.EGLContext;
+
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.plugins.GVRPlugin;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -106,6 +109,12 @@ public abstract class GVRScript {
      */
 
     private GVRViewManager mViewManager;
+    protected EGLContext mEglContext;
+    protected GVRPlugin mPlugin;
+
+    public EGLContext getEGLContext() {
+        return mEglContext;
+    }
 
     /**
      * Whether the splash screen should be displayed, and for how long.
@@ -281,4 +290,9 @@ public abstract class GVRScript {
         onSplashScreenCreated(splashScreen);
         return splashScreen;
     }
+
+    public void setCurrentPlugin(GVRPlugin plugin) {
+        mPlugin = plugin;
+    }
+
 }

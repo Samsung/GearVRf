@@ -24,12 +24,17 @@ import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
+
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScript.SplashMode;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+
+import org.gearvrf.plugins.widget.GVRWidgetPluginActivity;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
@@ -578,7 +583,19 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
 
             try {
-                mScript.onInit(GVRViewManager.this);
+
+                if (mScript.mPlugin == null
+                        || !(mScript.mPlugin instanceof GVRWidgetPluginActivity))
+                    mScript.onInit(GVRViewManager.this);
+                else {
+                    // get the egl contect here, plugin creation wil happen
+                    // after this, which will give us widget texture to call
+                    // init,
+                    // otherwise deadlock!!
+                    mScript.mEglContext = ((EGL10) EGLContext.getEGL())
+                            .eglGetCurrentContext();
+                    performLateInitialisation();
+                }
             } catch (Throwable t) {
                 t.printStackTrace();
                 mActivity.finish();
@@ -836,5 +853,24 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     GVRRenderBundle getRenderBundle() {
         return mRenderBundle;
+    }
+
+    private void performLateInitialisation() throws Throwable {
+        // quirky implementation, revisit TBD
+        // must wait on the same thread
+        int failsafe = 0;
+        while (!mScript.mPlugin.isInitialised() && failsafe < 10) {
+            try {
+                Thread.sleep(500);
+                failsafe++;
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            // handler.post(this);
+        }
+
+        mScript.onInit(GVRViewManager.this);
+
     }
 }
