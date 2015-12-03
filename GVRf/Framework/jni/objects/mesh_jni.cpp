@@ -94,6 +94,10 @@ Java_org_gearvrf_NativeMesh_setVec4Vector(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMesh_getBoundingBox(JNIEnv * env,
         jobject obj, jlong jmesh);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env,
+        jobject obj, jlong jmesh, jlongArray jBonePtrArray);
 }
 ;
 
@@ -380,4 +384,23 @@ Java_org_gearvrf_NativeMesh_getBoundingBox(JNIEnv * env,
     return reinterpret_cast<jlong>(mesh->getBoundingBox());
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env, jobject obj, jlong jmesh,
+        jlongArray jBonePtrArray) {
+	Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+	int arrlen;
+	if (!jBonePtrArray || !(arrlen = env->GetArrayLength(jBonePtrArray))) {
+	    mesh->setBones(std::vector<Bone*>());
+	    return;
+	}
+
+	jlong* bonesPtr = env->GetLongArrayElements(jBonePtrArray, JNI_FALSE);
+	std::vector<Bone*> bonesVec(arrlen);
+	for (int i = 0; i < arrlen; ++i) {
+	    bonesVec[i] = reinterpret_cast<Bone*>(bonesPtr[i]);
+	}
+	mesh->setBones(std::move(bonesVec));
+
+	env->ReleaseLongArrayElements(jBonePtrArray, bonesPtr, JNI_ABORT);
+}
 }

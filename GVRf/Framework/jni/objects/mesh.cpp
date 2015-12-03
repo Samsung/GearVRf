@@ -289,4 +289,40 @@ void Mesh::generateVAO() {
 #endif
 }
 
+void Mesh::generateBoneArrayBuffers(Material::ShaderType key) {
+    int nVertices = vertices().size();
+    if (!vertexBoneData_.getNumBones() || !nVertices)
+        return;
+
+    if (boneIndicesVboID_.find(key) == boneIndicesVboID_.end() || shouldResetBoneBuffers) {
+        shouldResetBoneBuffers = false;
+
+        GLuint boneIndicesVboID;
+        GLuint boneWeightsVboID;
+
+        // BoneID
+        glGenBuffers(1, &boneIndicesVboID);
+        glBindBuffer(GL_ARRAY_BUFFER, boneIndicesVboID);
+        glBufferData(GL_ARRAY_BUFFER,
+                sizeof(glm::vec4) * nVertices,
+                &vertexBoneData_.boneIndices[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(getBoneIndicesLoc());
+        glVertexAttribIPointer(getBoneIndicesLoc(), 4, GL_UNSIGNED_INT, 0, 0);
+
+        // BoneWeight
+        glGenBuffers(1, &boneWeightsVboID);
+        glBindBuffer(GL_ARRAY_BUFFER, boneWeightsVboID);
+        glBufferData(GL_ARRAY_BUFFER,
+                sizeof(glm::vec4) * nVertices,
+                &vertexBoneData_.boneWeights[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(getBoneWeightsLoc());
+        glVertexAttribPointer(getBoneWeightsLoc(), 4, GL_FLOAT, 0, 0, 0);
+
+        boneIndicesVboID_[key] = boneIndicesVboID;
+        boneWeightsVboID_[key] = boneWeightsVboID;
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+}
+
 }

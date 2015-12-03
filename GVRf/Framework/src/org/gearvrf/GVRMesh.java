@@ -17,20 +17,26 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.gearvrf.utility.Exceptions;
+import org.gearvrf.utility.Log;
 
 /**
  * This is one of the key GVRF classes: It holds GL meshes.
  * 
  * A GL mesh is a net of triangles that define an object's surface geometry.
  */
-public class GVRMesh extends GVRHybridObject {
+public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     public GVRMesh(GVRContext gvrContext) {
-        super(gvrContext, NativeMesh.ctor());
+        this(gvrContext, NativeMesh.ctor());
     }
 
     GVRMesh(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        setBones(new ArrayList<GVRBone>());
+        mVertexBoneData = new GVRVertexBoneData(gvrContext, this);
     }
 
     /**
@@ -295,6 +301,70 @@ public class GVRMesh extends GVRHybridObject {
                 NativeMesh.getBoundingBox(getNative()));
     }
 
+    /**
+     * Returns the bones of this mesh.
+     *
+     * @return a list of bones
+     */
+    public List<GVRBone> getBones() {
+        return mBones;
+    }
+
+    /**
+     * Sets bones of this mesh.
+     *
+     * @param bones a list of bones
+     */
+    public void setBones(List<GVRBone> bones) {
+        mBones.clear();
+        mBones.addAll(bones);
+
+        NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(mBones));
+    }
+
+    /**
+     * Gets the vertex bone data.
+     *
+     * @return the vertex bone data.
+     */
+    public GVRVertexBoneData getVertexBoneData() {
+        return mVertexBoneData;
+    }
+
+    @Override
+    public void prettyPrint(StringBuffer sb, int indent) {
+        sb.append(getVertices() == null ? 0 : Integer.toString(getVertices().length));
+        sb.append(" vertices, ");
+        sb.append(getTriangles() == null ? 0 : Integer.toString(getTriangles().length));
+        sb.append(" triangles, ");
+        sb.append(getTexCoords() == null ? 0 : Integer.toString(getTexCoords().length));
+        sb.append(" tex-coords, ");
+        sb.append(getNormals() == null ? 0 : Integer.toString(getNormals().length));
+        sb.append(" normals, ");
+        sb.append(getBones() == null ? 0 : Integer.toString(getBones().size()));
+        sb.append(" bones");
+        sb.append(System.lineSeparator());
+
+        // Bones
+        List<GVRBone> bones = getBones();
+        if (!bones.isEmpty()) {
+            sb.append(Log.getSpaces(indent));
+            sb.append("Bones:");
+            sb.append(System.lineSeparator());
+
+            for (GVRBone bone : bones) {
+                bone.prettyPrint(sb, indent + 2);
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        prettyPrint(sb, 0);
+        return sb.toString();
+    }
+
     private void checkValidFloatVector(String keyName, String key,
             String vectorName, float[] vector, int expectedComponents) {
         checkStringNotNullOrEmpty(keyName, key);
@@ -320,6 +390,9 @@ public class GVRMesh extends GVRHybridObject {
                             numberOfElements, verticesNumber);
         }
     }
+
+    private List<GVRBone> mBones = new ArrayList<GVRBone>();
+    private GVRVertexBoneData mVertexBoneData;
 }
 
 class NativeMesh {
@@ -362,4 +435,6 @@ class NativeMesh {
     static native void setVec4Vector(long mesh, String key, float[] vec4Vector);
 
     static native long getBoundingBox(long mesh);
+
+    static native void setBones(long mesh, long[] bonePtrs);
 }

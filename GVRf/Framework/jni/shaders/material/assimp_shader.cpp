@@ -35,11 +35,16 @@ namespace gvr {
 static const char DIFFUSE_TEXTURE[] = "#define AS_DIFFUSE_TEXTURE\n";
 static const char NO_DIFFUSE_TEXTURE[] = "#undef AS_DIFFUSE_TEXTURE\n";
 
+static const char SKINNING[] = "#define AS_SKINNING\n";
+static const char NO_SKINNING[] = "#undef AS_SKINNING\n";
+
 static const char SPECULAR_TEXTURE[] = "#define AS_SPECULAR_TEXTURE\n";
 static const char NO_SPECULAR_TEXTURE[] = "#undef AS_SPECULAR_TEXTURE\n";
 
 static const char VERTEX_SHADER[] =
-        "attribute vec4 a_position;\n"
+                "precision highp float;\n"
+                "\n"
+                "attribute vec4 a_position;\n"
                 "uniform mat4 u_mvp;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
@@ -47,15 +52,37 @@ static const char VERTEX_SHADER[] =
                 "varying vec2 v_tex_coord;\n"
                 "#endif\n"
                 "\n"
+
+                // Skinning
+                "#ifdef AS_SKINNING\n"
+                "uniform mat4 u_bone_matrix[100];\n" // MAX_BONE_NUM = 100
+                "attribute vec4 a_bone_indices;\n"
+                "attribute vec4 a_bone_weights;\n"
+                "#endif\n"
+                "\n"
+
                 "void main() {\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
                 "  v_tex_coord = a_tex_coord.xy;\n"
                 "#endif\n"
+
+                "#ifdef AS_SKINNING\n"
+                "  lowp vec4 weights = a_bone_weights; \n"
+                "  weights.w = 1.0 - dot( weights.xyz, vec3(1.0)); \n" // normalize weights
+                "  vec4 local_pos = a_position; \n"
+                "  vec4 obj_pos = (u_bone_matrix[int(a_bone_indices[0])] * local_pos) * weights[0]; \n"
+                "  obj_pos += (u_bone_matrix[int(a_bone_indices[1])] * local_pos) * weights[1]; \n"
+                "  obj_pos += (u_bone_matrix[int(a_bone_indices[2])] * local_pos) * weights[2]; \n"
+                "  obj_pos += (u_bone_matrix[int(a_bone_indices[3])] * local_pos) * weights[3]; \n"
+                "  gl_Position = u_mvp * obj_pos;\n"
+                "#else\n"
                 "  gl_Position = u_mvp * a_position;\n"
+                "#endif\n"
+
                 "}\n";
 
 static const char FRAGMENT_SHADER[] =
-        "precision highp float;\n"
+                "precision highp float;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
                 "varying vec2 v_tex_coord;\n"
@@ -119,6 +146,20 @@ AssimpShader::AssimpShader() :
             vertex_shader_string_lengths[counter] = (GLint) strlen(NO_SPECULAR_TEXTURE);
             fragment_shader_strings[counter] = NO_SPECULAR_TEXTURE;
             fragment_shader_string_lengths[counter] = (GLint) strlen(NO_SPECULAR_TEXTURE);
+            counter++;
+        }
+
+        if (ISSET(i, AS_SKINNING)) {
+            vertex_shader_strings[counter] =  SKINNING;
+            vertex_shader_string_lengths[counter] = (GLint) strlen(SKINNING);
+            fragment_shader_strings[counter] = SKINNING;
+            fragment_shader_string_lengths[counter] = (GLint) strlen(SKINNING);
+            counter++;
+        } else {
+            vertex_shader_strings[counter] =  NO_SKINNING;
+            vertex_shader_string_lengths[counter] = (GLint) strlen(NO_SKINNING);
+            fragment_shader_strings[counter] = NO_SKINNING;
+            fragment_shader_string_lengths[counter] = (GLint) strlen(NO_SKINNING);
             counter++;
         }
 
@@ -203,6 +244,20 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
         glUniform4f(u_ambient_color_, ambient_color.r, ambient_color.g,
                 ambient_color.b, ambient_color.a);
     }
+
+    /* Set up bones if AS_SKINNING is set */
+    if (ISSET(feature_set, AS_SKINNING)) {
+        a_bone_indices_ = glGetAttribLocation(program_->id(), "a_bone_indices");
+        a_bone_weights_ = glGetAttribLocation(program_->id(), "a_bone_weights");
+        u_bone_matrix_ = glGetUniformLocation(program_->id(), "u_bone_matrix");
+
+        mesh->setBoneLoc(a_bone_indices_, a_bone_weights_, u_bone_matrix_);
+        mesh->generateBoneArrayBuffers(Material::ASSIMP_SHADER);
+
+        glUniformMatrix4fv(u_bone_matrix_, mesh->getVertexBoneData().getNumBones(),
+                GL_FALSE, glm::value_ptr(mesh->getVertexBoneData().boneMatrices[0]));
+    }
+
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 

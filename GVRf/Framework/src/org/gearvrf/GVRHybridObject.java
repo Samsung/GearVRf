@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,9 +51,27 @@ public abstract class GVRHybridObject implements Closeable {
      */
     private long mNativePointer;
 
+    /**
+     * If true, the native object will be deleted by this class; otherwise,
+     * it won't be deleted.
+     */
+    private boolean mOwnNative;
+
     /*
      * Constructors
      */
+
+    /**
+     * Normal constructor
+     *
+     * @param gvrContext
+     *            The current GVRF context
+     * @param nativePointer
+     *            The native pointer, returned by the native constructor
+     */
+    protected GVRHybridObject(GVRContext gvrContext, long nativePointer) {
+        this(gvrContext, nativePointer, true);
+    }
 
     /**
      * Normal constructor
@@ -62,10 +81,10 @@ public abstract class GVRHybridObject implements Closeable {
      * @param nativePointer
      *            The native pointer, returned by the native constructor
      */
-    protected GVRHybridObject(GVRContext gvrContext, long nativePointer) {
-        this(gvrContext, nativePointer, null);
+    protected GVRHybridObject(GVRContext gvrContext, long nativePointer, boolean ownNative) {
+        this(gvrContext, nativePointer, ownNative, null);
     }
-
+    
     /**
      * Special constructor, for descendants like {#link GVRMeshEyePointee} that
      * need to 'unregister' instances.
@@ -74,6 +93,9 @@ public abstract class GVRHybridObject implements Closeable {
      *            The current GVRF context
      * @param nativePointer
      *            The native pointer, returned by the native constructor
+     * @param ownNative
+     *            If true, the native object is owned by this hybrid object.
+     *            It will be deleted when this object is destroyed.
      * @param cleanupHandlers
      *            Cleanup handler(s).
      * 
@@ -88,13 +110,14 @@ public abstract class GVRHybridObject implements Closeable {
      *            concatenated lists - see {@link GVREyePointeeHolder} for an
      *            example.
      */
-    protected GVRHybridObject(GVRContext gvrContext, long nativePointer,
+    protected GVRHybridObject(GVRContext gvrContext, long nativePointer, boolean ownNative,
             List<NativeCleanupHandler> cleanupHandlers) {
         mGVRContext = gvrContext;
         mNativePointer = nativePointer;
+        mOwnNative = ownNative;
 
         sReferenceSet
-                .add(new GVRReference(this, nativePointer, cleanupHandlers));
+                .add(new GVRReference(this, nativePointer, mOwnNative, cleanupHandlers));
     }
 
     /*
@@ -151,6 +174,17 @@ public abstract class GVRHybridObject implements Closeable {
      */
     public long getNative() {
         return mNativePointer;
+    }
+
+    public static long[] getNativePtrArray(Collection<? extends GVRHybridObject> objects) {
+        long[] ptrs = new long[objects.size()];
+
+        int i = 0;
+        for (GVRHybridObject obj : objects) {
+            ptrs[i++] = obj.getNative();
+        }
+
+        return ptrs;
     }
 
     @Override
@@ -293,13 +327,15 @@ public abstract class GVRHybridObject implements Closeable {
         // private static final String TAG = Log.tag(GVRReference.class);
 
         private long mNativePointer;
+        private boolean mOwnNative;
         private final List<NativeCleanupHandler> mCleanupHandlers;
 
-        private GVRReference(GVRHybridObject object, long nativePointer,
+        private GVRReference(GVRHybridObject object, long nativePointer, boolean ownNative,
                 List<NativeCleanupHandler> cleanupHandlers) {
             super(object, sReferenceQueue);
 
             mNativePointer = nativePointer;
+            mOwnNative = ownNative;
             mCleanupHandlers = cleanupHandlers;
         }
 
@@ -310,7 +346,9 @@ public abstract class GVRHybridObject implements Closeable {
                         handler.nativeCleanup(mNativePointer);
                     }
                 }
-                NativeHybridObject.delete(mNativePointer);
+                if (mOwnNative) {
+                    NativeHybridObject.delete(mNativePointer);
+                }
             }
 
             sReferenceSet.remove(this);

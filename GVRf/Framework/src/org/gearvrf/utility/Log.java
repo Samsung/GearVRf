@@ -15,6 +15,14 @@
 
 package org.gearvrf.utility;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Scanner;
+
+import org.apache.commons.math3.geometry.euclidean.threed.Line;
+
 /** {@link android.util.Log} with String.format() pattern */
 public abstract class Log {
 
@@ -87,5 +95,33 @@ public abstract class Log {
             result = outer.getSimpleName() + "." + result;
         }
         return result;
+    }
+
+    /**
+     * Generates a string with {@code length} spaces.
+     *
+     * @param length length of the string
+     * @return the string
+     */
+    public static String getSpaces(int length) {
+        char[] charArray = new char[length];
+        Arrays.fill(charArray, ' ');
+        String str = new String(charArray);
+        return str;
+    }
+
+    /**
+     * Log long string using verbose tag
+     * 
+     * @param TAG The tag.
+     * @param longString The long string.
+     */
+    public static void logLong(String TAG, String longString) {
+        InputStream is = new ByteArrayInputStream( longString.getBytes() );
+        @SuppressWarnings("resource")
+        Scanner scan = new Scanner(is);
+        while (scan.hasNextLine()) {
+            Log.v(TAG, scan.nextLine());
+        }
     }
 }

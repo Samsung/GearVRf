@@ -149,6 +149,13 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
             }
         }
  
+        /* Skinning */
+        if (aiMesh.hasBones()) {
+            assimpFeatureSet = GVRShaderType.Assimp.setBit(
+                    assimpFeatureSet,
+                    GVRShaderType.Assimp.AS_SKINNING);
+        }
+
         /* Apply feature set to the material */
         meshMaterial.setShaderFeatureSet(assimpFeatureSet);
 

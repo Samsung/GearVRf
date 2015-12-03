@@ -9,11 +9,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.gearvrf.GVRBone;
+import org.gearvrf.GVRBoneWeight;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
-
 import org.gearvrf.utility.Log;
 
 public class GVRJassimpAdapter {
@@ -94,7 +95,40 @@ public class GVRJassimpAdapter {
             mesh.setTriangles(triangles.array());
         }
 
+        // Bones
+        if (aiMesh.hasBones()) {
+            List<GVRBone> bones = new ArrayList<GVRBone>();
+            for (AiBone bone : aiMesh.getBones()) {
+                bones.add(createBone(ctx, bone));
+            }
+            mesh.setBones(bones);
+        }
+
         return mesh;
+    }
+
+    private GVRBone createBone(GVRContext ctx, AiBone aiBone) {
+        GVRBone bone = new GVRBone(ctx);
+
+        bone.setName(aiBone.getName());
+        bone.setOffsetMatrix(aiBone.getOffsetMatrix(sWrapperProvider));
+
+        List<GVRBoneWeight> weights = new ArrayList<GVRBoneWeight>();
+        for (AiBoneWeight aiBoneWeight : aiBone.getBoneWeights()) {
+            weights.add(createBoneWeight(ctx, aiBoneWeight));
+        }
+        bone.setBoneWeights(weights);
+
+        return bone;
+    }
+
+    private GVRBoneWeight createBoneWeight(GVRContext ctx, AiBoneWeight aiBoneWeight) {
+        GVRBoneWeight boneWeight = new GVRBoneWeight(ctx);
+
+        boneWeight.setVertexId(aiBoneWeight.getVertexId());
+        boneWeight.setWeight(aiBoneWeight.getWeight());
+
+        return boneWeight;
     }
 
     public GVRSceneObject createSceneObject(GVRContext ctx, AiNode node) {

@@ -28,14 +28,29 @@ class GVRComponent extends GVRHybridObject {
 
     /**
      * Normal constructor
-     * 
+     *
      * @param gvrContext
      *            The current GVRF context
      * @param nativePointer
      *            The native pointer, returned by the native constructor
      */
     protected GVRComponent(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
+        super(gvrContext, ptr, true);
+    }
+
+    /**
+     * Normal constructor
+     * 
+     * @param gvrContext
+     *            The current GVRF context
+     * @param nativePointer
+     *            The native pointer, returned by the native constructor
+     * @param ownNative
+     *            If true, the native object will be deleted when this object
+     *            is destroyed.
+     */
+    protected GVRComponent(GVRContext gvrContext, long ptr, boolean ownNative) {
+        super(gvrContext, ptr, ownNative);
     }
 
     /**
@@ -62,7 +77,7 @@ class GVRComponent extends GVRHybridObject {
      */
     protected GVRComponent(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> cleanupHandlers) {
-        super(gvrContext, nativePointer, cleanupHandlers);
+        super(gvrContext, nativePointer, true, cleanupHandlers);
     }
 
     protected GVRSceneObject owner;

@@ -20,6 +20,7 @@
 #ifndef MESH_H_
 #define MESH_H_
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
@@ -33,9 +34,11 @@
 #include "gl/gl_buffer.h"
 #include "gl/gl_program.h"
 
+#include "objects/components/bone.h"
 #include "objects/hybrid_object.h"
 #include "objects/material.h"
 #include "objects/bounding_volume.h"
+#include "objects/vertex_bone_data.h"
 
 #include "engine/memory/gl_delete.h"
 
@@ -46,7 +49,8 @@ public:
             vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
                     have_bounding_volume_(false), vao_dirty_(true),
                     vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
-                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID)
+                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID),
+                    vertexBoneData_(this)
     {
     }
 
@@ -79,8 +83,23 @@ public:
         if (tex_vboID_ != GVR_INVALID)
             gl_delete.queueBuffer(tex_vboID_);
         have_bounding_volume_ = false;
+
         vao_dirty_ = true;
         vaoID_ = triangle_vboID_ = vert_vboID_ = norm_vboID_ = tex_vboID_ = GVR_INVALID;
+
+        for (auto iterator = boneIndicesVboID_.begin();
+                iterator != boneIndicesVboID_.end(); iterator++) {
+            gl_delete.queueBuffer(iterator->second);
+        }
+        boneIndicesVboID_.clear();
+
+        for (auto iterator = boneWeightsVboID_.begin();
+                iterator != boneWeightsVboID_.end(); iterator++) {
+            gl_delete.queueBuffer(iterator->second);
+        }
+        boneWeightsVboID_.clear();
+
+        shouldResetBoneBuffers = true;
     }
 
     const std::vector<glm::vec3>& vertices() const {
@@ -226,6 +245,24 @@ public:
     // /////////////////////////////////////////////////
     //  code for vertex attribute location
 
+    void setBoneLoc(GLuint boneIndicesLoc, GLuint boneWeightsLoc, GLuint boneTransformLoc) {
+        boneIndicesLoc_ = boneIndicesLoc;
+        boneWeightsLoc_ = boneWeightsLoc;
+        boneTransformLoc_ = boneTransformLoc;
+    }
+
+    GLuint getBoneIndicesLoc() {
+        return boneIndicesLoc_;
+    }
+
+    GLuint getBoneWeightsLoc() {
+        return boneWeightsLoc_;
+    }
+
+    GLuint getBoneTransformLoc() {
+        return boneTransformLoc_;
+    }
+
     void setVertexAttribLocF(GLuint location, std::string key) {
         attribute_float_keys_[location] = key;
         vao_dirty_ = true;
@@ -259,6 +296,21 @@ public:
 
     const BoundingVolume& getBoundingVolume();
 
+    bool hasBones() const {
+        return vertexBoneData_.getNumBones();
+    }
+
+    void setBones(std::vector<Bone*>&& bones) {
+        vertexBoneData_.setBones(std::move(bones));
+        shouldResetBoneBuffers = true;
+    }
+
+    VertexBoneData &getVertexBoneData() {
+        return vertexBoneData_;
+    }
+
+    void generateBoneArrayBuffers(Material::ShaderType key);
+
 private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
@@ -273,6 +325,7 @@ private:
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
     std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
     std::vector<unsigned short> indices_;
+    std::vector<unsigned short> triangles_;
 
     // add location slot map
     std::map<int, std::string> attribute_float_keys_;
@@ -294,6 +347,17 @@ private:
 
     bool have_bounding_volume_;
     BoundingVolume bounding_volume;
+
+    // Bone data for the shader
+    VertexBoneData vertexBoneData_;
+    GLuint boneTransformLoc_;
+    GLuint boneIndicesLoc_;
+    GLuint boneWeightsLoc_;
+
+    std::map<Material::ShaderType, GLuint> boneIndicesVboID_;
+    std::map<Material::ShaderType, GLuint> boneWeightsVboID_;
+
+    bool shouldResetBoneBuffers;
 };
 }
 #endif
