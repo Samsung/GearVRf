@@ -36,8 +36,11 @@ namespace gvr {
 //#define LOG_SUMMARY
 //#define LOG_GYRO_FILTER
 //#define LOG_MAGNETOMETER_CORRECTION
+//#define LOG_TILE_CORRECTION
 
 float acosx(const float angle);
+
+const float KTiltCorrectionWaitInSeconds = 2.0;
 
 void KSensor::readerThreadFunc() {
     LOGV("k_sensor: reader starting up");
@@ -237,9 +240,9 @@ void KSensor::process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion&
 }
 
 void KSensor::updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q) {
-    vec3 filteredGyro = applyGyroFilter(msg->RotationRate, msg->Temperature);
-
     const float deltaT = msg->TimeDelta;
+
+    vec3 filteredGyro = applyGyroFilter(msg->RotationRate, msg->Temperature);
     std::pair<vec3, float> axisAndMagnitude = applyTiltCorrection(filteredGyro, msg->Acceleration,
             deltaT, q);
 
@@ -306,7 +309,8 @@ vec3 KSensor::applyGyroFilter(const vec3& rawGyro, const float currentTemperatur
 }
 
 std::pair<vec3, float> KSensor::applyTiltCorrection(const vec3& gyro, const vec3& accel,
-        const float DeltaT, Quaternion& q) {
+        const float deltaT, Quaternion& q) {
+    tiltCorrectionTimer += deltaT;
     if (accel.Length() <= 0.001f) {
         return std::make_pair(gyro.Normalized(), gyro.Length());
     }
@@ -319,8 +323,8 @@ std::pair<vec3, float> KSensor::applyTiltCorrection(const vec3& gyro, const vec3
     vec3 correction = accel_normalize.Cross(up_normalize);
 
     float proportionalGain = 0.25f;
-    const int startupThreshold = 5;
-    if (step_ > startupThreshold) {
+    bool fullCorrectionEnabled = tiltCorrectionTimer < KTiltCorrectionWaitInSeconds;
+    if (!fullCorrectionEnabled) {
         // Spike detection
         float tiltAngle = up.Angle(accel);
         tiltFilter_.push(tiltAngle);
@@ -331,11 +335,14 @@ std::pair<vec3, float> KSensor::applyTiltCorrection(const vec3& gyro, const vec3
         }
     } else {
         // Apply full correction at the startup
-        proportionalGain = 1 / DeltaT;
+        proportionalGain = KTiltCorrectionWaitInSeconds/tiltCorrectionTimer;
+#ifdef LOG_TILE_CORRECTION
+        LOGI("k_sensor: full tilt correction applied; %f", proportionalGain);
+#endif
     }
 
     vec3 gyroCorrected = gyro + (correction * proportionalGain);
-    float magnitude = startupThreshold < step_ ? gyro.Length() : gyroCorrected.Length();
+    float magnitude = fullCorrectionEnabled ? gyroCorrected.Length() : gyro.Length();
     return std::make_pair(gyroCorrected.Normalized(), magnitude);
 }
 
@@ -372,18 +379,18 @@ void KSensor::readFactoryCalibration() {
  */
 Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const vec3& accelerometer, const vec3& gyro,
         float deltaT) {
+    magnetometerCorrectionTimer += deltaT;
+
     const float gravityThreshold = 0.1f;
     const float gravity = 9.80665f;
     if (fabs(accelerometer.Length() / gravity - 1) > gravityThreshold) {
         //linear acceleration detection
-        yawCorrectionTimer = 0;
+        magnetometerCorrectionTimer = 0;
         return orientation;
     }
 
-    yawCorrectionTimer += deltaT;
-    const float tiltCorrectionWaitInSeconds = 5.0;
     static const float angularVelocityThreshold = glm::radians(5.0f);
-    if (yawCorrectionTimer < tiltCorrectionWaitInSeconds
+    if (magnetometerCorrectionTimer < 5.0
             || gyro.Length() >= angularVelocityThreshold) {
 #ifdef LOG_MAGNETOMETER_CORRECTION
         LOGI("ksensor: no yaw correction applied");
