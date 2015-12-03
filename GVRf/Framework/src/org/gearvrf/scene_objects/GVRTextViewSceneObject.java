@@ -102,6 +102,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            Height of the {@link TextView}
      * @param text
      *            {@link CharSequence} to show on the textView
+     * @deprecated
      */
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh,
             GVRActivity gvrActivity, int viewWidth, int viewHeight,
@@ -138,6 +139,66 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * 
      * @param gvrContext
      *            current {@link GVRContext}
+     * @param mesh
+     *            A {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}.
+     * 
+     *            Please note that this mesh controls the size of your scene
+     *            object, and it is independent of the size of the internal
+     *            {@code TextView}: a large mismatch between the scene object's
+     *            size and the view's size will result in 'spidery' or 'blocky'
+     *            text.
+     * @param viewWidth
+     *            Width of the {@link TextView}
+     * @param viewHeight
+     *            Height of the {@link TextView}
+     * @param text
+     *            {@link CharSequence} to show on the textView
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh,
+            int viewWidth, int viewHeight, CharSequence text) {
+        this(gvrContext, mesh, gvrContext.getActivity(), viewWidth, viewHeight, text);
+    }
+
+
+    /**
+     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param gvrActivity
+     *            a {@link GVRActivity}
+     * @param width
+     *            Scene object height, in GVRF scene graph units.
+     * 
+     *            Please note that your scene object's size, is independent of
+     *            the size of the internal {@code TextView}: a large mismatch
+     *            between the scene object's size and the view's size will
+     *            result in 'spidery' or 'blocky' text.
+     * 
+     * @param height
+     *            Scene object's width, in GVRF scene graph units.
+     * @param viewWidth
+     *            Width of the {@link TextView}
+     * @param viewHeight
+     *            Height of the {@link TextView}
+     * @param text
+     *            {@link CharSequence} to show on the textView
+     * @deprecated
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext,
+            GVRActivity gvrActivity, float width, float height, int viewWidth,
+            int viewHeight, CharSequence text) {
+        this(gvrContext, gvrContext.createQuad(width, height), gvrActivity,
+                viewWidth, viewHeight, text);
+    }
+
+    /**
+     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
      * @param gvrActivity
      *            a {@link GVRActivity}
      * @param width
@@ -158,9 +219,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            {@link CharSequence} to show on the textView
      */
     public GVRTextViewSceneObject(GVRContext gvrContext,
-            GVRActivity gvrActivity, float width, float height, int viewWidth,
-            int viewHeight, CharSequence text) {
-        this(gvrContext, gvrContext.createQuad(width, height), gvrActivity,
+            float width, float height, int viewWidth, int viewHeight, CharSequence text) {
+        this(gvrContext, gvrContext.createQuad(width, height), gvrContext.getActivity(),
                 viewWidth, viewHeight, text);
     }
 
@@ -184,10 +244,65 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            a {@link GVRActivity}
      * @param text
      *            {@link CharSequence} to show on the textView
+     * @deprecated
      */
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh,
             GVRActivity gvrActivity, CharSequence text) {
         this(gvrContext, mesh, gvrActivity, DEFAULT_WIDTH, DEFAULT_HEIGHT, text);
+    }
+
+    
+    /**
+     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
+     * with view default height and width.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param mesh
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}
+     * 
+     *            Please note that this mesh controls the size of your scene
+     *            object, and it is independent of the size of the internal
+     *            {@code TextView}: a large mismatch between the scene object's
+     *            size and the view's size will result in 'spidery' or 'blocky'
+     *            text.
+     * @param text
+     *            {@link CharSequence} to show on the textView
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh, CharSequence text) {
+        this(gvrContext, mesh, gvrContext.getActivity(), DEFAULT_WIDTH, DEFAULT_HEIGHT, text);
+    }
+
+
+    /**
+     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
+     * with view's default height and width.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param gvrActivity
+     *            a {@link GVRActivity}
+     * @param width
+     *            Scene object height, in GVRF scene graph units.
+     * 
+     *            Please note that your scene object's size, is independent of
+     *            the size of the internal {@code TextView}: a large mismatch
+     *            between the scene object's size and the view's size will
+     *            result in 'spidery' or 'blocky' text.
+     * 
+     * @param height
+     *            Scene object's width, in GVRF scene graph units.
+     * @param text
+     *            {@link CharSequence} to show on the textView
+     * @deprecated
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext,
+            GVRActivity gvrActivity, float width, float height,
+            CharSequence text) {
+        this(gvrContext, gvrContext.createQuad(width, height), gvrActivity,
+                text);
     }
 
     /**
@@ -212,11 +327,11 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            {@link CharSequence} to show on the textView
      */
     public GVRTextViewSceneObject(GVRContext gvrContext,
-            GVRActivity gvrActivity, float width, float height,
-            CharSequence text) {
-        this(gvrContext, gvrContext.createQuad(width, height), gvrActivity,
+            float width, float height, CharSequence text) {
+        this(gvrContext, gvrContext.createQuad(width, height), gvrContext.getActivity(),
                 text);
     }
+
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -229,12 +344,30 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            a {@link GVRActivity}
      * @param text
      *            {@link CharSequence} to show on the textView
+     * @deprecated
      */
     public GVRTextViewSceneObject(GVRContext gvrContext,
             GVRActivity gvrActivity, CharSequence text) {
         this(gvrContext, gvrActivity, DEFAULT_QUAD_WIDTH, DEFAULT_QUAD_HEIGHT,
                 text);
     }
+
+    /**
+     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
+     * with both view's default height and width and quad's default height and
+     * width.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param text
+     *            {@link CharSequence} to show on the textView
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext, CharSequence text) {
+        this(gvrContext, gvrContext.getActivity(), DEFAULT_QUAD_WIDTH, DEFAULT_QUAD_HEIGHT,
+                text);
+    }
+
+
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -246,10 +379,25 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param gvrActivity
      *            a {@link GVRActivity}
+     * @deprecated
      */
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRActivity gvrActivity) {
         this(gvrContext, gvrActivity, DEFAULT_TEXT);
     }
+
+    /**
+     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
+     * with both view's default height and width and quad's default height and
+     * width. The initial text will be the private {@code DEFAULT_TEXT}
+     * constant, or {@code ""}.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext) {
+        this(gvrContext, gvrContext.getActivity(), DEFAULT_TEXT);
+    }
+
 
     /**
      * Set the text size.
