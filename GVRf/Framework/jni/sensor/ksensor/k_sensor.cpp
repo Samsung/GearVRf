@@ -49,7 +49,7 @@ void KSensor::readerThreadFunc() {
 
     JNIEnv *env;
     jint err = jvm_->AttachCurrentThread(&env, NULL);
-    if (JNI_OK!=err) {
+    if (JNI_OK != err) {
         LOGI("k_sensor: jni attach error");
         return;
     }
@@ -68,7 +68,7 @@ void KSensor::readerThreadFunc() {
         }
     }
 
-    Quaternion q;
+    glm::quat q;
     glm::vec3 corrected_gyro;
     long long currentTime;
     KTrackerSensorZip data;
@@ -81,7 +81,7 @@ void KSensor::readerThreadFunc() {
         currentTime = getCurrentTime();
         process(&data, corrected_gyro, q);
 
-        std::lock_guard<std::mutex> lock(update_mutex_);
+        std::lock_guard < std::mutex > lock(update_mutex_);
         latest_time_ = currentTime;
         last_corrected_gyro_ = corrected_gyro;
         q_ = q;
@@ -169,7 +169,7 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
     return false;
 }
 
-void KSensor::process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, Quaternion& q) {
+void KSensor::process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, glm::quat& q) {
     const float timeUnit = (1.0f / 1000.f);
 
     struct timespec tp;
@@ -230,7 +230,7 @@ void KSensor::process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, Quater
 
     KTrackerMessage sensors;
     int iterations = data->SampleCount;
-    sensors.Temperature = (0 == data->Temperature ? 0 : data->Temperature*0.01f);
+    sensors.Temperature = (0 == data->Temperature ? 0 : data->Temperature * 0.01f);
 
     if (data->SampleCount > 3) {
         iterations = 3;
@@ -241,9 +241,9 @@ void KSensor::process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, Quater
 
     const float scale = 0.0001f;
     for (int i = 0; i < iterations; ++i) {
-        sensors.Acceleration = vec3(data->Samples[i].AccelX * scale, data->Samples[i].AccelY * scale,
+        sensors.Acceleration = glm::vec3(data->Samples[i].AccelX * scale, data->Samples[i].AccelY * scale,
                 data->Samples[i].AccelZ * scale);
-        sensors.RotationRate = vec3(data->Samples[i].GyroX * scale, data->Samples[i].GyroY * scale,
+        sensors.RotationRate = glm::vec3(data->Samples[i].GyroX * scale, data->Samples[i].GyroY * scale,
                 data->Samples[i].GyroZ * scale);
 
         updateQ(&sensors, corrected_gyro, q);
@@ -258,15 +258,14 @@ void KSensor::process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, Quater
     last_rotation_rate_ = sensors.RotationRate;
 }
 
-void KSensor::updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, Quaternion& q) {
+void KSensor::updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, glm::quat& q) {
     glm::vec3 filteredGyro = applyGyroFilter(msg->RotationRate, msg->Temperature);
 
     const float deltaT = msg->TimeDelta;
-    std::pair<glm::vec3, float> axisAndMagnitude = applyTiltCorrection(filteredGyro, msg->Acceleration,
-            deltaT, q);
+    std::pair<glm::vec3, float> axisAndMagnitude = applyTiltCorrection(filteredGyro, msg->Acceleration, deltaT, q);
 
     if (0.0f != axisAndMagnitude.second) {
-        q = q * Quaternion::CreateFromAxisAngle(axisAndMagnitude.first, axisAndMagnitude.second * deltaT);
+        q *= glm::angleAxis(glm::degrees(axisAndMagnitude.second * deltaT), axisAndMagnitude.first);
     }
 
 #ifdef LOG_SUMMARY
@@ -284,16 +283,15 @@ void KSensor::updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, Quaternio
     step_++;
     // Normalize error
     if (step_ % 500 == 0) {
-        q.Normalize();
+        q = glm::normalize(q);
     }
 }
 
-glm::vec3 transform(const glm::mat4& m, const glm::vec3& v)
-{
-    const auto rcpW = 1 / ( m[3][0] * v.x + m[3][1] * v.y + m[3][2] * v.z + m[3][3] );
+glm::vec3 transform(const glm::mat4& m, const glm::vec3& v) {
+    const auto rcpW = 1 / (m[3][0] * v.x + m[3][1] * v.y + m[3][2] * v.z + m[3][3]);
     return glm::vec3((m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z + m[0][3]) * rcpW,
-                      (m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z + m[1][3]) * rcpW,
-                      (m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z + m[2][3]) * rcpW);
+            (m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z + m[1][3]) * rcpW,
+            (m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z + m[2][3]) * rcpW);
 }
 
 /**
@@ -310,8 +308,7 @@ glm::vec3 KSensor::applyGyroFilter(const glm::vec3& rawGyro, const float current
     }
 
     if (gyroFilterSize > 0) {
-        if (!isnan(sensorTemperature_) && sensorTemperature_ != currentTemperature
-                && 0 != currentTemperature) {
+        if (!isnan(sensorTemperature_) && sensorTemperature_ != currentTemperature && 0 != currentTemperature) {
 #ifdef LOG_GYRO_FILTER
             LOGI("k_sensor: clear gyro filter due to temperature change %f %f", sensorTemperature_, currentTemperature);
 #endif
@@ -340,13 +337,14 @@ glm::vec3 KSensor::applyGyroFilter(const glm::vec3& rawGyro, const float current
 }
 
 std::pair<glm::vec3, float> KSensor::applyTiltCorrection(const glm::vec3& gyro, const glm::vec3& accel,
-        const float DeltaT, Quaternion& q) {
+        const float deltaT, const glm::quat& q) {
+    tiltCorrectionTimer += deltaT;
     if (glm::length(accel) <= 0.001f) {
         return std::make_pair(glm::normalize(gyro), glm::length(gyro));
     }
 
-    Quaternion Qinv = q.Inverted();
-    glm::vec3 up = Qinv.Rotate(glm::vec3(0, 1, 0));
+    glm::quat Qinv = glm::conjugate(q);
+    glm::vec3 up = glm::rotate(Qinv, glm::vec3(0, 1, 0));
 
     glm::vec3 accel_normalize = glm::normalize(accel);
     glm::vec3 up_normalize = glm::normalize(up);
@@ -365,7 +363,7 @@ std::pair<glm::vec3, float> KSensor::applyTiltCorrection(const glm::vec3& gyro, 
         }
     } else {
         // Apply full correction at the startup
-        proportionalGain = KTiltCorrectionWaitInSeconds/tiltCorrectionTimer;
+        proportionalGain = KTiltCorrectionWaitInSeconds / tiltCorrectionTimer;
 #ifdef LOG_TILE_CORRECTION
         LOGI("k_sensor: full tilt correction applied; %f", proportionalGain);
 #endif
@@ -407,19 +405,20 @@ void KSensor::readFactoryCalibration() {
 /**
  * Using the phone magnetometer as it is continuously calibrated.
  */
-Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const glm::vec3& accelerometer, const glm::vec3& gyro,
-        float deltaT) {
+glm::quat KSensor::applyMagnetometerCorrection(glm::quat& orientation, const glm::vec3& accelerometer,
+        const glm::vec3& gyro, float deltaT) {
+    magnetometerCorrectionTimer += deltaT;
+
     const float gravityThreshold = 0.1f;
     const float gravity = 9.80665f;
     if (fabs(glm::length(accelerometer) / gravity - 1) > gravityThreshold) {
         //linear acceleration detection
-        yawCorrectionTimer = 0;
+        magnetometerCorrectionTimer = 0;
         return orientation;
     }
 
     static const float angularVelocityThreshold = glm::radians(5.0f);
-    if (magnetometerCorrectionTimer < 5.0
-            || glm::length(gyro) >= angularVelocityThreshold) {
+    if (magnetometerCorrectionTimer < 5.0 || glm::length(gyro) >= angularVelocityThreshold) {
 #ifdef LOG_MAGNETOMETER_CORRECTION
         LOGI("ksensor: no yaw correction applied");
 #endif
@@ -433,12 +432,13 @@ Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const g
 
     if (0 != glm::length(referencePoint_.first)) {
         // get the angle between the remembered orientation and this orientation
-        float angleRadians = 2 * acosx(fabs(orientation.Dot(referencePoint_.second)));
+        const float dot = glm::dot(orientation, referencePoint_.second);
+        float angleRadians = 2 * acosx(fabs(dot));
 
-        Quaternion correctedOrientation = orientation;
+        glm::quat correctedOrientation = orientation;
         if (angleRadians < glm::radians(5.0f)) {
             //use always the most up-to-date bias for improved calibration
-            glm::vec3 worldFrame = orientation.Rotate(magnetic - magneticBias);
+            glm::vec3 worldFrame = glm::rotate(orientation, magnetic - magneticBias);
             const float epsilon = 0.00001f;
             if (worldFrame.x * worldFrame.x + worldFrame.z * worldFrame.z < epsilon) {
 #ifdef LOG_MAGNETOMETER_CORRECTION
@@ -448,7 +448,7 @@ Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const g
             }
             worldFrame = glm::normalize(worldFrame);
 
-            glm::vec3 referenceWorldFrame = referencePoint_.second.Rotate(referencePoint_.first - magneticBias);
+            glm::vec3 referenceWorldFrame = glm::rotate(referencePoint_.second, referencePoint_.first - magneticBias);
             referenceWorldFrame = glm::normalize(referenceWorldFrame);
 
             const float maxTiltDifference = 0.15f;
@@ -474,7 +474,7 @@ Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const g
             float correction = errorAngleInRadians * gain;
             correction = std::max(-maxCorrectionRadians, std::min(maxCorrectionRadians, correction));
             correction *= deltaT;
-            correctedOrientation = Quaternion::CreateFromAxisAngle(glm::vec3(0.0f, 1.0f, 0.0f), correction) * orientation;
+            correctedOrientation = glm::angleAxis(glm::degrees(correction), glm::vec3(0.0f, 1.0f, 0.0f)) * orientation;
 
 #ifdef LOG_MAGNETOMETER_CORRECTION
             if (0 == step_ % 1500) {
@@ -491,7 +491,7 @@ Quaternion KSensor::applyMagnetometerCorrection(Quaternion& orientation, const g
 
     referencePoint_ = std::make_pair(magnetic, orientation);
 #ifdef LOG_MAGNETOMETER_CORRECTION
-        LOGI("k_sensor: saving reference point at uncorrected yaw %f", glm::degrees(orientation.ToEulerAngle().y));
+    LOGI("k_sensor: saving reference point at uncorrected yaw %f", glm::degrees(orientation.ToEulerAngle().y));
 #endif
     return orientation;
 }

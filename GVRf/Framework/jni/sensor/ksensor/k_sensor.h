@@ -32,7 +32,7 @@
 #include <android/sensor.h>
 
 #include <glm/glm.hpp>
-#include "math/quaternion.hpp"
+#include <glm/gtc/quaternion.hpp>
 #include <jni.h>
 
 #include "ktracker_sensor_filter.h"
@@ -59,18 +59,18 @@ public:
 private:
     bool update();
     bool pollSensor(KTrackerSensorZip* data);
-    void process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, Quaternion& q);
-    void updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, Quaternion& q);
-    std::pair<glm::vec3, float> applyTiltCorrection(const glm::vec3& gyro, const glm::vec3& accel, const float DeltaT, Quaternion& q);
+    void process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, glm::quat& q);
+    void updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, glm::quat& q);
+    std::pair<glm::vec3, float> applyTiltCorrection(const glm::vec3& gyro, const glm::vec3& accel, const float DeltaT, const glm::quat& q);
     void readerThreadFunc();
     glm::vec3 applyGyroFilter(const glm::vec3& rawGyro, const float currentTemperature);
     void readFactoryCalibration();
     bool getLatestMagneticField();
-    Quaternion applyMagnetometerCorrection(Quaternion& q, const glm::vec3& accelerometer, const glm::vec3& gyro, float deltaT);
+    glm::quat applyMagnetometerCorrection(glm::quat& q, const glm::vec3& accelerometer, const glm::vec3& gyro, float deltaT);
 
 private:
     int fd_;
-    Quaternion q_;
+    glm::quat q_;
     bool first_;
     int step_;
     unsigned int first_real_time_delta_;
@@ -88,7 +88,7 @@ private:
     std::mutex update_mutex_;
     glm::vec3 gyroOffset_;
     float sensorTemperature_ = std::numeric_limits<float>::quiet_NaN();
-    std::pair<glm::vec3, Quaternion> referencePoint_;
+    std::pair<glm::vec3, glm::quat> referencePoint_;
 
     float tiltCorrectionTimer = 0;
     float magnetometerCorrectionTimer = 0;
