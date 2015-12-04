@@ -271,7 +271,7 @@ void KSensor::updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, glm::quat
 #ifdef LOG_SUMMARY
     if (0 == step_ % 1000) {
         LOGI("k_sensor: summary: yaw angle %f; gyro offset %f %f %f; temperature %f; gyro filter sizes %d",
-                glm::degrees(q.ToEulerAngle().y), gyroOffset_.x, gyroOffset_.y, gyroOffset_.z, msg->Temperature,
+                glm::yaw(q), gyroOffset_.x, gyroOffset_.y, gyroOffset_.z, msg->Temperature,
                 gyroFilter_.size());
     }
 #endif
@@ -479,10 +479,10 @@ glm::quat KSensor::applyMagnetometerCorrection(glm::quat& orientation, const glm
 #ifdef LOG_MAGNETOMETER_CORRECTION
             if (0 == step_ % 1500) {
                 LOGI("k_sensor: magnetometer correction: %f degrees; angle to reference %f; reference yaw: %f; current yaw: %f; corrected yaw: %f",
-                        glm::degrees(correction), glm::degrees(errorAngleInRadians),
-                        glm::degrees(referencePoint_.second.ToEulerAngle().y),
-                        glm::degrees(orientation.ToEulerAngle().y),
-                        glm::degrees(correctedOrientation.ToEulerAngle().y));
+                        glm::degrees(correction), errorAngleInRadians,
+                        glm::yaw(referencePoint_.second),
+                        glm::yaw(orientation),
+                        glm::yaw(correctedOrientation));
             }
 #endif
             return correctedOrientation;
@@ -491,7 +491,7 @@ glm::quat KSensor::applyMagnetometerCorrection(glm::quat& orientation, const glm
 
     referencePoint_ = std::make_pair(magnetic, orientation);
 #ifdef LOG_MAGNETOMETER_CORRECTION
-    LOGI("k_sensor: saving reference point at uncorrected yaw %f", glm::degrees(orientation.ToEulerAngle().y));
+    LOGI("k_sensor: saving reference point at uncorrected yaw %f", glm::yaw(orientation));
 #endif
     return orientation;
 }
