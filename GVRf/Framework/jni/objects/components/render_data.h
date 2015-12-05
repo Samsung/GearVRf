@@ -28,6 +28,7 @@
 
 #include "objects/components/component.h"
 #include "objects/render_pass.h"
+#include "objects/components/texture_capturer.h"
 
 namespace gvr {
 class Mesh;
@@ -53,7 +54,7 @@ public:
                     DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
-                    true), draw_mode_(GL_TRIANGLES) {
+                    true), draw_mode_(GL_TRIANGLES), texture_capturer(0) {
     }
 
     ~RenderData() {
@@ -201,9 +202,16 @@ public:
         return camera_distance_;
     }
 
-
     void set_draw_mode(GLenum draw_mode) {
         draw_mode_ = draw_mode;
+    }
+
+    void set_texture_capturer(TextureCapturer *capturer) {
+        texture_capturer = capturer;
+    }
+
+    TextureCapturer *get_texture_capturer() {
+        return texture_capturer;
     }
 
 private:
@@ -228,6 +236,7 @@ private:
     bool alpha_blend_;
     GLenum draw_mode_;
     float camera_distance_;
+    TextureCapturer *texture_capturer;
 };
 
 inline bool compareRenderData(RenderData* i, RenderData* j) {

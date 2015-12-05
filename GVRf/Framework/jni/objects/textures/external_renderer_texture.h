@@ -7,6 +7,7 @@
 #include <GLES2/gl2ext.h>
 
 #include "objects/textures/base_texture.h"
+#include "objects/components/texture_capturer.h"
 
 // this is the texture to be used with an external renderer
 // the data field can be used to pass data between the gvrf application

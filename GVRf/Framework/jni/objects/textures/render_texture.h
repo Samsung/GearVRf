@@ -35,9 +35,19 @@ public:
 
     ~RenderTexture() {
         if (gl_texture_ != 0 || gl_render_buffer_ != 0
-                || gl_frame_buffer_ != 0) {
+                || gl_frame_buffer_ != 0 || gl_pbo_ != 0) {
             recycle();
         }
+    }
+
+    void initialize(int width, int height) {
+        gl_pbo_ = 0;
+        glGenBuffers(1, &gl_pbo_);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
+        glBufferData(GL_PIXEL_PACK_BUFFER, width_ * height_ * 4, 0, GL_DYNAMIC_READ);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+        readback_started_ = false;
     }
 
     void recycle() {
@@ -46,6 +56,8 @@ public:
         gl_render_buffer_ = 0;
         delete gl_frame_buffer_;
         gl_frame_buffer_ = 0;
+
+        glDeleteBuffers(1, &gl_pbo_);
     }
 
     GLenum getTarget() const {
@@ -64,6 +76,14 @@ public:
         return height_;
     }
 
+    // Start to read back texture in the background. It can be optionally called before
+    // readRenderResult() to read pixels asynchronously. This function returns immediately.
+    void startReadBack();
+
+    // Copy data in pixel buffer to client memory. This function is synchronous. When
+    // it returns, the pixels have been copied to PBO and then to the client memory.
+    bool readRenderResult(uint32_t *readback_buffer, long capacity);
+
 private:
     RenderTexture(const RenderTexture& render_texture);
     RenderTexture(RenderTexture&& render_texture);
@@ -77,6 +97,8 @@ private:
     int sample_count_;
     GLRenderBuffer* gl_render_buffer_;
     GLFrameBuffer* gl_frame_buffer_;
+    GLuint gl_pbo_;
+    bool readback_started_;          // set by startReadBack()
 };
 }
 #endif

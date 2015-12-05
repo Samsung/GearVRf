@@ -30,6 +30,9 @@ Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env,
         jobject obj, jint width, jint height, jint sample_count);
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeRenderTexture_readRenderResult(JNIEnv * env, jobject obj,
+        jlong ptr, jintArray jreadback_buffer);
 }
 ;
 
@@ -43,6 +46,20 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env,
         jobject obj, jint width, jint height, jint sample_count) {
     return reinterpret_cast<jlong>(new RenderTexture(width, height, sample_count));
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeRenderTexture_readRenderResult(JNIEnv * env, jobject obj,
+        jlong ptr, jintArray jreadback_buffer) {
+    RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
+    jint *readback_buffer = env->GetIntArrayElements(jreadback_buffer, JNI_FALSE);
+    jlong buffer_capacity = env->GetArrayLength(jreadback_buffer);
+
+    bool rv = render_texture->readRenderResult((uint32_t*)readback_buffer, buffer_capacity);
+
+    env->ReleaseIntArrayElements(jreadback_buffer, readback_buffer, 0);
+
+    return rv;
 }
 
 }

@@ -676,6 +676,23 @@ public class GVRRenderData extends GVRComponent {
         NativeRenderData.setDrawMode(getNative(), drawMode);
     }
 
+    /**
+     * Set the capturer for this texture. If capturer is null, the existing capturer
+     * is removed. Whether the capturer takes effect depends on the shader associated
+     * with {@code GVRMaterial}. In order to support the texture capturer, a native
+     * shader should check {@code RenderData::get_texture_capturer}. See {@code
+     * ExternalRendererShader} as an example.
+     *
+     * @param capturer The capturer.
+     */
+    public void setTextureCapturer(GVRTextureCapturer capturer) {
+        if (capturer != null) {
+            NativeRenderData.setTextureCapturer(getNative(), capturer.getNative());
+        } else {
+            NativeRenderData.setTextureCapturer(getNative(), 0);
+        }
+    }
+
     private boolean isLightEnabled;
 }
 
@@ -724,4 +741,5 @@ class NativeRenderData {
 
     public static native void setDrawMode(long renderData, int draw_mode);
 
+    public static native void setTextureCapturer(long renderData, long texture_capturer);
 }

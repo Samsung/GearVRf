@@ -19,7 +19,7 @@ package org.gearvrf;
 public class GVRRenderTexture extends GVRTexture {
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size.
-     * 
+     *
      * @param gvrContext
      *            Current gvrContext
      * @param width
@@ -37,7 +37,7 @@ public class GVRRenderTexture extends GVRTexture {
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size,
      * with MSAA enabled at the specified sample count.
-     * 
+     *
      * @param gvrContext
      *            Current gvrContext
      * @param width
@@ -51,7 +51,6 @@ public class GVRRenderTexture extends GVRTexture {
             int sampleCount) {
         super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
                 sampleCount));
-
         mWidth = width;
         mHeight = height;
     }
@@ -74,6 +73,20 @@ public class GVRRenderTexture extends GVRTexture {
         return mHeight;
     }
 
+    /**
+     * Return the render texture.
+     *
+     * @param readbackBuffer
+     *        A preallocated IntBuffer to receive the data from the texture. Its capacity should
+     *        be width * height. The output pixel format is GPU format GL_RGBA packed as an 32-bit
+     *        integer.
+     *
+     * @return true if successful.
+     */
+    boolean readRenderResult(int[] readbackBuffer) {
+        return NativeRenderTexture.readRenderResult(getNative(), readbackBuffer);
+    }
+
     private int mWidth, mHeight;
 }
 
@@ -81,4 +94,6 @@ class NativeRenderTexture {
     static native long ctor(int width, int height);
 
     static native long ctorMSAA(int width, int height, int sampleCount);
+
+    static native boolean readRenderResult(long ptr, int[] readbackBuffer);
 }

@@ -23,7 +23,8 @@ class RenderData;
 class ExternalRendererShader : public RecyclableObject {
 public:
     ExternalRendererShader() {}
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
+    void render(const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
+                const glm::mat4& mvp_matrix, RenderData* render_data);
 
 private:
     ExternalRendererShader(

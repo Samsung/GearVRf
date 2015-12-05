@@ -19,7 +19,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,12 +33,12 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.opengl.GLES20;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
@@ -78,6 +81,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private static final String TAG = Log.tag(GVRViewManager.class);
 
     protected final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
+    protected final Map<Runnable, Integer> mRunnablesPostRender = new HashMap<Runnable, Integer>();
 
     protected List<GVRDrawFrameListener> mFrameListeners = new CopyOnWriteArrayList<GVRDrawFrameListener>();
 
@@ -314,25 +318,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 .getNative(), mReadbackBuffer);
     }
 
-    private Bitmap generateBitmap(final byte[] byteArray, final int width,
-            final int height) {
-        int[] pixels = new int[width * height];
-        for (int row = 0; row < height; row++) {
-            int start_position = row * width;
-            int reverse_start_position = (height - 1 - row) * width;
-            for (int col = 0; col < width; col++) {
-                int position = (start_position + col) * 4;
-                int r = byteArray[position++] & 0xff;
-                int g = byteArray[position++] & 0xff;
-                int b = byteArray[position] & 0xff;
-                // flip the image vertically
-                pixels[reverse_start_position + col] = Color.rgb(r, g, b);
-            }
-        }
-        return Bitmap.createBitmap(pixels, width, height,
-                Bitmap.Config.ARGB_8888);
-    }
-
     private void returnScreenshotToCaller(final GVRScreenshotCallback callback,
             final int width, final int height) {
         // run the callback function in a background thread
@@ -340,8 +325,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mReadbackBuffer.array().length);
         Threads.spawn(new Runnable() {
             public void run() {
-                final Bitmap capturedBitmap = generateBitmap(byteArray, width,
-                        height);
+                final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(
+                        byteArray, width, height);
                 callback.onScreenCaptured(capturedBitmap);
             }
         });
@@ -426,8 +411,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                             public void run() {
                                 byte[] bytearray = byteArrays[index];
                                 byteArrays[index] = null;
-                                Bitmap bitmap = generateBitmap(bytearray,
-                                        width, height);
+                                Bitmap bitmap = ImageUtils.generateBitmapFlipV(
+                                        bytearray, width, height);
                                 synchronized (this) {
                                     bitmapArray[index] = bitmap;
                                     notify();
@@ -542,6 +527,21 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     void afterDrawEyes() {
+        // Execute post-rendering tasks (after drawing eyes, but
+        // before after draw eye handlers)
+        synchronized (mRunnablesPostRender) {
+            for (Iterator<Map.Entry<Runnable, Integer>> it = mRunnablesPostRender.entrySet().iterator();
+                    it.hasNext(); ) {
+                Map.Entry<Runnable, Integer> entry = it.next();
+                if (entry.getValue() <= 0) {
+                    entry.getKey().run();
+                    it.remove();
+                } else {
+                    entry.setValue(entry.getValue() - 1);
+                }
+            }
+        }
+
         mFrameHandler.afterDrawEyes();
     }
 
@@ -821,6 +821,13 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     public void runOnGlThread(Runnable runnable) {
         mRunnables.add(runnable);
+    }
+
+    @Override
+    public void runOnGlThreadPostRender(int delayFrames, Runnable runnable) {
+        synchronized (mRunnablesPostRender) {
+            mRunnablesPostRender.put(runnable, delayFrames);
+        }
     }
 
     @Override
