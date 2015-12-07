@@ -38,6 +38,7 @@ template <class R> class GVRActivityT : public OVR::VrAppInterface
 {
 public:
     GVRActivityT(JNIEnv& jni);
+    virtual ~GVRActivityT() {}
 
     virtual void        Configure( OVR::ovrSettings & settings );
     virtual void        OneTimeInit( const char * fromPackage, const char * launchIntentJSON, const char * launchIntentURI );

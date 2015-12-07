@@ -43,7 +43,7 @@ class KTrackerMessage;
 
 class KSensor {
 public:
-    KSensor(JNIEnv& env, jobject activity);
+    KSensor();
     ~KSensor();
     void stop();
     void start();
@@ -105,8 +105,6 @@ private:
     float factoryTemperature_ = 0.0f;
 
     jobject activity_;
-    JavaVM* jvm_;
-    jclass gvrActivityClass_;
 
     static const int KGyroNoiseFilterCapacity = 6000;
 };

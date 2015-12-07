@@ -47,18 +47,6 @@ void KSensor::readerThreadFunc() {
     pid_t tid = gettid();
     LOGV("k_sensor: reader starting up; tid: %d", tid);
 
-    JNIEnv *env;
-    jint err = jvm_->AttachCurrentThread(&env, NULL);
-    if (JNI_OK != err) {
-        LOGI("k_sensor: jni attach error");
-        return;
-    }
-    jmethodID methodId = env->GetMethodID(gvrActivityClass_, "setSchedFifo", "(I)V");
-    env->CallVoidMethod(activity_, methodId, tid);
-    env->DeleteGlobalRef(gvrActivityClass_);
-    gvrActivityClass_ = nullptr;
-    jvm_->DetachCurrentThread();
-
     readFactoryCalibration();
 
     while (0 > (fd_ = open("/dev/ovr0", O_RDONLY))) {
@@ -100,15 +88,10 @@ void KSensor::readerThreadFunc() {
     LOGV("k_sensor: reader shut down");
 }
 
-KSensor::KSensor(JNIEnv& jniEnv, jobject activity) :
+KSensor::KSensor() :
         fd_(-1), q_(), first_(true), step_(0), first_real_time_delta_(0.0f), last_timestamp_(0), full_timestamp_(0), last_sample_count_(
                 0), latest_time_(0), last_acceleration_(0.0f, 0.0f, 0.0f), processing_thread_(), gyroFilter_(
-                KGyroNoiseFilterCapacity), tiltFilter_(25), processing_flag_(
-        true), activity_(activity) {
-
-    jniEnv.GetJavaVM(&jvm_);
-    jclass localClass = jniEnv.FindClass("org/gearvrf/GVRActivity");
-    gvrActivityClass_ = static_cast<jclass>(jniEnv.NewGlobalRef(localClass));
+                KGyroNoiseFilterCapacity), tiltFilter_(25), processing_flag_(true) {
 }
 
 KSensor::~KSensor() {
