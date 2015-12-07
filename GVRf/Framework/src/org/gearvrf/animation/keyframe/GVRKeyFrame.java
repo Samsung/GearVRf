@@ -1,6 +1,6 @@
 package org.gearvrf.animation.keyframe;
 
-public interface GVRKeyFrame<T> {
+/*package*/ interface GVRKeyFrame<T> {
     float getTime();
     T getValue();
     void setValue(T value);

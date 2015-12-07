@@ -41,6 +41,9 @@ static const char NO_SKINNING[] = "#undef AS_SKINNING\n";
 static const char SPECULAR_TEXTURE[] = "#define AS_SPECULAR_TEXTURE\n";
 static const char NO_SPECULAR_TEXTURE[] = "#undef AS_SPECULAR_TEXTURE\n";
 
+#define STR_(x) #x
+#define STR(x) STR_(x)
+
 static const char VERTEX_SHADER[] =
                 "precision highp float;\n"
                 "\n"
@@ -57,7 +60,8 @@ static const char VERTEX_SHADER[] =
                 "#ifdef AS_SKINNING\n"
                 "attribute vec4 a_bone_indices;\n"
                 "attribute vec4 a_bone_weights;\n"
-                "uniform mat4 u_bone_matrix[100];\n" // MAX_BONE_NUM = 100
+                "const int MAX_BONES = " STR(MAX_BONES) ";\n"
+                "uniform mat4 u_bone_matrix[MAX_BONES];\n"
                 "#endif\n"
                 "\n"
 

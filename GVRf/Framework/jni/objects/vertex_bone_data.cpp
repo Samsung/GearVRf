@@ -68,28 +68,8 @@ void VertexBoneData::normalizeWeights() {
             for (int j = 0; j < BONES_PER_VERTEX; ++j) {
                 boneData[i].weights[j] /= wtSum;
             }
-        } else {
-            LOGV("WARNING: unanimated vertex: %d", i);
         }
     }
-
-    //!DEBUG
-    /*
-    for (int i = 0; i < size; ++i) {
-        glm::mat4 bone(0.f);
-        for (int j = 0; j < BONES_PER_VERTEX; ++j) {
-            bone += boneData[i].weights[j] * boneMatrices[boneData[i].ids[j]];
-        }
-        bone -= glm::mat4(1.0f);
-        float sum = 0.f;
-        for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
-                sum += fabs(bone[i][j]);
-        if (sum > 1.f) {
-            LOGV("WARNING: default bone matrix is not identity: vertex %d, diff %f", i, sum);
-        }
-    }
-    */
 }
 
 } // namespace gvr

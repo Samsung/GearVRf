@@ -908,10 +908,6 @@ class NativeSceneObject {
 
     static native void detachEyePointeeHolder(long sceneObject);
 
-    static native void attachBone(long sceneObject, long bone);
-
-    static native void detachBone(long sceneObject);
-
     static native long setParent(long sceneObject, long parent);
 
     static native void addChildObject(long sceneObject, long child);

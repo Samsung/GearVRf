@@ -20,7 +20,6 @@
 #ifndef MESH_H_
 #define MESH_H_
 
-#include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
