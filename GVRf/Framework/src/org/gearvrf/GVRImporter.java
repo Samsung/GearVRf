@@ -33,6 +33,7 @@ import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 
 /**
@@ -116,7 +117,7 @@ final class GVRImporter {
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
-    static GVRSceneObject loadJassimpModelFromSD(final GVRContext context, String externalFile,
+    static GVRModelSceneObject loadJassimpModelFromSD(final GVRContext context, String externalFile,
             EnumSet<GVRImportSettings> settings) throws IOException {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
@@ -127,7 +128,7 @@ final class GVRImporter {
         return new GVRJassimpSceneObject(context, assimpScene);
     }
 
-    static GVRSceneObject loadJassimpModel(final GVRContext context, String assetFile,
+    static GVRModelSceneObject loadJassimpModel(final GVRContext context, String assetFile,
             EnumSet<GVRImportSettings> settings) throws IOException {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importAssetFile(assetFile,

@@ -32,6 +32,7 @@ import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.periodic.GVRPeriodicEngine;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
@@ -504,19 +505,19 @@ public abstract class GVRContext {
         return GVRImporter.getAssimpModel(this, assetRelativeFilename, settings);
     }
 
-    public GVRSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
+    public GVRModelSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
         return loadJassimpModelFromSD(externalFile, GVRImportSettings.getRecommendedSettings());
     }
 
-    public GVRSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
+    public GVRModelSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return GVRImporter.loadJassimpModelFromSD(this, externalFile, settings);
     }
 
-    public GVRSceneObject loadJassimpModel(String assetFile) throws IOException {
+    public GVRModelSceneObject loadJassimpModel(String assetFile) throws IOException {
         return loadJassimpModel(assetFile, GVRImportSettings.getRecommendedSettings());
     }
 
-    public GVRSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
+    public GVRModelSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return GVRImporter.loadJassimpModel(this, assetFile, settings);
     }
 

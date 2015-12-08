@@ -2,30 +2,25 @@ package org.gearvrf.jassimp2;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
-import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
-public class GVRJassimpSceneObject extends GVRSceneObject {
+public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
     protected AiScene scene;
-    protected List<GVRKeyFrameAnimation> animations;
-
     public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene) {
         super(gvrContext);
-        animations = new ArrayList<GVRKeyFrameAnimation>();
 
         if (scene != null) {
             this.scene = scene;
@@ -33,13 +28,9 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
 
             // Animations
             for (AiAnimation aiAnim : scene.getAnimations()) {
-                animations.add(GVRJassimpAdapter.get().createAnimation(aiAnim, this));
+                mAnimations.add(GVRJassimpAdapter.get().createAnimation(aiAnim, this));
             }
         }
-    }
-
-    public List<GVRKeyFrameAnimation> getAnimations() {
-        return animations;
     }
 
     private void recurseAssimpNodes(
@@ -183,14 +174,5 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
         sceneObject.attachRenderData(sceneObjectRenderData);
 
         return sceneObject;
-    }
-
-    @Override
-    public void prettyPrint(StringBuffer sb, int indent) {
-        super.prettyPrint(sb, indent);
-        // dump its animations
-        for (GVRKeyFrameAnimation anim : animations) {
-            anim.prettyPrint(sb, indent + 2);
-        }
     }
 }
