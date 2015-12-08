@@ -386,8 +386,7 @@ template <class R> OVR::Matrix4f GVRActivityT<R>::DrawEyeView(const int eye, con
     if (!sensoredSceneUpdated_ && headRotationProvider_.receivingUpdates()) {
         sensoredSceneUpdated_ = updateSensoredScene();
     }
-    glm::quat headRotation = headRotationProvider_.getPrediction(*this, frameParms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
-    cameraRig_->getHeadTransform()->set_rotation(headRotation);
+    headRotationProvider_.predict(*this, frameParms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
 
     JNIEnv* jni = app->GetJava()->Env;
     jni->CallVoidMethod(app->GetJava()->ActivityObject, drawEyeViewMethodId, eye, fovDegreesY);
