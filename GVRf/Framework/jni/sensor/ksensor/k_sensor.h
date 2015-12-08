@@ -31,8 +31,9 @@
 #include <mutex>
 #include <android/sensor.h>
 
-#include "math/quaternion.hpp"
-#include "math/vector.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <jni.h>
 
 #include "ktracker_sensor_filter.h"
 
@@ -58,18 +59,18 @@ public:
 private:
     bool update();
     bool pollSensor(KTrackerSensorZip* data);
-    void process(KTrackerSensorZip* data, vec3& corrected_gyro, Quaternion& q);
-    void updateQ(KTrackerMessage *msg, vec3& corrected_gyro, Quaternion& q);
-    std::pair<vec3, float> applyTiltCorrection(const vec3& gyro, const vec3& accel, const float DeltaT, Quaternion& q);
+    void process(KTrackerSensorZip* data, glm::vec3& corrected_gyro, glm::quat& q);
+    void updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, glm::quat& q);
+    std::pair<glm::vec3, float> applyTiltCorrection(const glm::vec3& gyro, const glm::vec3& accel, const float DeltaT, const glm::quat& q);
     void readerThreadFunc();
-    vec3 applyGyroFilter(const vec3& rawGyro, const float currentTemperature);
+    glm::vec3 applyGyroFilter(const glm::vec3& rawGyro, const float currentTemperature);
     void readFactoryCalibration();
     bool getLatestMagneticField();
-    Quaternion applyMagnetometerCorrection(Quaternion& q, const vec3& accelerometer, const vec3& gyro, float deltaT);
+    glm::quat applyMagnetometerCorrection(glm::quat& q, const glm::vec3& accelerometer, const glm::vec3& gyro, float deltaT);
 
 private:
     int fd_;
-    Quaternion q_;
+    glm::quat q_;
     bool first_;
     int step_;
     unsigned int first_real_time_delta_;
@@ -77,31 +78,33 @@ private:
     uint32_t full_timestamp_;
     uint8_t last_sample_count_;
     long long latest_time_;
-    vec3 last_acceleration_;
-    vec3 last_rotation_rate_;
-    vec3 last_corrected_gyro_;
+    glm::vec3 last_acceleration_;
+    glm::vec3 last_rotation_rate_;
+    glm::vec3 last_corrected_gyro_;
     SensorFilter<float> tiltFilter_;
-    SensorFilter<vec3> gyroFilter_;
+    SensorFilter<glm::vec3> gyroFilter_;
     std::thread processing_thread_;
     std::atomic<bool> processing_flag_;
     std::mutex update_mutex_;
-    vec3 gyroOffset_;
+    glm::vec3 gyroOffset_;
     float sensorTemperature_ = std::numeric_limits<float>::quiet_NaN();
-    std::pair<vec3, Quaternion> referencePoint_;
+    std::pair<glm::vec3, glm::quat> referencePoint_;
 
     float tiltCorrectionTimer = 0;
     float magnetometerCorrectionTimer = 0;
     ASensorEventQueue* magneticSensorQueue = nullptr;
     ASensorRef magneticSensor = nullptr;
-    vec3 magnetic;
-    vec3 magneticBias;
+    glm::vec3 magnetic;
+    glm::vec3 magneticBias;
 
     bool factoryCalibration = false;
-    vec3 factoryAccelOffset_;
-    vec3 factoryGyroOffset_;
-    mat4 factoryAccelMatrix_;
-    mat4 factoryGyroMatrix_;
+    glm::vec3 factoryAccelOffset_;
+    glm::vec3 factoryGyroOffset_;
+    glm::mat4 factoryAccelMatrix_;
+    glm::mat4 factoryGyroMatrix_;
     float factoryTemperature_ = 0.0f;
+
+    jobject activity_;
 
     static const int KGyroNoiseFilterCapacity = 6000;
 };
@@ -113,10 +116,10 @@ public:
     };
     uint8_t buffer_[PacketSize];
 
-    vec3 accelOffset_;
-    vec3 gyroOffset_;
-    mat4 accelMatrix_;
-    mat4 gyroMatrix_;
+    glm::vec3 accelOffset_;
+    glm::vec3 gyroOffset_;
+    glm::mat4 accelMatrix_;
+    glm::mat4 gyroMatrix_;
     float temperature_ = 0;
 
     KSensorFactoryCalibration() {
@@ -138,25 +141,21 @@ public:
         gyroOffset_.y = (float) y * 1e-4f;
         gyroOffset_.z = (float) z * 1e-4f;
 
-        float accelMatrixTemp[4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
         for (int i = 0; i < 3; i++) {
             unpack(buffer_ + 19 + 8 * i, &x, &y, &z);
-            accelMatrixTemp[i][0] = (float) x / sensorMax;
-            accelMatrixTemp[i][1] = (float) y / sensorMax;
-            accelMatrixTemp[i][2] = (float) z / sensorMax;
-            accelMatrixTemp[i][i] += 1.0f;
+            accelMatrix_[i][0] = (float) x / sensorMax;
+            accelMatrix_[i][1] = (float) y / sensorMax;
+            accelMatrix_[i][2] = (float) z / sensorMax;
+            accelMatrix_[i][i] += 1.0f;
         }
-        accelMatrix_ = mat4(&accelMatrixTemp[0][0]);
 
-        float gyroMatrixTemp[4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
         for (int i = 0; i < 3; i++) {
             unpack(buffer_ + 43 + 8 * i, &x, &y, &z);
-            gyroMatrixTemp[i][0] = (float) x / sensorMax;
-            gyroMatrixTemp[i][1] = (float) y / sensorMax;
-            gyroMatrixTemp[i][2] = (float) z / sensorMax;
-            gyroMatrixTemp[i][i] += 1.0f;
+            gyroMatrix_[i][0] = (float) x / sensorMax;
+            gyroMatrix_[i][1] = (float) y / sensorMax;
+            gyroMatrix_[i][2] = (float) z / sensorMax;
+            gyroMatrix_[i][i] += 1.0f;
         }
-        gyroMatrix_ = mat4(&gyroMatrixTemp[0][0]);
 
         temperature_ = (float) decodeInt16t(buffer_ + 67) / 100.0f;
     }
