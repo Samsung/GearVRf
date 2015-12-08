@@ -15,7 +15,10 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
     protected float mTicksPerSecond;
     protected float mDurationTicks;
     protected List<GVRAnimationChannel> mChannels;
+
+    protected GVRNodeAnimationController mNodeAnimationController;
     protected GVRSkinningController mSkinningController;
+
     protected GVRSceneObject mTarget;
     protected Matrix4f[] mTransforms;
 
@@ -25,7 +28,10 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
         mDurationTicks = durationTicks;
         mTicksPerSecond = ticksPerSecond;
         mChannels = new ArrayList<GVRAnimationChannel>();
+
+        mNodeAnimationController = null;
         mSkinningController = null;
+
         mTarget = target;
     }
 
@@ -38,9 +44,11 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
     }
 
     /**
-     * Must be called after calling all channels.
+     * Must be called after adding all channels.
      */
     public void prepare() {
+        mNodeAnimationController = new GVRNodeAnimationController(mTarget, this);
+
         mSkinningController = new GVRSkinningController(mTarget, this);
         mTransforms = new Matrix4f[mChannels.size()];
         for (int i = 0; i < mTransforms.length; ++i) {
@@ -86,13 +94,13 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
             return;
         }
 
-        if (mSkinningController == null) {
+        if (mNodeAnimationController == null && mSkinningController == null) {
             throw new RuntimeException("Animation is not prepared. Call prepare() before starting.");
         }
 
-        mSkinningController.animate(getDuration() * ratio);
+        mNodeAnimationController.animate(getDuration() * ratio);
 
-        // TODO: ordinary transform animation
+        mSkinningController.animate(getDuration() * ratio);
     }
 
     protected Matrix4f[] getTransforms(float animationTime) {
