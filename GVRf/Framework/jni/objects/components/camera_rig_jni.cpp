@@ -113,8 +113,7 @@ Java_org_gearvrf_NativeCameraRig_setRotationSensorData(
         jfloat gyro_z);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_predictAndSetRotation(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jfloat time);
+Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat time);
 
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
@@ -338,10 +337,9 @@ Java_org_gearvrf_NativeCameraRig_setRotationSensorData(
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_predictAndSetRotation(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jfloat time) {
+Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat time) {
     CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
-    camera_rig->predictAndSetRotation(time);
+    camera_rig->predict(time);
 }
 
 JNIEXPORT jfloatArray JNICALL

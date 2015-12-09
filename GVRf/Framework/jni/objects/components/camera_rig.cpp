@@ -121,16 +121,11 @@ void CameraRig::setRotationSensorData(long long time_stamp, float w, float x,
     rotation_sensor_data_.update(time_stamp, w, x, y, z, gyro_x, gyro_y, gyro_z);
 }
 
-void CameraRig::predictAndSetRotation(float time) {
-    glm::quat headRotation = predict(time);
-    setRotation(headRotation);
-}
-
-glm::quat CameraRig::predict(float time) {
+void CameraRig::predict(float time) {
     return predict(time, rotation_sensor_data_);
 }
 
-glm::quat CameraRig::predict(float time, const RotationSensorData& rotationSensorData) {
+void CameraRig::predict(float time, const RotationSensorData& rotationSensorData) {
     long long clock_time = getCurrentTime();
     float time_diff = (clock_time - rotationSensorData.time_stamp())
             / 1000000000.0f;
@@ -144,7 +139,7 @@ glm::quat CameraRig::predict(float time, const RotationSensorData& rotationSenso
         axis /= angle;
     }
 
-    return complementary_rotation_*rotationSensorData.quaternion();
+    setRotation(complementary_rotation_*rotationSensorData.quaternion());
 }
 
 void CameraRig::setRotation(const glm::quat& transform_rotation) {

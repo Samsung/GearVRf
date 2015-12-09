@@ -107,16 +107,16 @@ typedef GVRActivityT<OculusHeadRotation> GVRActivity;
 
 class KSensorHeadRotation {
 public:
-    glm::quat getPrediction(GVRActivityT<KSensorHeadRotation>& gvrActivity, const ovrFrameParms&, const float time) {
+    void predict(GVRActivityT<KSensorHeadRotation>& gvrActivity, const ovrFrameParms&, const float time) {
         if (nullptr != gvrActivity.cameraRig_) {
             if (nullptr == sensor_.get()) {
-                return gvrActivity.cameraRig_->predict(time);
+                gvrActivity.cameraRig_->predict(time);
             } else {
                 sensor_->convertTo(rotationSensorData_);
-                return gvrActivity.cameraRig_->predict(time, rotationSensorData_);
+                gvrActivity.cameraRig_->predict(time, rotationSensorData_);
             }
         } else {
-            return glm::quat();
+            gvrActivity.cameraRig_->setRotation(glm::quat());
         }
     }
     bool receivingUpdates() {
@@ -141,7 +141,7 @@ public:
 class OculusHeadRotation {
     bool docked_ = false;
 public:
-    glm::quat getPrediction(GVRActivityT<OculusHeadRotation>& gvrActivity, const ovrFrameParms& frameParms, const float time) {
+    void predict(GVRActivityT<OculusHeadRotation>& gvrActivity, const ovrFrameParms& frameParms, const float time) {
         if (docked_) {
             ovrMobile* ovr = gvrActivity.app->GetOvrMobile();
             ovrTracking tracking = vrapi_GetPredictedTracking(ovr, vrapi_GetPredictedDisplayTime(ovr, frameParms.FrameIndex));
@@ -150,11 +150,11 @@ public:
 
             const ovrQuatf& orientation = tracking.HeadPose.Pose.Orientation;
             glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
-            return glm::conjugate(glm::inverse(quat));
+            gvrActivity.cameraRig_->setRotation(glm::conjugate(glm::inverse(quat)));
         } else if (nullptr != gvrActivity.cameraRig_) {
-            return gvrActivity.cameraRig_->predict(time);
+            gvrActivity.cameraRig_->predict(time);
         } else {
-            return glm::quat();
+            gvrActivity.cameraRig_->setRotation(glm::quat());
         }
     }
     bool receivingUpdates() {
