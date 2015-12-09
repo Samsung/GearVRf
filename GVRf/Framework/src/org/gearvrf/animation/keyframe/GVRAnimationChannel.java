@@ -20,11 +20,11 @@ import org.joml.Vector3f;
  * scaling, rotation, translation.<p>
  */
 public final class GVRAnimationChannel implements PrettyPrint {
-    protected static interface Interpolator<T> {
+    protected static interface ValueInterpolator<T> {
         T interpolate(Object begin, Object end, float factor);
     }
 
-    protected static Interpolator<Vector3f> sInterpolatorVector3f = new Interpolator<Vector3f>() {
+    protected static ValueInterpolator<Vector3f> sInterpolatorVector3f = new ValueInterpolator<Vector3f>() {
         public Vector3f interpolate(Object begin_, Object end_, float factor) {
             Vector3f begin = (Vector3f) begin_;
             Vector3f end = (Vector3f) end_;
@@ -33,7 +33,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
         }
     };
 
-    protected static Interpolator<Quaternionf> sInterpolatorQuaternion = new Interpolator<Quaternionf>() {
+    protected static ValueInterpolator<Quaternionf> sInterpolatorQuaternion = new ValueInterpolator<Quaternionf>() {
         public Quaternionf interpolate(Object begin_, Object end_, float factor) {
             Quaternionf begin = (Quaternionf) begin_;
             Quaternionf end = (Quaternionf) end_;
@@ -41,6 +41,92 @@ public final class GVRAnimationChannel implements PrettyPrint {
             return new Quaternionf().set(begin).slerp(end, factor);
         }
     };
+
+    protected class KeyFrameInterplator<T> {
+        GVRKeyFrame<T>[] keys;
+        ValueInterpolator<T> interpolator;
+
+        private int lastKeyIndex;
+
+        KeyFrameInterplator(GVRKeyFrame<T>[] keys, ValueInterpolator<T> interpolator) {
+            this.keys = keys;
+            this.interpolator = interpolator;
+            lastKeyIndex = -1;
+        }
+
+        protected T interpolate(float time) {
+            int index = getKeyIndex(time);
+            int nextIndex = index + 1;
+
+            if (index != -1 && keys[index].getTime() <= time && time < keys[nextIndex].getTime()) {
+                // interpolate
+                float deltaTime = (float)(keys[nextIndex].getTime() - keys[index].getTime());
+                float factor = (float)((time - keys[index].getTime()) / deltaTime);
+
+                Object start = keys[index].getValue();
+                Object end = keys[nextIndex].getValue();
+
+                return interpolator.interpolate(start, end, factor);
+            } else {
+                // time is out of range of animation time frame
+                float firstFrameTime = keys[0].getTime();
+                float lastFrameTime = keys[keys.length - 1].getTime();
+                T firstFrameValue = keys[0].getValue();
+                T lastFrameValue = keys[keys.length - 1].getValue();
+
+                if (time <= firstFrameTime) {
+                    return firstFrameValue;
+                } else if (time >= lastFrameTime) {
+                    return lastFrameValue;
+                } else {
+                    // Shouldn't happen
+                    throw new RuntimeException("Interpolation failed");
+                }
+            }
+        }
+
+        protected int getKeyIndex(float time) {
+            // Try cached key first
+            if (lastKeyIndex != -1) {
+                if (keys[lastKeyIndex].getTime() <= time && time < keys[lastKeyIndex + 1].getTime()) {
+                    return lastKeyIndex;
+                }
+
+                // Try neighboring keys
+                if (lastKeyIndex + 2 < keys.length &&
+                        keys[lastKeyIndex + 1].getTime() <= time && time < keys[lastKeyIndex + 2].getTime()) {
+                    return ++lastKeyIndex;
+                }
+
+                if (lastKeyIndex >= 1 &&
+                        keys[lastKeyIndex - 1].getTime() <= time && time < keys[lastKeyIndex].getTime()) {
+                    return --lastKeyIndex;
+                }
+            }
+
+            // Binary search for the interval
+            int low = 0, high = keys.length - 2;
+            // invariant: [low, high) contains time if time can be found
+            // post-condition: |high - low| <= 1, only need to check [low, low + 1)
+            while (high - low > 1) {
+                int mid = (low + high) / 2;
+                if (time < keys[mid].getTime()) {
+                    high = mid;
+                } else if (time >= keys[mid + 1].getTime()) {
+                    low = mid + 1;
+                } else {
+                    // time in [mid, mid + 1) by definition
+                    return lastKeyIndex = mid;
+                }
+            }
+
+            if (keys[low].getTime() <= time && time < keys[low + 1].getTime()) {
+                return lastKeyIndex = low;
+            }
+
+            return lastKeyIndex = -1;
+        }
+    }
 
     /**
      * Constructor.
@@ -61,6 +147,10 @@ public final class GVRAnimationChannel implements PrettyPrint {
         mScaleKeys = new GVRScaleKey[numScaleKeys];
         mPreState = preBehavior;
         mPostState = postBehavior;
+
+        mPositionInterpolator = new KeyFrameInterplator<Vector3f>(mPositionKeys, sInterpolatorVector3f);
+        mRotationInterpolator = new KeyFrameInterplator<Quaternionf>(mRotationKeys, sInterpolatorQuaternion);
+        mScaleInterpolator = new KeyFrameInterplator<Vector3f>(mScaleKeys, sInterpolatorVector3f);
 
         mCurrentTransform = new Matrix4f();
     }
@@ -251,7 +341,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
             return mPositionKeys[0].getValue();
         }
 
-        return (Vector3f) interpolate(time, mPositionKeys, sInterpolatorVector3f);
+        return mPositionInterpolator.interpolate(time);
     }
 
     protected Vector3f getScale(float time) {
@@ -263,7 +353,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
             return mScaleKeys[0].getValue();
         }
 
-        return (Vector3f) interpolate(time, mScaleKeys, sInterpolatorVector3f);
+        return mScaleInterpolator.interpolate(time);
     }
 
     protected Quaternionf getRotation(float time) {
@@ -275,47 +365,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
             return mRotationKeys[0].getValue();
         }
 
-        return (Quaternionf) interpolate(time, mRotationKeys, sInterpolatorQuaternion);
-    }
-
-    protected Object interpolate(float time, GVRKeyFrame<?>[] keys, Interpolator<?> interpolator) {
-        int index = getKeyIndex(time, keys);
-        int nextIndex = index + 1;
-
-        if (keys[index].getTime() <= time && time <= keys[nextIndex].getTime()) {
-            // interpolate
-            float deltaTime = (float)(keys[nextIndex].getTime() - keys[index].getTime());
-            float factor = (float)((time - keys[index].getTime()) / deltaTime);
-
-            Object start = keys[index].getValue();
-            Object end = keys[nextIndex].getValue();
-
-            return interpolator.interpolate(start, end, factor);
-        } else {
-            // time is out of range of animation time frame
-            float firstFrameTime = keys[0].getTime();
-            float lastFrameTime = keys[keys.length - 1].getTime();
-            Object firstFrameValue = keys[0].getValue();
-            Object lastFrameValue = keys[keys.length - 1].getValue();
-
-            if (time <= firstFrameTime) {
-                return firstFrameValue;
-            } else if (time >= lastFrameTime) {
-                return lastFrameValue;
-            } else {
-                // Shouldn't happen
-                throw new RuntimeException("Interpolation failed");
-            }
-        }
-    }
-
-    protected int getKeyIndex(float time, GVRKeyFrame<?>[] keys) {
-        for (int i = 0; i < (keys.length - 1); i++) {
-            if (time < (float) keys[i + 1].getTime()) {
-                return i;
-            }
-        }
-        return 0;
+        return mRotationInterpolator.interpolate(time);
     }
 
     @Override
@@ -345,6 +395,10 @@ public final class GVRAnimationChannel implements PrettyPrint {
     private final GVRPositionKey[] mPositionKeys;
     private final GVRRotationKey[] mRotationKeys;
     private final GVRScaleKey[] mScaleKeys;
+
+    private final KeyFrameInterplator<Vector3f> mPositionInterpolator;
+    private final KeyFrameInterplator<Quaternionf> mRotationInterpolator;
+    private final KeyFrameInterplator<Vector3f> mScaleInterpolator;
 
     protected Matrix4f mCurrentTransform;
 
