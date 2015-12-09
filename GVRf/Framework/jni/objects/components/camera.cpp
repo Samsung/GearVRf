@@ -49,7 +49,12 @@ glm::mat4 Camera::getViewMatrix() {
         std::string error = "Camera::getViewMatrix() : camera not attached.";
         throw error;
     }
-    return glm::affineInverse(owner_object()->transform()->getModelMatrix());
+    Transform* const t = owner_object()->transform();
+    if (nullptr == t) {
+        std::string error = "Camera::getViewMatrix() : transform not attached.";
+        throw error;
+    }
+    return glm::affineInverse(t->getModelMatrix());
 }
 
 glm::mat4 Camera::getCenterViewMatrix() {
@@ -58,6 +63,12 @@ glm::mat4 Camera::getCenterViewMatrix() {
         LOGE("%s at %s:%d", error.c_str(), __FILE__, __LINE__);
         throw error;
     }
-    return glm::affineInverse(owner_object()->parent()->transform()->getModelMatrix());
+    Transform* const t = owner_object()->parent()->transform();
+    if (nullptr == t) {
+        std::string error = "Camera::getCenterViewMatrix() : transform not attached.";
+        LOGE("%s at %s:%d", error.c_str(), __FILE__, __LINE__);
+        throw error;
+    }
+    return glm::affineInverse(t->getModelMatrix());
 }
 }

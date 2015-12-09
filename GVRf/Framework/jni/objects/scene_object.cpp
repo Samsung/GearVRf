@@ -156,7 +156,10 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     }
     children_.push_back(child);
     child->parent_ = self;
-    child->transform()->invalidate(false);
+    Transform* const t = child->transform();
+    if (nullptr != t) {
+        t->invalidate(false);
+    }
     dirtyBoundingVolume();
 }
 
@@ -166,7 +169,11 @@ void SceneObject::removeChildObject(SceneObject* child) {
                 children_.end());
         child->parent_ = NULL;
     }
-    child->transform()->invalidate(false);
+
+    Transform* const t = child->transform();
+    if (nullptr != t) {
+        t->invalidate(false);
+    }
     dirtyBoundingVolume();
 }
 
@@ -213,13 +220,21 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
 
     float this_object_bounding_box[6], check_object_bounding_box[6];
 
-    glm::mat4 this_object_model_matrix =
-            this->render_data()->owner_object()->transform()->getModelMatrix();
+    Transform* t = this->render_data()->owner_object()->transform();
+    if (nullptr == t) {
+        LOGE("isColliding: no transform for this scene object");
+        return false;
+    }
+    glm::mat4 this_object_model_matrix = t->getModelMatrix();
     this->render_data()->mesh()->getTransformedBoundingBoxInfo(
             &this_object_model_matrix, this_object_bounding_box);
 
-    glm::mat4 check_object_model_matrix =
-            scene_object->render_data()->owner_object()->transform()->getModelMatrix();
+    t = scene_object->render_data()->owner_object()->transform();
+    if (nullptr == t) {
+        LOGE("isColliding: no transform for target scene object");
+        return false;
+    }
+    glm::mat4 check_object_model_matrix = t->getModelMatrix();
     scene_object->render_data()->mesh()->getTransformedBoundingBoxInfo(
             &check_object_model_matrix, check_object_bounding_box);
 
