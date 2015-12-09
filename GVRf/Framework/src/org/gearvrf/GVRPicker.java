@@ -104,22 +104,26 @@ public class GVRPicker {
      *         corresponding scene objects.
      * 
      */
-    public static final GVREyePointeeHolder[] pickScene(GVRScene scene,
-            float ox, float oy, float oz, float dx, float dy, float dz) {
+    public static final GVREyePointeeHolder[] pickScene(GVRScene scene, float ox, float oy, float oz, float dx,
+            float dy, float dz) {
         sFindObjectsLock.lock();
         try {
-            long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz,
+            final long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz,
                     dx, dy, dz);
-            GVREyePointeeHolder[] eyePointeeHolders = new GVREyePointeeHolder[ptrs.length];
-            GVRContext gvrContext = scene.getGVRContext();
+            final ArrayList<GVREyePointeeHolder> eyePointeeHolders = new ArrayList<GVREyePointeeHolder>(ptrs.length);
+            final GVRContext gvrContext = scene.getGVRContext();
+
             for (int i = 0, length = ptrs.length; i < length; ++i) {
                 Log.d(TAG, "pickScene(): ptrs[%d] = %x", i, ptrs[i]);
-                eyePointeeHolders[i] = GVREyePointeeHolder.lookup(gvrContext,
-                        ptrs[i]);
-                Log.d(TAG, "pickScene(): eyePointeeHolders[%d] = %s", i,
-                        eyePointeeHolders[i]);
+                final GVREyePointeeHolder holder = GVREyePointeeHolder.lookup(gvrContext, ptrs[i]);
+                Log.d(TAG, "pickScene(): eyePointeeHolders[%d] = %s", i, holder);
+                if (null != holder) {
+                    eyePointeeHolders.add(holder);
+                }
             }
-            return eyePointeeHolders;
+
+            GVREyePointeeHolder[] result = new GVREyePointeeHolder[eyePointeeHolders.size()];
+            return eyePointeeHolders.toArray(result);
         } finally {
             sFindObjectsLock.unlock();
         }
@@ -239,20 +243,19 @@ public class GVRPicker {
      * 
      * @since 1.6.6
      */
-    public static final List<GVRPickedObject> findObjects(GVRScene scene,
-            float ox, float oy, float oz, float dx, float dy, float dz) {
+    public static final List<GVRPickedObject> findObjects(GVRScene scene, float ox, float oy, float oz, float dx,
+            float dy, float dz) {
         sFindObjectsLock.lock();
         try {
-            GVRContext gvrContext = scene.getGVRContext();
+            final GVRContext gvrContext = scene.getGVRContext();
 
-            long[] pointers = NativePicker.pickScene(scene.getNative(), ox, oy,
-                    oz, dx, dy, dz);
-            List<GVRPickedObject> result = new ArrayList<GVRPickedObject>(
-                    pointers.length);
-            for (long pointer : pointers) {
-                GVREyePointeeHolder holder = GVREyePointeeHolder.lookup(
-                        gvrContext, pointer);
-                result.add(new GVRPickedObject(holder));
+            final long[] pointers = NativePicker.pickScene(scene.getNative(), ox, oy, oz, dx, dy, dz);
+            final List<GVRPickedObject> result = new ArrayList<GVRPickedObject>(pointers.length);
+            for (final long pointer : pointers) {
+                final GVREyePointeeHolder holder = GVREyePointeeHolder.lookup(gvrContext, pointer);
+                if (null != holder) {
+                    result.add(new GVRPickedObject(holder));
+                }
             }
             return result;
         } finally {
