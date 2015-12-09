@@ -137,20 +137,10 @@ AssimpShader::AssimpShader() :
 
 AssimpShader::~AssimpShader() {
     if (program_list_ != 0) {
-        recycle();
-    }
-}
-
-void AssimpShader::recycle() {
-    if (program_list_ != 0) {
         for (int i = 0; i < AS_TOTAL_GL_PROGRAM_COUNT; i++) {
-            if (program_list_[i] != 0) {
-                delete program_list_[i];
-            }
+            delete program_list_[i];
         }
         delete program_list_;
-        program_list_ = 0;
-        program_ = 0;
     }
 }
 

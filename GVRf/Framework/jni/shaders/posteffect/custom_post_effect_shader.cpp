@@ -49,19 +49,11 @@ CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
 }
 
 CustomPostEffectShader::~CustomPostEffectShader() {
-    if (program_ != 0) {
-        recycle();
-    }
+    delete program_;
 
     if (vaoID_ != 0) {
-    	gl_delete.queueVertexArray(vaoID_);
-    	vaoID_ = 0;
+        gl_delete.queueVertexArray(vaoID_);
     }
-}
-
-void CustomPostEffectShader::recycle() {
-    delete program_;
-    program_ = 0;
 }
 
 void CustomPostEffectShader::addTextureKey(std::string variable_name,

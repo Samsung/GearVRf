@@ -27,18 +27,18 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 class Color;
 class GLProgram;
 class RenderData;
 
-class ErrorShader: public RecyclableObject {
+class ErrorShader: public HybridObject {
 public:
     ErrorShader();
-    ~ErrorShader();
-    void recycle();
+    virtual ~ErrorShader();
+
     void render(const glm::mat4& mvp_matrix, RenderData* render_data);
 
 private:

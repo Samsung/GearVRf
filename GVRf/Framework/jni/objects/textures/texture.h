@@ -21,21 +21,14 @@
 #define TEXTURE_H_
 
 #include "gl/gl_texture.h"
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 
-class Texture: public RecyclableObject {
+class Texture: public HybridObject {
 public:
     virtual ~Texture() {
-        recycle();
-    }
-
-    virtual void recycle() {
-        if (gl_texture_ != 0) {
-            delete gl_texture_;
-            gl_texture_ = 0;
-        }
+        delete gl_texture_;
     }
 
     virtual GLuint getId() const {
@@ -77,8 +70,7 @@ public:
     virtual GLenum getTarget() const = 0;
 
 protected:
-    Texture(GLTexture* gl_texture) :
-            RecyclableObject() {
+    Texture(GLTexture* gl_texture) : HybridObject() {
         gl_texture_ = gl_texture;
     }
 

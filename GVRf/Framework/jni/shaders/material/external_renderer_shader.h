@@ -8,7 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 typedef void (*GVRF_ExternalRenderer)(long data,
                                       const float* bounding_volume, int vcount,
@@ -20,7 +20,7 @@ extern "C" void GVRF_installExternalRenderer(GVRF_ExternalRenderer renderer);
 namespace gvr {
 class RenderData;
 
-class ExternalRendererShader : public RecyclableObject {
+class ExternalRendererShader : public HybridObject {
 public:
     ExternalRendererShader() {}
     void render(const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,

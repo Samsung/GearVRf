@@ -27,18 +27,18 @@
 #include "GLES3/gl3.h"
 #include "glm/glm.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 class GLProgram;
 class RenderTexture;
 class PostEffectData;
 
-class HorizontalFlipPostEffectShader: RecyclableObject {
+class HorizontalFlipPostEffectShader: HybridObject {
 public:
     HorizontalFlipPostEffectShader();
-    ~HorizontalFlipPostEffectShader();
-    void recycle();
+    virtual ~HorizontalFlipPostEffectShader();
+
     void render(RenderTexture* render_texture,
             PostEffectData* post_effect_data,
             std::vector<glm::vec3>& vertices,

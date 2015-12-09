@@ -63,14 +63,7 @@ OESVerticalStereoShader::OESVerticalStereoShader() :
 }
 
 OESVerticalStereoShader::~OESVerticalStereoShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void OESVerticalStereoShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void OESVerticalStereoShader::render(const glm::mat4& mvp_matrix,

@@ -52,18 +52,11 @@ HorizontalFlipPostEffectShader::HorizontalFlipPostEffectShader() :
 }
 
 HorizontalFlipPostEffectShader::~HorizontalFlipPostEffectShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-    if (vaoID_ != 0) {
-    	gl_delete.queueVertexArray(vaoID_);
-    	vaoID_ = 0;
-    }
-}
-
-void HorizontalFlipPostEffectShader::recycle() {
     delete program_;
-    program_ = 0;
+
+    if (vaoID_ != 0) {
+        gl_delete.queueVertexArray(vaoID_);
+    }
 }
 
 void HorizontalFlipPostEffectShader::render(

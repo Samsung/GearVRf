@@ -62,14 +62,7 @@ UnlitVerticalStereoShader::UnlitVerticalStereoShader() :
 }
 
 UnlitVerticalStereoShader::~UnlitVerticalStereoShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void UnlitVerticalStereoShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,

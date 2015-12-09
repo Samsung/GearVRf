@@ -29,18 +29,18 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
 
-class OESShader: public RecyclableObject {
+class OESShader: public HybridObject {
 public:
     OESShader();
-    ~OESShader();
-    void recycle();
+    virtual ~OESShader();
+
     void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
 
 private:

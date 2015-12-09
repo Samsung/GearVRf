@@ -110,13 +110,17 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
         if (mGVRViewManager != null) {
             mGVRViewManager.onPause();
         }
         if (null != mDockEventReceiver) {
             mDockEventReceiver.stop();
         }
+
+        GVRHybridObject.closeAll();
+        NativeGLDelete.processQueues();
+
+        super.onPause();
     }
 
     @Override

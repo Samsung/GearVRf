@@ -59,14 +59,7 @@ OESShader::OESShader() :
 }
 
 OESShader::~OESShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void OESShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material) {

@@ -30,7 +30,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "objects/eye_type.h"
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 
@@ -38,12 +38,12 @@ class GLProgram;
 class RenderData;
 class Material;
 
-class CustomShader: public RecyclableObject {
+class CustomShader: public HybridObject {
 public:
     explicit CustomShader(std::string vertex_shader,
             std::string fragment_shader);
-    ~CustomShader();
-    void recycle();
+    virtual ~CustomShader();
+
     void addTextureKey(std::string variable_name, std::string key);
     void addAttributeFloatKey(std::string variable_name, std::string key);
     void addAttributeVec2Key(std::string variable_name, std::string key);
