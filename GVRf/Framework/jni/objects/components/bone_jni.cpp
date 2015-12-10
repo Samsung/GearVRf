@@ -63,7 +63,7 @@ Java_org_gearvrf_NativeBone_setBoneWeights(JNIEnv * env, jobject clz, jlong ptr,
         jlongArray jArrayBoneWeights) {
     Bone* bone = reinterpret_cast<Bone*>(ptr);
     int arrlen;
-    if (!jArrayBoneWeights && !(arrlen = env->GetArrayLength(jArrayBoneWeights))) {
+    if (!jArrayBoneWeights || !(arrlen = env->GetArrayLength(jArrayBoneWeights))) {
         bone->setBoneWeights(std::vector<BoneWeight*>());
         return;
     }

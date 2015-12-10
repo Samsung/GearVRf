@@ -28,6 +28,8 @@
 
 #include "util/gvr_log.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 namespace gvr {
 
 #define AS_TOTAL_SHADER_STRINGS_COUNT    AS_TOTAL_FEATURE_COUNT + 1
@@ -258,7 +260,8 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
         mesh->generateBoneArrayBuffers();
 
         glm::mat4 finalTransform;
-        for (int i = 0; i < mesh->getVertexBoneData().getNumBones(); ++i) {
+        int nBones = MIN(mesh->getVertexBoneData().getNumBones(), MAX_BONES);
+        for (int i = 0; i < nBones; ++i) {
             char name[64];
             memset(name, 0, sizeof(name));
             snprintf(name, sizeof(name), "u_bone_matrix[%d]", i);

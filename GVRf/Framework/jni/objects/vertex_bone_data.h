@@ -31,7 +31,7 @@
 #include "glm/geometric.hpp"
 #include "util/gvr_log.h"
 
-#define MAX_BONES 100
+#define MAX_BONES 60
 #define BONES_PER_VERTEX 4
 
 namespace gvr {
