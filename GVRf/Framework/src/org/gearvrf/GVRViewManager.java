@@ -27,6 +27,9 @@ import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
+
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRScript.SplashMode;
 import org.gearvrf.animation.GVRAnimation;
@@ -578,7 +581,18 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
 
             try {
-                mScript.onInit(GVRViewManager.this);
+
+                if (mScript.getCurrentPlugin() == null) {
+                    mScript.onInit(GVRViewManager.this);
+                } else {
+                    // get the egl contect here, plugin creation wil happen
+                    // after this, which will give us widget texture to call
+                    // init, otherwise deadlock!!
+                    mScript.setEGLContext(((EGL10) EGLContext.getEGL())
+                            .eglGetCurrentContext());
+                    mScript.getCurrentPlugin().syncNotify();
+                    initWithPlugin();
+                }
             } catch (Throwable t) {
                 t.printStackTrace();
                 mActivity.finish();
@@ -843,5 +857,13 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     GVRRenderBundle getRenderBundle() {
         return mRenderBundle;
+    }
+
+    private void initWithPlugin() throws Throwable {
+        while (!mScript.getCurrentPlugin().isInitialised()) {
+            mScript.getCurrentPlugin().syncWait();
+        }
+        mScript.onInit(GVRViewManager.this);
+
     }
 }
