@@ -16,8 +16,8 @@
 package org.gearvrf;
 
 /**
- * Wrapper for a {@code GL_TEXTURE_EXTERNAL_OES} texture. This is typically used
- * to work with textures that are backed by cameras or video buffers.
+ * This is used in GVRWidget plugin to create GVRTexture handle from texture
+ * generated in shared context.
  */
 public class GVRSharedTexture extends GVRTexture {
     /**

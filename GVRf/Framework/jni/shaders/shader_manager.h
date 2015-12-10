@@ -41,8 +41,11 @@ namespace gvr {
 class ShaderManager: public HybridObject {
 public:
     ShaderManager() :
-            HybridObject(), bounding_box_shader_(), unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(), oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(), cubemap_shader_(), cubemap_reflection_shader_(), texture_shader_(), assimp_shader_(), external_renderer_shader_(), error_shader_(), unlit_fbo_shader_(), latest_custom_shader_id_(
-                    INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
+            HybridObject(), bounding_box_shader_(), unlit_horizontal_stereo_shader_(),
+            unlit_vertical_stereo_shader_(), oes_shader_(), oes_horizontal_stereo_shader_(),
+            oes_vertical_stereo_shader_(), cubemap_shader_(), cubemap_reflection_shader_(),
+            texture_shader_(), assimp_shader_(), external_renderer_shader_(), error_shader_(),
+            unlit_fbo_shader_(), latest_custom_shader_id_(INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
     }
     ~ShaderManager() {
         delete unlit_horizontal_stereo_shader_;
