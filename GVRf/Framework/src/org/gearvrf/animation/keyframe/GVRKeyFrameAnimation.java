@@ -10,6 +10,9 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 
+/**
+ * Represents animation based on a sequence of key frames.
+ */
 public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
     protected String mName;
     protected float mTicksPerSecond;
@@ -22,6 +25,14 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
     protected GVRSceneObject mTarget;
     protected Matrix4f[] mTransforms;
 
+    /**
+     * Constructor.
+     *
+     * @param name The name of the animation.
+     * @param target The target object it influences.
+     * @param durationTicks Duration of the animation in ticks.
+     * @param ticksPerSecond Number of ticks per second.
+     */
     public GVRKeyFrameAnimation(String name, GVRSceneObject target, float durationTicks, float ticksPerSecond) {
     	super(target, durationTicks / ticksPerSecond);
         mName = name;
@@ -77,7 +88,16 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
         return sb.toString();
     }
 
+    /**
+     * Searches for a channel based on the node it affects.
+     *
+     * @param nodeName The name of the node.
+     * @return The ID of the channel.
+     */
     public int findChannel(String nodeName) {
+        if (nodeName == null)
+            return -1;
+
         int i = 0;
         for (GVRAnimationChannel channel : mChannels) {
             if (nodeName != null && nodeName.equals(channel.getNodeName())) {
