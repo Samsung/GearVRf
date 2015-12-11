@@ -501,7 +501,46 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
-        return GVRImporter.getAssimpModel(this, assetRelativeFilename, settings);
+        return GVRImporter.getAssimpModel(this, assetRelativeFilename, settings, false);
+    }
+    
+    /**
+     * Simple, high-level method to load a scene as {@link GVRSceneObject} from
+     * 3D model.
+     * 
+     * @param filename
+     *            A filename, present in the external storage of the device
+     * 
+     * @return A {@link GVRSceneObject} that contains the meshes with textures
+     * 
+     * @throws IOException
+     *             File does not exist or cannot be read
+     *
+     */
+    public GVRSceneObject getAssimpModelFromSDCard(String fileName)
+            throws IOException {
+        return getAssimpModelFromSDCard(fileName,
+                GVRImportSettings.getRecommendedSettings());
+    }
+
+    /**
+     * Simple, high-level method to load a scene as {@link GVRSceneObject} from
+     * 3D model.
+     * 
+     * @param assetRelativeFilename
+     *            A filename, present in the external storage of the device
+     * 
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     * @return A {@link GVRSceneObject} that contains the meshes with textures
+     * 
+     * @throws IOException
+     *             File does not exist or cannot be read
+     *
+     */
+    public GVRSceneObject getAssimpModelFromSDCard(String fileName,
+            EnumSet<GVRImportSettings> settings) throws IOException {
+        return GVRImporter.getAssimpModel(this, fileName, settings, true);
     }
 
     public GVRSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
