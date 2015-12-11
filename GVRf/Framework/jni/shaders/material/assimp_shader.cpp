@@ -32,7 +32,9 @@
 
 namespace gvr {
 
-#define AS_TOTAL_SHADER_STRINGS_COUNT    AS_TOTAL_FEATURE_COUNT + 1
+#define AS_TOTAL_SHADER_STRINGS_COUNT    AS_TOTAL_FEATURE_COUNT + 2
+
+static const char GLSL_VERSION[] = "#version 300 es \n";
 
 static const char DIFFUSE_TEXTURE[] = "#define AS_DIFFUSE_TEXTURE\n";
 static const char NO_DIFFUSE_TEXTURE[] = "#undef AS_DIFFUSE_TEXTURE\n";
@@ -47,21 +49,19 @@ static const char NO_SPECULAR_TEXTURE[] = "#undef AS_SPECULAR_TEXTURE\n";
 #define STR(x) STR_(x)
 
 static const char VERTEX_SHADER[] =
-                "precision highp float;\n"
-                "\n"
-                "attribute vec4 a_position;\n"
+                "in vec4 a_position;\n"
                 "uniform mat4 u_mvp;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
-                "attribute vec4 a_tex_coord;\n"
-                "varying vec2 v_tex_coord;\n"
+                "in vec4 a_tex_coord;\n"
+                "out vec2 v_tex_coord;\n"
                 "#endif\n"
                 "\n"
 
                 // Skinning
                 "#ifdef AS_SKINNING\n"
-                "attribute vec4 a_bone_indices;\n"
-                "attribute vec4 a_bone_weights;\n"
+                "in ivec4 a_bone_indices;\n"
+                "in vec4 a_bone_weights;\n"
                 "const int MAX_BONES = " STR(MAX_BONES) ";\n"
                 "uniform mat4 u_bone_matrix[MAX_BONES];\n"
                 "#endif\n"
@@ -74,7 +74,7 @@ static const char VERTEX_SHADER[] =
 
                 "#ifdef AS_SKINNING\n"
                 "  vec4 weights = a_bone_weights; \n"
-                "  ivec4 bone_idx = ivec4(a_bone_indices); \n"
+                "  ivec4 bone_idx = a_bone_indices; \n"
                 "  mat4 bone = u_bone_matrix[bone_idx[0]] * weights[0]; \n"
                 "  bone += u_bone_matrix[bone_idx[1]] * weights[1]; \n"
                 "  bone += u_bone_matrix[bone_idx[2]] * weights[2]; \n"
@@ -91,7 +91,7 @@ static const char FRAGMENT_SHADER[] =
                 "precision highp float;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
-                "varying vec2 v_tex_coord;\n"
+                "in vec2 v_tex_coord;\n"
                 "uniform sampler2D u_texture;\n"
                 "#else\n"
                 "uniform vec4 u_diffuse_color;\n"
@@ -101,14 +101,15 @@ static const char FRAGMENT_SHADER[] =
                 "uniform vec3 u_color;\n"
                 "uniform float u_opacity;\n"
                 "\n"
+                "out vec4 Color;\n"
                 "void main()\n"
                 "{\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
                 "  vec4 color;\n"
-                "  color = texture2D(u_texture, v_tex_coord);\n"
-                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+                "  color = texture(u_texture, v_tex_coord);\n"
+                "  Color = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
                 "#else\n"
-                "  gl_FragColor = (u_diffuse_color * u_opacity) + u_ambient_color;\n"
+                "  Color = (u_diffuse_color * u_opacity) + u_ambient_color;\n"
                 "#endif\n"
                 "}\n";
 
@@ -125,6 +126,12 @@ AssimpShader::AssimpShader() :
 
     for (int i = 0; i < AS_TOTAL_GL_PROGRAM_COUNT; i++) {
         int counter = 0;
+
+        vertex_shader_strings[counter] =  GLSL_VERSION;
+        vertex_shader_string_lengths[counter] = (GLint) strlen(GLSL_VERSION);
+        fragment_shader_strings[counter] = GLSL_VERSION;
+        fragment_shader_string_lengths[counter] = (GLint) strlen(GLSL_VERSION);
+        counter++;
 
         // TODO: remove duplicate code
         if (ISSET(i, AS_DIFFUSE_TEXTURE)) {
