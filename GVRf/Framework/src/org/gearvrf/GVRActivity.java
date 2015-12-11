@@ -15,21 +15,16 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.DockEventReceiver;
-import org.gearvrf.utility.VrAppSettings;
-
 import android.app.Activity;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.oculus.vrappframework.VrActivity;
 
@@ -137,10 +132,15 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (mGVRViewManager != null) {
             mGVRViewManager.onDestroy();
         }
+        destroy(nativePointer);
+
+        GVRHybridObject.closeAll();
+        NativeGLDelete.processQueues();
+
+        super.onDestroy();
     }
 
     /**

@@ -93,8 +93,9 @@ public abstract class GVRHybridObject implements Closeable {
         mGVRContext = gvrContext;
         mNativePointer = nativePointer;
 
-        sReferenceSet
-                .add(new GVRReference(this, nativePointer, cleanupHandlers));
+        synchronized (sReferenceSet) {
+            sReferenceSet.add(new GVRReference(this, nativePointer, cleanupHandlers));
+        }
     }
 
     /*
@@ -304,16 +305,24 @@ public abstract class GVRHybridObject implements Closeable {
         }
 
         private void close() {
-            if (mNativePointer != 0) {
-                if (mCleanupHandlers != null) {
-                    for (NativeCleanupHandler handler : mCleanupHandlers) {
-                        handler.nativeCleanup(mNativePointer);
-                    }
-                }
-                NativeHybridObject.delete(mNativePointer);
-            }
+            close(true);
+        }
 
-            sReferenceSet.remove(this);
+        private void close(boolean removeFromSet) {
+            synchronized (sReferenceSet) {
+                if (mNativePointer != 0) {
+                    if (mCleanupHandlers != null) {
+                        for (NativeCleanupHandler handler : mCleanupHandlers) {
+                            handler.nativeCleanup(mNativePointer);
+                        }
+                    }
+                    NativeHybridObject.delete(mNativePointer);
+                }
+
+                if (removeFromSet) {
+                    sReferenceSet.remove(this);
+                }
+            }
         }
     }
 
@@ -355,11 +364,13 @@ public abstract class GVRHybridObject implements Closeable {
      */
     @Override
     public final void close() throws IOException {
-        if (mNativePointer != 0L) {
-            GVRReference reference = findReference(mNativePointer);
-            if (reference != null) {
-                reference.close();
-                mNativePointer = 0L;
+        synchronized (sReferenceSet) {
+            if (mNativePointer != 0L) {
+                GVRReference reference = findReference(mNativePointer);
+                if (reference != null) {
+                    reference.close();
+                    mNativePointer = 0L;
+                }
             }
         }
     }
@@ -378,6 +389,16 @@ public abstract class GVRHybridObject implements Closeable {
         }
         // else
         return null;
+    }
+
+    static void closeAll() {
+        synchronized (sReferenceSet) {
+            final boolean doNotRemoveFromSet = false;
+            for (final GVRReference r : sReferenceSet) {
+                r.close(doNotRemoveFromSet);
+            }
+            sReferenceSet.clear();
+        }
     }
 }
 
