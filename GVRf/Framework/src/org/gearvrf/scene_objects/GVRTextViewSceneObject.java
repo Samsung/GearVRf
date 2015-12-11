@@ -38,6 +38,7 @@ import android.webkit.WebView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+@Deprecated
 public class GVRTextViewSceneObject extends GVRSceneObject {
     private static final int HIGH_REFRESH_INTERVAL = 10; // frames
     private static final int MEDIUM_REFRESH_INTERVAL = 20;
