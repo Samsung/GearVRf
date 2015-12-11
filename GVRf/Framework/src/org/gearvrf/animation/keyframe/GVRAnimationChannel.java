@@ -1,5 +1,6 @@
 package org.gearvrf.animation.keyframe;
 
+import org.gearvrf.BuildConfig;
 import org.gearvrf.PrettyPrint;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -20,6 +21,7 @@ import org.joml.Vector3f;
  * scaling, rotation, translation.<p>
  */
 public final class GVRAnimationChannel implements PrettyPrint {
+    private static final String TAG = GVRAnimationChannel.class.getSimpleName();
     protected static interface ValueInterpolator<T> {
         T interpolate(Object begin, Object end, float factor);
     }
@@ -80,7 +82,11 @@ public final class GVRAnimationChannel implements PrettyPrint {
                     return lastFrameValue;
                 } else {
                     // Shouldn't happen
-                    throw new RuntimeException("Interpolation failed");
+                    if (BuildConfig.DEBUG) {
+                        throw new RuntimeException("Interpolation failed");
+                    } else {
+                        return firstFrameValue;
+                    }
                 }
             }
         }
@@ -104,9 +110,13 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 }
             }
 
+            if (time < keys[0].getTime() || time >= keys[keys.length - 1].getTime()) {
+                return lastKeyIndex = -1;
+            }
+
             // Binary search for the interval
             int low = 0, high = keys.length - 2;
-            // invariant: [low, high) contains time if time can be found
+            // invariant: [low, high) contains time
             // post-condition: |high - low| <= 1, only need to check [low, low + 1)
             while (high - low > 1) {
                 int mid = (low + high) / 2;
@@ -124,6 +134,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 return lastKeyIndex = low;
             }
 
+            Log.v(TAG, "Warning: interpolation failed at time " + time);
             return lastKeyIndex = -1;
         }
     }
