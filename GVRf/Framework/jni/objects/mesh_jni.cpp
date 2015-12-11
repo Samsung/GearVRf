@@ -385,16 +385,6 @@ Java_org_gearvrf_NativeMesh_getBoundingBox(JNIEnv * env,
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_animate(JNIEnv * env,
-        jobject obj, jlong jmesh, jfloat jTimeInSeconds) {
-    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-
-    float timeInSeconds = jTimeInSeconds;
-
-    mesh->animate(timeInSeconds);
-}
-
-JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env, jobject obj, jlong jmesh,
         jlongArray jBonePtrArray) {
 	Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
