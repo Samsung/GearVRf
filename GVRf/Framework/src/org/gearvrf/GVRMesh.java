@@ -339,6 +339,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
                 }
             }
         }
+        if (getVertexBoneData() != null) {
+            getVertexBoneData().normalizeWeights();
+        }
     }
 
     /**
@@ -354,7 +357,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     public void prettyPrint(StringBuffer sb, int indent) {
         sb.append(getVertices() == null ? 0 : Integer.toString(getVertices().length / 3));
         sb.append(" vertices, ");
-        sb.append(getTriangles() == null ? 0 : Integer.toString(getTriangles().length / 3));
+        sb.append(getIndices() == null ? 0 : Integer.toString(getIndices().length / 3));
         sb.append(" triangles, ");
         sb.append(getTexCoords() == null ? 0 : Integer.toString(getTexCoords().length / 2));
         sb.append(" tex-coords, ");

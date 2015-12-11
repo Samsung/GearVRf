@@ -2,6 +2,7 @@ package org.gearvrf.animation.keyframe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,6 +63,7 @@ public class GVRSkinningController {
         boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
 
         animRoot = createAnimationTree(sceneRoot, null);
+        pruneTree(animRoot);
     }
 
     protected SceneAnimNode createAnimationTree(GVRSceneObject node, SceneAnimNode parent) {
@@ -82,7 +84,7 @@ public class GVRSkinningController {
             internalNode.channelId = animation.findChannel(node.getName());
         }
 
-        setupBone(node);
+        setupBone(node, internalNode);
 
         for (GVRSceneObject child : node.getChildren()) {
             SceneAnimNode animChild = createAnimationTree(child, internalNode);
@@ -92,13 +94,10 @@ public class GVRSkinningController {
         return internalNode;
     }
 
-    protected void setupBone(GVRSceneObject node) {
+    protected void setupBone(GVRSceneObject node, SceneAnimNode internalNode) {
         GVRMesh mesh;
         if (node.getRenderData() != null && (mesh = node.getRenderData().getMesh()) != null) {
             Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertices().length / 3);
-
-            GVRVertexBoneData vertexBoneData = mesh.getVertexBoneData();
-
             for (GVRBone bone : mesh.getBones()) {
                 bone.setSceneObject(node);
 
@@ -116,9 +115,6 @@ public class GVRSkinningController {
                 }
                 boneList.add(bone);
             }
-
-            // Normalize vertex
-            vertexBoneData.normalizeWeights();
         }
     }
 
@@ -145,9 +141,10 @@ public class GVRSkinningController {
         for (Entry<GVRSceneObject, List<GVRBone>> ent : boneMap.entrySet()) {
             // Transform all bone splits (a bone can be split into multiple instances if they influence
             // different meshes)
+            SceneAnimNode node = nodeByName.get(ent.getKey().getName());
             for (GVRBone bone : ent.getValue()) {
-                updateBoneMatrices(bone);
-            }   
+                updateBoneMatrices(bone, node);
+            }
         }
     }
 
@@ -166,22 +163,34 @@ public class GVRSkinningController {
         }
     }
 
-    protected void updateBoneMatrices(GVRBone bone) {
+    protected void updateBoneMatrices(GVRBone bone, SceneAnimNode node) {
         Matrix4f finalMatrix = new Matrix4f().set(bone.getOffsetMatrix());
 
-        getGlobalTransform(bone.getName()).mul(finalMatrix, finalMatrix);
+        node.globalTransform.mul(finalMatrix, finalMatrix);
 
-        Matrix4f globalInverse = new Matrix4f().set(getGlobalTransform(bone.getSceneObject())).invert();
+        Matrix4f globalInverse = new Matrix4f().set(bone.getSceneObject().getTransform().getModelMatrix4f()).invert();
         globalInverse.mul(finalMatrix, finalMatrix);
 
         bone.setFinalTransformMatrix(finalMatrix);
     }
 
-    private Matrix4f getGlobalTransform(String name) {
-        return nodeByName.get(name).globalTransform;
-    }
+    /* Returns true if the subtree should be kept */
+    protected boolean pruneTree(SceneAnimNode node) {
+        boolean keep = node.channelId != -1;
+        if (keep) {
+            return keep;
+        }
 
-    private Matrix4f getGlobalTransform(GVRSceneObject sceneObject) {
-        return getGlobalTransform(sceneObject.getName());
+        Iterator<SceneAnimNode> iter = node.children.iterator();
+        while (iter.hasNext()) {
+            SceneAnimNode child = iter.next();
+            boolean keepChild = pruneTree(child);
+            keep |= keepChild;
+            if (!keepChild) {
+                iter.remove();
+            }
+        }
+
+        return keep;
     }
 }
