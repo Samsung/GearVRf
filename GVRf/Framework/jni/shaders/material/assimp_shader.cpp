@@ -262,6 +262,10 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     if (ISSET(feature_set, AS_SKINNING)) {
         a_bone_indices_ = glGetAttribLocation(program_->id(), "a_bone_indices");
         a_bone_weights_ = glGetAttribLocation(program_->id(), "a_bone_weights");
+        u_bone_matrices_ = glGetUniformLocation(program_->id(), "u_bone_matrix[0]");
+        if (u_bone_matrices_ == -1) {
+            LOGD("Warning! Unable to get the location of uniform u_bone_matrix[0]\n");
+        }
 
         mesh->setBoneLoc(a_bone_indices_, a_bone_weights_);
         mesh->generateBoneArrayBuffers();
@@ -269,17 +273,8 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
         glm::mat4 finalTransform;
         int nBones = MIN(mesh->getVertexBoneData().getNumBones(), MAX_BONES);
         for (int i = 0; i < nBones; ++i) {
-            char name[64];
-            memset(name, 0, sizeof(name));
-            snprintf(name, sizeof(name), "u_bone_matrix[%d]", i);
-
-            int32_t loc = glGetUniformLocation(program_->id(), name);
-            if (loc == -1) {
-                LOGD("Warning! Unable to get the location of uniform '%s'\n", name);
-            }
-
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
-            glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(finalTransform));
+            glUniformMatrix4fv(u_bone_matrices_ + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
     }
 

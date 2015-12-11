@@ -83,6 +83,7 @@ private:
     // Bones
     GLuint a_bone_indices_;
     GLuint a_bone_weights_;
+    GLuint u_bone_matrices_;
 };
 
 }
