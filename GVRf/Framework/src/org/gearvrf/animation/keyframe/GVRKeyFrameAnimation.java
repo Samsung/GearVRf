@@ -94,7 +94,7 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
             return;
         }
 
-        if (mNodeAnimationController == null && mSkinningController == null) {
+        if (mNodeAnimationController == null || mSkinningController == null) {
             throw new RuntimeException("Animation is not prepared. Call prepare() before starting.");
         }
 

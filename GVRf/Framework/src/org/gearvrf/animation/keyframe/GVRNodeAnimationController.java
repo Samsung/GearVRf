@@ -44,16 +44,21 @@ public class GVRNodeAnimationController {
         }
     }
 
-    protected void scanTree(GVRSceneObject node) {
+    /* Returns true if subtree contains renderables */
+    protected boolean scanTree(GVRSceneObject node) {
+        boolean containsRenderable = node.getRenderData() != null;
+
+        for (GVRSceneObject child : node.getChildren()) {
+            containsRenderable |= scanTree(child);
+        }
+
         // Find channel Id
         int channelId = animation.findChannel(node.getName());
-        if (channelId != -1) {
+        if (channelId != -1 && containsRenderable) {
             animatedNodes.add(new AnimationItem(node, channelId));
         }
 
-        for (GVRSceneObject child : node.getChildren()) {
-            scanTree(child);
-        }
+        return containsRenderable;
     }
 
     /**
