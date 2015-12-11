@@ -18,6 +18,7 @@ ovr_sdk_mobile/
 /////////////////////////
 // Ignored Files        /
 /////////////////////////
+.DS_Store
 lint.xml
 oculussig_*
 proguard-project.txt
