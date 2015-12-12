@@ -568,7 +568,8 @@ public abstract class GVRContext {
      *             File does not exist or cannot be read
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return GVRImporter.loadJassimpModelFromSD(this, externalFile, settings);
+        return GVRImporter.loadJassimpModel(this, externalFile,
+                GVRResourceVolume.VolumeType.ANDROID_SDCARD, settings);
     }
 
     /**
@@ -612,7 +613,47 @@ public abstract class GVRContext {
      *
      */
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return GVRImporter.loadJassimpModel(this, assetFile, settings);
+        return GVRImporter.loadJassimpModel(this, assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings);
+    }
+
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model from a URL.
+     *
+     * @param urlString
+     *            A URL string pointing to where the model file is located.
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     *
+     */
+    public GVRSceneObject loadModelFromURL(String urlString) throws IOException {
+        return loadModelFromURL(urlString, GVRImportSettings.getRecommendedSettings());
+    }
+
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model from a URL.
+     *
+     * @param urlString
+     *            A URL string pointing to where the model file is located.
+     *
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     *
+     */
+    public GVRSceneObject loadModelFromURL(String urlString, EnumSet<GVRImportSettings> settings) throws IOException {
+        return GVRImporter.loadJassimpModel(this, urlString,
+                GVRResourceVolume.VolumeType.NETWORK, settings);
     }
 
     /**

@@ -29,7 +29,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
-import org.gearvrf.utility.FileExtension;
+import org.gearvrf.utility.FileNameUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -96,7 +96,7 @@ abstract class AsyncCubemapTexture {
                 ZipEntry zipEntry = null;
                 while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                     String imageName = zipEntry.getName();
-                    String imageBaseName = FileExtension.getBaseName(imageName);
+                    String imageBaseName = FileNameUtils.getBaseName(imageName);
                     Integer imageIndex = faceIndexMap.get(imageBaseName);
                     if (imageIndex == null) {
                         throw new IllegalArgumentException("Name of image ("

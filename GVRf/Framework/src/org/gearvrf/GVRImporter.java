@@ -15,13 +15,15 @@
 
 package org.gearvrf;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.util.EnumSet;
 
-import android.content.res.AssetManager;
-
-import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.jassimp.AiColor;
@@ -34,7 +36,12 @@ import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.Log;
+
+import android.content.Context;
+import android.content.res.AssetManager;
+import android.os.Environment;
 
 /**
  * {@link GVRImporter} provides methods for importing 3D models and making them
@@ -117,27 +124,97 @@ final class GVRImporter {
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
-    static GVRModelSceneObject loadJassimpModelFromSD(final GVRContext context, String externalFile,
+    static GVRModelSceneObject loadJassimpModel(final GVRContext context, String filePath,
+            GVRResourceVolume.VolumeType volumeType,
             EnumSet<GVRImportSettings> settings) throws IOException {
+
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
-        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
-                GVRJassimpAdapter.get().toJassimpSettings(settings));
-        if (assimpScene == null) {
-            throw new IOException("Cannot load a model from SD card");
+        org.gearvrf.jassimp2.AiScene assimpScene = null;
+
+        switch (volumeType) {
+        case ANDROID_ASSETS:
+            assimpScene = Jassimp.importAssetFile(filePath,
+                    GVRJassimpAdapter.get().toJassimpSettings(settings),
+                    context.getContext().getAssets());
+            break;
+
+        case ANDROID_SDCARD:
+            String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            assimpScene = Jassimp.importFile(sdPath + File.separator + filePath,
+                    GVRJassimpAdapter.get().toJassimpSettings(settings));
+            break;
+
+        case LINUX_FILESYSTEM:
+            assimpScene = Jassimp.importFile(filePath,
+                    GVRJassimpAdapter.get().toJassimpSettings(settings));
+            break;
+
+        case NETWORK:
+            // filePath is a URL in this case
+            File tmpFile = downloadFile(context.getActivity(), filePath);
+            if (tmpFile != null) {
+                assimpScene = Jassimp.importFile(tmpFile.getAbsolutePath(),
+                        GVRJassimpAdapter.get().toJassimpSettings(settings));
+                tmpFile.delete();
+            }
+            break;
         }
-        return new GVRJassimpSceneObject(context, assimpScene);
+
+        if (assimpScene == null) {
+            throw new IOException("Cannot load a model from path " + filePath +
+                    " from " + volumeType);
+        }
+
+        return new GVRJassimpSceneObject(context, assimpScene,
+                new GVRResourceVolume(context, volumeType, FileNameUtils.getParentDirectory(filePath)));
     }
 
-    static GVRModelSceneObject loadJassimpModel(final GVRContext context, String assetFile,
-            EnumSet<GVRImportSettings> settings) throws IOException {
-        Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
-        org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importAssetFile(assetFile,
-                GVRJassimpAdapter.get().toJassimpSettings(settings),
-                context.getContext().getAssets());
-        if (assimpScene == null) {
-            throw new IOException("Cannot load a model from android assets");
+    private static File downloadFile(Context context, String urlString) {
+        URL url = null;
+        try {
+            url = new URL(urlString);
+        } catch (IOException e) {
+            Log.e(TAG, "URL error: ", urlString);
+            return null;
         }
-        return new GVRJassimpSceneObject(context, assimpScene);
+
+        String directoryPath = context.getFilesDir().getAbsolutePath();
+        String outputFilename = directoryPath + File.separator + FileNameUtils.getURLFilename(urlString);
+
+        InputStream input = null;
+        // Output stream to write file
+        OutputStream output = null;
+
+        try {
+            input = new BufferedInputStream(url.openStream(), 8192);
+            output = new FileOutputStream(outputFilename);
+
+            byte data[] = new byte[1024];
+            int count;
+            while ((count = input.read(data)) != -1) {
+                // writing data to file
+                output.write(data, 0, count);
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to download: ", urlString);
+            return null;
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                }
+            }
+
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        return new File(outputFilename);
     }
 
     static GVRSceneObject getAssimpModel(final GVRContext context, String assetRelativeFilename,
