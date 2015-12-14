@@ -508,7 +508,7 @@ public abstract class GVRContext {
      * Simple, high-level method to load a scene as {@link GVRSceneObject} from
      * 3D model.
      * 
-     * @param filename
+     * @param fileName
      *            A filename, present in the external storage of the device
      * 
      * @return A {@link GVRSceneObject} that contains the meshes with textures
@@ -527,7 +527,7 @@ public abstract class GVRContext {
      * Simple, high-level method to load a scene as {@link GVRSceneObject} from
      * 3D model.
      * 
-     * @param assetRelativeFilename
+     * @param fileName
      *            A filename, present in the external storage of the device
      * 
      * @param settings
