@@ -57,6 +57,13 @@ public class GVRResourceVolume {
      * @throws IOException
      */
     public GVRAndroidResource openResource(String filePath) throws IOException {
+        // Error tolerance: Remove initial '/' introduced by file::///filename
+        // In this case, the path is interpreted as relative to defaultPath, which
+        // is the root of the filesystem.
+        if (filePath.startsWith(File.separator)) {
+            filePath = filePath.substring(File.separator.length());
+        }
+
         switch (volumeType) {
         case ANDROID_ASSETS:
             return new GVRAndroidResource(gvrContext, getFullPath(defaultPath, filePath));
