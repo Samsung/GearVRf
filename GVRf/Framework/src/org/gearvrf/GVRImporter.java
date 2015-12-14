@@ -148,11 +148,7 @@ final class GVRImporter {
         if (loadFromSDCard) {
             String directoryPath = Environment.getExternalStorageDirectory().getPath();
 
-            System.out.println("Directory Path: " + directoryPath);
-
             String filePath = directoryPath + "/" + assetRelativeFilename;
-
-            System.out.println("File Path: " + filePath);
 
             File file = new File(filePath);
 
@@ -170,13 +166,8 @@ final class GVRImporter {
 
         // Recurse through the entire hierarchy to attache all the meshes as
         // Scene Object
-        if (loadFromSDCard) {
-            recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, wholeSceneObject, rootNode,
-                    sWrapperProvider, true);
-        } else {
-            recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, wholeSceneObject, rootNode,
-                    sWrapperProvider, false);
-        }
+        recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, wholeSceneObject, rootNode, sWrapperProvider,
+                loadFromSDCard);
 
         return wholeSceneObject;
     }
@@ -216,26 +207,15 @@ final class GVRImporter {
             } else if (node.getNumMeshes() == 1) {
                 // add the scene object to the scene graph
                 GVRSceneObject sceneObject;
-                if (loadFromSDCard) {
-                    sceneObject = createSceneObject(context, assimpImporter, assetRelativeFilename, node, 0,
-                            wrapperProvider, true);
-                } else {
-                    sceneObject = createSceneObject(context, assimpImporter, assetRelativeFilename, node, 0,
-                            wrapperProvider, false);
-                }
-
+                sceneObject = createSceneObject(context, assimpImporter, assetRelativeFilename, node, 0,
+                        wrapperProvider, loadFromSDCard);
                 parentSceneObject.addChildObject(sceneObject);
                 parentSceneObject = sceneObject;
             } else {
                 for (int i = 0; i < node.getNumMeshes(); i++) {
                     GVRSceneObject sceneObject;
-                    if (loadFromSDCard) {
-                        sceneObject = createSceneObject(context, assimpImporter, assetRelativeFilename, node, i,
-                                wrapperProvider, true);
-                    } else {
-                        sceneObject = createSceneObject(context, assimpImporter, assetRelativeFilename, node, i,
-                                wrapperProvider, false);
-                    }
+                    sceneObject = createSceneObject(context, assimpImporter, assetRelativeFilename, node, i,
+                            wrapperProvider, loadFromSDCard);
                     newParentSceneObject.addChildObject(sceneObject);
                 }
                 parentSceneObject.addChildObject(newParentSceneObject);
@@ -248,14 +228,8 @@ final class GVRImporter {
             }
 
             for (int i = 0; i < node.getNumChildren(); i++) {
-
-                if (loadFromSDCard) {
-                    recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, parentSceneObject,
-                            node.getChildren().get(i), wrapperProvider, true);
-                } else {
-                    recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, parentSceneObject,
-                            node.getChildren().get(i), wrapperProvider, false);
-                }
+                recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, parentSceneObject,
+                        node.getChildren().get(i), wrapperProvider, loadFromSDCard);
             }
         } catch (Exception e) {
             // Error while recursing the Scene Graph
@@ -292,12 +266,8 @@ final class GVRImporter {
             String assetRelativeFilename, AiNode node, int index, GVROldWrapperProvider wrapperProvider,
             boolean loadFromSDCard) throws IOException {
 
-        System.out.println("Inside CreateSceneObject");
-
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
                 context.getNodeMesh(assimpImporter, node.getName(), index));
-
-        System.out.println("Node Name: " + node.getName());
 
         AiMaterial material = getMeshMaterial(assimpImporter, node.getName(), index);
 
@@ -333,28 +303,18 @@ final class GVRImporter {
         /* Diffuse Texture */
         final String texDiffuseFileName = material.getTextureFile(AiTextureType.DIFFUSE, 0);
 
-        System.out.println("Texture File Name: " + texDiffuseFileName);
-
-        if (loadFromSDCard) {
-            if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+        if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+            if (loadFromSDCard) {
                 assimpFeatureSet = GVRShaderType.Assimp.setBit(assimpFeatureSet,
                         GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
-
                 String directoryPath = Environment.getExternalStorageDirectory().getPath();
                 String filePath = directoryPath + "/" + texDiffuseFileName;
-
                 File textureFile = new File(filePath);
-
-                System.out.println("Texture File Path: " + filePath);
-
                 Future<GVRTexture> futureDiffuseTexture = context
                         .loadFutureTexture(new GVRAndroidResource(textureFile));
-                System.out.println("Loaded Future Texture");
                 meshMaterial.setMainTexture(futureDiffuseTexture);
                 meshMaterial.setShaderFeatureSet(assimpFeatureSet);
-            }
-        } else {
-            if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
+            } else {
                 context.loadTexture(new TextureCallback() {
                     @Override
                     public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
