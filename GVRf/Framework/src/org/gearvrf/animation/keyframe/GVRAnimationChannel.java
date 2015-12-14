@@ -1,6 +1,5 @@
 package org.gearvrf.animation.keyframe;
 
-import org.gearvrf.BuildConfig;
 import org.gearvrf.PrettyPrint;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -82,11 +81,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
                     return lastFrameValue;
                 } else {
                     // Shouldn't happen
-                    if (BuildConfig.DEBUG) {
-                        throw new RuntimeException("Interpolation failed");
-                    } else {
-                        return firstFrameValue;
-                    }
+                    return lastFrameValue;
                 }
             }
         }
@@ -110,14 +105,11 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 }
             }
 
-            if (time < keys[0].getTime() || time >= keys[keys.length - 1].getTime()) {
-                return lastKeyIndex = -1;
-            }
-
             // Binary search for the interval
+            // Each of the index i represents an interval I(i) = [time(i), time(i + 1)).
             int low = 0, high = keys.length - 2;
-            // invariant: [low, high) contains time
-            // post-condition: |high - low| <= 1, only need to check [low, low + 1)
+            // invariant: I(low)...I(high) contains time if time can be found
+            // post-condition: |high - low| <= 1, only need to check I(low) and I(low + 1)
             while (high - low > 1) {
                 int mid = (low + high) / 2;
                 if (time < keys[mid].getTime()) {
@@ -125,13 +117,18 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 } else if (time >= keys[mid + 1].getTime()) {
                     low = mid + 1;
                 } else {
-                    // time in [mid, mid + 1) by definition
+                    // time in I(mid) by definition
                     return lastKeyIndex = mid;
                 }
             }
 
             if (keys[low].getTime() <= time && time < keys[low + 1].getTime()) {
                 return lastKeyIndex = low;
+            }
+
+            if (low + 2 < keys.length &&
+                    keys[low + 1].getTime() <= time && time < keys[low + 2].getTime()) {
+                return lastKeyIndex = low + 1;
             }
 
             Log.v(TAG, "Warning: interpolation failed at time " + time);
