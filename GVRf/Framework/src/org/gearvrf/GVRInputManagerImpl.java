@@ -1,0 +1,129 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.gearvrf;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.gearvrf.io.CursorControllerListener;
+import org.gearvrf.io.GVRInputManager;
+
+/**
+ * 
+ * The input received from the {@link GVRCursorController} is dispatched across
+ * the attached scene graph to activate the related sensors in the graph.
+ * 
+ * The {@link GVRBaseSensor} nodes provide the app with the {@link SensorEvent}s
+ * generated as a result of the processing done by the
+ * {@link GVRInputManagerImpl}.
+ * 
+ */
+class GVRInputManagerImpl extends GVRInputManager {
+    private static final String TAG = GVRInputManagerImpl.class.getSimpleName();
+    private final SensorManager sensorManager;
+    private List<CursorControllerListener> listeners;
+    private GVRScene scene;
+    private List<GVRCursorController> controllers;
+
+    GVRInputManagerImpl(GVRContext gvrContext) {
+        super(gvrContext);
+        sensorManager = new SensorManager();
+
+        controllers = new ArrayList<GVRCursorController>();
+        listeners = new ArrayList<CursorControllerListener>();
+
+        for (GVRCursorController controller : super.getCursorControllers()) {
+            addGVRCursorController(controller);
+        }
+        gvrContext.registerDrawFrameListener(drawFrameListener);
+    }
+
+    @Override
+    public void addCursorControllerListener(CursorControllerListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeCursorControllerListener(
+            CursorControllerListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    @Override
+    public void addGVRCursorController(GVRCursorController controller) {
+        controllers.add(controller);
+        synchronized (listeners) {
+            for (CursorControllerListener listener : listeners) {
+                listener.onGVRCursorControllerAdded(controller);
+            }
+        }
+    }
+
+    @Override
+    public void removeGVRCursorController(GVRCursorController controller) {
+        controllers.remove(controller);
+        synchronized (listeners) {
+            for (CursorControllerListener listener : listeners) {
+                listener.onGVRCursorControllerRemoved(controller);
+            }
+        }
+    }
+
+    /**
+     * This method sets a new scene for the {@link GVRInputManagerImpl}
+     * 
+     * @param scene
+     * 
+     */
+    void setScene(GVRScene scene) {
+        this.scene = scene;
+    }
+
+    @Override
+    protected void close() {
+        super.close();
+        controllers.clear();
+        sensorManager.clear();
+    }
+
+    private GVRDrawFrameListener drawFrameListener = new GVRDrawFrameListener() {
+        @Override
+        public void onDrawFrame(float frameTime) {
+            for (GVRCursorController controller : controllers) {
+                if (controller.update()) {
+                    sensorManager.processPick(scene, controller);
+                }
+            }
+        }
+    };
+
+    void addSensor(GVRBaseSensor sensor) {
+        sensorManager.addSensor(sensor);
+    }
+
+    void removeSensor(GVRBaseSensor sensor) {
+        sensorManager.removeSensor(sensor);
+    }
+
+    @Override
+    public List<GVRCursorController> getCursorControllers() {
+        return controllers;
+    }
+}

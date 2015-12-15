@@ -30,6 +30,8 @@
 #include "objects/scene_object.h"
 #include "objects/components/camera_rig.h"
 #include "objects/components/eye_pointee_holder.h"
+#include "objects/components/render_data.h"
+#include "objects/mesh_eye_pointee.h"
 
 namespace gvr {
 
@@ -99,4 +101,20 @@ float Picker::pickSceneObject(const SceneObject* scene_object,
 
     return std::numeric_limits<float>::infinity();
 }
+
+glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
+        const SceneObject* scene_object, float ox, float oy, float oz, float dx,
+        float dy, float dz) {
+    glm::mat4 model_matrix = scene_object->transform()->getModelMatrix();
+    Mesh* mesh = scene_object->render_data()->mesh()->getBoundingBox();
+    if (mesh != 0) {
+        EyePointData data = MeshEyePointee::isPointed(mesh, model_matrix, ox,
+                oy, oz, dx, dy, dz);
+        if (data.pointed()) {
+            return data.hit();
+        }
+    }
+    return glm::vec3(std::numeric_limits<float>::infinity());
+}
+
 }

@@ -31,6 +31,7 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
+import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
@@ -1799,6 +1800,15 @@ public abstract class GVRContext {
      * @since 1.6.4
      */
     public abstract GVRScene getNextMainScene(Runnable onSwitchMainScene);
+
+    /**
+     * Returns the {@link GVRInputManager}.
+     * 
+     * @return A {@link GVRInputManager} to help the GVRf application interface
+     *         with the input subsystem.
+     * 
+     */
+    public abstract GVRInputManager getInputManager();
 
     /**
      * Is the key pressed?
