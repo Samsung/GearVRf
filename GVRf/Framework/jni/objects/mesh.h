@@ -224,7 +224,6 @@ public:
         vao_dirty_ = true;
     }
 
-    const BoundingVolume& getBoundingVolume() const { return bounding_volume; }
     Mesh* getBoundingBox();
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
@@ -274,6 +273,10 @@ public:
 
     GLuint getNumTriangles() {
         return numTriangles_;
+    }
+
+    bool hasBoundingVolume() {
+    	return have_bounding_volume_;
     }
 
     const BoundingVolume& getBoundingVolume();

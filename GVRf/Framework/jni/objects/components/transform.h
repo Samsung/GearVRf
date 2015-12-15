@@ -167,6 +167,10 @@ public:
         invalidate(false);
     }
 
+    bool isModelMatrixValid() {
+        return model_matrix_.isValid();
+    }
+
     void invalidate(bool rotationUpdated);
     glm::mat4 getModelMatrix();
     glm::mat4 getLocalModelMatrix();

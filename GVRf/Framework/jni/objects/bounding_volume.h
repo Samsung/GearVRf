@@ -1,4 +1,3 @@
-
 /* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,9 +25,10 @@
 #include <vector>
 #include <string>
 
+#include "objects/components/transform.h"
+
 #include "glm/glm.hpp"
 #include "glm/geometric.hpp"
-
 
 namespace gvr {
 class BoundingVolume {
@@ -38,18 +38,26 @@ public:
     ~BoundingVolume() {
     }
 
+    const glm::vec3& center() const {
+        return center_;
+    }
+    float radius() const {
+        return radius_;
+    }
+    const glm::vec3& min_corner() const {
+        return min_corner_;
+    }
+    const glm::vec3& max_corner() const {
+        return max_corner_;
+    }
+
+    void reset();
     void expand(const glm::vec3 point);
     void expand(const BoundingVolume &volume);
-
-    const glm::vec3& center() const { return center_; }
-    float radius() const { return radius_; }
-    const glm::vec3& min_corner() const { return min_corner_; }
-    const glm::vec3& max_corner() const { return max_corner_; }
+    void expand(const glm::vec3 &in_center, float in_radius);
+    void transform(const BoundingVolume &volume, glm::mat4 matrix);
 
 private:
-    // bounding volume info
-    bool dirty = true;
-
     glm::vec3 center_;
     float radius_ = 0.0f;
     glm::vec3 min_corner_;

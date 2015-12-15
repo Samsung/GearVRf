@@ -59,7 +59,7 @@ void Transform::invalidate(bool rotationUpdated) {
     }
 
     if(owner_object()) {
-        owner_object()->dirtyBoundingVolume();
+        owner_object()->dirtyHierarchicalBoundingVolume();
     }
 }
 

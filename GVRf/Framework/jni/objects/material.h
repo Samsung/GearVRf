@@ -45,6 +45,8 @@ public:
         TEXTURE_SHADER = 7,
         EXTERNAL_RENDERER_SHADER = 8,
         ASSIMP_SHADER = 9,
+        BOUNDING_BOX_SHADER = 10,
+        DISTORTION_SHADER = 90, // this shader is implemented and loaded in the distorter
         TEXTURE_SHADER_NOLIGHT = 100
     };
 
@@ -176,6 +178,7 @@ private:
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
+
     unsigned int shader_feature_set_;
 };
 }

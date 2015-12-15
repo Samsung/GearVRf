@@ -28,9 +28,10 @@
 
 namespace gvr {
 SceneObject::SceneObject() :
-        HybridObject(), name_(""), children_(), visible_(true), in_frustum_(false),
-        query_currently_issued_(false), vis_count_(0), lod_min_range_(0), lod_max_range_(MAXFLOAT),
-        using_lod_(false), bounding_volume_dirty_(true) {
+        HybridObject(), name_(""), children_(), visible_(true), in_frustum_(
+                false), query_currently_issued_(false), vis_count_(0), lod_min_range_(
+                0), lod_max_range_(MAXFLOAT), using_lod_(false), bounding_volume_dirty_(
+                true) {
 
     // Occlusion query setup
 #if _GVRF_USE_GLES3_
@@ -55,7 +56,7 @@ void SceneObject::attachTransform(SceneObject* self, Transform* transform) {
     }
     transform_ = transform;
     transform_->set_owner_object(self);
-    dirtyBoundingVolume();
+    dirtyHierarchicalBoundingVolume();
 }
 
 void SceneObject::detachTransform() {
@@ -63,7 +64,7 @@ void SceneObject::detachTransform() {
         transform_->removeOwnerObject();
         transform_ = NULL;
     }
-    dirtyBoundingVolume();
+    dirtyHierarchicalBoundingVolume();
 }
 
 void SceneObject::attachRenderData(SceneObject* self, RenderData* render_data) {
@@ -76,7 +77,7 @@ void SceneObject::attachRenderData(SceneObject* self, RenderData* render_data) {
     }
     render_data_ = render_data;
     render_data->set_owner_object(self);
-    dirtyBoundingVolume();
+    dirtyHierarchicalBoundingVolume();
 }
 
 void SceneObject::detachRenderData() {
@@ -84,7 +85,7 @@ void SceneObject::detachRenderData() {
         render_data_->removeOwnerObject();
         render_data_ = NULL;
     }
-    dirtyBoundingVolume();
+    dirtyHierarchicalBoundingVolume();
 }
 
 void SceneObject::attachCamera(SceneObject* self, Camera* camera) {
@@ -125,8 +126,7 @@ void SceneObject::detachCameraRig() {
     }
 }
 
-void SceneObject::attachEyePointeeHolder(
-        SceneObject* self,
+void SceneObject::attachEyePointeeHolder(SceneObject* self,
         EyePointeeHolder* eye_pointee_holder) {
     if (eye_pointee_holder_) {
         detachEyePointeeHolder();
@@ -161,7 +161,7 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     if (nullptr != t) {
         t->invalidate(false);
     }
-    dirtyBoundingVolume();
+    dirtyHierarchicalBoundingVolume();
 }
 
 void SceneObject::removeChildObject(SceneObject* child) {
@@ -175,7 +175,7 @@ void SceneObject::removeChildObject(SceneObject* child) {
     if (nullptr != t) {
         t->invalidate(false);
     }
-    dirtyBoundingVolume();
+    dirtyHierarchicalBoundingVolume();
 }
 
 int SceneObject::getChildrenCount() const {
@@ -249,32 +249,217 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
     return result;
 }
 
-void SceneObject::dirtyBoundingVolume() {
-    if(bounding_volume_dirty_) {
+void SceneObject::dirtyHierarchicalBoundingVolume() {
+    if (bounding_volume_dirty_) {
         return;
     }
 
     bounding_volume_dirty_ = true;
 
-    if(parent_ != NULL) {
-        parent_->dirtyBoundingVolume();
+    if (parent_ != NULL) {
+        parent_->dirtyHierarchicalBoundingVolume();
     }
 }
 
 BoundingVolume& SceneObject::getBoundingVolume() {
-    if(!bounding_volume_dirty_) {
-        return bounding_volume_;
+    if (!bounding_volume_dirty_) {
+        return transformed_bounding_volume_;
     }
 
-    if(render_data_ && render_data_->mesh()) {
-        bounding_volume_.expand(render_data_->mesh()->getBoundingVolume());
+    // Calculate the new bounding volume from itself and all its children
+    // 1. Start from its own mesh's bounding volume if there is any
+    if (render_data_ != NULL && render_data_->mesh() != NULL) {
+        // Future optimization:
+        // If the mesh and transform are still valid, don't need to recompute the mesh_bounding_volume
+        // if (!render_data_->mesh()->hasBoundingVolume()
+        // || !transform_->isModelMatrixValid()) {
+        mesh_bounding_volume.transform(
+                render_data_->mesh()->getBoundingVolume(),
+                transform_->getModelMatrix());
+        //	}
+        transformed_bounding_volume_ = mesh_bounding_volume;
     }
 
-    for(int i=0; i<children_.size(); i++) {
-        SceneObject *child = children_[i];
-        bounding_volume_.expand(child->getBoundingVolume());
+    // 2. Aggregate with all its children's bounding volumes
+    for (auto it = children_.begin(); it != children_.end(); ++it) {
+        transformed_bounding_volume_.expand((*it)->getBoundingVolume());
     }
 
-    return bounding_volume_;
+    bounding_volume_dirty_ = false;
+
+    return transformed_bounding_volume_;
+}
+
+float planeDistanceToPoint(float plane[4], glm::vec3 &compare_point) {
+    glm::vec3 normal = glm::vec3(plane[0], plane[1], plane[2]);
+    glm::normalize(normal);
+    float distance_to_origin = plane[3];
+    float distance = glm::dot(compare_point, normal) + distance_to_origin;
+
+    return distance;
+}
+
+bool SceneObject::sphereInFrustum(const float frustum[6][4],
+        BoundingVolume &sphere) {
+    glm::vec3 center = sphere.center();
+    float radius = sphere.radius();
+
+    for (int i = 0; i < 6; i++) {
+        float distance = planeDistanceToPoint(frustum[i], center);
+        if (distance < -radius) {
+            return false; // outside
+        }
+    }
+
+    return true; // fully inside
+}
+
+// frustumCull() return 3 possible values:
+// 0 when the bounding volume of the object is completely outside the frustum: cull it out and do not continue with its children
+// 1 when the bounding volume of the object is intersecting(or inside) the frustum but the object itself is not: cull it out and continue culling with its children
+// 2 when both the bounding volume and the mesh of the object is intersecting (or inside) the frustum: need to render it further and continue culling with its children
+int SceneObject::frustumCull(Camera *camera, const float frustum[6][4]) {
+    if (!visible_) {
+        if (DEBUG_RENDERER) {
+            LOGD("FRUSTUM: not visible, cull out %s and all its children\n",
+                    name_.c_str());
+        }
+
+        return 0;
+    }
+
+    // 1. Check if the bounding volume intersects with or inside the view frustum
+    BoundingVolume bounding_volume_ = getBoundingVolume();
+    bool is_inside;
+    //	is_inside = sphereInFrustum(frustum, bounding_volume_);
+
+    // Future optimization:
+    // is_cube_in_frustum() now checks if the bounding volume is 1) completely out of the frustum or 2) not for all six frustum planes
+    // A more efficient checking would be return three outcomes: 1) completely outside 2) completely inside 3) intersecting the frustum
+    // 1) will remain the same so that all children will be culled out
+    // 2) improves by directly counting in all its children without going over the frustum tests for each of its child
+    // 3) by further utilizing plane masking, is_cube_in_frustum() only needs to check the planes that intersect with the parent,
+    //    rather than all six planes for each of its child
+    is_inside = is_cube_in_frustum(frustum, bounding_volume_);
+
+    // Cull out the object and all its children if its bounding volume is completely outside the frustum
+    if (!is_inside) {
+        if (DEBUG_RENDERER) {
+            LOGD(
+                    "FRUSTUM: HBV not in frustum, cull out %s and all its children\n",
+                    name_.c_str());
+        }
+
+        return 0;
+    }
+
+    // 2. Skip the empty objects with no render data
+    if (render_data_ == NULL || render_data_->pass(0)->material() == NULL) {
+        if (DEBUG_RENDERER) {
+            LOGD("FRUSTUM: no render data skip %s\n", name_.c_str());
+        }
+
+        return 1;
+    }
+
+    // 3. Check if the object against the Level-of-details
+    // Transform the bounding sphere
+    glm::vec4 transformed_sphere_center(bounding_volume_.center(), 1.0f);
+
+    // Calculate distance from camera
+    glm::vec3 camera_position = camera->owner_object()->transform()->position();
+    glm::vec4 position(camera_position, 1.0f);
+    glm::vec4 difference = transformed_sphere_center - position;
+    float distance = glm::dot(difference, difference);
+
+    // this distance will be used when sorting transparent objects
+    render_data_->set_camera_distance(distance);
+
+    // if the object is not in the correct LOD level, cull out itself and all its children
+    if (!inLODRange(distance)) {
+        if (DEBUG_RENDERER) {
+            LOGD(
+                    "FRUSTUM: not in lod range, cull out %s and all its children\n",
+                    name_.c_str());
+        }
+
+        return 0;
+    }
+
+    // 4. Check if the object itself is intersecting with or inside the frustum
+    if (children_.size() > 0) {
+        is_inside = is_cube_in_frustum(frustum, mesh_bounding_volume);
+        //	is_inside = sphereInFrustum(frustum, mesh_bounding_volume);
+    }
+
+    // if the object is not in the frustum, cull out itself but continue testing its children
+    if (DEBUG_RENDERER) {
+        if (!is_inside) {
+            LOGD("FRUSTUM: mesh not in frustum, cull out %s\n", name_.c_str());
+        } else {
+            LOGD("FRUSTUM: mesh in frustum, render %s and all its children\n",
+                    name_.c_str());
+        }
+    }
+
+    return is_inside ? 2 : 1;
+}
+
+bool SceneObject::is_cube_in_frustum(const float frustum[6][4],
+        BoundingVolume &bounding_volume) {
+    glm::vec3 min_corner = bounding_volume.min_corner();
+    glm::vec3 max_corner = bounding_volume.max_corner();
+
+    float Xmin = min_corner[0];
+    float Ymin = min_corner[1];
+    float Zmin = min_corner[2];
+    float Xmax = max_corner[0];
+    float Ymax = max_corner[1];
+    float Zmax = max_corner[2];
+
+    for (int p = 0; p < 6; p++) {
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            continue;
+        }
+
+        return false;
+    }
+    return true;
 }
 }
