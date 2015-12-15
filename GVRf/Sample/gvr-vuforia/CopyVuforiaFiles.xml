@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project name="VuforiaSamples" default="CopyVuforiaSo">
-    <target name="CopyVuforiaSo">
-        <copy overwrite="true" todir="libs/armeabi-v7a">
-			<fileset dir="src/armeabi-v7a"/>
-		</copy>
-    </target>
-</project>
