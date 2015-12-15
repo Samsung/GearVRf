@@ -95,6 +95,7 @@ KSensor::KSensor() :
 }
 
 KSensor::~KSensor() {
+    stop();
 }
 
 void KSensor::start() {
