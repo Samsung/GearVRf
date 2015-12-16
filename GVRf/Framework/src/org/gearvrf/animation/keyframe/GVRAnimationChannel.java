@@ -22,23 +22,17 @@ import org.joml.Vector3f;
 public final class GVRAnimationChannel implements PrettyPrint {
     private static final String TAG = GVRAnimationChannel.class.getSimpleName();
     protected static interface ValueInterpolator<T> {
-        T interpolate(Object begin, Object end, float factor);
+        T interpolate(T begin, T end, float factor);
     }
 
     protected static ValueInterpolator<Vector3f> sInterpolatorVector3f = new ValueInterpolator<Vector3f>() {
-        public Vector3f interpolate(Object begin_, Object end_, float factor) {
-            Vector3f begin = (Vector3f) begin_;
-            Vector3f end = (Vector3f) end_;
-
+        public Vector3f interpolate(Vector3f begin, Vector3f end, float factor) {
             return new Vector3f().set(end).sub(begin).mul(factor).add(begin);
         }
     };
 
     protected static ValueInterpolator<Quaternionf> sInterpolatorQuaternion = new ValueInterpolator<Quaternionf>() {
-        public Quaternionf interpolate(Object begin_, Object end_, float factor) {
-            Quaternionf begin = (Quaternionf) begin_;
-            Quaternionf end = (Quaternionf) end_;
-
+        public Quaternionf interpolate(Quaternionf begin, Quaternionf end, float factor) {
             return new Quaternionf().set(begin).slerp(end, factor);
         }
     };
@@ -64,8 +58,8 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 float deltaTime = (float)(keys[nextIndex].getTime() - keys[index].getTime());
                 float factor = (float)((time - keys[index].getTime()) / deltaTime);
 
-                Object start = keys[index].getValue();
-                Object end = keys[nextIndex].getValue();
+                T start = keys[index].getValue();
+                T end = keys[nextIndex].getValue();
 
                 return interpolator.interpolate(start, end, factor);
             } else {
