@@ -28,18 +28,18 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "objects/eye_type.h"
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
 
-class UnlitHorizontalStereoShader: public RecyclableObject {
+class UnlitHorizontalStereoShader: public HybridObject {
 public:
     UnlitHorizontalStereoShader();
-    ~UnlitHorizontalStereoShader();
-    void recycle();
+    virtual ~UnlitHorizontalStereoShader();
+
     void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material, bool right);
 
 private:

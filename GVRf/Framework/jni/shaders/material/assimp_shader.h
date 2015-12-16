@@ -26,7 +26,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 #define SETBIT(num, i)                   num = (num | (1 << i))
 #define ISSET(num, i)                    ((num & (1 << i)) != 0)
@@ -52,11 +52,11 @@ class GLProgram;
 class RenderData;
 class Material;
 
-class AssimpShader: public RecyclableObject {
+class AssimpShader: public HybridObject {
 public:
     AssimpShader();
-    ~AssimpShader();
-    void recycle();
+    virtual ~AssimpShader();
+
     void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
             const glm::mat4& mvp_matrix, RenderData* render_data,
             Material* material);

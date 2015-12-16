@@ -29,7 +29,7 @@
 #include "GLES3/gl3.h"
 #include "glm/glm.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 #include "objects/components/camera.h"
 
 namespace gvr {
@@ -37,12 +37,12 @@ class GLProgram;
 class RenderTexture;
 class PostEffectData;
 
-class CustomPostEffectShader: public RecyclableObject {
+class CustomPostEffectShader: public HybridObject {
 public:
     CustomPostEffectShader(std::string vertex_shader,
             std::string fragment_shader);
-    ~CustomPostEffectShader();
-    void recycle();
+    virtual ~CustomPostEffectShader();
+
     void addTextureKey(std::string variable_name, std::string key);
     void addFloatKey(std::string variable_name, std::string key);
     void addVec2Key(std::string variable_name, std::string key);

@@ -40,14 +40,22 @@ CameraRig::~CameraRig() {
 }
 
 void CameraRig::attachLeftCamera(Camera* const left_camera) {
-    left_camera->owner_object()->transform()->set_position(
-            -camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
+    Transform* const t = left_camera->owner_object()->transform();
+    if (nullptr == t) {
+        LOGE("attachLeftCamera error: no transform");
+        return;
+    }
+    t->set_position(-camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
     left_camera_ = left_camera;
 }
 
 void CameraRig::attachRightCamera(Camera* const right_camera) {
-    right_camera->owner_object()->transform()->set_position(
-            camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
+    Transform* const t = right_camera->owner_object()->transform();
+    if (nullptr == t) {
+        LOGE("attachRightCamera error: no transform");
+        return;
+    }
+    t->set_position(camera_separation_distance_ * 0.5f, 0.0f, 0.0f);
     right_camera_ = right_camera;
 }
 
@@ -85,11 +93,17 @@ void CameraRig::attachRightCamera(Camera* const right_camera) {
  * z = ipd/2 * 1/tan(fov_y/2)
  */
 void CameraRig::attachCenterCamera(PerspectiveCamera* const center_camera) {
+    Transform* const t = center_camera->owner_object()->transform();
+    if (nullptr == t) {
+        LOGE("attachCenterCamera error: no transform");
+        return;
+    }
+
     float half_ipd = camera_separation_distance_ * 0.5f;
     float theta = (center_camera->fov_y() * 0.5f) * (M_PI/180.0f);
     float tan_theta = tan(theta);
     float z = half_ipd * (1.0f/tan_theta);
-    center_camera->owner_object()->transform()->set_position(0.0f, 0.0f, z);
+    t->set_position(0.0f, 0.0f, z);
     center_camera_ = center_camera;
 }
 

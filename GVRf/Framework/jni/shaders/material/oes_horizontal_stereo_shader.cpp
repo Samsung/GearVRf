@@ -63,14 +63,7 @@ OESHorizontalStereoShader::OESHorizontalStereoShader() :
 }
 
 OESHorizontalStereoShader::~OESHorizontalStereoShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void OESHorizontalStereoShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void OESHorizontalStereoShader::render(const glm::mat4& mvp_matrix,

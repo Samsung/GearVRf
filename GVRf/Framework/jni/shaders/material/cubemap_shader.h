@@ -26,18 +26,18 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
 
-class CubemapShader: public RecyclableObject {
+class CubemapShader: public HybridObject {
 public:
     CubemapShader();
-    ~CubemapShader();
-    void recycle();
+    virtual ~CubemapShader();
+
     void render(const glm::mat4& model_matrix, const glm::mat4& mvp_matrix,
             RenderData* render_data, Material* material);
 

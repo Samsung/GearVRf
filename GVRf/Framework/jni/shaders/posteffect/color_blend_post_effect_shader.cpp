@@ -60,18 +60,10 @@ ColorBlendPostEffectShader::ColorBlendPostEffectShader() :
 }
 
 ColorBlendPostEffectShader::~ColorBlendPostEffectShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-    if (vaoID_ != 0) {
-    	gl_delete.queueVertexArray(vaoID_);
-    	vaoID_ = 0;
-    }
-}
-
-void ColorBlendPostEffectShader::recycle() {
     delete program_;
-    program_ = 0;
+    if (vaoID_ != 0) {
+        gl_delete.queueVertexArray(vaoID_);
+    }
 }
 
 void ColorBlendPostEffectShader::render(

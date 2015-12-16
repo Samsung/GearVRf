@@ -33,31 +33,22 @@ public:
     explicit RenderTexture(int width, int height);
     explicit RenderTexture(int width, int height, int sample_count);
 
-    ~RenderTexture() {
-        if (gl_texture_ != 0 || gl_render_buffer_ != 0
-                || gl_frame_buffer_ != 0 || gl_pbo_ != 0) {
-            recycle();
+    virtual ~RenderTexture() {
+        delete gl_render_buffer_;
+        delete gl_frame_buffer_;
+
+        if (0 != gl_pbo_) {
+            glDeleteBuffers(1, &gl_pbo_);
         }
     }
 
     void initialize(int width, int height) {
-        gl_pbo_ = 0;
         glGenBuffers(1, &gl_pbo_);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
         glBufferData(GL_PIXEL_PACK_BUFFER, width_ * height_ * 4, 0, GL_DYNAMIC_READ);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
         readback_started_ = false;
-    }
-
-    void recycle() {
-        Texture::recycle();
-        delete gl_render_buffer_;
-        gl_render_buffer_ = 0;
-        delete gl_frame_buffer_;
-        gl_frame_buffer_ = 0;
-
-        glDeleteBuffers(1, &gl_pbo_);
     }
 
     GLenum getTarget() const {
@@ -95,9 +86,9 @@ private:
     int width_;
     int height_;
     int sample_count_;
-    GLRenderBuffer* gl_render_buffer_;
-    GLFrameBuffer* gl_frame_buffer_;
-    GLuint gl_pbo_;
+    GLRenderBuffer* gl_render_buffer_ = nullptr;
+    GLFrameBuffer* gl_frame_buffer_ = nullptr;
+    GLuint gl_pbo_ = 0;
     bool readback_started_;          // set by startReadBack()
 };
 }

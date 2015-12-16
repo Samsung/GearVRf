@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "render_texture.h"
-
 #include "eglextension/msaa/msaa.h"
 
 namespace gvr {

@@ -108,14 +108,7 @@ CubemapReflectionShader::CubemapReflectionShader() :
 }
 
 CubemapReflectionShader::~CubemapReflectionShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void CubemapReflectionShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void CubemapReflectionShader::render(const glm::mat4& mv_matrix,

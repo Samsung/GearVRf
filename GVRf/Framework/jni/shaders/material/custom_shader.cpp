@@ -37,14 +37,7 @@ CustomShader::CustomShader(std::string vertex_shader,
 }
 
 CustomShader::~CustomShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void CustomShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void CustomShader::addTextureKey(std::string variable_name, std::string key) {

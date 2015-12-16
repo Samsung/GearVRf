@@ -48,14 +48,7 @@ BoundingBoxShader::BoundingBoxShader() :
 }
 
 BoundingBoxShader::~BoundingBoxShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void BoundingBoxShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void BoundingBoxShader::render(const glm::mat4& mvp_matrix,

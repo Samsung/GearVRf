@@ -232,8 +232,11 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
 
         const BoundingVolume& bounding_volume = currentMesh->getBoundingVolume();
 
-        glm::mat4 model_matrix_tmp(
-                render_data->owner_object()->transform()->getModelMatrix());
+        Transform* t = render_data->owner_object()->transform();
+        if (nullptr == t) {
+            continue;
+        }
+        glm::mat4 model_matrix_tmp(t->getModelMatrix());
         glm::mat4 mvp_matrix_tmp(vp_matrix * model_matrix_tmp);
 
         // Frustum
@@ -262,8 +265,11 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
         glm::vec4 transformed_sphere_center = mvp_matrix_tmp * sphere_center;
 
         // Calculate distance from camera
-        glm::vec3 camera_position =
-                camera->owner_object()->transform()->position();
+        t = camera->owner_object()->transform();
+        if (nullptr == t) {
+            continue;
+        }
+        glm::vec3 camera_position = t->position();
         glm::vec4 position(camera_position, 1.0f);
         glm::vec4 difference = transformed_sphere_center - position;
         float distance = glm::dot(difference, difference);
@@ -529,10 +535,10 @@ void Renderer::renderRenderData(RenderData* render_data,
                 set_face_culling(render_data->pass(curr_pass)->cull_face());
                 Material* curr_material =
                         render_data->pass(curr_pass)->material();
+                Transform* const t = render_data->owner_object()->transform();
 
-                if (curr_material != nullptr) {
-                    glm::mat4 model_matrix(
-                            render_data->owner_object()->transform()->getModelMatrix());
+                if (curr_material != nullptr && nullptr != t) {
+                    glm::mat4 model_matrix(t->getModelMatrix());
                     glm::mat4 mv_matrix(view_matrix * model_matrix);
                     glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
                     try {

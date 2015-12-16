@@ -96,14 +96,7 @@ CubemapShader::CubemapShader() :
 }
 
 CubemapShader::~CubemapShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void CubemapShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void CubemapShader::render(const glm::mat4& model_matrix,

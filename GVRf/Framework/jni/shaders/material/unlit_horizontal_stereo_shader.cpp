@@ -62,14 +62,7 @@ UnlitHorizontalStereoShader::UnlitHorizontalStereoShader() :
 }
 
 UnlitHorizontalStereoShader::~UnlitHorizontalStereoShader() {
-    if (program_ != 0) {
-        recycle();
-    }
-}
-
-void UnlitHorizontalStereoShader::recycle() {
     delete program_;
-    program_ = 0;
 }
 
 void UnlitHorizontalStereoShader::render(const glm::mat4& mvp_matrix,

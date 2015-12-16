@@ -39,7 +39,10 @@ void Transform::invalidate(bool rotationUpdated) {
         model_matrix_.invalidate();
         std::vector<SceneObject*> children(owner_object()->children());
         for (auto it = children.begin(); it != children.end(); ++it) {
-            (*it)->transform()->invalidate(false);
+            Transform* const t = (*it)->transform();
+            if (nullptr != t) {
+                t->invalidate(false);
+            }
         }
     }
     if (rotationUpdated) {
@@ -69,10 +72,11 @@ glm::mat4 Transform::getModelMatrix() {
         glm::mat4 trs_matrix = translation_matrix * rotation_matrix
                 * scale_matrix;
         if (owner_object()->parent() != 0) {
-            glm::mat4 model_matrix =
-                    owner_object()->parent()->transform()->getModelMatrix()
-                            * trs_matrix;
-            model_matrix_.validate(model_matrix);
+            Transform* const t = owner_object()->parent()->transform();
+            if (nullptr != t) {
+                glm::mat4 model_matrix = t->getModelMatrix() * trs_matrix;
+                model_matrix_.validate(model_matrix);
+            }
         } else {
             model_matrix_.validate(trs_matrix);
         }

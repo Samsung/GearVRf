@@ -15,9 +15,13 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.Log;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.utility.DockEventReceiver;
+import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
+
+import com.oculus.vrappframework.VrActivity;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -30,8 +34,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-
-import com.oculus.vrappframework.VrActivity;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -115,13 +117,14 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
         if (mGVRViewManager != null) {
             mGVRViewManager.onPause();
         }
         if (null != mDockEventReceiver) {
             mDockEventReceiver.stop();
         }
+
+        super.onPause();
     }
 
     @Override
@@ -137,10 +140,11 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (mGVRViewManager != null) {
             mGVRViewManager.onDestroy();
         }
+
+        super.onDestroy();
     }
 
     /**
@@ -257,6 +261,9 @@ public class GVRActivity extends VrActivity {
 
     void oneTimeShutDown() {
         Log.e(TAG, " oneTimeShutDown from native layer");
+
+        GVRHybridObject.closeAll();
+        NativeGLDelete.processQueues();
     }
 
     void beforeDrawEyes() {

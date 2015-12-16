@@ -167,20 +167,8 @@ TextureShader::TextureShader() :
 }
 
 TextureShader::~TextureShader() {
-    if (program_light_ != 0 || program_no_light_ != 0) {
-        recycle();
-    }
-}
-
-void TextureShader::recycle() {
-    if (program_light_ != 0) {
-        delete program_light_;
-        program_light_ = 0;
-    }
-    if (program_no_light_ != 0) {
-        delete program_no_light_;
-        program_no_light_ = 0;
-    }
+    delete program_light_;
+    delete program_no_light_;
 }
 
 void TextureShader::render(const glm::mat4& mv_matrix,
