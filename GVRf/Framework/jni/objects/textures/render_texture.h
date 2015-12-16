@@ -36,7 +36,6 @@ public:
     virtual ~RenderTexture() {
         delete gl_render_buffer_;
         delete gl_frame_buffer_;
-        delete gl_color_buffer_;
 
         if (0 != gl_pbo_) {
             glDeleteBuffers(1, &gl_pbo_);

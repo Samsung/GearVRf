@@ -50,31 +50,25 @@ std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
         }
     }
 
-    glm::mat4 view_matrix =
-            glm::affineInverse(
-                    scene->main_camera_rig()->getHeadTransform()->getModelMatrix());
-
-    std::vector<EyePointeeHolderData> picked_holder_data;
-
-    for (auto it = eye_pointee_holders.begin(); it != eye_pointee_holders.end();
-            ++it) {
-        EyePointData data = (*it)->isPointed(view_matrix, ox, oy, oz, dx, dy,
-                dz);
-        if (data.pointed()) {
-            (*it)->set_hit(data.hit());
-            picked_holder_data.push_back(
-                    EyePointeeHolderData(*it, data.distance()));
-        }
-    }
-
-    std::sort(picked_holder_data.begin(), picked_holder_data.end(),
-            compareEyePointeeHolderData);
-
     std::vector<EyePointeeHolder*> picked_holders;
-    for (auto it = picked_holder_data.begin(); it != picked_holder_data.end();
-            ++it) {
-        EyePointeeHolder* holder = it->eye_pointee_holder();
-        picked_holders.push_back(holder);
+    Transform* const t = scene->main_camera_rig()->getHeadTransform();
+    if (nullptr != t) {
+        glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
+
+        std::vector<EyePointeeHolderData> picked_holder_data;
+        for (auto it = eye_pointee_holders.begin(); it != eye_pointee_holders.end(); ++it) {
+            EyePointData data = (*it)->isPointed(view_matrix, ox, oy, oz, dx, dy, dz);
+            if (data.pointed()) {
+                (*it)->set_hit(data.hit());
+                picked_holder_data.push_back(EyePointeeHolderData(*it, data.distance()));
+            }
+        }
+
+        std::sort(picked_holder_data.begin(), picked_holder_data.end(), compareEyePointeeHolderData);
+        for (auto it = picked_holder_data.begin(); it != picked_holder_data.end(); ++it) {
+            EyePointeeHolder* holder = it->eye_pointee_holder();
+            picked_holders.push_back(holder);
+        }
     }
 
     return picked_holders;

@@ -28,8 +28,9 @@
 
 namespace gvr {
 SceneObject::SceneObject() :
-        HybridObject(), name_(""), transform_(), render_data_(), camera_(), camera_rig_(), eye_pointee_holder_(), parent_(), children_(), visible_(
-                true), in_frustum_(false), query_currently_issued_(false), vis_count_(0), lod_min_range_(0), lod_max_range_(MAXFLOAT), using_lod_(false), bounding_volume_dirty_(true) {
+        HybridObject(), name_(""), children_(), visible_(true), in_frustum_(false),
+        query_currently_issued_(false), vis_count_(0), lod_min_range_(0), lod_max_range_(MAXFLOAT),
+        using_lod_(false), bounding_volume_dirty_(true) {
 
     // Occlusion query setup
 #if _GVRF_USE_GLES3_

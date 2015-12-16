@@ -21,8 +21,6 @@
 #define SCENE_OBJECT_H_
 
 #include <algorithm>
-#include <vector>
-#include <memory>
 
 #include "objects/hybrid_object.h"
 #include "objects/components/transform.h"
@@ -158,12 +156,12 @@ private:
 
 private:
     std::string name_;
-    Transform* transform_;
-    RenderData* render_data_;
-    Camera* camera_;
-    CameraRig* camera_rig_;
-    EyePointeeHolder* eye_pointee_holder_;
-    SceneObject* parent_;
+    Transform* transform_ = nullptr;
+    RenderData* render_data_ = nullptr;
+    Camera* camera_ = nullptr;
+    CameraRig* camera_rig_ = nullptr;
+    EyePointeeHolder* eye_pointee_holder_ = nullptr;
+    SceneObject* parent_ = nullptr;
     std::vector<SceneObject*> children_;
     float lod_min_range_;
     float lod_max_range_;
@@ -178,7 +176,7 @@ private:
     bool visible_;
     bool in_frustum_;
     bool query_currently_issued_;
-    GLuint *queries_;
+    GLuint *queries_ = nullptr;
 };
 
 }
