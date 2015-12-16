@@ -187,6 +187,49 @@ public class GVRPicker {
     }
 
     /**
+     * 
+     * Tests the {@link GVRSceneObject} against the specified ray.
+     * 
+     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
+     * {@code [dx, dy, dz]}.
+     * 
+     * <p>
+     * The ray origin may be [0, 0, 0] and the direction components should be
+     * normalized from -1 to 1: Note that the y direction runs from -1 at the
+     * bottom to 1 at the top.
+     * 
+     * @param sceneObject
+     *            The {@link GVRSceneObject} to be tested.
+     * 
+     * @param ox
+     *            The x coordinate of the ray origin.
+     * 
+     * @param oy
+     *            The y coordinate of the ray origin.
+     * 
+     * @param oz
+     *            The z coordinate of the ray origin.
+     * 
+     * @param dx
+     *            The x vector of the ray direction.
+     * 
+     * @param dy
+     *            The y vector of the ray direction.
+     * 
+     * @param dz
+     *            The z vector of the ray direction.
+     * 
+     * @return The coordinates of the hit point if successful, <code>null</code>
+     *         otherwise.
+     */
+    static final float[] pickSceneObjectAgainstBoundingBox(
+            GVRSceneObject sceneObject, float ox, float oy, float oz, float dx,
+            float dy, float dz) {
+        return NativePicker.pickSceneObjectAgainstBoundingBox(
+                sceneObject.getNative(), ox, oy, oz, dx, dy, dz);
+    }
+
+    /**
      * Casts a ray into the scene graph, and returns the objects it intersects.
      * 
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
@@ -346,4 +389,7 @@ final class NativePicker {
             float dx, float dy, float dz);
 
     static native float pickSceneObject(long sceneObject, long cameraRig);
+
+    static native float[] pickSceneObjectAgainstBoundingBox(long sceneObject,
+            float ox, float oy, float oz, float dx, float dy, float dz);
 }

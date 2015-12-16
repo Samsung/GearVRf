@@ -110,6 +110,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private GVRScreenshot3DCallback mScreenshot3DCallback = null;
     ByteBuffer mReadbackBuffer = null;
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
+    private GVRInputManager mInputManager = null;
 
     private native void cull(long scene, long camera, long shader_manager);
     private native void renderCamera(long appPtr, long scene, long camera,
@@ -209,6 +210,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     void onDestroy() {
         Log.v(TAG, "onDestroy");
         mRotationSensor.onDestroy();
+        
+        if(mInputManager != null){
+        	mInputManager.close();
+        }
     }
 
     /*
@@ -843,5 +848,20 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     GVRRenderBundle getRenderBundle() {
         return mRenderBundle;
+    }
+
+    @Override
+    GVRInputManager getInputManager() {
+        return mInputManager;
+    }
+
+    @Override
+    public GVRInputManager setupInputManagerForScene(GVRScene scene) {
+        if (mInputManager == null) {
+            mInputManager = new GVRInputManager(this, scene);
+        } else {
+            mInputManager.setScene(scene);
+        }
+        return mInputManager;
     }
 }
