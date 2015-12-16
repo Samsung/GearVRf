@@ -1,11 +1,16 @@
 package org.gearvrf;
 
-public final class GVRVertexBoneData extends GVRComponent implements PrettyPrint {
+public final class GVRVertexBoneData implements PrettyPrint {
+    @SuppressWarnings("unused")
+    private GVRMesh mMesh;
+    private long mNative;
+
     /**
      * Constructor.
      */
     public GVRVertexBoneData(GVRContext gvrContext, GVRMesh mesh) {
-        super(gvrContext, NativeVertexBoneData.get(mesh.getNative()), false /* not owned */);
+        mMesh = mesh; // holds a reference to mesh to avoid GC
+        mNative = NativeVertexBoneData.get(mesh.getNative());
     }
 
     public int getFreeBoneSlot(int vertexId) {
@@ -22,6 +27,10 @@ public final class GVRVertexBoneData extends GVRComponent implements PrettyPrint
 
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {        
+    }
+
+    private long getNative() {
+        return mNative;
     }
 }
 
