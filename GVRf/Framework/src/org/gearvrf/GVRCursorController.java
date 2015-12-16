@@ -78,8 +78,7 @@ public abstract class GVRCursorController {
     /**
      * Return an id that represent this {@link GVRCursorController}
      * 
-     * @return an integer array of all ids that identifies the cursor that uses
-     *         this interface.
+     * @return an integer id that identifies this controller.
      */
     public int getId() {
         return controllerId;

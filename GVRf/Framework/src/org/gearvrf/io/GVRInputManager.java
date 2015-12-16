@@ -34,29 +34,22 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 /**
- * This class encapsulates the {@link InputManager} to detect all relevant Input
- * devices attached to the framework.
- * 
- * Another important function of this class to report multiple deviceIds
- * reported by the {@link InputManager} as one device to the framework.
- * 
- * For now this class recognizes mouse and controller devices attached to the
- * Android device.
- * 
- * Use the
- * {@link GVRInputManager#addCursorControllerListener(CursorControllerListener)}
- * call to notify the app whenever a {@link GVRCursorController} is added or
- * removed from the framework.
- * 
- * Alternatively use the {@link GVRInputManager#getCursorControllers()} call to
- * know all the devices currently in the framework.
  * 
  * An instance of this class is obtained using the
  * {@link GVRContext#getInputManager()} call. Use this class to query for all
  * the {@link GVRCursorController} objects in the framework.
  * 
- * The class also provides an interface {@link GVRCursorController} to add
- * external input devices into the framework.
+ * Use the
+ * {@link GVRInputManager#addCursorControllerListener(CursorControllerListener)}
+ * call to notify the application whenever a {@link GVRCursorController} is
+ * added or removed from the framework.
+ * 
+ * Alternatively use the {@link GVRInputManager#getCursorControllers()} method
+ * to know all the devices currently in the framework.
+ * 
+ * The class also allows external input devices to be added using the
+ * {@link GVRInputManager#addGVRCursorController(GVRCursorController)} method.
+ * 
  * 
  */
 public abstract class GVRInputManager {
@@ -65,6 +58,17 @@ public abstract class GVRInputManager {
     private final GVRContext context;
     private GVRGamepadDeviceManager gamepadDeviceManager;
     private GVRMouseDeviceManager mouseDeviceManager;
+
+    /*
+     * This class encapsulates the {@link InputManager} to detect all relevant
+     * Input devices attached to the framework.
+     * 
+     * Another important function of this class to report multiple deviceIds
+     * reported by the {@link InputManager} as one device to the framework.
+     * 
+     * This class internally recognizes mouse and gamepad devices attached to
+     * the Android device.
+     */
 
     // maps a given device Id to a controller id
     private final SparseArray<GVRBaseController> controllerIds;
@@ -99,8 +103,8 @@ public abstract class GVRInputManager {
      * Get a list of the {@link GVRCursorController}s currently in the system.
      * 
      * Ideally this call needs to be done inside
-     * {@link GVRScript#onInit(GVRContext)} so that all the GVRInputDevice
-     * objects are set up before the rendering starts.
+     * {@link GVRScript#onInit(GVRContext)} so that all the cursor objects are
+     * set up before the rendering starts.
      * 
      * Remember to add a {@link CursorControllerListener} to receive
      * notifications on {@link GVRCursorController} objects added or removed
