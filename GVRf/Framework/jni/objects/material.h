@@ -85,6 +85,21 @@ public:
         textures_[key] = texture;
     }
 
+    // ---------------------------------------------AR------------------------{
+
+    void setIsAr(std::string key, int ar) {
+        isAR_ = ar;
+    }
+
+    void setMvpMatrix(std::string key, glm::mat4 mat) {
+        mvpMatrix = mat;
+    }
+
+    void setArViewOffsets(std::string key, glm::vec4 ar_offsets) {
+        arOffsets = ar_offsets;
+    }
+    // ---------------------------------------------AR------------------------}
+
     float getFloat(std::string key) {
         auto it = floats_.find(key);
         if (it != floats_.end()) {
@@ -161,6 +176,13 @@ public:
     void set_shader_feature_set(int feature_set) {
         shader_feature_set_ = feature_set;
     }
+
+    // ---------------------------------------------AR------------------------{
+public:
+    int isAR_ = 0;
+    glm::vec4 arOffsets;
+    glm::mat4 mvpMatrix;
+    // ---------------------------------------------AR------------------------}
 
 private:
     Material(const Material& material);

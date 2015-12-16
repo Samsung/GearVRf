@@ -39,7 +39,11 @@ namespace gvr {
 
 static int numberDrawCalls;
 static int numberTriangles;
-
+// ---------------------------------------------AR------------------------{
+int setIsAr = 0;
+glm::mat4 MVPmatrix;
+glm::vec4 ar_offsets;
+// ---------------------------------------------AR------------------------}
 void Renderer::initializeStats() {
     // TODO: this function will be filled in once we add draw time stats
 }
@@ -59,7 +63,8 @@ int Renderer::getNumberTriangles() {
 
 static std::vector<RenderData*> render_data_vector;
 
-void Renderer::cull(Scene *scene, Camera *camera, ShaderManager* shader_manager) {
+void Renderer::cull(Scene *scene, Camera *camera,
+        ShaderManager* shader_manager) {
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
@@ -71,8 +76,8 @@ void Renderer::cull(Scene *scene, Camera *camera, ShaderManager* shader_manager)
     occlusion_cull(scene, scene_objects);
 
     // do frustum culling, if enabled
-    frustum_cull(scene, camera, scene_objects, render_data_vector,
-            vp_matrix, shader_manager);
+    frustum_cull(scene, camera, scene_objects, render_data_vector, vp_matrix,
+            shader_manager);
 
     // do sorting based on render order
     std::sort(render_data_vector.begin(), render_data_vector.end(),
@@ -108,11 +113,19 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     if (post_effects.size() == 0) {
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
-        glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(),
-                camera->background_color_a());
+        // ---------------------------------------------AR------------------------{
+        if (setIsAr != 0) {
+            glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
+                    viewportWidth - ar_offsets[2],
+                    viewportHeight - ar_offsets[3]);
+        } else {
+            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
+        // ---------------------------------------------AR------------------------}
+
+        glClearColor(camera->background_color_r(), camera->background_color_g(),
+                camera->background_color_b(), camera->background_color_a());
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         for (auto it = render_data_vector.begin();
@@ -126,12 +139,19 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
         glBindFramebuffer(GL_FRAMEBUFFER,
                 texture_render_texture->getFrameBufferId());
-        glViewport(0, 0, texture_render_texture->width(),
-                texture_render_texture->height());
 
-        glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(),
-                camera->background_color_a());
+        // ---------------------------------------------AR------------------------{
+        if (setIsAr != 0) {
+            glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
+                    viewportWidth - ar_offsets[2],
+                    viewportHeight - ar_offsets[3]);
+        } else {
+            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
+        // ---------------------------------------------AR------------------------}
+
+        glClearColor(camera->background_color_r(), camera->background_color_g(),
+                camera->background_color_b(), camera->background_color_a());
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         for (auto it = render_data_vector.begin();
@@ -152,7 +172,16 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 target_render_texture = post_effect_render_texture_a;
             }
             glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+            // ---------------------------------------------AR------------------------{
+            if (setIsAr != 0) {
+                glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
+                        viewportWidth - ar_offsets[2],
+                        viewportHeight - ar_offsets[3]);
+            } else {
+                glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+            }
+            // ---------------------------------------------AR------------------------}
 
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
             renderPostEffectData(camera, texture_render_texture,
@@ -160,7 +189,16 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+        // ---------------------------------------------AR------------------------{
+        if (setIsAr != 0) {
+            glViewport(viewportX + ar_offsets[0], viewportY + ar_offsets[1],
+                    viewportWidth - ar_offsets[2],
+                    viewportHeight - ar_offsets[3]);
+        } else {
+            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
+        // ---------------------------------------------AR------------------------}
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         renderPostEffectData(camera, texture_render_texture,
                 post_effects.back(), post_effect_shader_manager);
@@ -230,7 +268,8 @@ void Renderer::frustum_cull(Scene* scene, Camera *camera,
             continue;
         }
 
-        const BoundingVolume& bounding_volume = currentMesh->getBoundingVolume();
+        const BoundingVolume& bounding_volume =
+                currentMesh->getBoundingVolume();
 
         glm::mat4 model_matrix_tmp(
                 render_data->owner_object()->transform()->getModelMatrix());
@@ -507,6 +546,15 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int viewportX,
 void Renderer::renderRenderData(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
         int render_mask, ShaderManager* shader_manager) {
+    // ---------------------------------------------AR------------------------{
+    if (render_data->pass(0)->material()->isAR_ != 0) {
+        setIsAr = render_data->pass(0)->material()->isAR_;
+//			MVPmatrix = render_data->pass(0)->material()->mvpMatrix;
+        ar_offsets = render_data->pass(0)->material()->arOffsets;
+    }
+    MVPmatrix = render_data->pass(0)->material()->mvpMatrix;
+
+    // ---------------------------------------------AR------------------------}
     if (render_mask & render_data->render_mask()) {
 
         if (render_data->offset()) {
@@ -534,7 +582,14 @@ void Renderer::renderRenderData(RenderData* render_data,
                     glm::mat4 model_matrix(
                             render_data->owner_object()->transform()->getModelMatrix());
                     glm::mat4 mv_matrix(view_matrix * model_matrix);
-                    glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
+                    // ---------------------------------------------AR------------------------{
+                    glm::mat4 mvp_matrix;
+                    if (setIsAr == 2)
+                        mvp_matrix = MVPmatrix;
+                    // ---------------------------------------------AR------------------------}
+                    else
+                        mvp_matrix = projection_matrix * mv_matrix;
+
                     try {
                         bool right = render_mask
                                 & RenderData::RenderMaskBit::Right;
@@ -585,8 +640,8 @@ void Renderer::renderRenderData(RenderData* render_data,
                                     mvp_matrix, render_data);
                             break;
                         case Material::ShaderType::ASSIMP_SHADER:
-                            shader_manager->getAssimpShader()->render(
-                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                            shader_manager->getAssimpShader()->render(mv_matrix,
+                                    glm::inverseTranspose(mv_matrix),
                                     mvp_matrix, render_data, curr_material);
                             break;
                         default:
@@ -598,7 +653,9 @@ void Renderer::renderRenderData(RenderData* render_data,
                         }
                     } catch (std::string error) {
                         LOGE(
-                                "Error detected in Renderer::renderRenderData; name : %s, error : %s", render_data->owner_object()->name().c_str(), error.c_str());
+                                "Error detected in Renderer::renderRenderData; name : %s, error : %s",
+                                render_data->owner_object()->name().c_str(),
+                                error.c_str());
                         shader_manager->getErrorShader()->render(mvp_matrix,
                                 render_data);
                     }
@@ -655,8 +712,8 @@ void Renderer::renderPostEffectData(Camera* camera,
             break;
         }
     } catch (std::string error) {
-        LOGE(
-                "Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
+        LOGE("Error detected in Renderer::renderPostEffectData; error : %s",
+                error.c_str());
     }
 }
 

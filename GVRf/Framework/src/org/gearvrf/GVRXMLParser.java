@@ -47,6 +47,10 @@ class GVRXMLParser {
      * @param fileName
      *            the distortion file name under assets folder
      */
+    // ------------------------AR-------------------------------------------{
+    private float offsets[] = new float[4];
+
+    // ------------------------AR-------------------------------------------}
     GVRXMLParser(AssetManager assets, String fileName, VrAppSettings settings) {
         try {
             StringBuilder buf = new StringBuilder();
@@ -76,10 +80,10 @@ class GVRXMLParser {
             int eventType = xpp.getEventType();
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_DOCUMENT) {
-                } else if (eventType == XmlPullParser.START_TAG) {                    
+                } else if (eventType == XmlPullParser.START_TAG) {
                     String tagName = xpp.getName();
                     for (int i = 0; i < xpp.getAttributeCount(); ++i) {
-                        if(xpp.getAttributeValue(i).equals("DEFAULT")){
+                        if (xpp.getAttributeValue(i).equals("DEFAULT")) {
                             continue;
                         }
                         String attributeName = xpp.getAttributeName(i);
@@ -213,6 +217,24 @@ class GVRXMLParser {
                                                         .getAttributeValue(i)));
                             }
                         }
+                        // ------------------
+                        else if (tagName.equals("scene")) {
+                            if (attributeName.equals("ar_offsetX")) {
+                                offsets[0] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            } else if (attributeName.equals("ar_offsetY")) {
+                                offsets[1] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            } else if (attributeName.equals("ar_offsetWidth")) {
+                                offsets[2] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            } else if (attributeName.equals("ar_offsetHeight")) {
+                                offsets[3] = Float.parseFloat(xpp
+                                        .getAttributeValue(i));
+                            }
+
+                        }
+
                     }
                 } else if (eventType == XmlPullParser.END_TAG) {
                 } else if (eventType == XmlPullParser.TEXT) {
@@ -227,5 +249,9 @@ class GVRXMLParser {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    float[] getAROffsets() {
+        return offsets;
     }
 }
