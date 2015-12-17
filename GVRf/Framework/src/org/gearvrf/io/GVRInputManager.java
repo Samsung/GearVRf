@@ -48,7 +48,7 @@ import android.view.MotionEvent;
  * to know all the devices currently in the framework.
  * 
  * The class also allows external input devices to be added using the
- * {@link GVRInputManager#addGVRCursorController(GVRCursorController)} method.
+ * {@link GVRInputManager#addCursorController(GVRCursorController)} method.
  * 
  * 
  */
@@ -113,7 +113,7 @@ public abstract class GVRInputManager {
      * @return a list of all the {@link GVRCursorController} objects in the
      *         system.
      */
-    protected List<GVRCursorController> getCursorControllers() {
+    public List<GVRCursorController> getCursorControllers() {
         List<GVRCursorController> result = new ArrayList<GVRCursorController>();
         for (int index = 0, size = controllerIds
                 .size(); index < size; index++) {
@@ -196,7 +196,7 @@ public abstract class GVRInputManager {
             Log.d(TAG, "onInputDeviceRemoved " + deviceId);
             GVRBaseController controller = controllerIds.get(deviceId);
             if (controller != null) {
-                removeGVRCursorController(controller);
+                removeCursorController(controller);
                 controllerIds.remove(deviceId);
             }
         }
@@ -217,7 +217,7 @@ public abstract class GVRInputManager {
 
             if (addDevice(inputDevice)) {
                 GVRBaseController controller = controllerIds.get(deviceId);
-                addGVRCursorController(controller);
+                addCursorController(controller);
             }
         }
     };
@@ -286,7 +286,7 @@ public abstract class GVRInputManager {
      *            the external {@link GVRCursorController} to be added to the
      *            framework.
      */
-    public abstract void addGVRCursorController(GVRCursorController controller);
+    public abstract void addCursorController(GVRCursorController controller);
 
     /**
      * Remove the previously added {@link GVRCursorController} added to the
@@ -296,7 +296,7 @@ public abstract class GVRInputManager {
      *            the external {@link GVRCursorController} to be removed from
      *            the framework.
      */
-    public abstract void removeGVRCursorController(
+    public abstract void removeCursorController(
             GVRCursorController controller);
 
 }

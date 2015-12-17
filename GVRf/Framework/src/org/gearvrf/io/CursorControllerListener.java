@@ -36,7 +36,7 @@ public interface CursorControllerListener {
      * @param controller
      *            the {@link GVRCursorController} added.
      */
-    public void onGVRCursorControllerAdded(GVRCursorController controller);
+    public void onCursorControllerAdded(GVRCursorController controller);
 
     /**
      * Called when the {@link GVRCursorController} previously added has been
@@ -50,6 +50,6 @@ public interface CursorControllerListener {
      * @param controller
      *            the {@link GVRCursorController} removed.
      */
-    public void onGVRCursorControllerRemoved(GVRCursorController controller);
+    public void onCursorControllerRemoved(GVRCursorController controller);
 
 }

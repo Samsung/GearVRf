@@ -46,7 +46,7 @@ class GVRInputManagerImpl extends GVRInputManager {
         listeners = new ArrayList<CursorControllerListener>();
 
         for (GVRCursorController controller : super.getCursorControllers()) {
-            addGVRCursorController(controller);
+            addCursorController(controller);
         }
         gvrContext.registerDrawFrameListener(drawFrameListener);
     }
@@ -67,21 +67,21 @@ class GVRInputManagerImpl extends GVRInputManager {
     }
 
     @Override
-    public void addGVRCursorController(GVRCursorController controller) {
+    public void addCursorController(GVRCursorController controller) {
         controllers.add(controller);
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
-                listener.onGVRCursorControllerAdded(controller);
+                listener.onCursorControllerAdded(controller);
             }
         }
     }
 
     @Override
-    public void removeGVRCursorController(GVRCursorController controller) {
+    public void removeCursorController(GVRCursorController controller) {
         controllers.remove(controller);
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
-                listener.onGVRCursorControllerRemoved(controller);
+                listener.onCursorControllerRemoved(controller);
             }
         }
     }

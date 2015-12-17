@@ -35,7 +35,7 @@ import org.gearvrf.io.GVRInputManager;
  * manipulate the {@link GVRSceneObject} based on the input coming in to the
  * {@link GVRCursorController}.
  * 
- * Use the {@link GVRInputManager#addGVRCursorController(GVRCursorController)}
+ * Use the {@link GVRInputManager#addCursorController(GVRCursorController)}
  * call to add an external {@link GVRCursorController} to the framework.
  * 
  */
