@@ -17,14 +17,14 @@
 -->
 
 <resources>
- 
+
     <string name="app_name">New GVR SDK</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-    <string name="volume_up">volume up</string>
-    <string name="volume_down">volume down</string>
-    <string name="zoom_in">zoom in</string>
-    <string name="zoom_out">zoom out</string>
-    <string name="inverted_colors">invert color</string>
+    <string name="volume_up">volume mais</string>
+    <string name="volume_down">volume menos</string>
+    <string name="zoom_in">zoom mais</string>
+    <string name="zoom_out">zoom menos</string>
+    <string name="inverted_colors">inverter cores</string>
 
 </resources>
