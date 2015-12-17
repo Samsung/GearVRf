@@ -154,7 +154,7 @@ public abstract class GVRHybridObject implements Closeable {
         return mNativePointer;
     }
 
-    public static long[] getNativePtrArray(Collection<? extends GVRHybridObject> objects) {
+    /*package*/ static long[] getNativePtrArray(Collection<? extends GVRHybridObject> objects) {
         long[] ptrs = new long[objects.size()];
 
         int i = 0;
