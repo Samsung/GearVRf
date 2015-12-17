@@ -95,6 +95,10 @@ KSensor::KSensor() :
 }
 
 KSensor::~KSensor() {
+    try {
+        stop();
+    } catch (const std::exception&) {
+    }
 }
 
 void KSensor::start() {
