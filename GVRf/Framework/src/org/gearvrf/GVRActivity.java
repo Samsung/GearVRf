@@ -289,9 +289,22 @@ public class GVRActivity extends VrActivity {
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        boolean handled = super.dispatchTouchEvent(event);// VrActivity's
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return mGVRViewManager.dispatchKeyEvent(event);
+    }
 
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
+        return mGVRViewManager.dispatchGenericMotionEvent(event);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        boolean handled = mGVRViewManager.dispatchTouchEvent(event);
+
+        if (handled == false) {
+            handled = super.dispatchTouchEvent(event);// VrActivity's
+        }
         /*
          * Situation: while the super class VrActivity is implementing
          * dispatchTouchEvent() without calling its own super

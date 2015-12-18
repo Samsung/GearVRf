@@ -46,6 +46,7 @@ public class GVRSceneObject extends GVRHybridObject {
     private GVRCameraRig mCameraRig;
     private GVREyePointeeHolder mEyePointeeHolder;
     private GVRSceneObject mParent;
+    private GVRBaseSensor mSensor;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
 
     /**
@@ -704,6 +705,48 @@ public class GVRSceneObject extends GVRHybridObject {
      */
     public Iterable<GVRSceneObject> children() {
         return new Children(this);
+    }    
+
+    /**
+     * Add a {@link GVRBaseSensor} node to the object.
+     * 
+     * Use <code>null</code> to reset the {@link GVRBaseSensor} attached to the
+     * {@link GVRSceneObject}.
+     * 
+     * Calling {@link GVRSceneObject#setSensor(GVRBaseSensor)} when there is
+     * already a {@link GVRBaseSensor} attached results in the existing
+     * {@link GVRBaseSensor} being replaced by the new {@link GVRBaseSensor}
+     * passed to this call.
+     *
+     * Note that the attached sensor affects this node and its descendants.
+     * 
+     * @param sensor
+     *            The {@link GVRBaseSensor} to be added to the object node.
+     * 
+     */
+    public void setSensor(GVRBaseSensor sensor) {
+        GVRInputManagerImpl inputManager = (GVRInputManagerImpl) getGVRContext()
+                .getInputManager();
+        // remove the currently attached sensor if there is one already.
+        if (mSensor != null) {
+            inputManager.removeSensor(mSensor);
+        }
+
+        // add the new sensor if there is one.
+        if (sensor != null) {
+            inputManager.addSensor(sensor);
+        }
+        mSensor = sensor;
+    }
+
+    /**
+     * Get the {@link GVRBaseSensor} if available.
+     * 
+     * @return The {@link GVRBaseSensor} attached to the node if available,
+     *         <code>null</code> otherwise.
+     */
+    public GVRBaseSensor getSensor() {
+        return mSensor;
     }
 
     /**

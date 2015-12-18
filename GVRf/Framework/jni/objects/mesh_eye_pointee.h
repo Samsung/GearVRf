@@ -44,6 +44,8 @@ public:
     EyePointData isPointed(const glm::mat4& mv_matrix);
     EyePointData isPointed(const glm::mat4& mv_matrix, float ox, float oy,
             float oz, float dx, float dy, float dz);
+    static EyePointData isPointed(const Mesh* mesh, const glm::mat4& mv_matrix, float ox,
+            float oy, float oz, float dx, float dy, float dz);
 
 private:
     MeshEyePointee(const MeshEyePointee& mesh_eye_pointee);
