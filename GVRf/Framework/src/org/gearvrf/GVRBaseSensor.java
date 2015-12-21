@@ -35,6 +35,8 @@ import android.util.SparseArray;
  * 
  */
 public class GVRBaseSensor {
+    private static final String TAG = GVRBaseSensor.class.getSimpleName();
+    private static final float[] EMPTY_HIT_POINT = new float[3];
     private boolean enabled = true;
     private ListenerDelegate listener;
     private SparseArray<ControllerData> controllerData;
@@ -81,10 +83,12 @@ public class GVRBaseSensor {
             for (GVRSceneObject object : prevHits) {
                 SensorEvent event = SensorEvent.obtain();
                 event.setActive(data.getActive());
+                event.setCursorController(controller);
                 event.setObject(object);
+                // clear the hit point
+                event.setHitPoint(EMPTY_HIT_POINT);
                 event.setOver(false);
                 events.add(event);
-
             }
             if (data.getActive() == false) {
                 prevHits.clear();
