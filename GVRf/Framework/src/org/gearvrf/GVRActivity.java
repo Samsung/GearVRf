@@ -290,17 +290,25 @@ public class GVRActivity extends VrActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        return mGVRViewManager.dispatchKeyEvent(event);
+        boolean handled = mGVRViewManager.dispatchKeyEvent(event);
+        if (handled == false) {
+            handled = super.dispatchKeyEvent(event);// VrActivity's
+        }
+        return handled;
     }
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        return mGVRViewManager.dispatchGenericMotionEvent(event);
+        boolean handled = mGVRViewManager.dispatchMotionEvent(event);
+        if (handled == false) {
+            handled = super.dispatchGenericMotionEvent(event);// VrActivity's
+        }
+        return handled;
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        boolean handled = mGVRViewManager.dispatchTouchEvent(event);
+        boolean handled = mGVRViewManager.dispatchMotionEvent(event);
 
         if (handled == false) {
             handled = super.dispatchTouchEvent(event);// VrActivity's
