@@ -220,11 +220,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         return mInputManager.dispatchKeyEvent(event);
     }
 
-    public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        return mInputManager.dispatchMotionEvent(event);
-    }
-
-    public boolean dispatchTouchEvent(MotionEvent event) {
+    public boolean dispatchMotionEvent(MotionEvent event) {
         return mInputManager.dispatchMotionEvent(event);
     }
 
