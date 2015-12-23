@@ -449,7 +449,7 @@ template <class R> bool GVRActivityT<R>::OnKeyEvent(const int keyCode, const int
             onKeyEventNativeMethodId, keyCode, (int)eventType);
 
     // if not handled back key long press, show global menu
-    if (handled == false && keyCode == 4 && eventType == OVR::KEY_EVENT_LONG_PRESS) {
+    if (handled == false && keyCode == OVR::OVR_KEY_BACK && eventType == OVR::KEY_EVENT_LONG_PRESS) {
         app->StartSystemActivity(PUI_GLOBAL_MENU);
     }
 
