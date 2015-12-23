@@ -112,6 +112,7 @@ public class GVRAnimationEngine {
     public GVRAnimation start(GVRAnimation animation) {
         if (animation.getRepeatCount() != 0) {
             synchronized (mAnimations) {
+                animation.reset();
                 mAnimations.add(animation);
             }
         }
