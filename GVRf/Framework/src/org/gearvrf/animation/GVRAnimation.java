@@ -115,6 +115,8 @@ public abstract class GVRAnimation {
     // Running state
     private float mElapsedTime = 0f;
     private int mIterations = 0;
+    
+    private boolean isFinished = false;
 
     /**
      * Base constructor.
@@ -371,6 +373,8 @@ public abstract class GVRAnimation {
             if (mOnFinish != null) {
                 mOnFinish.finished(this);
             }
+            
+            isFinished = true;
         }
 
         return stillRunning;
@@ -404,10 +408,17 @@ public abstract class GVRAnimation {
      * handler, before calling {@link #start(GVRAnimationEngine)}.
      * 
      * @return {@code true} if done or repeating; {@code false} if on first run.
-     */
+     */ 
     public final boolean isFinished() {
-        return mElapsedTime >= mDuration;
+        return isFinished;
     }
+
+    public void reset() {
+        mElapsedTime = 0;
+        mIterations = 0;
+        isFinished = false;
+    }
+
 
     /**
      * Get the current repeat count.
