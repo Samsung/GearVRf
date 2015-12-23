@@ -47,6 +47,7 @@ public class GVRSceneObject extends GVRHybridObject {
     private GVREyePointeeHolder mEyePointeeHolder;
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
+    private Object mTag;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
 
     /**
@@ -264,6 +265,32 @@ public class GVRSceneObject extends GVRHybridObject {
      */
     public void setName(String name) {
         NativeSceneObject.setName(getNative(), name);
+    }
+
+    /**
+     * Sets the tag associated with this scene object.
+     * 
+     * Tags can be used to store data within the scene object without
+     * resorting to another data structure.
+     *
+     * @param tag an object to associate with this scene object
+     * 
+     * @see #getTag()
+     */
+    public void setTag(Object tag) {
+        mTag = tag;
+    }
+
+    /**
+     * Returns this scene object's tag.
+     * 
+     * @return the Object stored in this scene object as a tag,
+     *         or {@code null} if not set
+     * 
+     * @see #setTag(Object)
+     */
+    public Object getTag() {
+        return mTag;
     }
 
     /**
