@@ -39,11 +39,11 @@ public class GVRResourceVolume {
     protected VolumeType volumeType;
     protected String defaultPath;
 
-    public GVRResourceVolume(GVRContext gvrContext, VolumeType volume) {
+    /*package*/ GVRResourceVolume(GVRContext gvrContext, VolumeType volume) {
         this(gvrContext, volume, null);
     }
 
-    public GVRResourceVolume(GVRContext gvrContext, VolumeType volumeType, String defaultPath) {
+    /*package*/ GVRResourceVolume(GVRContext gvrContext, VolumeType volumeType, String defaultPath) {
         this.gvrContext = gvrContext;
         this.volumeType = volumeType;
         this.defaultPath = defaultPath;
