@@ -39,6 +39,7 @@ public class GVRViewSceneObject extends GVRSceneObject implements
 
     private final Surface mSurface;
     private final SurfaceTexture mSurfaceTexture;
+    private final GVRView mView;
 
     /**
      * Shows any view into the {@linkplain GVRViewSceneObject scene object} with an arbitrarily complex
@@ -70,6 +71,11 @@ public class GVRViewSceneObject extends GVRSceneObject implements
         gvrView.setSceneObject(this);
 
         gvrView.getView().postInvalidate();
+        mView = gvrView;
+    }
+
+    public GVRView getView() {
+        return mView;
     }
 
     /**
