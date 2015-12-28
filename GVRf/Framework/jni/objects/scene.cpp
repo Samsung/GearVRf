@@ -19,6 +19,7 @@
 
 #include "scene.h"
 
+#include "engine/exporter/exporter.h"
 #include "objects/scene_object.h"
 
 namespace gvr {
@@ -52,4 +53,7 @@ std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     return scene_objects;
 }
 
+void Scene::exportToFile(std::string filepath) {
+    Exporter::writeToFile(this, filepath);
+}
 }

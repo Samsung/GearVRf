@@ -303,6 +303,25 @@ public class GVRScene extends GVRHybridObject {
     public void killStatMessage() {
         mStatMessage.delete(0, mStatMessage.length());
     }
+
+    /**
+     * Exports the scene to the given file path at some
+     * of the following supported formats:
+     *
+     *     Collada ( .dae )
+     *     Wavefront Object ( .obj )
+     *     Stereolithography ( .stl )
+     *     Stanford Polygon Library ( .ply )
+     *
+     * The current supported formats are the same supported
+     * by Assimp library. It will export according to file's
+     * extension.
+     *
+     * @param filepath Absolute file path to export the scene.
+     */
+    public void export(String filepath) {
+        NativeScene.exportToFile(getNative(), filepath);
+    }
 }
 
 class NativeScene {
@@ -323,4 +342,6 @@ class NativeScene {
     public static native int getNumberDrawCalls(long scene);
 
     public static native int getNumberTriangles(long scene);
+
+    public static native void exportToFile(long scene, String file_path);
 }

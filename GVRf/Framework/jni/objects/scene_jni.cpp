@@ -52,6 +52,10 @@ JNIEXPORT int JNICALL
 Java_org_gearvrf_NativeScene_getNumberDrawCalls(JNIEnv * env,
         jobject obj, jlong jscene);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
+        jobject obj, jlong jscene, jstring file_path);
+
 JNIEXPORT int JNICALL
 Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
         jobject obj, jlong jscene);
@@ -124,5 +128,15 @@ Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
     return scene->getNumberTriangles();
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
+        jobject obj, jlong jscene, jstring filepath) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    const char* native_filepath = env->GetStringUTFChars(filepath, 0);
+
+    scene->exportToFile(std::string(native_filepath));
+
+    env->ReleaseStringUTFChars(filepath, native_filepath);
+}
 
 }
