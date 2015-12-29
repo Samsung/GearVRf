@@ -123,7 +123,7 @@ final class GVRImporter {
         org.gearvrf.jassimp2.AiScene assimpScene = Jassimp.importFile(externalFile,
                 GVRJassimpAdapter.get().toJassimpSettings(settings));
         if (assimpScene == null) {
-            return null;
+            throw new IOException("Cannot load a model from SD card");
         }
         return new GVRJassimpSceneObject(context, assimpScene);
     }
@@ -135,7 +135,7 @@ final class GVRImporter {
                 GVRJassimpAdapter.get().toJassimpSettings(settings),
                 context.getContext().getAssets());
         if (assimpScene == null) {
-            return null;
+            throw new IOException("Cannot load a model from android assets");
         }
         return new GVRJassimpSceneObject(context, assimpScene);
     }
