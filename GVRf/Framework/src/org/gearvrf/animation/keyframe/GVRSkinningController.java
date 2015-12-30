@@ -101,7 +101,7 @@ public class GVRSkinningController {
             for (GVRBone bone : mesh.getBones()) {
                 bone.setSceneObject(node);
 
-                GVRSceneObject skeletalNode = sceneRoot.findChildByName(bone.getName());
+                GVRSceneObject skeletalNode = sceneRoot.getSceneObjectByName(bone.getName());
                 if (skeletalNode == null) {
                     Log.w(TAG, "what? cannot find the skeletal node for bone: %s", bone.toString());
                     continue;

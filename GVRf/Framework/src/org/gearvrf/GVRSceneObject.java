@@ -787,53 +787,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
         }
     }
 
-    private void findChildrenByName(String name, List<GVRSceneObject> objects,
-            boolean onlyFirst, Set<GVRSceneObject> visited) {
-        if (visited.contains(this))
-            return;
-
-        visited.add(this);
-
-        for (GVRSceneObject child : mChildren) {
-            String childName = child.getName();
-            if (name.equals(childName)) {
-                objects.add(child);
-                if (onlyFirst)
-                    return;
-            }
-
-            child.findChildrenByName(name, objects, onlyFirst, visited);
-            if (onlyFirst && !objects.isEmpty())
-                return;
-        }
-    }
-
-    /**
-     * Searches for the all children with the specified name.
-     *
-     * @param name the name of the children.
-     * @return the children found
-     */
-    public List<GVRSceneObject> findAllChildrenByName(String name) {
-        List<GVRSceneObject> objects = new ArrayList<GVRSceneObject>();
-        Set<GVRSceneObject> visited = new HashSet<GVRSceneObject>();
-        findChildrenByName(name, objects, false, visited);
-        return objects;
-    }
-
-    /**
-     * Searches for the first child with the specified name.
-     * 
-     * @param name the name of the child.
-     * @return the child found
-     */
-    public GVRSceneObject findChildByName(String name) {
-        List<GVRSceneObject> objects = new ArrayList<GVRSceneObject>();
-        Set<GVRSceneObject> visited = new HashSet<GVRSceneObject>();
-        findChildrenByName(name, objects, true, visited);
-        return objects.isEmpty() ? null : objects.get(0);
-    }
-
     /**
      * Called when the scene object has been loaded from a model.
      */
