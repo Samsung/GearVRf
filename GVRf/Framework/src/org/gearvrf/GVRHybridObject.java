@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +57,7 @@ public abstract class GVRHybridObject implements Closeable {
 
     /**
      * Normal constructor
-     * 
+     *
      * @param gvrContext
      *            The current GVRF context
      * @param nativePointer
@@ -152,6 +153,17 @@ public abstract class GVRHybridObject implements Closeable {
      */
     public long getNative() {
         return mNativePointer;
+    }
+
+    /*package*/ static long[] getNativePtrArray(Collection<? extends GVRHybridObject> objects) {
+        long[] ptrs = new long[objects.size()];
+
+        int i = 0;
+        for (GVRHybridObject obj : objects) {
+            ptrs[i++] = obj.getNative();
+        }
+
+        return ptrs;
     }
 
     @Override

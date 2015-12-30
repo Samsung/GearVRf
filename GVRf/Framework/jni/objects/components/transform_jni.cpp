@@ -108,6 +108,10 @@ JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeTransform_getModelMatrix(JNIEnv * env,
         jobject obj, jlong jtransform);
 
+JNIEXPORT jfloatArray JNICALL
+Java_org_gearvrf_NativeTransform_getLocalModelMatrix(JNIEnv * env,
+        jobject obj, jlong jtransform);
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeTransform_setModelMatrix(JNIEnv * env,
         jobject obj, jlong jtransform, jfloatArray mat);
@@ -310,6 +314,21 @@ Java_org_gearvrf_NativeTransform_getModelMatrix(JNIEnv * env,
         jobject obj, jlong jtransform) {
     Transform* transform = reinterpret_cast<Transform*>(jtransform);
     glm::mat4 matrix = transform->getModelMatrix();
+    jsize size = sizeof(matrix) / sizeof(jfloat);
+    if (size != 16) {
+        LOGE("sizeof(matrix) / sizeof(jfloat) != 16");
+        throw "sizeof(matrix) / sizeof(jfloat) != 16";
+    }
+    jfloatArray jmatrix = env->NewFloatArray(size);
+    env->SetFloatArrayRegion(jmatrix, 0, size, glm::value_ptr(matrix));
+    return jmatrix;
+}
+
+JNIEXPORT jfloatArray JNICALL
+Java_org_gearvrf_NativeTransform_getLocalModelMatrix(JNIEnv * env,
+        jobject obj, jlong jtransform) {
+    Transform* transform = reinterpret_cast<Transform*>(jtransform);
+    glm::mat4 matrix = transform->getLocalModelMatrix();
     jsize size = sizeof(matrix) / sizeof(jfloat);
     if (size != 16) {
         LOGE("sizeof(matrix) / sizeof(jfloat) != 16");

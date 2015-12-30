@@ -3,12 +3,13 @@ package org.gearvrf.jassimp2;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.math3.complex.Quaternion;
+import org.joml.Quaternionf;
 
 /*
  * V3, M4, C, N, Q
  */
-public class GVRNewWrapperProvider implements AiWrapperProvider<float[], float[], AiColor, AiNode, Quaternion> {
-	/**
+public class GVRNewWrapperProvider implements AiWrapperProvider<float[], float[], AiColor, AiNode, Quaternionf> {
+    /**
      * Wraps a RGBA color.
      * <p>
      * 
@@ -57,12 +58,12 @@ public class GVRNewWrapperProvider implements AiWrapperProvider<float[], float[]
      * @return the wrapped quaternion
      */
     @Override
-    public Quaternion wrapQuaternion(ByteBuffer buffer, int offset) {
+    public Quaternionf wrapQuaternion(ByteBuffer buffer, int offset) {
     	float w = buffer.getFloat(offset);
     	float x = buffer.getFloat(offset + 4);
     	float y = buffer.getFloat(offset + 8);
     	float z = buffer.getFloat(offset + 12);
-        return new Quaternion(w, x, y, z);
+        return new Quaternionf(x, y, z, w);
     }
 
     /**

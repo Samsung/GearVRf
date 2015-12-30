@@ -28,37 +28,70 @@
 
 #include "util/gvr_log.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 namespace gvr {
 
-#define AS_TOTAL_SHADER_STRINGS_COUNT    AS_TOTAL_FEATURE_COUNT + 1
+#define AS_TOTAL_SHADER_STRINGS_COUNT    AS_TOTAL_FEATURE_COUNT + 2
+
+static const char GLSL_VERSION[] = "#version 300 es \n";
 
 static const char DIFFUSE_TEXTURE[] = "#define AS_DIFFUSE_TEXTURE\n";
 static const char NO_DIFFUSE_TEXTURE[] = "#undef AS_DIFFUSE_TEXTURE\n";
 
+static const char SKINNING[] = "#define AS_SKINNING\n";
+static const char NO_SKINNING[] = "#undef AS_SKINNING\n";
+
 static const char SPECULAR_TEXTURE[] = "#define AS_SPECULAR_TEXTURE\n";
 static const char NO_SPECULAR_TEXTURE[] = "#undef AS_SPECULAR_TEXTURE\n";
 
+#define STR_(x) #x
+#define STR(x) STR_(x)
+
 static const char VERTEX_SHADER[] =
-        "attribute vec4 a_position;\n"
+                "in vec4 a_position;\n"
                 "uniform mat4 u_mvp;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
-                "attribute vec4 a_tex_coord;\n"
-                "varying vec2 v_tex_coord;\n"
+                "in vec4 a_tex_coord;\n"
+                "out vec2 v_tex_coord;\n"
                 "#endif\n"
                 "\n"
+
+                // Skinning
+                "#ifdef AS_SKINNING\n"
+                "in ivec4 a_bone_indices;\n"
+                "in vec4 a_bone_weights;\n"
+                "const int MAX_BONES = " STR(MAX_BONES) ";\n"
+                "uniform mat4 u_bone_matrix[MAX_BONES];\n"
+                "#endif\n"
+                "\n"
+
                 "void main() {\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
                 "  v_tex_coord = a_tex_coord.xy;\n"
                 "#endif\n"
+
+                "#ifdef AS_SKINNING\n"
+                "  vec4 weights = a_bone_weights; \n"
+                "  ivec4 bone_idx = a_bone_indices; \n"
+                "  mat4 bone = u_bone_matrix[bone_idx[0]] * weights[0]; \n"
+                "  bone += u_bone_matrix[bone_idx[1]] * weights[1]; \n"
+                "  bone += u_bone_matrix[bone_idx[2]] * weights[2]; \n"
+                "  bone += u_bone_matrix[bone_idx[3]] * weights[3]; \n"
+                "  vec4 animated_pos = bone * a_position; \n"
+                "  gl_Position = u_mvp * animated_pos;\n"
+                "#else\n"
                 "  gl_Position = u_mvp * a_position;\n"
+                "#endif\n"
+
                 "}\n";
 
 static const char FRAGMENT_SHADER[] =
-        "precision highp float;\n"
+                "precision highp float;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
-                "varying vec2 v_tex_coord;\n"
+                "in vec2 v_tex_coord;\n"
                 "uniform sampler2D u_texture;\n"
                 "#else\n"
                 "uniform vec4 u_diffuse_color;\n"
@@ -68,14 +101,15 @@ static const char FRAGMENT_SHADER[] =
                 "uniform vec3 u_color;\n"
                 "uniform float u_opacity;\n"
                 "\n"
+                "out vec4 Color;\n"
                 "void main()\n"
                 "{\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
                 "  vec4 color;\n"
-                "  color = texture2D(u_texture, v_tex_coord);\n"
-                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+                "  color = texture(u_texture, v_tex_coord);\n"
+                "  Color = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
                 "#else\n"
-                "  gl_FragColor = (u_diffuse_color * u_opacity) + u_ambient_color;\n"
+                "  Color = (u_diffuse_color * u_opacity) + u_ambient_color;\n"
                 "#endif\n"
                 "}\n";
 
@@ -92,6 +126,12 @@ AssimpShader::AssimpShader() :
 
     for (int i = 0; i < AS_TOTAL_GL_PROGRAM_COUNT; i++) {
         int counter = 0;
+
+        vertex_shader_strings[counter] =  GLSL_VERSION;
+        vertex_shader_string_lengths[counter] = (GLint) strlen(GLSL_VERSION);
+        fragment_shader_strings[counter] = GLSL_VERSION;
+        fragment_shader_string_lengths[counter] = (GLint) strlen(GLSL_VERSION);
+        counter++;
 
         // TODO: remove duplicate code
         if (ISSET(i, AS_DIFFUSE_TEXTURE)) {
@@ -119,6 +159,20 @@ AssimpShader::AssimpShader() :
             vertex_shader_string_lengths[counter] = (GLint) strlen(NO_SPECULAR_TEXTURE);
             fragment_shader_strings[counter] = NO_SPECULAR_TEXTURE;
             fragment_shader_string_lengths[counter] = (GLint) strlen(NO_SPECULAR_TEXTURE);
+            counter++;
+        }
+
+        if (ISSET(i, AS_SKINNING)) {
+            vertex_shader_strings[counter] =  SKINNING;
+            vertex_shader_string_lengths[counter] = (GLint) strlen(SKINNING);
+            fragment_shader_strings[counter] = SKINNING;
+            fragment_shader_string_lengths[counter] = (GLint) strlen(SKINNING);
+            counter++;
+        } else {
+            vertex_shader_strings[counter] =  NO_SKINNING;
+            vertex_shader_string_lengths[counter] = (GLint) strlen(NO_SKINNING);
+            fragment_shader_strings[counter] = NO_SKINNING;
+            fragment_shader_string_lengths[counter] = (GLint) strlen(NO_SKINNING);
             counter++;
         }
 
@@ -193,6 +247,27 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
         glUniform4f(u_ambient_color_, ambient_color.r, ambient_color.g,
                 ambient_color.b, ambient_color.a);
     }
+
+    /* Set up bones if AS_SKINNING is set */
+    if (ISSET(feature_set, AS_SKINNING)) {
+        a_bone_indices_ = glGetAttribLocation(program_->id(), "a_bone_indices");
+        a_bone_weights_ = glGetAttribLocation(program_->id(), "a_bone_weights");
+        u_bone_matrices_ = glGetUniformLocation(program_->id(), "u_bone_matrix[0]");
+        if (u_bone_matrices_ == -1) {
+            LOGD("Warning! Unable to get the location of uniform u_bone_matrix[0]\n");
+        }
+
+        mesh->setBoneLoc(a_bone_indices_, a_bone_weights_);
+        mesh->generateBoneArrayBuffers();
+
+        glm::mat4 finalTransform;
+        int nBones = MIN(mesh->getVertexBoneData().getNumBones(), MAX_BONES);
+        for (int i = 0; i < nBones; ++i) {
+            finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
+            glUniformMatrix4fv(u_bone_matrices_ + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
+        }
+    }
+
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 

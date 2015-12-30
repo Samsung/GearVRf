@@ -8,21 +8,29 @@ import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 
-public class GVRJassimpSceneObject extends GVRSceneObject {
+public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
     protected AiScene scene;
-
     public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene) {
         super(gvrContext);
-        this.scene = scene;
-        recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider));
+
+        if (scene != null) {
+            this.scene = scene;
+            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider));
+
+            // Animations
+            for (AiAnimation aiAnim : scene.getAnimations()) {
+                mAnimations.add(GVRJassimpAdapter.get().createAnimation(aiAnim, this));
+            }
+        }
     }
 
     private void recurseAssimpNodes(
@@ -103,7 +111,7 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
 
         /* Feature set */
         int assimpFeatureSet = 0x00000000;
-        
+
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
         meshMaterial.setDiffuseColor(diffuseColor.getRed(),
@@ -149,6 +157,13 @@ public class GVRJassimpSceneObject extends GVRSceneObject {
             }
         }
  
+        /* Skinning */
+        if (aiMesh.hasBones()) {
+            assimpFeatureSet = GVRShaderType.Assimp.setBit(
+                    assimpFeatureSet,
+                    GVRShaderType.Assimp.AS_SKINNING);
+        }
+
         /* Apply feature set to the material */
         meshMaterial.setShaderFeatureSet(assimpFeatureSet);
 

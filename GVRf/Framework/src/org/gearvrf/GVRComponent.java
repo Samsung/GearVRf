@@ -28,7 +28,7 @@ class GVRComponent extends GVRHybridObject {
 
     /**
      * Normal constructor
-     * 
+     *
      * @param gvrContext
      *            The current GVRF context
      * @param nativePointer

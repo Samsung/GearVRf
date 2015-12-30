@@ -33,6 +33,7 @@ import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
@@ -473,7 +474,7 @@ public abstract class GVRContext {
      * @throws IOException
      *             File does not exist or cannot be read
      *
-     * @deprecated Replaced by {@link #loadJassimpModel}
+     * @deprecated Replaced by {@link #loadModel}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename)
             throws IOException {
@@ -505,19 +506,112 @@ public abstract class GVRContext {
         return GVRImporter.getAssimpModel(this, assetRelativeFilename, settings);
     }
 
-    public GVRSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
-        return loadJassimpModelFromSD(externalFile, GVRImportSettings.getRecommendedSettings());
+    /**
+     * @deprecated Replaced by {@link #loadModelFromSD}
+     */
+    public GVRModelSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
+        return loadModelFromSD(externalFile);
     }
 
-    public GVRSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
+    /**
+     * @deprecated Replaced by {@link #loadModelFromSD}
+     */
+    public GVRModelSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
+        return loadModelFromSD(externalFile, settings);
+    }
+
+    /**
+     * @deprecated Replaced by {@link #loadModel}
+     */
+    public GVRModelSceneObject loadJassimpModel(String assetFile) throws IOException {
+        return loadModel(assetFile);
+    }
+
+    /**
+     * @deprecated Replaced by {@link #loadModel}
+     */
+    public GVRModelSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
+        return loadModel(assetFile, settings);
+    }
+
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model stored in the Android SD card.
+     *
+     * @param externalFile
+     *            A filename, relative to the SD card's root directory.
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    public GVRModelSceneObject loadModelFromSD(String externalFile) throws IOException {
+        return loadModelFromSD(externalFile, GVRImportSettings.getRecommendedSettings());
+    }
+
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model stored in the Android SD card.
+     *
+     * @param externalFile
+     *            A filename, relative to the SD card's root directory.
+     *
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    public GVRModelSceneObject loadModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return GVRImporter.loadJassimpModelFromSD(this, externalFile, settings);
     }
 
-    public GVRSceneObject loadJassimpModel(String assetFile) throws IOException {
-        return loadJassimpModel(assetFile, GVRImportSettings.getRecommendedSettings());
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model stored in Android application assets.
+     *
+     * @param assetFile
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    public GVRModelSceneObject loadModel(String assetFile) throws IOException {
+        return loadModel(assetFile, GVRImportSettings.getRecommendedSettings());
     }
 
-    public GVRSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model stored in the Android SD card.
+     *
+     * @param assetFile
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     *
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     *
+     */
+    public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return GVRImporter.loadJassimpModel(this, assetFile, settings);
     }
 
