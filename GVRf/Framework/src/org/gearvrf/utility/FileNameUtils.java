@@ -114,7 +114,7 @@ public class FileNameUtils {
         int lastSlashIndex = path.lastIndexOf("/");
         String directory = lastSlashIndex == -1 ? "" : path.substring(0, lastSlashIndex);
         return String.format("%s://%s%s%s%s", url.getProtocol(),
-                url.getUserInfo() == null ? "" : url.getUserInfo(),
+                url.getUserInfo() == null ? "" : url.getUserInfo() + "@",
                 url.getHost(),
                 url.getPort() == -1 ? "" : Integer.toString(url.getPort()),
                 directory);
