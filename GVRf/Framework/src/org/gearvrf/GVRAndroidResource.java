@@ -15,10 +15,12 @@
 
 package org.gearvrf;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 import org.gearvrf.utility.MarkingFileInputStream;
 
@@ -60,6 +62,7 @@ public class GVRAndroidResource {
     private final String assetPath;
     // For hint to Assimp
     private String resourceFilePath;
+    private final URL url;
 
     /**
      * Open any file you have permission to read.
@@ -78,6 +81,7 @@ public class GVRAndroidResource {
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = null;
         resourceFilePath = null;
+        url = null;
     }
 
     /**
@@ -121,6 +125,7 @@ public class GVRAndroidResource {
         filePath = null;
         this.resourceId = resourceId;
         assetPath = null;
+        url = null;
         TypedValue value = new TypedValue();
         resources.getValue(resourceId, value, true);
         resourceFilePath = value.string.toString();
@@ -167,6 +172,25 @@ public class GVRAndroidResource {
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = assetRelativeFilename;
         resourceFilePath = null;
+        url = null;
+    }
+
+    /**
+     * Open resource from a URL.
+     *
+     * @param url
+     *            A Java {@link URL} object
+     * @throws IOException
+     */
+    public GVRAndroidResource(URL url) throws IOException {
+        stream = new BufferedInputStream(url.openStream(), 8192);
+        debugState = DebugStates.OPEN;
+
+        filePath = null;
+        resourceId = 0; // No R.whatever field will ever be 0
+        assetPath = null;
+        resourceFilePath = null;
+        this.url = url;
     }
 
     /**
@@ -260,6 +284,8 @@ public class GVRAndroidResource {
         } else if (assetPath != null) {
             return assetPath
                     .substring(assetPath.lastIndexOf(File.separator) + 1);
+        } else if (url != null) {
+            return url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
         }
         return null;
     }
@@ -279,6 +305,8 @@ public class GVRAndroidResource {
                 + ((assetPath == null) ? 0 : assetPath.hashCode());
         result = prime * result
                 + ((filePath == null) ? 0 : filePath.hashCode());
+        result = prime * result
+                + ((url == null) ? 0 : url.hashCode());
         result = prime * result + resourceId;
         return result;
     }
@@ -325,8 +353,8 @@ public class GVRAndroidResource {
      */
     @Override
     public String toString() {
-        return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s}",
-                debugState, filePath, resourceId, assetPath);
+        return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s, url=%s}",
+                debugState, filePath, resourceId, assetPath, url);
     }
 
     /*

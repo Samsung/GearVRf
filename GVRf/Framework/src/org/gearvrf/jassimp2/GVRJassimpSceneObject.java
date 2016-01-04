@@ -8,6 +8,7 @@ import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
@@ -19,8 +20,11 @@ import org.gearvrf.utility.Log;
 public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
     protected AiScene scene;
-    public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene) {
+    protected GVRResourceVolume volume;
+
+    public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume) {
         super(gvrContext);
+        this.volume = volume;
 
         if (scene != null) {
             this.scene = scene;
@@ -145,15 +149,19 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 AiTextureType.DIFFUSE, 0);
         if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
             try {
-                Future<GVRTexture> futureDiffuseTexture = getGVRContext()
-                        .loadFutureTexture(new GVRAndroidResource(getGVRContext(),
-                        		texDiffuseFileName));
-                meshMaterial.setMainTexture(futureDiffuseTexture);
+                if (volume != null) {
+                    GVRAndroidResource resource = volume.openResource(texDiffuseFileName);
+                    Future<GVRTexture> futureDiffuseTexture = getGVRContext()
+                            .loadFutureTexture(resource);
+                    meshMaterial.setMainTexture(futureDiffuseTexture);
+                }
                 assimpFeatureSet = GVRShaderType.Assimp.setBit(
                         assimpFeatureSet,
                         GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
             } catch (FileNotFoundException file) {
                 Log.e(TAG, "Couldn't find diffuse texture: %s", texDiffuseFileName);
+            } catch (IOException e) {
+                Log.e(TAG, "Error in loading texture: %s", texDiffuseFileName);
             }
         }
  
