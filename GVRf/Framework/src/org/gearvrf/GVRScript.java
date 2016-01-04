@@ -16,7 +16,6 @@
 package org.gearvrf;
 
 import org.gearvrf.animation.GVRAnimation;
-import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.script.IScriptable;
 
 import android.graphics.Bitmap;

@@ -151,7 +151,8 @@ public class VrAppSettings {
             COLOR_8888(3), // 8-bit red, 8-bit green, 8-bit blue, 8-bit alpha
                            // channel.
 
-            COLOR_8888_sRGB(4);// SRGB color format
+            COLOR_8888_sRGB(4), // SRGB color format
+            COLOR_RGBA16F(5);   // GL_RGBA16F
 
             private final int value;
 

@@ -56,8 +56,10 @@ public:
         memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
     }
 
-    ~GLTexture() {
-        deleter_->queueTexture(id_);
+    virtual ~GLTexture() {
+        if (GL_TASK_NONE == pending_gl_task_) {
+            deleter_->queueTexture(id_);
+        }
     }
 
     GLuint id() {

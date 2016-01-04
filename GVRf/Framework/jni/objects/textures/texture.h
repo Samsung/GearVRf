@@ -62,8 +62,7 @@ public:
 
         // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
         if (texture_parameters[2] > 1.0f) {
-            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                    texture_parameters[2]);
+            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, texture_parameters[2]);
         }
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
