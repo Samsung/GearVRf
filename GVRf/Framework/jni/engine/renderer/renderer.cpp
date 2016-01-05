@@ -35,6 +35,8 @@
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
 
+#include "objects/components/directional_light.h"
+
 namespace gvr {
 
 static int numberDrawCalls;
@@ -160,6 +162,49 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     // bone/weight/joint and other assimp data, we will put general model conversion
     // on hold and do this kind of conversion fist
 
+    //  LOGI(" Render Camera Framebuffer %d ", framebufferId);
+
+    DirectionalLight *cameraLight = scene->getDirectionalLight();
+
+    bool renderShadow = cameraLight; // TODO reader from scene;
+
+    if ((framebufferId != 0) && !renderShadow) {
+        renderCamera(scene, camera, framebufferId, viewportX, viewportY,
+                viewportWidth, viewportHeight, shader_manager,
+                post_effect_shader_manager, post_effect_render_texture_a,
+                post_effect_render_texture_b, ShadowShader::RENDER_DEFAULT);
+
+    } else {
+        shader_manager->getShadowShader()->setCameraLight(cameraLight);
+
+        renderCamera(scene, camera,
+                shader_manager->getShadowShader()->getFBOFromLight(), viewportX,
+                viewportY, viewportWidth, viewportHeight, shader_manager,
+                post_effect_shader_manager, post_effect_render_texture_a,
+                post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
+
+        renderCamera(scene, camera,
+                shader_manager->getShadowShader()->getFBOFromCamera(),
+                viewportX, viewportY, viewportWidth, viewportHeight,
+                shader_manager, post_effect_shader_manager,
+                post_effect_render_texture_a, post_effect_render_texture_b,
+                ShadowShader::RENDER_FROM_CAMERA);
+
+        renderCamera(scene, camera, framebufferId, viewportX, viewportY,
+                viewportWidth, viewportHeight, shader_manager,
+                post_effect_shader_manager, post_effect_render_texture_a,
+                post_effect_render_texture_b, ShadowShader::RENDER_WITH_SHADOW);
+    }
+
+}
+
+void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
+        int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+        ShaderManager* shader_manager,
+        PostEffectShaderManager* post_effect_shader_manager,
+        RenderTexture* post_effect_render_texture_a,
+        RenderTexture* post_effect_render_texture_b, int modeShadow) {
+
     numberDrawCalls = 0;
     numberTriangles = 0;
 
@@ -193,7 +238,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager);
+                    camera->render_mask(), shader_manager, modeShadow);
         }
     } else {
         RenderTexture* texture_render_texture = post_effect_render_texture_a;
@@ -211,7 +256,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager);
+                    camera->render_mask(), shader_manager, modeShadow);
         }
 
         glDisable(GL_DEPTH_TEST);
@@ -480,11 +525,96 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int viewportX,
             post_effect_render_texture_a, post_effect_render_texture_b);
 }
 
+bool Renderer::isShader3d(const Material* curr_material) {
+    bool shaders3d;
+
+    switch (curr_material->shader_type()) {
+    case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
+    case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
+    case Material::ShaderType::OES_SHADER:
+    case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
+    case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
+    case Material::ShaderType::CUBEMAP_SHADER:
+    case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
+        shaders3d = false;
+        break;
+    case Material::ShaderType::TEXTURE_SHADER:
+    case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
+    case Material::ShaderType::ASSIMP_SHADER:
+    default:
+        shaders3d = true;
+        break;
+    }
+
+    return shaders3d;
+}
+
+bool Renderer::isDefaultPosition3d(const Material* curr_material) {
+    bool defaultShadersForm = false;
+
+    switch (curr_material->shader_type()) {
+    case Material::ShaderType::TEXTURE_SHADER:
+        defaultShadersForm = true;
+        break;
+    default:
+        defaultShadersForm = false;
+        break;
+    }
+
+    return defaultShadersForm;
+}
+
+void Renderer::calculateShadow(ShaderManager* shader_manager,
+        const Material* curr_material, const glm::mat4& model_matrix,
+        const int modeShadow, glm::vec3& lightPosition,
+        glm::mat4& vp_matrixLightModel) {
+
+    bool isShadowMode = modeShadow != 0
+            && modeShadow != ShadowShader::RENDER_FROM_CAMERA;
+
+    if (isShadowMode && isShader3d(curr_material)) {
+
+        DirectionalLight *cameraLight =
+                shader_manager->getShadowShader()->getCameraLight();
+
+        lightPosition = cameraLight->getLightPosition();
+        glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        glm::mat4 vp_matrixProj;
+
+        switch (cameraLight->getRenderMode()) {
+        case DirectionalLight::ORTOGONAL: {
+            float sizeAngle = (float) cameraLight->getSpotangle(); // TODO: rename
+            glm::mat4 vp_matrixOrtho = glm::ortho(-sizeAngle, sizeAngle,
+                    -sizeAngle, sizeAngle, 0.1f, 60.0f);
+            vp_matrixProj = vp_matrixOrtho;
+            break;
+        }
+
+        default:
+        case DirectionalLight::PERSPECTIVE: {
+            glm::mat4 vp_matrixPersp = glm::perspective(
+                    cameraLight->getSpotangle(), 1.0f, .1f, 1000.0f); // fovy 90
+            vp_matrixProj = vp_matrixPersp;
+            break;
+        }
+        }
+
+        glm::mat4 vp_matrixLook = glm::lookAt(lightPosition,
+                cameraLight->getLightDirection(), UP);
+        vp_matrixLightModel = glm::mat4(
+                vp_matrixProj * vp_matrixLook * model_matrix);
+
+        glm::mat4 vp_matrixLight = glm::mat4(vp_matrixLook);
+        vp_matrixLight = glm::mat4(1);
+    }
+}
+
 void Renderer::renderRenderData(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager) {
-    if (render_mask & render_data->render_mask()) {
+        int render_mask, ShaderManager* shader_manager, int modeShadow) {
 
+    if (render_mask & render_data->render_mask()) {
         if (render_data->offset()) {
             glEnable (GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(render_data->offset_factor(),
@@ -519,63 +649,97 @@ void Renderer::renderRenderData(RenderData* render_data,
                     try {
                         bool right = render_mask
                                 & RenderData::RenderMaskBit::Right;
-                        switch (curr_material->shader_type()) {
-                        case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
-                            shader_manager->getUnlitHorizontalStereoShader()->render(
-                                    mvp_matrix, render_data, curr_material,
-                                    right);
-                            break;
-                        case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
-                            shader_manager->getUnlitVerticalStereoShader()->render(
-                                    mvp_matrix, render_data, curr_material,
-                                    right);
-                            break;
-                        case Material::ShaderType::OES_SHADER:
-                            shader_manager->getOESShader()->render(mvp_matrix,
-                                    render_data, curr_material);
-                            break;
-                        case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
-                            shader_manager->getOESHorizontalStereoShader()->render(
-                                    mvp_matrix, render_data, curr_material,
-                                    right);
-                            break;
-                        case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
-                            shader_manager->getOESVerticalStereoShader()->render(
-                                    mvp_matrix, render_data, curr_material,
-                                    right);
-                            break;
-                        case Material::ShaderType::CUBEMAP_SHADER:
-                            shader_manager->getCubemapShader()->render(
-                                    model_matrix, mvp_matrix, render_data,
-                                    curr_material);
-                            break;
-                        case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                            shader_manager->getCubemapReflectionShader()->render(
-                                    mv_matrix, glm::inverseTranspose(mv_matrix),
-                                    glm::inverse(view_matrix), mvp_matrix,
-                                    render_data, curr_material);
-                            break;
-                        case Material::ShaderType::TEXTURE_SHADER:
-                            shader_manager->getTextureShader()->render(
-                                    mv_matrix, glm::inverseTranspose(mv_matrix),
-                                    mvp_matrix, render_data, curr_material);
-                            break;
-                        case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
-                            shader_manager->getExternalRendererShader()->render(
-                                    mv_matrix, glm::inverseTranspose(mv_matrix),
-                                    mvp_matrix, render_data);
-                            break;
-                        case Material::ShaderType::ASSIMP_SHADER:
-                            shader_manager->getAssimpShader()->render(mv_matrix,
+
+                        /////////
+
+                        glm::mat4 vp_matrixLightModel;
+                        glm::vec3 lightPosition;
+
+                        calculateShadow(shader_manager, curr_material, model_matrix,
+                                modeShadow, lightPosition, vp_matrixLightModel);
+
+                        if (modeShadow == ShadowShader::RENDER_WITH_SHADOW
+                                && isDefaultPosition3d(curr_material)) {
+                            // render the shadow
+                            shader_manager->getShadowShader()->render(
+                                    mvp_matrix, vp_matrixLightModel, mv_matrix,
                                     glm::inverseTranspose(mv_matrix),
-                                    mvp_matrix, render_data, curr_material);
-                            break;
-                        default:
-                            shader_manager->getCustomShader(
-                                    curr_material->shader_type())->render(
-                                    mvp_matrix, render_data, curr_material,
-                                    right);
-                            break;
+                                    view_matrix, model_matrix, lightPosition,
+                                    render_data, curr_material, modeShadow);
+                        } else {
+                            //ShadowShader::RENDER_FROM_LIGHT
+                            //ShadowShader::RENDER_FROM_CAMERA
+
+                            if (modeShadow == ShadowShader::RENDER_FROM_LIGHT) { // ShadowMap
+                                // generates the ShadowMap from light
+                                mvp_matrix = vp_matrixLightModel;
+
+                                // if (!render_data->mesh()->hasShadow()) // TODO
+                                //  continue;
+                            }
+
+                            switch (curr_material->shader_type()) {
+                            case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
+                                shader_manager->getUnlitHorizontalStereoShader()->render(
+                                        mvp_matrix, render_data, curr_material,
+                                        right);
+                                break;
+                            case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
+                                shader_manager->getUnlitVerticalStereoShader()->render(
+                                        mvp_matrix, render_data, curr_material,
+                                        right);
+                                break;
+                            case Material::ShaderType::OES_SHADER:
+                                shader_manager->getOESShader()->render(
+                                        mvp_matrix, render_data, curr_material);
+                                break;
+                            case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
+                                shader_manager->getOESHorizontalStereoShader()->render(
+                                        mvp_matrix, render_data, curr_material,
+                                        right);
+                                break;
+                            case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
+                                shader_manager->getOESVerticalStereoShader()->render(
+                                        mvp_matrix, render_data, curr_material,
+                                        right);
+                                break;
+                            case Material::ShaderType::CUBEMAP_SHADER:
+                                shader_manager->getCubemapShader()->render(
+                                        model_matrix, mvp_matrix, render_data,
+                                        curr_material);
+                                break;
+                            case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
+                                shader_manager->getCubemapReflectionShader()->render(
+                                        mv_matrix,
+                                        glm::inverseTranspose(mv_matrix),
+                                        glm::inverse(view_matrix), mvp_matrix,
+                                        render_data, curr_material);
+                                break;
+                            case Material::ShaderType::TEXTURE_SHADER:
+                                shader_manager->getTextureShader()->render(
+                                        mv_matrix,
+                                        glm::inverseTranspose(mv_matrix),
+                                        mvp_matrix, render_data, curr_material);
+                                break;
+                            case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
+                                shader_manager->getExternalRendererShader()->render(
+                                        mv_matrix,
+                                        glm::inverseTranspose(mv_matrix),
+                                        mvp_matrix, render_data);
+                                break;
+                            case Material::ShaderType::ASSIMP_SHADER:
+                                shader_manager->getAssimpShader()->render(
+                                        mv_matrix,
+                                        glm::inverseTranspose(mv_matrix),
+                                        mvp_matrix, render_data, curr_material);
+                                break;
+                            default:
+                                shader_manager->getCustomShader(
+                                        curr_material->shader_type())->render(
+                                        mvp_matrix, render_data, curr_material,
+                                        right);
+                                break;
+                            }
                         }
                     } catch (const std::string &error) {
                         LOGE(
