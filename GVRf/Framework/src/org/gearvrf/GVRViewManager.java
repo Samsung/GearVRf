@@ -581,18 +581,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
 
             try {
-
-                if (mScript.getCurrentPlugin() == null) {
-                    mScript.onInit(GVRViewManager.this);
-                } else {
-                    // get the egl contect here, plugin creation wil happen
-                    // after this, which will give us widget texture to call
-                    // init, otherwise deadlock!!
-                    mScript.setEGLContext(((EGL10) EGLContext.getEGL())
-                            .eglGetCurrentContext());
-                    mScript.getCurrentPlugin().syncNotify();
+                if (mScript.getCurrentPlugin() != null) {
                     initWithPlugin();
-                }
+                  }
+                 mScript.onInit(GVRViewManager.this);
             } catch (Throwable t) {
                 t.printStackTrace();
                 mActivity.finish();
@@ -860,10 +852,13 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     }
 
     private void initWithPlugin() throws Throwable {
+        
+        mScript.setEGLContext(((EGL10) EGLContext.getEGL())
+                .eglGetCurrentContext());
+        mScript.getCurrentPlugin().syncNotify();
+        
         while (!mScript.getCurrentPlugin().isInitialised()) {
             mScript.getCurrentPlugin().syncWait();
         }
-        mScript.onInit(GVRViewManager.this);
-
     }
 }

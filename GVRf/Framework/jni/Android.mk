@@ -26,6 +26,11 @@ LOCAL_SRC_FILES := ../libs/libassimp.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := libgdx
+LOCAL_SRC_FILES := ../libs/libgdx.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 
 ifndef OVR_MOBILE_SDK
 	OVR_MOBILE_SDK=../../ovr_sdk_mobile
@@ -37,6 +42,7 @@ include $(OVR_MOBILE_SDK)/cflags.mk
 #$(call import-module,$(OVR_MOBILE_SDK)/LibOVR/Projects/Android/jni)
 #$(call import-module,$(OVR_MOBILE_SDK)/VrApi/Projects/AndroidPrebuilt/jni)
 #$(call import-module,$(OVR_MOBILE_SDK)/VrAppFramework/Projects/Android/jni)
+
 
 
 

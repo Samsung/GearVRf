@@ -23,14 +23,14 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "objects/eye_type.h"
-#include "objects/recyclable_object.h"
+#include "objects/hybrid_object.h"
 
 namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
 
-class UnlitFboShader: public RecyclableObject {
+class UnlitFboShader: public HybridObject {
 public:
     UnlitFboShader();
     ~UnlitFboShader();
