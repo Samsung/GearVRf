@@ -50,7 +50,6 @@ import android.view.MotionEvent;
  * The class also allows external input devices to be added using the
  * {@link GVRInputManager#addCursorController(GVRCursorController)} method.
  * 
- * 
  */
 public abstract class GVRInputManager {
     private static final String TAG = GVRInputManager.class.getSimpleName();
@@ -86,16 +85,9 @@ public abstract class GVRInputManager {
         controllerIds = new SparseArray<GVRBaseController>();
         cache = new LongSparseArray<GVRBaseController>();
         mouseDeviceManager = new GVRMouseDeviceManager(androidContext);
-        gamepadDeviceManager = new GVRGamepadDeviceManager(androidContext,
-                new int[] { KeyEvent.KEYCODE_BUTTON_A,
-                        KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_X,
-                        KeyEvent.KEYCODE_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_L1,
-                        KeyEvent.KEYCODE_BUTTON_R1, KeyEvent.KEYCODE_BUTTON_L2,
-                        KeyEvent.KEYCODE_BUTTON_R2, KeyEvent.KEYCODE_BUTTON_Y,
-                        KeyEvent.KEYCODE_BUTTON_Z });
+        gamepadDeviceManager = new GVRGamepadDeviceManager(androidContext);
         for (int deviceId : inputManager.getInputDeviceIds()) {
-            InputDevice device = inputManager.getInputDevice(deviceId);
-            addDevice(device);
+            addDevice(deviceId);
         }
     }
 
@@ -115,10 +107,9 @@ public abstract class GVRInputManager {
      */
     public List<GVRCursorController> getCursorControllers() {
         List<GVRCursorController> result = new ArrayList<GVRCursorController>();
-        for (int index = 0, size = controllerIds
-                .size(); index < size; index++) {
-            int key = controllerIds.keyAt(index);
-            GVRBaseController controller = controllerIds.get(key);
+        for (int index = 0, size = cache.size(); index < size; index++) {
+            long key = cache.keyAt(index);
+            GVRBaseController controller = cache.get(key);
             result.add(controller);
         }
         return result;
@@ -126,6 +117,8 @@ public abstract class GVRInputManager {
 
     protected void close() {
         inputManager.unregisterInputDeviceListener(inputDeviceListener);
+        controllerIds.clear();
+        cache.clear();
         mouseDeviceManager.stop();
         gamepadDeviceManager.stop();
     }
@@ -154,10 +147,8 @@ public abstract class GVRInputManager {
         return GVRCursorType.UNKNOWN;
     }
 
-    // returns true if a new device is found
-    private boolean addDevice(InputDevice device) {
-        Log.d(TAG, "onInputDeviceAdded " + device.getName());
-        GVRCursorType cursorType = getGVRInputDeviceType(device);
+    // Return the key if there is one else return -1
+    private long getCacheKey(InputDevice device, GVRCursorType cursorType) {
         if (cursorType != GVRCursorType.UNKNOWN
                 && cursorType != GVRCursorType.EXTERNAL) {
             int vendorId = device.getVendorId();
@@ -166,38 +157,82 @@ public abstract class GVRInputManager {
             // We do not want to add the Oculus touchpad as a mouse device.
             if (vendorId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID
                     && productId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) {
-                return false;
+                return -1;
             }
 
+            // Sometimes a device shows up using two device ids
+            // here we try to show both devices as one using the
+            // product and vendor id
             long key = device.getVendorId() << 32;
             key = key | device.getProductId();
-            GVRBaseController controller = cache.get(key);
+            return key;
+        }
+        return -1;
+    }
 
+    // returns controller if a new device is found
+    private GVRBaseController addDevice(int deviceId) {
+        InputDevice device = inputManager.getInputDevice(deviceId);
+        GVRCursorType cursorType = getGVRInputDeviceType(device);
+        long key = getCacheKey(device, cursorType);
+        if (key != -1) {
+            GVRBaseController controller = cache.get(key);
             if (controller == null) {
                 if (cursorType == GVRCursorType.MOUSE) {
                     controller = mouseDeviceManager
-                            .getGVRCursorController(context);
+                            .getCursorController(context);
                 } else if (cursorType == GVRCursorType.CONTROLLER) {
                     controller = gamepadDeviceManager
-                            .getGVRCursorController(context);
+                            .getCursorController(context);
                 }
                 cache.put(key, controller);
+                controllerIds.put(device.getId(), controller);
+                return controller;
+            } else {
+                controllerIds.put(device.getId(), controller);
             }
-            controllerIds.put(device.getId(), controller);
-            return true;
         }
-        return false;
+        return null;
+    }
+
+    private GVRBaseController removeDevice(int deviceId) {
+        /*
+         * We can't use the inputManager here since the device has already been
+         * detached and the inputManager would return a null. Instead use the
+         * list of controllers to find the device and then do a reverse lookup
+         * on the cached controllers to remove the cached entry.
+         */
+        GVRBaseController controller = controllerIds.get(deviceId);
+
+        if (controller != null) {
+            // Do a reverse lookup and remove the controller
+            for (int index = 0; index < cache.size(); index++) {
+                long key = cache.keyAt(index);
+                GVRBaseController cachedController = cache.get(key);
+                if (cachedController == controller) {
+                    cache.remove(key);
+                    controllerIds.remove(deviceId);
+                    if (controller.getCursorType() == GVRCursorType.MOUSE) {
+                        mouseDeviceManager.removeCursorController(controller);
+                    } else if (controller
+                            .getCursorType() == GVRCursorType.CONTROLLER) {
+                        gamepadDeviceManager.removeCursorController(controller);
+                    }
+                    return controller;
+                }
+            }
+            controllerIds.remove(deviceId);
+        }
+        return null;
     }
 
     private InputDeviceListener inputDeviceListener = new InputDeviceListener() {
 
         @Override
         public void onInputDeviceRemoved(int deviceId) {
-            Log.d(TAG, "onInputDeviceRemoved " + deviceId);
-            GVRBaseController controller = controllerIds.get(deviceId);
+            GVRBaseController controller = removeDevice(deviceId);
             if (controller != null) {
                 removeCursorController(controller);
-                controllerIds.remove(deviceId);
             }
         }
 
@@ -208,15 +243,9 @@ public abstract class GVRInputManager {
 
         @Override
         public void onInputDeviceAdded(int deviceId) {
-            // Sometimes a device shows up using two device ids
-            // here we try to show both devices as one using the
-            // product and vendor id
             Log.d(TAG, "onInputDeviceAdded " + deviceId);
-
-            InputDevice inputDevice = inputManager.getInputDevice(deviceId);
-
-            if (addDevice(inputDevice)) {
-                GVRBaseController controller = controllerIds.get(deviceId);
+            GVRBaseController controller = addDevice(deviceId);
+            if (controller != null) {
                 addCursorController(controller);
             }
         }
@@ -296,7 +325,5 @@ public abstract class GVRInputManager {
      *            the external {@link GVRCursorController} to be removed from
      *            the framework.
      */
-    public abstract void removeCursorController(
-            GVRCursorController controller);
-
+    public abstract void removeCursorController(GVRCursorController controller);
 }

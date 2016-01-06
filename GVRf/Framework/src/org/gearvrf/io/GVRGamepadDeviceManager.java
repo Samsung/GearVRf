@@ -38,10 +38,26 @@ class GVRGamepadDeviceManager {
     private static final String TAG = GVRGamepadDeviceManager.class
             .getSimpleName();
     private static final int DELAY_MILLISECONDS = 16;
+    private static final String THREAD_NAME = "GVRGamepadManagerThread";
+    private static final Set<Integer> ACTIVE_BUTTONS = new HashSet<Integer>();
 
     private EventHandlerThread thread;
     private SparseArray<GVRGamepadController> controllers;
     private boolean threadStarted = false;
+
+    static {
+        // Add the buttons that define the active state
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_A);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_B);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_X);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_Y);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_L1);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_R1);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_L2);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_R2);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_Y);
+        ACTIVE_BUTTONS.add(KeyEvent.KEYCODE_BUTTON_Z);
+    }
 
     /**
      * {@link GVRGamepadDeviceManager} is a helper class that can be used to
@@ -69,14 +85,14 @@ class GVRGamepadDeviceManager {
      *            buttons.
      * 
      */
-    GVRGamepadDeviceManager(Context context, int[] activeButtons) {
-        thread = new EventHandlerThread("GVRGamepadManagerThread",
-                activeButtons);
+    GVRGamepadDeviceManager(Context context) {
+        thread = new EventHandlerThread(THREAD_NAME);
         controllers = new SparseArray<GVRGamepadController>();
     }
 
-    GVRBaseController getGVRCursorController(GVRContext context) {
+    GVRBaseController getCursorController(GVRContext context) {
         if (threadStarted == false) {
+            Log.d(TAG, "Starting " + THREAD_NAME);
             thread.start();
             threadStarted = true;
         }
@@ -88,10 +104,20 @@ class GVRGamepadDeviceManager {
         return controller;
     }
 
-    private static class GVRGamepadController extends GVRBaseController {
-        private static final float MAX_RADIUS_SQUARE = 30.0f * 30.0f;
-        private static final float MIN_RADIUS_SQUARE = 2.0f * 2.0f;
+    void removeCursorController(GVRBaseController controller) {
+        int id = controller.getId();
+        controllers.remove(id);
 
+        // stop the thread if no more devices are online
+        if (controllers.size() == 0 && threadStarted) {
+            Log.d(TAG, "Stopping " + THREAD_NAME);
+            thread.interrupt();
+            thread = new EventHandlerThread(THREAD_NAME);
+            threadStarted = false;
+        }
+    }
+
+    private static class GVRGamepadController extends GVRBaseController {
         private static final float[] UP_VECTOR = { 0.0f, 1.0f, 0.0f, 1.0f };
         private static final float[] RIGHT_VECTOR = { 1.0f, 0.0f, 0.0f, 1.0f };
 
@@ -111,7 +137,7 @@ class GVRGamepadDeviceManager {
             super(cursorType);
             this.context = context;
             internalObject = new GVRSceneObject(context);
-            internalObject.getTransform().setPosition(0.0f, 0.0f, -7.0f);
+            internalObject.getTransform().setPosition(0.0f, 0.0f, -1.0f);
             this.thread = thread;
         }
 
@@ -183,33 +209,44 @@ class GVRGamepadDeviceManager {
                     }
                 }
                 setActive(active);
-                setPosition(internalObject.getTransform().getPositionX(),
+                super.setPosition(internalObject.getTransform().getPositionX(),
                         internalObject.getTransform().getPositionY(),
                         internalObject.getTransform().getPositionZ());
-                invalidate();
             }
         }
 
         private boolean checkBounds(float[] point) {
             float lhs = square(point[0]) + square(point[1]) + square(point[2]);
-            return (lhs <= MAX_RADIUS_SQUARE && lhs >= MIN_RADIUS_SQUARE);
+            return (lhs <= getMaxRadius() && lhs >= getMinRadius());
         }
 
         private static float square(float x) {
             return x * x;
         }
 
+        private float getMinRadius() {
+            float nearDepth = getNearDepth();
+            return nearDepth * nearDepth;
+        }
+
+        private float getMaxRadius() {
+            float farDepth = getFarDepth();
+            return farDepth * farDepth;
+        }
+
+        @Override
+        public void setPosition(float x, float y, float z) {
+            internalObject.getTransform().setPosition(x, y, z);
+            super.setPosition(x, y, z);
+        }
     }
 
     private class EventHandlerThread extends Thread {
-        private final Set<Integer> activeButtons;
         private int dpadState;
         private boolean isActive = false;
         private float x, y, ry;
         private Object lock = new Object();
-
         private boolean pedalDown = false;
-
         private EventDataHolder holder;
 
         private class EventDataHolder {
@@ -237,12 +274,8 @@ class GVRGamepadDeviceManager {
             }
         }
 
-        EventHandlerThread(String name, int[] activeButtons) {
+        EventHandlerThread(String name) {
             super(name);
-            this.activeButtons = new HashSet<Integer>();
-            for (int button = 0; button < activeButtons.length; button++) {
-                this.activeButtons.add(activeButtons[button]);
-            }
         }
 
         @Override
@@ -282,7 +315,7 @@ class GVRGamepadDeviceManager {
                     Thread.sleep(DELAY_MILLISECONDS);
                 }
             } catch (InterruptedException e) {
-                Log.d(TAG, "EventHandlerThread stopped");
+                Log.d(TAG, "Stopped " + THREAD_NAME);
             }
         }
 
@@ -291,7 +324,7 @@ class GVRGamepadDeviceManager {
             int action = event.getAction();
 
             if (id != -1) {
-                if (activeButtons.contains(keyCode)) {
+                if (ACTIVE_BUTTONS.contains(keyCode)) {
                     if (action == KeyEvent.ACTION_DOWN && isActive == false) {
                         isActive = true;
                     } else

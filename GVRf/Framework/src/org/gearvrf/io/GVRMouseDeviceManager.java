@@ -38,18 +38,20 @@ import android.view.MotionEvent;
 class GVRMouseDeviceManager {
     private static final String TAG = GVRMouseDeviceManager.class
             .getSimpleName();
-    private final EventHandlerThread thread;
-    private SparseArray<GVRMouseController> devices;
+    private static final String THREAD_NAME = "GVRMouseManagerThread";
+    private EventHandlerThread thread;
+    private SparseArray<GVRMouseController> controllers;
     private boolean threadStarted = false;
 
     GVRMouseDeviceManager(Context context) {
-        thread = new EventHandlerThread("GVRMouseManagerThread");
-        devices = new SparseArray<GVRMouseController>();
+        thread = new EventHandlerThread(THREAD_NAME);
+        controllers = new SparseArray<GVRMouseController>();
     }
 
-    GVRBaseController getGVRCursorController(GVRContext context) {
+    GVRBaseController getCursorController(GVRContext context) {
         Log.d(TAG, "Creating Mouse Device");
         if (threadStarted == false) {
+            Log.d(TAG, "Starting " + THREAD_NAME);
             thread.start();
             thread.prepareHandler();
             threadStarted = true;
@@ -57,15 +59,28 @@ class GVRMouseDeviceManager {
         GVRMouseController controller = new GVRMouseController(context,
                 GVRCursorType.MOUSE, thread);
         int id = controller.getId();
-        devices.append(id, controller);
+        controllers.append(id, controller);
         return controller;
+    }
+
+    void removeCursorController(GVRBaseController controller) {
+        int id = controller.getId();
+        controllers.remove(id);
+
+        // stop the thread if no more devices are online
+        if (controllers.size() == 0 && threadStarted) {
+            Log.d(TAG, "Stopping " + THREAD_NAME);
+            thread.quitSafely();
+            thread = new EventHandlerThread(THREAD_NAME);
+            threadStarted = false;
+        }
     }
 
     static class GVRMouseController extends GVRBaseController {
 
         private EventHandlerThread thread;
         private GVRContext context;
-        private float x = 0.0f, y = 0.0f, z = -7.0f;
+        private float x = 0.0f, y = 0.0f, z = -1.0f;
 
         GVRMouseController(GVRContext context, GVRCursorType cursorType,
                 EventHandlerThread thread) {
@@ -94,7 +109,8 @@ class GVRMouseDeviceManager {
             GVRScene scene = context.getMainScene();
             if (scene != null) {
                 float depth = this.z;
-                if (((depth + z) <= -2.0f) && ((depth + z) >= -30.0f)) {
+                if (((depth + z) <= getNearDepth())
+                        && ((depth + z) >= getFarDepth())) {
                     float frustumWidth, frustumHeight;
                     depth = depth + z;
 
@@ -114,9 +130,16 @@ class GVRMouseDeviceManager {
                     this.z = depth;
                 }
                 setActive(active);
-                setPosition(this.x, this.y, this.z);
-                invalidate();
+                super.setPosition(this.x, this.y, this.z);
             }
+        }
+
+        @Override
+        public void setPosition(float x, float y, float z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            super.setPosition(x, y, z);
         }
     }
 
@@ -167,7 +190,7 @@ class GVRMouseDeviceManager {
         private void processMouseInput(int uniqueId, MotionEvent motionEvent,
                 int historyPos) {
             if (getNormalizedCoordinates(motionEvent)) {
-                GVRMouseController device = devices.get(uniqueId);
+                GVRMouseController device = controllers.get(uniqueId);
                 device.processMouseEvent(this.x, this.y, this.z, isActive);
             }
         }

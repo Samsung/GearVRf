@@ -19,6 +19,8 @@ import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRCursorType;
 import org.gearvrf.io.GVRInputManager;
 
+import android.opengl.Matrix;
+
 /**
  * Define a class of type {@link GVRCursorController} to register a new cursor
  * controller with the {@link GVRInputManager}.
@@ -35,8 +37,8 @@ import org.gearvrf.io.GVRInputManager;
  * manipulate the {@link GVRSceneObject} based on the input coming in to the
  * {@link GVRCursorController}.
  * 
- * Use the {@link GVRInputManager#addCursorController(GVRCursorController)}
- * call to add an external {@link GVRCursorController} to the framework.
+ * Use the {@link GVRInputManager#addCursorController(GVRCursorController)} call
+ * to add an external {@link GVRCursorController} to the framework.
  * 
  */
 public abstract class GVRCursorController {
@@ -48,7 +50,9 @@ public abstract class GVRCursorController {
     private boolean invalidate = false;
     private boolean active;
     private float rayX, rayY, rayZ;
-    private float x = 0.0f, y = 0.0f, z = -7.0f;
+    private float nearDepth, farDepth = -Float.MAX_VALUE;
+    private float[] position;
+
     private GVRSceneObject sceneObject;
     private Object sceneObjectLock = new Object();
 
@@ -56,6 +60,7 @@ public abstract class GVRCursorController {
         this.controllerId = uniqueControllerId;
         this.cursorType = cursorType;
         uniqueControllerId++;
+        position = new float[] { 0.0f, 0.0f, 0.0f, 1.0f };
     }
 
     /**
@@ -70,6 +75,8 @@ public abstract class GVRCursorController {
      * {@link GVRMouseDeviceManager} and {@link GVRGamepadDeviceManager}.
      * 
      * @return the {@link GVRCursorType} for the {@link GVRCursorController}.
+     * 
+     * @deprecated Use {@link GVRCursorController#getCursorType()} instead.
      */
     public GVRCursorType getGVRCursorType() {
         return cursorType;
@@ -107,12 +114,25 @@ public abstract class GVRCursorController {
      */
     protected void setActive(boolean active) {
         this.active = active;
+        invalidate = true;
     }
 
     public void setSceneObject(GVRSceneObject object) {
         synchronized (sceneObjectLock) {
+
+            if (sceneObject != null) {
+                // if there is already an attached scene object transfer the
+                // position to the new one
+                object.getTransform().setPosition(
+                        sceneObject.getTransform().getPositionX(),
+                        sceneObject.getTransform().getPositionY(),
+                        sceneObject.getTransform().getPositionZ());
+            } else {
+                // use the exiting position from the controller
+                object.getTransform().setPosition(position[0], position[1],
+                        position[2]);
+            }
             sceneObject = object;
-            sceneObject.getTransform().setPosition(x, y, z);
         }
     }
 
@@ -130,37 +150,111 @@ public abstract class GVRCursorController {
 
     /**
      * This is an important method with respect to the
-     * {@link GVRCursorController}.
-     * 
-     * In order to prevent excessive polling of the transform data by the
-     * {@link GVRInputManager}, we leave it to the {@link GVRCursorController}
-     * to let the {@link GVRInputManager} when to data is ready.
+     * {@link GVRCursorController}. In order to prevent excessive polling of the
+     * transform data by the {@link GVRInputManager}, we leave it to the
+     * {@link GVRCursorController} to let the {@link GVRInputManager} whe
      * 
      * Make sure that a call to invalidate is made whenever the
      * {@link GVRCursorController} has new data to be processed.
+     * 
+     * @deprecated invalidate is now called internally whenever a new data is
+     *             passed to the {@link GVRCursorController}. There is no need
+     *             for an explicit {@link GVRCursorController#invalidate()}
+     *             call.
      */
     protected void invalidate() {
-        invalidate = true;
     }
 
     /**
-     * Get the {@link GVRCursorType} of this object.
+     * Return the {@link GVRCursorType} associated with the
+     * {@link GVRCursorController}.
      * 
-     * @return the {@link GVRCursorType} that this object represents.
+     * In most cases, this method should return {@link GVRCursorType#EXTERNAL}.
+     * {@link GVRCursorType#EXTERNAL} allows the input device to define its own
+     * input behavior. If the device wishes to implement
+     * {@link GVRCursorType#MOUSE} or {@link GVRCursorType#CONTROLLER} make sure
+     * that the behavior is consistent with that defined in
+     * {@link GVRMouseDeviceManager} and {@link GVRGamepadDeviceManager}.
+     * 
+     * @return the {@link GVRCursorType} for the {@link GVRCursorController}.
      */
     public GVRCursorType getCursorType() {
         return cursorType;
     }
 
+    /**
+     * This call sets the position of the {@link GVRCursorController}.
+     * 
+     * Use this call to also set an initial position for the Cursor when a new
+     * {@link GVRCursorController} is returned by the
+     * {@link CursorControllerListener}.
+     * 
+     * @param x
+     *            the x value of the position.
+     * @param y
+     *            the y value of the position.
+     * @param z
+     *            the z value of the position.
+     */
     public void setPosition(float x, float y, float z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        position[0] = x;
+        position[1] = y;
+        position[2] = z;
         if (sceneObject != null) {
             synchronized (sceneObjectLock) {
+                // if there is an attached scene object then use its absolute
+                // position.
                 sceneObject.getTransform().setPosition(x, y, z);
+                float[] modelMatrix = sceneObject.getTransform()
+                        .getModelMatrix();
+                Matrix.multiplyMV(position, 0, modelMatrix, 0, position, 0);
             }
         }
+        invalidate = true;
+    }
+
+    /**
+     * Set the near depth value for the controller. This is the closest the
+     * {@link GVRCursorController} can get in relation to the {@link GVRCamera}.
+     * 
+     * By default this value is set to zero.
+     * 
+     * @param nearDepth
+     */
+    public void setNearDepth(float nearDepth) {
+        this.nearDepth = nearDepth;
+    }
+
+    /**
+     * Set the far depth value for the controller. This is the farthest the
+     * {@link GVRCursorController} can get in relation to the {@link GVRCamera}.
+     * 
+     * By default this value is set to negative {@link Float#MAX_VALUE}.
+     * 
+     * @param farDepth
+     */
+    public void setFarDepth(float farDepth) {
+        this.farDepth = farDepth;
+    }
+
+    /**
+     * Get the near depth value for the controller.
+     * 
+     * @return value representing the near depth. By default the value returned
+     *         is zero.
+     */
+    protected float getNearDepth() {
+        return nearDepth;
+    }
+
+    /**
+     * Get the far depth value for the controller.
+     * 
+     * @return value representing the far depth. By default the value returned
+     *         is negative {@link Float#MAX_VALUE}.
+     */
+    protected float getFarDepth() {
+        return farDepth;
     }
 
     /**
@@ -179,11 +273,13 @@ public abstract class GVRCursorController {
             }
 
             previousActive = active;
-            float inverseLength = (float) (1
-                    / (Math.sqrt(square(x) + square(y) + square(z))));
-            rayX = x * inverseLength;
-            rayY = y * inverseLength;
-            rayZ = z * inverseLength;
+
+            float inverseLength = (float) (1 / (Math.sqrt(square(position[0])
+                    + square(position[1]) + square(position[2]))));
+
+            rayX = position[0] * inverseLength;
+            rayY = position[1] * inverseLength;
+            rayZ = position[2] * inverseLength;
 
             invalidate = false;
             return true;
