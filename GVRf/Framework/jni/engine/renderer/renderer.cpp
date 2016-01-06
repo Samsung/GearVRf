@@ -591,8 +591,12 @@ void Renderer::renderRenderData(RenderData* render_data,
                                     mvp_matrix, render_data);
                             break;
                         case Material::ShaderType::ASSIMP_SHADER:
-                            shader_manager->getAssimpShader()->render(
-                                    mv_matrix, glm::inverseTranspose(mv_matrix),
+                            shader_manager->getAssimpShader()->render(mv_matrix,
+                                    glm::inverseTranspose(mv_matrix),
+                                    mvp_matrix, render_data, curr_material);
+                            break;
+                        case Material::ShaderType::UNLIT_FBO_SHADER:
+                            shader_manager->getUnlitFboShader()->render(
                                     mvp_matrix, render_data, curr_material);
                             break;
                         default:
