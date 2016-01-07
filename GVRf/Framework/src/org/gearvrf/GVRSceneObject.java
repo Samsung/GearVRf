@@ -51,8 +51,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
-    private final List<GVRSceneObject> mChildren = Collections.synchronizedList(
-                                                   new ArrayList<GVRSceneObject>());
+    private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
 
     /**
      * Constructs an empty scene object with a default {@link GVRTransform
@@ -701,7 +700,9 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
      *         this object.
      */
     public int getChildrenCount() {
-        return mChildren.size();
+        synchronized (mChildren) {
+            return mChildren.size();
+        }
     }
 
     /**
@@ -715,7 +716,9 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
      *         at that position.
      */
     public GVRSceneObject getChildByIndex(int index) {
-        return mChildren.get(index);
+        synchronized (mChildren) {
+            return mChildren.get(index);
+        }
     }
 
     /**
