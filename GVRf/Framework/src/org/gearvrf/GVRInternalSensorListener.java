@@ -15,23 +15,24 @@
 
 package org.gearvrf;
 
-import org.apache.commons.math3.complex.Quaternion;
-
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Build;
 
+import org.joml.Quaternionf;
+
 /** A listener for a TYPE_ROTATION_VECTOR type sensor. */
 class GVRInternalSensorListener implements SensorEventListener {
-    private static final Quaternion COORDINATE_QUATERNION = new Quaternion(
-            Math.sqrt(0.5), 0.0f, 0.0f, -Math.sqrt(0.5));
-    private static final Quaternion OFFSET_QUATERNION = new Quaternion(
-            Math.sqrt(0.5), 0.0f, Math.sqrt(0.5), 0.0f);
-    private static final Quaternion CONSTANT_EXPRESSION = COORDINATE_QUATERNION
-            .getInverse().multiply(OFFSET_QUATERNION);
+    private static final float SQRT_OF_HALF = (float)Math.sqrt(0.5);
+    private static final Quaternionf COORDINATE_QUATERNION = new Quaternionf(0.0f, 0.0f, -SQRT_OF_HALF, SQRT_OF_HALF);
+    private static final Quaternionf OFFSET_QUATERNION = new Quaternionf(0.0f, SQRT_OF_HALF, 0.0f, SQRT_OF_HALF);
+    //.invert() modifies the current quaternion hence duplicating COORDINATE_QUATERNION2
+    private static final Quaternionf CONSTANT_EXPRESSION = (new Quaternionf(0.0f, 0.0f, -SQRT_OF_HALF, SQRT_OF_HALF))
+            .invert().mul(OFFSET_QUATERNION);
 
-    private RotationSensor mSensor = null;
+    private RotationSensor mSensor;
+    private final Quaternionf mQuaternion = new Quaternionf(); 
 
     public GVRInternalSensorListener(RotationSensor sensor) {
         mSensor = sensor;
@@ -49,21 +50,17 @@ class GVRInternalSensorListener implements SensorEventListener {
         float z = event.values[2];
 
         if (Build.VERSION.SDK_INT < 18) {
-            w = getQuaternionW(event.values[0], event.values[1],
-                    event.values[2]);
+            w = getQuaternionW(event.values[0], event.values[1], event.values[2]);
         } else {
             w = event.values[3];
         }
 
-        Quaternion sensorQuaternion = new Quaternion(w, x, y, z);
+        mQuaternion.set(x, y, z, w);
+        CONSTANT_EXPRESSION.mul(mQuaternion, mQuaternion);
+        mQuaternion.mul(COORDINATE_QUATERNION);
 
-        Quaternion quaternion = CONSTANT_EXPRESSION.multiply(sensorQuaternion)
-                .multiply(COORDINATE_QUATERNION);
-
-        mSensor.onInternalRotationSensor(GVRTime.getCurrentTime(),
-                (float) quaternion.getQ0(), (float) quaternion.getQ1(),
-                (float) quaternion.getQ2(), (float) quaternion.getQ3(), 0.0f,
-                0.0f, 0.0f);
+        mSensor.onInternalRotationSensor(GVRTime.getCurrentTime(), mQuaternion.w, mQuaternion.x, mQuaternion.y,
+                mQuaternion.z, 0.0f, 0.0f, 0.0f);
     }
 
     /**
