@@ -153,6 +153,11 @@ public class GVRMaterial extends GVRHybridObject implements
                 return (number &= ~(1 << index));
             }
         }
+
+        public abstract static class UnlitFBO {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    10);
+        }
     };
 
     /**

@@ -34,18 +34,18 @@
 #include "shaders/material/texture_shader.h"
 #include "shaders/material/external_renderer_shader.h"
 #include "shaders/material/assimp_shader.h"
+#include "shaders/material/unlit_fbo_shader.h"
 #include "util/gvr_log.h"
 
 namespace gvr {
 class ShaderManager: public HybridObject {
 public:
     ShaderManager() :
-            HybridObject(), bounding_box_shader_(),
-            unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
-            oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
-            cubemap_shader_(), cubemap_reflection_shader_(), texture_shader_(), assimp_shader_(),
-            external_renderer_shader_(), error_shader_(), latest_custom_shader_id_(
-                    INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
+            HybridObject(), bounding_box_shader_(), unlit_horizontal_stereo_shader_(),
+            unlit_vertical_stereo_shader_(), oes_shader_(), oes_horizontal_stereo_shader_(),
+            oes_vertical_stereo_shader_(), cubemap_shader_(), cubemap_reflection_shader_(),
+            texture_shader_(), assimp_shader_(), external_renderer_shader_(), error_shader_(),
+            unlit_fbo_shader_(), latest_custom_shader_id_(INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
     }
     ~ShaderManager() {
         delete unlit_horizontal_stereo_shader_;
@@ -59,6 +59,7 @@ public:
         delete external_renderer_shader_;
         delete assimp_shader_;
         delete error_shader_;
+        delete unlit_fbo_shader_;
         // We don't delete the custom shaders, as their Java owner-objects will do that for us.
     }
     BoundingBoxShader* getBoundingBoxShader() {
@@ -133,6 +134,12 @@ public:
         }
         return error_shader_;
     }
+    UnlitFboShader* getUnlitFboShader() {
+        if (!unlit_fbo_shader_) {
+            unlit_fbo_shader_ = new UnlitFboShader();
+        }
+        return unlit_fbo_shader_;
+    }
     int addCustomShader(std::string vertex_shader,
             std::string fragment_shader) {
         int id = latest_custom_shader_id_++;
@@ -170,6 +177,7 @@ private:
     TextureShader* texture_shader_;
     ExternalRendererShader* external_renderer_shader_;
     AssimpShader* assimp_shader_;
+    UnlitFboShader* unlit_fbo_shader_;
     ErrorShader* error_shader_;
     int latest_custom_shader_id_;
     std::map<int, CustomShader*> custom_shaders_;
