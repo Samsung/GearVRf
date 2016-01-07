@@ -162,11 +162,13 @@ public class GVRScene extends GVRHybridObject {
 
     static void getSceneObjectsByName(final List<GVRSceneObject> matches,
             final List<GVRSceneObject> children, final String name) {
-        for (final GVRSceneObject child : children) {
-            if (name.equals(child.getName())) {
-                matches.add(child);
+        synchronized (children) {
+            for (final GVRSceneObject child : children) {
+                if (name.equals(child.getName())) {
+                    matches.add(child);
+                }
+                getSceneObjectsByName(matches, child.rawGetChildren(), name);
             }
-            getSceneObjectsByName(matches, child.rawGetChildren(), name);
         }
     }
 
@@ -186,13 +188,15 @@ public class GVRScene extends GVRHybridObject {
     }
 
     static GVRSceneObject getSceneObjectByName(final List<GVRSceneObject> children, final String name) {
-        for (final GVRSceneObject child : children) {
-            final GVRSceneObject scene = getSceneObjectByName(child.rawGetChildren(), name);
-            if (null != scene) {
-                return scene;
-            }
-            if (name.equals(child.getName())) {
-                return child;
+        synchronized (children) {
+            for (final GVRSceneObject child : children) {
+                final GVRSceneObject scene = getSceneObjectByName(child.rawGetChildren(), name);
+                if (null != scene) {
+                    return scene;
+                }
+                if (name.equals(child.getName())) {
+                    return child;
+                }
             }
         }
         return null;
