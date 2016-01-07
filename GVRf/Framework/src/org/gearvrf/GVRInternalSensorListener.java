@@ -27,9 +27,8 @@ class GVRInternalSensorListener implements SensorEventListener {
     private static final float SQRT_OF_HALF = (float)Math.sqrt(0.5);
     private static final Quaternionf COORDINATE_QUATERNION = new Quaternionf(0.0f, 0.0f, -SQRT_OF_HALF, SQRT_OF_HALF);
     private static final Quaternionf OFFSET_QUATERNION = new Quaternionf(0.0f, SQRT_OF_HALF, 0.0f, SQRT_OF_HALF);
-    //.invert() modifies the current quaternion hence duplicating COORDINATE_QUATERNION2
-    private static final Quaternionf CONSTANT_EXPRESSION = (new Quaternionf(0.0f, 0.0f, -SQRT_OF_HALF, SQRT_OF_HALF))
-            .invert().mul(OFFSET_QUATERNION);
+    private static final Quaternionf CONSTANT_EXPRESSION = new Quaternionf().set(COORDINATE_QUATERNION).invert()
+            .mul(OFFSET_QUATERNION);
 
     private RotationSensor mSensor;
     private final Quaternionf mQuaternion = new Quaternionf(); 
