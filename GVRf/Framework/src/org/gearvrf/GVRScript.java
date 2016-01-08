@@ -29,7 +29,7 @@ import android.graphics.BitmapFactory;
  * processes running at any time, and all {@linkplain Thread#NORM_PRIORITY
  * default priority} threads compete with each other.
  */
-public abstract class GVRScript {
+public abstract class GVRScript implements IScriptEvents {
 
     // private static final String TAG = Log.tag(GVRScript.class);
 
@@ -76,6 +76,7 @@ public abstract class GVRScript {
      *             but it is just fine for handling development-time issues like
      *             typing {@code "mesh.obi"} instead of {@code "mesh.obj"}.
      */
+    @Override
     public abstract void onInit(GVRContext gvrContext) throws Throwable;
 
     /**
@@ -98,6 +99,7 @@ public abstract class GVRScript {
      * After these steps, {@link GVRViewManager} does stereo rendering and
      * applies the lens distortion.
      */
+    @Override
     public abstract void onStep();
 
     /*
