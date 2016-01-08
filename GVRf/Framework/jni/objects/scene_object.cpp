@@ -299,8 +299,7 @@ float planeDistanceToPoint(float plane[4], glm::vec3 &compare_point) {
     return distance;
 }
 
-bool SceneObject::sphereInFrustum(const float frustum[6][4],
-        BoundingVolume &sphere) {
+bool SceneObject::sphereInFrustum(float frustum[6][4], BoundingVolume &sphere) {
     glm::vec3 center = sphere.center();
     float radius = sphere.radius();
 
