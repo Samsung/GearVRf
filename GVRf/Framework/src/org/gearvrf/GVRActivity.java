@@ -391,6 +391,10 @@ public class GVRActivity extends VrActivity {
         mRenderableViewGroup.removeView(view);
     }
 
+    public GVRContext getGVRContext() {
+        return mGVRViewManager;
+    }
+
     private final Runnable mRunOnDock = new Runnable() {
         @Override
         public void run() {

@@ -34,6 +34,7 @@ import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 
@@ -1944,6 +1945,24 @@ public abstract class GVRContext {
      * 
      */
     public abstract GVRInputManager getInputManager();
+
+    /**
+     * Returns the {@link GVREventManager}.
+     *
+     * @return A {@link GVREventManager} to help the GVRf framework and
+     * applications to deliver events.
+     *
+     */
+    public abstract GVREventManager getEventManager();
+
+    /**
+     * Returns the {@link GVRScriptManager}.
+     *
+     * @return A {@link GVRInputManager} to help the GVRf application to
+     * create, load or execute scripts.
+     *
+     */
+    public abstract GVRScriptManager getScriptManager();
 
     /**
      * Is the key pressed?
