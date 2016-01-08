@@ -135,24 +135,30 @@ public:
     }
 
     bool inLODRange(float distance_from_camera) {
-        if(!using_lod_) {
+        if (!using_lod_) {
             return true;
         }
-        if(distance_from_camera >= lod_min_range_ &&
-           distance_from_camera < lod_max_range_) {
+        if (distance_from_camera >= lod_min_range_
+                && distance_from_camera < lod_max_range_) {
             return true;
         }
         return false;
     }
 
-    void dirtyBoundingVolume();
+    void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
+
+    int frustumCull(Camera *camera, const float frustum[6][4]);
+    bool sphereInFrustum(float frustum[6][4], BoundingVolume &sphere);
 
 private:
     SceneObject(const SceneObject& scene_object);
     SceneObject(SceneObject&& scene_object);
     SceneObject& operator=(const SceneObject& scene_object);
     SceneObject& operator=(SceneObject&& scene_object);
+
+    bool is_cube_in_frustum(const float frustum[6][4],
+            BoundingVolume &bounding_volume);
 
 private:
     std::string name_;
@@ -166,8 +172,10 @@ private:
     float lod_min_range_;
     float lod_max_range_;
     bool using_lod_;
-    BoundingVolume bounding_volume_;
+
+    BoundingVolume transformed_bounding_volume_;
     bool bounding_volume_dirty_;
+    BoundingVolume mesh_bounding_volume;
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it

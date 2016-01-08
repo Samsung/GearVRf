@@ -58,10 +58,12 @@ public class GVRScene extends GVRHybridObject {
         addSceneObject(cameraRig.getOwnerObject());
 
         setMainCameraRig(cameraRig);
+        setFrustumCulling(true);
     }
 
     private GVRScene(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        setFrustumCulling(true);
     }
 
     /**

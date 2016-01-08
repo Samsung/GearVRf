@@ -30,4 +30,6 @@
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
+static bool DEBUG_RENDERER = false; //printf() or glGetError() per frame is expensive
+
 #endif
