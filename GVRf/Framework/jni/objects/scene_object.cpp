@@ -249,6 +249,66 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
     return result;
 }
 
+/**
+ * Test the input ray against the scene objects HBV.
+ *
+ * This method uses the algorithm described in the paper:
+ *
+ * An Efficient and Robust Ray–Box Intersection Algorithm by
+ * Amy Williams, Steve Barrus, R. Keith Morley and Peter Shirley.
+ *
+ * http://people.csail.mit.edu/amy/papers/box-jgt.pdf
+ */
+bool SceneObject::intersectsBoundingVolume(float rox, float roy, float roz,
+        float rdx, float rdy, float rdz) {
+    BoundingVolume bounding_volume_ = getBoundingVolume();
+
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    int sign[3];
+    glm::vec3 invdir;
+    invdir.x = 1 / rdx;
+    invdir.y = 1 / rdy;
+    invdir.z = 1 / rdz;
+    sign[0] = (invdir.x < 0);
+    sign[1] = (invdir.y < 0);
+    sign[2] = (invdir.z < 0);
+
+    glm::vec3 bounds[2];
+    bounds[0] = bounding_volume_.min_corner();
+    bounds[1] = bounding_volume_.max_corner();
+
+    tmin = (bounds[sign[0]].x - rox) * invdir.x;
+    tmax = (bounds[1 - sign[0]].x - rox) * invdir.x;
+    tymin = (bounds[sign[1]].y - roy) * invdir.y;
+    tymax = (bounds[1 - sign[1]].y - roy) * invdir.y;
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+    if (tymin > tmin)
+        tmin = tymin;
+    if (tymax < tmax)
+        tmax = tymax;
+
+    tzmin = (bounds[sign[2]].z - roz) * invdir.z;
+    tzmax = (bounds[1 - sign[2]].z - roz) * invdir.z;
+
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+
+    if (tzmin > tmin)
+        tmin = tzmin;
+    if (tzmax < tmax)
+        tmax = tzmax;
+
+    if (tmin < 0 && tmax < 0) {
+        return false;
+    }
+
+    return true;
+}
+
 void SceneObject::dirtyHierarchicalBoundingVolume() {
     if (bounding_volume_dirty_) {
         return;

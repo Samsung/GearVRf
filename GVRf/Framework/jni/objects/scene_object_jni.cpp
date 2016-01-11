@@ -88,6 +88,11 @@ JNIEXPORT bool JNICALL
 Java_org_gearvrf_NativeSceneObject_isColliding(
         JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
+        jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
+        jfloat rdx, jfloat rdy, jfloat rdz);
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeSceneObject_setLODRange(
         JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range);
@@ -225,6 +230,14 @@ Java_org_gearvrf_NativeSceneObject_isColliding(
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     SceneObject* other_object = reinterpret_cast<SceneObject*>(jother_object);
     return scene_object->isColliding(other_object);
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
+        jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
+        jfloat rdx, jfloat rdy, jfloat rdz) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    return scene_object->intersectsBoundingVolume(rox, roy, roz, rdx, rdy, rdz);
 }
 
 JNIEXPORT void JNICALL

@@ -656,6 +656,46 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
     }
 
     /**
+     * Tests the {@link GVRSceneObject}s hierarchical bounding volume against
+     * the specified ray.
+     * 
+     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
+     * {@code [dx, dy, dz]}.
+     * 
+     * <p>
+     * The ray origin may be [0, 0, 0] and the direction components should be
+     * normalized from -1 to 1: Note that the y direction runs from -1 at the
+     * bottom to 1 at the top.
+     * 
+     * @param ox
+     *            The x coordinate of the ray origin.
+     * 
+     * @param oy
+     *            The y coordinate of the ray origin.
+     * 
+     * @param oz
+     *            The z coordinate of the ray origin.
+     * 
+     * @param dx
+     *            The x vector of the ray direction.
+     * 
+     * @param dy
+     *            The y vector of the ray direction.
+     * 
+     * @param dz
+     *            The z vector of the ray direction.
+     * 
+     * @return <code>true</code> if the input ray intersects with the
+     *         {@link GVRSceneObject}s hierarchical bounding volume,
+     *         <code>false</code> otherwise.
+     */
+    boolean intersectsBoundingVolume(float ox, float oy, float oz, float dx,
+            float dy, float dz) {
+        return NativeSceneObject.intersectsBoundingVolume(getNative(), ox, oy,
+                oz, dx, dy, dz);
+    }
+
+    /**
      * Sets the range of distances from the camera where this object will be shown.
      *
      * @param minRange
@@ -949,6 +989,9 @@ class NativeSceneObject {
     static native void removeChildObject(long sceneObject, long child);
 
     static native boolean isColliding(long sceneObject, long otherObject);
+
+    static native boolean intersectsBoundingVolume(long sceneObject, float rox,
+            float roy, float roz, float rdx, float rdy, float rdz);
 
     static native void setLODRange(long sceneObject, float minRange, float maxRange);
     static native float getLODMinRange(long sceneObject);
