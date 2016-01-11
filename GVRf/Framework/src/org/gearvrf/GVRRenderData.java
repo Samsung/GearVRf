@@ -43,6 +43,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     private ArrayList<GVRRenderPass> mRenderPassList;
     private static final String TAG = "GearVRf";
     private GVRLight mLight;
+    private boolean mLightMapEnabled;
 
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
@@ -106,6 +107,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         mRenderPassList = new ArrayList<GVRRenderPass>();
         addPass(basePass);
         isLightEnabled = false;
+        mLightMapEnabled = false;
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
@@ -432,6 +434,24 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     }
 
     /**
+     * Enable lighting map effect for the render_data.
+     */
+    public void enableLightMap() {
+
+        NativeRenderData.enableLightMap(getNative());
+        mLightMapEnabled = true;
+    }
+
+    /**
+     * Disable lighting map effect for the render_data.
+     */
+    public void disableLightMap() {
+
+        NativeRenderData.disableLightMap(getNative());
+        mLightMapEnabled = false;
+    }
+
+    /**
      * Get the enable/disable status for the lighting effect. Note that it is
      * different to enable/disable status of the light. The lighting effect is
      * applied if and only if {@code mLight} is enabled (i.e. on) AND the
@@ -442,6 +462,15 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public boolean isLightEnabled() {
         return isLightEnabled;
+    }
+
+    /**
+     * Get the enable/disable status for the lighting map effect.
+     * 
+     * @return true if lighting map effect is enabled, otherwise returns false.
+     */
+    public boolean isLightMapEnabled() {
+        return mLightMapEnabled;
     }
 
     /**
@@ -756,6 +785,10 @@ class NativeRenderData {
     static native void enableLight(long renderData);
 
     static native void disableLight(long renderData);
+
+    static native void enableLightMap(long renderData);
+
+    static native void disableLightMap(long renderData);
 
     static native int getRenderMask(long renderData);
 

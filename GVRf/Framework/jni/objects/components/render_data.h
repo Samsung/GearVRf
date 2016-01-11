@@ -50,8 +50,8 @@ public:
     };
 
     RenderData() :
-            Component(), mesh_(0), light_(0), use_light_(false), render_mask_(
-                    DEFAULT_RENDER_MASK), rendering_order_(
+            Component(), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),
+                    render_mask_(DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), draw_mode_(GL_TRIANGLES), texture_capturer(0) {
@@ -118,6 +118,18 @@ public:
 
     bool light_enabled() {
         return use_light_;
+    }
+
+    void enable_lightmap() {
+        use_lightmap_ = true;
+    }
+
+    void disable_lightmap() {
+        use_lightmap_ = false;
+    }
+
+    bool lightmap_enabled() {
+        return use_lightmap_;
     }
 
     int render_mask() const {
@@ -227,6 +239,7 @@ private:
     std::vector<RenderPass*> render_pass_list_;
     Light* light_;
     bool use_light_;
+    bool use_lightmap_;
     int render_mask_;
     int rendering_order_;
     bool offset_;
