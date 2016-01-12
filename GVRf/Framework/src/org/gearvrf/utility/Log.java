@@ -15,13 +15,10 @@
 
 package org.gearvrf.utility;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Scanner;
-
-import org.apache.commons.math3.geometry.euclidean.threed.Line;
 
 /** {@link android.util.Log} with String.format() pattern */
 public abstract class Log {
