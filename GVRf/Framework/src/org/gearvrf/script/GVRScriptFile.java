@@ -42,10 +42,13 @@ import org.gearvrf.GVRContext;
  */
 public abstract class GVRScriptFile {
     private static final String TAG = GVRScriptFile.class.getSimpleName();
-    GVRContext mGvrContext;
-    protected String mLanguage;
+    protected final GVRContext mGvrContext;
+    protected final String mLanguage;
+    protected final ScriptEngine mLocalEngine;
+
+    protected final Object mScriptTextLock = new Object();
     protected String mScriptText;
-    protected ScriptEngine mLocalEngine; 
+    protected boolean mScriptTextDirty;
 
     /**
      * Constructor.
@@ -60,6 +63,9 @@ public abstract class GVRScriptFile {
     public GVRScriptFile(GVRContext gvrContext, String language) {
         mGvrContext = gvrContext;
         mLanguage = language;
+
+        // Get an engine because some impl. requires a new engine to
+        // enforce context
         ScriptEngine engine = mGvrContext.getScriptManager().getEngine(mLanguage);
         mLocalEngine = engine.getFactory().getScriptEngine();
 
@@ -93,11 +99,9 @@ public abstract class GVRScriptFile {
      * @param scriptText The script string.
      */
     public void setScriptText(String scriptText) {
-        mScriptText = scriptText;
-        try {
-            mLocalEngine.eval(mScriptText);
-        } catch (ScriptException e) {
-            e.printStackTrace();
+        synchronized (mScriptTextLock) {
+            mScriptText = scriptText;
+            mScriptTextDirty = true;
         }
     }
 
@@ -123,18 +127,43 @@ public abstract class GVRScriptFile {
      * parameters don't match, {@code false} is returned.
      */
     public boolean invokeFunction(String funcName, Object[] params) {
+        // Run script if it is dirty. This makes sure the script is run
+        // on the same thread as the caller (suppose the caller is always
+        // calling from the same thread).
+        checkDirty();
+
         String statement = getInvokeStatement(funcName, params);
-        Bindings localBindings = mLocalEngine.createBindings();
+
+        Bindings localBindings = mLocalEngine.getBindings(ScriptContext.ENGINE_SCOPE);
+        if (localBindings == null) {
+            localBindings = mLocalEngine.createBindings();
+            mLocalEngine.setBindings(localBindings, ScriptContext.ENGINE_SCOPE);
+        }
+
         fillBindings(localBindings, params);
-        mLocalEngine.setBindings(localBindings, ScriptContext.ENGINE_SCOPE);
 
         try {
             mLocalEngine.eval(statement);
         } catch (ScriptException e) {
             return false;
+        } finally {
+            removeBindings(localBindings, params);
         }
 
         return true;
+    }
+
+    protected void checkDirty() {
+        synchronized (mScriptTextLock) {
+            if (mScriptTextDirty) {
+                mScriptTextDirty = false;
+                try {
+                    mLocalEngine.eval(mScriptText);
+                } catch (ScriptException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     protected String getDefaultParamName(int i) {
@@ -144,6 +173,12 @@ public abstract class GVRScriptFile {
     protected void fillBindings(Bindings localBindings, Object[] params) {
         for (int i = 0; i < params.length; ++i) {
             localBindings.put(getDefaultParamName(i), params[i]);
+        }
+    }
+
+    protected void removeBindings(Bindings localBindings, Object[] params) {
+        for (int i = 0; i < params.length; ++i) {
+            localBindings.remove(getDefaultParamName(i));
         }
     }
 
