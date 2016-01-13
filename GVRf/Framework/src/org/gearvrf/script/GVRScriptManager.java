@@ -1,3 +1,18 @@
+/* Copyright 2016 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.gearvrf.script;
 
 import java.io.IOException;
@@ -15,12 +30,13 @@ import org.gearvrf.utility.Log;
 
 import com.naef.jnlua.script.LuaScriptEngineFactory;
 
-
 /**
- * Script manager
+ * The script manager class handles script engines, script attachment/
+ * detachment with scriptable objects, and other operation related to
+ * scripting.
  */
 public class GVRScriptManager {
-    public static final String TAG = GVRScriptManager.class.getSimpleName();
+    private static final String TAG = GVRScriptManager.class.getSimpleName();
     public static final String LANG_LUA = "lua";
     public static final String LANG_JAVASCRIPT = "js";
     public static final String VAR_NAME_GVRF = "gvrf";
@@ -32,6 +48,12 @@ public class GVRScriptManager {
 
     protected Map<IScriptable, GVRScriptFile> mScriptMap;
 
+    /**
+     * Constructor.
+     *
+     * @param gvrContext
+     *     The GVR Context.
+     */
     public GVRScriptManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
         mGlobalVariables = new TreeMap<String, Object>();
@@ -64,7 +86,7 @@ public class GVRScriptManager {
         }
     }
 
-    public void addGlobalBindings(ScriptEngine engine) {
+    protected void addGlobalBindings(ScriptEngine engine) {
         Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
         if (bindings == null) {
             bindings = engine.createBindings();

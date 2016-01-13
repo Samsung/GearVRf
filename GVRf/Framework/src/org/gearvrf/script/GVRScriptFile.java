@@ -1,3 +1,18 @@
+/* Copyright 2016 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.gearvrf.script;
 
 import java.io.BufferedReader;
@@ -12,6 +27,19 @@ import javax.script.ScriptException;
 
 import org.gearvrf.GVRContext;
 
+/**
+ * This class represents a script file, which can be attached to an
+ * object to handle events delivered to it. <p>
+ *
+ * It can be used in two ways:
+ * <ul>
+ *   <li> Use {@link GVRScriptManager#loadScript(org.gearvrf.GVRAndroidResource, String)
+ *   to load using a {@code GVRAndroidResource} object.</li>
+ *   <li> Construct the {@code GVRScriptFile} object and set the script
+ *   text using {@link #setScriptText(String)}, or load it from a stream using
+ *   {@link #load(InputStream)}. </li>
+ * </ul>
+ */
 public abstract class GVRScriptFile {
     private static final String TAG = GVRScriptFile.class.getSimpleName();
     GVRContext mGvrContext;
@@ -19,6 +47,16 @@ public abstract class GVRScriptFile {
     protected String mScriptText;
     protected ScriptEngine mLocalEngine; 
 
+    /**
+     * Constructor.
+     *
+     * @param gvrContext
+     *     The GVR Context.
+     * @param language
+     *     The language of the script file. Please use the constants
+     *     {@code LANG_*} defined in {@link GVRScriptManager}, such
+     *     as {@code LANG_LUA}, {@code LANG_JAVASCRIPT}, and so on.
+     */
     public GVRScriptFile(GVRContext gvrContext, String language) {
         mGvrContext = gvrContext;
         mLanguage = language;
@@ -29,6 +67,13 @@ public abstract class GVRScriptFile {
         mGvrContext.getScriptManager().addGlobalBindings(mLocalEngine);
     }
 
+    /**
+     * Loads a script into the {@GVRScriptFile} object.
+     *
+     * @param inputStream
+     *     The input stream from which to load the script.
+     * @throws IOException
+     */
     public void load(InputStream inputStream) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         StringBuilder out = new StringBuilder();
@@ -42,6 +87,11 @@ public abstract class GVRScriptFile {
         setScriptText(out.toString());
     }
 
+    /**
+     * Sets the script using a string.
+     *
+     * @param scriptText The script string.
+     */
     public void setScriptText(String scriptText) {
         mScriptText = scriptText;
         try {
@@ -51,12 +101,29 @@ public abstract class GVRScriptFile {
         }
     }
 
+    /**
+     * Gets the script from the {@GVRScriptFile} object.
+     *
+     * @return The script string.
+     */
     public String getScriptText() {
         return mScriptText;
     }
 
-    public boolean invokeFunction(String eventName, Object[] params) {
-        String statement = getInvokeStatement(eventName, params);
+    /**
+     * Invokes a function defined in the script.
+     *
+     * @param funcName
+     *     The function name.
+     * @param params
+     *     The parameter array.
+     * @return
+     *     A boolean value representing whether the function is
+     * executed correctly. If the function cannot be found, or
+     * parameters don't match, {@code false} is returned.
+     */
+    public boolean invokeFunction(String funcName, Object[] params) {
+        String statement = getInvokeStatement(funcName, params);
         Bindings localBindings = mLocalEngine.createBindings();
         fillBindings(localBindings, params);
         mLocalEngine.setBindings(localBindings, ScriptContext.ENGINE_SCOPE);
