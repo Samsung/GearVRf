@@ -359,7 +359,8 @@ float planeDistanceToPoint(float plane[4], glm::vec3 &compare_point) {
     return distance;
 }
 
-bool SceneObject::sphereInFrustum(float frustum[6][4], BoundingVolume &sphere) {
+bool SceneObject::checkSphereVsFrustum(float frustum[6][4],
+        BoundingVolume &sphere) {
     glm::vec3 center = sphere.center();
     float radius = sphere.radius();
 
@@ -373,11 +374,17 @@ bool SceneObject::sphereInFrustum(float frustum[6][4], BoundingVolume &sphere) {
     return true; // fully inside
 }
 
+enum AABB_STATE {
+    OUTSIDE, INTERSECT, INSIDE
+};
+
 // frustumCull() return 3 possible values:
-// 0 when the bounding volume of the object is completely outside the frustum: cull it out and do not continue with its children
-// 1 when the bounding volume of the object is intersecting(or inside) the frustum but the object itself is not: cull it out and continue culling with its children
-// 2 when both the bounding volume and the mesh of the object is intersecting (or inside) the frustum: need to render it further and continue culling with its children
-int SceneObject::frustumCull(Camera *camera, const float frustum[6][4]) {
+// 0 when the HBV of the object is completely outside the frustum: cull itself and all its children out
+// 1 when the HBV of the object is intersecting the frustum but the object itself is not: cull it out and continue culling test with its children
+// 2 when the HBV of the object is intersecting the frustum and the mesh BV of the object are intersecting (inside) the frustum: render itself and continue culling test with its children
+// 3 when the HBV of the object is completely inside the frustum: render itself and all its children without further culling test
+int SceneObject::frustumCull(Camera *camera, const float frustum[6][4],
+        int& planeMask) {
     if (!visible_) {
         if (DEBUG_RENDERER) {
             LOGD("FRUSTUM: not visible, cull out %s and all its children\n",
@@ -389,27 +396,30 @@ int SceneObject::frustumCull(Camera *camera, const float frustum[6][4]) {
 
     // 1. Check if the bounding volume intersects with or inside the view frustum
     BoundingVolume bounding_volume_ = getBoundingVolume();
-    bool is_inside;
-    //	is_inside = sphereInFrustum(frustum, bounding_volume_);
-
-    // Future optimization:
-    // is_cube_in_frustum() now checks if the bounding volume is 1) completely out of the frustum or 2) not for all six frustum planes
-    // A more efficient checking would be return three outcomes: 1) completely outside 2) completely inside 3) intersecting the frustum
-    // 1) will remain the same so that all children will be culled out
-    // 2) improves by directly counting in all its children without going over the frustum tests for each of its child
-    // 3) by further utilizing plane masking, is_cube_in_frustum() only needs to check the planes that intersect with the parent,
-    //    rather than all six planes for each of its child
-    is_inside = is_cube_in_frustum(frustum, bounding_volume_);
+    char outPlaneMask;
+    int checkResult = checkAABBVsFrustumOpt(frustum, bounding_volume_,
+            planeMask);
+    // int checkResult = checkSphereVsFrustum(frustum, bounding_volume_);
 
     // Cull out the object and all its children if its bounding volume is completely outside the frustum
-    if (!is_inside) {
+    if (checkResult == OUTSIDE) {
         if (DEBUG_RENDERER) {
             LOGD(
-                    "FRUSTUM: HBV not in frustum, cull out %s and all its children\n",
+                    "FRUSTUM: HBV completely outside frustum, cull out %s and all its children\n",
                     name_.c_str());
         }
 
         return 0;
+    }
+
+    if (checkResult == INSIDE) {
+        if (DEBUG_RENDERER) {
+            LOGD(
+                    "FRUSTUM: HBV completely inside frustum, render %s and all its children\n",
+                    name_.c_str());
+        }
+
+        return 3;
     }
 
     // 2. Skip the empty objects with no render data
@@ -447,24 +457,112 @@ int SceneObject::frustumCull(Camera *camera, const float frustum[6][4]) {
 
     // 4. Check if the object itself is intersecting with or inside the frustum
     if (children_.size() > 0) {
-        is_inside = is_cube_in_frustum(frustum, mesh_bounding_volume);
-        //	is_inside = sphereInFrustum(frustum, mesh_bounding_volume);
+        int tempMask = planeMask;
+        checkResult = checkAABBVsFrustumOpt(frustum, mesh_bounding_volume,
+                tempMask);
+        //	checkResult = checkSphereVsFrustum(frustum, mesh_bounding_volume);
     }
 
     // if the object is not in the frustum, cull out itself but continue testing its children
     if (DEBUG_RENDERER) {
-        if (!is_inside) {
+        if (checkResult == OUTSIDE) {
             LOGD("FRUSTUM: mesh not in frustum, cull out %s\n", name_.c_str());
         } else {
-            LOGD("FRUSTUM: mesh in frustum, render %s and all its children\n",
-                    name_.c_str());
+            LOGD("FRUSTUM: mesh in frustum, render %s\n", name_.c_str());
         }
     }
 
-    return is_inside ? 2 : 1;
+    return checkResult == 0 ? 1 : 2;
 }
 
-bool SceneObject::is_cube_in_frustum(const float frustum[6][4],
+// Test if a AABB bounding volume is completely outside, inside or intersecting the frustum
+// Test each of the eight vertices of the AABB bounding volume against each of the six frustum planes:
+// If the AABB is completely outside any frustum plane, return 0 indicating the AABB is completely outside the whole frustum;
+// If the any vertex of the AABB is outside a frustum plane, return 1 indicating the AABB is intersecting the frustum;
+// If the AABB is completely inside all frustum planes, return 2 indicating the AABB is completely inside the frustum.
+int SceneObject::checkAABBVsFrustumOpt(const float frustum[6][4],
+        BoundingVolume &bounding_volume, int& planeMask) {
+    glm::vec3 min_corner = bounding_volume.min_corner();
+    glm::vec3 max_corner = bounding_volume.max_corner();
+
+    float Xmin = min_corner[0];
+    float Ymin = min_corner[1];
+    float Zmin = min_corner[2];
+    float Xmax = max_corner[0];
+    float Ymax = max_corner[1];
+    float Zmax = max_corner[2];
+
+    bool isCompleteInside = true;
+
+    for (int p = 0; p < 6; p++) {
+        //skip current plane if the corresponding planeMask is set
+        if ((planeMask >> p) & 1) {
+            if (DEBUG_RENDERER) {
+                LOGD("PLANE %d MASKED", p);
+            }
+            continue;
+        }
+
+        int count = 0;
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmin) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymin)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmin) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        if (frustum[p][0] * (Xmax) + frustum[p][1] * (Ymax)
+                + frustum[p][2] * (Zmax) + frustum[p][3] > 0) {
+            count++;
+        }
+
+        // All vertices are completely outside the frustum plane
+        if (count == 0) {
+            return OUTSIDE;
+        }
+
+        // If any vertex is outside the frustum plane, it cannot be completely inside the whole frustum
+        if (count < 8) {
+            isCompleteInside = false;
+        }
+        // If all vertices are inside the frustum plane, mask this plane so we can skip testing all its children against it
+        else {
+            planeMask = planeMask | (1 << p);
+        }
+    }
+
+    return isCompleteInside ? INSIDE : INTERSECT;
+}
+
+bool SceneObject::checkAABBVsFrustumBasic(const float frustum[6][4],
         BoundingVolume &bounding_volume) {
     glm::vec3 min_corner = bounding_volume.min_corner();
     glm::vec3 max_corner = bounding_volume.max_corner();
