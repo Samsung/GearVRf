@@ -111,7 +111,8 @@ private:
     static void build_frustum(float frustum[6][4], const float *vp_matrix);
     static void frustum_cull(Camera *camera, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
-            bool continue_cull, int planeMask);
+            bool continue_cull, int planeMask);	
+	static void state_sort();
 
     static void set_face_culling(int cull_face);
 

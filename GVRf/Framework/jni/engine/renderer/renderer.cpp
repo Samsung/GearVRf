@@ -95,11 +95,36 @@ void Renderer::frustum_cull(Camera *camera, SceneObject *object,
     }
 }
 
+void Renderer::state_sort() {
+    // The current implementation of sorting is based on
+    // 1. rendering order first to maintain specified order
+    // 2. shader type second to minimize the gl cost of switching shader
+    // 3. camera distance last to minimize overdraw
+    std::sort(render_data_vector.begin(), render_data_vector.end(),
+            compareRenderDataByOrderShaderDistance);
+
+    if (DEBUG_RENDERER) {
+        LOGD("SORTING: After sorting");
+
+        for (int i = 0; i < render_data_vector.size(); ++i) {
+            RenderData* renderData = render_data_vector[i];
+
+            if (DEBUG_RENDERER) {
+                LOGD(
+                        "SORTING: pass_count = %d, rendering order = %d, shader_type = %d, camera_distance = %f\n",
+                        renderData->pass_count(), renderData->rendering_order(),
+                        renderData->material(0)->shader_type(),
+                        renderData->camera_distance());
+            }
+        }
+    }
+}
+
 void Renderer::cull(Scene *scene, Camera *camera,
         ShaderManager* shader_manager) {
 
-    if (camera->owner_object() == 0 ||
-        camera->owner_object()->transform() == nullptr) {
+    if (camera->owner_object() == 0
+            || camera->owner_object()->transform() == nullptr) {
         return;
     }
     glm::mat4 view_matrix = camera->getViewMatrix();
@@ -108,6 +133,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
 
     render_data_vector.clear();
     std::vector<SceneObject*> scene_objects;
+    scene_objects.reserve(1024);
 
     // 1. Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
     if (scene->get_frustum_culling()) {
@@ -145,9 +171,9 @@ void Renderer::cull(Scene *scene, Camera *camera,
     // 2. do occlusion culling, if enabled
     occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
 
-    // 3. do sorting based on render order
-    std::sort(render_data_vector.begin(), render_data_vector.end(),
-            compareRenderData);
+    // 3. do state sorting
+    // Note: this needs to be scaled to sort on N states
+    state_sort();
 }
 
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -289,7 +315,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 }
 
 void addRenderData(RenderData *render_data) {
-    if (render_data == 0 || render_data->pass(0)->material() == 0) {
+    if (render_data == 0 || render_data->material(0) == 0) {
         return;
     }
 
@@ -323,7 +349,7 @@ void Renderer::occlusion_cull(Scene* scene,
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
         SceneObject *scene_object = (*it);
         RenderData* render_data = scene_object->render_data();
-        if (render_data == 0 || render_data->pass(0)->material() == 0) {
+        if (render_data == 0 || render_data->material(0) == 0) {
             continue;
         }
 
@@ -363,7 +389,7 @@ void Renderer::occlusion_cull(Scene* scene,
             glBeginQuery(GL_ANY_SAMPLES_PASSED, query[0]);
             shader_manager->getBoundingBoxShader()->render(mvp_matrix_tmp,
                     bounding_box_render_data,
-                    bounding_box_render_data->pass(0)->material());
+                    bounding_box_render_data->material(0));
             glEndQuery (GL_ANY_SAMPLES_PASSED);
             scene_object->set_query_issued(true);
 
@@ -840,6 +866,7 @@ void Renderer::renderPostEffectData(Camera* camera,
                 "Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
     }
 }
+
 
 void Renderer::set_face_culling(int cull_face) {
     switch (cull_face) {
