@@ -4,6 +4,8 @@ import org.gearvrf.GVRActivity;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.PorterDuff.Mode;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -55,6 +57,9 @@ public class GVRTextView extends TextView implements GVRView {
 
         // Canvas attached to GVRViewSceneObject to draw on
         Canvas attachedCanvas = mSceneObject.lockCanvas();
+        // Clear the canvas to avoid overlapping text when
+        // TextView's background is transparent.
+        attachedCanvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
         // draw the view to provided canvas
         super.draw(attachedCanvas);
 
