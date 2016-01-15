@@ -380,6 +380,10 @@ public class GVRActivity extends VrActivity {
      * @param view Is a {@link GVRView} that draw itself into some {@link GVRViewSceneObject}.
      */
     public void registerView(View view) {
+        /* The full screen should be updated
+           otherwise just the children's bounds may be refreshed. */
+        mRenderableViewGroup.setClipChildren(false);
+
         mRenderableViewGroup.addView(view);
     }
 
