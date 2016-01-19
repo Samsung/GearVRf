@@ -72,6 +72,8 @@ public:
         return Renderer::getNumberTriangles();
     }
 
+    void exportToFile(std::string filepath);
+
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
