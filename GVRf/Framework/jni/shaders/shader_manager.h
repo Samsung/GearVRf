@@ -34,6 +34,7 @@
 #include "shaders/material/texture_shader.h"
 #include "shaders/material/external_renderer_shader.h"
 #include "shaders/material/assimp_shader.h"
+#include "shaders/posteffect/shadow_shader.h"
 #include "util/gvr_log.h"
 
 namespace gvr {
@@ -44,8 +45,8 @@ public:
             unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
             oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
             cubemap_shader_(), cubemap_reflection_shader_(), texture_shader_(), assimp_shader_(),
-            external_renderer_shader_(), error_shader_(), latest_custom_shader_id_(
-                    INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
+            shadow_shader_(), external_renderer_shader_(), error_shader_(),
+            latest_custom_shader_id_(INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_() {
     }
     ~ShaderManager() {
         delete unlit_horizontal_stereo_shader_;
@@ -58,6 +59,7 @@ public:
         delete texture_shader_;
         delete external_renderer_shader_;
         delete assimp_shader_;
+        delete shadow_shader_;
         delete error_shader_;
         // We don't delete the custom shaders, as their Java owner-objects will do that for us.
     }
@@ -127,6 +129,12 @@ public:
         }
         return assimp_shader_;
     }
+    ShadowShader* getShadowShader() {
+        if (!shadow_shader_) {
+            shadow_shader_ = new ShadowShader();
+        }
+        return shadow_shader_;
+    }
     ErrorShader* getErrorShader() {
         if (!error_shader_) {
             error_shader_ = new ErrorShader();
@@ -170,6 +178,7 @@ private:
     TextureShader* texture_shader_;
     ExternalRendererShader* external_renderer_shader_;
     AssimpShader* assimp_shader_;
+    ShadowShader* shadow_shader_;
     ErrorShader* error_shader_;
     int latest_custom_shader_id_;
     std::map<int, CustomShader*> custom_shaders_;
