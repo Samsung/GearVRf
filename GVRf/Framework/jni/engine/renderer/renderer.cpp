@@ -58,37 +58,54 @@ int Renderer::getNumberTriangles() {
 }
 
 static std::vector<RenderData*> render_data_vector;
-static std::vector<SceneObject*> scene_objects;
 
 void Renderer::frustum_cull(Camera *camera, SceneObject *object,
-        float frustum[6][4]) {
-    // frustumCull() return 3 possible values:
-    // 0 when the bounding volume of the object is completely outside the frustum: cull it out and do not continue with its children
-    // 1 when the bounding volume of the object is intersecting(or inside) the frustum but the object itself is not: cull it out and continue culling with its children
-    // 2 when both the bounding volume and the mesh of the object is intersecting (or inside) the frustum: need to render it further and continue culling with its children
-    int cullVal = object->frustumCull(camera, frustum);
-    if (cullVal == 0) {
-        return;
-    }
+        float frustum[6][4], std::vector<SceneObject*>& scene_objects,
+        bool need_cull, int planeMask) {
 
-    if (cullVal == 2) {
+    // frustumCull() return 3 possible values:
+    // 0 when the HBV of the object is completely outside the frustum: cull itself and all its children out
+    // 1 when the HBV of the object is intersecting the frustum but the object itself is not: cull it out and continue culling test with its children
+    // 2 when the HBV of the object is intersecting the frustum and the mesh BV of the object are intersecting (inside) the frustum: render itself and continue culling test with its children
+    // 3 when the HBV of the object is completely inside the frustum: render itself and all its children without further culling test
+    int cullVal;
+    if (need_cull) {
+
+        cullVal = object->frustumCull(camera, frustum, planeMask);
+        if (cullVal == 0) {
+            return;
+        }
+
+        if (cullVal >= 2) {
+            scene_objects.push_back(object);
+        }
+
+        if (cullVal == 3) {
+            need_cull = false;
+        }
+    } else {
         scene_objects.push_back(object);
     }
 
     const std::vector<SceneObject*> children = object->children();
     for (auto it = children.begin(); it != children.end(); ++it) {
-        frustum_cull(camera, *it, frustum);
+        frustum_cull(camera, *it, frustum, scene_objects, need_cull, planeMask);
     }
 }
 
 void Renderer::cull(Scene *scene, Camera *camera,
         ShaderManager* shader_manager) {
+
+    if (camera->owner_object() == 0 ||
+        camera->owner_object()->transform() == nullptr) {
+        return;
+    }
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
     render_data_vector.clear();
-    scene_objects.clear();
+    std::vector<SceneObject*> scene_objects;
 
     // 1. Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
     if (scene->get_frustum_culling()) {
@@ -109,7 +126,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
                         object->name().c_str());
             }
 
-            frustum_cull(camera, object, frustum);
+            frustum_cull(camera, object, frustum, scene_objects, true, 0);
 
             if (DEBUG_RENDERER) {
                 LOGD("FRUSTUM: end frustum culling for root %s\n",
@@ -241,7 +258,7 @@ void addRenderData(RenderData *render_data) {
 }
 
 void Renderer::occlusion_cull(Scene* scene,
-        std::vector<SceneObject*> scene_objects, ShaderManager *shader_manager,
+        std::vector<SceneObject*>& scene_objects, ShaderManager *shader_manager,
         glm::mat4 vp_matrix) {
 
     bool do_culling = scene->get_occlusion_culling();

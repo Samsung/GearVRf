@@ -97,11 +97,12 @@ private:
             PostEffectShaderManager* post_effect_shader_manager);
 
     static void occlusion_cull(Scene* scene,
-            std::vector<SceneObject*> scene_objects,
+            std::vector<SceneObject*>& scene_objects,
             ShaderManager *shader_manager, glm::mat4 vp_matrix);
     static void build_frustum(float frustum[6][4], const float *vp_matrix);
     static void frustum_cull(Camera *camera, SceneObject *object,
-            float frustum[6][4]);
+            float frustum[6][4], std::vector<SceneObject*>& scene_objects,
+            bool continue_cull, int planeMask);
 
     static void set_face_culling(int cull_face);
 

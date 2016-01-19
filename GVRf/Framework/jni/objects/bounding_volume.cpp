@@ -134,13 +134,13 @@ void BoundingVolume::transform(const BoundingVolume &in_volume,
 
     glm::vec4 min_corner(in_volume.min_corner(), 1.0f);
     glm::vec4 max_corner(in_volume.max_corner(), 1.0f);
-    glm::vec4 transformed_minCorner = matrix * min_corner;
-    glm::vec4 transformed_maxCorner = matrix * max_corner;
+    glm::vec4 transformed_min_corner = matrix * min_corner;
+    glm::vec4 transformed_max_corner = matrix * max_corner;
 
-    glm::vec3 transformed_min(transformed_minCorner.x, transformed_minCorner.y,
-            transformed_minCorner.z);
-    glm::vec3 transformed_max(transformed_maxCorner.x, transformed_maxCorner.y,
-            transformed_maxCorner.z);
+    glm::vec3 transformed_min(transformed_min_corner.x, transformed_min_corner.y,
+            transformed_min_corner.z);
+    glm::vec3 transformed_max(transformed_max_corner.x, transformed_max_corner.y,
+            transformed_max_corner.z);
 
     // expand with the new corners
     expand(transformed_min);
