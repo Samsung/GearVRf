@@ -33,6 +33,7 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
@@ -113,6 +114,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     ByteBuffer mReadbackBuffer = null;
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
     private final GVRInputManagerImpl mInputManager;
+    private final GVREventManager mEventManager;
+    private final GVRScriptManager mScriptManager;
 
     private native void cull(long scene, long camera, long shader_manager);
     private native void renderCamera(long appPtr, long scene, long camera,
@@ -179,6 +182,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         // .getRealScreenWidthMeters()
         // / mLensInfo.getRealScreenHeightMeters());
         mInputManager = new GVRInputManagerImpl(this);
+
+        mEventManager = new GVREventManager(this);
+        mScriptManager = new GVRScriptManager(this);
     }
 
     /*
@@ -591,7 +597,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
 
             try {
-                mScript.onInit(GVRViewManager.this);
+                GVRViewManager.this.getEventManager().sendEvent(
+                        mScript, IScriptEvents.class,
+                        "onInit", GVRViewManager.this);
             } catch (Throwable t) {
                 t.printStackTrace();
                 mActivity.finish();
@@ -667,7 +675,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
             doMemoryManagementAndPerFrameCallbacks();
 
-            mScript.onStep();
+            GVRViewManager.this.getEventManager().sendEvent(
+                    mScript, IScriptEvents.class,
+                    "onStep");
         }
 
         @Override
@@ -862,5 +872,15 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     public GVRInputManager getInputManager() {
         return mInputManager;
+    }
+
+    @Override
+    public GVREventManager getEventManager() {
+        return mEventManager;
+    }
+
+    @Override
+    public GVRScriptManager getScriptManager() {
+        return mScriptManager;
     }
 }

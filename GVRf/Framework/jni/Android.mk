@@ -25,6 +25,13 @@ LOCAL_SRC_FILES := ../libs/libassimp.so
 #include $(PREBUILT_STATIC_LIBRARY)
 include $(PREBUILT_SHARED_LIBRARY)
 
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := jnlua
+LOCAL_SRC_FILES := ../libs/libjnlua.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+
 include $(CLEAR_VARS)
 
 ifndef OVR_MOBILE_SDK
