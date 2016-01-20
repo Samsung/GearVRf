@@ -37,8 +37,8 @@ Transform::~Transform() {
 void Transform::invalidate(bool rotationUpdated) {
     if (model_matrix_.isValid()) {
         model_matrix_.invalidate();
-        std::vector<SceneObject*> children(owner_object()->children());
-        for (auto it = children.begin(); it != children.end(); ++it) {
+        std::vector<SceneObject*> childrenCopy = owner_object()->children();
+        for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
             Transform* const t = (*it)->transform();
             if (nullptr != t) {
                 t->invalidate(false);

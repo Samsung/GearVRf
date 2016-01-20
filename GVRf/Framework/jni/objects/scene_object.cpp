@@ -155,7 +155,10 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
             throw error;
         }
     }
-    children_.push_back(child);
+    {
+        std::lock_guard < std::mutex > lock(children_mutex_);
+        children_.push_back(child);
+    }
     child->parent_ = self;
     Transform* const t = child->transform();
     if (nullptr != t) {
@@ -166,8 +169,10 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
 
 void SceneObject::removeChildObject(SceneObject* child) {
     if (child->parent_ == this) {
-        children_.erase(std::remove(children_.begin(), children_.end(), child),
-                children_.end());
+        {
+            std::lock_guard < std::mutex > lock(children_mutex_);
+            children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
+        }
         child->parent_ = NULL;
     }
 
@@ -176,19 +181,6 @@ void SceneObject::removeChildObject(SceneObject* child) {
         t->invalidate(false);
     }
     dirtyHierarchicalBoundingVolume();
-}
-
-int SceneObject::getChildrenCount() const {
-    return children_.size();
-}
-
-SceneObject* SceneObject::getChildByIndex(int index) {
-    if (index < children_.size()) {
-        return children_[index];
-    } else {
-        std::string error = "SceneObject::getChildByIndex() : Out of index.";
-        throw error;
-    }
 }
 
 void SceneObject::set_visible(bool visibility = true) {
@@ -341,7 +333,8 @@ BoundingVolume& SceneObject::getBoundingVolume() {
     }
 
     // 2. Aggregate with all its children's bounding volumes
-    for (auto it = children_.begin(); it != children_.end(); ++it) {
+    std::vector<SceneObject*> childrenCopy = children();
+    for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
         transformed_bounding_volume_.expand((*it)->getBoundingVolume());
     }
 
@@ -456,7 +449,12 @@ int SceneObject::frustumCull(Camera *camera, const float frustum[6][4],
     }
 
     // 4. Check if the object itself is intersecting with or inside the frustum
-    if (children_.size() > 0) {
+    size_t size;
+    {
+        std::lock_guard < std::mutex > lock(children_mutex_);
+        size = children_.size();
+    }
+    if (0 < size) {
         int tempMask = planeMask;
         checkResult = checkAABBVsFrustumOpt(frustum, mesh_bounding_volume,
                 tempMask);

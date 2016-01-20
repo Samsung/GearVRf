@@ -21,6 +21,7 @@
 #define SCENE_OBJECT_H_
 
 #include <algorithm>
+#include <mutex>
 
 #include "objects/hybrid_object.h"
 #include "objects/components/transform.h"
@@ -107,14 +108,13 @@ public:
         return parent_;
     }
 
-    const std::vector<SceneObject*>& children() const {
-        return children_;
+    std::vector<SceneObject*> children() {
+        std::lock_guard < std::mutex > lock(children_mutex_);
+        return std::vector<SceneObject*>(children_);
     }
 
     void addChildObject(SceneObject* self, SceneObject* child);
     void removeChildObject(SceneObject* child);
-    int getChildrenCount() const;
-    SceneObject* getChildByIndex(int index);
     GLuint *get_occlusion_array() {
         return queries_;
     }
@@ -191,6 +191,7 @@ private:
     bool checkAABBVsFrustumBasic(const float frustum[6][4],
             BoundingVolume &bounding_volume);
 
+    std::mutex children_mutex_;
 };
 
 }
