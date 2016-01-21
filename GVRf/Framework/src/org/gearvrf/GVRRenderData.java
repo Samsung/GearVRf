@@ -696,7 +696,21 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     public void setAlphaBlend(boolean alphaBlend) {
         NativeRenderData.setAlphaBlend(getNative(), alphaBlend);
     }
-
+    /**
+     * @return {@code true} if {@code GL_ALPHA_TO_COVERAGE} is enabled, {@code false} if not
+     */
+    public boolean getAlphaToCoverage() {
+        return NativeRenderData.getAlphaToCoverage(getNative());
+    }
+    
+    /**
+     * @param alphaToCoverage
+     *            {@code true} if {@code GL_ALPHA_TO_COVERAGE} should be enabled,
+     *            {@code false} if not.
+     */
+    public void setAlphaToCoverage(boolean alphaToCoverage) {
+        NativeRenderData.setAlphaToCoverage(getNative(), alphaToCoverage);
+    }
     /**
      * @return The OpenGL draw mode (e.g. GL_TRIANGLES).
      */
@@ -817,6 +831,10 @@ class NativeRenderData {
     static native boolean getAlphaBlend(long renderData);
 
     public static native void setAlphaBlend(long renderData, boolean alphaBlend);
+
+    static native boolean getAlphaToCoverage(long renderData);
+
+    public static native void setAlphaToCoverage(long renderData, boolean alphaToCoverage);    
 
     public static native int getDrawMode(long renderData);
 
