@@ -267,6 +267,8 @@ void KSensor::updateQ(KTrackerMessage *msg, glm::vec3& corrected_gyro, glm::quat
     q = applyMagnetometerCorrection(q, msg->Acceleration, filteredGyro, deltaT);
 #endif
 
+    corrected_gyro = filteredGyro;
+
     step_++;
     // Normalize error
     if (step_ % 500 == 0) {
