@@ -496,7 +496,7 @@ void Renderer::renderRenderData(RenderData* render_data,
             glDisable (GL_BLEND);
         }
        if( !render_data->alpha_to_coverage()) {
-        	glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+           glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         }
         if (render_data->mesh() != 0) {
             for (int curr_pass = 0; curr_pass < render_data->pass_count();
@@ -604,7 +604,7 @@ void Renderer::renderRenderData(RenderData* render_data,
             glEnable (GL_BLEND);
         }
         if (render_data->alpha_to_coverage()) {
-        	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+            glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         }
     }
 }
