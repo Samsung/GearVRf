@@ -696,6 +696,50 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     public void setAlphaBlend(boolean alphaBlend) {
         NativeRenderData.setAlphaBlend(getNative(), alphaBlend);
     }
+    /**
+     * @return {@code true} if {@code GL_ALPHA_TO_COVERAGE} is enabled, {@code false} if not
+     */
+    public boolean getAlphaToCoverage() {
+        return NativeRenderData.getAlphaToCoverage(getNative());
+    }
+    
+    /**
+     * @param alphaToCoverage
+     *            {@code true} if {@code GL_ALPHA_TO_COVERAGE} should be enabled,
+     *            {@code false} if not.
+     */
+    public void setAlphaToCoverage(boolean alphaToCoverage) {
+        NativeRenderData.setAlphaToCoverage(getNative(), alphaToCoverage);
+    }
+
+    /**
+     * @return value of sample coverage
+     */
+    public float getSampleCoverage(){
+        return NativeRenderData.getSampleCoverage(getNative());
+    }
+    /**
+     * @param sampleCoverage
+     *                 Specifies the coverage of the modification mask.
+     */
+    public void setSampleCoverage(float sampleCoverage) {
+        NativeRenderData.setSampleCoverage(getNative(),sampleCoverage);
+    }
+    
+    /**
+     * @return whether the modification mask implied by value is inverted or not
+     */
+    public boolean getInvertCoverageMask(){
+        return NativeRenderData.getInvertCoverageMask(getNative());
+    }
+    
+    /**
+     * @param invertCoverageMask
+     *          Specifies whether the modification mask implied by value is inverted or not.
+     */
+    public void setInvertCoverageMask(boolean invertCoverageMask){
+        NativeRenderData.setInvertCoverageMask(getNative(),invertCoverageMask);
+    }
 
     /**
      * @return The OpenGL draw mode (e.g. GL_TRIANGLES).
@@ -817,6 +861,18 @@ class NativeRenderData {
     static native boolean getAlphaBlend(long renderData);
 
     public static native void setAlphaBlend(long renderData, boolean alphaBlend);
+
+    static native boolean getAlphaToCoverage(long renderData);
+
+    public static native void setAlphaToCoverage(long renderData, boolean alphaToCoverage);    
+
+    static native float getSampleCoverage(long renderData);
+
+    public static native void setSampleCoverage(long renderData,float sampleCoverage);
+    
+    static native boolean getInvertCoverageMask(long renderData);
+
+    public static native void setInvertCoverageMask(long renderData,boolean invertCoverageMask);
 
     public static native int getDrawMode(long renderData);
 

@@ -175,6 +175,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     glFrontFace (GL_CCW);
     glCullFace (GL_BACK);
     glEnable (GL_BLEND);
+    glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
     glBlendEquation (GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glDisable (GL_POLYGON_OFFSET_FILL);
@@ -495,6 +496,11 @@ void Renderer::renderRenderData(RenderData* render_data,
         if (!render_data->alpha_blend()) {
             glDisable (GL_BLEND);
         }
+        if( render_data->alpha_to_coverage()) {
+        	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        	glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask());
+        }
+
         if (render_data->mesh() != 0) {
             for (int curr_pass = 0; curr_pass < render_data->pass_count();
                     ++curr_pass) {
@@ -599,6 +605,9 @@ void Renderer::renderRenderData(RenderData* render_data,
         }
         if (!render_data->alpha_blend()) {
             glEnable (GL_BLEND);
+        }
+        if (render_data->alpha_to_coverage()) {
+        	glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         }
     }
 }
