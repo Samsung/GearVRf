@@ -54,7 +54,7 @@ public:
                     render_mask_(DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
-                    true), alpha_to_coverage_(false), draw_mode_(GL_TRIANGLES), texture_capturer(0) {
+                    true), alpha_to_coverage_(false), sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES), texture_capturer(0) {
     }
 
     ~RenderData() {
@@ -210,6 +210,22 @@ public:
     	alpha_to_coverage_ = alpha_to_coverage;
     }
 
+    void set_sample_coverage(float sample_coverage) {
+    	sample_coverage_ = sample_coverage;
+    }
+   
+    float sample_coverage() const {
+    	return sample_coverage_;
+    }
+
+    void set_invert_coverage_mask(GLboolean invert_coverage_mask){
+    	invert_coverage_mask_ = invert_coverage_mask;
+    }
+
+    GLboolean invert_coverage_mask() const {
+    	return invert_coverage_mask_;
+    }
+
     GLenum draw_mode() const {
         return draw_mode_;
     }
@@ -256,6 +272,8 @@ private:
     bool depth_test_;
     bool alpha_blend_;
     bool alpha_to_coverage_;
+    float sample_coverage_;
+    GLboolean invert_coverage_mask_;
     GLenum draw_mode_;
     float camera_distance_;
     TextureCapturer *texture_capturer;
