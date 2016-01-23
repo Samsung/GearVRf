@@ -22,13 +22,13 @@ package org.gearvrf;
  * Note that the callbacks happen on the main UI thread.
  *
  */
-public interface SensorEventListener {
+public interface ISensorEvents extends IEvents {
     /**
      * The callback that returns the {@link SensorEvent}s for the corresponding
      * {@link GVRBaseSensor}.
      * 
      * @param event
-     *            The {@link SensorEventListener} returns one
+     *            The {@link ISensorEvents} returns one
      *            {@link SensorEvent} for every affected object. Use the methods
      *            in {@link SensorEvent} to retrieve the information contained
      *            in the event.
