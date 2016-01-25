@@ -250,6 +250,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         // we know that the current thread is a GL one, so we store it to
         // prevent non-GL thread from calling GL functions
         mGLThreadID = currentThread.getId();
+        mGlDeleterPtr = NativeGLDelete.ctor();
 
         // Evaluating anisotropic support on GL Thread
         String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
@@ -711,8 +712,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 listener.onDrawFrame(mFrameTime);
             }
         }
-
-        NativeGLDelete.processQueues();
+        NativeGLDelete.processQueues(mGlDeleterPtr);
 
         return currentTime;
     }
@@ -774,7 +774,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             final GVRCameraRig cameraRig = mMainScene.getMainCameraRig();
 
             if (null != cameraRig
-                    && (mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
+                    && (mSensoredScene == null || !mMainScene
+                            .equals(mSensoredScene))) {
+                Log.i(TAG, "camera rig yaw reset");
                 cameraRig.resetYaw();
                 mSensoredScene = mMainScene;
                 return true;
@@ -882,5 +884,25 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     public GVRScriptManager getScriptManager() {
         return mScriptManager;
+    }
+
+
+    protected long mGlDeleterPtr;
+
+    @Override
+    public void finalize() throws Throwable {
+        try {
+            if (0 != mGlDeleterPtr) {
+                NativeGLDelete.dtor(mGlDeleterPtr);
+            }
+        } catch (final Exception ignored) {
+        } finally {
+            super.finalize();
+        }
+    }
+
+    static {
+        //strictly one-time per process op hence the static block
+        NativeGLDelete.createTlsKey();
     }
 }

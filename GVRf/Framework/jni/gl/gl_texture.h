@@ -39,6 +39,8 @@ class GLTexture {
 public:
     explicit GLTexture(GLenum target) :
             target_(target) {
+        deleter_ = getDeleterForThisThread();
+
         glGenTextures(1, &id_);
         glBindTexture(target, id_);
         glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -50,6 +52,8 @@ public:
 
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
+        deleter_ = getDeleterForThisThread();
+
         // Sets the new MIN FILTER
         GLenum min_filter_type_ = texture_parameters[0];
 
@@ -79,7 +83,7 @@ public:
     }
 
     ~GLTexture() {
-        gl_delete.queueTexture(id_);
+        deleter_->queueTexture(id_);
     }
 
     GLuint id() const {
@@ -99,6 +103,7 @@ private:
 private:
     GLuint id_;
     GLenum target_;
+    GlDelete* deleter_;
 };
 
 }

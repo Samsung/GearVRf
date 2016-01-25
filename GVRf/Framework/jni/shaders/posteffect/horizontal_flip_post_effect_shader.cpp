@@ -24,7 +24,6 @@
 #include "objects/post_effect_data.h"
 #include "objects/textures/render_texture.h"
 #include "util/gvr_gl.h"
-#include "engine/memory/gl_delete.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
@@ -44,6 +43,8 @@ static const char FRAGMENT_SHADER[] = "precision highp float;\n"
 
 HorizontalFlipPostEffectShader::HorizontalFlipPostEffectShader() :
         program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0) {
+    deleter_ = getDeleterForThisThread();
+
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
@@ -55,7 +56,7 @@ HorizontalFlipPostEffectShader::~HorizontalFlipPostEffectShader() {
     delete program_;
 
     if (vaoID_ != 0) {
-        gl_delete.queueVertexArray(vaoID_);
+        deleter_->queueVertexArray(vaoID_);
     }
 }
 

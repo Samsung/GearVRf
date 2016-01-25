@@ -28,6 +28,7 @@
 #include "glm/glm.hpp"
 
 #include "objects/hybrid_object.h"
+#include "engine/memory/gl_delete.h"
 
 namespace gvr {
 class GLProgram;
@@ -62,6 +63,7 @@ private:
     GLuint u_texture_;
     // add vertex array object
     GLuint vaoID_;
+    GlDelete* deleter_;
 };
 }
 #endif

@@ -30,7 +30,6 @@
 #endif
 
 #include "glm/glm.hpp"
-#include "gl/gl_buffer.h"
 #include "gl/gl_program.h"
 
 #include "util/gvr_gl.h"
@@ -73,16 +72,21 @@ public:
     }
 
     void deleteVaos() {
-        if (vaoID_ != GVR_INVALID)
-            gl_delete.queueVertexArray(vaoID_);
-        if (triangle_vboID_ != GVR_INVALID)
-            gl_delete.queueBuffer(triangle_vboID_);
-        if (vert_vboID_ != GVR_INVALID)
-            gl_delete.queueBuffer(vert_vboID_);
-        if (norm_vboID_ != GVR_INVALID)
-            gl_delete.queueBuffer(norm_vboID_);
-        if (tex_vboID_ != GVR_INVALID)
-            gl_delete.queueBuffer(tex_vboID_);
+        if (vaoID_ != GVR_INVALID) {
+            deleter_->queueVertexArray(vaoID_);
+        }
+        if (triangle_vboID_ != GVR_INVALID) {
+            deleter_->queueBuffer(triangle_vboID_);
+        }
+        if (vert_vboID_ != GVR_INVALID) {
+            deleter_->queueBuffer(vert_vboID_);
+        }
+        if (norm_vboID_ != GVR_INVALID) {
+            deleter_->queueBuffer(norm_vboID_);
+        }
+        if (tex_vboID_ != GVR_INVALID) {
+            deleter_->queueBuffer(tex_vboID_);
+        }
         have_bounding_volume_ = false;
         vao_dirty_ = true;
         vaoID_ = triangle_vboID_ = vert_vboID_ = norm_vboID_ = tex_vboID_ = GVR_INVALID;
@@ -296,6 +300,13 @@ public:
 
     void generateBoneArrayBuffers();
 
+    //must be called by the thread on which the mesh cleanup should happen
+    void obtainDeleter() {
+        if (nullptr == deleter_) {
+            deleter_ = getDeleterForThisThread();
+        }
+    }
+
 private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
@@ -339,6 +350,8 @@ private:
 
     GLuint boneVboID_;
     bool bone_data_dirty_;
+
+    GlDelete* deleter_ = nullptr;
 };
 }
 #endif

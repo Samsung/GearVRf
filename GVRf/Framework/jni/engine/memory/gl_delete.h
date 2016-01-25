@@ -16,8 +16,11 @@
 #ifndef GL_DELETE_H_
 #define GL_DELETE_H_
 
+#include "util/gvr_log.h"
+
 #include <vector>
 #include <pthread.h>
+#include <unistd.h>
 #ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
 #endif
@@ -25,15 +28,48 @@
 #define GVR_INVALID 0
 
 namespace gvr {
+
+extern pthread_key_t deleter_key;
+
 class GlDelete {
 
 public:
+    /**
+     * Before using this class this method must be called once
+     * and only once per-process
+     */
+    static void createTlsKey() {
+        //corresponding pthread_key_delete missing intentionally as this is
+        //needed for as long as the process is alive
+        int err = pthread_key_create(&deleter_key, nullptr);
+        if (0 != err) {
+            LOGE("fatal error: pthread_key_create failed with %d!", err);
+            std::terminate();
+        }
+    }
+
     GlDelete() {
-        pthread_mutex_init(&mutex, 0);
+        int err = pthread_mutex_init(&mutex, nullptr);
+        if (0 != err) {
+            LOGE("fatal error: pthread_mutex_init failed with %d!", err);
+            std::terminate();
+        }
+        err = pthread_setspecific(deleter_key, this);
+        if (0 != err) {
+            LOGE("fatal error: pthread_setspecific failed with %d!", err);
+            std::terminate();
+        }
+
+        LOGV("GlDelete(): %p tid: %d", this, gettid());
     }
 
     ~GlDelete() {
-        pthread_mutex_destroy(&mutex);
+        LOGV("~GlDelete(): %p tid: %d", this, gettid());
+        int err = pthread_mutex_destroy(&mutex);
+        if (0 != err) {
+            LOGE("fatal error: pthread_mutex_destroy failed with %d!", err);
+            std::terminate();
+        }
     }
 
     void queueBuffer(GLuint buffer);
@@ -69,7 +105,19 @@ private:
     std::vector<GLuint> vertex_arrays_;
 };
 
-extern GlDelete gl_delete;
+/**
+ * The assumption is threads that do know they are supposed to have
+ * a deleter may only call this method.
+ */
+static GlDelete* getDeleterForThisThread() {
+    GlDelete* deleter = static_cast<GlDelete*>(pthread_getspecific(deleter_key));
+    if (nullptr == deleter) {
+        LOGE("fatal error: no deleter associated with this thread!");
+        std::terminate();
+    }
+    return deleter;
+}
+
 }
 
 #endif
