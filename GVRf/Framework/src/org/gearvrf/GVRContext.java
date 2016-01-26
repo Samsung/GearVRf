@@ -1933,7 +1933,7 @@ public abstract class GVRContext {
             return;
         }
 
-        mDebugServer = new DebugServer(this);
+        mDebugServer = new DebugServer(this, port, maxClients);
         Threads.spawn(mDebugServer);
     }
 
