@@ -43,6 +43,23 @@ public class ConsoleIO implements Input, Output, ShellManageable {
 
     private int lastCommandOffset = 0;
 
+    public interface PromptListener {
+        /**
+         * Notifies the listener about a prompt to be displayed.
+         * @param prompt The prompt string.
+         *
+         * @return true if the normal prompt should be suppressed. This is the case
+         * when the an interactive line editor is in use.
+         */
+        boolean onPrompt(String prompt);
+    }
+
+    protected PromptListener promptListener;
+
+    public void setPromptListener(PromptListener l) {
+        this.promptListener = l;
+    }
+
     public String readCommand(List<String> path) {
         try {
             String prompt = Strings.joinStrings(path, false, '/');
@@ -73,9 +90,18 @@ public class ConsoleIO implements Input, Output, ShellManageable {
 
     private String readUsersCommand(String prompt) throws IOException {
         String completePrompt = prompt+ USER_PROMPT_SUFFIX;
-        print(completePrompt);
-        lastCommandOffset = completePrompt.length();
         
+        boolean suppressed = false;
+        if (promptListener != null) {
+            suppressed = promptListener.onPrompt(completePrompt);
+        }
+
+        if (!suppressed) {
+            print(completePrompt);
+        }
+
+        lastCommandOffset = completePrompt.length();
+
         String command = in.readLine();
         if (log != null) {
             log.println(command);

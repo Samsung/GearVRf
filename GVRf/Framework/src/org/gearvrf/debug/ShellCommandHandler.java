@@ -26,7 +26,10 @@ import org.gearvrf.debug.cli.Shell;
 import org.gearvrf.debug.cli.ShellDependent;
 import org.gearvrf.script.GVRScriptManager;
 
-/*package*/ class ShellCommandHandler implements ShellDependent {
+/**
+ * Shell commands for GVRf debug console.
+ */
+public class ShellCommandHandler implements ShellDependent {
     protected Shell mShell;
     protected GVRContext mGVRContext;
     protected HelpCommandHandler mHelpHandler = new HelpCommandHandler();
