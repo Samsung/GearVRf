@@ -29,8 +29,8 @@ import org.gearvrf.debug.cli.Shell;
  */
 public class DebugServer implements Runnable {
     public static final boolean RUN_DEBUG_SERVER = true;
-    private static final int DEFAULT_DEBUG_PORT = 1645;
-    private static final int NUM_CLIENTS = 2;
+    public static final int DEFAULT_DEBUG_PORT = 1645;
+    public static final int NUM_CLIENTS = 2;
 
     private static final String PROMPT = "gvrf";
     private static final String APP_NAME = "GearVR Framework";
@@ -59,6 +59,7 @@ public class DebugServer implements Runnable {
                     new BufferedReader(new InputStreamReader(socket.getInputStream())),
                     out, out);
             shell.commandLoop();
+            socket.close();
             return null;
         }
     }
@@ -99,7 +100,7 @@ public class DebugServer implements Runnable {
     }
 
     /**
-     * Shuts down the server.
+     * Shuts down the server. Active connections are not affected.
      */
     public void shutdown() {
         shuttingDown = true;

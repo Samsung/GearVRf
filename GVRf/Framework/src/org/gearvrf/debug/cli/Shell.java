@@ -30,7 +30,7 @@ import org.gearvrf.debug.cli.util.MultiMap;
  * @author ASG
  */
 public class Shell {
-    public static String PROJECT_HOMEPAGE_URL = "http://cliche.sourceforge.net";
+    public static String PROJECT_HOMEPAGE_URL = "http://www.gearvrf.org";
 
     private Output output;
     private Input input;

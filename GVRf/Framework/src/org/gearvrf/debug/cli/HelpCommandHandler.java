@@ -142,7 +142,7 @@ public class HelpCommandHandler implements ShellDependent {
     @Command(description="Show info on using the UI")
     public Object help() {
         return
-                "This is Cliche shell (" + Shell.PROJECT_HOMEPAGE_URL + ").\n" +
+                "This is GVRf shell (" + Shell.PROJECT_HOMEPAGE_URL + ").\n" +
                 "To list all available commands enter ?list or ?list-all, " +
                 "the latter will also show you system commands. To get detailed info " +
                 "on a command enter ?help command-name";

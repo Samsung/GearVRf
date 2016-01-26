@@ -31,12 +31,14 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
+import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
+import org.gearvrf.utility.Threads;
 
 import android.app.Activity;
 import android.content.Context;
@@ -129,6 +131,9 @@ public abstract class GVRContext {
 
     // Max anisotropic value if supported and -1 otherwise
     public int maxAnisotropicValue = -1;
+
+    // Debug server
+    protected DebugServer mDebugServer;
 
     /*
      * Methods
@@ -1903,6 +1908,47 @@ public abstract class GVRContext {
      */
     public GVRScene getNextMainScene() {
         return getNextMainScene(null);
+    }
+
+    /**
+     * Start a debug server on the default TCP/IP port for the default number
+     * of clients.
+     */
+    public void startDebugServer() {
+        startDebugServer(DebugServer.DEFAULT_DEBUG_PORT, DebugServer.NUM_CLIENTS);
+    }
+
+    /**
+     * Start a debug server on a specified TCP/IP port, allowing a specified number
+     * of concurrent clients.
+     *
+     * @param port
+     *     The port number for the TCP/IP server.
+     * @param maxClients
+     *     The maximum number of concurrent clients.
+     */
+    public synchronized void startDebugServer(int port, int maxClients) {
+        if (mDebugServer != null) {
+            Log.e(TAG, "Debug server has already been started.");
+            return;
+        }
+
+        mDebugServer = new DebugServer(this);
+        Threads.spawn(mDebugServer);
+    }
+
+    /**
+     * Stops the current debug server. Active connections are
+     * not affected.
+     */
+    public synchronized void stopDebugServer() {
+        if (mDebugServer == null) {
+            Log.e(TAG, "Debug server is not running.");
+            return;
+        }
+
+        mDebugServer.shutdown();
+        mDebugServer = null;
     }
 
     /**
