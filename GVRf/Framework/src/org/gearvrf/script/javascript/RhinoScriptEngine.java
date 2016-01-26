@@ -290,7 +290,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             "    } else if (str == null) {                 \n" +
             "        str = 'null';                         \n" +
             "    }                                         \n" +
-            "    context.getWriter().println(String(str)); \n" +
+            "    context.getWriter().write(String(str)); \n" +
             "}";
     
     Scriptable getRuntimeScope(ScriptContext ctxt) {
