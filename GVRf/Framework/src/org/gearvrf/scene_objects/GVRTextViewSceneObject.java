@@ -59,13 +59,17 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         /*
          * Frequency LOW, means will do refresh every 30 frames
          */
-        LOW
+        LOW,
+        /*
+         * No periodic refresh
+         */
+        NONE
     }
 
     private static int sReferenceCounter = 0;// This is for load balancing.
     private boolean mFirstFrame;
     private boolean mIsChanged;
-    private int mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
+    private volatile int mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
 
     private static final int DEFAULT_WIDTH = 2000;
     private static final int DEFAULT_HEIGHT = 1000;
@@ -162,7 +166,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         this(gvrContext, mesh, gvrContext.getActivity(), viewWidth, viewHeight, text);
     }
 
-
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}.
      * 
@@ -252,7 +255,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         this(gvrContext, mesh, gvrActivity, DEFAULT_WIDTH, DEFAULT_HEIGHT, text);
     }
 
-    
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with view default height and width.
@@ -275,7 +277,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh, CharSequence text) {
         this(gvrContext, mesh, gvrContext.getActivity(), DEFAULT_WIDTH, DEFAULT_HEIGHT, text);
     }
-
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -333,7 +334,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
                 text);
     }
 
-
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with both view's default height and width and quad's default height and
@@ -368,8 +368,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
                 text);
     }
 
-
-
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with both view's default height and width and quad's default height and
@@ -398,7 +396,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public GVRTextViewSceneObject(GVRContext gvrContext) {
         this(gvrContext, gvrContext.getActivity(), DEFAULT_TEXT);
     }
-
 
     /**
      * Set the text size.
@@ -520,11 +517,16 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Set the refresh frequency of this scene object.
+     * Use NONE for improved performance when the text is set initially and never
+     * changed.
      * 
      * @param frequency
      *            The refresh frequency of this TextViewSceneObject.
      */
     public void setRefreshFrequency(IntervalFrequency frequency) {
+        if (0 == mRefreshInterval && IntervalFrequency.NONE != frequency) {
+            getGVRContext().registerDrawFrameListener(mFrameListener);
+        }
         switch (frequency) {
         case HIGH:
             mRefreshInterval = HIGH_REFRESH_INTERVAL;
@@ -534,6 +536,9 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             break;
         case LOW:
             mRefreshInterval = LOW_REFRESH_INTERVAL;
+            break;
+        case NONE:
+            mRefreshInterval = 0;
             break;
         default:
             break;
@@ -560,7 +565,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private final GVRDrawFrameListener mFrameListener = new GVRDrawFrameListener() {
         @Override
         public void onDrawFrame(float frameTime) {
-            if (mFirstFrame || (++mCount % mRefreshInterval == 0 && mIsChanged)) {
+            int refreshInterval = mRefreshInterval;
+            if (mFirstFrame || (0 != refreshInterval && (++mCount % refreshInterval == 0 && mIsChanged))) {
                 refresh();
                 if (!mFirstFrame) {
                     mCount = 0;
@@ -568,6 +574,9 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
                     mFirstFrame = false;
                 }
                 mIsChanged = false;
+            }
+            if (0 == refreshInterval) {
+                getGVRContext().unregisterDrawFrameListener(mFrameListener);
             }
         }
     };
