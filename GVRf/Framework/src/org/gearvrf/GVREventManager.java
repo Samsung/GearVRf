@@ -149,7 +149,13 @@ public class GVREventManager {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            Throwable throwable = e.getCause();
+            // rethrow the RuntimeException back to the application
+            if (throwable instanceof RuntimeException) {
+                throw (RuntimeException) throwable;
+            } else {
+                e.printStackTrace();
+            }
         }
     }
 }
