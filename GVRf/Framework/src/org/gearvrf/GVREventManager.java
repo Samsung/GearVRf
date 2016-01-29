@@ -148,22 +148,28 @@ public class GVREventManager {
     }
 
     private Method getCachedMethod(Object target, String eventName) {
-        Map<String, Method> targetCache = mHandlerMethodCache.get(target);
-        if (targetCache == null) {
-            return null;
-        }
+        // Lock the whole cache for both first- and second-level lookup
+        synchronized (mHandlerMethodCache) {
+            Map<String, Method> targetCache = mHandlerMethodCache.get(target);
+            if (targetCache == null) {
+                return null;
+            }
 
-        return targetCache.get(eventName);
+            return targetCache.get(eventName);
+        }
     }
 
     private void addCachedMethod(Object target, String eventName, Method method) {
-        Map<String, Method> targetCache = mHandlerMethodCache.get(target);
-        if (targetCache == null) {
-            targetCache = new TreeMap<String, Method>();
-            mHandlerMethodCache.put(target, targetCache);
-        }
+        // Lock the whole cache for both first- and second-level lookup
+        synchronized (mHandlerMethodCache) {
+            Map<String, Method> targetCache = mHandlerMethodCache.get(target);
+            if (targetCache == null) {
+                targetCache = new TreeMap<String, Method>();
+                mHandlerMethodCache.put(target, targetCache);
+            }
 
-        targetCache.put(eventName, method);
+            targetCache.put(eventName, method);
+        }
     }
 
     private void tryInvokeScript(IScriptable target, String eventName,
