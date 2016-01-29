@@ -19,6 +19,7 @@ package org.gearvrf;
 public class GVRTexture extends GVRHybridObject {
     protected GVRTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        gvrContext.assertGLThread();
     }
 
     /**
