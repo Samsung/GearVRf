@@ -675,9 +675,13 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
             doMemoryManagementAndPerFrameCallbacks();
 
-            GVRViewManager.this.getEventManager().sendEvent(
-                    mScript, IScriptEvents.class,
-                    "onStep");
+            try {
+                GVRViewManager.this.getEventManager().sendEvent(
+                        mScript, IScriptEvents.class, "onStep");
+            } catch (final Exception exc) {
+                Log.e(TAG, "Exception from onStep: %s", exc.toString());
+                exc.printStackTrace();
+            }
         }
 
         @Override
@@ -703,12 +707,22 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             Runnable runnable = null;
             while ((runnable = mRunnables.poll()) != null) {
-                runnable.run();
+                try {
+                    runnable.run();
+                } catch (final Exception exc) {
+                    Log.e(TAG, "Runnable-on-GL %s threw %s", runnable, exc.toString());
+                    exc.printStackTrace();
+                }
             }
 
             final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
             for (GVRDrawFrameListener listener : frameListeners) {
-                listener.onDrawFrame(mFrameTime);
+                try {
+                    listener.onDrawFrame(mFrameTime);
+                } catch (final Exception exc) {
+                    Log.e(TAG, "DrawFrameListener %s threw %s", listener, exc.toString());
+                    exc.printStackTrace();
+                }
             }
         }
 
