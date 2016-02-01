@@ -47,9 +47,12 @@ void TextureCapturer::setCapturerObject(JNIEnv *env, jobject capturer) {
 
     if (mCapturerObject) {
         mJNIEnv->DeleteGlobalRef(mCapturerObject);
+        mCapturerObject = nullptr;
     }
 
-    mCapturerObject = env->NewGlobalRef(capturer);
+    if (nullptr != capturer) {
+        mCapturerObject = env->NewGlobalRef(capturer);
+    }
 }
 
 void TextureCapturer::setRenderTexture(RenderTexture *renderTexture) {
@@ -164,8 +167,10 @@ glm::mat4 TextureCapturer::getMvpMatrix(float half_width, float half_height) {
 }
 
 void TextureCapturer::callback(int msg, char *info) {
-    Java_org_gearvrf_NativeTextureCapturer_callbackFromNative(
-            mJNIEnv, mCapturerObject, msg, info);
+    if (nullptr != mCapturerObject) {
+        Java_org_gearvrf_NativeTextureCapturer_callbackFromNative(
+                mJNIEnv, mCapturerObject, msg, info);
+    }
 }
 
 }

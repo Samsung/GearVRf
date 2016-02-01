@@ -127,6 +127,9 @@ public class GVRTextureCapturer extends GVRHybridObject {
     public void addListener(TextureCapturerListener l) {
         synchronized (mListeners) {
             mListeners.add(l);
+            if (1 == mListeners.size()) {
+                NativeTextureCapturer.setCapturerObject(getNative(), this);
+            }
         }
     }
 
@@ -138,6 +141,9 @@ public class GVRTextureCapturer extends GVRHybridObject {
     public void removeListener(TextureCapturerListener l) {
         synchronized (mListeners) {
             mListeners.remove(l);
+            if (mListeners.isEmpty()) {
+                NativeTextureCapturer.setCapturerObject(getNative(), null);
+            }
         }
     }
 
