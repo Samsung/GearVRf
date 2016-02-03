@@ -26,6 +26,7 @@ import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
+import org.gearvrf.GVRHybridObject.NativeCleanupHandler;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
@@ -949,7 +950,7 @@ public abstract class GVRContext {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the cube map is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStsep()} callback as that is called
+     * from your {@link GVRScript#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames.
      * 
      * @param resourceArray
@@ -2238,4 +2239,46 @@ public abstract class GVRContext {
      * @since 1.6.8
      */
     public abstract void captureScreen3D(GVRScreenshot3DCallback callback);
+
+    private final GVRContextPrivate mContextPrivate = new GVRContextPrivate();
+
+    final void releaseNative(final GVRHybridObject hybridObject) {
+        mContextPrivate.releaseNative(hybridObject);
+    }
+
+    final void registerHybridObject(final GVRHybridObject hybridObject, final long nativePointer,
+            final List<NativeCleanupHandler> cleanupHandlers) {
+        mContextPrivate.registerHybridObject(hybridObject, nativePointer, cleanupHandlers);
+    }
+
+    private Object mTag;
+
+    /**
+     * Sets the tag associated with this context.
+     * 
+     * Tags can be used to store data within the context without
+     * resorting to another data structure.
+     *
+     * @param tag an object to associate with this context
+     * 
+     * @see #getTag()
+     * @since 3.0.0
+     */
+    public void setTag(Object tag) {
+        mTag = tag;
+    }
+
+    /**
+     * Returns this context's tag.
+     * 
+     * @return the Object stored in this context as a tag,
+     *         or {@code null} if not set
+     * 
+     * @see #setTag(Object)
+     * @since 3.0.0
+     */
+    public Object getTag() {
+        return mTag;
+    }
+
 }

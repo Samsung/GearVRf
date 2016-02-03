@@ -15,19 +15,14 @@
 
 package org.gearvrf;
 
-import java.io.Closeable;
+import org.gearvrf.utility.Log;
+
 import java.io.IOException;
-import java.lang.ref.PhantomReference;
-import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.gearvrf.utility.Log;
 
 /**
  * Root of the GVRF object hierarchy.
@@ -35,7 +30,7 @@ import org.gearvrf.utility.Log;
  * Descendant classes all have native (JNI) implementations; this base class
  * manages the native lifecycles.
  */
-public abstract class GVRHybridObject implements Closeable {
+public abstract class GVRHybridObject {
 
     private static final String TAG = Log.tag(GVRHybridObject.class);
 
@@ -94,9 +89,7 @@ public abstract class GVRHybridObject implements Closeable {
         mGVRContext = gvrContext;
         mNativePointer = nativePointer;
 
-        synchronized (sReferenceSet) {
-            sReferenceSet.add(new GVRReference(this, nativePointer, cleanupHandlers));
-        }
+        gvrContext.registerHybridObject(this,nativePointer, cleanupHandlers);
     }
 
     /*
@@ -213,22 +206,6 @@ public abstract class GVRHybridObject implements Closeable {
      * Native memory management
      */
 
-    /**
-     * Our {@linkplain GVRReference references} are placed on this queue, once
-     * they've been finalized
-     */
-    private static final ReferenceQueue<GVRHybridObject> sReferenceQueue = new ReferenceQueue<GVRHybridObject>();
-    /**
-     * We need hard references to {@linkplain GVRReference our references} -
-     * otherwise, the references get garbage collected (usually before their
-     * objects) and never get enqueued.
-     */
-    private static final Set<GVRReference> sReferenceSet = new HashSet<GVRReference>();
-
-    static {
-        new GVRFinalizeThread();
-    }
-
     /** Optional after-finalization callback to 'deregister' native pointers. */
     protected interface NativeCleanupHandler {
         /**
@@ -301,65 +278,20 @@ public abstract class GVRHybridObject implements Closeable {
         }
     }
 
-    private static class GVRReference extends PhantomReference<GVRHybridObject> {
-
-        // private static final String TAG = Log.tag(GVRReference.class);
-
-        private long mNativePointer;
-        private final List<NativeCleanupHandler> mCleanupHandlers;
-
-        private GVRReference(GVRHybridObject object, long nativePointer,
-                List<NativeCleanupHandler> cleanupHandlers) {
-            super(object, sReferenceQueue);
-
-            mNativePointer = nativePointer;
-            mCleanupHandlers = cleanupHandlers;
-        }
-
-        private void close() {
-            close(true);
-        }
-
-        private void close(boolean removeFromSet) {
-            synchronized (sReferenceSet) {
-                if (mNativePointer != 0) {
-                    if (mCleanupHandlers != null) {
-                        for (NativeCleanupHandler handler : mCleanupHandlers) {
-                            handler.nativeCleanup(mNativePointer);
-                        }
-                    }
-                    NativeHybridObject.delete(mNativePointer);
-                }
-
-                if (removeFromSet) {
-                    sReferenceSet.remove(this);
-                }
-            }
-        }
-    }
-
-    private static class GVRFinalizeThread extends Thread {
-
-        // private static final String TAG = Log.tag(GVRFinalizeThread.class);
-
-        private GVRFinalizeThread() {
-            setName("GVRF Finalize Thread");
-            setPriority(MAX_PRIORITY);
-            start();
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    GVRReference reference = (GVRReference) sReferenceQueue
-                            .remove();
-                    reference.close();
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    /**
+     * Close this object, releasing any native resources.
+     * 
+     * Most objects will be automatically closed when Java's garbage collector
+     * detects that they are no longer being used: Explicitly closing an object
+     * that's still linked into the scene graph will almost certainly crash your
+     * GVRF app. You should only {@code close()} transient objects (especially
+     * those that use lots of memory, like large textures) that you
+     * <em>know</em> are no longer being used.
+     * 
+     * @since 3.0.0
+     */
+    public final void releaseNative() {
+        mGVRContext.releaseNative(this);
     }
 
     /**
@@ -374,43 +306,9 @@ public abstract class GVRHybridObject implements Closeable {
      * 
      * @since 2.0.0
      */
-    @Override
+    @Deprecated
     public final void close() throws IOException {
-        synchronized (sReferenceSet) {
-            if (mNativePointer != 0L) {
-                GVRReference reference = findReference(mNativePointer);
-                if (reference != null) {
-                    reference.close();
-                    mNativePointer = 0L;
-                }
-            }
-        }
-    }
-
-    /**
-     * Explicitly close()ing an object is going to be relatively rare - most
-     * native memory will be freed when the owner-objects are garbage collected.
-     * Doing a lookup in these rare cases means that we can avoid giving every @link
-     * {@link GVRHybridObject} a hard reference to its {@link GVRReference}.
-     */
-    private static GVRReference findReference(long nativePointer) {
-        for (GVRReference reference : sReferenceSet) {
-            if (reference.mNativePointer == nativePointer) {
-                return reference;
-            }
-        }
-        // else
-        return null;
-    }
-
-    static void closeAll() {
-        synchronized (sReferenceSet) {
-            final boolean doNotRemoveFromSet = false;
-            for (final GVRReference r : sReferenceSet) {
-                r.close(doNotRemoveFromSet);
-            }
-            sReferenceSet.clear();
-        }
+        mGVRContext.releaseNative(this);
     }
 }
 

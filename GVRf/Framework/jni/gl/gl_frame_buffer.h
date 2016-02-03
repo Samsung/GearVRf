@@ -32,11 +32,12 @@ namespace gvr {
 class GLFrameBuffer {
 public:
     GLFrameBuffer() {
+        deleter_ = getDeleterForThisThread();
         glGenFramebuffers(1, &id_);
     }
 
     ~GLFrameBuffer() {
-        gl_delete.queueFrameBuffer(id_);
+        deleter_->queueFrameBuffer(id_);
     }
 
     GLuint id() const {
@@ -51,6 +52,7 @@ private:
 
 private:
     GLuint id_;
+    GlDelete* deleter_;
 };
 
 }

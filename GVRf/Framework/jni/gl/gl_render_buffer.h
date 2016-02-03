@@ -32,11 +32,12 @@ namespace gvr {
 class GLRenderBuffer {
 public:
     GLRenderBuffer() {
+        deleter_ = getDeleterForThisThread();
         glGenRenderbuffers(1, &id_);
     }
 
     ~GLRenderBuffer() {
-        gl_delete.queueRenderBuffer(id_);
+        deleter_->queueRenderBuffer(id_);
     }
 
     GLuint id() const {
@@ -51,6 +52,7 @@ private:
 
 private:
     GLuint id_;
+    GlDelete* deleter_;
 };
 
 }

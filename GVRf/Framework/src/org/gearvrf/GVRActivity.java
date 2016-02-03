@@ -81,6 +81,7 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        android.util.Log.i(TAG, "onCreate " + Integer.toHexString(hashCode()));
         /*
          * Removes the title bar and the status bar.
          */
@@ -117,6 +118,7 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onPause() {
+        android.util.Log.i(TAG, "onPause " + Integer.toHexString(hashCode()));
         if (mGVRViewManager != null) {
             mGVRViewManager.onPause();
         }
@@ -129,6 +131,7 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onResume() {
+        android.util.Log.i(TAG, "onResume " + Integer.toHexString(hashCode()));
         super.onResume();
         if (mGVRViewManager != null) {
             mGVRViewManager.onResume();
@@ -140,6 +143,7 @@ public class GVRActivity extends VrActivity {
 
     @Override
     protected void onDestroy() {
+        android.util.Log.i(TAG, "onDestroy " + Integer.toHexString(hashCode()));
         if (mGVRViewManager != null) {
             mGVRViewManager.onDestroy();
         }
@@ -261,9 +265,6 @@ public class GVRActivity extends VrActivity {
 
     void oneTimeShutDown() {
         Log.e(TAG, " oneTimeShutDown from native layer");
-
-        GVRHybridObject.closeAll();
-        NativeGLDelete.processQueues();
     }
 
     void beforeDrawEyes() {

@@ -33,6 +33,8 @@ class GLProgram {
 public:
     GLProgram(const char* pVertexSourceStrings,
             const char* pFragmentSourceStrings) {
+        deleter_ = getDeleterForThisThread();
+
         GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
                 pVertexSourceStrings) };
         GLint fragment_shader_string_lengths[1] = { (GLint) strlen(
@@ -50,10 +52,11 @@ public:
                     createProgram(count, pVertexSourceStrings,
                             pVertexSourceStringLengths, pFragmentSourceStrings,
                             pFragmentSourceStringLengths)) {
+        deleter_ = getDeleterForThisThread();
     }
 
     ~GLProgram() {
-        gl_delete.queueProgram(id_);
+        deleter_->queueProgram(id_);
     }
 
     GLuint id() const {
@@ -66,7 +69,7 @@ public:
         }
     }
 
-    static GLuint loadShader(GLenum shaderType, int strLength, const char** pSourceStrings,
+    GLuint loadShader(GLenum shaderType, int strLength, const char** pSourceStrings,
             const GLint*pSourceStringLengths) {
         GLuint shader = glCreateShader(shaderType);
         if (shader) {
@@ -85,7 +88,7 @@ public:
                                 buf);
                         free(buf);
                     }
-                    gl_delete.queueShader(shader);
+                    deleter_->queueShader(shader);
                     shader = 0;
                 }
             }
@@ -93,7 +96,7 @@ public:
         return shader;
     }
 
-    static GLuint createProgram(int strLength,
+    GLuint createProgram(int strLength,
             const char** pVertexSourceStrings,
             const GLint* pVertexSourceStringLengths,
             const char** pFragmentSourceStrings,
@@ -131,7 +134,7 @@ public:
                         free(buf);
                     }
                 }
-                gl_delete.queueProgram(program);
+                deleter_->queueProgram(program);
                 program = 0;
             }
         }
@@ -146,12 +149,12 @@ public:
 
 private:
     GLuint id_;
+    GlDelete* deleter_;
 
-    static void bindCommonAttributes(GLuint id)
-    {
-    	glBindAttribLocation (id, POSITION_ATTRIBUTE_LOCATION, "a_position");
-    	glBindAttribLocation (id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
-    	glBindAttribLocation (id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
+    static void bindCommonAttributes(GLuint id) {
+        glBindAttribLocation(id, POSITION_ATTRIBUTE_LOCATION, "a_position");
+        glBindAttribLocation(id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
+        glBindAttribLocation(id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
     }
 
 };
