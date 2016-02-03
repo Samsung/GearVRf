@@ -44,8 +44,8 @@ void Scene::removeSceneObject(SceneObject* scene_object) {
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     std::vector<SceneObject*> scene_objects(scene_objects_);
     for (int i = 0; i < scene_objects.size(); ++i) {
-        std::vector<SceneObject*> children(scene_objects[i]->children());
-        for (auto it = children.begin(); it != children.end(); ++it) {
+        std::vector<SceneObject*> childrenCopy = scene_objects[i]->children();
+        for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
             scene_objects.push_back(*it);
         }
     }
