@@ -32,39 +32,34 @@ class BaseTexture: public Texture {
 public:
     explicit BaseTexture(JNIEnv* env, jobject bitmap) :
             Texture(new GLTexture(TARGET)) {
-        AndroidBitmapInfo info;
-        void *pixels;
         int ret;
         if (bitmap == NULL) {
             std::string error =
                     "new BaseTexture() failed! Input bitmap is NULL.";
             throw error;
         }
-        if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
+
+        if ((ret = AndroidBitmap_getInfo(env, bitmap, &info_)) < 0) {
             std::string error = "AndroidBitmap_getInfo () failed! error = "
                     + ret;
             throw error;
         }
-        if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
-            std::string error = "AndroidBitmap_lockPixels () failed! error = "
-                    + ret;
-            throw error;
-        }
 
-        glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info.width, info.height, 0,
-                GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        glGenerateMipmap (GL_TEXTURE_2D);
-        AndroidBitmap_unlockPixels(env, bitmap);
+        env_ = env;
+        bitmapRef_ = env->NewGlobalRef(bitmap);
+
+        pending_gl_task_ = GL_TASK_INIT_BITMAP;
     }
 
     explicit BaseTexture(int width, int height, const unsigned char* pixels,
             int* texture_parameters) :
-            Texture(new GLTexture(TARGET, texture_parameters)) {
-        glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                GL_UNSIGNED_BYTE, pixels);
-        glGenerateMipmap (GL_TEXTURE_2D);
+            Texture(new GLTexture(TARGET, texture_parameters)),
+            pixels_(pixels)
+    {
+        width_ = width;
+        height_ = height;
+
+        pending_gl_task_ = GL_TASK_INIT_PIXELS_PARAMS;
     }
 
     explicit BaseTexture(int* texture_parameters) :
@@ -83,6 +78,44 @@ public:
         return TARGET;
     }
 
+    virtual void runPendingGL() {
+        Texture::runPendingGL();
+
+        switch (pending_gl_task_) {
+        case GL_TASK_NONE:
+            return;
+
+        case GL_TASK_INIT_BITMAP: {
+            int ret;
+            if ((ret = AndroidBitmap_lockPixels(env_, bitmapRef_, (void**)&pixels_)) < 0) {
+                std::string error = "AndroidBitmap_lockPixels () failed! error = "
+                        + ret;
+                throw error;
+            }
+            AndroidBitmap_unlockPixels(env_, bitmapRef_);
+
+            glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info_.width, info_.height, 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+            glGenerateMipmap (GL_TEXTURE_2D);
+
+            env_->DeleteGlobalRef(bitmapRef_);
+            break;
+        }
+
+        case GL_TASK_INIT_PIXELS_PARAMS: {
+            glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+                    GL_UNSIGNED_BYTE, pixels_);
+            glGenerateMipmap (GL_TEXTURE_2D);
+            break;
+        }
+
+        } // switch
+
+        pending_gl_task_ = GL_TASK_NONE;
+    }
+
 private:
     BaseTexture(const BaseTexture& base_texture);
     BaseTexture(BaseTexture&& base_texture);
@@ -91,6 +124,24 @@ private:
 
 private:
     static const GLenum TARGET = GL_TEXTURE_2D;
+
+    // Enum for pending GL tasks. Keep a comma with each line
+    // for easier merging.
+    enum {
+        GL_TASK_NONE = 0,
+        GL_TASK_INIT_BITMAP,
+        GL_TASK_INIT_PIXELS_PARAMS,
+        GL_TASK_INIT_PARAMS,
+    };
+    int pending_gl_task_;
+
+    JNIEnv* env_;
+    jobject bitmapRef_;
+    AndroidBitmapInfo info_;
+    const unsigned char* pixels_;
+
+    int width_;
+    int height_;
 };
 
 }

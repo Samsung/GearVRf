@@ -22,20 +22,26 @@
 
 #include "gl/gl_texture.h"
 #include "objects/hybrid_object.h"
+#include "objects/gl_pending_task.h"
 
 namespace gvr {
 
-class Texture: public HybridObject {
+class Texture: public HybridObject, GLPendingTask {
 public:
     virtual ~Texture() {
         delete gl_texture_;
     }
 
-    virtual GLuint getId() const {
+    // Should be called in GL context.
+    virtual GLuint getId() {
         if (gl_texture_ == 0) {
             // must be recycled already. The caller will handle error.
             return 0;
         }
+
+        // Before returning the ID makes sure nothing is pending
+        runPendingGL();
+
         return gl_texture_->id();
     }
 
@@ -69,12 +75,19 @@ public:
 
     virtual GLenum getTarget() const = 0;
 
+    virtual void runPendingGL() {
+        if (gl_texture_) {
+            gl_texture_->runPendingGL();
+        }
+    }
+
 protected:
     Texture(GLTexture* gl_texture) : HybridObject() {
         gl_texture_ = gl_texture;
     }
 
-    const GLTexture* gl_texture_;
+    GLTexture* gl_texture_;
+    bool gl_texture_bound_;
 
 private:
     Texture(const Texture& texture);
