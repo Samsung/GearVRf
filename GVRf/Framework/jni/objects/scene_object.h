@@ -115,6 +115,8 @@ public:
 
     void addChildObject(SceneObject* self, SceneObject* child);
     void removeChildObject(SceneObject* child);
+    int getChildrenCount() const;
+    SceneObject* getChildByIndex(int index);
     GLuint *get_occlusion_array() {
         return queries_;
     }

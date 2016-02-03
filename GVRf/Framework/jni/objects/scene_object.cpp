@@ -183,6 +183,19 @@ void SceneObject::removeChildObject(SceneObject* child) {
     dirtyHierarchicalBoundingVolume();
 }
 
+int SceneObject::getChildrenCount() const {
+    return children_.size();
+}
+
+SceneObject* SceneObject::getChildByIndex(int index) {
+    if (index < children_.size()) {
+        return children_[index];
+    } else {
+        std::string error = "SceneObject::getChildByIndex() : Out of index.";
+        throw error;
+    }
+}
+
 void SceneObject::set_visible(bool visibility = true) {
 
     //HACK
