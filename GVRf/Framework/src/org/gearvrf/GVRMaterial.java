@@ -24,6 +24,7 @@ import org.gearvrf.utility.Threads;
 import static org.gearvrf.utility.Assert.*;
 
 import android.graphics.Color;
+import android.util.Log;
 
 /**
  * This is one of the key GVRF classes: it holds shaders with textures.
@@ -478,17 +479,25 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
-        Threads.spawn(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    setTexture(key, texture.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        if (texture.isDone()) {
+            try {
+                setTexture(key, texture.get());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
+        } else {
+            Threads.spawn(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        setTexture(key, texture.get());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
     }
 
     public float getFloat(String key) {
