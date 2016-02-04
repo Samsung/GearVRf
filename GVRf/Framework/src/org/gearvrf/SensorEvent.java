@@ -22,7 +22,7 @@ import android.util.Log;
  * a {@link GVRBaseSensor}.
  * 
  * When GVRf detects cases where a given {@link GVRBaseSensor} is activated by
- * user interaction the {@link SensorEventListener} is triggered and a
+ * user interaction the {@link ISensorEvents} is triggered and a
  * {@link SensorEvent} is delivered to the application.
  * 
  * Make sure that the app consumes the {@link SensorEvent} data within the
@@ -114,7 +114,7 @@ public class SensorEvent {
      * .
      * 
      * @return <code>true</code> if the input is over the corresponding
-     *         {@link GVRSceneObject}. The {@link SensorEventListener} delivers
+     *         {@link GVRSceneObject}. The {@link ISensorEvents} delivers
      *         multiple sensor events when this state is <code>true</code> and
      *         only one event when this state is <code>false</code>.
      * 

@@ -20,6 +20,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.gearvrf.io.GVRInputManager;
+
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -30,7 +32,7 @@ import android.util.SparseArray;
  * input device interacts with a {@link GVRSceneObject}.
  * 
  * Note that to successfully receive {@link SensorEvent}s for an object make
- * sure that the sensor is enabled and a valid {@link SensorEventListener} is
+ * sure that the sensor is enabled and a valid {@link ISensorEvents} is
  * attached.
  * 
  */
@@ -40,12 +42,14 @@ public class GVRBaseSensor {
     private boolean enabled = true;
     private ListenerDelegate listener;
     private SparseArray<ControllerData> controllerData;
+    protected GVRContext gvrContext;
 
-    public GVRBaseSensor() {
-        this(null);
+    public GVRBaseSensor(GVRContext gvrContext) {
+        this(gvrContext, null);
     }
 
-    public GVRBaseSensor(SensorEventListener listener) {
+    public GVRBaseSensor(GVRContext gvrContext, ISensorEvents listener) {
+        this.gvrContext = gvrContext;
         this.listener = new ListenerDelegate(listener);
         controllerData = new SparseArray<GVRBaseSensor.ControllerData>();
     }
@@ -129,7 +133,7 @@ public class GVRBaseSensor {
      * 
      * @param listener
      */
-    public void registerSensorEventListener(SensorEventListener listener) {
+    public void registerSensorEventListener(ISensorEvents listener) {
         this.listener = new ListenerDelegate(listener);
     }
 
@@ -161,17 +165,22 @@ public class GVRBaseSensor {
         return enabled;
     }
 
-    private static class ListenerDelegate {
-        private final SensorEventListener sensorEventListener;
+    private class ListenerDelegate {
+        private final ISensorEvents sensorEventListener;
         private final Handler mainThreadHandler;
 
-        public ListenerDelegate(SensorEventListener listener) {
+        public ListenerDelegate(ISensorEvents listener) {
             this.sensorEventListener = listener;
             mainThreadHandler = new Handler(Looper.getMainLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
                     SensorEvent event = (SensorEvent) msg.obj;
-                    sensorEventListener.onSensorEvent(event);
+
+                    // Sends the onSensorEvent event
+                    GVREventManager eventManager = gvrContext.getEventManager();
+                    eventManager.sendEvent(sensorEventListener,
+                            ISensorEvents.class, "onSensorEvent", event);
+
                     event.recycle();
                 }
             };
