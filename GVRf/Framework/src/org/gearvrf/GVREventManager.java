@@ -17,6 +17,9 @@ package org.gearvrf;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.gearvrf.script.GVRScriptFile;
 import org.gearvrf.script.IScriptable;
@@ -54,8 +57,12 @@ public class GVREventManager {
     private static final String TAG = GVREventManager.class.getSimpleName();
     private GVRContext mGvrContext;
 
+    // Cache for Java handler methods
+    private final Map<Object, Map<String, Method>> mHandlerMethodCache;
+
     GVREventManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
+        mHandlerMethodCache = new HashMap<Object, Map<String, Method>>();
     }
 
     /**
@@ -89,6 +96,12 @@ public class GVREventManager {
 
     private Method validateEvent(Object target, Class<? extends IEvents> eventsClass,
             String eventName, Object[] params) {
+        // Use cached method if available
+        Method cachedMethod = getCachedMethod(target, eventName);
+        if (cachedMethod != null) {
+            return cachedMethod;
+        }
+
         // Check target event interface
         if (!eventsClass.isInstance(target)) {
             throw new RuntimeException(String.format("The target object does not implement interface %s",
@@ -117,8 +130,10 @@ public class GVREventManager {
                     }
                 }
 
-                if (foundMatchedMethod)
+                if (foundMatchedMethod) {
+                    addCachedMethod(target, eventName, method);
                     return method;
+                }
             }
         }
 
@@ -129,6 +144,31 @@ public class GVREventManager {
         } else {
             throw new RuntimeException(String.format("The target object has no method %s",
                     eventName));
+        }
+    }
+
+    private Method getCachedMethod(Object target, String eventName) {
+        // Lock the whole cache for both first- and second-level lookup
+        synchronized (mHandlerMethodCache) {
+            Map<String, Method> targetCache = mHandlerMethodCache.get(target);
+            if (targetCache == null) {
+                return null;
+            }
+
+            return targetCache.get(eventName);
+        }
+    }
+
+    private void addCachedMethod(Object target, String eventName, Method method) {
+        // Lock the whole cache for both first- and second-level lookup
+        synchronized (mHandlerMethodCache) {
+            Map<String, Method> targetCache = mHandlerMethodCache.get(target);
+            if (targetCache == null) {
+                targetCache = new TreeMap<String, Method>();
+                mHandlerMethodCache.put(target, targetCache);
+            }
+
+            targetCache.put(eventName, method);
         }
     }
 

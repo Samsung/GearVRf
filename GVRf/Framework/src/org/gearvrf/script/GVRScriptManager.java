@@ -16,6 +16,7 @@
 package org.gearvrf.script;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -58,7 +59,7 @@ public class GVRScriptManager {
     public GVRScriptManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
         mGlobalVariables = new TreeMap<String, Object>();
-        mScriptMap = new HashMap<IScriptable, GVRScriptFile>();
+        mScriptMap = Collections.synchronizedMap(new HashMap<IScriptable, GVRScriptFile>());
 
         Thread.currentThread().setContextClassLoader(
                 gvrContext.getActivity().getClassLoader());
@@ -95,8 +96,10 @@ public class GVRScriptManager {
             engine.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
         }
 
-        for (Map.Entry<String, Object> ent : mGlobalVariables.entrySet()) {
-            bindings.put(ent.getKey(), ent.getValue());
+        synchronized (mGlobalVariables) {
+            for (Map.Entry<String, Object> ent : mGlobalVariables.entrySet()) {
+                bindings.put(ent.getKey(), ent.getValue());
+            }
         }
     }
 
@@ -120,7 +123,9 @@ public class GVRScriptManager {
      * @param value The variable value.
      */
     public void addVariable(String varName, Object value) {
-        mGlobalVariables.put(varName, value);
+        synchronized (mGlobalVariables) {
+            mGlobalVariables.put(varName, value);
+        }
         refreshGlobalBindings();
     }
 
