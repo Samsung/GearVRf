@@ -21,5 +21,8 @@ package org.gearvrf;
  */
 public interface IScriptEvents extends IEvents {
     void onInit(GVRContext gvrContext) throws Throwable;
+
+    void onAfterInit();
+
     void onStep();
 }

@@ -29,10 +29,32 @@ public class GVRResourceVolume {
     private static final String TAG = GVRResourceVolume.class.getSimpleName();
 
     public enum VolumeType {
-        ANDROID_ASSETS,
-        ANDROID_SDCARD,
-        LINUX_FILESYSTEM,
-        NETWORK,
+        ANDROID_ASSETS ("assets"),
+        ANDROID_SDCARD ("sdcard"),
+        LINUX_FILESYSTEM ("linux"),
+        NETWORK ("url");
+
+        private String name;
+
+        VolumeType(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        // Gets a volume type from a string. For example, when loading
+        // a script from a bundle file, the volume type attribute needs
+        // to be converted to a VolumeType.
+        public static VolumeType fromString(String name) {
+            for (VolumeType type : VolumeType.values()) {
+                if (type.getName().equalsIgnoreCase(name)) // case insensitive
+                    return type;
+            }
+
+            return null;
+        }
     }
 
     protected GVRContext gvrContext;
@@ -40,11 +62,11 @@ public class GVRResourceVolume {
     protected String defaultPath;
     protected boolean enableUrlLocalCache = false;
 
-    /*package*/ GVRResourceVolume(GVRContext gvrContext, VolumeType volume) {
+    public GVRResourceVolume(GVRContext gvrContext, VolumeType volume) {
         this(gvrContext, volume, null);
     }
 
-    /*package*/ GVRResourceVolume(GVRContext gvrContext, VolumeType volumeType, String defaultPath) {
+    public GVRResourceVolume(GVRContext gvrContext, VolumeType volumeType, String defaultPath) {
         this.gvrContext = gvrContext;
         this.volumeType = volumeType;
         this.defaultPath = defaultPath;

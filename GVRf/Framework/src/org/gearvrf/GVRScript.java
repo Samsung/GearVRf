@@ -83,6 +83,18 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
     public abstract void onInit(GVRContext gvrContext) throws Throwable;
 
     /**
+     * Called after {@code onInit()} has finished.
+     *
+     * This is where you do some post-processing of the initial scene graph
+     * created in the method {@link #onInit(GVRContext)}, a listener added to
+     * {@link GVREventReceiver} or a {@link GVRScriptFile} attached to this {@link
+     * GVRScript} using {@link GVRScriptManager#attachScript}.
+     */
+    @Override
+    public void onAfterInit() {
+    }
+
+    /**
      * Called every frame.
      * 
      * This is where you start animations, and where you add or change

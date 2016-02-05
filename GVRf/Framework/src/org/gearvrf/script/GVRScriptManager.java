@@ -27,8 +27,12 @@ import javax.script.ScriptEngine;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRResourceVolume;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRScript;
+import org.gearvrf.IScriptEvents;
 import org.gearvrf.script.javascript.RhinoScriptEngineFactory;
-import org.gearvrf.utility.Log;
 
 import com.naef.jnlua.script.LuaScriptEngineFactory;
 
@@ -49,6 +53,30 @@ public class GVRScriptManager {
     protected Map<String, Object> mGlobalVariables;
 
     protected Map<IScriptable, GVRScriptFile> mScriptMap;
+
+    // For script bundles. All special targets start with @.
+    public static final String TARGET_PREFIX = "@";
+    public static final String TARGET_GVRSCRIPT = "@GVRScript";
+
+    interface TargetResolver {
+        IScriptable getTarget(GVRContext gvrContext, String name);
+    }
+
+    static Map<String, TargetResolver> sBuiltinTargetMap;
+
+    // Provide getters for non-scene-object targets.
+    static {
+        sBuiltinTargetMap = new TreeMap<String, TargetResolver>();
+
+        // Target resolver for "@GVRScript"
+        sBuiltinTargetMap.put(TARGET_GVRSCRIPT, new TargetResolver() {
+            @Override
+            public IScriptable getTarget(GVRContext gvrContext,
+                    String name) {
+                return gvrContext.getActivity().getScript();
+            }
+        });
+    }
 
     /**
      * Constructor.
@@ -164,10 +192,9 @@ public class GVRScriptManager {
      * @return A script file object or {@code null} if not found.
      * @throws IOException
      */
-    public GVRScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException {
+    public GVRScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException, GVRScriptException {
         if (getEngine(language) == null) {
-            Log.e(TAG, "The language is unknown: %s", language);
-            return null;
+            throw new GVRScriptException(String.format("The language is unknown: %s", language));
         }
 
         GVRScriptFile script = null;
@@ -178,5 +205,159 @@ public class GVRScriptManager {
         }
 
         return script;
+    }
+
+    /**
+     * Load a script bundle file. It defines bindings between scripts and GVRf objects
+     * (e.g., scene objects and the {@link GVRScript} object).
+     *
+     * If {@linkplain GVRScriptEntry script entry} contains a {@code volume} attribute, the
+     * script is loaded from the specified volume. Otherwise, it is loaded from the volume
+     * specified by the {@code volume} parameter.
+     *
+     * @param filePath
+     *        The path and filename of the script bundle.
+     * @param volume
+     *        The {@link GVRResourceVolume} from which to load the bundle file and scripts.
+     * @return
+     *         The loaded {@linkplain GVRScriptBundle script bundle}.
+     *
+     * @throws IOException
+     */
+    public GVRScriptBundle loadScriptBundle(String filePath, GVRResourceVolume volume) throws IOException {
+        GVRScriptBundle bundle = GVRScriptBundle.loadFromFile(mGvrContext, filePath, volume);
+        return bundle;
+    }
+
+    /**
+     * Binds a script bundle to a {@link GVRScene} object.
+     *
+     * @param scriptBundle
+     *     The script bundle.
+     * @param gvrScript
+     *     The {@link GVRScript} to bind to.
+     * @param bindToMainScene
+     *     If {@code true}, also bind it to the main scene on the event {@link GVRScript#onAfterInit}.
+     * @throws GVRScriptException
+     * @throws IOException
+     */
+    public void bindScriptBundle(final GVRScriptBundle scriptBundle, final GVRScript gvrScript, boolean bindToMainScene)
+            throws IOException, GVRScriptException {
+        bindHelper(scriptBundle, null, BIND_MASK_GVRSCRIPT);
+
+        if (bindToMainScene) {
+            final IScriptEvents bindToSceneListener = new IScriptEvents() {
+                GVRScene mainScene = null;
+
+                @Override
+                public void onInit(GVRContext gvrContext) throws Throwable {
+                    mainScene = gvrContext.getNextMainScene();
+                }
+
+                @Override
+                public void onAfterInit() {
+                    try {
+                        bindScriptBundleToScene(scriptBundle, mainScene);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (GVRScriptException e) {
+                        e.printStackTrace();
+                    } finally {
+                        // Remove the listener itself
+                        gvrScript.getEventReceiver().removeListener(this);
+                    }
+                }
+
+                @Override
+                public void onStep() {
+                }
+            };
+
+            // Add listener to bind to main scene when event "onAfterInit" is received
+            gvrScript.getEventReceiver().addListener(bindToSceneListener);
+        }
+    }
+
+    /**
+     * Binds a script bundle to a scene.
+     * @param scriptBundle
+     *         The {@code GVRScriptBundle} object containing script binding information.
+     * @param GVRScene
+     *         The scene to bind to.
+     * @throws GVRScriptException
+     * @throws IOException
+     */
+    public void bindScriptBundleToScene(GVRScriptBundle scriptBundle, GVRScene scene) throws IOException, GVRScriptException {
+        for (GVRSceneObject sceneObject : scene.getSceneObjects()) {
+            bindBundleToSceneObject(scriptBundle, sceneObject);
+        }
+    }
+
+    /**
+     * Binds a script bundle to scene graph rooted at a scene object.
+     * @param scriptBundle
+     *         The {@code GVRScriptBundle} object containing script binding information.
+     * @param rootSceneObject
+     *         The root of the scene object tree to which the scripts are bound.
+     * @throws IOException
+     */
+    public void bindBundleToSceneObject(GVRScriptBundle scriptBundle, GVRSceneObject rootSceneObject)
+            throws IOException, GVRScriptException
+    {
+        bindHelper(scriptBundle, rootSceneObject, BIND_MASK_SCENE_OBJECTS);
+    }
+
+    protected int BIND_MASK_SCENE_OBJECTS = 0x0001;
+    protected int BIND_MASK_GVRSCRIPT     = 0x0002;
+
+    // Helper function to bind script bundler to various targets
+    protected void bindHelper(GVRScriptBundle scriptBundle, GVRSceneObject rootSceneObject, int bindMask)
+            throws IOException, GVRScriptException
+    {
+        for (GVRScriptBindingEntry entry : scriptBundle.file.binding) {
+            GVRAndroidResource rc;
+            if (entry.volumeType == null || entry.volumeType.isEmpty()) {
+                rc = scriptBundle.volume.openResource(entry.script);
+            } else {
+                GVRResourceVolume.VolumeType volumeType = GVRResourceVolume.VolumeType.fromString(entry.volumeType);
+                if (volumeType == null) {
+                    throw new GVRScriptException(String.format("Volume type %s is not recognized, script=%s",
+                            entry.volumeType, entry.script));
+                }
+                rc = new GVRResourceVolume(mGvrContext, volumeType).openResource(entry.script);
+            }
+
+            GVRScriptFile scriptFile = loadScript(rc, entry.language);
+
+            String targetName = entry.target;
+            if (targetName.startsWith(TARGET_PREFIX)) {
+                TargetResolver resolver = sBuiltinTargetMap.get(targetName);
+                IScriptable target = resolver.getTarget(mGvrContext, targetName);
+
+                // Apply mask
+                boolean toBind = false;
+                if ((bindMask & BIND_MASK_GVRSCRIPT) != 0 && targetName.equalsIgnoreCase(TARGET_GVRSCRIPT)) {
+                    toBind = true;
+                }
+
+                if (toBind) {
+                    attachScriptFile(target, scriptFile);
+                }
+            } else {
+                if ((bindMask & BIND_MASK_SCENE_OBJECTS) != 0) {
+                    if (targetName.equals(rootSceneObject.getName())) {
+                        attachScriptFile(rootSceneObject, scriptFile);
+                    }
+
+                    // Search in children
+                    GVRSceneObject[] sceneObjects = rootSceneObject.getSceneObjectsByName(targetName);
+                    if (sceneObjects != null) {
+                        for (GVRSceneObject sceneObject : sceneObjects) {
+                            attachScriptFile(sceneObject, scriptFile);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

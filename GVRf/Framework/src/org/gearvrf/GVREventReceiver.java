@@ -1,7 +1,7 @@
 package org.gearvrf;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * An event receiver can contain a list of listeners, and deliver events to
@@ -34,7 +34,10 @@ public class GVREventReceiver {
      */
     public GVREventReceiver(IEventReceiver owner) {
         mOwner = owner;
-        mListeners = new ArrayList<IEvents>();
+
+        // Copy-on-write list is used. Otherwise, it won't be thread-safe
+        // unless we do copy-on-read, which is worse.
+        mListeners = new CopyOnWriteArrayList<IEvents>();
     }
 
     /**
