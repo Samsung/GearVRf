@@ -96,6 +96,8 @@ private:
             RenderTexture* render_texture, PostEffectData* post_effect_data,
             PostEffectShaderManager* post_effect_shader_manager);
 
+    static bool checkTextureReady(Material* material);
+
     static void occlusion_cull(Scene* scene,
             std::vector<SceneObject*>& scene_objects,
             ShaderManager *shader_manager, glm::mat4 vp_matrix);

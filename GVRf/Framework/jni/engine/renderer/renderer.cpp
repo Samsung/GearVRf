@@ -510,6 +510,12 @@ void Renderer::renderRenderData(RenderData* render_data,
                 set_face_culling(render_data->pass(curr_pass)->cull_face());
                 Material* curr_material =
                         render_data->pass(curr_pass)->material();
+
+                //Skip the material whose texture is not ready with some exceptions
+                if (!checkTextureReady(curr_material)) {
+                    continue;
+                }
+
                 Transform* const t = render_data->owner_object()->transform();
 
                 if (curr_material != nullptr && nullptr != t) {
@@ -609,6 +615,29 @@ void Renderer::renderRenderData(RenderData* render_data,
         if (render_data->alpha_to_coverage()) {
         	glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         }
+    }
+}
+
+bool Renderer::checkTextureReady(Material* material) {
+    int shaderType = material->shader_type();
+
+    //Skip custom shader here since they are rendering multiple textures
+    //Check the textures later inside the rendering pass inside the custom shader
+    if (shaderType < 0
+            || shaderType >= Material::ShaderType::BUILTIN_SHADER_SIZE) {
+        return true;
+    }
+    //For regular shaders, check its main texture
+    else if (shaderType != Material::ShaderType::ASSIMP_SHADER) {
+        return material->isMainTextureReady();
+    }
+    //For ASSIMP_SHADER as diffused texture, check its main texture
+    //For non diffused texture, the rendering doesn't take any textures and needs to be skipped
+    else if (ISSET(material->get_shader_feature_set(), AS_DIFFUSE_TEXTURE)) {
+        return material->isMainTextureReady();
+    }
+    else {
+        return true;
     }
 }
 

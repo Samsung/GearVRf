@@ -26,6 +26,8 @@
 #include "objects/components/render_data.h"
 #include "util/gvr_gl.h"
 
+#include <sys/time.h>
+
 namespace gvr {
 CustomShader::CustomShader(std::string vertex_shader,
         std::string fragment_shader) :
@@ -99,8 +101,16 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material,
-        bool right) {
+void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
+        Material* material, bool right) {
+    for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
+        Texture* texture = material->getTextureNoError(it->second);
+        // If any texture is not ready, do not render the material at all
+        if (texture == NULL || !texture->isReady()) {
+            return;
+        }
+    }
+
     Mesh* mesh = render_data->mesh();
 
 #if _GVRF_USE_GLES3_

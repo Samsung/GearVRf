@@ -171,17 +171,26 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         synchronized (this) {
             mFutureMesh = mesh;
         }
-        Threads.spawn(new Runnable() {
 
-            @Override
-            public void run() {
-                try {
-                    setMesh(mesh.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        if (mesh.isDone()) {
+            try {
+                setMesh(mesh.get());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
+        } else {
+            Threads.spawn(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        setMesh(mesh.get());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
     }
 
     /**
