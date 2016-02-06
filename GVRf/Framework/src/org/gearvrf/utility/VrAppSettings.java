@@ -578,6 +578,10 @@ public class VrAppSettings {
     // Not going to become part of xml content.
     public static boolean isShowDebugLog = false;
 
+    // Use this flag to enable the gaze cursor controller whenever
+    // the phone is docked.
+    boolean useGazeCursorController;
+
     public ModeParms modeParms;
     public EyeBufferParms eyeBufferParms;
     public HeadModelParms headModelParms;
@@ -639,6 +643,25 @@ public class VrAppSettings {
      */
     public void setUseSrgbFramebuffer(boolean useSrgbFramebuffer) {
         this.useSrgbFramebuffer = useSrgbFramebuffer;
+    }
+    
+    /**
+     * Check if current app is using the gaze cursor controller
+     * 
+     * @return if current app is using the gaze cursor controller
+     */
+    public boolean useGazeCursorController() {
+        return useGazeCursorController;
+    }
+
+    /**
+     * Set if current app is using the gaze cursor controller
+     * 
+     * @param useGazeCursorController
+     *            if current app is using the gaze cursor controller
+     */
+    public void setUseGazeCursorController(boolean useGazeCursorController) {
+        this.useGazeCursorController = useGazeCursorController;
     }
 
     /**

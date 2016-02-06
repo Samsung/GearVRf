@@ -21,12 +21,12 @@ import java.util.List;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRScript;
+import org.gearvrf.utility.Log;
 
 import android.content.Context;
 import android.hardware.input.InputManager;
 import android.hardware.input.InputManager.InputDeviceListener;
 
-import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.InputDevice;
@@ -55,6 +55,7 @@ public abstract class GVRInputManager {
     private static final String TAG = GVRInputManager.class.getSimpleName();
     private final InputManager inputManager;
     private final GVRContext context;
+    private boolean useGazeCursorController;
     private GVRGamepadDeviceManager gamepadDeviceManager;
     private GVRMouseDeviceManager mouseDeviceManager;
 
@@ -76,11 +77,13 @@ public abstract class GVRInputManager {
     // We make use of the vendor and product id to identify a device.
     private final LongSparseArray<GVRBaseController> cache;
 
-    protected GVRInputManager(GVRContext context) {
+    protected GVRInputManager(GVRContext context,
+            boolean useGazeCursorController) {
         Context androidContext = context.getContext();
         inputManager = (InputManager) androidContext
                 .getSystemService(Context.INPUT_SERVICE);
         this.context = context;
+        this.useGazeCursorController = useGazeCursorController;
         inputManager.registerInputDeviceListener(inputDeviceListener, null);
         controllerIds = new SparseArray<GVRBaseController>();
         cache = new LongSparseArray<GVRBaseController>();
@@ -136,6 +139,15 @@ public abstract class GVRInputManager {
         if (device != null) {
             if ((device.getSources()
                     & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) {
+
+                // We do not want to add the Oculus touchpad as a mouse device.
+                if (device
+                        .getVendorId() == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID
+                        && device
+                                .getProductId() == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) {
+                    return (useGazeCursorController ? GVRCursorType.GAZE
+                            : GVRCursorType.UNKNOWN);
+                }
                 return GVRCursorType.MOUSE;
             } else if ((device.getSources()
                     & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
@@ -151,15 +163,6 @@ public abstract class GVRInputManager {
     private long getCacheKey(InputDevice device, GVRCursorType cursorType) {
         if (cursorType != GVRCursorType.UNKNOWN
                 && cursorType != GVRCursorType.EXTERNAL) {
-            int vendorId = device.getVendorId();
-            int productId = device.getProductId();
-
-            // We do not want to add the Oculus touchpad as a mouse device.
-            if (vendorId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID
-                    && productId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) {
-                return -1;
-            }
-
             // Sometimes a device shows up using two device ids
             // here we try to show both devices as one using the
             // product and vendor id
@@ -184,6 +187,9 @@ public abstract class GVRInputManager {
                 } else if (cursorType == GVRCursorType.CONTROLLER) {
                     controller = gamepadDeviceManager
                             .getCursorController(context);
+                } else if (cursorType == GVRCursorType.GAZE) {
+                    controller = new GVRGazeCursorController(context,
+                            GVRCursorType.GAZE);
                 }
                 cache.put(key, controller);
                 controllerIds.put(device.getId(), controller);
@@ -217,6 +223,9 @@ public abstract class GVRInputManager {
                     } else if (controller
                             .getCursorType() == GVRCursorType.CONTROLLER) {
                         gamepadDeviceManager.removeCursorController(controller);
+                    } else
+                        if (controller.getCursorType() == GVRCursorType.GAZE) {
+                        ((GVRGazeCursorController) controller).close();
                     }
                     return controller;
                 }

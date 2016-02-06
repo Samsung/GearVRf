@@ -37,6 +37,7 @@ import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
+import org.gearvrf.utility.VrAppSettings;
 import org.gearvrf.io.GVRInputManager;
 
 import android.app.Activity;
@@ -169,19 +170,19 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 * INCH_TO_METERS;
         float screenHeightMeters = (float) screenHeightPixels / metrics.ydpi
                 * INCH_TO_METERS;
-
+        VrAppSettings vrAppSettings = gvrActivity.getAppSettings();
         mLensInfo = new GVRLensInfo(screenWidthPixels, screenHeightPixels,
-                screenWidthMeters, screenHeightMeters,
-                gvrActivity.getAppSettings());
+                screenWidthMeters, screenHeightMeters, vrAppSettings);
 
-        GVRPerspectiveCamera.setDefaultFovY(gvrActivity.getAppSettings()
-                .getEyeBufferParms().getFovY());
+        GVRPerspectiveCamera
+                .setDefaultFovY(vrAppSettings.getEyeBufferParms().getFovY());
         // Different width/height aspect ratio makes the rendered screen warped
         // when the screen rotates
         // GVRPerspectiveCamera.setDefaultAspectRatio(mLensInfo
         // .getRealScreenWidthMeters()
         // / mLensInfo.getRealScreenHeightMeters());
-        mInputManager = new GVRInputManagerImpl(this);
+        mInputManager = new GVRInputManagerImpl(this,
+                vrAppSettings.useGazeCursorController());
 
         mEventManager = new GVREventManager(this);
         mScriptManager = new GVRScriptManager(this);
