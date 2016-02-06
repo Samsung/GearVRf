@@ -58,7 +58,7 @@ void TextureCapturer::setRenderTexture(RenderTexture *renderTexture) {
 
 void TextureCapturer::setCapture(bool capture, float fps) {
     mPendingCapture = capture;
-    if (fabs(fps) > TOL) {
+    if (capture && fabs(fps) > TOL) {
         mCaptureIntervalNS = (long long)(1000000000.f / fps);
     } else {
         mCaptureIntervalNS = 0;
