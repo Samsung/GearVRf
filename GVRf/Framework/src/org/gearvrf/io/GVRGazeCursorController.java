@@ -17,12 +17,7 @@ package org.gearvrf.io;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
-
-import android.opengl.Matrix;
+import org.joml.Vector3f;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -31,13 +26,21 @@ class GVRGazeCursorController extends GVRBaseController
     private static final String TAG = GVRGazeCursorController.class
             .getSimpleName();
     private boolean isActive;
-    private float x, y, z;
-    private GVRContext context;
+    private final GVRContext context;
+
+    // Used to calculate the absolute position that the controller reports to
+    // the user.
+    private final Vector3f gazePosition;
+
+    // Saves the relative position of the cursor with respect to the camera.
+    private final Vector3f setPosition;
 
     public GVRGazeCursorController(GVRContext context,
             GVRCursorType cursorType) {
         super(cursorType);
         this.context = context;
+        gazePosition = new Vector3f();
+        setPosition = new Vector3f();
         context.registerDrawFrameListener(this);
     }
 
@@ -62,22 +65,18 @@ class GVRGazeCursorController extends GVRBaseController
 
     @Override
     public void setPosition(float x, float y, float z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        setPosition.set(x, y, z);
         super.setPosition(x, y, z);
     }
 
     @Override
     public void onDrawFrame(float frameTime) {
-        float[] position = new float[] { x, y, z, 1.0f };
-        float[] modelMatrix = context.getMainScene().getMainCameraRig()
-                .getHeadTransform().getModelMatrix();
-        Matrix.multiplyMV(position, 0, modelMatrix, 0, position, 0);
-        super.setPosition(position[0], position[1], position[2]);
+        setPosition.mulPoint(context.getMainScene().getMainCameraRig()
+                .getHeadTransform().getModelMatrix4f(), gazePosition);
+        super.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
     }
-    
-    void close(){
+
+    void close() {
         context.unregisterDrawFrameListener(this);
     }
 }
