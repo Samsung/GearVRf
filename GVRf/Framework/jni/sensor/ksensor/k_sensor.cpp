@@ -48,13 +48,7 @@ void KSensor::readerThreadFunc() {
     LOGV("k_sensor: reader starting up; tid: %d", tid);
 
     readFactoryCalibration();
-
-    while (0 > (fd_ = open("/dev/ovr0", O_RDONLY))) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        if (!processing_flag_) {
-            return;
-        }
-    }
+    openOvrDevice();
 
     glm::quat q;
     glm::vec3 corrected_gyro;
@@ -115,7 +109,7 @@ void KSensor::stop() {
 bool KSensor::pollSensor(KTrackerSensorZip* data) {
     struct pollfd pfds;
     pfds.fd = fd_;
-    pfds.events = POLLIN;
+    pfds.events = POLLIN | POLLHUP | POLLERR;
 
     uint8_t buffer[100];
     int n = poll(&pfds, 1, 100);
@@ -152,6 +146,10 @@ bool KSensor::pollSensor(KTrackerSensorZip* data) {
         }
 
         return true;
+    } else if (0 < n && (pfds.revents & POLLHUP)) {
+        LOGI("k_sensor: received POLLHUP, will try to reopen device until interrupted");
+        last_rotation_rate_ = last_acceleration_ = last_corrected_gyro_ = glm::vec3(0, 0, 0);
+        openOvrDevice();
     }
     return false;
 }
