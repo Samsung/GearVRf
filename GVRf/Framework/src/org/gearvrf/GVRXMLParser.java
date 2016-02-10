@@ -100,6 +100,10 @@ class GVRXMLParser {
                                 settings.setShowLoadingIcon(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));
                             } else if (attributeName
+                                    .equals("useGazeCursorController")) {
+                                settings.setUseGazeCursorController(Boolean
+                                        .parseBoolean(xpp.getAttributeValue(i)));
+                            } else if (attributeName
                                     .equals("useSrgbFramebuffer")) {
                                 settings.setUseSrgbFramebuffer(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));

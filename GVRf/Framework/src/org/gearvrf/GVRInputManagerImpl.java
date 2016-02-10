@@ -38,8 +38,9 @@ class GVRInputManagerImpl extends GVRInputManager {
     private GVRScene scene;
     private List<GVRCursorController> controllers;
 
-    GVRInputManagerImpl(GVRContext gvrContext) {
-        super(gvrContext);
+    GVRInputManagerImpl(GVRContext gvrContext,
+            boolean useGazeCursorController) {
+        super(gvrContext, useGazeCursorController);
         sensorManager = new SensorManager();
 
         controllers = new ArrayList<GVRCursorController>();

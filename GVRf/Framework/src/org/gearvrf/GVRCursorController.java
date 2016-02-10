@@ -205,9 +205,6 @@ public abstract class GVRCursorController {
                 // if there is an attached scene object then use its absolute
                 // position.
                 sceneObject.getTransform().setPosition(x, y, z);
-                float[] modelMatrix = sceneObject.getTransform()
-                        .getModelMatrix();
-                Matrix.multiplyMV(position, 0, modelMatrix, 0, position, 0);
             }
         }
         invalidate = true;
