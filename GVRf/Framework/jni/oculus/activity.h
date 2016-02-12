@@ -68,6 +68,8 @@ private:
     ovrHeadModelParms oculusHeadModelParms_;
 
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
+    void beginRenderingEye(const int eye);
+    void endRenderingEye(const int eye);
 
 public:
     void onSurfaceCreated(JNIEnv& env);

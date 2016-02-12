@@ -119,11 +119,9 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         oculusHeadModelParms_ = vrapi_DefaultHeadModelParms();
         configurationHelper_.getHeadModelConfiguration(env, oculusHeadModelParms_);
 
-        //@todo struct instead?
-        int width, height, multisamples;
-        ovrTextureFormat colorTextureFormat;
-        ovrTextureFormat depthTextureFormat;
         bool resolveDepth;
+        int width, height, multisamples;
+        ovrTextureFormat colorTextureFormat, depthTextureFormat;
         configurationHelper_.getFramebufferConfiguration(env, width, height,
                 vrapi_GetSystemPropertyInt(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH),
                 vrapi_GetSystemPropertyInt(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT),
@@ -161,9 +159,7 @@ void GVRActivity::onDrawFrame() {
         ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_, tracking.HeadPose.TimeInSeconds);
         updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;
 
-        frameBuffer_[eye].bind();
-        GL(glViewport(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
-        GL(glScissor(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
+        beginRenderingEye(eye);
 
         if (!sensoredSceneUpdated_ && headRotationProvider_.receivingUpdates()) {
             sensoredSceneUpdated_ = updateSensoredScene();
@@ -171,23 +167,46 @@ void GVRActivity::onDrawFrame() {
         headRotationProvider_.predict(*this, parms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
         oculusJavaGlThread_.Env->CallVoidMethod(activityRenderingCallbacks_, onDrawEyeMethodId, eye);
 
-        frameBuffer_[eye].resolve();
+        ovrFrameLayerTexture& eyeTexture = parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye];
+        eyeTexture.ColorTextureSwapChain = frameBuffer_[eye].mColorTextureSwapChain;
+        eyeTexture.DepthTextureSwapChain = frameBuffer_[eye].mDepthTextureSwapChain;
+        eyeTexture.TextureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
 
-        parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].ColorTextureSwapChain =
-                frameBuffer_[eye].mColorTextureSwapChain;
-        parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].TextureSwapChainIndex =
-                frameBuffer_[eye].mTextureSwapChainIndex;
         for (int layer = 0; layer < VRAPI_FRAME_LAYER_TYPE_MAX; layer++) {
             parms.Layers[layer].Textures[eye].TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
             parms.Layers[layer].Textures[eye].HeadPose = updatedTracking.HeadPose;
         }
 
-        frameBuffer_[eye].advance();
+        endRenderingEye(eye);
     }
 
     FrameBufferObject::unbind();
-
     vrapi_SubmitFrame(oculusMobile_, &parms);
+}
+
+static const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
+
+void GVRActivity::beginRenderingEye(const int eye) {
+    frameBuffer_[eye].bind();
+
+    GL(glViewport(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
+    GL(glScissor(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
+
+    GL(glDepthMask(GL_TRUE));
+    GL(glEnable(GL_DEPTH_TEST));
+    GL(glDepthFunc(GL_LEQUAL));
+    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, sizeof(attachments)/sizeof(GLenum), attachments));
+    GL(glClear(GL_DEPTH_BUFFER_BIT));
+}
+
+void GVRActivity::endRenderingEye(const int eye) {
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+
+    frameBuffer_[eye].resolve();
+    GL(glFlush());  //per vrAppFw
+
+    frameBuffer_[eye].advance();
 }
 
 void GVRActivity::initializeOculusJava(JNIEnv& env, ovrJava& oculusJava) {

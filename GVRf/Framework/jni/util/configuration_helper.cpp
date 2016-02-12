@@ -96,34 +96,30 @@ void ConfigurationHelper::getFramebufferConfiguration(JNIEnv& env, int& fbWidthO
     resolveDepthOut = env.GetBooleanField(parms, fid);
     LOGV("ConfigurationHelper: --- resolve depth: %d", resolveDepthOut);
 
-    if (resolveDepthOut) {
-        fid = env.GetFieldID(parmsClass, "depthFormat",
-                "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$DepthFormat;");
-        jobject depthFormat = env.GetObjectField(parms, fid);
-        mid = env.GetMethodID(env.GetObjectClass(depthFormat), "getValue", "()I");
-        int depthFormatValue = env.CallIntMethod(depthFormat, mid);
-        switch (depthFormatValue) {
-        case 0:
-            depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_NONE;
-            break;
-        case 1:
-            depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_DEPTH_16;
-            break;
-        case 2:
-            depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_DEPTH_24;
-            break;
-        case 3:
-            depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_DEPTH_24_STENCIL_8;
-            break;
-        default:
-            LOGE("fatal error: unknown depth texture format");
-            std::terminate();
-        }
-    } else {
+    fid = env.GetFieldID(parmsClass, "depthFormat",
+            "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$DepthFormat;");
+    jobject depthFormat = env.GetObjectField(parms, fid);
+    mid = env.GetMethodID(env.GetObjectClass(depthFormat), "getValue", "()I");
+    int depthFormatValue = env.CallIntMethod(depthFormat, mid);
+    switch (depthFormatValue) {
+    case 0:
         depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_NONE;
+        break;
+    case 1:
+        depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_DEPTH_16;
+        break;
+    case 2:
+        depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_DEPTH_24;
+        break;
+    case 3:
+        depthTextureFormatOut = VRAPI_TEXTURE_FORMAT_DEPTH_24_STENCIL_8;
+        break;
+    default:
+        LOGE("fatal error: unknown depth texture format");
+        std::terminate();
     }
-    LOGV("ConfigurationHelper: --- depth texture format: %d", depthTextureFormatOut);
 
+    LOGV("ConfigurationHelper: --- depth texture format: %d", depthTextureFormatOut);
     LOGV("ConfigurationHelper: ---------------------------------");
 }
 
