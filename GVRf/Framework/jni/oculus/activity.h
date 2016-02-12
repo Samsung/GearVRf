@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., LTD
+/* Copyright 2016 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,10 @@ private:
     ovrMatrix4f texCoordsTanAnglesMatrix_;
     ovrPerformanceParms oculusPerformanceParms_;
     ovrHeadModelParms oculusHeadModelParms_;
+
+    bool mResolveDepthConfiguration;
+    int mWidthConfiguration, mHeightConfiguration, mMultisamplesConfiguration;
+    ovrTextureFormat mColorTextureFormatConfiguration, mDepthTextureFormatConfiguration;
 
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
     void beginRenderingEye(const int eye);

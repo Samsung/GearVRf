@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., LTD
+/* Copyright 2016 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,6 +102,14 @@ void GVRActivity::setCameraRig(jlong cameraRig) {
 void GVRActivity::onSurfaceCreated(JNIEnv& env) {
     LOGV("GVRActivity::onSurfaceCreated");
     initializeOculusJava(env, oculusJavaGlThread_);
+
+    //must happen as soon as possible as it updates the java side wherever it has default values; e.g.
+    //resolutionWidth -1 becomes whatever VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH is.
+    configurationHelper_.getFramebufferConfiguration(env, mWidthConfiguration, mHeightConfiguration,
+            vrapi_GetSystemPropertyInt(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH),
+            vrapi_GetSystemPropertyInt(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT),
+            mMultisamplesConfiguration, mColorTextureFormatConfiguration,
+            mResolveDepthConfiguration, mDepthTextureFormatConfiguration);
 }
 
 void GVRActivity::onSurfaceChanged(JNIEnv& env) {
@@ -119,17 +127,10 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         oculusHeadModelParms_ = vrapi_DefaultHeadModelParms();
         configurationHelper_.getHeadModelConfiguration(env, oculusHeadModelParms_);
 
-        bool resolveDepth;
-        int width, height, multisamples;
-        ovrTextureFormat colorTextureFormat, depthTextureFormat;
-        configurationHelper_.getFramebufferConfiguration(env, width, height,
-                vrapi_GetSystemPropertyInt(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH),
-                vrapi_GetSystemPropertyInt(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT),
-                multisamples, colorTextureFormat, resolveDepth, depthTextureFormat);
-
         for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
-            bool b = frameBuffer_[eye].create(colorTextureFormat, width, height, multisamples, resolveDepth,
-                    depthTextureFormat);
+            bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
+                    mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
+                    mDepthTextureFormatConfiguration);
         }
 
         projectionMatrix_ = ovrMatrix4f_CreateProjectionFov(

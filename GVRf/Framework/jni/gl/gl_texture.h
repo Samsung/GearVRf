@@ -57,7 +57,7 @@ public:
     }
 
     virtual ~GLTexture() {
-        if (GL_TASK_NONE == pending_gl_task_) {
+        if (0 != id_) {
             deleter_->queueTexture(id_);
         }
     }
@@ -129,7 +129,7 @@ private:
     GLTexture& operator=(GLTexture&& gl_texture);
 
 private:
-    GLuint id_;
+    GLuint id_ = 0;
     GLenum target_;
     GlDelete* deleter_;
 
