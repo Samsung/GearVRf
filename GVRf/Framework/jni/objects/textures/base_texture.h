@@ -63,7 +63,7 @@ public:
     }
 
     explicit BaseTexture(int* texture_parameters) :
-            Texture(new GLTexture(TARGET, texture_parameters)) {
+            Texture(new GLTexture(TARGET, texture_parameters)), pending_gl_task_(GL_TASK_NONE) {
     }
 
     bool update(int width, int height, void* data) {
