@@ -47,8 +47,10 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
 GVRActivity::~GVRActivity() {
     LOGV("GVRActivity::~GVRActivity");
 
-    SystemActivities_Shutdown(&oculusJavaMainThread_);
-    vrapi_Shutdown();
+    if (VRAPI_INITIALIZE_UNKNOWN_ERROR != mVrapiInitResult) {
+        SystemActivities_Shutdown(&oculusJavaMainThread_);
+        vrapi_Shutdown();
+    }
 
     envMainThread_->DeleteGlobalRef(activityRenderingCallbacksClass_);
     envMainThread_->DeleteGlobalRef(activityClass_);
@@ -61,23 +63,23 @@ int GVRActivity::initializeVrApi() {
     initializeOculusJava(*envMainThread_, oculusJavaMainThread_);
 
     const ovrInitParms initParms = vrapi_DefaultInitParms(&oculusJavaMainThread_);
-    int32_t initResult = vrapi_Initialize(&initParms);
-    if (VRAPI_INITIALIZE_UNKNOWN_ERROR == initResult) {
+    mVrapiInitResult = vrapi_Initialize(&initParms);
+    if (VRAPI_INITIALIZE_UNKNOWN_ERROR == mVrapiInitResult) {
         LOGE("Oculus is probably not present on this device");
-        return initResult;
+        return mVrapiInitResult;
     }
 
     SystemActivities_Init(&oculusJavaMainThread_);
-    if (VRAPI_INITIALIZE_PERMISSIONS_ERROR == initResult) {
+    if (VRAPI_INITIALIZE_PERMISSIONS_ERROR == mVrapiInitResult) {
         char const * msg =
-                initResult == VRAPI_INITIALIZE_PERMISSIONS_ERROR ?
+                mVrapiInitResult == VRAPI_INITIALIZE_PERMISSIONS_ERROR ?
                         "Thread priority security exception. Make sure the APK is signed." :
                         "VrApi initialization error.";
         SystemActivities_DisplayError(&oculusJavaMainThread_, SYSTEM_ACTIVITIES_FATAL_ERROR_OSIG, __FILE__, msg);
         SystemActivities_Shutdown(&oculusJavaMainThread_);
     }
 
-    return initResult;
+    return mVrapiInitResult;
 }
 
 void GVRActivity::showGlobalMenu() {

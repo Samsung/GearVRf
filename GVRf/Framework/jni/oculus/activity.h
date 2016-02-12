@@ -71,6 +71,8 @@ private:
     int mWidthConfiguration, mHeightConfiguration, mMultisamplesConfiguration;
     ovrTextureFormat mColorTextureFormatConfiguration, mDepthTextureFormatConfiguration;
 
+    int32_t mVrapiInitResult;
+
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
     void beginRenderingEye(const int eye);
     void endRenderingEye(const int eye);
