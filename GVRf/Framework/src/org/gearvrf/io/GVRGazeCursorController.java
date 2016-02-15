@@ -18,6 +18,8 @@ package org.gearvrf.io;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.joml.Vector3f;
+
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -25,7 +27,11 @@ class GVRGazeCursorController extends GVRBaseController
         implements GVRDrawFrameListener {
     private static final String TAG = GVRGazeCursorController.class
             .getSimpleName();
-    private boolean isActive;
+    private final KeyEvent BUTTON_GAZE_DOWN = new KeyEvent(KeyEvent.ACTION_DOWN,
+            KeyEvent.KEYCODE_BUTTON_1);
+    private final KeyEvent BUTTON_GAZE_UP = new KeyEvent(KeyEvent.ACTION_UP,
+            KeyEvent.KEYCODE_BUTTON_1);
+
     private final GVRContext context;
 
     // Used to calculate the absolute position that the controller reports to
@@ -46,20 +52,21 @@ class GVRGazeCursorController extends GVRBaseController
 
     @Override
     boolean dispatchKeyEvent(KeyEvent event) {
-        // Not used.
-        return false;
+        setKeyEvent(event);
+        return true;
     }
 
     @Override
     boolean dispatchMotionEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN && isActive == false) {
-            this.isActive = true;
-            setActive(isActive);
-        } else if (event.getAction() == MotionEvent.ACTION_UP
-                && isActive == true) {
-            this.isActive = false;
-            setActive(isActive);
+        MotionEvent clone = MotionEvent.obtain(event);
+        if (clone.getAction() == MotionEvent.ACTION_DOWN) {
+            // report ACTION_DOWN as a button
+            setKeyEvent(BUTTON_GAZE_DOWN);
+        } else if (clone.getAction() == MotionEvent.ACTION_UP) {
+            // report ACTION_UP as a button
+            setKeyEvent(BUTTON_GAZE_UP);
         }
+        setMotionEvent(clone);
         return true;
     }
 

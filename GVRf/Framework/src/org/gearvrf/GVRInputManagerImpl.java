@@ -95,6 +95,9 @@ class GVRInputManagerImpl extends GVRInputManager {
      */
     void setScene(GVRScene scene) {
         this.scene = scene;
+        for (GVRCursorController controller : controllers) {
+            sensorManager.processPick(scene, controller);
+        }
     }
 
     @Override
@@ -108,9 +111,7 @@ class GVRInputManagerImpl extends GVRInputManager {
         @Override
         public void onDrawFrame(float frameTime) {
             for (GVRCursorController controller : controllers) {
-                if (controller.update()) {
-                    sensorManager.processPick(scene, controller);
-                }
+                controller.update(sensorManager, scene);
             }
         }
     };

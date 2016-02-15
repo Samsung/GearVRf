@@ -77,6 +77,10 @@ class GVRMouseDeviceManager {
     }
 
     static class GVRMouseController extends GVRBaseController {
+        private static final KeyEvent BUTTON_1_DOWN = new KeyEvent(
+                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
+        private static final KeyEvent BUTTON_1_UP = new KeyEvent(
+                KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_1);
 
         private EventHandlerThread thread;
         private GVRContext context;
@@ -90,9 +94,17 @@ class GVRMouseDeviceManager {
         }
 
         @Override
+        protected void setKeyEvent(KeyEvent keyEvent) {
+            super.setKeyEvent(keyEvent);
+        }
+
+        @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
-            // Not used
-            return false;
+            if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+                return thread.submitKeyEvent(getId(), event);
+            } else {
+                return false;
+            }
         }
 
         @Override
@@ -104,8 +116,8 @@ class GVRMouseDeviceManager {
             }
         }
 
-        private void processMouseEvent(float x, float y, float z,
-                boolean active) {
+        private boolean processMouseEvent(float x, float y, float z,
+                MotionEvent event) {
             GVRScene scene = context.getMainScene();
             if (scene != null) {
                 float depth = this.z;
@@ -129,9 +141,23 @@ class GVRMouseDeviceManager {
                     this.y = frustumHeight * -y;
                     this.z = depth;
                 }
-                setActive(active);
+
+                /*
+                 * The mouse does not report a key event against the primary
+                 * button click. Instead we generate a synthetic KeyEvent
+                 * against the mouse.
+                 */
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    setKeyEvent(BUTTON_1_DOWN);
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    setKeyEvent(BUTTON_1_UP);
+                }
+                setMotionEvent(event);
                 super.setPosition(this.x, this.y, this.z);
+                return true;
             }
+            event.recycle();
+            return false;
         }
 
         @Override
@@ -144,9 +170,9 @@ class GVRMouseDeviceManager {
     }
 
     private class EventHandlerThread extends HandlerThread {
+        private static final int MOTION_EVENT = 0;
+        private static final int KEY_EVENT = 1;
         private Handler handler;
-        private boolean isActive = false;
-        private float x, y, z;
 
         EventHandlerThread(String name) {
             super(name);
@@ -156,75 +182,87 @@ class GVRMouseDeviceManager {
             handler = new Handler(getLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
-                    MotionEvent motionEvent = (MotionEvent) msg.obj;
                     int id = msg.arg1;
-                    dispatchMotionEvent(id, motionEvent);
-                    motionEvent.recycle();
+                    switch (msg.what) {
+                    case MOTION_EVENT:
+                        MotionEvent motionEvent = (MotionEvent) msg.obj;
+                        if (dispatchMotionEvent(id, motionEvent) == false) {
+                            // recycle if unhandled.
+                            motionEvent.recycle();
+                        }
+                        break;
+                    case KEY_EVENT:
+                        KeyEvent keyEvent = (KeyEvent) msg.obj;
+                        dispatchKeyEvent(id, keyEvent);
+                        break;
+                    default:
+                        break;
+                    }
                 }
             };
         }
 
-        boolean submitMotionEvent(int id, MotionEvent event) {
+        boolean submitKeyEvent(int id, KeyEvent event) {
             if (threadStarted) {
-                MotionEvent clone = MotionEvent.obtain(event);
-
-                Message message = Message.obtain(null, 0, id, 0, clone);
+                Message message = Message.obtain(null, KEY_EVENT, id, 0, event);
                 return handler.sendMessage(message);
             }
             return false;
         }
 
-        // The following methods are taken from the controller sample on the
-        // Android Developer web site:
-        // https://developer.android.com/training/game-controllers/controller-input.html
-        private void dispatchMotionEvent(int id, MotionEvent event) {
-            if (id != -1) {
-                final int historySize = event.getHistorySize();
-                for (int i = 0; i < historySize; i++) {
-                    processMouseInput(id, event, i);
-                }
-                processMouseInput(id, event, -1);
-            }
-        }
-
-        private void processMouseInput(int uniqueId, MotionEvent motionEvent,
-                int historyPos) {
-            if (getNormalizedCoordinates(motionEvent)) {
-                GVRMouseController device = controllers.get(uniqueId);
-                device.processMouseEvent(this.x, this.y, this.z, isActive);
-            }
-        }
-
-        // Retrieves the normalized coordinates (-1 to 1) for any given (x,y)
-        // value reported by the Android MotionEvent.
-        private boolean getNormalizedCoordinates(MotionEvent motionEvent) {
-            InputDevice device = motionEvent.getDevice();
-            if (device != null) {
-                InputDevice.MotionRange range = device.getMotionRange(
-                        MotionEvent.AXIS_X, motionEvent.getSource());
-                float x = range.getMax() + 1;
-                range = motionEvent.getDevice().getMotionRange(
-                        MotionEvent.AXIS_Y, motionEvent.getSource());
-                float y = range.getMax() + 1;
-                this.x = (motionEvent.getX() / x * 2.0f - 1.0f);
-                this.y = 1.0f - motionEvent.getY() / y * 2.0f;
-                if (motionEvent.getAction() == MotionEvent.ACTION_SCROLL) {
-                    this.z = (motionEvent
-                            .getAxisValue(MotionEvent.AXIS_VSCROLL) > 0 ? -1
-                                    : 1);
-                } else {
-                    this.z = 0;
-                }
-
-                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    this.isActive = true;
-                } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                    this.isActive = false;
-                }
-                return true;
+        boolean submitMotionEvent(int id, MotionEvent event) {
+            if (threadStarted) {
+                MotionEvent clone = MotionEvent.obtain(event);
+                Message message = Message.obtain(null, MOTION_EVENT, id, 0,
+                        clone);
+                return handler.sendMessage(message);
             }
             return false;
         }
+
+        private void dispatchKeyEvent(int id, KeyEvent event) {
+            if (id != -1) {
+                InputDevice device = event.getDevice();
+                if (device != null) {
+                    GVRMouseController mouseDevice = controllers.get(id);
+                    mouseDevice.setKeyEvent(event);
+                }
+            }
+        }
+
+        // The following methods are taken from the controller sample on the
+        // Android Developer web site:
+        // https://developer.android.com/training/game-controllers/controller-input.html
+        private boolean dispatchMotionEvent(int id, MotionEvent event) {
+            InputDevice device = event.getDevice();
+            if (id == -1 || device == null) {
+                event.recycle();
+                return false;
+            }
+
+            /*
+             * Retrieve the normalized coordinates (-1 to 1) for any given (x,y)
+             * value reported by the MotionEvent.
+             */
+            InputDevice.MotionRange range = device
+                    .getMotionRange(MotionEvent.AXIS_X, event.getSource());
+            float x = range.getMax() + 1;
+            range = event.getDevice().getMotionRange(MotionEvent.AXIS_Y,
+                    event.getSource());
+            float y = range.getMax() + 1;
+            float z;
+            x = (event.getX() / x * 2.0f - 1.0f);
+            y = 1.0f - event.getY() / y * 2.0f;
+            if (event.getAction() == MotionEvent.ACTION_SCROLL) {
+                z = (event.getAxisValue(MotionEvent.AXIS_VSCROLL) > 0 ? -1 : 1);
+            } else {
+                z = 0;
+            }
+
+            GVRMouseController controller = controllers.get(id);
+            return controller.processMouseEvent(x, y, z, event);
+        }
+
     }
 
     void stop() {

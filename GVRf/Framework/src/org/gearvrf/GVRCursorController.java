@@ -15,11 +15,17 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRCursorType;
 import org.gearvrf.io.GVRInputManager;
+import org.joml.Vector3f;
 
-import android.opengl.Matrix;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 /**
  * Define a class of type {@link GVRCursorController} to register a new cursor
@@ -49,18 +55,24 @@ public abstract class GVRCursorController {
     private ActiveState activeState = ActiveState.NONE;
     private boolean invalidate = false;
     private boolean active;
-    private float rayX, rayY, rayZ;
     private float nearDepth, farDepth = -Float.MAX_VALUE;
-    private float[] position;
+    private final Vector3f position, ray;
+    private boolean enable = true;
+    private KeyEvent keyEvent, processedKeyEvent;
+    private MotionEvent motionEvent, processedMotionEvent;
 
     private GVRSceneObject sceneObject;
     private Object sceneObjectLock = new Object();
+    private Object eventLock = new Object();
+    private List<ControllerEventListener> controllerEventListeners;
 
     public GVRCursorController(GVRCursorType cursorType) {
         this.controllerId = uniqueControllerId;
         this.cursorType = cursorType;
         uniqueControllerId++;
-        position = new float[] { 0.0f, 0.0f, 0.0f, 1.0f };
+        position = new Vector3f();
+        ray = new Vector3f();
+        controllerEventListeners = new ArrayList<ControllerEventListener>();
     }
 
     /**
@@ -113,13 +125,24 @@ public abstract class GVRCursorController {
      *            <code>true</code> the affected that {@link GVRSceneObject}.
      */
     protected void setActive(boolean active) {
+        // check if the controller is enabled
+        if (isEnabled() == false) {
+            return;
+        }
+
         this.active = active;
         invalidate = true;
     }
 
+    /**
+     * Set a {@link GVRSceneObject} to be controlled by the
+     * {@link GVRCursorController}.
+     * 
+     * @param object
+     *            the {@link GVRSceneObject}
+     */
     public void setSceneObject(GVRSceneObject object) {
         synchronized (sceneObjectLock) {
-
             if (sceneObject != null) {
                 // if there is already an attached scene object transfer the
                 // position to the new one
@@ -129,8 +152,8 @@ public abstract class GVRCursorController {
                         sceneObject.getTransform().getPositionZ());
             } else {
                 // use the exiting position from the controller
-                object.getTransform().setPosition(position[0], position[1],
-                        position[2]);
+                object.getTransform().setPosition(position.x, position.y,
+                        position.z);
             }
             sceneObject = object;
         }
@@ -152,7 +175,8 @@ public abstract class GVRCursorController {
      * This is an important method with respect to the
      * {@link GVRCursorController}. In order to prevent excessive polling of the
      * transform data by the {@link GVRInputManager}, we leave it to the
-     * {@link GVRCursorController} to let the {@link GVRInputManager} whe
+     * {@link GVRCursorController} to let the {@link GVRInputManager} know when
+     * the data is ready.
      * 
      * Make sure that a call to invalidate is made whenever the
      * {@link GVRCursorController} has new data to be processed.
@@ -183,6 +207,104 @@ public abstract class GVRCursorController {
     }
 
     /**
+     * Set a key event. Note that this call can be used in lieu of
+     * {@link GVRCursorController#setActive(boolean)}.
+     * 
+     * The {@link GVRCursorController} processes a {@link KeyEvent.ACTION_DOWN}
+     * as active <code>true</code> and {@link KeyEvent.ACTION_UP} as active
+     * <code>false</code>.
+     * 
+     * In addition the key event passed is used as a reference for applications
+     * that wish to use the contents from the class.
+     * 
+     * {@link #setActive(boolean)} can still be used for applications that do
+     * not want to expose key events.
+     * 
+     * @param keyEvent
+     */
+    protected void setKeyEvent(KeyEvent keyEvent) {
+        synchronized (eventLock) {
+            this.keyEvent = keyEvent;
+        }
+        if (keyEvent != null) {
+            int action = keyEvent.getAction();
+            if (action == KeyEvent.ACTION_DOWN && active == false) {
+                setActive(true);
+            } else if (action == KeyEvent.ACTION_UP && active == true) {
+                setActive(false);
+            }
+        }
+    }
+
+    /**
+     * Get the latest key event processed by the {@link GVRCursorController} if
+     * there is one (not all {@link GVRCursorController} report {@link KeyEvent}
+     * s). Note that this value will be null if the latest event processed by
+     * the {@link GVRCursorController} did not contain a {@link KeyEvent}.
+     * 
+     * Note that this function also returns a null. To get every
+     * {@link KeyEvent} reported by the {@link GVRCursorController} use the
+     * {@link ControllerEventListener} or the {@link ISensorEvents} listener to
+     * query for the {@link KeyEvent} whenever a a callback is made.
+     * 
+     * The {@link KeyEvent} would be valid for the lifetime of that callback and
+     * would be reset to null on completion.
+     * 
+     * @return the {@link KeyEvent} or null if there isn't one.
+     */
+    public KeyEvent getKeyEvent() {
+        synchronized (eventLock) {
+            return processedKeyEvent;
+        }
+    }
+
+    /**
+     * Set the latest motion event processed by the {@link GVRCursorController}.
+     * 
+     * Make sure not to recycle the passed {@link MotionEvent}. The
+     * {@link GVRCursorController} will recycle the {@link MotionEvent} after
+     * completion.
+     * 
+     * @param motionEvent
+     *            the {@link MotionEvent} processed by the
+     *            {@link GVRCursorController}.
+     */
+    protected void setMotionEvent(MotionEvent motionEvent) {
+        synchronized (eventLock) {
+            if (this.motionEvent != null) {
+                // its not yet been processed, recycle.
+                this.motionEvent.recycle();
+            }
+            this.motionEvent = motionEvent;
+        }
+
+    }
+
+    /**
+     * Get the latest {@link MotionEvent} processed by the
+     * {@link GVRCursorController} if there is one (not all
+     * {@link GVRCursorController} report {@link MotionEvent}s)
+     * 
+     * Note that this function also returns a null. To get every
+     * {@link MotionEvent} reported by the {@link GVRCursorController} use the
+     * {@link ControllerEventListener} or the {@link ISensorEvents} listener to
+     * query for the {@link MotionEvent} whenever a a callback is made.
+     * 
+     * The {@link MotionEvent} would be valid for the lifetime of that callback
+     * and would be recycled and reset to null on completion. Make use to the
+     * {@link MotionEvent#obtain(MotionEvent)} to clone a copy of the
+     * {@link MotionEvent}.
+     * 
+     * @return the latest {@link MotionEvent} processed by the
+     *         {@link GVRCursorController} or null.
+     */
+    public MotionEvent getMotionEvent() {
+        synchronized (eventLock) {
+            return processedMotionEvent;
+        }
+    }
+
+    /**
      * This call sets the position of the {@link GVRCursorController}.
      * 
      * Use this call to also set an initial position for the Cursor when a new
@@ -197,9 +319,11 @@ public abstract class GVRCursorController {
      *            the z value of the position.
      */
     public void setPosition(float x, float y, float z) {
-        position[0] = x;
-        position[1] = y;
-        position[2] = z;
+        // check if the controller is enabled
+        if (isEnabled() == false) {
+            return;
+        }
+        position.set(x, y, z);
         if (sceneObject != null) {
             synchronized (sceneObjectLock) {
                 // if there is an attached scene object then use its absolute
@@ -208,6 +332,75 @@ public abstract class GVRCursorController {
             }
         }
         invalidate = true;
+    }
+
+    /**
+     * Register a {@link ControllerEventListener} to receive a callback whenever
+     * the {@link GVRCursorController} has been updated.
+     * 
+     * Use the {@link GVRCursorController} methods to query for information
+     * about the {@link GVRCursorController}.
+     */
+    public static interface ControllerEventListener {
+        public void onEvent(GVRCursorController controller);
+    }
+
+    /**
+     * Add a {@link ControllerEventListener} to receive updates from this
+     * {@link GVRCursorController}.
+     * 
+     * @param listener
+     *            the {@link CursorControllerListener} to be added.
+     */
+    public void addControllerEventListener(ControllerEventListener listener) {
+        controllerEventListeners.add(listener);
+    }
+
+    /**
+     * Remove the previously added {@link ControllerEventListener}.
+     * 
+     * @param listener
+     *            {@link ControllerEventListener} that was previously added .
+     */
+    public void removeControllerEventListener(
+            ControllerEventListener listener) {
+        controllerEventListeners.remove(listener);
+    }
+
+    /**
+     * Use this method to enable or disable the {@link GVRCursorController}.
+     * 
+     * By default the {@link GVRCursorController} is enabled. If disabled, the
+     * controller would not report new positions for the cursor and would not
+     * generate {@link SensorEvent}s to {@link GVRBaseSensor}s.
+     * 
+     * @param enable
+     *            <code>true</code> to enable the {@link GVRCursorController},
+     *            <code>false</code> to disable.
+     */
+    public void setEnable(boolean enable) {
+        this.enable = enable;
+
+        if (enable == false) {
+            // reset
+            position.zero();
+            ray.zero();
+            activeState = ActiveState.NONE;
+            active = false;
+            previousActive = false;
+        }
+    }
+
+    /**
+     * Check if the {@link GVRCursorController} is enabled or disabled.
+     * 
+     * By default the {@link GVRCursorController} is enabled.
+     * 
+     * @return <code>true</code> if the {@link GVRCursorController} is enabled,
+     *         <code>false</code> otherwise.
+     */
+    public boolean isEnabled() {
+        return enable;
     }
 
     /**
@@ -255,12 +448,19 @@ public abstract class GVRCursorController {
     }
 
     /**
-     * Process the input data and return true if changed.
-     * 
-     * @return
+     * Process the input data
      */
-    boolean update() {
+    void update(SensorManager sensorManager, GVRScene scene) {
         if (invalidate) {
+
+            // set the newly received key and motion events.
+            synchronized (eventLock) {
+                processedKeyEvent = keyEvent;
+                keyEvent = null;
+                processedMotionEvent = motionEvent;
+                motionEvent = null;
+            }
+
             if (previousActive == false && active) {
                 activeState = ActiveState.ACTIVE_PRESSED;
             } else if (previousActive == true && active == false) {
@@ -270,33 +470,28 @@ public abstract class GVRCursorController {
             }
 
             previousActive = active;
-
-            float inverseLength = (float) (1 / (Math.sqrt(square(position[0])
-                    + square(position[1]) + square(position[2]))));
-
-            rayX = position[0] * inverseLength;
-            rayY = position[1] * inverseLength;
-            rayZ = position[2] * inverseLength;
-
+            position.normalize(ray);
             invalidate = false;
-            return true;
+            for (ControllerEventListener listener : controllerEventListeners) {
+                listener.onEvent(this);
+            }
+
+            sensorManager.processPick(scene, this);
+
+            // reset the set key and motion events.
+            synchronized (eventLock) {
+                processedKeyEvent = null;
+                if (processedMotionEvent != null) {
+                    // done processing, recycle
+                    processedMotionEvent.recycle();
+                    processedKeyEvent = null;
+                }
+            }
         }
-        return false;
     }
 
-    private static float square(float x) {
-        return x * x;
+    Vector3f getRay() {
+        return ray;
     }
 
-    float getRayX() {
-        return rayX;
-    }
-
-    float getRayY() {
-        return rayY;
-    }
-
-    float getRayZ() {
-        return rayZ;
-    }
 }
