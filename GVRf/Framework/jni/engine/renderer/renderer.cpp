@@ -282,6 +282,10 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
         renderPostEffectData(camera, texture_render_texture, post_effects.back(), post_effect_shader_manager);
     }
+
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+    GL(glDisable(GL_BLEND));
 }
 
 void addRenderData(RenderData *render_data) {
