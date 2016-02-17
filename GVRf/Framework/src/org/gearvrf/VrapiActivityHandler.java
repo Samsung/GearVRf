@@ -16,6 +16,8 @@
 package org.gearvrf;
 
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -51,6 +53,7 @@ class VrapiActivityHandler implements ActivityHandler {
     private final ActivityHandlerRenderingCallbacks mCallbacks;
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
+    boolean mVrApiInitialized;
 
     VrapiActivityHandler(final GVRActivity activity,
             final ActivityHandlerRenderingCallbacks callbacks) throws VrapiNotAvailableException {
@@ -64,27 +67,49 @@ class VrapiActivityHandler implements ActivityHandler {
         if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
             throw new VrapiNotAvailableException();
         }
+        mVrApiInitialized = true;
     }
 
     @Override
     public void onPause() {
         stopChoreographerThread();
 
+        final CountDownLatch cdl;
         if (null != mSurfaceView) {
             mSurfaceView.onPause();
+            cdl = new CountDownLatch(1);
             mSurfaceView.queueEvent(new Runnable() {
                 @Override
                 public void run() {
                     //these two must happen on the gl thread
                     nativeLeaveVrMode(mPtr);
                     destroySurfaceForTimeWarp();
+                    cdl.countDown();
                 }
             });
+        } else {
+            cdl = null;
+        }
+
+        if (mVrApiInitialized) {
+            if (null != cdl) {
+                try {
+                    cdl.await();
+                } catch (final InterruptedException ignored) {
+                }
+            }
+            nativeUninitializeVrApi(mPtr);
+            mVrApiInitialized = false;
         }
     }
 
     @Override
     public void onResume() {
+        if (!mVrApiInitialized) {
+            nativeInitializeVrApi(mPtr);
+            mVrApiInitialized = true;
+        }
+
         startChoreographerThreadIfNotStarted();
         if (null != mSurfaceView) {
             mSurfaceView.onResume();
@@ -406,6 +431,8 @@ class VrapiActivityHandler implements ActivityHandler {
     private static native void nativeShowConfirmQuit(long appPtr);
 
     private static native int nativeInitializeVrApi(long ptr);
+
+    private static native int nativeUninitializeVrApi(long ptr);
 
     private static final int VRAPI_INITIALIZE_SUCCESS = 0;
     private static final int VRAPI_INITIALIZE_UNKNOWN_ERROR = -1;

@@ -24,7 +24,6 @@ import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;

@@ -97,6 +97,11 @@ JNIEXPORT jint JNICALL Java_org_gearvrf_VrapiActivityHandler_nativeInitializeVrA
     return activity->initializeVrApi();
 }
 
+JNIEXPORT void JNICALL Java_org_gearvrf_VrapiActivityHandler_nativeUninitializeVrApi(JNIEnv * jni, jclass clazz, jlong appPtr) {
+    GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
+    activity->uninitializeVrApi();
+}
+
 } //extern "C" {
 
 } //namespace gvr

@@ -67,11 +67,12 @@ private:
     ovrPerformanceParms oculusPerformanceParms_;
     ovrHeadModelParms oculusHeadModelParms_;
 
-    bool mResolveDepthConfiguration;
-    int mWidthConfiguration, mHeightConfiguration, mMultisamplesConfiguration;
-    ovrTextureFormat mColorTextureFormatConfiguration, mDepthTextureFormatConfiguration;
+    bool mResolveDepthConfiguration = false;
+    int mWidthConfiguration = 0, mHeightConfiguration = 0, mMultisamplesConfiguration = 0;
+    ovrTextureFormat mColorTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
+    ovrTextureFormat mDepthTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
 
-    int32_t mVrapiInitResult;
+    int32_t mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
 
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
     void beginRenderingEye(const int eye);
@@ -82,6 +83,7 @@ public:
     void onSurfaceChanged(JNIEnv& env);
     void onDrawFrame();
     int initializeVrApi();
+    void uninitializeVrApi();
     void leaveVrMode();
 
     void showGlobalMenu();

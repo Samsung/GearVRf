@@ -46,11 +46,7 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
 
 GVRActivity::~GVRActivity() {
     LOGV("GVRActivity::~GVRActivity");
-
-    if (VRAPI_INITIALIZE_UNKNOWN_ERROR != mVrapiInitResult) {
-        SystemActivities_Shutdown(&oculusJavaMainThread_);
-        vrapi_Shutdown();
-    }
+    uninitializeVrApi();
 
     envMainThread_->DeleteGlobalRef(activityRenderingCallbacksClass_);
     envMainThread_->DeleteGlobalRef(activityClass_);
@@ -80,6 +76,14 @@ int GVRActivity::initializeVrApi() {
     }
 
     return mVrapiInitResult;
+}
+
+void GVRActivity::uninitializeVrApi() {
+    if (VRAPI_INITIALIZE_UNKNOWN_ERROR != mVrapiInitResult) {
+        SystemActivities_Shutdown(&oculusJavaMainThread_);
+        vrapi_Shutdown();
+    }
+    mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
 }
 
 void GVRActivity::showGlobalMenu() {
