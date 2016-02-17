@@ -47,7 +47,8 @@ public:
         ASSIMP_SHADER = 9,
         BOUNDING_BOX_SHADER = 10,
         DISTORTION_SHADER = 90, // this shader is implemented and loaded in the distorter
-        TEXTURE_SHADER_NOLIGHT = 100
+        TEXTURE_SHADER_NOLIGHT = 100,
+        BUILTIN_SHADER_SIZE = 101
     };
 
     explicit Material(ShaderType shader_type) :
@@ -72,7 +73,7 @@ public:
         shader_type_ = shader_type;
     }
 
-    Texture* getTexture(std::string key) const {
+    Texture* getTexture(const std::string& key) const {
         auto it = textures_.find(key);
         if (it != textures_.end()) {
             return it->second;
@@ -83,11 +84,28 @@ public:
         }
     }
 
-    void setTexture(std::string key, Texture* texture) {
-        textures_[key] = texture;
+    //A new api to return a texture even it is NULL without throwing a error,
+    //otherwise it will be captured abruptly by the error handler
+    Texture* getTextureNoError(const std::string& key) const {
+        auto it = textures_.find(key);
+        if (it != textures_.end()) {
+            return it->second;
+        } else {
+            return NULL;
+        }
     }
 
-    float getFloat(std::string key) {
+    void setTexture(const std::string& key, Texture* texture) {
+        textures_[key] = texture;
+        //By the time the texture is being set to its attaching material, it is ready
+        //This is guaranteed by upper java layer scheduling
+        texture->setReady(true);
+        if (key == "main_texture") {
+            main_texture = texture;
+        }
+    }
+
+    float getFloat(const std::string& key) {
         auto it = floats_.find(key);
         if (it != floats_.end()) {
             return it->second;
@@ -96,11 +114,11 @@ public:
             throw error;
         }
     }
-    void setFloat(std::string key, float value) {
+    void setFloat(const std::string& key, float value) {
         floats_[key] = value;
     }
 
-    glm::vec2 getVec2(std::string key) {
+    glm::vec2 getVec2(const std::string& key) {
         auto it = vec2s_.find(key);
         if (it != vec2s_.end()) {
             return it->second;
@@ -110,11 +128,11 @@ public:
         }
     }
 
-    void setVec2(std::string key, glm::vec2 vector) {
+    void setVec2(const std::string& key, glm::vec2 vector) {
         vec2s_[key] = vector;
     }
 
-    glm::vec3 getVec3(std::string key) {
+    glm::vec3 getVec3(const std::string& key) {
         auto it = vec3s_.find(key);
         if (it != vec3s_.end()) {
             return it->second;
@@ -124,11 +142,11 @@ public:
         }
     }
 
-    void setVec3(std::string key, glm::vec3 vector) {
+    void setVec3(const std::string& key, glm::vec3 vector) {
         vec3s_[key] = vector;
     }
 
-    glm::vec4 getVec4(std::string key) {
+    glm::vec4 getVec4(const std::string& key) {
         auto it = vec4s_.find(key);
         if (it != vec4s_.end()) {
             return it->second;
@@ -138,11 +156,11 @@ public:
         }
     }
 
-    void setVec4(std::string key, glm::vec4 vector) {
+    void setVec4(const std::string& key, glm::vec4 vector) {
         vec4s_[key] = vector;
     }
 
-    glm::mat4 getMat4(std::string key) {
+    glm::mat4 getMat4(const std::string& key) {
         auto it = mat4s_.find(key);
         if (it != mat4s_.end()) {
             return it->second;
@@ -152,7 +170,7 @@ public:
         }
     }
 
-    void setMat4(std::string key, glm::mat4 matrix) {
+    void setMat4(const std::string& key, glm::mat4 matrix) {
         mat4s_[key] = matrix;
     }
 
@@ -164,6 +182,19 @@ public:
         shader_feature_set_ = feature_set;
     }
 
+    bool isMainTextureReady() {
+        return (main_texture != NULL) && main_texture->isReady();
+    }
+
+    bool isTextureReady(const std::string& name) {
+        auto it = textures_.find(name);
+        if (it != textures_.end()) {
+            return ((Texture*) it->second)->isReady();
+        } else {
+            return false;
+        }
+    }
+
 private:
     Material(const Material& material);
     Material(Material&& material);
@@ -173,6 +204,7 @@ private:
 private:
     ShaderType shader_type_;
     std::map<std::string, Texture*> textures_;
+    Texture* main_texture = NULL;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec2> vec2s_;
     std::map<std::string, glm::vec3> vec3s_;
