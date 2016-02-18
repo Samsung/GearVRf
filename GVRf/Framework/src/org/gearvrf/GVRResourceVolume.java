@@ -38,6 +38,7 @@ public class GVRResourceVolume {
     protected GVRContext gvrContext;
     protected VolumeType volumeType;
     protected String defaultPath;
+    protected boolean enableUrlLocalCache = false;
 
     /*package*/ GVRResourceVolume(GVRContext gvrContext, VolumeType volume) {
         this(gvrContext, volume, null);
@@ -49,10 +50,18 @@ public class GVRResourceVolume {
         this.defaultPath = defaultPath;
     }
 
+    /* package */ GVRResourceVolume(GVRContext gvrContext,
+            VolumeType volumeType, String defaultPath, boolean cacheEnabled) {
+        this(gvrContext, volumeType, defaultPath);
+        this.enableUrlLocalCache = cacheEnabled;
+    }
+
     /**
-     * Opens a file from the volume. The filePath is relative to the defaultPath.
+     * Opens a file from the volume. The filePath is relative to the
+     * defaultPath.
      *
-     * @param filePath          File path of the resource to open.
+     * @param filePath
+     *            File path of the resource to open.
      *
      * @throws IOException
      */
@@ -76,7 +85,8 @@ public class GVRResourceVolume {
             return new GVRAndroidResource(getFullPath(linuxPath, defaultPath, filePath));
 
         case NETWORK:
-            return new GVRAndroidResource(getFullURL(defaultPath, filePath));
+            return new GVRAndroidResource(gvrContext,
+                    getFullURL(defaultPath, filePath), enableUrlLocalCache);
 
         default:
             throw new IOException(String.format("Unrecognized volumeType %s", volumeType));

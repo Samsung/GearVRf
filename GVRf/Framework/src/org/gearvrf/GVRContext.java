@@ -638,7 +638,34 @@ public abstract class GVRContext {
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString) throws IOException {
-        return loadModelFromURL(urlString, GVRImportSettings.getRecommendedSettings());
+        return loadModelFromURL(urlString, false);
+    }
+
+    /**
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
+     * a 3D model from a URL with an option to store it into local file cache for future use.
+     *
+     * @param urlString
+     *            A URL string pointing to where the model file is located.
+     *
+     * @param cacheEnabled
+     *           An option that a developer can choose for the loading process for the trade off 
+     *           between performance and consistency(or security):
+     *           True: Download and store the file locally in this app's cache directory and
+     *                  load from the cache in future uses;
+     *           false: Don't keep local copy and only do online streaming for loading everytime
+     *           
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     *
+     */
+    public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled) throws IOException {
+        return GVRImporter.loadJassimpModel(this, urlString,
+                GVRResourceVolume.VolumeType.NETWORK,
+                GVRImportSettings.getRecommendedSettings(), cacheEnabled);
     }
 
     /**

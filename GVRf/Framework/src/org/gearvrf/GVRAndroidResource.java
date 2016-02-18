@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import org.gearvrf.utility.Log;
 import org.gearvrf.utility.MarkingFileInputStream;
 
 import android.content.Context;
@@ -44,6 +45,7 @@ import android.util.TypedValue;
  * @since 1.6.1
  */
 public class GVRAndroidResource {
+    private static final String TAG = Log.tag(GVRAndroidResource.class);
 
     private enum DebugStates {
         OPEN, READING, CLOSED
@@ -182,12 +184,77 @@ public class GVRAndroidResource {
      *            A Java {@link URL} object
      * @throws IOException
      */
-    public GVRAndroidResource(URL url) throws IOException {
-        stream = new BufferedInputStream(url.openStream(), 8192);
-        debugState = DebugStates.OPEN;
+    public GVRAndroidResource(GVRContext context, URL url) throws IOException {
+        this(context, url, false);
+    }
 
+    /*
+     * A {@link URLBufferedInputStream} that supports {@link
+     * InputStream#mark(int)} and {@link InputStream#reset()}
+     */
+    static class URLBufferedInputStream extends InputStream {
+        private URL url;
+        private BufferedInputStream in;
+
+        public URLBufferedInputStream(URL url) throws IOException {
+            this.url = url;
+            in = new BufferedInputStream(url.openStream());
+        }
+
+        @Override
+        public boolean markSupported() {
+            return true;
+        }
+
+        @Override
+        public void reset() throws IOException {
+            // Since the bufferInputStream resets the offset within the internal
+            // buffer while may not resets the url's stream correctly
+            // it could easily causes OOM error when decoding it after some
+            // initial read and reset.
+            // Here we tackle it by opening a new connection to the url and
+            // restart from beginning
+            in = new BufferedInputStream(url.openStream());
+        }
+
+        @Override
+        public int read() throws IOException {
+            return in.read();
+        }
+
+        @Override
+        public int read(byte[] buffer, int byteOffset, int byteCount)
+                throws IOException {
+            return in.read(buffer, byteOffset, byteCount);
+        }
+    }
+
+    /**
+     * Download resource from a URL and open it as a regular file.
+     * 
+     * @param context
+     *            An Android Context
+     * @param url
+     *            A Java {@link URL} object
+     * @throws IOException
+     */
+    public GVRAndroidResource(GVRContext context, URL url,
+            boolean enableUrlLocalCache) throws IOException {
+        if (!enableUrlLocalCache) {
+            Log.d(TAG,
+                    "Do not allow local caching, use streaming to get the resource");
+            stream = new URLBufferedInputStream(url);
+        } else {
+            Log.d(TAG,
+                    "Allow local caching, download the resource to local cache");
+            File file = GVRImporter.downloadFile(context.getContext(),
+                    url.toString());
+            stream = new MarkingFileInputStream(file);
+        }
+
+        debugState = DebugStates.OPEN;
         filePath = null;
-        resourceId = 0; // No R.whatever field will ever be 0
+        resourceId = 0;
         assetPath = null;
         resourceFilePath = null;
         this.url = url;
@@ -237,11 +304,17 @@ public class GVRAndroidResource {
      * reset().} Calling {@link #mark()} right after construction will allow you
      * to read the header then {@linkplain #reset() rewind the stream} if you
      * can't handle the file format.
+     * @throws IOException 
      * 
      * @since 1.6.7
      */
-    public void mark() {
-        stream.mark(Integer.MAX_VALUE);
+    public void mark() throws IOException {
+        if (stream.markSupported()) {
+            stream.mark(Integer.MAX_VALUE);
+        } else {
+            //In case a inputStream (e.g., fileInputStream) doesn't support mark, throw a exception
+            throw new IOException("Input stream doesn't support mark");
+        }
     }
 
     /**
@@ -256,14 +329,16 @@ public class GVRAndroidResource {
      * reset();
      * reset();
      * </pre>
+     * @throws IOException 
      * 
      * @since 1.6.7
      */
-    public void reset() {
-        try {
+    public void reset() throws IOException {
+        if (stream.markSupported()) {
             stream.reset();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            //In case a inputStream (e.g., fileInputStream) doesn't support mark, throw a exception
+            throw new IOException("Input stream doesn't support mark");
         }
     }
 
