@@ -21,9 +21,9 @@ import java.util.List;
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRCursorType;
 import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -48,6 +48,7 @@ import android.view.MotionEvent;
  * 
  */
 public abstract class GVRCursorController {
+    private static final String TAG = GVRCursorController.class.getSimpleName();
     private static int uniqueControllerId = 0;
     private final int controllerId;
     private final GVRCursorType cursorType;
@@ -323,6 +324,7 @@ public abstract class GVRCursorController {
         if (isEnabled() == false) {
             return;
         }
+
         position.set(x, y, z);
         if (sceneObject != null) {
             synchronized (sceneObjectLock) {
@@ -385,9 +387,17 @@ public abstract class GVRCursorController {
             // reset
             position.zero();
             ray.zero();
-            activeState = ActiveState.NONE;
-            active = false;
-            previousActive = false;
+            if (previousActive) {
+                active = false;
+            }
+
+            synchronized (eventLock) {
+                keyEvent = null;
+                if (motionEvent != null) {
+                    motionEvent.recycle();
+                }
+            }
+            invalidate = true;
         }
     }
 
@@ -472,6 +482,7 @@ public abstract class GVRCursorController {
             previousActive = active;
             position.normalize(ray);
             invalidate = false;
+
             for (ControllerEventListener listener : controllerEventListeners) {
                 listener.onEvent(this);
             }

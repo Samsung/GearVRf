@@ -212,7 +212,6 @@ class GVRGamepadDeviceManager {
                                 point[1], point[2]);
                     }
                 }
-
                 super.setPosition(internalObject.getTransform().getPositionX(),
                         internalObject.getTransform().getPositionY(),
                         internalObject.getTransform().getPositionZ());
@@ -306,8 +305,8 @@ class GVRGamepadDeviceManager {
                             keyEvent = holder.keyEvent;
                             id = holder.id;
                         }
-
                         GVRGamepadController controller = controllers.get(id);
+
                         if (event != null) {
                             dispatchMotionEvent(controller, event);
                         }
@@ -341,46 +340,50 @@ class GVRGamepadDeviceManager {
 
             if (ACTIVE_BUTTONS.contains(keyCode)) {
                 controller.setKeyEvent(event);
-                return;
+            } else {
+                switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_LEFT) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_LEFT;
+                        x = -1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
+                    }
+                    break;
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_RIGHT) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_RIGHT;
+                        x = 1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
+                    }
+                    break;
+                case KeyEvent.KEYCODE_DPAD_UP:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_UP) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_UP;
+                        y = 1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
+                    }
+                    break;
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_DOWN) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_DOWN;
+                        y = -1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
+                    }
+                    break;
+                }
             }
 
-            switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                if (action == KeyEvent.ACTION_DOWN
-                        && dpadState != KeyEvent.KEYCODE_DPAD_LEFT) {
-                    dpadState = KeyEvent.KEYCODE_DPAD_LEFT;
-                    x = -1.0f;
-                } else if (action == KeyEvent.ACTION_UP) {
-                    dpadState = 0;
-                }
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                if (action == KeyEvent.ACTION_DOWN
-                        && dpadState != KeyEvent.KEYCODE_DPAD_RIGHT) {
-                    dpadState = KeyEvent.KEYCODE_DPAD_RIGHT;
-                    x = 1.0f;
-                } else if (action == KeyEvent.ACTION_UP) {
-                    dpadState = 0;
-                }
-                break;
-            case KeyEvent.KEYCODE_DPAD_UP:
-                if (action == KeyEvent.ACTION_DOWN
-                        && dpadState != KeyEvent.KEYCODE_DPAD_UP) {
-                    dpadState = KeyEvent.KEYCODE_DPAD_UP;
-                    y = 1.0f;
-                } else if (action == KeyEvent.ACTION_UP) {
-                    dpadState = 0;
-                }
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                if (action == KeyEvent.ACTION_DOWN
-                        && dpadState != KeyEvent.KEYCODE_DPAD_DOWN) {
-                    dpadState = KeyEvent.KEYCODE_DPAD_DOWN;
-                    y = -1.0f;
-                } else if (action == KeyEvent.ACTION_UP) {
-                    dpadState = 0;
-                }
-                break;
+            if (holder != null && holder.event == null) {
+                // reset holder when there is no motion event
+                holder = null;
             }
         }
 
@@ -434,6 +437,7 @@ class GVRGamepadDeviceManager {
             if (event.getAction() != MotionEvent.ACTION_MOVE
                     || device == null) {
                 event.recycle();
+                holder = null;
                 return;
             }
 
