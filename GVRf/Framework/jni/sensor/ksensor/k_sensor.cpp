@@ -37,7 +37,7 @@ namespace gvr {
 //#define LOG_SUMMARY
 //#define LOG_GYRO_FILTER
 //#define LOG_MAGNETOMETER_CORRECTION
-//#define LOG_TILE_CORRECTION
+//#define LOG_TILT_CORRECTION
 
 float acosx(const float angle);
 
@@ -46,6 +46,8 @@ const float KTiltCorrectionWaitInSeconds = 2.0;
 void KSensor::readerThreadFunc() {
     pid_t tid = gettid();
     LOGV("k_sensor: reader starting up; tid: %d", tid);
+
+    pthread_setname_np(pthread_self(), "ksensor");
 
     readFactoryCalibration();
     openOvrDevice();
