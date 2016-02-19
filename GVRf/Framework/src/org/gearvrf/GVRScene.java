@@ -322,9 +322,22 @@ public class GVRScene extends GVRHybridObject {
     public void export(String filepath) {
         NativeScene.exportToFile(getNative(), filepath);
     }
+
+    private GVRDirectionalLight mDirectionalLight;
+
+    public void setDirectionalLight(GVRDirectionalLight light) {
+        mDirectionalLight = light;
+
+        if (light != null) {
+            NativeScene.attachDirectionalLight(getNative(), light.getNative());
+        } else {
+            NativeScene.attachDirectionalLight(getNative(), 0);
+        }
+    }
 }
 
 class NativeScene {
+
     static native long ctor();
 
     static native void addSceneObject(long scene, long sceneObject);
@@ -344,4 +357,6 @@ class NativeScene {
     public static native int getNumberTriangles(long scene);
 
     public static native void exportToFile(long scene, String file_path);
+
+    static native void attachDirectionalLight(long scene, long light);
 }

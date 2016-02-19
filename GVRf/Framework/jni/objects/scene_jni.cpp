@@ -59,6 +59,11 @@ Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
 JNIEXPORT int JNICALL
 Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
         jobject obj, jlong jscene);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_attachDirectionalLight(
+        JNIEnv * env, jobject obj, jlong jscene, jlong light);
+
 }
 ;
 
@@ -137,6 +142,20 @@ Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
     scene->exportToFile(std::string(native_filepath));
 
     env->ReleaseStringUTFChars(filepath, native_filepath);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_attachDirectionalLight(JNIEnv * env,
+        jobject obj, jlong jscene, jlong light) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+
+    if (light != 0) {
+        DirectionalLight* directional_light =
+                reinterpret_cast<DirectionalLight*>(light);
+        scene->attachDirectionalLight(directional_light);
+    } else {
+        scene->attachDirectionalLight(0);
+    }
 }
 
 }
