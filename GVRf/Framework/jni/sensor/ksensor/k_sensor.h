@@ -113,8 +113,6 @@ private:
     glm::mat4 factoryGyroMatrix_;
     float factoryTemperature_ = 0.0f;
 
-    jobject activity_;
-
     static const int KGyroNoiseFilterCapacity = 6000;
 };
 

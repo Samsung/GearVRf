@@ -56,8 +56,10 @@ public:
         memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
     }
 
-    ~GLTexture() {
-        deleter_->queueTexture(id_);
+    virtual ~GLTexture() {
+        if (0 != id_) {
+            deleter_->queueTexture(id_);
+        }
     }
 
     GLuint id() {
@@ -127,7 +129,7 @@ private:
     GLTexture& operator=(GLTexture&& gl_texture);
 
 private:
-    GLuint id_;
+    GLuint id_ = 0;
     GLenum target_;
     GlDelete* deleter_;
 

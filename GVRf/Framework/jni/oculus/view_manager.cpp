@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
+#include "activity.h"
 #include "view_manager.h"
-#include "activity_jni.h"
-#include <jni.h>
 #include "../engine/renderer/renderer.h"
 #include "../objects/components/camera.h"
+
+#include <jni.h>
 
 namespace gvr {
 
@@ -35,8 +36,7 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
         jlong appPtr, jlong jscene, jlong jcamera, jlong jshader_manager,
         jlong jpost_effect_shader_manager, jlong jpost_effect_render_texture_a,
         jlong jpost_effect_render_texture_b) {
-    GVRActivity *activity =
-            (GVRActivity*) ((OVR::App *) appPtr)->GetAppInterface();
+    GVRActivity *activity = (GVRActivity*)appPtr;
 
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
@@ -49,7 +49,7 @@ void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv * jni, jclass clazz,
     RenderTexture* post_effect_render_texture_b =
             reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_b);
 
-    activity->viewManager->renderCamera(activity->Scene, scene, camera,
+    activity->viewManager_.renderCamera(scene, camera,
             shader_manager, post_effect_shader_manager,
             post_effect_render_texture_a, post_effect_render_texture_b);
 }
@@ -90,21 +90,13 @@ void Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * jni,
 //                             GVRViewManager
 //=============================================================================
 
-GVRViewManager::GVRViewManager(JNIEnv & jni_, jobject activityObject_) {
-    // initial
-    m_frameRendered = 0;
-    m_fps = 0.0;
-    m_startTime = m_currentTime = 0.0f;
-    gNumFrame = 0;
-
-    LOG("GVRViewManager::GVRViewManager");
+GVRViewManager::GVRViewManager() {
 }
 
 GVRViewManager::~GVRViewManager() {
-    LOG("GVRViewManager::~GVRViewManager()");
 }
 
-void GVRViewManager::renderCamera(OVR::OvrSceneView &ovr_scene, Scene* scene,
+void GVRViewManager::renderCamera(Scene* scene,
         Camera* camera, ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,
         RenderTexture* post_effect_render_texture_a,
@@ -120,13 +112,6 @@ void GVRViewManager::renderCamera(OVR::OvrSceneView &ovr_scene, Scene* scene,
     float fps = 0.0;
     gettimeofday(&start, NULL);
 #endif
-
-    if (camera->render_mask() == 1) {
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-    } else {
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    }
-    glClear (GL_COLOR_BUFFER_BIT);
 
     Renderer::renderCamera(scene, camera, shader_manager,
             post_effect_shader_manager, post_effect_render_texture_a,
