@@ -19,6 +19,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRTime;
 import org.gearvrf.debug.Stats.DescriptiveResult;
 import org.gearvrf.utility.Log;
@@ -66,21 +67,7 @@ public class GVRStatsLine {
      * @return The line to be printed.
      */
     public void printLine() {
-        StringBuffer sb = new StringBuffer();
-
-        boolean first = true;
-        for (GVRColumnBase<? extends Number> col : mColumns) {
-            if (!first) {
-                sb.append(", ");
-            } else {
-                first = false;
-            }
-            sb.append(col.getName());
-            sb.append("=");
-            sb.append(col.getStat());
-        }
-
-        Log.d(mLineTag, "%s", sb.toString());
+        Log.d(mLineTag, "%s", getStats(false));
     }
 
     /**
@@ -102,6 +89,31 @@ public class GVRStatsLine {
             mLastPrintTimeMS = currentTime;
             printLine();
         }
+    }
+
+    public String getStats(boolean multiline) {
+        StringBuffer sb = new StringBuffer();
+        if (!multiline) {
+            boolean first = true;
+            for (GVRColumnBase<? extends Number> col : mColumns) {
+                if (!first) {
+                    sb.append(", ");
+                } else {
+                    first = false;
+                }
+                sb.append(col.getName());
+                sb.append("=");
+                sb.append(col.getStat());
+            }
+        } else {
+            for (GVRColumnBase<? extends Number> col : mColumns) {
+                String line = String.format("%s: %s", col.getName(), col.getStat());
+                sb.append(line);
+                sb.append(System.lineSeparator());
+            }
+        }
+
+        return sb.toString();
     }
 
     /* **********************************************************************************
@@ -226,5 +238,4 @@ public class GVRStatsLine {
             mDecimalFormat = new DecimalFormat(fmt);
         }
     }
-
 }

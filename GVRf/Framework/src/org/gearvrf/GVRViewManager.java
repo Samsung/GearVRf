@@ -643,6 +643,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
             mFPSTracer.tick();
             mStatsLine.printLine(DEBUG_STATS_PERIOD_MS);
+
+            mMainScene.addStatMessage(System.lineSeparator() +
+                                      mStatsLine.getStats(true));
         }
     }
 
