@@ -89,6 +89,22 @@ public class GVRScene extends GVRHybridObject {
     }
 
     /**
+     * Remove all scene objects.
+     */
+    public void removeAllSceneObjects() {
+        mSceneObjects.clear();
+        NativeScene.removeAllSceneObjects(getNative());
+    }
+
+    /**
+     * Clears the scene and resets it to initial state. Currently, it only
+     * removes all scene objects.
+     */
+    public void clear() {
+        removeAllSceneObjects();
+    }
+
+    /**
      * The top-level scene objects.
      * 
      * @return A read-only list containing all the 'root' scene objects (those
@@ -343,6 +359,8 @@ class NativeScene {
     static native void addSceneObject(long scene, long sceneObject);
 
     static native void removeSceneObject(long scene, long sceneObject);
+
+    static native void removeAllSceneObjects(long scene);
 
     public static native void setFrustumCulling(long scene, boolean flag);
 

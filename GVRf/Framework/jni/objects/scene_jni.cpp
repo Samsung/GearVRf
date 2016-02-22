@@ -35,6 +35,10 @@ Java_org_gearvrf_NativeScene_removeSceneObject(JNIEnv * env,
         jobject obj, jlong jscene, jlong jscene_object);
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_removeAllSceneObjects(JNIEnv * env,
+        jobject obj, jlong jscene);
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_setMainCameraRig(JNIEnv * env,
         jobject obj, jlong jscene, jlong jcamera_rig);
 JNIEXPORT void JNICALL
@@ -86,6 +90,13 @@ Java_org_gearvrf_NativeScene_removeSceneObject(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     scene->removeSceneObject(scene_object);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_removeAllSceneObjects(JNIEnv * env,
+        jobject obj, jlong jscene) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->removeAllSceneObjects();
 }
 
 JNIEXPORT void JNICALL
