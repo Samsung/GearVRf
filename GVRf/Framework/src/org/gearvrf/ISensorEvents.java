@@ -33,5 +33,5 @@ public interface ISensorEvents extends IEvents {
      *            in {@link SensorEvent} to retrieve the information contained
      *            in the event.
      */
-    public void onSensorEvent(SensorEvent event);
+    void onSensorEvent(SensorEvent event);
 }

@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 
@@ -142,24 +143,27 @@ class GVRGamepadDeviceManager {
         }
 
         @Override
+        protected void setKeyEvent(KeyEvent keyEvent) {
+            super.setKeyEvent(keyEvent);
+        }
+
+        @Override
+        protected void setMotionEvent(MotionEvent motionEvent) {
+            super.setMotionEvent(motionEvent);
+        }
+
+        @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
-            if ((thread.isActive == false
-                    && event.getAction() == KeyEvent.ACTION_DOWN)
-                    || (thread.isActive == true
-                            && event.getAction() == KeyEvent.ACTION_UP)) {
-                return thread.submitKeyEvent(getId(), event);
-            }
-            return false;
+            return thread.submitKeyEvent(getId(), event);
+
         }
 
         @Override
         public boolean dispatchMotionEvent(MotionEvent event) {
-            MotionEvent clone = MotionEvent.obtain(event);
-            return thread.submitMotionEvent(getId(), clone);
+            return thread.submitMotionEvent(getId(), event);
         }
 
-        private void processControllerEvent(float x, float y, float z,
-                boolean active) {
+        private void processControllerEvent(float x, float y, float z) {
             GVRScene scene = context.getMainScene();
             if (scene != null) {
                 float[] viewMatrix = scene.getMainCameraRig().getHeadTransform()
@@ -208,7 +212,6 @@ class GVRGamepadDeviceManager {
                                 point[1], point[2]);
                     }
                 }
-                setActive(active);
                 super.setPosition(internalObject.getTransform().getPositionX(),
                         internalObject.getTransform().getPositionY(),
                         internalObject.getTransform().getPositionZ());
@@ -242,8 +245,15 @@ class GVRGamepadDeviceManager {
     }
 
     private class EventHandlerThread extends Thread {
+        private final KeyEvent BUTTON_L2_DOWN = new KeyEvent(
+                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_L2);
+        private final KeyEvent BUTTON_L2_UP = new KeyEvent(KeyEvent.ACTION_UP,
+                KeyEvent.KEYCODE_BUTTON_L2);
+        private final KeyEvent BUTTON_R2_DOWN = new KeyEvent(
+                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_R2);
+        private final KeyEvent BUTTON_R2_UP = new KeyEvent(KeyEvent.ACTION_UP,
+                KeyEvent.KEYCODE_BUTTON_R2);
         private int dpadState;
-        private boolean isActive = false;
         private float x, y, ry;
         private Object lock = new Object();
         private boolean pedalDown = false;
@@ -282,7 +292,6 @@ class GVRGamepadDeviceManager {
         public void run() {
             try {
                 while (true) {
-                    boolean running = false;
                     synchronized (lock) {
                         if (holder == null) {
                             lock.wait();
@@ -296,21 +305,18 @@ class GVRGamepadDeviceManager {
                             keyEvent = holder.keyEvent;
                             id = holder.id;
                         }
-                        if (event != null) {
-                            running = dispatchMotionEvent(id, event);
-                            if (running == false) {
-                                event.recycle();
-                                event = null;
-                                holder = null;
-                            }
-                        }
-                        if (keyEvent != null) {
-                            dispatchKeyEvent(id, keyEvent);
-                            keyEvent = null;
-                        }
                         GVRGamepadController controller = controllers.get(id);
+
+                        if (event != null) {
+                            dispatchMotionEvent(controller, event);
+                        }
+
+                        if (keyEvent != null) {
+                            dispatchKeyEvent(controller, keyEvent);
+                        }
+
                         controller.processControllerEvent(this.x, this.y,
-                                this.ry, isActive);
+                                this.ry);
                     }
                     Thread.sleep(DELAY_MILLISECONDS);
                 }
@@ -319,60 +325,65 @@ class GVRGamepadDeviceManager {
             }
         }
 
-        private void dispatchKeyEvent(int id, KeyEvent event) {
+        /**
+         * Process the KeyEvent from the Gamepad.
+         * 
+         * @param event
+         *            the {@link KeyEvent}.
+         * @return <code>true</code> if the key is from an active button,
+         *         <code>false</code> otherwise
+         */
+        private void dispatchKeyEvent(GVRGamepadController controller,
+                KeyEvent event) {
             int keyCode = event.getKeyCode();
             int action = event.getAction();
 
-            if (id != -1) {
-                if (ACTIVE_BUTTONS.contains(keyCode)) {
-                    if (action == KeyEvent.ACTION_DOWN && isActive == false) {
-                        isActive = true;
-                    } else
-                        if (action == KeyEvent.ACTION_UP && isActive == true) {
-                        isActive = false;
+            if (ACTIVE_BUTTONS.contains(keyCode)) {
+                controller.setKeyEvent(event);
+            } else {
+                switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_LEFT) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_LEFT;
+                        x = -1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
                     }
-                } else {
-                    switch (keyCode) {
-                    case KeyEvent.KEYCODE_DPAD_LEFT:
-                        if (action == KeyEvent.ACTION_DOWN
-                                && dpadState != KeyEvent.KEYCODE_DPAD_LEFT) {
-                            dpadState = KeyEvent.KEYCODE_DPAD_LEFT;
-
-                            x = -1.0f;
-                        } else if (action == KeyEvent.ACTION_UP) {
-                            dpadState = 0;
-                        }
-                        break;
-                    case KeyEvent.KEYCODE_DPAD_RIGHT:
-                        if (action == KeyEvent.ACTION_DOWN
-                                && dpadState != KeyEvent.KEYCODE_DPAD_RIGHT) {
-                            dpadState = KeyEvent.KEYCODE_DPAD_RIGHT;
-                            x = 1.0f;
-                        } else if (action == KeyEvent.ACTION_UP) {
-                            dpadState = 0;
-                        }
-                        break;
-                    case KeyEvent.KEYCODE_DPAD_UP:
-                        if (action == KeyEvent.ACTION_DOWN
-                                && dpadState != KeyEvent.KEYCODE_DPAD_UP) {
-                            dpadState = KeyEvent.KEYCODE_DPAD_UP;
-                            y = 1.0f;
-                        } else if (action == KeyEvent.ACTION_UP) {
-                            dpadState = 0;
-                        }
-                        break;
-                    case KeyEvent.KEYCODE_DPAD_DOWN:
-                        if (action == KeyEvent.ACTION_DOWN
-                                && dpadState != KeyEvent.KEYCODE_DPAD_DOWN) {
-                            dpadState = KeyEvent.KEYCODE_DPAD_DOWN;
-                            y = -1.0f;
-                        } else if (action == KeyEvent.ACTION_UP) {
-                            dpadState = 0;
-                        }
-                        break;
+                    break;
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_RIGHT) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_RIGHT;
+                        x = 1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
                     }
-
+                    break;
+                case KeyEvent.KEYCODE_DPAD_UP:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_UP) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_UP;
+                        y = 1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
+                    }
+                    break;
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                    if (action == KeyEvent.ACTION_DOWN
+                            && dpadState != KeyEvent.KEYCODE_DPAD_DOWN) {
+                        dpadState = KeyEvent.KEYCODE_DPAD_DOWN;
+                        y = -1.0f;
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        dpadState = 0;
+                    }
+                    break;
                 }
+            }
+
+            if (holder != null && holder.event == null) {
+                // reset holder when there is no motion event
+                holder = null;
             }
         }
 
@@ -380,16 +391,14 @@ class GVRGamepadDeviceManager {
             if (threadStarted && event.isFromSource(InputDevice.SOURCE_GAMEPAD)
                     || event.isFromSource(InputDevice.SOURCE_JOYSTICK)) {
                 MotionEvent clone = MotionEvent.obtain(event);
-
                 synchronized (lock) {
-                    // There are cases of null events being passed.
-                    if (event != null) {
-                        event.recycle();
-                    }
-
                     if (holder == null) {
                         this.holder = new EventDataHolder(id, clone, null);
                     } else {
+                        // if there is already an event recycle it
+                        if (holder.event != null) {
+                            holder.event.recycle();
+                        }
                         holder.setId(id);
                         holder.setEvent(clone);
                     }
@@ -422,17 +431,16 @@ class GVRGamepadDeviceManager {
         // The following methods are taken from the controller sample on the
         // Android Developer web site:
         // https://developer.android.com/training/game-controllers/controller-input.html
-        private boolean dispatchMotionEvent(int id, MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                if (id != -1) {
-                    return processJoystickInput(event);
-                }
-            }
-            return false;
-        }
-
-        private boolean processJoystickInput(MotionEvent event) {
+        private void dispatchMotionEvent(GVRGamepadController controller,
+                MotionEvent event) {
             InputDevice device = event.getDevice();
+            if (event.getAction() != MotionEvent.ACTION_MOVE
+                    || device == null) {
+                event.recycle();
+                holder = null;
+                return;
+            }
+
             float x = getCenteredAxis(event, device, MotionEvent.AXIS_X);
             if (x == 0) {
                 x = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_X);
@@ -458,23 +466,24 @@ class GVRGamepadDeviceManager {
             } else if ((vendorId == GVRDeviceConstants.STEELSERIES_CONTROLLER_VENDOR_ID
                     && productId == GVRDeviceConstants.STEELSERIES_CONTROLLER_PRODUCT_ID)) {
                 ry = getCenteredAxis(event, device, MotionEvent.AXIS_RZ);
-                if ((getCenteredAxis(event, device, MotionEvent.AXIS_BRAKE) != 0
-                        || getCenteredAxis(event, device,
-                                MotionEvent.AXIS_GAS) != 0)
-                        && pedalDown == false) {
+
+                float brakeAxis = getCenteredAxis(event, device,
+                        MotionEvent.AXIS_BRAKE);
+                float gasAxis = getCenteredAxis(event, device,
+                        MotionEvent.AXIS_GAS);
+                if (brakeAxis != 0 && pedalDown == false) {
                     pedalDown = true;
-                    if (isActive == false) {
-                        isActive = true;
-                    }
-                } else if ((getCenteredAxis(event, device,
-                        MotionEvent.AXIS_BRAKE) == 0
-                        && getCenteredAxis(event, device,
-                                MotionEvent.AXIS_GAS) == 0)
-                        && pedalDown == true) {
+                    controller.setKeyEvent(BUTTON_L2_DOWN);
+                } else if (brakeAxis == 0 && pedalDown == true) {
                     pedalDown = false;
-                    if (isActive == true) {
-                        isActive = false;
-                    }
+                    controller.setKeyEvent(BUTTON_L2_UP);
+                }
+                if (gasAxis != 0 && pedalDown == false) {
+                    pedalDown = true;
+                    controller.setKeyEvent(BUTTON_R2_DOWN);
+                } else if (gasAxis == 0 && pedalDown == true) {
+                    pedalDown = false;
+                    controller.setKeyEvent(BUTTON_R2_UP);
                 }
             }
 
@@ -483,9 +492,12 @@ class GVRGamepadDeviceManager {
             this.ry = ry;
 
             if (x == 0 && y == 0 && ry == 0) {
-                return false;
+                event.recycle();
+                holder = null;
             } else {
-                return true;
+                MotionEvent clone = MotionEvent.obtain(event);
+                holder.event = clone;
+                controller.setMotionEvent(event);
             }
         }
 
