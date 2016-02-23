@@ -341,7 +341,7 @@ void Renderer::occlusion_cull(Scene* scene,
         if (!is_query_issued) {
             //Setup basic bounding box and material
             RenderData* bounding_box_render_data(new RenderData());
-            Mesh* bounding_box_mesh = render_data->mesh()->getBoundingBox();
+            Mesh* bounding_box_mesh = render_data->mesh()->createBoundingBox();
             Material *bbox_material = new Material(
                     Material::BOUNDING_BOX_SHADER);
             RenderPass *pass = new RenderPass();

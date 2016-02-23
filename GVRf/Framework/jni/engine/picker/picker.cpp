@@ -100,14 +100,12 @@ glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
         const SceneObject* scene_object, float ox, float oy, float oz, float dx,
         float dy, float dz) {
     glm::mat4 model_matrix = scene_object->transform()->getModelMatrix();
-    Mesh* mesh = scene_object->render_data()->mesh()->getBoundingBox();
-    if (mesh != 0) {
-        EyePointData data = MeshEyePointee::isPointed(mesh, model_matrix, ox,
-                oy, oz, dx, dy, dz);
-        if (data.pointed()) {
-            return data.hit();
-        }
+    std::unique_ptr<Mesh> mesh(scene_object->render_data()->mesh()->createBoundingBox());
+    EyePointData data = MeshEyePointee::isPointed(*mesh, model_matrix, ox, oy, oz, dx, dy, dz);
+    if (data.pointed()) {
+        return data.hit();
     }
+
     return glm::vec3(std::numeric_limits<float>::infinity());
 }
 
