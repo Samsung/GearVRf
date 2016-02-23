@@ -85,7 +85,6 @@ public:
     }
 
     void setReady(bool ready) {
-        LOGD("ASYNC: set texture ready");
         this->ready = ready;
     }
 
