@@ -1924,8 +1924,6 @@ public abstract class GVRContext {
      */
     public List<GVRAtlasInformation> loadTextureAtlasInformation(GVRAndroidResource resource) {
 
-        assertGLThread();
-
         List<GVRAtlasInformation> atlasInformation
                 = GVRAsynchronousResourceLoader.loadAtlasInformation(resource.getStream());
         resource.closeStream();
