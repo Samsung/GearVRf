@@ -569,6 +569,7 @@ bool Renderer::isShader3d(const Material* curr_material) {
     case Material::ShaderType::TEXTURE_SHADER:
     case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
     case Material::ShaderType::ASSIMP_SHADER:
+    case Material::ShaderType::LIGHTMAP_SHADER:
     default:
         shaders3d = true;
         break;
@@ -766,6 +767,10 @@ void Renderer::renderRenderData(RenderData* render_data,
                                         mv_matrix,
                                         glm::inverseTranspose(mv_matrix),
                                         mvp_matrix, render_data, curr_material);
+                                break;
+                            case Material::ShaderType::LIGHTMAP_SHADER:
+                                shader_manager->getLightMapShader()->render(mvp_matrix,
+                                        render_data, curr_material);
                                 break;
                             default:
                                 shader_manager->getCustomShader(
