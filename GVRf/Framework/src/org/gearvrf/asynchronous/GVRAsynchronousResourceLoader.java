@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -30,6 +31,7 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
+import org.gearvrf.GVRAtlasInformation;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCubemapTexture;
@@ -662,5 +664,15 @@ public class GVRAsynchronousResourceLoader {
         return AsyncBitmapTexture.decodeStream(stream,
                 AsyncBitmapTexture.glMaxTextureSize,
                 AsyncBitmapTexture.glMaxTextureSize, true, null, closeStream);
+    }
+
+    /**
+     * Load a atlas map information asynchronously.
+     *
+     * @param ins
+     *            JSON text stream
+     */
+    public static List<GVRAtlasInformation> loadAtlasInformation(InputStream ins) {
+        return AsyncAtlasInfo.loadAtlasInformation(ins);
     }
 }
