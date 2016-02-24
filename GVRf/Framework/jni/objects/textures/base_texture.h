@@ -92,13 +92,13 @@ public:
                         + ret;
                 throw error;
             }
-            AndroidBitmap_unlockPixels(env_, bitmapRef_);
 
             glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info_.width, info_.height, 0,
                     GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
-            glGenerateMipmap (GL_TEXTURE_2D);
+            glGenerateMipmap(GL_TEXTURE_2D);
 
+            AndroidBitmap_unlockPixels(env_, bitmapRef_);
             env_->DeleteGlobalRef(bitmapRef_);
             break;
         }
