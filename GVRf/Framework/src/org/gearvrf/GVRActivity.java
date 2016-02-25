@@ -84,7 +84,7 @@ public class GVRActivity extends Activity {
 
         try {
             mActivityHandler = new VrapiActivityHandler(this, mRenderingCallbacks);
-        } catch (final VrapiNotAvailableException ignored) {
+        } catch (final Exception ignored) {
             // will fall back to mono rendering in that case
         }
     }
