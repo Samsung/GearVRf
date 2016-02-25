@@ -850,8 +850,6 @@ public abstract class GVRContext {
     public GVRBitmapTexture loadTexture(String fileName,
             GVRTextureParameters textureParameters) {
 
-        assertGLThread();
-
         if (fileName.endsWith(".png")) { // load png directly to texture
             return new GVRBitmapTexture(this, fileName);
         }
@@ -933,8 +931,6 @@ public abstract class GVRContext {
 
         GVRTexture texture = textureCache.get(resource);
         if (texture == null) {
-            assertGLThread();
-
             Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
                     resource.getStream(), false);
             resource.closeStream();
@@ -981,8 +977,6 @@ public abstract class GVRContext {
     public GVRCubemapTexture loadCubemapTexture(
             GVRAndroidResource[] resourceArray,
             GVRTextureParameters textureParameters) {
-
-        assertGLThread();
 
         if (resourceArray.length != 6) {
             return null;
