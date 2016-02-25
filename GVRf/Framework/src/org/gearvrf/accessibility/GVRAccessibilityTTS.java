@@ -22,7 +22,8 @@ import android.speech.SpeechRecognizer;
 import android.util.Log;
 
 /**
- * This class initializes Speech Recognizer, capture user voice, convert it to text and treats it as a command by comparing to a list of predefined text commands.
+ * This class initializes Speech Recognizer, capture user voice, convert it to text and treats it as a command by comparing to a list of predefined text commands. 8
+ *
  */
 final class GVRAccessibilityTTS implements RecognitionListener {
     private SpeechRecognizer mSpeechRecognizer;

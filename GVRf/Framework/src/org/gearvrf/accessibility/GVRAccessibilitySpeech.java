@@ -13,6 +13,10 @@ package org.gearvrf.accessibility;
 
 import org.gearvrf.GVRContext;
 
+/**
+ * Class responsible to manager speech recognize for all accessibility features such as {@code GVRAccessibilityZoom}, {@code GVRAccessibilityTalkBack}, {@code GVRAccessibilityInvertedColors}
+ *
+ */
 public class GVRAccessibilitySpeech {
 
     private GVRAccessibilityTTS mTts;
@@ -33,14 +37,14 @@ public class GVRAccessibilitySpeech {
     }
 
     /**
-     * Active talk back for accessibility features.
+     * Active speech for accessibility features.
      */
     public void active() {
         mTts.setActive(true);
     }
 
     /**
-     * Inactive talk back for accessibility features.
+     * Inactive speech for accessibility features.
      */
     public void inactive() {
         mTts.setActive(false);
