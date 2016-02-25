@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.gearvrf.utility.Colors;
+import org.gearvrf.utility.Log;
 
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -32,7 +33,7 @@ import android.graphics.Color;
  * (stock or custom) GL shaders, applied after the scene graph has been
  * rendered.
  */
-public abstract class GVRCamera extends GVRComponent {
+public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     /**
      * We use a {@code Set}, not a {@code List}, because while
      * {@link #addPostEffect(GVRPostEffect)} can add multiple copies of the same
@@ -296,6 +297,36 @@ public abstract class GVRCamera extends GVRComponent {
             return getOwnerObject().getChildrenCount();
         }
         return 0;
+    }
+
+    @Override
+    public void prettyPrint(StringBuffer sb, int indent) {
+        sb.append(Log.getSpaces(indent));
+        sb.append(getClass().getSimpleName());
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("backgroundColor: ");
+        sb.append(String.format("0x%x", getBackgroundColor()));
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("renderMask: ");
+        sb.append(String.format("0x%x", getRenderMask()));
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent + 2));
+        GVRTransform transform = getTransform();
+        sb.append("transform: ");
+        sb.append(transform);
+        sb.append(System.lineSeparator());
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        prettyPrint(sb, 0);
+        return sb.toString();
     }
 }
 
