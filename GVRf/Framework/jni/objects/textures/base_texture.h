@@ -66,6 +66,17 @@ public:
             Texture(new GLTexture(TARGET, texture_parameters)), pending_gl_task_(GL_TASK_NONE) {
     }
 
+    virtual ~BaseTexture() {
+        switch (pending_gl_task_) {
+        case GL_TASK_INIT_BITMAP:
+            env_->DeleteGlobalRef(bitmapRef_);
+            break;
+
+        default:
+            break;
+        }
+    }
+
     bool update(int width, int height, void* data) {
         glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0,

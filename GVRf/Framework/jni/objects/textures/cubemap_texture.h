@@ -63,6 +63,27 @@ public:
             Texture(new GLTexture(TARGET)) {
     }
 
+    virtual ~CubemapTexture() {
+        // Release global refs. Race condition does not occur because if
+        // the runPendingGL is running, the object won't be destructed.
+        switch (pending_gl_task_) {
+        case GL_TASK_INIT_BITMAP:
+            for (int i = 0; i < 6; i++) {
+                env_->DeleteGlobalRef(bitmapRef_[i]);
+            }
+            break;
+
+        case GL_TASK_INIT_INTERNAL_FORMAT:
+            for (int i = 0; i < 6; i++) {
+                env_->DeleteGlobalRef(textureRef_[i]);
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
     GLenum getTarget() const {
         return TARGET;
     }
