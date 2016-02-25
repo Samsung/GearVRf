@@ -17,7 +17,6 @@ package org.gearvrf.asynchronous;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -26,10 +25,19 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.gearvrf.*;
+import org.gearvrf.FutureWrapper;
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
+import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCubemapTexture;
+import org.gearvrf.GVRHybridObject;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRShaders;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
@@ -137,16 +145,13 @@ public class GVRAsynchronousResourceLoader {
         } else {
             // Load the bytes on a background thread
             Threads.spawn(new Runnable() {
-
                 @Override
                 public void run() {
                     try {
                         final CompressedTexture compressedTexture = CompressedTexture
                                 .load(resource.getStream(), -1, false);
-                        resource.closeStream();
                         // Create texture on GL thread
                         gvrContext.runOnGlThread(new Runnable() {
-
                             @Override
                             public void run() {
                                 GVRTexture texture = compressedTexture
@@ -159,6 +164,8 @@ public class GVRAsynchronousResourceLoader {
                         });
                     } catch (Exception e) {
                         callback.failed(e, resource);
+                    } finally {
+                        resource.closeStream();
                     }
                 }
             });

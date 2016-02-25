@@ -38,16 +38,20 @@ MeshEyePointee::~MeshEyePointee() {
 
 EyePointData MeshEyePointee::isPointed(const glm::mat4& mv_matrix, float ox,
         float oy, float oz, float dx, float dy, float dz) {
-    return isPointed(mesh_, mv_matrix, ox, oy, oz, dx, dy, dz);
+    if (nullptr != mesh_) {
+        return isPointed(*mesh_, mv_matrix, ox, oy, oz, dx, dy, dz);
+    } else {
+        return EyePointData();
+    }
 }
 
-EyePointData MeshEyePointee::isPointed(const Mesh* mesh,
+EyePointData MeshEyePointee::isPointed(const Mesh& mesh,
         const glm::mat4& matrix, float ox, float oy, float oz, float dx,
         float dy, float dz) {
     glm::mat4 inv_mv_matrix = glm::affineInverse(matrix);
     std::vector<glm::vec4> relative_veritces;
 
-    for (auto it = mesh->vertices().begin(); it != mesh->vertices().end();
+    for (auto it = mesh.vertices().begin(); it != mesh.vertices().end();
             ++it) {
         glm::vec4 mesh_vertex(*it, 1.0f);
         relative_veritces.push_back(matrix * mesh_vertex);
@@ -56,13 +60,13 @@ EyePointData MeshEyePointee::isPointed(const Mesh* mesh,
     EyePointData data;
 
     //http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    for (int i = 0; i < mesh->triangles().size(); i += 3) {
+    for (int i = 0; i < mesh.triangles().size(); i += 3) {
         glm::vec3 O(ox, oy, oz);
         glm::vec3 D(dx, dy, dz);
 
-        glm::vec3 V1(relative_veritces[mesh->triangles()[i]]);
-        glm::vec3 V2(relative_veritces[mesh->triangles()[i + 1]]);
-        glm::vec3 V3(relative_veritces[mesh->triangles()[i + 2]]);
+        glm::vec3 V1(relative_veritces[mesh.triangles()[i]]);
+        glm::vec3 V2(relative_veritces[mesh.triangles()[i + 1]]);
+        glm::vec3 V3(relative_veritces[mesh.triangles()[i + 2]]);
 
         glm::vec3 e1(V2 - V1);
         glm::vec3 e2(V3 - V1);

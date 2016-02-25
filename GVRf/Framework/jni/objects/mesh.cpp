@@ -31,7 +31,7 @@
 #include "../gl/gl_program.h"
 
 namespace gvr {
-Mesh* Mesh::getBoundingBox() {
+Mesh* Mesh::createBoundingBox() {
 
     Mesh* mesh = new Mesh();
 

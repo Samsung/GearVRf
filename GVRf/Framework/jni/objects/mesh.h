@@ -228,7 +228,7 @@ public:
         vao_dirty_ = true;
     }
 
-    Mesh* getBoundingBox();
+    Mesh* createBoundingBox();
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
 
