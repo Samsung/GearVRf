@@ -41,6 +41,7 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRShaders;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
@@ -260,6 +261,16 @@ public class GVRAsynchronousResourceLoader {
             final CancelableCallback<GVRTexture> callback,
             final GVRAndroidResource resource, final int priority,
             final int quality) {
+        loadTexture(gvrContext, textureCache, callback, resource, null,
+                     priority, quality);
+    }
+
+    public static void loadTexture(final GVRContext gvrContext,
+            final ResourceCache<GVRTexture> textureCache,
+            final CancelableCallback<GVRTexture> callback,
+            final GVRAndroidResource resource,
+            final GVRTextureParameters textureParams, final int priority,
+            final int quality) {
         validateCallbackParameters(gvrContext, callback, resource);
 
         final GVRTexture cached = textureCache == null ? null : textureCache
@@ -301,8 +312,15 @@ public class GVRAsynchronousResourceLoader {
 
                                 @Override
                                 public void run() {
-                                    GVRTexture texture = compressedTexture
-                                            .toTexture(gvrContext, quality);
+                                    GVRTexture texture;
+                                    if (textureParams == null) {
+                                        texture = compressedTexture
+                                                .toTexture(gvrContext, quality);
+                                    } else {
+                                        texture = compressedTexture
+                                                .toTexture(gvrContext, quality,
+                                                           textureParams);
+                                    }
                                     textureCache.put(resource, texture);
                                     callback.loaded(texture, resource);
                                 }

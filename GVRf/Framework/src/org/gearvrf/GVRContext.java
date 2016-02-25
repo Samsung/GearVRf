@@ -1616,6 +1616,301 @@ public abstract class GVRContext {
     }
 
     /**
+     * A simplified, low-level method that loads a texture asynchronously,
+     * without making you specify
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)
+     * loadCompressedTexture()}.
+     * 
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     * 
+     * <p>
+     * This method uses a default priority and a default render quality: Use
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)}
+     * to specify an explicit priority, and
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * to specify an explicit quality.
+     * 
+     * <p>
+     * We will continue to support the {@code loadBitmapTexture()} and
+     * {@code loadCompressedTexture()} APIs for at least a little while: We
+     * haven't yet decided whether to deprecate them or not.
+     * 
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     * 
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     * 
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * 
+     * @since 2.0.2
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
+     */
+    public void loadTexture(TextureCallback callback,
+            GVRAndroidResource resource, GVRTextureParameters textureParameters) {
+        loadTexture(callback, resource, textureParameters, DEFAULT_PRIORITY);
+    }
+
+    /**
+     * A simplified, low-level method that loads a texture asynchronously,
+     * without making you specify
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)
+     * loadCompressedTexture()}.
+     * 
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     * 
+     * <p>
+     * This method uses a default render quality: Use
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * to specify an explicit quality.
+     * 
+     * <p>
+     * We will continue to support the {@code loadBitmapTexture()} and
+     * {@code loadCompressedTexture()} APIs for at least a little while: We
+     * haven't yet decided whether to deprecate them or not.
+     * 
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     * 
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     * 
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @since 2.0.2
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
+     */
+    public void loadTexture(TextureCallback callback,
+            GVRAndroidResource resource, GVRTextureParameters textureParameters, int priority) {
+        loadTexture(callback, resource, priority, GVRCompressedTexture.BALANCED);
+    }
+
+    /**
+     * A simplified, low-level method that loads a texture asynchronously,
+     * without making you specify
+     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
+     * loadBitmapTexture()} or
+     * {@link #loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)
+     * loadCompressedTexture()}.
+     * 
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     * 
+     * <p>
+     * We will continue to support the {@code loadBitmapTexture()} and
+     * {@code loadCompressedTexture()} APIs for at least a little while: We
+     * haven't yet decided whether to deprecate them or not.
+     * 
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     * 
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     * 
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * 
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @param quality
+     *            The compressed texture {@link GVRCompressedTexture#mQuality
+     *            quality} parameter: should be one of
+     *            {@link GVRCompressedTexture#SPEED},
+     *            {@link GVRCompressedTexture#BALANCED}, or
+     *            {@link GVRCompressedTexture#QUALITY}, but other values are
+     *            'clamped' to one of the recognized values. Please note that
+     *            this (currently) only applies to compressed textures; normal
+     *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
+     *            quality parameter.
+     * 
+     * @since 2.0.2
+     * 
+     * @throws IllegalArgumentException
+     *             If you 'abuse' request consolidation by passing the same
+     *             {@link GVRAndroidResource} descriptor to multiple load calls.
+     *             <p>
+     *             It's fairly common for multiple scene objects to use the same
+     *             texture or the same mesh. Thus, if you try to load, say,
+     *             {@code R.raw.whatever} while you already have a pending
+     *             request for {@code R.raw.whatever}, it will only be loaded
+     *             once; the same resource will be used to satisfy both (all)
+     *             requests. This "consolidation" uses
+     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
+     *             {@code ==} (aka "reference equality"): The problem with using
+     *             the same resource descriptor is that if requests can't be
+     *             consolidated (because the later one(s) came in after the
+     *             earlier one(s) had already completed) the resource will be
+     *             reloaded ... but the original descriptor will have been
+     *             closed.
+     */
+    public void loadTexture(TextureCallback callback,
+            GVRAndroidResource resource,
+            GVRTextureParameters textureParameters, int priority, int quality) {
+        GVRAsynchronousResourceLoader.loadTexture(this, textureCache, callback,
+                                                  resource, textureParameters,
+                                                  priority, quality);
+    }
+
+    /**
      * Simple, high-level method to load a texture asynchronously, for use with
      * {@link GVRShaders#setMainTexture(Future)} and
      * {@link GVRShaders#setTexture(String, Future)}.
