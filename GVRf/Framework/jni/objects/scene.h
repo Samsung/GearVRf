@@ -40,6 +40,7 @@ public:
     virtual ~Scene();
     void addSceneObject(SceneObject* scene_object);
     void removeSceneObject(SceneObject* scene_object);
+    void removeAllSceneObjects();
     const std::vector<SceneObject*>& scene_objects() {
         return scene_objects_;
     }

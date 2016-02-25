@@ -1004,13 +1004,13 @@ public abstract class GVRContext {
      * @since 1.6.5
      * 
      */
-    private void assertGLThread() {
-
+    public void assertGLThread() {
         if (Thread.currentThread().getId() != mGLThreadID) {
-            throw new RuntimeException(
+            RuntimeException e = new RuntimeException(
                     "Should not run GL functions from a non-GL thread!");
+            e.printStackTrace();
+            throw e;
         }
-
     }
 
     /*
