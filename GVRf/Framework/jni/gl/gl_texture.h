@@ -45,19 +45,17 @@ public:
     : target_(target)
     , pending_gl_task_(GL_TASK_NONE)
     {
-        deleter_ = getDeleterForThisThread();
         pending_gl_task_ = GL_TASK_INIT_NO_PARAM;
     }
 
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
-        deleter_ = getDeleterForThisThread();
         pending_gl_task_ = GL_TASK_INIT_WITH_PARAM;
         memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
     }
 
     virtual ~GLTexture() {
-        if (0 != id_) {
+        if (0 != id_ && deleter_) {
             deleter_->queueTexture(id_);
         }
     }
@@ -77,6 +75,9 @@ public:
             return;
 
         case GL_TASK_INIT_NO_PARAM: {
+            // The deleter needs to be obtained from the GL thread
+            deleter_= getDeleterForThisThread();
+
             glGenTextures(1, &id_);
             glBindTexture(target_, id_);
             glTexParameteri(target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -88,6 +89,8 @@ public:
         }
 
         case GL_TASK_INIT_WITH_PARAM: {
+            deleter_= getDeleterForThisThread();
+
             // Sets the new MIN FILTER
             GLenum min_filter_type_ = texture_parameters_[0];
 

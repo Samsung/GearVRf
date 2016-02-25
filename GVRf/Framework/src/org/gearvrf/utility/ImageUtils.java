@@ -3,8 +3,13 @@ package org.gearvrf.utility;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRContext;
+
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 
 /**
  * Utilities for basic image I/O and manipulation.
@@ -84,5 +89,29 @@ public class ImageUtils
         }
 
         return true;
+    }
+
+    /**
+     * Creates a {@code MediaPlayer} with a specified data source. The returned media player
+     * is not started.
+     *
+     * @param filenameOrURL
+     *         A string representing a path of the data file, or a URL.
+     *
+     * @return The {@code MediaPlayer} object if successful, or {@code null} if there is
+     *         an error.
+     */
+    public static MediaPlayer createMediaPlayer(String filenameOrURL) {
+        // create mediaplayer instance
+        MediaPlayer mediaPlayer = new MediaPlayer();
+        try {
+            mediaPlayer.setDataSource(filenameOrURL);
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return mediaPlayer;
     }
 }
