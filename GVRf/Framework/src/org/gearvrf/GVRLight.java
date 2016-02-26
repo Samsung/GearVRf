@@ -21,6 +21,14 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 
 public class GVRLight extends GVRHybridObject {
 
+    public abstract static class GVRLightType {
+        public static int POINT = 0;
+
+        public static int SPOT = 1;
+
+        public static int DIRECTIONAL = 2;
+    }
+
     public GVRLight(GVRContext gvrContext) {
         super(gvrContext, NativeLight.ctor());
         // set light parameters to OpenGL default values
@@ -29,6 +37,11 @@ public class GVRLight extends GVRHybridObject {
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         isEnabled = true;
+    }
+
+    public GVRLight(GVRContext gvrContext, int type) {
+        this(gvrContext);
+        NativeLight.setLightType(getNative(), type);
     }
 
     /**
@@ -232,6 +245,22 @@ public class GVRLight extends GVRHybridObject {
         NativeLight.setVec4(getNative(), key, x, y, z, w);
     }
 
+    public void setShadowSmoothSize(float angle) {
+        NativeDirectionalLight.setShadowSmoothSize(getNative(), angle);
+    }
+
+    public void setBias(float value) {
+        NativeDirectionalLight.setBias(getNative(), value);
+    }
+
+    public void setSpotangle(float angle) {
+        NativeDirectionalLight.setSpotangle(getNative(), angle);
+    }
+
+    public void setLightDirection(float x, float y, float z) {
+        NativeDirectionalLight.setLightDirection(getNative(), x, y, z);
+    }
+
     private boolean isEnabled;
 }
 
@@ -241,6 +270,8 @@ class NativeLight {
     static native void enable(long light);
 
     static native void disable(long light);
+
+    static native void setLightType(long light, int type);
 
     static native float getFloat(long light, String key);
 
@@ -254,4 +285,13 @@ class NativeLight {
 
     static native void setVec4(long light, String key, float x, float y,
             float z, float w);
+
+    static native int setBias(long dlight, float value);
+
+    static native int setSpotangle(long dlight, float angle);
+
+    static native int setShadowSmoothSize(long dlight, float mode);
+
+    static native int setLightDirection(long dlight, float x, float y, float z);
+
 }

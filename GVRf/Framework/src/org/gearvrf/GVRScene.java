@@ -339,9 +339,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
         NativeScene.exportToFile(getNative(), filepath);
     }
 
-    private GVRDirectionalLight mDirectionalLight;
+    private GVRLight mDirectionalLight;
 
-    public void setDirectionalLight(GVRDirectionalLight light) {
+    public void setDirectionalLight(GVRLight light) {
         mDirectionalLight = light;
 
         if (light != null) {

@@ -35,8 +35,6 @@
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
 
-#include "objects/components/directional_light.h"
-
 namespace gvr {
 
 static int numberDrawCalls;
@@ -190,7 +188,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     //  LOGI(" Render Camera Framebuffer %d ", framebufferId);
 
-    DirectionalLight *cameraLight = scene->getDirectionalLight();
+    Light *cameraLight = scene->getDirectionalLight();
 
     bool renderShadow = cameraLight; // TODO reader from scene;
 
@@ -602,16 +600,16 @@ void Renderer::calculateShadow(ShaderManager* shader_manager,
 
     if (isShadowMode && isShader3d(curr_material)) {
 
-        DirectionalLight *cameraLight =
+        Light *cameraLight =
                 shader_manager->getShadowShader()->getCameraLight();
 
-        lightPosition = cameraLight->getLightPosition();
+        lightPosition = cameraLight->getVec3("position");
         glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
 
         glm::mat4 vp_matrixProj;
 
-        switch (cameraLight->getRenderMode()) {
-        case DirectionalLight::ORTOGONAL: {
+        switch (cameraLight->getLightType()) {
+        case Light::DIRECTIONAL: {
             float sizeAngle = (float) cameraLight->getSpotangle(); // TODO: rename
             glm::mat4 vp_matrixOrtho = glm::ortho(-sizeAngle, sizeAngle,
                     -sizeAngle, sizeAngle, 0.1f, 60.0f);
@@ -620,7 +618,7 @@ void Renderer::calculateShadow(ShaderManager* shader_manager,
         }
 
         default:
-        case DirectionalLight::PERSPECTIVE: {
+        case Light::SPOT: {
             glm::mat4 vp_matrixPersp = glm::perspective(
                     cameraLight->getSpotangle(), 1.0f, .1f, 1000.0f); // fovy 90
             vp_matrixProj = vp_matrixPersp;

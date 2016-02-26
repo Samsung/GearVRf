@@ -32,6 +32,9 @@ Java_org_gearvrf_NativeLight_enable(JNIEnv * env, jobject obj, jlong jlight);
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_disable(JNIEnv * env, jobject obj, jlong jlight);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setLightType(JNIEnv * env, jobject obj, jlong jlight, jint type);
+
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeLight_getFloat(JNIEnv * env,
         jobject obj, jlong jlight, jstring key);
@@ -56,6 +59,19 @@ Java_org_gearvrf_NativeLight_setVec4(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeLight_getVec4(JNIEnv * env,
         jobject obj, jlong jlight, jstring key);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setLightDirection(JNIEnv * env,
+        jobject obj, jlong ref, jfloat jx, jfloat jy, jfloat jz);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setSpotangle(JNIEnv * env, jobject obj,
+        jlong ref, jfloat angle);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setShadowSmoothSize(JNIEnv * env,
+        jobject obj, jlong ref, jfloat size);
+
 }
 ;
 
@@ -76,6 +92,12 @@ Java_org_gearvrf_NativeLight_disable(JNIEnv * env,
     jobject obj, jlong jlight) {
     Light* light = reinterpret_cast<Light*>(jlight);
     light->disable();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setLightType(JNIEnv * env, jobject obj, jlong jlight, jint type) {
+    Light* light = reinterpret_cast<Light*>(jlight);
+    light->setLightType(type);
 }
 
 JNIEXPORT jfloat JNICALL
@@ -148,4 +170,37 @@ Java_org_gearvrf_NativeLight_setVec4(JNIEnv * env,
     light->setVec4(native_key, glm::vec4(x, y, z, w));
     env->ReleaseStringUTFChars(key, char_key);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setLightDirection(JNIEnv * env,
+        jobject obj, jlong ref, jfloat jx, jfloat jy, jfloat jz) {
+
+    Light* light = reinterpret_cast<Light*>(ref);
+    light->setLightDirection(glm::vec3(jx, jy, jz));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setSpotangle(JNIEnv * env, jobject obj,
+        jlong ref, jfloat angle) {
+
+    Light* light = reinterpret_cast<Light*>(ref);
+    light->setSpotangle(angle);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setShadowSmoothSize(JNIEnv * env,
+        jobject obj, jlong ref, jfloat size) {
+
+    Light* light = reinterpret_cast<Light*>(ref);
+    light->setShadowSmoothSize(size);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setBias(JNIEnv * env, jobject obj,
+        jlong ref, jfloat value) {
+
+    Light* light = reinterpret_cast<Light*>(ref);
+    light->setBias(value);
+}
+
 }

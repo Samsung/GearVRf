@@ -33,7 +33,7 @@
 #include "gl/gl_texture.h"
 
 #include "objects/components/camera.h"
-#include "objects/components/directional_light.h"
+#include "objects/light.h"
 #include "engine/memory/gl_delete.h"
 
 namespace gvr {
@@ -76,12 +76,12 @@ public:
         return fbo_camera;
     }
 
-    void setCameraLight(DirectionalLight* camera) {
+    void setCameraLight(Light* camera) {
         cameraLight = camera;
     }
     ;
 
-    DirectionalLight* getCameraLight() {
+    Light* getCameraLight() {
         return cameraLight;
     }
     ;
@@ -117,7 +117,7 @@ private:
     GLTexture* texture_light_color;
     GLTexture* texture_camera_depth;
     GLTexture* texture_camera_color;
-    DirectionalLight* cameraLight;
+    Light* cameraLight;
 
     GlDelete* deleter_;
 };

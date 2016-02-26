@@ -161,8 +161,8 @@ Java_org_gearvrf_NativeScene_attachDirectionalLight(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
 
     if (light != 0) {
-        DirectionalLight* directional_light =
-                reinterpret_cast<DirectionalLight*>(light);
+        Light* directional_light =
+                reinterpret_cast<Light*>(light);
         scene->attachDirectionalLight(directional_light);
     } else {
         scene->attachDirectionalLight(0);
