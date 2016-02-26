@@ -620,7 +620,7 @@ public class GVRAsynchronousResourceLoader {
      * This is a wrapper to convert {@code CancelableCallback<S>} to {@code CancelableCallback<T>}
      * where T extends S.
      */
-    static class CancelableCallbackWrapper<T extends S, S extends GVRHybridObject>
+    static class CancelableCallbackWrapper<S extends GVRHybridObject, T extends S>
     implements CancelableCallback<T> {
         private CancelableCallback<S> wrapped_;
 
@@ -643,10 +643,10 @@ public class GVRAsynchronousResourceLoader {
             return wrapped_.stillWanted(androidResource);
         }
 
-        public static <T extends S, S extends GVRHybridObject> CancelableCallbackWrapper<T, S> wrap(
+        public static <S extends GVRHybridObject, T extends S> CancelableCallbackWrapper<S, T> wrap(
                 Class<T> targetClass,
                 CancelableCallback<S> wrapped) {
-            return new CancelableCallbackWrapper<T, S>(wrapped);
+            return new CancelableCallbackWrapper<S, T>(wrapped);
         }
     }
 
