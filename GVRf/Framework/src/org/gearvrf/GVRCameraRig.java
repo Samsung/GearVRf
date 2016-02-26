@@ -17,8 +17,10 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import org.gearvrf.utility.Log;
+
 /** Holds the GVRCameras. */
-public class GVRCameraRig extends GVRComponent {
+public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     private GVRSceneObject headTransformObject;
 
     private GVRCamera leftCamera, rightCamera;
@@ -563,6 +565,62 @@ public class GVRCameraRig extends GVRComponent {
         }
     }
 
+    /**
+     * Prints the {@link GVRCameraRig} object with indentation.
+     *
+     * @param sb
+     *         The {@code StringBuffer} object to receive the output.
+     *
+     * @param indent
+     *         Size of indentation in number of spaces.
+     */
+    @Override
+    public void prettyPrint(StringBuffer sb, int indent) {
+        sb.append(Log.getSpaces(indent));
+        sb.append(getClass().getSimpleName());
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("type: ");
+        sb.append(getCameraRigType());
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("lookAt: ");
+        float[] lookAt = getLookAt();
+        for (float vecElem : lookAt) {
+            sb.append(vecElem);
+            sb.append(" ");
+        }
+        sb.append(System.lineSeparator());
+
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("leftCamera: ");
+        if (leftCamera == null) {
+            sb.append("null");
+            sb.append(System.lineSeparator());
+        } else {
+            sb.append(System.lineSeparator());
+            leftCamera.prettyPrint(sb, indent + 4);
+        }
+
+        sb.append(Log.getSpaces(indent + 2));
+        sb.append("rightCamera: ");
+        if (rightCamera == null) {
+            sb.append("null");
+            sb.append(System.lineSeparator());
+        } else {
+            sb.append(System.lineSeparator());
+            rightCamera.prettyPrint(sb, indent + 4);
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        prettyPrint(sb, 0);
+        return sb.toString();
+    }
 }
 
 class NativeCameraRig {
