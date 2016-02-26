@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.EnumSet;
+import java.util.UUID;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -124,9 +125,16 @@ final class GVRImporter {
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
-    static GVRModelSceneObject loadJassimpModel(final GVRContext context, String filePath,
-            GVRResourceVolume.VolumeType volumeType,
+    static GVRModelSceneObject loadJassimpModel(final GVRContext context,
+            String filePath, GVRResourceVolume.VolumeType volumeType,
             EnumSet<GVRImportSettings> settings) throws IOException {
+        return loadJassimpModel(context, filePath, volumeType, settings, false);
+    }
+
+    static GVRModelSceneObject loadJassimpModel(final GVRContext context,
+            String filePath, GVRResourceVolume.VolumeType volumeType,
+            EnumSet<GVRImportSettings> settings, boolean cacheEnabled)
+                    throws IOException {
 
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
@@ -166,10 +174,12 @@ final class GVRImporter {
         }
 
         return new GVRJassimpSceneObject(context, assimpScene,
-                new GVRResourceVolume(context, volumeType, FileNameUtils.getParentDirectory(filePath)));
+                new GVRResourceVolume(context, volumeType,
+                        FileNameUtils.getParentDirectory(filePath),
+                        cacheEnabled));
     }
 
-    private static File downloadFile(Context context, String urlString) {
+    static File downloadFile(Context context, String urlString) {
         URL url = null;
         try {
             url = new URL(urlString);
@@ -178,8 +188,19 @@ final class GVRImporter {
             return null;
         }
 
-        String directoryPath = context.getFilesDir().getAbsolutePath();
-        String outputFilename = directoryPath + File.separator + FileNameUtils.getURLFilename(urlString);
+        String directoryPath = context.getCacheDir().getAbsolutePath();
+        // add a uuid value for the url to prevent aliasing from files sharing
+        // same name inside one given app
+        String outputFilename = directoryPath + File.separator
+                + UUID.nameUUIDFromBytes(urlString.getBytes()).toString()
+                + FileNameUtils.getURLFilename(urlString);
+
+        Log.d(TAG, "URL filename: %s", outputFilename);
+        
+        File localCopy = new File(outputFilename);
+        if (localCopy.exists()) {
+            return localCopy;
+        }
 
         InputStream input = null;
         // Output stream to write file
