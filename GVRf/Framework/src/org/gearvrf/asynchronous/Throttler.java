@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import static org.gearvrf.utility.Threads.VERBOSE_SCHEDULING;
 import static org.gearvrf.utility.Threads.threadId;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -200,9 +201,14 @@ class Throttler implements Scheduler {
 
                         @Override
                         public void run() {
-                            OUTPUT gvrfResource = converter.convert(gvrContext,
-                                    loadedResource);
-                            callback.loaded(gvrfResource, resource);
+                            try  {
+                                OUTPUT gvrfResource = converter.convert(gvrContext,
+                                        loadedResource);
+                                callback.loaded(gvrfResource, resource);
+                            } catch (Throwable t) {
+                                // Catch converter errors
+                                callback.failed(t, resource);
+                            }
                         }
                     });
                 } else {
@@ -437,22 +443,7 @@ class Throttler implements Scheduler {
                              * to minimize the damage.
                              */
                             try {
-                                /*
-                                 * FIXME And now for something completely ugly.
-                                 * 
-                                 * Actual callbacks are defined to take specific
-                                 * GVRHybridObject descendants; the gvrResource
-                                 * here is-a base GVRHybridObject. The compiler
-                                 * quite rightly refuses to do this on its own:
-                                 * we might be passing a GVRMesh to a callback
-                                 * that expects a GVRTexture!
-                                 * 
-                                 * The cast is telling the compiler that we
-                                 * really do know what we're doing, and are
-                                 * always passing the right resource type to the
-                                 * app's callback; there does not *seem* to be
-                                 * any way to avoid this.
-                                 */
+                                // Inform handler the resource has been loaded.
                                 callback.loaded(gvrResource, androidResource);
                             } catch (Exception e) {
                                 e.printStackTrace();

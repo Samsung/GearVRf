@@ -462,6 +462,7 @@ public abstract class Threads {
                                 threadId(), threadManager, threadProc);
                     }
                 } else {
+                    // precondition: size == 0 || policyOp != PUT
                     // Update policy within synchronized block
                     switch (policyOp) {
                     case PUT:
