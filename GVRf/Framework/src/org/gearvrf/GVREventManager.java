@@ -18,6 +18,7 @@ package org.gearvrf;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -66,7 +67,20 @@ public class GVREventManager {
     }
 
     /**
-     * Delivers an event to a handler object.
+     * Delivers an event to a handler object. An event is sent in the following
+     * way: <p>
+     *
+     * <ol>
+     * <li> If the {@code target} defines the interface of the class object
+     * {@code eventsClass}, the event is delivered to it first, by invoking
+     * the corresponding method in the {@code target}. </li>
+     * <li> If the {@code target} implements interface {@link IEventReceiver}, the
+     *    event is delivered to listeners added to the {@link GVREventReceiver} object.
+     *    See {@link GVREventReceiver} for more information.
+     *    </li>
+     * <li> If the target is bound with scripts, the event is delivered to the scripts.
+     * A script can be attached to the target using {@link GVRScriptManager#attachScriptFile}.</li>
+     * </ol>
      *
      * @param target
      *     The object which handles the event.
@@ -79,22 +93,60 @@ public class GVREventManager {
      *     Parameters of the event. It should match the parameter list
      * of the corresponding method in the interface, specified by {@code
      * event class}
+     * @return
+     *     {@code true} if the event is handled successfully, {@code false} if not handled
+     *     or any error occurred.
      */
-    public void sendEvent(Object target, Class<? extends IEvents> eventsClass,
+    public boolean sendEvent(Object target, Class<? extends IEvents> eventsClass,
             String eventName, Object... params) {
-        // Validate the event
-        Method method = validateEvent(target, eventsClass, eventName, params);
+        // Set to true if an event is handled.
+        boolean handledSuccessful = false;
+
+        // Check if the target directly handles the event by implementing the
+        // eventsClass interface.
+        Method method = findHandlerMethod(target, eventsClass, eventName, params);
+
+        if (method != null) {
+            // Try invoking the method in target
+            invokeMethod(target, method, params);
+            handledSuccessful = true;
+        }
+
+        // Try to deliver to the event receiver (if any)
+        if (target instanceof IEventReceiver) {
+            IEventReceiver receivingTarget = (IEventReceiver) target;
+            GVREventReceiver receiver = receivingTarget.getEventReceiver();
+            List<IEvents> listeners = receiver.getListeners();
+
+            for (IEvents listener : listeners) {
+                // Skip the listener due to different type
+                if (!eventsClass.isInstance(listener))
+                    continue;
+
+                try {
+                    Method listenerMethod = findHandlerMethod(listener, eventsClass, eventName, params);
+                    // This may throw RuntimeException if the handler does so.
+                    invokeMethod(listener, listenerMethod, params);
+                    handledSuccessful = true;
+                } catch(Exception e) {
+                    // Requested method does not exist. Probably because of a caller error.
+                    continue;
+                }
+            }
+        }
 
         // Try invoking the handler in the script
         if (target instanceof IScriptable) {
-            tryInvokeScript((IScriptable)target, eventName, params);
+            handledSuccessful |= tryInvokeScript((IScriptable)target, eventName, params);
         }
 
-        // Try invoking the method in target
-        invokeMethod(target, method, params);
+        return handledSuccessful;
     }
 
-    private Method validateEvent(Object target, Class<? extends IEvents> eventsClass,
+    /*
+     * Return the method in the target by signature. It throws if the method is not found.
+     */
+    private Method findHandlerMethod(Object target, Class<? extends IEvents> eventsClass,
             String eventName, Object[] params) {
         // Use cached method if available
         Method cachedMethod = getCachedMethod(target, eventName);
@@ -104,16 +156,13 @@ public class GVREventManager {
 
         // Check target event interface
         if (!eventsClass.isInstance(target)) {
-            throw new RuntimeException(String.format("The target object does not implement interface %s",
-                    eventsClass.getSimpleName()));
+            // The target object does not implement interface
+            return null;
         }
 
-        Method nameMatch = null;
         for (Method method : eventsClass.getMethods()) {
             // Match method name and event name
             if (method.getName().equals(eventName)) {
-                nameMatch = method;
-
                 // Check number of parameters
                 Class<?>[] types = method.getParameterTypes();
                 if (types.length != params.length)
@@ -137,14 +186,8 @@ public class GVREventManager {
             }
         }
 
-        // Error
-        if (nameMatch != null) {
-            throw new RuntimeException(String.format("The target object contains a method %s but parameters don't match",
-                    eventName));
-        } else {
-            throw new RuntimeException(String.format("The target object has no method %s",
-                    eventName));
-        }
+        // No matching method
+        return null;
     }
 
     private Method getCachedMethod(Object target, String eventName) {
@@ -172,13 +215,13 @@ public class GVREventManager {
         }
     }
 
-    private void tryInvokeScript(IScriptable target, String eventName,
+    private boolean tryInvokeScript(IScriptable target, String eventName,
             Object[] params) {
         GVRScriptFile script = mGvrContext.getScriptManager().getScriptFile(target);
         if (script == null)
-            return;
+            return false;
 
-        script.invokeFunction(eventName, params);
+        return script.invokeFunction(eventName, params);
     }
 
     private void invokeMethod(Object target, Method method, Object[] params) {
