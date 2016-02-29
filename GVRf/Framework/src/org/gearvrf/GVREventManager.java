@@ -116,21 +116,19 @@ public class GVREventManager {
         if (target instanceof IEventReceiver) {
             IEventReceiver receivingTarget = (IEventReceiver) target;
             GVREventReceiver receiver = receivingTarget.getEventReceiver();
+
             List<IEvents> listeners = receiver.getListeners();
 
             for (IEvents listener : listeners) {
-                // Skip the listener due to different type
-                if (!eventsClass.isInstance(listener))
+                // Skip the listener due to different type, or has been removed
+                if (!eventsClass.isInstance(listener) || receiver.getOwner() != target)
                     continue;
 
-                try {
-                    Method listenerMethod = findHandlerMethod(listener, eventsClass, eventName, params);
+                Method listenerMethod = findHandlerMethod(listener, eventsClass, eventName, params);
+                if (listenerMethod != null) {
                     // This may throw RuntimeException if the handler does so.
                     invokeMethod(listener, listenerMethod, params);
                     handledSuccessful = true;
-                } catch(Exception e) {
-                    // Requested method does not exist. Probably because of a caller error.
-                    continue;
                 }
             }
         }

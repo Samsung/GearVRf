@@ -17,13 +17,13 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
+import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
 /**
@@ -41,7 +41,7 @@ import org.gearvrf.utility.Log;
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
  */
-public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IEventReceiver {
+public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
 
     private GVRTransform mTransform;
     private GVRRenderData mRenderData;

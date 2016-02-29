@@ -25,14 +25,14 @@ import java.util.List;
  * can be used to deliver events to the class.
  */
 public class GVREventReceiver {
-    protected Object mOwner;
+    protected IEventReceiver mOwner;
     protected List<IEvents> mListeners;
 
     /**
      * Constructs an event receiver for the host object.
      * @param owner The host object which owns this event receiver.
      */
-    public GVREventReceiver(Object owner) {
+    public GVREventReceiver(IEventReceiver owner) {
         mOwner = owner;
         mListeners = new ArrayList<IEvents>();
     }
@@ -66,5 +66,13 @@ public class GVREventReceiver {
      */
     protected List<IEvents> getListeners() {
         return mListeners;
+    }
+
+    /**
+     * Gets the owner of the event receiver.
+     * @return The owner of the event receiver.
+     */
+    protected IEventReceiver getOwner() {
+        return mOwner;
     }
 }
