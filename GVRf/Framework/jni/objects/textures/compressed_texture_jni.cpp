@@ -42,13 +42,9 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 
     jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
 
-    jbyte* data = env->GetByteArrayElements(bytes, 0);
-
     CompressedTexture* texture =
-            new CompressedTexture(target, internalFormat, width, height, imageSize,
-                                  (const char*)data, dataOffset, texture_parameters);
-
-    env->ReleaseByteArrayElements(bytes, data, 0);
+            new CompressedTexture(env, target, internalFormat, width, height, imageSize,
+                                  bytes, dataOffset, texture_parameters);
 
     env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
 
