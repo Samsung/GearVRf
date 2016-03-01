@@ -24,7 +24,6 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import java.lang.ref.WeakReference;
 
-import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
@@ -46,6 +45,13 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private static final int HIGH_REFRESH_INTERVAL = 10; // frames
     private static final int MEDIUM_REFRESH_INTERVAL = 20;
     private static final int LOW_REFRESH_INTERVAL = 30;
+
+    private static final float DEFAULT_QUAD_WIDTH = 2.0f;
+    private static final float DEFAULT_QUAD_HEIGHT = 1.0f;
+    private static final String DEFAULT_TEXT = "";
+    //@todo the following two probably should be derived from the display metrics
+    private static final int FACTOR_IMAGE_SIZE = 128;
+    private static final int MAX_IMAGE_SIZE = 4*FACTOR_IMAGE_SIZE;
 
     /**
      * The refresh frequency of this sceneobject.
@@ -74,10 +80,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private boolean mIsChanged;
     private volatile int mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
 
-    private static final float DEFAULT_QUAD_WIDTH = 2.0f;
-    private static final float DEFAULT_QUAD_HEIGHT = 1.0f;
-    private static final String DEFAULT_TEXT = "";
-
     private final Surface mSurface;
     private final SurfaceTexture mSurfaceTexture;
     private final LinearLayout mTextViewContainer;
@@ -85,57 +87,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     private int mCount;
     private final GVRDrawFrameListenerImpl mFrameListener;
-
-    /**
-     * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}.
-     * 
-     * @param gvrContext
-     *            current {@link GVRContext}
-     * @param mesh
-     *            A {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
-     *            and {@link GVRContext#createQuad(float, float)}.
-     * 
-     *            Please note that this mesh controls the size of your scene
-     *            object, and it is independent of the size of the internal
-     *            {@code TextView}: a large mismatch between the scene object's
-     *            size and the view's size will result in 'spidery' or 'blocky'
-     *            text.
-     * @param text
-     *            {@link CharSequence} to show on the textView
-     * @deprecated
-     */
-    public GVRTextViewSceneObject(GVRContext gvrContext, GVRMesh mesh, CharSequence text) {
-        super(gvrContext, mesh);
-
-        final GVRActivity activity = gvrContext.getActivity();
-        mTextView = new TextView(activity);
-        mTextView.setBackgroundColor(Color.TRANSPARENT);
-        mTextView.setText(text);
-        mTextView.setVisibility(View.VISIBLE);
-        mTextView.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-
-        mTextViewContainer = new LinearLayout(activity);
-        mTextViewContainer.addView(mTextView);
-        mTextViewContainer.setVisibility(View.VISIBLE);
-
-        mFrameListener = new GVRDrawFrameListenerImpl(this);
-        gvrContext.registerDrawFrameListener(mFrameListener);
-
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
-        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
-        material.setMainTexture(texture);
-        getRenderData().setMaterial(material);
-
-        mSurfaceTexture = new SurfaceTexture(texture.getId());
-        mSurface = new Surface(mSurfaceTexture);
-
-        updateSurfaceBufferSize();
-
-        sReferenceCounter++;
-        mCount = sReferenceCounter;
-        mFirstFrame = true;
-    }
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -148,18 +99,56 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * @param width
      *            Scene object height, in GVRF scene graph units.
      * 
-     *            Please note that your scene object's size, is independent of
-     *            the size of the internal {@code TextView}: a large mismatch
-     *            between the scene object's size and the view's size will
-     *            result in 'spidery' or 'blocky' text.
-     * 
      * @param height
      *            Scene object's width, in GVRF scene graph units.
      * @param text
      *            {@link CharSequence} to show on the textView
      */
     public GVRTextViewSceneObject(GVRContext gvrContext, float width, float height, CharSequence text) {
-        this(gvrContext, gvrContext.createQuad(width, height), text);
+        super(gvrContext, gvrContext.createQuad(width, height));
+
+        //cap the canvas dimensions
+        final float factor = width/height;
+        int canvasWidth = (int)(width*FACTOR_IMAGE_SIZE);
+        int canvasHeight = (int)(height*FACTOR_IMAGE_SIZE);
+
+        if (canvasWidth > canvasHeight && canvasWidth > MAX_IMAGE_SIZE) {
+            canvasWidth = MAX_IMAGE_SIZE;
+            canvasHeight = (int)(MAX_IMAGE_SIZE/factor);
+        } else if (canvasHeight > canvasWidth && canvasHeight > MAX_IMAGE_SIZE) {
+            canvasWidth = (int)(MAX_IMAGE_SIZE*factor);
+            canvasHeight = MAX_IMAGE_SIZE;
+        }
+
+        final GVRActivity activity = gvrContext.getActivity();
+        mTextView = new TextView(activity);
+        mTextView.setBackgroundColor(Color.TRANSPARENT);
+        mTextView.setText(text);
+        mTextView.setVisibility(View.VISIBLE);
+        mTextView.setLayoutParams(new LayoutParams(canvasWidth, canvasHeight));
+
+        mTextViewContainer = new LinearLayout(activity);
+        mTextViewContainer.addView(mTextView);
+        mTextViewContainer.setVisibility(View.VISIBLE);
+
+        mTextViewContainer.measure(canvasWidth, canvasHeight);
+        mTextViewContainer.layout(0, 0, canvasWidth, canvasHeight);
+
+        mFrameListener = new GVRDrawFrameListenerImpl(this);
+        gvrContext.registerDrawFrameListener(mFrameListener);
+
+        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
+        material.setMainTexture(texture);
+        getRenderData().setMaterial(material);
+
+        mSurfaceTexture = new SurfaceTexture(texture.getId());
+        mSurfaceTexture.setDefaultBufferSize(canvasWidth, canvasHeight);
+        mSurface = new Surface(mSurfaceTexture);
+
+        sReferenceCounter++;
+        mCount = sReferenceCounter;
+        mFirstFrame = true;
     }
 
     /**
@@ -198,7 +187,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public void setTextSize(float size) {
         mTextView.setTextSize(size);
         mIsChanged = true;
-        updateSurfaceBufferSize();
     }
 
     /**
@@ -231,7 +219,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public void setText(CharSequence text) {
         mTextView.setText(text);
         mIsChanged = true;
-        updateSurfaceBufferSize();
     }
 
     /**
@@ -298,7 +285,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public void setGravity(int gravity) {
         mTextView.setGravity(gravity);
         mIsChanged = true;
-        updateSurfaceBufferSize();
     }
 
     /**
@@ -404,11 +390,5 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             Log.e("GVRTextViewObject", "lockCanvas failed");
         }
         mSurfaceTexture.updateTexImage();
-    }
-
-    private void updateSurfaceBufferSize() {
-        mTextViewContainer.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        mTextViewContainer.layout(0, 0, mTextViewContainer.getMeasuredWidth(), mTextViewContainer.getMeasuredHeight());
-        mSurfaceTexture.setDefaultBufferSize(mTextViewContainer.getWidth(), mTextViewContainer.getHeight());
     }
 }
