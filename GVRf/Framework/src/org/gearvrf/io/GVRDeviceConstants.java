@@ -16,6 +16,8 @@
 package org.gearvrf.io;
 
 class GVRDeviceConstants {
+    public static final int GPIO_KEYBOARD_PRODUCT_ID = 1;
+    public static final int GPIO_KEYBOARD_VENDOR_ID = 1;
     public static final int OCULUS_GEARVR_TOUCHPAD_VENDOR_ID = 1256;
     public static final int OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID = 42240;
     public static final int SAMSUNG_GAMEPAD_VENDOR_ID = 1256;
