@@ -294,8 +294,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
             mStatsConsole.writeLine("Draw Calls: %d", numberDrawCalls);
             mStatsConsole.writeLine("Triangles: %d", numberTriangles);
 
-            if (mStatMessage.length() > 0)
-                mStatsConsole.writeLine("%s", mStatMessage.toString());
+            if (mStatMessage.length() > 0) {
+                String lines[] = mStatMessage.toString().split(System.lineSeparator());
+                for (String line : lines)
+                    mStatsConsole.writeLine("%s", line);
+            }
         }
     }
 

@@ -28,6 +28,10 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTime_getCurrentTime(JNIEnv * env,
         jobject obj);
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTime_getNanoTime(JNIEnv * env,
+        jobject obj);
 }
 ;
 
@@ -35,6 +39,12 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTime_getCurrentTime(JNIEnv * env,
         jobject obj) {
     return getCurrentTime();
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTime_getNanoTime(JNIEnv * env,
+        jobject obj) {
+    return getNanoTime();
 }
 
 }

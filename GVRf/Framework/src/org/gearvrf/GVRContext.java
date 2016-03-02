@@ -67,6 +67,18 @@ public abstract class GVRContext {
      * Fields and constants
      */
 
+    // Debug and log level settings
+
+    /**
+     * Set to true for displaying statistics line.
+     */
+    public static boolean DEBUG_STATS = false;
+
+    /**
+     * Period of statistic log in millliseconds.
+     */
+    public static long DEBUG_STATS_PERIOD_MS = 1000;
+
     // Priorities constants, for asynchronous loading
 
     /**
