@@ -31,6 +31,7 @@ import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRCompressedCubemapTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRHybridObject;
@@ -206,8 +207,9 @@ public class GVRAsynchronousResourceLoader {
         validatePriorityCallbackParameters(gvrContext, callback, resource,
                 priority);
 
-        final GVRTexture cached = textureCache == null ? null : textureCache
-                .get(resource);
+        final GVRBitmapTexture cached = textureCache == null
+                ? null
+                : (GVRBitmapTexture) textureCache.get(resource);
         if (cached != null) {
             gvrContext.runOnGlThread(new Runnable() {
 
@@ -219,7 +221,8 @@ public class GVRAsynchronousResourceLoader {
         } else {
             BitmapTextureCallback actualCallback = textureCache == null ? callback
                     : ResourceCache.wrapCallback(textureCache, callback);
-            AsyncBitmapTexture.loadTexture(gvrContext, actualCallback,
+            AsyncBitmapTexture.loadTexture(gvrContext,
+                    CancelableCallbackWrapper.wrap(GVRBitmapTexture.class, actualCallback),
                     resource, priority);
         }
     }
@@ -305,10 +308,12 @@ public class GVRAsynchronousResourceLoader {
                         } else {
                             // We don't have a compressed texture: pass to
                             // AsyncBitmapTexture code
-                            CancelableCallback<GVRTexture> actualCallback = textureCache == null ? callback
+                            CancelableCallback<GVRTexture> actualCallback = textureCache == null
+                                    ? callback
                                     : textureCache.wrapCallback(callback);
                             AsyncBitmapTexture.loadTexture(gvrContext,
-                                    actualCallback, resource, priority);
+                                    CancelableCallbackWrapper.wrap(GVRBitmapTexture.class, actualCallback),
+                                    resource, priority);
                         }
                     } catch (Exception e) {
                         callback.failed(e, resource);
@@ -408,7 +413,8 @@ public class GVRAsynchronousResourceLoader {
         } else {
             FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
-            AsyncCubemapTexture.loadTexture(gvrContext, result.callback,
+            AsyncCubemapTexture.get().loadTexture(gvrContext,
+                    CancelableCallbackWrapper.wrap(GVRCubemapTexture.class, result.callback),
                     resource, priority, faceIndexMap);
 
             return result;
@@ -450,7 +456,8 @@ public class GVRAsynchronousResourceLoader {
         } else {
             FutureResource<GVRTexture> result = new FutureResource<GVRTexture>();
 
-            AsyncCompressedCubemapTexture.loadTexture(gvrContext, result.callback,
+            AsyncCompressedCubemapTexture.get().loadTexture(gvrContext,
+                    CancelableCallbackWrapper.wrap(GVRCompressedCubemapTexture.class, result.callback),
                     resource, priority, faceIndexMap);
 
             return result;
@@ -491,7 +498,7 @@ public class GVRAsynchronousResourceLoader {
         validatePriorityCallbackParameters(gvrContext, callback, resource,
                 priority);
 
-        AsyncMesh.loadMesh(gvrContext, callback, resource, priority);
+        AsyncMesh.get().loadMesh(gvrContext, callback, resource, priority);
     }
 
     /**
@@ -607,6 +614,40 @@ public class GVRAsynchronousResourceLoader {
             return pending == false;
         }
 
+    }
+
+    /*
+     * This is a wrapper to convert {@code CancelableCallback<S>} to {@code CancelableCallback<T>}
+     * where T extends S.
+     */
+    static class CancelableCallbackWrapper<S extends GVRHybridObject, T extends S>
+    implements CancelableCallback<T> {
+        private CancelableCallback<S> wrapped_;
+
+        private CancelableCallbackWrapper(CancelableCallback<S> wrapped) {
+            wrapped_ = wrapped;
+        }
+
+        @Override
+        public void loaded(T resource, GVRAndroidResource androidResource) {
+            wrapped_.loaded(resource, androidResource);
+        }
+
+        @Override
+        public void failed(Throwable t, GVRAndroidResource androidResource) {
+            wrapped_.failed(t, androidResource);
+        }
+
+        @Override
+        public boolean stillWanted(GVRAndroidResource androidResource) {
+            return wrapped_.stillWanted(androidResource);
+        }
+
+        public static <S extends GVRHybridObject, T extends S> CancelableCallbackWrapper<S, T> wrap(
+                Class<T> targetClass,
+                CancelableCallback<S> wrapped) {
+            return new CancelableCallbackWrapper<S, T>(wrapped);
+        }
     }
 
     private static <T extends GVRHybridObject> void validateCallbackParameters(

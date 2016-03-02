@@ -15,21 +15,22 @@
 
 package org.gearvrf.asynchronous;
 
-import static org.gearvrf.utility.Threads.*;
+import static org.gearvrf.utility.Threads.VERBOSE_SCHEDULING;
+import static org.gearvrf.utility.Threads.threadId;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAndroidResource.Callback;
+import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRAndroidResource.Callback;
-import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.utility.Exceptions;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.RuntimeAssertion;
@@ -47,23 +48,39 @@ import android.util.SparseArray;
  * 
  * @since 1.6.2
  */
-abstract class Throttler {
-
+class Throttler implements Scheduler {
     /*
      * The API
      */
 
-    static void registerDatatype(Class<? extends GVRHybridObject> targetClass,
-            AsyncLoaderFactory<? extends GVRHybridObject, ?> factory) {
-        requests.registerDatatype(targetClass, factory);
-    }
-
-    static void registerCallback(GVRContext gvrContext,
-            Class<? extends GVRHybridObject> outClass,
-            CancelableCallback<? extends GVRHybridObject> callback,
-            GVRAndroidResource request, int priority) {
+    @Override
+    public <OUTPUT extends GVRHybridObject, INTER> void registerCallback(
+            GVRContext gvrContext, Class<OUTPUT> outClass,
+            CancelableCallback<OUTPUT> callback, GVRAndroidResource request,
+            int priority) {
         requests.registerCallback(gvrContext, outClass, callback, request,
                 priority);
+    }
+
+    /*
+     * Singleton
+     */
+
+    private static Throttler mInstance;
+
+    public static Throttler get() {
+        if (mInstance != null) {
+            return mInstance;
+        }
+
+        synchronized (Throttler.class) {
+            mInstance = new Throttler();
+        }
+
+        return mInstance;
+    }
+
+    private Throttler() {
     }
 
     /*
@@ -156,12 +173,12 @@ abstract class Throttler {
         protected final GVRContext gvrContext;
         protected final GVRAndroidResource resource;
         protected final GlConverter<OUTPUT, INTERMEDIATE> converter;
-        protected final CancelableCallback<GVRHybridObject> callback;
+        protected final CancelableCallback<OUTPUT> callback;
 
         protected AsyncLoader(GVRContext gvrContext,
                 GlConverter<OUTPUT, INTERMEDIATE> converter,
                 GVRAndroidResource request,
-                CancelableCallback<GVRHybridObject> callback) {
+                CancelableCallback<OUTPUT> callback) {
             this.gvrContext = gvrContext;
             this.converter = converter;
             this.resource = request;
@@ -184,9 +201,14 @@ abstract class Throttler {
 
                         @Override
                         public void run() {
-                            OUTPUT gvrfResource = converter.convert(gvrContext,
-                                    loadedResource);
-                            callback.loaded(gvrfResource, resource);
+                            try  {
+                                OUTPUT gvrfResource = converter.convert(gvrContext,
+                                        loadedResource);
+                                callback.loaded(gvrfResource, resource);
+                            } catch (Throwable t) {
+                                // Catch converter errors
+                                callback.failed(t, resource);
+                            }
                         }
                     });
                 } else {
@@ -239,7 +261,7 @@ abstract class Throttler {
         /** Create an AsyncLoader of the right type */
         abstract AsyncLoader<OUTPUT, INTERMEDIATE> threadProc(
                 GVRContext gvrContext, GVRAndroidResource request,
-                CancelableCallback<GVRHybridObject> callback, int priority);
+                CancelableCallback<OUTPUT> cancelableCallback, int priority);
     }
 
     /*
@@ -248,7 +270,7 @@ abstract class Throttler {
 
     // TODO I don't THINK we need to reset PendingRequests on restart, but I may
     // be wrong ....
-    private static final PendingRequests requests = new PendingRequests();
+    private final PendingRequests requests = new PendingRequests();
 
     /**
      * This is the 'heart' of the throttler.
@@ -265,19 +287,12 @@ abstract class Throttler {
 
         private static final String TAG = Log.tag(PendingRequests.class);
 
-        private final Map<GVRAndroidResource, PendingRequest> pendingRequests = new ConcurrentHashMap<GVRAndroidResource, PendingRequest>();
+        private final Map<GVRAndroidResource, PendingRequest<? extends GVRHybridObject, ?>> pendingRequests =
+                new ConcurrentHashMap<GVRAndroidResource, PendingRequest<? extends GVRHybridObject, ?>>();
 
-        private final Map< //
-
-        Class<? extends GVRHybridObject>, //
-        AsyncLoaderFactory<? extends GVRHybridObject, ?>
-
-        > threadFactories = new HashMap< //
-
-        Class<? extends GVRHybridObject>, //
-        AsyncLoaderFactory<? extends GVRHybridObject, ?> //
-
-        >();
+        private Map<Class<? extends GVRHybridObject>, AsyncLoaderFactory<? extends GVRHybridObject, ?>> getFactories() {
+            return AsyncManager.get().getFactories();
+        }
 
         private final ThreadLimiter<PriorityCancelable> deviceThreadLimiter = new ThreadLimiter<PriorityCancelable>(
                 DECODE_THREAD_LIMIT,
@@ -285,14 +300,9 @@ abstract class Throttler {
                 /* Don't exceed DECODE_THREAD_LIMIT when a download gets wedged */
                 Integer.MAX_VALUE);
 
-        void registerDatatype(Class<? extends GVRHybridObject> targetClass,
-                AsyncLoaderFactory<? extends GVRHybridObject, ?> factory) {
-            threadFactories.put(targetClass, factory);
-        }
-
-        void registerCallback(GVRContext gvrContext,
-                Class<? extends GVRHybridObject> outClass,
-                CancelableCallback<? extends GVRHybridObject> callback,
+        <OUTPUT extends GVRHybridObject, INTER> void registerCallback(GVRContext gvrContext,
+                Class<OUTPUT> outClass,
+                CancelableCallback<OUTPUT> callback,
                 GVRAndroidResource request, int priority) {
             if (VERBOSE_SCHEDULING) {
                 Log.d(TAG, "registerCallback(%s, %s)", request, callback);
@@ -311,7 +321,9 @@ abstract class Throttler {
             ThreadLimiter<PriorityCancelable> threadLimiter = deviceThreadLimiter;
 
             synchronized (pendingRequests) {
-                PendingRequest pending = pendingRequests.get(request);
+                @SuppressWarnings("unchecked")
+                PendingRequest<OUTPUT, INTER> pending =
+                        (PendingRequest<OUTPUT, INTER>) pendingRequests.get(request);
 
                 if (pending != null) {
                     if (request == pending.request) {
@@ -335,7 +347,7 @@ abstract class Throttler {
                     // There is no current request for this resource. Create a
                     // new PendingRequest, using a threadFactory to create the
                     // appropriate AsyncLoader.
-                    pending = new PendingRequest(gvrContext, request, callback,
+                    pending = new PendingRequest<OUTPUT,INTER>(gvrContext, request, callback,
                             priority, outClass);
 
                     pendingRequests.put(request, pending);
@@ -349,34 +361,37 @@ abstract class Throttler {
             }
         }
 
-        private class PendingRequest implements
-                CancelableCallback<GVRHybridObject>, PriorityCancelable {
+        private class PendingRequest<OUTPUT extends GVRHybridObject, INTER> implements
+                CancelableCallback<OUTPUT>, PriorityCancelable {
 
             private final String TAG = Log.tag(PendingRequest.class);
 
             private final int EMPTY_LIST = GVRContext.LOWEST_PRIORITY - 1;
 
             private final GVRAndroidResource request;
-            private final List<CancelableCallback<? extends GVRHybridObject>> callbacks = new ArrayList<CancelableCallback<? extends GVRHybridObject>>(
-                    1);
+            private final List<CancelableCallback<OUTPUT>> callbacks = new ArrayList<CancelableCallback<OUTPUT>>(1);
             private final Cancelable cancelable;
             private int priority = EMPTY_LIST;
             private int highestPriority = priority;
 
             public PendingRequest(GVRContext gvrContext,
                     GVRAndroidResource request,
-                    CancelableCallback<? extends GVRHybridObject> callback,
-                    int priority, Class<? extends GVRHybridObject> outClass) {
+                    CancelableCallback<OUTPUT> callback,
+                    int priority, Class<OUTPUT> outClass) {
                 this.request = request;
                 addCallback(callback, priority);
                 updatePriority();
 
-                cancelable = threadFactories.get(outClass).threadProc(
-                        gvrContext, request, this, priority);
+                @SuppressWarnings("unchecked")
+                AsyncLoaderFactory<OUTPUT, INTER> factory =
+                        (AsyncLoaderFactory<OUTPUT, INTER>) getFactories().get(outClass);
+
+                cancelable = factory.threadProc(
+                        gvrContext, request, PendingRequest.this, priority);
             }
 
             public void addCallback(
-                    CancelableCallback<? extends GVRHybridObject> callback,
+                    CancelableCallback<OUTPUT> callback,
                     int priority) {
                 synchronized (callbacks) {
                     callbacks.add(callback);
@@ -386,9 +401,8 @@ abstract class Throttler {
                 }
             }
 
-            @SuppressWarnings("unchecked" /* shameful ... */)
             @Override
-            public void loaded(GVRHybridObject gvrResource,
+            public void loaded(OUTPUT gvrResource,
                     GVRAndroidResource androidResource) {
                 if (VERBOSE_SCHEDULING) {
                     Log.d(TAG, "%s loaded(%s, %s), thread %d: request %s",
@@ -399,7 +413,7 @@ abstract class Throttler {
                 // gvrResource may be null, if we caught an exception in
                 // AsyncLoadImage.run)
                 if (gvrResource != null) {
-                    List<CancelableCallback<? extends GVRHybridObject>> listeners = new ArrayList<CancelableCallback<? extends GVRHybridObject>>();
+                    List<CancelableCallback<OUTPUT>> listeners = new ArrayList<CancelableCallback<OUTPUT>>();
                     do {
                         /*
                          * Copy the list of listeners then clear it, so any
@@ -422,31 +436,15 @@ abstract class Throttler {
                             callbacks.clear();
                         }
 
-                        for (CancelableCallback<? extends GVRHybridObject> callback : listeners) {
+                        for (CancelableCallback<OUTPUT> callback : listeners) {
                             /*
                              * Each callback in its own exception frame,
                              * 
                              * to minimize the damage.
                              */
                             try {
-                                /*
-                                 * FIXME And now for something completely ugly.
-                                 * 
-                                 * Actual callbacks are defined to take specific
-                                 * GVRHybridObject descendants; the gvrResource
-                                 * here is-a base GVRHybridObject. The compiler
-                                 * quite rightly refuses to do this on its own:
-                                 * we might be passing a GVRMesh to a callback
-                                 * that expects a GVRTexture!
-                                 * 
-                                 * The cast is telling the compiler that we
-                                 * really do know what we're doing, and are
-                                 * always passing the right resource type to the
-                                 * app's callback; there does not *seem* to be
-                                 * any way to avoid this.
-                                 */
-                                ((CancelableCallback<GVRHybridObject>) callback)
-                                        .loaded(gvrResource, androidResource);
+                                // Inform handler the resource has been loaded.
+                                callback.loaded(gvrResource, androidResource);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -461,7 +459,11 @@ abstract class Throttler {
                             "ready(), thread %d: clearing pending request for request %s",
                             threadId(), request);
                 }
-                PendingRequest removed = pendingRequests.remove(request);
+
+                @SuppressWarnings("unchecked")
+                PendingRequest<OUTPUT, INTER> removed =
+                        (PendingRequest<OUTPUT, INTER>) pendingRequests.remove(request);
+
                 if (RUNTIME_ASSERTIONS) {
                     if (removed != this) {
                         throw new RuntimeAssertion(
@@ -479,7 +481,7 @@ abstract class Throttler {
 
             @Override
             public boolean stillWanted(GVRAndroidResource request) {
-                for (CancelableCallback<? extends GVRHybridObject> callback : callbacks) {
+                for (CancelableCallback<OUTPUT> callback : callbacks) {
                     if (callback.stillWanted(request)) {
                         return true;
                     }
@@ -499,9 +501,9 @@ abstract class Throttler {
             @Override
             public boolean stillWanted() {
                 synchronized (callbacks) {
-                    List<CancelableCallback<? extends GVRHybridObject>> canceled = new ArrayList<CancelableCallback<? extends GVRHybridObject>>(
+                    List<CancelableCallback<OUTPUT>> canceled = new ArrayList<CancelableCallback<OUTPUT>>(
                             callbacks.size());
-                    for (CancelableCallback<? extends GVRHybridObject> callback : callbacks) {
+                    for (CancelableCallback<OUTPUT> callback : callbacks) {
                         if (callback.stillWanted(request) != true) {
                             canceled.add(callback);
                         }
@@ -515,8 +517,9 @@ abstract class Throttler {
                             Log.d(TAG, "Canceling %s, request %s", this,
                                     request);
                         }
-                        PendingRequest removed = pendingRequests
-                                .remove(request);
+                        @SuppressWarnings("unchecked")
+                        PendingRequest<OUTPUT, INTER> removed =
+                                (PendingRequest<OUTPUT, INTER>) pendingRequests.remove(request);
                         if (removed != this) {
                             throw new RuntimeAssertion(
                                     "removed = %s, this = %s", removed, this);
