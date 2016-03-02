@@ -75,9 +75,7 @@ class SensorManager {
         }
 
         // Well at least we are not comparing against all scene objects.
-        if (objectSensor != null && objectSensor.isEnabled()
-                && object.getRenderData() != null
-                && object.getRenderData().getMesh() != null) {
+        if (objectSensor != null && objectSensor.isEnabled() && object.hasMesh()) {
 
             /**
              * Compare ray against the hierarchical bounding volume and then add

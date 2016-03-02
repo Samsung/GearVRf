@@ -33,6 +33,7 @@ class GVRGazeCursorController extends GVRBaseController
             KeyEvent.KEYCODE_BUTTON_1);
 
     private final GVRContext context;
+    private int referenceCount = 0;
 
     // Used to calculate the absolute position that the controller reports to
     // the user.
@@ -46,8 +47,30 @@ class GVRGazeCursorController extends GVRBaseController
         super(cursorType);
         this.context = context;
         gazePosition = new Vector3f();
-        setPosition = new Vector3f();
-        context.registerDrawFrameListener(this);
+        setPosition = new Vector3f();        
+    }
+
+    /*
+     * The increment the reference count to let the cursor controller know how
+     * many input devices are using this controller.
+     */
+    void incrementReferenceCount() {
+        referenceCount++;
+        if (referenceCount == 1) {
+            context.registerDrawFrameListener(this);
+        }
+    }
+
+    /*
+     * The decrement the reference count to let the cursor controller know how
+     * many input devices are using this controller.
+     */
+    void decrementReferenceCount() {
+        referenceCount--;
+        // no more devices
+        if (referenceCount == 0) {
+            context.unregisterDrawFrameListener(this);
+        }
     }
 
     @Override
@@ -83,7 +106,11 @@ class GVRGazeCursorController extends GVRBaseController
         super.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
     }
 
-    void close() {
-        context.unregisterDrawFrameListener(this);
+    void close() {       
+        // unregister the draw frame listener
+        if (referenceCount > 0) {
+            context.unregisterDrawFrameListener(this);
+        }
+        referenceCount = 0;
     }
 }

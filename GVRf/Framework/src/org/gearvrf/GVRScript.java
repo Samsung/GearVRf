@@ -30,7 +30,7 @@ import android.graphics.BitmapFactory;
  * processes running at any time, and all {@linkplain Thread#NORM_PRIORITY
  * default priority} threads compete with each other.
  */
-public abstract class GVRScript implements IScriptEvents, IScriptable {
+public abstract class GVRScript implements IScriptEvents, IScriptable, IEventReceiver {
 
     // private static final String TAG = Log.tag(GVRScript.class);
 
@@ -48,6 +48,8 @@ public abstract class GVRScript implements IScriptEvents, IScriptable {
 
     /** Splash screen, distance from the camera. */
     private static final float DEFAULT_SPLASH_Z = -1.25f;
+
+    private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
     /*
      * Core methods, that you must override.
@@ -102,6 +104,11 @@ public abstract class GVRScript implements IScriptEvents, IScriptable {
      */
     @Override
     public abstract void onStep();
+
+    @Override
+    public GVREventReceiver getEventReceiver() {
+        return mEventReceiver;
+    }
 
     /*
      * Splash screen support: methods to call or overload to change the default

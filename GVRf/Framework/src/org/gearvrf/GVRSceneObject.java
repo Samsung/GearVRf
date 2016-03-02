@@ -17,13 +17,13 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
+import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
 /**
@@ -41,7 +41,7 @@ import org.gearvrf.utility.Log;
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
  */
-public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
+public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
 
     private GVRTransform mTransform;
     private GVRRenderData mRenderData;
@@ -52,6 +52,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
     private GVRBaseSensor mSensor;
     private Object mTag;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
+    private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
     /**
      * Constructs an empty scene object with a default {@link GVRTransform
@@ -367,6 +368,17 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
      */
     public GVRRenderData getRenderData() {
         return mRenderData;
+    }
+
+    /**
+     * Checks if this {@link GVRSceneObject} has mesh. This method is not recursive.
+     * That is, if it doesn't have a mesh though its children have, it returns
+     * {@code false}.
+     *
+     * @return true if this {@link GVRSceneObject} contains mesh itself.
+     */
+    public boolean hasMesh() {
+        return getRenderData() != null && getRenderData().getMesh() != null;
     }
 
     /**
@@ -808,11 +820,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
         // remove the currently attached sensor if there is one already.
         if (mSensor != null) {
             inputManager.removeSensor(mSensor);
+            mSensor.setOwner(null);
         }
 
         // add the new sensor if there is one.
         if (sensor != null) {
             inputManager.addSensor(sensor);
+            sensor.setOwner(this);
         }
         mSensor = sensor;
     }
@@ -951,6 +965,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint {
         StringBuffer sb = new StringBuffer();
         prettyPrint(sb, 0);
         return sb.toString();
+    }
+
+    @Override
+    public GVREventReceiver getEventReceiver() {
+        return mEventReceiver;
     }
 }
 
