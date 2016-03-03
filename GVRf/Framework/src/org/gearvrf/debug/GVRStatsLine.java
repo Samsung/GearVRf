@@ -19,7 +19,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gearvrf.GVRScene;
 import org.gearvrf.GVRTime;
 import org.gearvrf.debug.Stats.DescriptiveResult;
 import org.gearvrf.utility.Log;
@@ -31,6 +30,21 @@ import org.gearvrf.utility.Log;
 public class GVRStatsLine {
     protected String mLineTag;
     protected long mLastPrintTimeMS;
+    protected boolean mAnalysisModeHeader;
+
+    /**
+     * Formats for statistics
+     */
+    public enum FORMAT {
+        DEFAULT,
+        MULTILINE,
+        ANALYSIS,
+    }
+
+    /**
+     * Current format.
+     */
+    public static FORMAT sFormat = FORMAT.ANALYSIS;
 
     /**
      * Constructor.
@@ -40,6 +54,9 @@ public class GVRStatsLine {
     public GVRStatsLine(String lineTag) {
         mLineTag = lineTag;
         mLastPrintTimeMS = -1;
+
+        // Print a header in analysis mode
+        mAnalysisModeHeader = true;
     }
 
     protected List<GVRColumnBase<? extends Number>> mColumns =
@@ -67,7 +84,7 @@ public class GVRStatsLine {
      * @return The line to be printed.
      */
     public void printLine() {
-        Log.d(mLineTag, "%s", getStats(false));
+        Log.d(mLineTag, "%s", getStats(sFormat));
     }
 
     /**
@@ -91,26 +108,57 @@ public class GVRStatsLine {
         }
     }
 
-    public String getStats(boolean multiline) {
+    public String getStats(FORMAT format) {
         StringBuffer sb = new StringBuffer();
-        if (!multiline) {
-            boolean first = true;
-            for (GVRColumnBase<? extends Number> col : mColumns) {
-                if (!first) {
-                    sb.append(", ");
-                } else {
-                    first = false;
+        boolean first = true;
+        switch (format) {
+            case DEFAULT: {
+                for (GVRColumnBase<? extends Number> col : mColumns) {
+                    if (!first) {
+                        sb.append(", ");
+                    } else {
+                        first = false;
+                    }
+                    sb.append(col.getName());
+                    sb.append("=");
+                    sb.append(col.getStat());
                 }
-                sb.append(col.getName());
-                sb.append("=");
-                sb.append(col.getStat());
+                break;
             }
-        } else {
-            for (GVRColumnBase<? extends Number> col : mColumns) {
-                String line = String.format("%s: %s", col.getName(), col.getStat());
-                sb.append(line);
-                sb.append(System.lineSeparator());
-            }
+
+            case MULTILINE:
+                for (GVRColumnBase<? extends Number> col : mColumns) {
+                    String line = String.format("%s: %s", col.getName(), col.getStat());
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
+                }
+                break;
+
+            case ANALYSIS:
+                if (mAnalysisModeHeader) {
+                    // Print header
+                    mAnalysisModeHeader = false; // once
+                    boolean firstHeaderCol = true;
+                    for (GVRColumnBase<? extends Number> col : mColumns) {
+                        if (!firstHeaderCol) {
+                            sb.append(";");
+                        } else {
+                            firstHeaderCol = false;
+                        }
+                        sb.append(col.getName());
+                    }
+                    return sb.toString(); // skip the data once for simplicity
+                }
+
+                for (GVRColumnBase<? extends Number> col : mColumns) {
+                    if (!first) {
+                        sb.append(";");
+                    } else {
+                        first = false;
+                    }
+                    sb.append(col.getStat());
+                }
+                break;
         }
 
         return sb.toString();
@@ -208,7 +256,6 @@ public class GVRStatsLine {
             mData.add(value);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public synchronized Object getStat() {
             switch (mData.size()) {
