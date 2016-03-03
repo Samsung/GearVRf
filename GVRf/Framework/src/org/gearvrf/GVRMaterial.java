@@ -21,10 +21,9 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Colors;
 import org.gearvrf.utility.Threads;
-import static org.gearvrf.utility.Assert.*;
 
+import static org.gearvrf.utility.Assert.*;
 import android.graphics.Color;
-import android.util.Log;
 
 /**
  * This is one of the key GVRF classes: it holds shaders with textures.
@@ -154,6 +153,11 @@ public class GVRMaterial extends GVRHybridObject implements
                 return (number &= ~(1 << index));
             }
         }
+
+        public abstract static class LightMap {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    11);
+        }
     };
 
     /**
@@ -219,6 +223,72 @@ public class GVRMaterial extends GVRHybridObject implements
 
     public void setMainTexture(Future<GVRTexture> texture) {
         setTexture(MAIN_TEXTURE, texture);
+    }
+
+    /**
+     * Set the baked light map texture
+     *
+     * @param texture
+     *            Texture with baked light map
+     */
+    public void setLightMapTexture(GVRTexture texture) {
+        setTexture("lightmap_texture", texture);
+    }
+
+    /**
+     * Set the baked light map texture
+     *
+     * @param texture
+     *            Texture with baked light map
+     */
+    public void setLightMapTexture(Future<GVRTexture> texture) {
+        setTexture("lightmap_texture", texture);
+    }
+
+    /**
+     * Set the light map information(offset and scale) at UV space to
+     * map the light map texture to the mesh.
+     *
+     * @param lightMapInformation
+     *            Atlas information object with the offset and scale
+     * at UV space necessary to map the light map texture to the mesh.
+     */
+    public void setLightMapInfo(GVRAtlasInformation lightMapInformation) {
+        setTextureAtlasInfo("lightmap", lightMapInformation);
+    }
+
+    /**
+     * Set the light map information(offset and scale) at UV space to
+     * map the light map texture to the mesh.
+     *
+     * @param key
+     *            Prefix name of the uniform at light map shader:
+     *            ([key]_texture, [key]_offset and [key]_scale.
+     * @param lightMapInformation
+     *            Atlas information object with the offset and scale
+     * at UV space necessary to map the light map texture to the mesh.
+     */
+    public void setTextureAtlasInfo(String key, GVRAtlasInformation atlasInformation) {
+        setTextureAtlasInfo(key, atlasInformation.getOffset(), atlasInformation.getScale());
+    }
+
+    /**
+     * Set the light map information(offset and scale) at UV space to
+     * map the light map texture to the mesh.
+     *
+     * @param key
+     *            Prefix name of the uniform at light map shader:
+     *            ([key]_texture, [key]_offset and [key]_scale.
+     * @param offset
+     *            Array with x and y offset values at UV space
+     *            to map the 2D texture to the mesh.
+     * @param scale
+     *            Array with x and y scale values at UV space
+     *            to map the 2D texture to the mesh.
+     */
+    public void setTextureAtlasInfo(String key, float[] offset, float[] scale) {
+        setVec2(key + "_offset", offset[0], offset[1]);
+        setVec2(key + "_scale", scale[0], scale[1]);
     }
 
     /**

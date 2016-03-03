@@ -1908,6 +1908,30 @@ public abstract class GVRContext {
     }
 
     /**
+     * Loads atlas information file placed in the assets folder.
+     *
+     * Atlas information file contains in UV space the information of offset and
+     * scale for each mesh mapped in some atlas texture.
+     * The content of the file is at json format like:
+     *
+     * [ {name: SUN, offset.x: 0.9, offset.y: 0.9, scale.x: 0.5, scale.y: 0.5},
+     * {name: EARTH, offset.x: 0.5, offset.y: 0.9, scale.x: 0.5, scale.y: 0.5} ]
+     *
+     * @param resource
+     *            A stream containing a text file on JSON format.
+     *
+     * @return List of atlas information load.
+     */
+    public List<GVRAtlasInformation> loadTextureAtlasInformation(GVRAndroidResource resource) {
+
+        List<GVRAtlasInformation> atlasInformation
+                = GVRAsynchronousResourceLoader.loadAtlasInformation(resource.getStream());
+        resource.closeStream();
+
+        return atlasInformation;
+    }
+
+    /**
      * Get the current {@link GVRScene}, which contains the scene graph (a
      * hierarchy of {@linkplain GVRSceneObject scene objects}) and the
      * {@linkplain GVRCameraRig camera rig}
