@@ -194,7 +194,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     bool renderShadow = cameraLight; // TODO reader from scene;
 
-    if ((framebufferId != 0) && !renderShadow) {
+    if (!renderShadow) {
         renderCamera(scene, camera, framebufferId, viewportX, viewportY,
                 viewportWidth, viewportHeight, shader_manager,
                 post_effect_shader_manager, post_effect_render_texture_a,
