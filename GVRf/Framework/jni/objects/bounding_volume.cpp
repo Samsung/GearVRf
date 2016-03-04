@@ -62,7 +62,10 @@ void BoundingVolume::expand(const glm::vec3 point) {
     }
 
     center_ = (min_corner_ + max_corner_) * 0.5f;
-    radius_ = glm::length(max_corner_ - min_corner_) * 0.5f;
+    if (min_corner_ == max_corner_)
+    	radius_ = 0;
+    else
+    	radius_ = glm::length(max_corner_ - min_corner_) * 0.5f;
 }
 
 /*
