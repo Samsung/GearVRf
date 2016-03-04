@@ -58,8 +58,6 @@ public class GVRActivity extends Activity {
     public static final int KEY_EVENT_MAX = 6;
 
     private GVRViewManager mViewManager;
-    private GVRViewManager mGVRViewManager = null;
-    private GVRCamera mCamera;
     private GVRScript mGVRScript;
     private VrAppSettings mAppSettings;
 

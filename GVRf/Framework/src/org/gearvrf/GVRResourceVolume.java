@@ -68,17 +68,41 @@ public class GVRResourceVolume {
     protected String defaultPath;
     protected boolean enableUrlLocalCache = false;
 
+    /**
+     * Constructor. Creates a {@link GVRResourceVolume} object based on a volume type.
+     * @param gvrContext The GVR Context.
+     * @param volume The volume type.
+     */
     public GVRResourceVolume(GVRContext gvrContext, VolumeType volume) {
         this(gvrContext, volume, null);
     }
 
+    /**
+     * Constructor. Creates a {@link GVRResourceVolume} object based on a volume type,
+     * and a default path.
+     *
+     * @param gvrContext The GVR Context.
+     * @param volumeType The volume type. See {@link VolumeType}.
+     * @param defaultPath The default path which specifies the 'root' directory of the
+     * volume.
+     */
     public GVRResourceVolume(GVRContext gvrContext, VolumeType volumeType, String defaultPath) {
         this.gvrContext = gvrContext;
         this.volumeType = volumeType;
         this.defaultPath = defaultPath;
     }
 
-    /* package */ GVRResourceVolume(GVRContext gvrContext,
+    /**
+     * Constructor. Creates a {@link GVRResourceVolume} object based on a volume type,
+     * and a default path.
+     *
+     * @param gvrContext The GVR Context.
+     * @param volumeType The volume type. See {@link VolumeType}.
+     * @param defaultPath The default path which specifies the 'root' directory of the
+     * volume.
+     * @param cacheEnabled Set to {@code true} for enabling cache for network files.
+     */
+    public GVRResourceVolume(GVRContext gvrContext,
             VolumeType volumeType, String defaultPath, boolean cacheEnabled) {
         this(gvrContext, volumeType, defaultPath);
         this.enableUrlLocalCache = cacheEnabled;
