@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import org.gearvrf.GVRActivity.DockListener;
 import org.gearvrf.utility.DockEventReceiver;
 
 import android.app.Activity;
@@ -33,7 +34,6 @@ class RotationSensor {
     private final RotationSensorListener mListener;
 
     private GVRInternalSensorListener mInternalSensorListener;
-    private final DockEventReceiver mDockEventReceiver;
     private final Context mApplicationContext;
     private boolean mUsingInternalSensor = true;
 
@@ -46,11 +46,22 @@ class RotationSensor {
      *            A {@link RotationSensorListener} implementation to receive
      *            rotation data.
      */
-    RotationSensor(Context context, RotationSensorListener listener) {
+    RotationSensor(GVRActivity activity, RotationSensorListener listener) {
         mListener = listener;
-        mApplicationContext = context.getApplicationContext();
+        mApplicationContext = activity.getApplicationContext();
 
-        mDockEventReceiver = new DockEventReceiver(context, mOnDock, mOnUndock);
+        activity.addDockListener(new DockListener() {
+            @Override
+            public void onUndock() {
+                startInternalSensor();
+                mUsingInternalSensor = true;
+            }
+            @Override
+            public void onDock() {
+                stopInternalSensor();
+                mUsingInternalSensor = false;
+            }
+        });
     }
 
     /**
@@ -58,7 +69,6 @@ class RotationSensor {
      * {@link Activity#onResume()}.
      */
     void onResume() {
-        mDockEventReceiver.start();
         if (mUsingInternalSensor) {
             startInternalSensor();
         }
@@ -69,7 +79,6 @@ class RotationSensor {
      * {@link Activity#onPause()}.
      */
     void onPause() {
-        mDockEventReceiver.stop();
         if (mUsingInternalSensor) {
             stopInternalSensor();
         }
@@ -80,7 +89,6 @@ class RotationSensor {
      * {@link Activity#onDestroy()}.
      */
     void onDestroy() {
-        mDockEventReceiver.stop();
         stopInternalSensor();
     }
 
@@ -117,21 +125,5 @@ class RotationSensor {
             mInternalSensorListener = null;
         }
     }
-
-    private final Runnable mOnDock = new Runnable() {
-        @Override
-        public void run() {
-            stopInternalSensor();
-            mUsingInternalSensor = false;
-        }
-    };
-
-    private final Runnable mOnUndock = new Runnable() {
-        @Override
-        public void run() {
-            startInternalSensor();
-            mUsingInternalSensor = true;
-        }
-    };
 
 }
