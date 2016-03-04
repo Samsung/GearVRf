@@ -51,9 +51,12 @@ private:
 
     jmethodID onDrawEyeMethodId = nullptr;
     jmethodID updateSensoredSceneMethodId = nullptr;
+    jmethodID handleOnDockMethodId = nullptr;
+    jmethodID handleOnUndockMethodId = nullptr;
 
     jobject activity_;
     jobject activityRenderingCallbacks_;
+    bool isDocked_ = false;
 
     ConfigurationHelper configurationHelper_;
 

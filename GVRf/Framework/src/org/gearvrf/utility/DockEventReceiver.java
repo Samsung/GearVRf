@@ -17,7 +17,8 @@ public final class DockEventReceiver {
     public void start() {
         if (!mIsStarted) {
             final IntentFilter dockEventFilter = new IntentFilter();
-            dockEventFilter.addAction(Intent.ACTION_DOCK_EVENT);
+            dockEventFilter.addAction(ACTION_HMT_CONNECT);
+            dockEventFilter.addAction(ACTION_HMT_DISCONNECT);
             mApplicationContext.registerReceiver(mBroadcastReceiver, dockEventFilter);
             mIsStarted = true;
         }
@@ -33,13 +34,10 @@ public final class DockEventReceiver {
     private final class BroadcastReceiverImpl extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, final Intent intent) {
-            if (Intent.ACTION_DOCK_EVENT.equals(intent.getAction())) {
-                final int dockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE, Intent.EXTRA_DOCK_STATE_UNDOCKED);
-                if (Intent.EXTRA_DOCK_STATE_UNDOCKED == dockState && null != mRunOnUndock) {
-                    mRunOnUndock.run();
-                } else if (EXTRA_DOCK_STATE_HMT == dockState && null != mRunOnDock) {
-                    mRunOnDock.run();
-                }
+            if (ACTION_HMT_DISCONNECT.equals(intent.getAction())) {
+                mRunOnUndock.run();
+            } else if (ACTION_HMT_CONNECT.equals(intent.getAction())) {
+                mRunOnDock.run();
             }
         }
     }
@@ -50,5 +48,6 @@ public final class DockEventReceiver {
     private final Runnable mRunOnDock;
     private final Runnable mRunOnUndock;
 
-    private final static int EXTRA_DOCK_STATE_HMT = 11;   //Intent.EXTRA_DOCK_STATE_HMT
+    private final static String ACTION_HMT_DISCONNECT = "com.samsung.intent.action.HMT_DISCONNECTED";
+    private final static String ACTION_HMT_CONNECT = "com.samsung.intent.action.HMT_CONNECTED";
 }

@@ -42,6 +42,8 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
 
     onDrawEyeMethodId = GetMethodId(env, activityRenderingCallbacksClass_, "onDrawEye", "(I)V");
     updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
+    handleOnDockMethodId = GetMethodId(env, activityClass_, "handleOnDock", "()V");
+    handleOnUndockMethodId = GetMethodId(env, activityClass_, "handleOnUndock", "()V");
 }
 
 GVRActivity::~GVRActivity() {
@@ -160,6 +162,16 @@ void GVRActivity::onDrawFrame() {
 
     const ovrHeadModelParms headModelParms = vrapi_DefaultHeadModelParms();
     const ovrTracking tracking = vrapi_ApplyHeadModel(&headModelParms, &baseTracking);
+
+    bool docked = vrapi_GetSystemStatusInt(&oculusJavaMainThread_, VRAPI_SYS_STATUS_DOCKED);
+    if (docked != isDocked_) {
+        isDocked_ = docked;
+        if (isDocked_) {
+            oculusJavaGlThread_.Env->CallVoidMethod(oculusJavaGlThread_.ActivityObject, handleOnDockMethodId);
+        } else {
+            oculusJavaGlThread_.Env->CallVoidMethod(oculusJavaGlThread_.ActivityObject, handleOnUndockMethodId);
+        }
+    }
 
     // Render the eye images.
     for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
