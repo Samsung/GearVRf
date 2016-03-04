@@ -89,6 +89,7 @@ public:
     void showGlobalMenu();
     void showConfirmQuit();
 
+    bool isHmtConnected() const;
     ovrMobile* getOculusContext() { return oculusMobile_; }
     ovrHeadModelParms* getOculusHeadModelParms() { return &oculusHeadModelParms_; }
 };

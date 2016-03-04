@@ -237,4 +237,11 @@ void GVRActivity::leaveVrMode() {
     }
 }
 
+/**
+ * Must be called on the GL thread
+ */
+bool GVRActivity::isHmtConnected() const {
+    return vrapi_GetSystemStatusInt(&oculusJavaMainThread_, VRAPI_SYS_STATUS_DOCKED);
+}
+
 }

@@ -102,6 +102,11 @@ JNIEXPORT void JNICALL Java_org_gearvrf_VrapiActivityHandler_nativeUninitializeV
     activity->uninitializeVrApi();
 }
 
+JNIEXPORT jboolean JNICALL Java_org_gearvrf_GVRConfigurationManager_nativeIsHmtConnected(JNIEnv* jni, jclass clazz, jlong appPtr) {
+    const GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
+    return activity->isHmtConnected();
+}
+
 } //extern "C" {
 
 } //namespace gvr
