@@ -425,7 +425,7 @@ int SceneObject::frustumCull(Camera *camera, const float frustum[6][4],
                     name_.c_str());
         }
 
-        return 3;
+        if (!using_lod_) return 3;
     }
 
     // 2. Skip the empty objects with no render data
