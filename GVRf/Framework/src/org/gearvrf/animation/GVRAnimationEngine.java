@@ -15,8 +15,8 @@
 
 package org.gearvrf.animation;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
@@ -59,7 +59,7 @@ public class GVRAnimationEngine {
         });
     }
 
-    private final List<GVRAnimation> mAnimations = new ArrayList<GVRAnimation>();
+    private final List<GVRAnimation> mAnimations = new CopyOnWriteArrayList<GVRAnimation>();
     private final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
 
     protected GVRAnimationEngine(GVRContext gvrContext) {
@@ -111,10 +111,8 @@ public class GVRAnimationEngine {
      */
     public GVRAnimation start(GVRAnimation animation) {
         if (animation.getRepeatCount() != 0) {
-            synchronized (mAnimations) {
-                animation.reset();
-                mAnimations.add(animation);
-            }
+            animation.reset();
+            mAnimations.add(animation);
         }
         return animation;
     }
@@ -140,22 +138,16 @@ public class GVRAnimationEngine {
      *            an animation
      */
     public void stop(GVRAnimation animation) {
-        synchronized (mAnimations) {
-            mAnimations.remove(animation);
-        }
+        mAnimations.remove(animation);
     }
 
     private final class DrawFrame implements GVRDrawFrameListener {
 
         @Override
         public void onDrawFrame(float frameTime) {
-            synchronized (mAnimations) {
-                List<GVRAnimation> animations = new ArrayList<GVRAnimation>(
-                        mAnimations);
-                for (GVRAnimation animation : animations) {
-                    if (animation.onDrawFrame(frameTime) == false) {
-                        mAnimations.remove(animation);
-                    }
+            for (GVRAnimation animation : mAnimations) {
+                if (animation.onDrawFrame(frameTime) == false) {
+                    mAnimations.remove(animation);
                 }
             }
         }
