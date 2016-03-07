@@ -12,19 +12,17 @@ import org.gearvrf.GVRBone;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRVertexBoneData;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 
 /**
  * Controls skeletal animation (skinning). 
  */
-public class GVRSkinningController {
+public class GVRSkinningController extends GVRAnimationController {
     private static final String TAG = GVRSkinningController.class.getSimpleName();
 
     protected GVRContext gvrContext;
     protected GVRSceneObject sceneRoot;
-    protected GVRKeyFrameAnimation animation;
 
     protected SceneAnimNode animRoot;
     protected Map<String, SceneAnimNode> nodeByName;
@@ -56,8 +54,8 @@ public class GVRSkinningController {
      * @param animation The animation object.
      */
     public GVRSkinningController(GVRSceneObject sceneRoot, GVRKeyFrameAnimation animation) {
+        super(animation);
         this.sceneRoot = sceneRoot;
-        this.animation = animation;
 
         nodeByName = new TreeMap<String, SceneAnimNode>();
         boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
@@ -119,22 +117,11 @@ public class GVRSkinningController {
     }
 
     /**
-     * Update bone transforms at each animation step.
+     * Update bone transforms for the specified tick.
      */
-    public void animate(float timeInSeconds) {
-        float ticksPerSecond;
-        float timeInTicks;
-        Matrix4f[] animationTransform = null;
-
-        if (animation.mTicksPerSecond != 0) {
-            ticksPerSecond = (float) animation.mTicksPerSecond;
-        } else {
-            ticksPerSecond = 25.0f;
-        }
-        timeInTicks = timeInSeconds * ticksPerSecond;
-
-        float animationTime = timeInTicks % animation.mDurationTicks; // auto-repeat
-        animationTransform = animation.getTransforms(animationTime);
+    @Override
+    protected void animateImpl(float animationTick) {
+        Matrix4f[] animationTransform = animation.getTransforms(animationTick);
 
         updateTransforms(animRoot, new Matrix4f(), animationTransform);
 
