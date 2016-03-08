@@ -116,7 +116,7 @@ public class FileNameUtils {
         return String.format("%s://%s%s%s%s", url.getProtocol(),
                 url.getUserInfo() == null ? "" : url.getUserInfo() + "@",
                 url.getHost(),
-                url.getPort() == -1 ? "" : Integer.toString(url.getPort()),
+                url.getPort() == -1 ? "" : ":" + Integer.toString(url.getPort()),
                 directory);
     }
 

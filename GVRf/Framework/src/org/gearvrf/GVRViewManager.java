@@ -700,6 +700,11 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 return;
             }
 
+            // Trigger event "onAfterInit" for post-processing of scene graph after initialization.
+            GVRViewManager.this.getEventManager().sendEvent(
+                    mScript, IScriptEvents.class,
+                    "onAfterInit");
+
             if (mSplashScreen == null) {
                 mFrameHandler = normalFrames;
                 firstFrame = splashFrames = null;
