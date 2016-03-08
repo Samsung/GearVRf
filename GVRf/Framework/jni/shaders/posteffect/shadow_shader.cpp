@@ -489,9 +489,6 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
             0);
 
     glBindVertexArray(0);
-
-#else
-    // TODO
 #endif
 
     checkGlError("TextureShader::render");
