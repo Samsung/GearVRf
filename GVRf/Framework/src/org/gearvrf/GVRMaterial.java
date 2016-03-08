@@ -287,7 +287,45 @@ public class GVRMaterial extends GVRHybridObject implements
      *            to map the 2D texture to the mesh.
      */
     public void setTextureAtlasInfo(String key, float[] offset, float[] scale) {
+        setTextureOffset(key, offset);
+        setTextureScale(key, scale);
+    }
+
+    /**
+     * Returns the placement offset of texture {@code key}}
+     * @param key Texture name. A common name is "main",
+     *            "lightmap", etc.
+     * @return    The vector of x and y at uv space.
+     */
+    public float[] getTextureOffset(String key) {
+        return getVec2(key + "_offset");
+    }
+
+    /**
+     * Set the placement offset of texture {@code key}}
+     * @param key Texture name. A common name is "main",
+     *            "lightmap", etc.
+     */
+    public void setTextureOffset(String key, float[] offset) {
         setVec2(key + "_offset", offset[0], offset[1]);
+    }
+
+    /**
+     * Returns the placement scale of texture {@code key}}
+     * @param key Texture name. A common name is "main",
+     *            "lightmap", etc.
+     * @return    The vector of x and y at uv space.
+     */
+    public float[] getTextureScale(String key) {
+        return getVec2(key + "_scale");
+    }
+
+    /**
+     * Set the placement scale of texture {@code key}}
+     * @param key Texture name. A common name is "main",
+     *            "lightmap", etc.
+     */
+    public void setTextureScale(String key, float[] scale) {
         setVec2(key + "_scale", scale[0], scale[1]);
     }
 
