@@ -197,8 +197,6 @@ void TextureShader::render(const glm::mat4& mv_matrix,
         }
     }
 
-#if _GVRF_USE_GLES3_
-
     mesh->generateVAO();
 
     if (use_light) {
@@ -262,7 +260,6 @@ void TextureShader::render(const glm::mat4& mv_matrix,
     GL(glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0));
     GL(glBindVertexArray(0));
-#endif
 
     checkGlError("TextureShader::render");
 }

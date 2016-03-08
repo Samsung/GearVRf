@@ -229,7 +229,6 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
 
-#if _GVRF_USE_GLES3_
     mesh->generateVAO();
 
     glUseProgram(program_->id());
@@ -275,7 +274,6 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#endif
 
     checkGlError("AssimpShader::render");
 }

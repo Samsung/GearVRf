@@ -73,7 +73,6 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
         throw error;
     }
 
-#if _GVRF_USE_GLES3_
     mesh->generateVAO();
 
     glUseProgram(program_->id());
@@ -89,7 +88,7 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#endif
+
     checkGlError("OESShader::render");
 }
 

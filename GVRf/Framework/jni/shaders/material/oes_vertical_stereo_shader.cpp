@@ -86,7 +86,6 @@ void OESVerticalStereoShader::render(const glm::mat4& mvp_matrix,
         mono_rendering = false;
     }
 
-#if _GVRF_USE_GLES3_
     mesh->generateVAO();
 
     glUseProgram(program_->id());
@@ -103,7 +102,7 @@ void OESVerticalStereoShader::render(const glm::mat4& mvp_matrix,
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#endif
+
     checkGlError("OESVerticalStereoShader::render");
 }
 

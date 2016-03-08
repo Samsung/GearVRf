@@ -67,7 +67,6 @@ void HorizontalFlipPostEffectShader::render(
         std::vector<unsigned short>& triangles) {
     glUseProgram(program_->id());
 
-#if _GVRF_USE_GLES3_
     GLuint tmpID;
 
     if(vaoID_ == 0)
@@ -105,7 +104,7 @@ void HorizontalFlipPostEffectShader::render(
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
-#endif
+
     checkGlError("HorizontalFlipPostEffectShader::render");
 }
 }

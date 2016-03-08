@@ -380,8 +380,6 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 //		}
 //	}
 
-#if _GVRF_USE_GLES3_
-
     mesh->generateVAO();
 
     DirectionalLight* cameraLight = this->getCameraLight();
@@ -489,7 +487,6 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
             0);
 
     glBindVertexArray(0);
-#endif
 
     checkGlError("TextureShader::render");
 

@@ -34,16 +34,12 @@ SceneObject::SceneObject() :
                 true) {
 
     // Occlusion query setup
-#if _GVRF_USE_GLES3_
     queries_ = new GLuint[1];
     glGenQueries(1, queries_);
-#endif
 }
 
 SceneObject::~SceneObject() {
-#if _GVRF_USE_GLES3_
     delete queries_;
-#endif
 }
 
 void SceneObject::attachTransform(SceneObject* self, Transform* transform) {

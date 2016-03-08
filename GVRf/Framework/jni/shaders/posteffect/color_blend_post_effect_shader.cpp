@@ -79,7 +79,6 @@ void ColorBlendPostEffectShader::render(
 
     glUseProgram(program_->id());
 
-#if _GVRF_USE_GLES3_
     GLuint tmpID;
 
     if(vaoID_ == 0)
@@ -120,7 +119,6 @@ void ColorBlendPostEffectShader::render(
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
-#endif
 
     checkGlError("ColorBlendPostEffectShader::render");
 }

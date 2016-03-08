@@ -113,7 +113,6 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
 
     Mesh* mesh = render_data->mesh();
 
-#if _GVRF_USE_GLES3_
     glUseProgram(program_->id());
 
     for (auto it = attribute_float_keys_.begin();
@@ -187,7 +186,6 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#endif
 
     checkGlError("CustomShader::render");
 }

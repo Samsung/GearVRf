@@ -99,7 +99,6 @@ void CustomPostEffectShader::render(Camera* camera,
         std::vector<unsigned short>& triangles) {
     glUseProgram(program_->id());
 
-#if _GVRF_USE_GLES3_
     GLuint tmpID;
 
     if(vaoID_ == 0)
@@ -181,7 +180,6 @@ void CustomPostEffectShader::render(Camera* camera,
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
-#endif
 }
 
 int CustomPostEffectShader::getGLTexture(int n) {

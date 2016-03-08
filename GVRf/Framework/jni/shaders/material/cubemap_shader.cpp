@@ -111,7 +111,6 @@ void CubemapShader::render(const glm::mat4& model_matrix,
         throw error;
     }
 
-#if _GVRF_USE_GLES3_
     mesh->generateVAO();
 
     glUseProgram(program_->id());
@@ -128,7 +127,6 @@ void CubemapShader::render(const glm::mat4& model_matrix,
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#endif
 
     checkGlError("CubemapShader::render");
 }
