@@ -50,7 +50,7 @@ public:
                     have_bounding_volume_(false), vao_dirty_(true),
                     vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
                     norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID),
-                    boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true)
+                    boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
     {
     }
 
@@ -251,21 +251,25 @@ public:
     void setVertexAttribLocF(GLuint location, std::string key) {
         attribute_float_keys_[location] = key;
         vao_dirty_ = true;
+        regenerate_vao_ = true;
     }
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
         vao_dirty_ = true;
+        regenerate_vao_ = true;
     }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
         vao_dirty_ = true;
+        regenerate_vao_ = true;
     }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
         vao_dirty_ = true;
+        regenerate_vao_ = true;
     }
 
     // generate VAO
@@ -297,7 +301,12 @@ public:
     VertexBoneData &getVertexBoneData() {
         return vertexBoneData_;
     }
-
+    bool isVaoDirty() const {
+    	return regenerate_vao_;
+    }
+    void unSetVaoDirty() {
+    	regenerate_vao_ = false;
+    }
     void generateBoneArrayBuffers();
 
     //must be called by the thread on which the mesh cleanup should happen
@@ -339,7 +348,7 @@ private:
     // triangle information
     GLuint numTriangles_;
     bool vao_dirty_;
-
+    bool regenerate_vao_;
     bool have_bounding_volume_;
     BoundingVolume bounding_volume;
 
