@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
-import org.gearvrf.utility.Log;
 import org.gearvrf.debug.GVRConsole;
+import org.gearvrf.utility.Log;
 
 /** The scene graph */
 public class GVRScene extends GVRHybridObject implements PrettyPrint {
@@ -382,6 +382,51 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
         // Show all scene objects
         for (GVRSceneObject child : mSceneObjects) {
             child.prettyPrint(sb, indent + 2);
+        }
+    }
+
+    /**
+     * Apply the light map texture to the scene.
+     *
+     * @param texture Texture atlas with the baked light map of the scene.
+     */
+    public void applyLightMapTexture(GVRTexture texture) {
+        applyTextureAtlas("lightmap", texture, GVRMaterial.GVRShaderType.LightMap.ID);
+    }
+
+    /**
+     * Apply the texture atlas to the scene.
+     *
+     * @param key Name of the texture. Common texture names are "main", "lightmap", etc.
+     * @param texture The texture atlas
+     * @param shaderId The shader to render the texture atlas.
+     */
+    public void applyTextureAtlas(String key, GVRTexture texture, GVRMaterialShaderId shaderId) {
+        if (!texture.isAtlasedTexture()) {
+            Log.w(TAG, "Invalid texture atlas to the scene!");
+            return;
+        }
+
+        List<GVRAtlasInformation> atlasInfoList = texture.getAtlasInformation();
+
+        for (GVRAtlasInformation atlasInfo: atlasInfoList) {
+            GVRSceneObject sceneObject = getSceneObjectByName(atlasInfo.getName());
+
+            if (sceneObject == null || sceneObject.getRenderData() == null) {
+                Log.w(TAG, "Null render data or scene object " + atlasInfo.getName()
+                        + " not found to apply texture atlas.");
+                continue;
+            }
+
+            if (shaderId == GVRMaterial.GVRShaderType.LightMap.ID
+                    && !sceneObject.getRenderData().isLightMapEnabled()) {
+                // TODO: Add support to enable and disable light map at run time.
+                continue;
+                    }
+
+            sceneObject.getRenderData().getMaterial().setShaderType(shaderId);
+            sceneObject.getRenderData().getMaterial().setTexture(key + "_texture", texture);
+            sceneObject.getRenderData().getMaterial().setTextureAtlasInfo(key, atlasInfo);
         }
     }
 

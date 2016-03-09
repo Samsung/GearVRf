@@ -15,8 +15,12 @@
 
 package org.gearvrf;
 
+import java.util.List;
+
 /** Wrapper for a GL texture. */
 public class GVRTexture extends GVRHybridObject {
+	private List<GVRAtlasInformation> mAtlasInformation = null;
+
     protected GVRTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -37,6 +41,40 @@ public class GVRTexture extends GVRHybridObject {
     public void updateTextureParameters(GVRTextureParameters textureParameters) {
         NativeTexture.updateTextureParameters(getNative(),
                 textureParameters.getCurrentValuesArray());
+    }
+
+    /**
+     * Returns the list of atlas information necessary to map
+     * the texture atlas to each scene object.
+     *
+     * @return List of atlas information.
+     */
+    public List<GVRAtlasInformation> getAtlasInformation() {
+        return mAtlasInformation;
+    }
+
+    /**
+     * Set the list of {@link GVRAtlasInformation} to map the texture atlas
+     * to each object of the scene.
+     *
+     * @param atlasInformation Atlas information to map the texture atlas to each
+     *        scene object.
+     */
+    public void setAtlasInformation(List<GVRAtlasInformation> atlasInformation) {
+        mAtlasInformation = atlasInformation;
+    }
+
+    /**
+     * Inform if the texture is a large image containing "atlas" of sub-images
+     * with a list of {@link GVRAtlasInformation} necessary to map it to the
+     * scene objects.
+     *
+     * @return True if the texture is a large image containing "atlas",
+     *         otherwise it returns false.
+     */
+    public boolean isAtlasedTexture() {
+        return mAtlasInformation != null
+            && !mAtlasInformation.isEmpty();
     }
 
 }
