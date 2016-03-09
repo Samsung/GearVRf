@@ -75,7 +75,7 @@ public abstract class GVRContext {
     public static boolean DEBUG_STATS = false;
 
     /**
-     * Period of statistic log in millliseconds.
+     * Period of statistic log in milliseconds.
      */
     public static long DEBUG_STATS_PERIOD_MS = 1000;
 

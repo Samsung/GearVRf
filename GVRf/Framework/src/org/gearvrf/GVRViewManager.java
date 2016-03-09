@@ -155,6 +155,17 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             GVRXMLParser xmlParser) {
         super(gvrActivity);
 
+        // Apply view manager preferences
+        GVRPreference prefs = GVRPreference.get();
+        DEBUG_STATS = prefs.getBooleanProperty(GVRPreference.KEY_DEBUG_STATS, false);
+        DEBUG_STATS_PERIOD_MS = prefs.getIntegerProperty(GVRPreference.KEY_DEBUG_STATS_PERIOD_MS, 1000);
+        try {
+            GVRStatsLine.sFormat = GVRStatsLine.FORMAT.valueOf(
+                    prefs.getProperty(GVRPreference.KEY_STATS_FORMAT,GVRStatsLine.FORMAT.DEFAULT.toString()));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+
         // Clear singletons and per-run data structures
         resetOnRestart();
 
