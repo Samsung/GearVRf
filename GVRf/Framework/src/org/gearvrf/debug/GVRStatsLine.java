@@ -44,7 +44,7 @@ public class GVRStatsLine {
     /**
      * Current format.
      */
-    public static FORMAT sFormat = FORMAT.ANALYSIS;
+    public static FORMAT sFormat = FORMAT.DEFAULT;
 
     /**
      * Constructor.
