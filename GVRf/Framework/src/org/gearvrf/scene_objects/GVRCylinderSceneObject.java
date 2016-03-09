@@ -650,6 +650,8 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
 
             float stackPercentage0 = ((float) (stack) / stackNumber);
             float stackPercentage1 = ((float) (stack + 1) / stackNumber);
+            float radius0 = (bottomRadius - (difference * stackPercentage0));
+            float radius1 = (bottomRadius - (difference * stackPercentage1));
 
             float t0 = 1.0f - stackPercentage0;
             float t1 = 1.0f - stackPercentage1;
@@ -666,17 +668,15 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 double cosTheta1 = Math.cos(theta1);
                 double sinTheta1 = Math.sin(theta1);
 
-                float radius = (bottomRadius - (difference * stackPercentage0));
-                float x0 = (float) (radius * cosTheta0);
-                float z0 = (float) (-radius * sinTheta0);
-                float x1 = (float) (radius * cosTheta1);
-                float z1 = (float) (-radius * sinTheta1);
+                float x0 = (float) (radius0 * cosTheta0);
+                float z0 = (float) (-radius0 * sinTheta0);
+                float x1 = (float) (radius0 * cosTheta1);
+                float z1 = (float) (-radius0 * sinTheta1);
 
-                radius = (bottomRadius - (difference * stackPercentage1));
-                float x2 = (float) (radius * cosTheta0);
-                float z2 = (float) (-radius * sinTheta0);
-                float x3 = (float) (radius * cosTheta1);
-                float z3 = (float) (-radius * sinTheta1);
+                float x2 = (float) (radius1 * cosTheta0);
+                float z2 = (float) (-radius1 * sinTheta0);
+                float x3 = (float) (radius1 * cosTheta1);
+                float z3 = (float) (-radius1 * sinTheta1);
 
                 float s0, s1;
                 if (facingOut) {
