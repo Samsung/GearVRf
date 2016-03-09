@@ -20,6 +20,7 @@ import java.util.List;
 import javax.script.ScriptEngine;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRVersion;
 import org.gearvrf.debug.cli.Command;
 import org.gearvrf.debug.cli.HelpCommandHandler;
 import org.gearvrf.debug.cli.Shell;
@@ -42,25 +43,31 @@ public class ShellCommandHandler implements ShellDependent {
     }
 
     @Command
-    public void lua() {
-        enterLanguage(GVRScriptManager.LANG_LUA);
+    public String lua() {
+        return enterLanguage(GVRScriptManager.LANG_LUA);
     }
 
     @Command
-    public void js() {
-        enterLanguage(GVRScriptManager.LANG_JAVASCRIPT);
+    public String js() {
+        return enterLanguage(GVRScriptManager.LANG_JAVASCRIPT);
     }
 
-    private void enterLanguage(String language) {
+    private String enterLanguage(String language) {
         ScriptEngine engine = mGVRContext.getScriptManager().getEngine(language);
 
         if (engine == null) {
-            mShell.getOutputConverter().convertOutput("Cannot find the language engine for " + language);
-            return;
+            return "Cannot find the language engine for " + language;
         }
 
         mScriptHandler = new ScriptHandler(mGVRContext, language, engine);
         mShell.setLineProcessor(mScriptHandler);
+
+        return null;
+    }
+
+    @Command
+    public String version() {
+        return GVRVersion.CURRENT;
     }
 
     @Command
