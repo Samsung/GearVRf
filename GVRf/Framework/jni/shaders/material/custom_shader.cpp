@@ -116,26 +116,28 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
 #if _GVRF_USE_GLES3_
     glUseProgram(program_->id());
 
-    for (auto it = attribute_float_keys_.begin();
-            it != attribute_float_keys_.end(); ++it) {
-        mesh->setVertexAttribLocF(it->first, it->second);
-    }
+    if(mesh->isVaoDirty()) {
+		for (auto it = attribute_float_keys_.begin();
+				it != attribute_float_keys_.end(); ++it) {
+			mesh->setVertexAttribLocF(it->first, it->second);
+		}
 
-    for (auto it = attribute_vec2_keys_.begin();
-            it != attribute_vec2_keys_.end(); ++it) {
-        mesh->setVertexAttribLocV2(it->first, it->second);
-    }
+		for (auto it = attribute_vec2_keys_.begin();
+				it != attribute_vec2_keys_.end(); ++it) {
+			mesh->setVertexAttribLocV2(it->first, it->second);
+		}
 
-    for (auto it = attribute_vec3_keys_.begin();
-            it != attribute_vec3_keys_.end(); ++it) {
-        mesh->setVertexAttribLocV3(it->first, it->second);
-    }
+		for (auto it = attribute_vec3_keys_.begin();
+				it != attribute_vec3_keys_.end(); ++it) {
+			mesh->setVertexAttribLocV3(it->first, it->second);
+		}
 
-    for (auto it = attribute_vec4_keys_.begin();
-            it != attribute_vec4_keys_.end(); ++it) {
-        mesh->setVertexAttribLocV4(it->first, it->second);
+		for (auto it = attribute_vec4_keys_.begin();
+				it != attribute_vec4_keys_.end(); ++it) {
+			mesh->setVertexAttribLocV4(it->first, it->second);
+		}
+		mesh->unSetVaoDirty();
     }
-
     mesh->generateVAO();  // setup VAO
 
     ///////////// uniform /////////
