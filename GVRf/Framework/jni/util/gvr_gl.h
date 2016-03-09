@@ -33,8 +33,6 @@
 #endif
 #include "util/gvr_log.h"
 
-#define _GVRF_USE_GLES3_  1
-
 namespace gvr {
 
 static void checkGlError(const char* op) {

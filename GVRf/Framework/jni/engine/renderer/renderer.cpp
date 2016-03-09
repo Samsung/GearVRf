@@ -345,7 +345,6 @@ void Renderer::occlusion_cull(Scene* scene,
         return;
     }
 
-#if _GVRF_USE_GLES3_
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
         SceneObject *scene_object = (*it);
         RenderData* render_data = scene_object->render_data();
@@ -416,7 +415,6 @@ void Renderer::occlusion_cull(Scene* scene,
             addRenderData((*it)->render_data());
         }
     }
-#endif
 }
 
 void Renderer::build_frustum(float frustum[6][4], const float *vp_matrix) {

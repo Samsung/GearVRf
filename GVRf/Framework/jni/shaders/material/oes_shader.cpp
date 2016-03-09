@@ -73,7 +73,6 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
         throw error;
     }
 
-#if _GVRF_USE_GLES3_
     mesh->generateVAO();
 
     glUseProgram(program_->id());
@@ -89,31 +88,7 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#else
 
-    glUseProgram(program_->id());
-
-    glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0,
-            mesh->vertices().data());
-    glEnableVertexAttribArray(a_position_);
-
-    glVertexAttribPointer(a_tex_coord_, 2, GL_FLOAT, GL_FALSE, 0,
-            mesh->tex_coords().data());
-    glEnableVertexAttribArray(a_tex_coord_);
-
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-
-    glActiveTexture (GL_TEXTURE0);
-    glBindTexture(texture->getTarget(), texture->getId());
-    glUniform1i(u_texture_, 0);
-
-    glUniform3f(u_color_, color.r, color.g, color.b);
-
-    glUniform1f(u_opacity_, opacity);
-
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            mesh->indices().data());
-#endif
     checkGlError("OESShader::render");
 }
 

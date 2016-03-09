@@ -56,7 +56,6 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
     float b = 0.0f;
     float a = 1.0f;
 
-#if _GVRF_USE_GLES3_
     Material* material = render_data->pass(0)->material();
     mesh->generateVAO();
 
@@ -69,20 +68,7 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
-#else
-    glUseProgram(program_->id());
 
-    glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0,
-            mesh->vertices().data());
-    glEnableVertexAttribArray(a_position_);
-
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-
-    glUniform4f(u_color_, r, g, b, a);
-
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            mesh->indices().data());
-#endif
     checkGlError("ErrorShader::render");
 }
 

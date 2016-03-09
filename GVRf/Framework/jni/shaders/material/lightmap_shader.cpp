@@ -73,8 +73,6 @@ LightMapShader::~LightMapShader() {
 void LightMapShader::render(const glm::mat4& mvp_matrix,
         RenderData* render_data, Material* material) {
 
-#if _GVRF_USE_GLES3_
-
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     Texture* lightmap_texture = material->getTexture("lightmap_texture");
@@ -103,9 +101,6 @@ void LightMapShader::render(const glm::mat4& mvp_matrix,
     glBindVertexArray(0);
 
     checkGlError("LightMapShader::render");
-
-#endif
-
 }
 
 };

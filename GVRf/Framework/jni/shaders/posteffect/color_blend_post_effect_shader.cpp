@@ -79,7 +79,6 @@ void ColorBlendPostEffectShader::render(
 
     glUseProgram(program_->id());
 
-#if _GVRF_USE_GLES3_
     GLuint tmpID;
 
     if(vaoID_ == 0)
@@ -120,26 +119,6 @@ void ColorBlendPostEffectShader::render(
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
-
-#else
-    glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0,
-            vertices.data());
-    glEnableVertexAttribArray(a_position_);
-
-    glVertexAttribPointer(a_tex_coord_, 2, GL_FLOAT, GL_FALSE, 0,
-            tex_coords.data());
-    glEnableVertexAttribArray(a_tex_coord_);
-
-    glActiveTexture (GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, render_texture->getId());
-    glUniform1i(u_texture_, 0);
-
-    glUniform3f(u_color_, r, g, b);
-    glUniform1f(u_factor_, factor);
-
-    glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT,
-            triangles.data());
-#endif
 
     checkGlError("ColorBlendPostEffectShader::render");
 }
