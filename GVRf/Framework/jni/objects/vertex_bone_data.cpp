@@ -50,8 +50,15 @@ int VertexBoneData::getFreeBoneSlot(int vertexId) {
 }
 
 void VertexBoneData::setVertexBoneWeight(int vertexId, int boneSlot, int boneId, float boneWeight) {
-    boneData[vertexId].ids[boneSlot] = boneId;
-    boneData[vertexId].weights[boneSlot] = boneWeight;
+    if (BONES_PER_VERTEX <= boneSlot || 0 > boneSlot) {
+        FAIL("index out of bounds; boneSlot: %d", boneSlot);
+    }
+    if (MAX_BONES <= boneId || 0 > boneId) {
+        FAIL("index out of bounds; boneId: %d", boneId);
+    }
+    BoneData& boneDataElement = boneData.at(vertexId);  //"at" performs bounds-checking
+    boneDataElement.ids[boneSlot] = boneId;
+    boneDataElement.weights[boneSlot] = boneWeight;
 }
 
 void VertexBoneData::normalizeWeights() {
