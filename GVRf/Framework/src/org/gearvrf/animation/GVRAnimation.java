@@ -368,6 +368,8 @@ public abstract class GVRAnimation {
         } else {
             float endRatio = mRepeatMode == GVRRepeatMode.ONCE ? 1f : 0f;
 
+            endRatio = interpolate(mDuration, mDuration);
+
             animate(mTarget, endRatio);
 
             if (mOnFinish != null) {
