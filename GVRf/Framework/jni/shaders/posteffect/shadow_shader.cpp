@@ -226,20 +226,20 @@ static const float BIAS_MATRIX[16] = {
 };
 
 static const float QUALITY = 1;
-static const int SIZE_MAP = (int) (1024 * QUALITY);
 
-GLuint ShadowShader::getFBO(GLTexture* color, GLTexture* depth, int width =
-        SIZE_MAP, int height = SIZE_MAP) {
+GLuint ShadowShader::getFBO(GLTexture* color, GLTexture* depth, int width, int height) {
 
     checkGlError("ShadowShader::getFBO");
+    const int realWidth = width*QUALITY;
+    const int realHeight = height*QUALITY;
 
     glBindTexture(GL_TEXTURE_2D, color->id());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, realWidth, realHeight, 0, GL_RGB,
             GL_UNSIGNED_BYTE, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glBindTexture(GL_TEXTURE_2D, depth->id());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, realWidth, realHeight, 0,
             GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -322,11 +322,6 @@ ShadowShader::ShadowShader() :
 
     checkGlError("ShadowShader::getFBO create");
 
-    fbo_light = getFBO(texture_light_color, texture_light_depth);
-    fbo_camera = getFBO(texture_camera_color, texture_camera_depth);
-
-    checkGlError("ShadowShader::getFBO check");
-
     glUseProgram(0);
 }
 
@@ -408,7 +403,7 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 
     switch (mode) {
     case ShadowShader::RENDER_FROM_LIGHT:
-        glViewport(0, 0, SIZE_MAP, SIZE_MAP);
+        glViewport(0, 0, viewportWidth, viewportHeight);
 //        glCullFace(GL_FRONT); // TODO
         glCullFace(GL_BACK); // TODO
         glUniform1i(glGetUniformLocation(program_->id(), "u_mode"), -1); // ignore all, less depth render;
@@ -417,7 +412,7 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 
     case ShadowShader::RENDER_FROM_CAMERA:
         // Optional: Replace main render: (Material::ShaderType::TEXTURE_SHADER) only test
-        glViewport(0, 0, SIZE_MAP, SIZE_MAP);
+        glViewport(0, 0, viewportWidth, viewportHeight);
         glCullFace(GL_BACK);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,
@@ -490,6 +485,17 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 
     checkGlError("TextureShader::render");
 
+}
+
+void ShadowShader::updateViewportInfo(int width, int height) {
+    if (0 == fbo_light && 0 == fbo_camera) {
+        viewportWidth = width;
+        viewportHeight = height;
+
+        fbo_light = getFBO(texture_light_color, texture_light_depth, width, height);
+        fbo_camera = getFBO(texture_camera_color, texture_camera_depth, width, height);
+        checkGlError("ShadowShader::updateViewportInfo check");
+    }
 }
 
 }

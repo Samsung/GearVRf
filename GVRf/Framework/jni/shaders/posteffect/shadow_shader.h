@@ -66,8 +66,6 @@ public:
             glm::vec3 light_position, RenderData* render_data,
             Material* material, int mode);
 
-    GLuint getFBO(GLTexture* color, GLTexture* depth, int width, int height);
-
     GLuint getFBOFromLight() {
         return fbo_light;
     }
@@ -79,12 +77,12 @@ public:
     void setCameraLight(DirectionalLight* camera) {
         cameraLight = camera;
     }
-    ;
 
     DirectionalLight* getCameraLight() {
         return cameraLight;
     }
-    ;
+
+    void updateViewportInfo(int width, int height);
 
 private:
     ShadowShader(const ShadowShader& shadow_shader);
@@ -93,6 +91,8 @@ private:
             const ShadowShader& shadow_shader);
     ShadowShader& operator=(
             ShadowShader&& shadow_shader);
+
+    GLuint getFBO(GLTexture* color, GLTexture* depth, int width, int height);
 
 private:
     GLProgram* program_;
@@ -110,14 +110,15 @@ private:
     // add vertex array object
     GLuint vaoID_;
 
-    GLuint fbo_light;
-    GLuint fbo_camera;
+    GLuint fbo_light = 0;
+    GLuint fbo_camera = 0;
 
     GLTexture* texture_light_depth;
     GLTexture* texture_light_color;
     GLTexture* texture_camera_depth;
     GLTexture* texture_camera_color;
     DirectionalLight* cameraLight;
+    GLsizei viewportWidth, viewportHeight;
 
     GlDelete* deleter_;
 };
