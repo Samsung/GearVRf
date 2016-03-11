@@ -20,8 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.gearvrf.io.GVRInputManager;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -180,15 +178,19 @@ public class GVRBaseSensor {
             mainThreadHandler = new Handler(Looper.getMainLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
-                    SensorEvent event = (SensorEvent) msg.obj;
+                    final SensorEvent event = (SensorEvent) msg.obj;
 
                     // Sends the onSensorEvent event to the owner of the sensor
                     // Make a copy for consistency. No need to use a mutex here.
                     final IEventReceiver ownerCopy = owner;
                     if (ownerCopy != null) {
-                        GVREventManager eventManager = gvrContext.getEventManager();
-                        eventManager.sendEvent(ownerCopy,
-                                ISensorEvents.class, "onSensorEvent", event);
+                        gvrContext.runOnTheFrameworkThread(new Runnable() {
+                            public void run() {
+                                GVREventManager eventManager = gvrContext.getEventManager();
+                                eventManager.sendEvent(ownerCopy,
+                                        ISensorEvents.class, "onSensorEvent", event);
+                            }
+                        });
                     }
 
                     event.recycle();

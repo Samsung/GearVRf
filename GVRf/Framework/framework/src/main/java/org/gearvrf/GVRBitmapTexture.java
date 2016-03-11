@@ -62,9 +62,9 @@ public class GVRBitmapTexture extends GVRTexture {
      */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap,
             GVRTextureParameters textureParameters) {
-        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters
-                .getCurrentValuesArray()));
-        update(bitmap);
+        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters.getCurrentValuesArray()));
+        NativeBaseTexture.setJavaOwner(getNative(), this);
+        mBitmap = bitmap;
     }
 
     /**
@@ -162,7 +162,10 @@ public class GVRBitmapTexture extends GVRTexture {
             throws IllegalArgumentException {
         super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters
                 .getCurrentValuesArray()));
-        update(width, height, grayscaleData);
+        NativeBaseTexture.setJavaOwner(getNative(), this);
+        mWidth = width;
+        mHeight = height;
+        mGrayscaleData = grayscaleData;
     }
 
     /**
@@ -317,11 +320,29 @@ public class GVRBitmapTexture extends GVRTexture {
         return null;
     }
 
+    @SuppressWarnings("unused")
+    protected void idAvailable(final int id) {
+        super.idAvailable(id);
+
+        if (null != mBitmap) {
+            updateCall(mBitmap);
+            mBitmap = null;
+        } else if (null != mGrayscaleData) {
+            updateCall(mWidth, mHeight, mGrayscaleData);
+            mGrayscaleData = null;
+        }
+    }
+
+    private Bitmap mBitmap;
+    private int mWidth;
+    private int mHeight;
+    private byte[] mGrayscaleData;
     private final static String TAG = "GVRBitmapTexture";
 }
 
-class NativeBaseTexture {
+final class NativeBaseTexture {
     static native long bareConstructor(int[] textureParameterValues);
+    static native long setJavaOwner(long pointer, GVRTexture owner);
 
     static native boolean update(long pointer, int width, int height,
             byte[] grayscaleData);
