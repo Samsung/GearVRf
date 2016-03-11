@@ -49,9 +49,21 @@ int VertexBoneData::getFreeBoneSlot(int vertexId) {
     return boneData[vertexId].getFreeBoneSlot();
 }
 
+#define unlikely(x) __builtin_expect(!!(x), 0)
 void VertexBoneData::setVertexBoneWeight(int vertexId, int boneSlot, int boneId, float boneWeight) {
-    boneData[vertexId].ids[boneSlot] = boneId;
-    boneData[vertexId].weights[boneSlot] = boneWeight;
+    if (unlikely(BONES_PER_VERTEX <= boneSlot || 0 > boneSlot)) {
+        FAIL("index out of bounds; boneSlot: %d", boneSlot);
+    }
+    if (unlikely(MAX_BONES <= boneId || 0 > boneId)) {
+        FAIL("index out of bounds; boneId: %d", boneId);
+    }
+    if (unlikely(boneData.size() <= vertexId)) {
+        FAIL("index out of bounds; vertexId: %d", vertexId);
+    }
+
+    BoneData& boneDataElement = boneData[vertexId];
+    boneDataElement.ids[boneSlot] = boneId;
+    boneDataElement.weights[boneSlot] = boneWeight;
 }
 
 void VertexBoneData::normalizeWeights() {
