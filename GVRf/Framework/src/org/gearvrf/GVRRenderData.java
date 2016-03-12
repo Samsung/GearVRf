@@ -22,13 +22,14 @@ import java.util.concurrent.TimeoutException;
 import java.util.ArrayList;
 
 import org.gearvrf.GVRRenderPass;
+import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 
 import static android.opengl.GLES30.*;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.Log;
-import org.gearvrf.utility.Threads;
 
 /**
  * One of the key GVRF classes: Encapsulates the data associated with rendering
@@ -179,17 +180,28 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
                 e.printStackTrace();
             }
         } else {
-            Threads.spawn(new Runnable() {
+            MeshCallback callback = new MeshCallback() {
+                @Override
+                public void loaded(GVRMesh mesh, GVRAndroidResource ignored) {
+                    setMesh(mesh);
+                    Log.d(TAG, "Finish loading and setting mesh %s", mesh);
+                }
 
                 @Override
-                public void run() {
-                    try {
-                        setMesh(mesh.get());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                public void failed(Throwable t,
+                        GVRAndroidResource androidResource) {
+                    Log.e(TAG, "Error loading mesh %s; exception: %s", mesh,
+                            t.getMessage());
                 }
-            });
+
+                @Override
+                public boolean stillWanted(GVRAndroidResource androidResource) {
+                    return true;
+                }
+            };
+
+            getGVRContext().loadMesh(callback,
+                    ((FutureResource<GVRMesh>) mesh).getResource());
         }
     }
 

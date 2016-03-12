@@ -2,6 +2,7 @@ package org.gearvrf.jassimp2;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
@@ -17,6 +18,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 
 public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();

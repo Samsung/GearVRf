@@ -18,7 +18,6 @@ package org.gearvrf.asynchronous;
 import static org.gearvrf.utility.Threads.VERBOSE_SCHEDULING;
 import static org.gearvrf.utility.Threads.threadId;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -321,34 +320,26 @@ class Throttler implements Scheduler {
             ThreadLimiter<PriorityCancelable> threadLimiter = deviceThreadLimiter;
 
             synchronized (pendingRequests) {
-                @SuppressWarnings("unchecked")
-                PendingRequest<OUTPUT, INTER> pending =
-                        (PendingRequest<OUTPUT, INTER>) pendingRequests.get(request);
+                PendingRequest<OUTPUT, INTER> pending = (PendingRequest<OUTPUT, INTER>) pendingRequests
+                        .get(request);
 
                 if (pending != null) {
-                    if (request == pending.request) {
-                        throw new IllegalArgumentException(
-                                "Tried to load the same GVRAndroidResource more than once - each async load call should use a new GVRAndroidResource");
-                    }
-
                     // There is already a request for this resource: add
                     // callback, and reschedule
-
                     pending.addCallback(callback, priority);
                     if (VERBOSE_SCHEDULING) {
                         Log.d(TAG, "Thread %d: rescheduling %s for request %s",
                                 threadId(), pending, request);
                     }
                     threadLimiter.reschedule(pending);
-
-                    // No one will ever read this stream
-                    request.closeStream();
                 } else {
                     // There is no current request for this resource. Create a
                     // new PendingRequest, using a threadFactory to create the
                     // appropriate AsyncLoader.
-                    pending = new PendingRequest<OUTPUT,INTER>(gvrContext, request, callback,
-                            priority, outClass);
+                    request.openStream();
+
+                    pending = new PendingRequest<OUTPUT, INTER>(gvrContext,
+                            request, callback, priority, outClass);
 
                     pendingRequests.put(request, pending);
 
@@ -390,20 +381,17 @@ class Throttler implements Scheduler {
                         gvrContext, request, PendingRequest.this, priority);
             }
 
-            public void addCallback(
-                    CancelableCallback<OUTPUT> callback,
+            public void addCallback(CancelableCallback<OUTPUT> callback,
                     int priority) {
-                synchronized (callbacks) {
-                    callbacks.add(callback);
-                    if (priority > this.highestPriority) {
-                        this.highestPriority = priority;
-                    }
+                callbacks.add(callback);
+                if (priority > this.highestPriority) {
+                    this.highestPriority = priority;
                 }
             }
 
             @Override
-            public void loaded(OUTPUT gvrResource,
-                    GVRAndroidResource androidResource) {
+            public void loaded(final OUTPUT gvrResource,
+                    final GVRAndroidResource androidResource) {
                 if (VERBOSE_SCHEDULING) {
                     Log.d(TAG, "%s loaded(%s, %s), thread %d: request %s",
                             this, gvrResource, androidResource, threadId(),
@@ -412,9 +400,10 @@ class Throttler implements Scheduler {
 
                 // gvrResource may be null, if we caught an exception in
                 // AsyncLoadImage.run)
-                if (gvrResource != null) {
-                    List<CancelableCallback<OUTPUT>> listeners = new ArrayList<CancelableCallback<OUTPUT>>();
-                    do {
+                synchronized (pendingRequests) {
+                    // TODO Auto-generated method stub
+                    if (gvrResource != null) {
+                        List<CancelableCallback<OUTPUT>> listeners = new ArrayList<CancelableCallback<OUTPUT>>();
                         /*
                          * Copy the list of listeners then clear it, so any
                          * requests that come in after we leave the sync block
@@ -423,18 +412,15 @@ class Throttler implements Scheduler {
                          * notified everybody.
                          */
                         listeners.clear();
-                        synchronized (callbacks) {
-                            if (callbacks.isEmpty()) {
-                                if (VERBOSE_SCHEDULING) {
-                                    Log.d(TAG,
-                                            "ready(), thread %d: no callbacks for request %s",
-                                            threadId(), request);
-                                }
-                                break;
+                        if (callbacks.isEmpty()) {
+                            if (VERBOSE_SCHEDULING) {
+                                Log.d(TAG,
+                                        "ready(), thread %d: no callbacks for request %s",
+                                        threadId(), request);
                             }
-                            listeners.addAll(callbacks);
-                            callbacks.clear();
                         }
+                        listeners.addAll(callbacks);
+                        callbacks.clear();
 
                         for (CancelableCallback<OUTPUT> callback : listeners) {
                             /*
@@ -443,32 +429,31 @@ class Throttler implements Scheduler {
                              * to minimize the damage.
                              */
                             try {
-                                // Inform handler the resource has been loaded.
+                                // Inform handler the resource has been
+                                // loaded.
                                 callback.loaded(gvrResource, androidResource);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
-                        // Loop in case a request came in between the
-                        // synchronized block and the (first) callback
-                    } while (true);
-                }
+                    }
 
-                if (VERBOSE_SCHEDULING) {
-                    Log.d(TAG,
-                            "ready(), thread %d: clearing pending request for request %s",
-                            threadId(), request);
-                }
+                    if (VERBOSE_SCHEDULING) {
+                        Log.d(TAG,
+                                "ready(), thread %d: clearing pending request for request %s",
+                                threadId(), request);
+                    }
 
-                @SuppressWarnings("unchecked")
-                PendingRequest<OUTPUT, INTER> removed =
-                        (PendingRequest<OUTPUT, INTER>) pendingRequests.remove(request);
+                    @SuppressWarnings("unchecked")
+                    PendingRequest<OUTPUT, INTER> removed = (PendingRequest<OUTPUT, INTER>) pendingRequests
+                            .remove(request);
 
-                if (RUNTIME_ASSERTIONS) {
-                    if (removed != this) {
-                        throw new RuntimeAssertion(
-                                "pendingRequests.remove(%s, parameters) removed %s, not %s",
-                                request, removed, this);
+                    if (RUNTIME_ASSERTIONS) {
+                        if (removed != PendingRequest.this) {
+                            throw new RuntimeAssertion(
+                                    "pendingRequests.remove(%s, parameters) removed %s, not %s",
+                                    request, removed, this);
+                        }
                     }
                 }
             }
@@ -500,34 +485,32 @@ class Throttler implements Scheduler {
 
             @Override
             public boolean stillWanted() {
-                synchronized (callbacks) {
-                    List<CancelableCallback<OUTPUT>> canceled = new ArrayList<CancelableCallback<OUTPUT>>(
-                            callbacks.size());
-                    for (CancelableCallback<OUTPUT> callback : callbacks) {
-                        if (callback.stillWanted(request) != true) {
-                            canceled.add(callback);
-                        }
+                List<CancelableCallback<OUTPUT>> canceled = new ArrayList<CancelableCallback<OUTPUT>>(
+                        callbacks.size());
+                for (CancelableCallback<OUTPUT> callback : callbacks) {
+                    if (callback.stillWanted(request) != true) {
+                        canceled.add(callback);
                     }
-                    callbacks.removeAll(canceled);
-
-                    boolean cancel = callbacks.size() == 0;
-
-                    if (cancel) {
-                        if (VERBOSE_SCHEDULING) {
-                            Log.d(TAG, "Canceling %s, request %s", this,
-                                    request);
-                        }
-                        @SuppressWarnings("unchecked")
-                        PendingRequest<OUTPUT, INTER> removed =
-                                (PendingRequest<OUTPUT, INTER>) pendingRequests.remove(request);
-                        if (removed != this) {
-                            throw new RuntimeAssertion(
-                                    "removed = %s, this = %s", removed, this);
-                        }
-                    }
-
-                    return cancel != true;
                 }
+                callbacks.removeAll(canceled);
+
+                boolean cancel = callbacks.size() == 0;
+
+                if (cancel) {
+                    if (VERBOSE_SCHEDULING) {
+                        Log.d(TAG, "Canceling %s, request %s", this, request);
+                    }
+                    @SuppressWarnings("unchecked")
+                    PendingRequest<OUTPUT, INTER> removed = (PendingRequest<OUTPUT, INTER>) pendingRequests
+                            .remove(request);
+                    if (removed != this) {
+                        throw new RuntimeAssertion("removed = %s, this = %s",
+                                removed, this);
+                    }
+                }
+
+                return cancel != true;
+
             }
 
             @Override

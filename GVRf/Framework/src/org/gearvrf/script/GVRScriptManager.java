@@ -204,6 +204,7 @@ public class GVRScriptManager {
             script = new GVRJavascriptScriptFile(mGvrContext, resource.getStream());
         }
 
+        resource.closeStream();
         return script;
     }
 
