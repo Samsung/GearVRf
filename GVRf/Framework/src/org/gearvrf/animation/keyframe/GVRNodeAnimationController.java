@@ -8,6 +8,14 @@ import org.joml.Matrix4f;
 
 /**
  * Controls node animation.
+ *
+ * A node animation continuously changes the Transform of a target {@link GVRSceneObject}.
+ * The {@link GVRKeyFrameAnimation} can be obtained from {@linkplain org.gearvrf.scene_objects.GVRModelSceneObject
+ * GVRModelSceneObject} using API as {@linkplain org.gearvrf.GVRContext#loadModel(String) GVRContext.loadModel}. <p>
+ *
+ * In order to import FBX animation correctly, it is required that key frames only use Euler angles within the
+ * range [0, 360) degrees. To avoid ambiguity, the angle difference between two adjacent key frames should be less
+ * than 180 degrees per component.
  */
 public class GVRNodeAnimationController extends GVRAnimationController {
     private static final String TAG = GVRNodeAnimationController.class.getSimpleName();
