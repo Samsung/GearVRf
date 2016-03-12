@@ -43,11 +43,27 @@ public class GVRTextView extends TextView implements GVRView {
      *            Height of the {@linkplain LinearLayout Layout container}
      */
     public GVRTextView(GVRActivity context, int viewWidth, int viewHeight) {
+        this(context, viewWidth, viewHeight, null);
+    }
+
+    /**
+     * Creates a new instance and sets its internal {@linkplain LinearLayout Layout container}
+     * with the specified width and height, and text with specified text.
+     *
+     * @param viewWidth
+     *            Width of the {@linkplain LinearLayout Layout container}
+     * @param viewHeight
+     *            Height of the {@linkplain LinearLayout Layout container}
+     * @param text
+     *            Text to set to the text view.
+     */
+    public GVRTextView(GVRActivity context, int viewWidth, int viewHeight, String text) {
         this(context);
 
         setLayoutParams(new LinearLayout.LayoutParams(viewWidth, viewHeight));
         mTextViewContainer.measure(viewWidth, viewHeight);
         mTextViewContainer.layout(0, 0, viewWidth, viewHeight);
+        setText(text);
     }
 
     @Override

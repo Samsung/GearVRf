@@ -319,12 +319,17 @@ public class GVRActivity extends Activity {
      * @param view Is a {@link GVRView} that draw itself into some
      *            {@link GVRViewSceneObject}.
      */
-    public void registerView(View view) {
-        /* The full screen should be updated
-           otherwise just the children's bounds may be refreshed. */
-        mRenderableViewGroup.setClipChildren(false);
+    public void registerView(final View view) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                /* The full screen should be updated
+                otherwise just the children's bounds may be refreshed. */
+                mRenderableViewGroup.setClipChildren(false);
 
-        mRenderableViewGroup.addView(view);
+                mRenderableViewGroup.addView(view);;
+            }
+        });
     }
 
     /**
@@ -332,8 +337,13 @@ public class GVRActivity extends Activity {
      * 
      * @param view View to be removed.
      */
-    public void unregisterView(View view) {
-        mRenderableViewGroup.removeView(view);
+    public void unregisterView(final View view) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mRenderableViewGroup.removeView(view);
+            }
+        });
     }
 
     public GVRContext getGVRContext() {
