@@ -29,7 +29,7 @@
 #include "components/camera_rig.h"
 #include "engine/renderer/renderer.h"
 
-#include "objects/components/directional_light.h"
+#include "objects/light.h"
 
 namespace gvr {
 class SceneObject;
@@ -77,11 +77,11 @@ public:
 
     void exportToFile(std::string filepath);
 
-    void attachDirectionalLight(DirectionalLight* directional_light) {
+    void attachDirectionalLight(Light* directional_light) {
         directional_light_ = directional_light;
     }
 
-    DirectionalLight* getDirectionalLight() const {
+    Light* getDirectionalLight() const {
         return directional_light_;
     }
 
@@ -95,7 +95,7 @@ private:
     std::vector<SceneObject*> scene_objects_;
     CameraRig* main_camera_rig_;
 
-    DirectionalLight* directional_light_;
+    Light* directional_light_;
 
     int dirtyFlag_;
     bool frustum_flag_;

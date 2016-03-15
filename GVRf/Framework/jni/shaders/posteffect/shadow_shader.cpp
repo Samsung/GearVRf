@@ -382,7 +382,7 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 
     mesh->generateVAO();
 
-    DirectionalLight* cameraLight = this->getCameraLight();
+    Light* cameraLight = this->getCameraLight();
 
     glUseProgram(program_->id());
     checkGlError("ShadowShader::render program");
@@ -429,7 +429,7 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
     case ShadowShader::RENDER_WITH_SHADOW: {
         glCullFace(GL_BACK);
 
-        DirectionalLight::ShadowMapHandlerMode mode =
+        Light::ShadowMapHandlerMode mode =
                 cameraLight->getShadowMapHandlerMode();
 
         glUniform1i(glGetUniformLocation(program_->id(), "u_mode"), 0); // render shadow from original map;

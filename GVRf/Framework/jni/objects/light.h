@@ -92,6 +92,155 @@ public:
         vec4s_[key] = vector;
     }
 
+    // ========== LIGHT parameters for shadow calculations ==========
+    // TODO: Ported from previous DirectionalLight class for compatibility reasons.
+    //       In the future, this will be moved to the appropriate class.
+    //
+
+    enum LightType {
+        POINT = 0, SPOT = 1, DIRECTIONAL = 2
+    };
+
+    enum ShadowMapHandlerMode {
+        HIDE = 0, SHOW = 1, GRADIENT = 2,
+    };
+
+    enum ShadowMapHandlerEdges {
+        HANDLER_EDGES_NONE = 0, HANDLER_EDGES_DARK = 1, HANDLER_EDGES_LIGHT = 2,
+    };
+
+    glm::vec3 getLightDirection() const {
+        return light_direction_;
+    }
+
+    void setLightDirection(glm::vec3 light_direction) {
+        light_direction_ = light_direction;
+    }
+
+    void setSpotangle(float angle) {
+        spotangle = angle;
+    }
+
+    float getSpotangle() const {
+        return spotangle;
+    }
+
+    void setOverwriteTextureRender(bool enable) {
+        overwriteTextureRender = enable;
+    }
+
+    float isOverwriteTextureRender() const {
+        return overwriteTextureRender;
+    }
+
+    int getLightType() const {
+        return type;
+    }
+
+    void setLightType(int light_type) {
+        type = light_type;
+    }
+
+    void setShadowMapHandlerMode(ShadowMapHandlerMode mode) {
+        shadowmap_handler = mode;
+    }
+
+    ShadowMapHandlerMode getShadowMapHandlerMode() const {
+        return shadowmap_handler;
+    }
+
+    float getShadowSmoothSize() const {
+        return shadow_smooth_size;
+    }
+
+    void setShadowSmoothSize(float size) {
+        shadow_smooth_size = size;
+    }
+
+    void setShadowMapHandlerEdges(ShadowMapHandlerEdges mode) {
+        shadowmap_handler_edges = mode;
+    }
+
+    ShadowMapHandlerEdges getShadowMapHandlerEdges() const {
+        return shadowmap_handler_edges;
+    }
+
+    float getShadowMapEdgesLength() const {
+        return shadowmap_edges_length;
+    }
+
+    void setShadowMapEdgesLength(float value) {
+        shadowmap_edges_length = value;
+    }
+
+    float getLightAmbientOnShadow() const {
+        return light_ambient_on_shadow;
+    }
+
+    void setLightAmbientOnShadow(float value) {
+        light_ambient_on_shadow = value;
+    }
+
+    float getShadowGradientCenter() const {
+        return shadow_gradient_center;
+    }
+
+    void setShadowGradientCenter(float value) {
+        shadow_gradient_center = value;
+    }
+
+    float getLightingShade() const {
+        return u_lighting_shade;
+    }
+
+    void setLightingShade(float value) {
+        u_lighting_shade = value;
+    }
+
+    float getBoardStratifiedSampling() const {
+        return u_stratified_sampling;
+    }
+
+    void setBoardStratifiedSampling(float value) {
+        u_stratified_sampling = value;
+    }
+
+    float getShadowSmoothDistance() const {
+        return u_shadow_smooth_distance;
+    }
+
+    void setShadowSmoothDistance(float value) {
+        u_shadow_smooth_distance = value;
+    }
+
+    float getBias() const {
+        return bias;
+    }
+
+    void setBias(float value) {
+        bias = value;
+    }
+
+private:
+    glm::vec3 light_position_;
+    glm::vec3 light_direction_ = glm::vec3(0);
+
+    int type = POINT;
+
+    bool overwriteTextureRender = false;
+    float spotangle = 100;
+    ShadowMapHandlerMode shadowmap_handler = HIDE;
+    ShadowMapHandlerEdges shadowmap_handler_edges = HANDLER_EDGES_DARK;
+    float shadow_smooth_size = 0.0;
+    float shadowmap_edges_length = 0.1;
+    float light_ambient_on_shadow = 0.1;
+    float shadow_gradient_center = 2.0;
+    float u_lighting_shade = 0.0;
+    float u_stratified_sampling = 1.0;
+    float u_shadow_smooth_distance = 1.0;
+    float bias = 0.001;
+    // ========== LIGHT parameters END ==========
+
 private:
     Light(const Light& light);
     Light(Light&& light);
