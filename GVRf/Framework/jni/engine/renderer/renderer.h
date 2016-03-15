@@ -99,6 +99,16 @@ private:
     static void renderRenderData(RenderData* render_data,
             const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
             int render_mask, ShaderManager* shader_manager, int modeShadow);
+
+    static void renderMesh(RenderData* render_data,
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager, int modeShadow);
+
+    static void renderMaterialShader(RenderData* render_data,
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager, int modeShadow,
+            Material *material);
+
     static void renderPostEffectData(Camera* camera,
             RenderTexture* render_texture, PostEffectData* post_effect_data,
             PostEffectShaderManager* post_effect_shader_manager);

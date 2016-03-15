@@ -641,175 +641,195 @@ void Renderer::renderRenderData(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
         int render_mask, ShaderManager* shader_manager, int modeShadow) {
 
-    if (render_mask & render_data->render_mask()) {
-        if (render_data->offset()) {
-            GL(glEnable (GL_POLYGON_OFFSET_FILL));
-            GL(glPolygonOffset(render_data->offset_factor(),
+    if (!render_mask || !render_data->render_mask())
+        return;
+
+    if (render_data->offset()) {
+        GL(glEnable (GL_POLYGON_OFFSET_FILL));
+        GL(glPolygonOffset(render_data->offset_factor(),
                     render_data->offset_units()));
+    }
+    if (!render_data->depth_test()) {
+        GL(glDisable (GL_DEPTH_TEST));
+    }
+    if (!render_data->alpha_blend()) {
+        GL(glDisable (GL_BLEND));
+    }
+    if( render_data->alpha_to_coverage()) {
+        GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+        GL(glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask()));
+    }
+
+    if (render_data->mesh() != 0) {
+        GL(renderMesh(render_data, view_matrix, projection_matrix,
+                    render_mask, shader_manager, modeShadow));
+    }
+
+    // Restoring to Default.
+    // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
+    // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
+    if (render_data->cull_face() != RenderData::CullBack) {
+        GL(glEnable (GL_CULL_FACE));
+        GL(glCullFace (GL_BACK));
+    }
+
+    if (render_data->offset()) {
+        GL(glDisable (GL_POLYGON_OFFSET_FILL));
+    }
+    if (!render_data->depth_test()) {
+        GL(glEnable (GL_DEPTH_TEST));
+    }
+    if (!render_data->alpha_blend()) {
+        GL(glEnable (GL_BLEND));
+    }
+    if (render_data->alpha_to_coverage()) {
+        GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+    }
+}
+
+void Renderer::renderMesh(RenderData* render_data,
+        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+        int render_mask, ShaderManager* shader_manager, int modeShadow) {
+
+    for (int curr_pass = 0; curr_pass < render_data->pass_count();
+            ++curr_pass) {
+        numberTriangles += render_data->mesh()->getNumTriangles();
+        numberDrawCalls++;
+
+        set_face_culling(render_data->pass(curr_pass)->cull_face());
+        Material* curr_material =
+            render_data->pass(curr_pass)->material();
+
+        if (curr_material != nullptr) {
+            GL(renderMaterialShader(render_data, view_matrix, projection_matrix,
+                        render_mask, shader_manager, modeShadow, curr_material));
         }
-        if (!render_data->depth_test()) {
-            GL(glDisable (GL_DEPTH_TEST));
-        }
-        if (!render_data->alpha_blend()) {
-            GL(glDisable (GL_BLEND));
-        }
-        if( render_data->alpha_to_coverage()) {
-            GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-            GL(glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask()));
-        }
+    }
+}
 
-        if (render_data->mesh() != 0) {
-            for (int curr_pass = 0; curr_pass < render_data->pass_count();
-                    ++curr_pass) {
-                numberTriangles += render_data->mesh()->getNumTriangles();
-                numberDrawCalls++;
+void Renderer::renderMaterialShader(RenderData* render_data,
+        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+        int render_mask, ShaderManager* shader_manager, int modeShadow,
+        Material *curr_material) {
 
-                set_face_culling(render_data->pass(curr_pass)->cull_face());
-                Material* curr_material =
-                        render_data->pass(curr_pass)->material();
+    //Skip the material whose texture is not ready with some exceptions
+    if (!checkTextureReady(curr_material))
+        return;
 
-                //Skip the material whose texture is not ready with some exceptions
-                if (!checkTextureReady(curr_material)) {
-                    continue;
-                }
+    Transform* const t = render_data->owner_object()->transform();
 
-                Transform* const t = render_data->owner_object()->transform();
+    if (t == nullptr)
+        return;
 
-                if (curr_material != nullptr && nullptr != t) {
-                    glm::mat4 model_matrix(t->getModelMatrix());
-                    glm::mat4 mv_matrix(view_matrix * model_matrix);
-                    glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
-                    try {
-                        bool right = render_mask
-                                & RenderData::RenderMaskBit::Right;
+    glm::mat4 model_matrix(t->getModelMatrix());
+    glm::mat4 mv_matrix(view_matrix * model_matrix);
+    glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
+    try {
+        bool right = render_mask
+            & RenderData::RenderMaskBit::Right;
 
-                        /////////
+        glm::mat4 vp_matrixLightModel;
+        glm::vec3 lightPosition;
 
-                        glm::mat4 vp_matrixLightModel;
-                        glm::vec3 lightPosition;
+        calculateShadow(shader_manager, curr_material, model_matrix,
+                modeShadow, lightPosition, vp_matrixLightModel);
 
-                        calculateShadow(shader_manager, curr_material, model_matrix,
-                                modeShadow, lightPosition, vp_matrixLightModel);
-
-                        if (modeShadow == ShadowShader::RENDER_WITH_SHADOW
-                                && isDefaultPosition3d(curr_material)) {
-                            // render the shadow
-                            shader_manager->getShadowShader()->render(
-                                    mvp_matrix, vp_matrixLightModel, mv_matrix,
-                                    glm::inverseTranspose(mv_matrix),
-                                    view_matrix, model_matrix, lightPosition,
-                                    render_data, curr_material, modeShadow);
-                        } else {
-                            //ShadowShader::RENDER_FROM_LIGHT
-                            //ShadowShader::RENDER_FROM_CAMERA
-
-                            if (modeShadow == ShadowShader::RENDER_FROM_LIGHT) { // ShadowMap
-                                // generates the ShadowMap from light
-                                mvp_matrix = vp_matrixLightModel;
-
-                                // if (!render_data->mesh()->hasShadow()) // TODO
-                                //  continue;
-                            }
-
-                            switch (curr_material->shader_type()) {
-                            case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
-                                shader_manager->getUnlitHorizontalStereoShader()->render(
-                                        mvp_matrix, render_data, curr_material,
-                                        right);
-                                break;
-                            case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
-                                shader_manager->getUnlitVerticalStereoShader()->render(
-                                        mvp_matrix, render_data, curr_material,
-                                        right);
-                                break;
-                            case Material::ShaderType::OES_SHADER:
-                                shader_manager->getOESShader()->render(
-                                        mvp_matrix, render_data, curr_material);
-                                break;
-                            case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
-                                shader_manager->getOESHorizontalStereoShader()->render(
-                                        mvp_matrix, render_data, curr_material,
-                                        right);
-                                break;
-                            case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
-                                shader_manager->getOESVerticalStereoShader()->render(
-                                        mvp_matrix, render_data, curr_material,
-                                        right);
-                                break;
-                            case Material::ShaderType::CUBEMAP_SHADER:
-                                shader_manager->getCubemapShader()->render(
-                                        model_matrix, mvp_matrix, render_data,
-                                        curr_material);
-                                break;
-                            case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                                shader_manager->getCubemapReflectionShader()->render(
-                                        mv_matrix,
-                                        glm::inverseTranspose(mv_matrix),
-                                        glm::inverse(view_matrix), mvp_matrix,
-                                        render_data, curr_material);
-                                break;
-                            case Material::ShaderType::TEXTURE_SHADER:
-                                shader_manager->getTextureShader()->render(
-                                        mv_matrix,
-                                        glm::inverseTranspose(mv_matrix),
-                                        mvp_matrix, render_data, curr_material);
-                                break;
-                            case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
-                                shader_manager->getExternalRendererShader()->render(
-                                        mv_matrix,
-                                        glm::inverseTranspose(mv_matrix),
-                                        mvp_matrix, render_data);
-                                break;
-                            case Material::ShaderType::ASSIMP_SHADER:
-                                shader_manager->getAssimpShader()->render(
-                                        mv_matrix,
-                                        glm::inverseTranspose(mv_matrix),
-                                        mvp_matrix, render_data, curr_material);
-                                break;
-                            case Material::ShaderType::LIGHTMAP_SHADER:
-                                shader_manager->getLightMapShader()->render(mvp_matrix,
-                                        render_data, curr_material);
-                                break;
-                            default:
-                                shader_manager->getCustomShader(
-                                        curr_material->shader_type())->render(
-                                        mvp_matrix, render_data, curr_material,
-                                        right);
-                                break;
-                            }
-                        }
-                    } catch (const std::string &error) {
-                        LOGE(
-                                "Error detected in Renderer::renderRenderData; name : %s, error : %s",
-                                render_data->owner_object()->name().c_str(),
-                                error.c_str());
-                        shader_manager->getErrorShader()->render(mvp_matrix,
-                                render_data);
-                    }
-                }
-            }
+        if (modeShadow == ShadowShader::RENDER_WITH_SHADOW
+                && isDefaultPosition3d(curr_material)) {
+            // render the shadow
+            shader_manager->getShadowShader()->render(
+                    mvp_matrix, vp_matrixLightModel, mv_matrix,
+                    glm::inverseTranspose(mv_matrix),
+                    view_matrix, model_matrix, lightPosition,
+                    render_data, curr_material, modeShadow);
+            return;
         }
 
-        // Restoring to Default.
-        // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
-        // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
-        if (render_data->cull_face() != RenderData::CullBack) {
-            GL(glEnable (GL_CULL_FACE));
-            GL(glCullFace (GL_BACK));
+        //ShadowShader::RENDER_FROM_LIGHT
+        //ShadowShader::RENDER_FROM_CAMERA
+
+        if (modeShadow == ShadowShader::RENDER_FROM_LIGHT) { // ShadowMap
+            // generates the ShadowMap from light
+            mvp_matrix = vp_matrixLightModel;
+
+            // if (!render_data->mesh()->hasShadow()) // TODO
+            //  continue;
         }
 
-        if (render_data->offset()) {
-            GL(glDisable (GL_POLYGON_OFFSET_FILL));
+        //TODO: Improve this logic to avoid a big "switch case"
+        switch (curr_material->shader_type()) {
+            case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
+                shader_manager->getUnlitHorizontalStereoShader()->render(
+                        mvp_matrix, render_data, curr_material,
+                        right);
+                break;
+            case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
+                shader_manager->getUnlitVerticalStereoShader()->render(
+                        mvp_matrix, render_data, curr_material,
+                        right);
+                break;
+            case Material::ShaderType::OES_SHADER:
+                shader_manager->getOESShader()->render(
+                        mvp_matrix, render_data, curr_material);
+                break;
+            case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
+                shader_manager->getOESHorizontalStereoShader()->render(
+                        mvp_matrix, render_data, curr_material,
+                        right);
+                break;
+            case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
+                shader_manager->getOESVerticalStereoShader()->render(
+                        mvp_matrix, render_data, curr_material,
+                        right);
+                break;
+            case Material::ShaderType::CUBEMAP_SHADER:
+                shader_manager->getCubemapShader()->render(
+                        model_matrix, mvp_matrix, render_data,
+                        curr_material);
+                break;
+            case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
+                shader_manager->getCubemapReflectionShader()->render(
+                        mv_matrix,
+                        glm::inverseTranspose(mv_matrix),
+                        glm::inverse(view_matrix), mvp_matrix,
+                        render_data, curr_material);
+                break;
+            case Material::ShaderType::TEXTURE_SHADER:
+                shader_manager->getTextureShader()->render(
+                        mv_matrix,
+                        glm::inverseTranspose(mv_matrix),
+                        mvp_matrix, render_data, curr_material);
+                break;
+            case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
+                shader_manager->getExternalRendererShader()->render(
+                        mv_matrix,
+                        glm::inverseTranspose(mv_matrix),
+                        mvp_matrix, render_data);
+                break;
+            case Material::ShaderType::ASSIMP_SHADER:
+                shader_manager->getAssimpShader()->render(
+                        mv_matrix,
+                        glm::inverseTranspose(mv_matrix),
+                        mvp_matrix, render_data, curr_material);
+                break;
+            case Material::ShaderType::LIGHTMAP_SHADER:
+                shader_manager->getLightMapShader()->render(mvp_matrix,
+                        render_data, curr_material);
+                break;
+            default:
+                shader_manager->getCustomShader(
+                        curr_material->shader_type())->render(
+                        mvp_matrix, render_data, curr_material,
+                        right);
+                break;
         }
-        if (!render_data->depth_test()) {
-            GL(glEnable (GL_DEPTH_TEST));
-        }
-        if (!render_data->alpha_blend()) {
-            GL(glEnable (GL_BLEND));
-        }
-        if (render_data->alpha_to_coverage()) {
-            GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-        }
+    } catch (const std::string &error) {
+        LOGE(
+                "Error detected in Renderer::renderRenderData; name : %s, error : %s",
+                render_data->owner_object()->name().c_str(),
+                error.c_str());
+        shader_manager->getErrorShader()->render(mvp_matrix,
+                render_data);
     }
 }
 
@@ -869,7 +889,6 @@ void Renderer::renderPostEffectData(Camera* camera,
                 "Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
     }
 }
-
 
 void Renderer::set_face_culling(int cull_face) {
     switch (cull_face) {
