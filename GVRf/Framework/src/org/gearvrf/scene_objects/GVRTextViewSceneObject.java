@@ -40,11 +40,12 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-@Deprecated
 public class GVRTextViewSceneObject extends GVRSceneObject {
+    private static final int REALTIME_REFRESH_INTERVAL = 1;
     private static final int HIGH_REFRESH_INTERVAL = 10; // frames
     private static final int MEDIUM_REFRESH_INTERVAL = 20;
     private static final int LOW_REFRESH_INTERVAL = 30;
+    private static final int NONE_REFRESH_INTERVAL = 0;
 
     private static final float DEFAULT_QUAD_WIDTH = 2.0f;
     private static final float DEFAULT_QUAD_HEIGHT = 1.0f;
@@ -58,19 +59,23 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      */
     public static enum IntervalFrequency {
         /*
-         * Frequency HIGH, means will do refresh every 10 frames
+         * Frequency REALTIME, means will refresh as soon as it changes.
+         */
+        REALTIME,
+        /*
+         * Frequency HIGH, means will do refresh every 10 frames (if it changes)
          */
         HIGH,
         /*
-         * Frequency MEDIUM, means will do refresh every 20 frames
+         * Frequency MEDIUM, means will do refresh every 20 frames (if it changes)
          */
         MEDIUM,
         /*
-         * Frequency LOW, means will do refresh every 30 frames
+         * Frequency LOW, means will do refresh every 30 frames (if it changes)
          */
         LOW,
         /*
-         * No periodic refresh
+         * No periodic refresh, even if it changes.
          */
         NONE
     }
@@ -78,7 +83,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private static int sReferenceCounter = 0;// This is for load balancing.
     private boolean mFirstFrame;
     private boolean mIsChanged;
-    private volatile int mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
+    private volatile int mRefreshInterval = REALTIME_REFRESH_INTERVAL;
 
     private final Surface mSurface;
     private final SurfaceTexture mSurfaceTexture;
@@ -305,11 +310,15 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            The refresh frequency of this TextViewSceneObject.
      */
     public void setRefreshFrequency(IntervalFrequency frequency) {
-        if (0 == mRefreshInterval && IntervalFrequency.NONE != frequency) {
+        if (NONE_REFRESH_INTERVAL == mRefreshInterval && IntervalFrequency.NONE != frequency) {
+            // Install draw-frame listener if frequency is no longer NONE
             getGVRContext().unregisterDrawFrameListener(mFrameListener);
             getGVRContext().registerDrawFrameListener(mFrameListener);
         }
         switch (frequency) {
+        case REALTIME:
+            mRefreshInterval = REALTIME_REFRESH_INTERVAL;
+            break;
         case HIGH:
             mRefreshInterval = HIGH_REFRESH_INTERVAL;
             break;
@@ -320,7 +329,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             mRefreshInterval = LOW_REFRESH_INTERVAL;
             break;
         case NONE:
-            mRefreshInterval = 0;
+            mRefreshInterval = NONE_REFRESH_INTERVAL;
             break;
         default:
             break;
@@ -335,12 +344,16 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     public IntervalFrequency getRefreshFrequency() {
         switch (mRefreshInterval) {
+        case REALTIME_REFRESH_INTERVAL:
+            return IntervalFrequency.REALTIME;
         case HIGH_REFRESH_INTERVAL:
             return IntervalFrequency.HIGH;
         case LOW_REFRESH_INTERVAL:
             return IntervalFrequency.LOW;
-        default:
+        case MEDIUM_REFRESH_INTERVAL:
             return IntervalFrequency.MEDIUM;
+        default:
+            return IntervalFrequency.NONE;
         }
     }
 
@@ -355,10 +368,10 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             final GVRTextViewSceneObject sceneObject = mRef.get();
             if (null != sceneObject) {
                 int refreshInterval = sceneObject.mRefreshInterval;
-                if (sceneObject.mFirstFrame
-                        || (0 != refreshInterval
-                            && (++sceneObject.mCount % refreshInterval == 0
-                            && sceneObject.mIsChanged))) {
+                if ((sceneObject.mFirstFrame || sceneObject.mIsChanged) &&
+                    (REALTIME_REFRESH_INTERVAL == refreshInterval ||
+                     (NONE_REFRESH_INTERVAL != refreshInterval
+                            && (++sceneObject.mCount % refreshInterval == 0)))) {
 
                     sceneObject.refresh();
                     if (!sceneObject.mFirstFrame) {
@@ -368,7 +381,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
                     }
                     sceneObject.mIsChanged = false;
                 }
-                if (0 == refreshInterval) {
+                if (NONE_REFRESH_INTERVAL == refreshInterval) {
                     mContext.unregisterDrawFrameListener(this);
                 }
             } else {
