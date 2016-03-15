@@ -53,6 +53,18 @@ static jclass GetGlobalClassReference(JNIEnv& env, const char * className) {
     return gc;
 }
 
+/**
+ * Assuming this is called only by threads that are already attached to jni; it is the
+ * responsibility of the caller to ensure that.
+ */
+static JNIEnv* getCurrentEnv(JavaVM* javaVm) {
+    JNIEnv* result;
+    if (JNI_OK != javaVm->GetEnv(reinterpret_cast<void**>(&result), JNI_VERSION_1_6)) {
+        FAIL("GetEnv failed");
+    }
+    return result;
+}
+
 }
 
 #endif
