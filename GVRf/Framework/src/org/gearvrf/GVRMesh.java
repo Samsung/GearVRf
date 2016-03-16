@@ -285,6 +285,15 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     }
 
     /**
+     * Determine if a named attribute exists in this mesh.
+     * @param key Name of the shader attribute
+     * @return true if attribute exists, false if not
+     */
+    public boolean hasAttribute(String key) {
+    	return NativeMesh.hasAttribute(getNative(), key);
+    }
+    
+    /**
      * Constructs a {@link GVRMesh mesh} that contains this mesh.
      * 
      * <p>
@@ -459,4 +468,6 @@ class NativeMesh {
     static native long getBoundingBox(long mesh);
 
     static native void setBones(long mesh, long[] bonePtrs);
+    
+    static native boolean hasAttribute(long mesh, String key);
 }

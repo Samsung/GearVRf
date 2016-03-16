@@ -404,4 +404,14 @@ Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env, jobject obj, jlong jmesh,
 	env->ReleaseLongArrayElements(jBonePtrArray, bonesPtr, JNI_ABORT);
 }
 
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeMesh_hasAttribute(JNIEnv * env,
+        jobject obj, jlong jmesh, jstring key) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    jboolean result = mesh->hasAttribute(native_key);
+    env->ReleaseStringUTFChars(key, char_key);
+    return result;
+}
 }
