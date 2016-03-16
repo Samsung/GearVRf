@@ -38,8 +38,8 @@ import android.view.Surface;
  */
 public class GVRViewSceneObject extends GVRSceneObject {
 
-    private final Surface mSurface;
-    private final SurfaceTexture mSurfaceTexture;
+    private Surface mSurface;
+    private SurfaceTexture mSurfaceTexture;
     private final GVRView mView;
 
     /**
@@ -52,27 +52,42 @@ public class GVRViewSceneObject extends GVRSceneObject {
      *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)} and
      *            {@link GVRContext#createQuad(float, float)}
      */
-    public GVRViewSceneObject(GVRContext gvrContext, GVRView gvrView, GVRMesh mesh) {
+    public GVRViewSceneObject(final GVRContext gvrContext, final GVRView gvrView, GVRMesh mesh) {
         super(gvrContext, mesh);
 
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRTexture texture = new GVRExternalTexture(gvrContext);
 
         // TODO: Shader type maybe defined by some GVRView.getShaderType()
         // according to view type
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);
-
-        mSurfaceTexture = new SurfaceTexture(texture.getId());
-        mSurface = new Surface(mSurfaceTexture);
-        mSurfaceTexture.setDefaultBufferSize(gvrView.getView().getWidth(),
-                gvrView.getView().getHeight());
-
-        gvrContext.registerDrawFrameListener(new GVRDrawFrameListenerImpl(gvrContext, mSurfaceTexture));
-        gvrView.setSceneObject(this);
-
-        gvrView.getView().postInvalidate();
         mView = gvrView;
+
+        // Generate texture on GL thread
+        gvrContext.runOnGlThreadPostRender(0, new Runnable() {
+            @Override
+            public void run() {
+                final int textureId = texture.getId();
+
+                // Initialize UI objects on UI thread
+                gvrContext.getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSurfaceTexture = new SurfaceTexture(textureId);
+                        mSurface = new Surface(mSurfaceTexture);
+                        mSurfaceTexture.setDefaultBufferSize(gvrView.getView().getWidth(),
+                                gvrView.getView().getHeight());
+
+                        // Make the scene object current after mSurfaceTexture and mSurface
+                        // are ready. They are needed for GVRView.draw().
+                        gvrContext.registerDrawFrameListener(new GVRDrawFrameListenerImpl(gvrContext, mSurfaceTexture));
+                        gvrView.setSceneObject(GVRViewSceneObject.this);
+                        gvrView.getView().postInvalidate();
+                    }
+                });
+            }
+        });
     }
 
     public GVRView getView() {
@@ -99,6 +114,9 @@ public class GVRViewSceneObject extends GVRSceneObject {
      * object. See - Android {@link Surface#lockCanvas(android.graphics.Rect)}
      */
     public Canvas lockCanvas() {
+        if (mSurface == null) {
+            return null;
+        }
         return mSurface.lockCanvas(null);
     }
 
@@ -110,6 +128,9 @@ public class GVRViewSceneObject extends GVRSceneObject {
      *            - Android {@link Surface#unlockCanvasAndPost(Canvas)}
      */
     public void unlockCanvasAndPost(Canvas canvas) {
+        if (mSurface == null) {
+            return;
+        }
         mSurface.unlockCanvasAndPost(canvas);
     }
 
