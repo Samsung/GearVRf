@@ -660,6 +660,16 @@ public class GVRMaterial extends GVRHybridObject implements
     }
     
     /**
+     * Determine whether a named texture or uniform is defined
+     * by this material.
+     * @param key name of texture or uniform
+     * @return true if texture or uniform defined, else false
+     */
+    public boolean hasAttribute(String key) {
+    	return NativeMaterial.hasAttribute(getNative(), key);
+    }
+    
+    /**
      * Set the feature set for pre-built shader's. Pre-built shader could be
      * written to support all the properties of a material system with
      * preprocessor macro to On/Off features. feature set would determine which

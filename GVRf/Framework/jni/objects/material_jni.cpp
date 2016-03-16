@@ -186,6 +186,17 @@ env->ReleaseStringUTFChars(key, char_key);
 return jvec4;
 }
 
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeMaterial_hasAttribute(JNIEnv * env,
+    jobject obj, jlong jmaterial, jstring key) {
+Material* material = reinterpret_cast<Material*>(jmaterial);
+const char* char_key = env->GetStringUTFChars(key, 0);
+std::string native_key = std::string(char_key);
+jboolean result = material->hasAttribute(native_key);
+env->ReleaseStringUTFChars(key, char_key);
+return jboolean;
+}
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setVec4(JNIEnv * env,
     jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y, jfloat z,
