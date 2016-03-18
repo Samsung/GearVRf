@@ -59,7 +59,7 @@ public class GVRShader
     {
         String  FragmentShaderSource;
         String  VertexShaderSource;
-        GVRMaterialShaderId ShaderID;
+        GVRCustomMaterialShaderId ShaderID;
     };
 
 
