@@ -201,13 +201,13 @@ public class GVRLight extends GVRHybridObject {
     }
 
     /**
-     * Access the shader segment implementing this light.
+     * Access the shader source code implementing this light.
      * The shader code for each light is combined to make
      * the final fragment shader.
      * @return
      */
-    public GVRShaderSegment getShader() {
-    	return mShader;
+    public String getShaderSource() {
+    	return mShaderSource;
     }
     
     // for future use
@@ -243,7 +243,7 @@ public class GVRLight extends GVRHybridObject {
     }
 
     private boolean isEnabled;
-    protected GVRShaderSegment mShader = null;
+    protected String mShaderSource = null;
 }
 
 class NativeLight {

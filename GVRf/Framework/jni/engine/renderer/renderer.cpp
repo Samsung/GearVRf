@@ -820,7 +820,7 @@ void Renderer::renderMaterialShader(RenderData* render_data,
             default:
                 shader_manager->getCustomShader(
                         curr_material->shader_type())->render(
-                        mvp_matrix, render_data, curr_material,
+                        mvp_matrix, mv_matrix, render_data, curr_material,
                         right);
                 break;
         }

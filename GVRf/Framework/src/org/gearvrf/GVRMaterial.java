@@ -660,13 +660,23 @@ public class GVRMaterial extends GVRHybridObject implements
     }
     
     /**
-     * Determine whether a named texture or uniform is defined
+     * Determine whether a named uniform is defined
      * by this material.
-     * @param key name of texture or uniform
-     * @return true if texture or uniform defined, else false
+     * @param name of uniform in shader and material
+     * @return true if uniform defined, else false
      */
-    public boolean hasAttribute(String key) {
-    	return NativeMaterial.hasAttribute(getNative(), key);
+    public boolean hasUniform(String name) {
+    	return NativeMaterial.hasUniform(getNative(), name);
+    }
+
+    /**
+     * Determine whether a named texture is attached
+     * to this material.
+     * @param key name of texture
+     * @return true if texture used by this material, else false
+     */
+    public boolean hasTexture(String name) {
+        return NativeMaterial.hasTexture(getNative(), name);
     }
     
     /**
@@ -727,4 +737,8 @@ class NativeMaterial {
             float z4, float w4);
 
     static native void setShaderFeatureSet(long material, int featureSet);
+    
+    static native boolean hasUniform(long material, String key);
+    
+    static native boolean hasTexture(long material, String key);
 }
