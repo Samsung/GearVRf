@@ -3,10 +3,6 @@ package org.gearvrf.utility;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRContext;
-
-import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.MediaPlayer;
