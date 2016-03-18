@@ -167,22 +167,6 @@ public:
         vao_dirty_ = true;
     }
 
-    bool hasAttribute(std::string key) const {
-        if (vec3_vectors_.find(key) != vec3_vectors_.end()) {
-            return true;
-        }
-        if (vec2_vectors_.find(key) != vec2_vectors_.end()) {
-            return true;
-        }
-        if (vec4_vectors_.find(key) != vec4_vectors_.end()) {
-            return true;
-        }
-        if (float_vectors_.find(key) != float_vectors_.end()) {
-            return true;
-        }
-        return false;
-    }
-
     const std::vector<float>& getFloatVector(std::string key) const {
         auto it = float_vectors_.find(key);
         if (it != float_vectors_.end()) {
@@ -247,6 +231,7 @@ public:
     Mesh* createBoundingBox();
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
+    bool hasAttribute(std::string key) const;
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location

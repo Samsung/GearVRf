@@ -171,10 +171,7 @@ public:
         }
     }
 
-    bool hasAttribute(const std::string& key) const {
-        if (textures_.find(key) != textures_.end()) {
-            return true;
-        }
+    bool hasUniform(const std::string& key) const {
         if (vec3s_.find(key) != vec3s_.end()) {
             return true;
         }
@@ -191,6 +188,10 @@ public:
             return true;
         }
         return false;
+    }
+
+    bool hasTexture(const std::string& key) const {
+        return (textures_.find(key) != textures_.end());
     }
 
     void setMat4(const std::string& key, glm::mat4 matrix) {

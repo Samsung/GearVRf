@@ -326,4 +326,24 @@ void Mesh::generateBoneArrayBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+bool Mesh::hasAttribute(std::string key) const {
+    if ((key == "a_position") ||
+        (key == "a_normal") ||
+        (key == "a_texcoord")) {
+        return true;
+    }
+    if (vec3_vectors_.find(key) != vec3_vectors_.end()) {
+        return true;
+    }
+    if (vec2_vectors_.find(key) != vec2_vectors_.end()) {
+        return true;
+    }
+    if (vec4_vectors_.find(key) != vec4_vectors_.end()) {
+        return true;
+    }
+    if (float_vectors_.find(key) != float_vectors_.end()) {
+        return true;
+    }
+    return false;
+}
 }

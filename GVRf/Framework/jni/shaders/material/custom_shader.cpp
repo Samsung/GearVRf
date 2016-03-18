@@ -31,10 +31,14 @@
 namespace gvr {
 CustomShader::CustomShader(std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), u_mvp_(0), u_right_(
-                0), texture_keys_(), attribute_float_keys_(), attribute_vec2_keys_(), attribute_vec3_keys_(), attribute_vec4_keys_(), uniform_float_keys_(), uniform_vec2_keys_(), uniform_vec3_keys_(), uniform_vec4_keys_(), uniform_mat4_keys_() {
+        program_(0), u_mvp_(0), u_mv_(0), u_right_(0),
+        texture_keys_(), attribute_float_keys_(),
+        attribute_vec2_keys_(), attribute_vec3_keys_(), attribute_vec4_keys_(),
+        uniform_float_keys_(), uniform_vec2_keys_(), uniform_vec3_keys_(),
+        uniform_vec4_keys_(), uniform_mat4_keys_() {
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+    u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
     u_right_ = glGetUniformLocation(program_->id(), "u_right");
 }
 
@@ -101,7 +105,7 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
+void CustomShader::render(const glm::mat4& mvp_matrix, const glm::mat4& mv_matrix, RenderData* render_data,
         Material* material, bool right) {
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         Texture* texture = material->getTextureNoError(it->second);
@@ -147,6 +151,9 @@ void CustomShader::render(const glm::mat4& mvp_matrix, RenderData* render_data,
 
     if (u_mvp_ != -1) {
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    }
+    if (u_mv_ != -1) {
+        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
     }
     if (u_right_ != 0) {
         glUniform1i(u_right_, right ? 1 : 0);
