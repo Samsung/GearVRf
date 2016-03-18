@@ -24,6 +24,7 @@
 #include "objects/textures/texture.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_log.h"
+#include "util/jni_utils.h"
 
 namespace gvr {
 class CompressedTexture: public Texture {
@@ -41,8 +42,10 @@ public:
             int dataOffset, int* texture_parameters) :
             Texture(new GLTexture(target, texture_parameters)), target(target) {
         pending_gl_task_ = GL_TASK_INIT_INTERNAL_FORMAT;
+        if (JNI_OK != env->GetJavaVM(&javaVm_)) {
+            FAIL("GetJavaVM failed");
+        }
 
-        env_ = env;
         internalFormat_ = internalFormat;
         width_ = width;
         height_ = height;
@@ -52,12 +55,15 @@ public:
     }
 
     virtual ~CompressedTexture() {
+        JNIEnv* env = getCurrentEnv(javaVm_);
+
         // Release global refs. Race condition does not occur because if
         // the runPendingGL is running, the object won't be destructed.
         switch (pending_gl_task_) {
-        case GL_TASK_INIT_INTERNAL_FORMAT:
-            env_->DeleteGlobalRef(bytesRef_);
+        case GL_TASK_INIT_INTERNAL_FORMAT: {
+            env->DeleteGlobalRef(bytesRef_);
             break;
+        }
 
         default:
             break;
@@ -80,14 +86,15 @@ public:
             break;
 
         case GL_TASK_INIT_INTERNAL_FORMAT: {
-            jbyte* data = env_->GetByteArrayElements(bytesRef_, 0);
+            JNIEnv* env = getCurrentEnv(javaVm_);
+            jbyte* data = env->GetByteArrayElements(bytesRef_, 0);
 
             glBindTexture(target, gl_texture_->id());
             glCompressedTexImage2D(target, 0, internalFormat_, width_, height_, 0,
                     imageSize_, data + dataOffset_);
 
-            env_->ReleaseByteArrayElements(bytesRef_, data, 0);
-            env_->DeleteGlobalRef(bytesRef_);
+            env->ReleaseByteArrayElements(bytesRef_, data, 0);
+            env->DeleteGlobalRef(bytesRef_);
             break;
         }
 
@@ -114,7 +121,7 @@ private:
     };
     int pending_gl_task_;
 
-    JNIEnv* env_;
+    JavaVM* javaVm_;
 
     // For GL_TASK_INIT_INTERNAL_FORMAT
     GLenum internalFormat_;

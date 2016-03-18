@@ -27,6 +27,7 @@
 #include "objects/textures/texture.h"
 #include "util/gvr_log.h"
 #include "util/scope_exit.h"
+#include "util/jni_utils.h"
 
 namespace gvr {
 class CubemapTexture: public Texture {
@@ -35,7 +36,9 @@ public:
             int* texture_parameters) :
             Texture(new GLTexture(TARGET, texture_parameters)) {
         pending_gl_task_ = GL_TASK_INIT_BITMAP;
-        env_ = env;
+        if (JNI_OK != env->GetJavaVM(&javaVm_)) {
+            FAIL("GetJavaVM failed");
+        }
 
         for (int i = 0; i < 6; i++) {
             bitmapRef_[i] = env->NewGlobalRef(env->GetObjectArrayElement(bitmapArray, i));
@@ -47,7 +50,10 @@ public:
             jobjectArray textureArray, int* textureOffset, int* texture_parameters) :
             Texture(new GLTexture(TARGET, texture_parameters)) {
         pending_gl_task_ = GL_TASK_INIT_INTERNAL_FORMAT;
-        env_ = env;
+        if (JNI_OK != env->GetJavaVM(&javaVm_)) {
+            FAIL("GetJavaVM failed");
+        }
+
         internalFormat_ = internalFormat;
         width_ = width;
         height_ = height;
@@ -64,18 +70,19 @@ public:
     }
 
     virtual ~CubemapTexture() {
+        JNIEnv* env = getCurrentEnv(javaVm_);
         // Release global refs. Race condition does not occur because if
         // the runPendingGL is running, the object won't be destructed.
         switch (pending_gl_task_) {
         case GL_TASK_INIT_BITMAP:
             for (int i = 0; i < 6; i++) {
-                env_->DeleteGlobalRef(bitmapRef_[i]);
+                env->DeleteGlobalRef(bitmapRef_[i]);
             }
             break;
 
         case GL_TASK_INIT_INTERNAL_FORMAT:
             for (int i = 0; i < 6; i++) {
-                env_->DeleteGlobalRef(textureRef_[i]);
+                env->DeleteGlobalRef(textureRef_[i]);
             }
             break;
 
@@ -96,13 +103,14 @@ public:
             return;
 
         case GL_TASK_INIT_BITMAP: {
+            JNIEnv* env = getCurrentEnv(javaVm_);
             // Clean up upon scope exit. The SCOPE_EXIT utility is used
             // to avoid duplicated code in the throw case and normal
             // case.
             SCOPE_EXIT(
                     pending_gl_task_ = GL_TASK_NONE;
                     for (int i = 0; i < 6; i++) {
-                        env_->DeleteGlobalRef(bitmapRef_[i]);
+                        env->DeleteGlobalRef(bitmapRef_[i]);
                     }
             );
 
@@ -120,12 +128,12 @@ public:
                             "new BaseTexture() failed! Input bitmap is NULL.";
                     throw error;
                 }
-                if ((ret = AndroidBitmap_getInfo(env_, bitmap, &info)) < 0) {
+                if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
                     std::string error = "AndroidBitmap_getInfo () failed! error = "
                             + ret;
                     throw error;
                 }
-                if ((ret = AndroidBitmap_lockPixels(env_, bitmap, &pixels)) < 0) {
+                if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
                     std::string error =
                             "AndroidBitmap_lockPixels () failed! error = " + ret;
                     throw error;
@@ -135,18 +143,19 @@ public:
                         info.width, info.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                         pixels);
 
-                AndroidBitmap_unlockPixels(env_, bitmap);
+                AndroidBitmap_unlockPixels(env, bitmap);
             }
 
             break;
         }
 
         case GL_TASK_INIT_INTERNAL_FORMAT: {
+            JNIEnv* env = getCurrentEnv(javaVm_);
             // Clean up upon scope exit
             SCOPE_EXIT(
                     pending_gl_task_ = GL_TASK_NONE;
                     for (int i = 0; i < 6; i++) {
-                        env_->DeleteGlobalRef(textureRef_[i]);
+                        env->DeleteGlobalRef(textureRef_[i]);
                     }
             );
 
@@ -155,7 +164,7 @@ public:
             for (int i = 0; i < 6; i++) {
                 jbyteArray byteArray = static_cast<jbyteArray>(textureRef_[i]);
 
-                jbyte *textureData = env_->GetByteArrayElements(byteArray, 0);
+                jbyte *textureData = env->GetByteArrayElements(byteArray, 0);
                 int ret;
 
                 if (byteArray == NULL) {
@@ -167,7 +176,7 @@ public:
                 glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
                         internalFormat_, width_, height_, 0, imageSize_, textureData + textureOffset_[i]);
 
-                env_->ReleaseByteArrayElements(byteArray, textureData, 0);
+                env->ReleaseByteArrayElements(byteArray, textureData, 0);
             }
 
             break;
@@ -192,9 +201,9 @@ private:
         GL_TASK_INIT_BITMAP,
         GL_TASK_INIT_INTERNAL_FORMAT,
     };
-    int pending_gl_task_;
+    int pending_gl_task_ = GL_TASK_NONE;
 
-    JNIEnv* env_;
+    JavaVM* javaVm_;
 
     // For GL_TASK_INIT_BITMAP
     jobject bitmapRef_[6];

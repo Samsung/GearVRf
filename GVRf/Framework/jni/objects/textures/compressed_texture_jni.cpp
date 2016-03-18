@@ -32,7 +32,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
         jobject obj, jint target);
 }
-;
+
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,

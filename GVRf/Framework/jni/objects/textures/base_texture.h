@@ -26,6 +26,7 @@
 
 #include "objects/textures/texture.h"
 #include "util/gvr_log.h"
+#include "util/jni_utils.h"
 
 namespace gvr {
 class BaseTexture: public Texture {
@@ -45,7 +46,9 @@ public:
             throw error;
         }
 
-        env_ = env;
+        if (JNI_OK != env->GetJavaVM(&javaVm_)) {
+            FAIL("GetJavaVM failed");
+        }
         bitmapRef_ = env->NewGlobalRef(bitmap);
 
         pending_gl_task_ = GL_TASK_INIT_BITMAP;
@@ -59,6 +62,7 @@ public:
         width_ = width;
         height_ = height;
 
+        javaVm_ = nullptr;
         pending_gl_task_ = GL_TASK_INIT_PIXELS_PARAMS;
     }
 
@@ -68,9 +72,11 @@ public:
 
     virtual ~BaseTexture() {
         switch (pending_gl_task_) {
-        case GL_TASK_INIT_BITMAP:
-            env_->DeleteGlobalRef(bitmapRef_);
+        case GL_TASK_INIT_BITMAP: {
+            JNIEnv* env = getCurrentEnv(javaVm_);
+            env->DeleteGlobalRef(bitmapRef_);
             break;
+        }
 
         default:
             break;
@@ -97,8 +103,10 @@ public:
             return;
 
         case GL_TASK_INIT_BITMAP: {
+            JNIEnv* env = getCurrentEnv(javaVm_);
+
             int ret;
-            if ((ret = AndroidBitmap_lockPixels(env_, bitmapRef_, (void**)&pixels_)) < 0) {
+            if ((ret = AndroidBitmap_lockPixels(env, bitmapRef_, (void**)&pixels_)) < 0) {
                 std::string error = "AndroidBitmap_lockPixels () failed! error = "
                         + ret;
                 throw error;
@@ -109,8 +117,8 @@ public:
                     GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
             glGenerateMipmap(GL_TEXTURE_2D);
 
-            AndroidBitmap_unlockPixels(env_, bitmapRef_);
-            env_->DeleteGlobalRef(bitmapRef_);
+            AndroidBitmap_unlockPixels(env, bitmapRef_);
+            env->DeleteGlobalRef(bitmapRef_);
             break;
         }
 
@@ -146,7 +154,7 @@ private:
     };
     int pending_gl_task_;
 
-    JNIEnv* env_;
+    JavaVM* javaVm_;
     jobject bitmapRef_;
     AndroidBitmapInfo info_;
     const unsigned char* pixels_;

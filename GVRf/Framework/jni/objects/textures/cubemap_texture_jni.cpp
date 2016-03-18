@@ -29,7 +29,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCubemapTexture_bitmapArrayConstructor(JNIEnv * env,
         jobject obj, jobjectArray bitmapArray, jintArray jtexture_parameters);
 }
-;
+
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCubemapTexture_bitmapArrayConstructor(JNIEnv * env,
