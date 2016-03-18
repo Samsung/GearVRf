@@ -49,6 +49,16 @@ class RenderData;
 class RenderTexture;
 class ShaderManager;
 
+struct ShaderUniformsPerObject {
+    glm::mat4   u_model;        // Model matrix
+    glm::mat4   u_view;         // View matrix
+    glm::mat4   u_view_inv;     // inverse of View matrix
+    glm::mat4   u_mv;           // ModelView matrix
+    glm::mat4   u_mvp;          // ModelViewProjection matrix
+    glm::mat4   u_mv_it;        // inverse transpose of ModelView
+    int         u_right;        // 1 = right eye, 0 = left
+};
+
 class Renderer {
 private:
     Renderer();

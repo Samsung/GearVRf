@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "custom_shader.h"
-
+#include "engine/renderer/renderer.h"
 #include "gl/gl_program.h"
 #include "objects/material.h"
 #include "objects/mesh.h"
@@ -39,6 +39,7 @@ CustomShader::CustomShader(std::string vertex_shader,
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
+    u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
     u_right_ = glGetUniformLocation(program_->id(), "u_right");
 }
 
@@ -105,8 +106,7 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const glm::mat4& mvp_matrix, const glm::mat4& mv_matrix, RenderData* render_data,
-        Material* material, bool right) {
+void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* render_data, Material* material) {
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         Texture* texture = material->getTextureNoError(it->second);
         // If any texture is not ready, do not render the material at all
@@ -150,13 +150,16 @@ void CustomShader::render(const glm::mat4& mvp_matrix, const glm::mat4& mv_matri
     }
 
     if (u_mvp_ != -1) {
-        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mvp));
     }
     if (u_mv_ != -1) {
-        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
+        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv));
+    }
+    if (u_mv_it_ != -1) {
+        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv_it));
     }
     if (u_right_ != 0) {
-        glUniform1i(u_right_, right ? 1 : 0);
+        glUniform1i(u_right_, uniforms.u_right ? 1 : 0);
     }
 
     int texture_index = 0;
@@ -165,24 +168,28 @@ void CustomShader::render(const glm::mat4& mvp_matrix, const glm::mat4& mv_matri
         Texture* texture = material->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
+        LOGD("glBindTexture %s", it->second.c_str());
     }
 
     for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
             ++it) {
         glm::vec2 v = material->getVec2(it->second);
         glUniform2f(it->first, v.x, v.y);
+        LOGD("glUniform2F %s %f, %f", it->second.c_str(), v.x, v.y);
     }
 
     for (auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end();
             ++it) {
         glm::vec3 v = material->getVec3(it->second);
         glUniform3f(it->first, v.x, v.y, v.z);
+        LOGD("glUniform3F %s %f, %f, %f", it->second.c_str(), v.x, v.y, v.z);
     }
 
     for (auto it = uniform_vec4_keys_.begin(); it != uniform_vec4_keys_.end();
             ++it) {
         glm::vec4 v = material->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
+        LOGD("glUniform4F %s %f, %f, %f, %f", it->second.c_str(), v.x, v.y, v.z, v.w);
     }
 
     for (auto it = uniform_mat4_keys_.begin(); it != uniform_mat4_keys_.end();
