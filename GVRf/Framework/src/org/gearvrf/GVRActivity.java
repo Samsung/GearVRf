@@ -15,9 +15,7 @@
 
 package org.gearvrf;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import org.gearvrf.VrapiActivityHandler.VrapiNotAvailableException;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.utility.DockEventReceiver;
@@ -80,6 +78,7 @@ public class GVRActivity extends Activity {
         mAppSettings = new VrAppSettings();
         super.onCreate(savedInstanceState);
 
+        mDockEventReceiver = new DockEventReceiver(this, mRunOnDock, mRunOnUndock);
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
 
         mActivityNative = GVRActivityNative.createObject(this, mAppSettings, mRenderingCallbacks);
@@ -89,18 +88,6 @@ public class GVRActivity extends Activity {
         } catch (final Exception ignored) {
             // will fall back to mono rendering in that case
         }
-        mDockEventReceiver = new DockEventReceiver(this,
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        handleOnDock();
-                    }
-                }, new Runnable() {
-                    @Override
-                    public void run() {
-                        handleOnUndock();
-                    }
-                });
     }
 
     protected void onInitAppSettings(VrAppSettings appSettings) {
@@ -350,55 +337,23 @@ public class GVRActivity extends Activity {
         return mViewManager;
     }
 
-    private boolean mIsDocked = false;
-
-    void handleOnDock() {
-        Log.i(TAG, "handleOnDock");
-        final Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                if (!mIsDocked) {
-                    mIsDocked = true;
-                    if (null != mActivityNative) {
-                        mActivityNative.onDock();
-                    }
-                    for (final DockListener dl : mDockListeners) {
-                        dl.onDock();
-                    }
-                }
+    private final Runnable mRunOnDock = new Runnable() {
+        @Override
+        public void run() {
+            if (null != mActivityNative) {
+                mActivityNative.onDock();
             }
-        };
-        runOnUiThread(r);
-    }
+        }
+    };
 
-    void handleOnUndock() {
-        Log.i(TAG, "handleOnUndock");
-        final Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                if (mIsDocked) {
-                    mIsDocked = false;
-                    if (null != mActivityNative) {
-                        mActivityNative.onUndock();
-                    }
-                    for (final DockListener dl : mDockListeners) {
-                        dl.onUndock();
-                    }
-                }
+    private final Runnable mRunOnUndock = new Runnable() {
+        @Override
+        public void run() {
+            if (null != mActivityNative) {
+                mActivityNative.onUndock();
             }
-        };
-        runOnUiThread(r);
-    }
-
-    interface DockListener {
-        void onDock();
-        void onUndock();
-    }
-    private final List<DockListener> mDockListeners = new CopyOnWriteArrayList<DockListener>();
-
-    void addDockListener(final DockListener dl) {
-        mDockListeners.add(dl);
-    }
+        }
+    };
 
     private DockEventReceiver mDockEventReceiver;
 
