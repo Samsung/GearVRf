@@ -77,9 +77,6 @@ extern "C" {
 
     JNIEXPORT jboolean JNICALL
     Java_org_gearvrf_NativeMaterial_hasUniform(JNIEnv *, jobject, jlong, jstring);
-
-    JNIEXPORT jboolean JNICALL
-    Java_org_gearvrf_NativeMaterial_hasTexture(JNIEnv*, jobject, jlong jmaterial, jstring key);
 };
 
 JNIEXPORT jlong JNICALL
@@ -189,17 +186,6 @@ env->SetFloatArrayRegion(jvec4, 0, 4,
         reinterpret_cast<jfloat*>(&material_vec4));
 env->ReleaseStringUTFChars(key, char_key);
 return jvec4;
-}
-
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeMaterial_hasTexture(JNIEnv * env,
-        jobject, jlong jmaterial, jstring key) {
-Material* material = reinterpret_cast<Material*>(jmaterial);
-const char* char_key = env->GetStringUTFChars(key, 0);
-std::string native_key = std::string(char_key);
-jboolean result = (material->hasTexture(native_key) == true);
-env->ReleaseStringUTFChars(key, char_key);
-return result;
 }
 
 JNIEXPORT jboolean JNICALL

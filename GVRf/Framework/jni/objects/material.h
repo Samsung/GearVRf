@@ -190,10 +190,6 @@ public:
         return false;
     }
 
-    bool hasTexture(const std::string& key) const {
-        return (textures_.find(key) != textures_.end());
-    }
-
     void setMat4(const std::string& key, glm::mat4 matrix) {
         mat4s_[key] = matrix;
     }

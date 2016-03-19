@@ -23,156 +23,8 @@ public class GVRLight extends GVRHybridObject {
 
     public GVRLight(GVRContext gvrContext) {
         super(gvrContext, NativeLight.ctor());
-        // set light parameters to OpenGL default values
-        setPosition(0.0f, 0.0f, 1.0f);
-        setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
-        setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         isEnabled = true;
-    }
-
-    /**
-     * Get the {@code light_pos} uniform.
-     * 
-     * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code light_pos}. With the {@linkplain GVRShaderType.Lit 'lit' shader,}
-     * this allows you to add an overlay color on top of the texture.
-     * 
-     * @return The current {@code vec4 light_pos} as a three-element array
-     */
-    public float[] getPosition() {
-        return getVec3("position");
-    }
-
-    /**
-     * Set the {@code light_pos} uniform for light.
-     * 
-     * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code light_pos}. With the {@linkplain GVRShaderType.Lit 'lit' shader,}
-     * this allows you to add an overlay lighting color on top of the texture.
-     * The position is in the camera coordinate system. The user is responsible
-     * to use the correct coordinate system.
-     * 
-     * @param x
-     *            x-coordinate in camera coordinate system
-     * @param y
-     *            y-coordinate in camera coordinate system
-     * @param z
-     *            z-coordinate in camera coordinate system
-     */
-    public void setPosition(float x, float y, float z) {
-        setVec3("position", x, y, z);
-    }
-
-    /**
-     * Get the {@code lightAmbientIntensity} uniform.
-     * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightAmbientIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
-     * 
-     * @return The current {@code vec4 lightAmbientIntensity} as a four-element
-     *         array
-     */
-    public float[] getAmbientIntensity() {
-        return getVec4("ambient_intensity");
-    }
-
-    /**
-     * Set the {@code lightAmbientIntensity} uniform for lighting.
-     * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightAmbientIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay ambient light intensity
-     * on top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
-     * inclusive.
-     * 
-     * @param r
-     *            Red
-     * @param g
-     *            Green
-     * @param b
-     *            Blue
-     * @param a
-     *            Alpha
-     */
-    public void setAmbientIntensity(float r, float g, float b, float a) {
-        setVec4("ambient_intensity", r, g, b, a);
-    }
-
-    /**
-     * Get the {@code lightDiffuseIntensity} uniform.
-     * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightDiffuseIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
-     * 
-     * @return The current {@code vec4 lightDiffuseIntensity} as a four-element
-     *         array
-     */
-    public float[] getDiffuseIntensity() {
-        return getVec4("diffuse_intensity");
-    }
-
-    /**
-     * Set the {@code lightDiffuseIntensity} uniform for lighting.
-     * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightDiffuseIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay diffuse light intensity
-     * on top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
-     * inclusive.
-     * 
-     * @param r
-     *            Red
-     * @param g
-     *            Green
-     * @param b
-     *            Blue
-     * @param a
-     *            Alpha
-     */
-    public void setDiffuseIntensity(float r, float g, float b, float a) {
-        setVec4("diffuse_intensity", r, g, b, a);
-    }
-
-    /**
-     * Get the {@code lightSpecularIntensity} uniform.
-     * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightSpecularIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
-     * 
-     * @return The current {@code vec4 lightSpecularIntensity} as a four-element
-     *         array
-     */
-    public float[] getSpecularIntensity() {
-        return getVec4("specular_intensity");
-    }
-
-    /**
-     * Set the {@code lightSpecularIntensity} uniform for lighting.
-     * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightSpecularIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay specular light intensity
-     * on top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
-     * inclusive.
-     * 
-     * @param r
-     *            Red
-     * @param g
-     *            Green
-     * @param b
-     *            Blue
-     * @param a
-     *            Alpha
-     */
-    public void setSpecularIntensity(float r, float g, float b, float a) {
-        setVec4("specular_intensity", r, g, b, a);
+        lightID = -1;
     }
 
     /**
@@ -199,51 +51,95 @@ public class GVRLight extends GVRHybridObject {
     public boolean isEnabled() {
         return isEnabled;
     }
+    
+    /**
+     * Get the unique light ID.
+     * 
+     * This is a number which is different for every light
+     * and is assigned by GearVRF when the light is added
+     * to the scene.
+     */
+    public int getLightID() {
+        return lightID;
+    }
 
     /**
      * Access the shader source code implementing this light.
-     * The shader code for each light is combined to make
-     * the final fragment shader.
+     *
+     * The shader code for each light defines a function which
+     * computes the color contributed by this light.
+     * It takes a structure of uniforms and a <Surface>
+     * structure as input and outputs a <Radiance> structure.
+     * The format of the uniforms is defined by the shader descriptor.
+     * The fragment shader is responsible for computing
+     * the surface color and integrating the contribution
+     * of each light to the final fragment color. It defines
+     * the format of the <Radiance> and <Surface> structures.
+     * {@link GVRShader }
+     * {@link getShaderDescriptor}
      * @return
      */
     public String getShaderSource() {
-    	return mShaderSource;
+    	return shaderSource;
+    }
+    
+    /**
+     * Access the descriptor defining the shader uniforms used by this light.
+     *
+     * Defines the GLSL structure representing the uniform data
+     * passed to this light. These must match the structure
+     * defined in the shader source code. Each light object
+     * maintains a copy of these values and sends them to
+     * the shader when they are updated.
+     * the format of the <Radiance> and <Surface> structures.
+     * {@link GVRShader }
+     * {@link getShaderSource}
+     * @return String describing light shader uniforms
+     */
+    public String getUniformDescriptor() {
+        return uniformDescriptor;
     }
     
     // for future use
     @SuppressWarnings("unused")
-    private float getFloat(String key) {
+    public float getFloat(String key) {
         return NativeLight.getFloat(getNative(), key);
     }
 
     // for future use
     @SuppressWarnings("unused")
-    private void setFloat(String key, float value) {
+    public void setFloat(String key, float value) {
         checkStringNotNullOrEmpty("key", key);
         checkFloatNotNaNOrInfinity("value", value);
         NativeLight.setFloat(getNative(), key, value);
     }
 
-    private float[] getVec3(String key) {
+    public float[] getVec3(String key) {
         return NativeLight.getVec3(getNative(), key);
     }
 
-    private void setVec3(String key, float x, float y, float z) {
+    public void setVec3(String key, float x, float y, float z) {
         checkStringNotNullOrEmpty("key", key);
         NativeLight.setVec3(getNative(), key, x, y, z);
     }
 
-    private float[] getVec4(String key) {
+    public float[] getVec4(String key) {
         return NativeLight.getVec4(getNative(), key);
     }
 
-    private void setVec4(String key, float x, float y, float z, float w) {
+    public void setVec4(String key, float x, float y, float z, float w) {
         checkStringNotNullOrEmpty("key", key);
         NativeLight.setVec4(getNative(), key, x, y, z, w);
     }
 
+    protected void setShaderSource(String source) {
+        shaderSource = source;
+    }
+    
     private boolean isEnabled;
-    protected String mShaderSource = null;
+    protected int  lightID;
+    protected String shaderSource = null;
+    protected String uniformDescriptor = null;
 }
 
 class NativeLight {

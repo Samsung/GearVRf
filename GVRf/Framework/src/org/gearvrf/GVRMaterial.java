@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Colors;
@@ -670,13 +671,11 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     /**
-     * Determine whether a named texture is attached
-     * to this material.
-     * @param key name of texture
-     * @return true if texture used by this material, else false
+     * Return the list of texture keys for this material.
+     * @return set of unique texture names.
      */
-    public boolean hasTexture(String name) {
-        return NativeMaterial.hasTexture(getNative(), name);
+    public Set<String> getTextureNames() {
+        return textures.keySet();
     }
     
     /**
@@ -739,6 +738,4 @@ class NativeMaterial {
     static native void setShaderFeatureSet(long material, int featureSet);
     
     static native boolean hasUniform(long material, String key);
-    
-    static native boolean hasTexture(long material, String key);
 }

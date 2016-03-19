@@ -63,9 +63,10 @@ public class GVRShader
     };
 
 
-    public GVRShader(String name)
+    public GVRShader(String name, String descriptor)
     {
         mName = name;
+        mUniformDescriptor = descriptor;
         mShaderSegments = new HashMap<String, String>();
     }
 
@@ -74,6 +75,7 @@ public class GVRShader
      * 
      * @param name string name of shader segment
      * @return source code for segment or null if none exists.
+     * {@link setSegment}
      */
     public String getSegment(String name)
     {
@@ -82,6 +84,11 @@ public class GVRShader
 
     /**
      * Attach a named shader segment.
+     * 
+     * Shader segment names should start with either "Vertex" or
+     * "Fragment" to designate which type of shader the code
+     * belongs with. Both vertex and fragment shaders can have
+     * more than one code segment contribute to the final shader.
      * 
      * @param segmentName  name associated with shader segment
      * @param shaderSource String with shader source code
@@ -101,6 +108,22 @@ public class GVRShader
         }
     }
 
+    /**
+     * Get the string describing the shader uniforms.
+     * 
+     * Each uniform is a fixed number of integer or float values.
+     * It is described with the type ("int" or "float") immediately
+     * followed by the size (a small integer) a space and then the
+     * name of uniform in the shader (e.g. "int enabled, float3 color")
+     * Spaces, commas, and other punctuation are ignored.
+     * 
+     * @return String with descriptor.
+     * {@link GVRLight.getUniformDescriptor }
+     */
+    public String getUniformDescriptor() {
+        return mUniformDescriptor;
+    }
+    
     /**
      * Create a unique signature for this shader variant.
      * 
@@ -139,11 +162,12 @@ public class GVRShader
     public Set<String> generateVariantDefines(GVRMesh mesh, GVRMaterial material)
     {
         Set<String> definedNames = new HashSet<String>();
+        Set<String> texNames = material.getTextureNames();
          for (String name : mShaderDefines)
          {
              if (mesh.hasAttribute(name) ||
                 material.hasUniform(name) ||
-                material.hasTexture(name))
+                texNames.contains(name))
                 {
                     definedNames.add(name);
                 }
@@ -225,9 +249,44 @@ public class GVRShader
             Log.d("vertex", variant.VertexShaderSource);
             Log.d("fragment", variant.FragmentShaderSource);
             variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
+            makeMaterialMap(material, materialMap);
         }
         material.setShaderType(variant.ShaderID);
         return variant.ShaderID;
+    }
+    
+    protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
+    {
+        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9]+)[,;:]*");
+        Matcher matcher = pattern.matcher(mUniformDescriptor);
+        
+
+        Set<String> texNames = material.getTextureNames();
+        for (String s : texNames)
+        {
+            map.addTextureKey(s, s);
+        }
+        while (matcher.find())
+        {
+            String name = matcher.group(3);
+            String size = matcher.group(2);
+            int nfloats = 1;
+            
+            if (size.length() > 0) {
+                nfloats = Integer.parseInt(size);
+            }
+            switch (nfloats)
+            {
+                case 1: map.addUniformFloatKey(name,  name); break;
+                case 2: map.addUniformVec2Key(name, name); break;
+                case 3: map.addUniformVec3Key(name, name); break;
+                case 4: map.addUniformVec4Key(name, name); break;
+                default:
+                // TODO: throw exception
+                break;
+            }
+         }        
     }
     
     /**
@@ -270,4 +329,5 @@ public class GVRShader
     protected Map<String, String> mShaderSegments;
     protected Map<String, ShaderVariant> mShaderVariants;
     protected Set<String> mShaderDefines;
+    protected String mUniformDescriptor;
 }
