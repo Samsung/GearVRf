@@ -51,6 +51,14 @@ public:
         enabled_ = false;
     }
 
+    int getLightID() {
+        return lightID_;
+    }
+
+    void setLightID(int newid) {
+        lightID_ = newid;
+    }
+
     float getFloat(std::string key) {
         auto it = floats_.find(key);
         if (it != floats_.end()) {
@@ -100,6 +108,7 @@ private:
 
 private:
     bool enabled_;
+    int lightID_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;

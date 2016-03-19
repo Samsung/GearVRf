@@ -168,28 +168,24 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
         Texture* texture = material->getTexture(it->second);
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
-        LOGD("glBindTexture %s", it->second.c_str());
     }
 
     for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
             ++it) {
         glm::vec2 v = material->getVec2(it->second);
         glUniform2f(it->first, v.x, v.y);
-        LOGD("glUniform2F %s %f, %f", it->second.c_str(), v.x, v.y);
     }
 
     for (auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end();
             ++it) {
         glm::vec3 v = material->getVec3(it->second);
         glUniform3f(it->first, v.x, v.y, v.z);
-        LOGD("glUniform3F %s %f, %f, %f", it->second.c_str(), v.x, v.y, v.z);
     }
 
     for (auto it = uniform_vec4_keys_.begin(); it != uniform_vec4_keys_.end();
             ++it) {
         glm::vec4 v = material->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
-        LOGD("glUniform4F %s %f, %f, %f, %f", it->second.c_str(), v.x, v.y, v.z, v.w);
     }
 
     for (auto it = uniform_mat4_keys_.begin(); it != uniform_mat4_keys_.end();

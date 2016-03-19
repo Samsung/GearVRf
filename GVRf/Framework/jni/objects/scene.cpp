@@ -60,4 +60,13 @@ std::vector<SceneObject*> Scene::getWholeSceneObjects() {
 void Scene::exportToFile(std::string filepath) {
     Exporter::writeToFile(this, filepath);
 }
+
+int Scene::addLight(Light* light) {
+    if (light->getLightID() >= 0)
+        return light->getLightID();
+    light->setLightID(lightList.size());
+    lightList.push_back(light);
+    return light->getLightID();
 }
+}
+
