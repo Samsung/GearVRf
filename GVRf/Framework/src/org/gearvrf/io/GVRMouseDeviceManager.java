@@ -156,7 +156,6 @@ class GVRMouseDeviceManager {
                 super.setPosition(this.x, this.y, this.z);
                 return true;
             }
-            event.recycle();
             return false;
         }
 
@@ -236,7 +235,6 @@ class GVRMouseDeviceManager {
         private boolean dispatchMotionEvent(int id, MotionEvent event) {
             InputDevice device = event.getDevice();
             if (id == -1 || device == null) {
-                event.recycle();
                 return false;
             }
 

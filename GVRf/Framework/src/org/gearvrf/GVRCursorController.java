@@ -395,6 +395,7 @@ public abstract class GVRCursorController {
                 keyEvent = null;
                 if (motionEvent != null) {
                     motionEvent.recycle();
+                    motionEvent = null;
                 }
             }
             invalidate = true;
