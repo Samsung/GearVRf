@@ -258,7 +258,7 @@ public class GVRShader
     
     protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
     {
-        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9]+)[,;:]*");
+        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
         Matcher matcher = pattern.matcher(mUniformDescriptor);
         
 
@@ -313,9 +313,11 @@ public class GVRShader
             String lightClassName = light.getClass().getSimpleName();
             if (lightShader != null)
             {
-                lightSources += "uniform Data" + lightClassName + " light" + lightid.toString() + ";\n";
-                lightFunction += "   Radiance r" + lightid.toString() + " = " + lightClassName + ";\n";
-                lightFunction += "   color =+ AddLight(s, r" + lightid.toString() + ");\n";
+                String id = lightid.toString();
+                lightSources += "uniform Data" + lightClassName + " light" + id + ";\n";
+                lightDefs += light.getShaderStruct();
+                lightFunction += "   Radiance r" + id + " = " + lightClassName + "(s, light" + id + ");\n";
+                lightFunction += "   color =+ AddLight(s, r" + id + ");\n";
                 lightShader = lightShader.replace("@LightType", lightClassName);
                 lightDefs += lightShader;
             }

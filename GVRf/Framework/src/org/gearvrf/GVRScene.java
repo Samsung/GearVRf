@@ -369,6 +369,14 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             NativeScene.attachDirectionalLight(getNative(), 0);
         }
     }
+    
+    public void addLight(GVRLight light) {
+        if (light != null) {
+            NativeScene.addLight(getNative(), light.getNative());
+        } else {
+            NativeScene.addLight(getNative(), 0);
+        }
+    }
 
     /**
      * Prints the {@link GVRScene} object with indentation.
@@ -527,4 +535,6 @@ class NativeScene {
     public static native void exportToFile(long scene, String file_path);
 
     static native void attachDirectionalLight(long scene, long light);
+    
+    static native void addLight(long scene, long light);
 }

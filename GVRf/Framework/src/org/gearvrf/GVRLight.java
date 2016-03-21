@@ -17,6 +17,9 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.gearvrf.GVRMaterial.GVRShaderType;
 
 public class GVRLight extends GVRHybridObject {
@@ -132,6 +135,38 @@ public class GVRLight extends GVRHybridObject {
         NativeLight.setVec4(getNative(), key, x, y, z, w);
     }
 
+    /**
+     * Get the GLSL structure describing this light.
+     * The name of the structure is derived from the light class name.
+     * It is assumed that each different type of light will be
+     * represented by a different Java class.
+     *
+     * @return String with shader structure description.
+     */
+    public String getShaderStruct() {
+        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
+        Matcher matcher = pattern.matcher(uniformDescriptor);
+        String structDesc = "struct Data" + getClass().getSimpleName() + " {\n";
+        while (matcher.find())
+        {
+            String name = matcher.group(3);
+            String size = matcher.group(2);
+            String type = matcher.group(1);
+
+            if (size.length() > 0) {
+                if (type.toLowerCase().startsWith("i"))
+                    structDesc += "   ivec" + size;
+                else
+                    structDesc += "   vec" + size;
+                }
+            else 
+                structDesc += type;
+            structDesc += " " + name + ";\n";
+        }
+        structDesc += "};\n";
+        return structDesc;
+    }
+    
     protected void setShaderSource(String source) {
         shaderSource = source;
     }

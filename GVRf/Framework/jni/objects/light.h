@@ -33,7 +33,10 @@ class Color;
 
 class Light: public HybridObject {
 public:
-    explicit Light() : enabled_(true) {
+    explicit Light()
+    :   enabled_(true),
+        dirty_(false),
+        lightID_(-1) {
     }
 
     ~Light() {
@@ -45,6 +48,7 @@ public:
 
     void enable() {
         enabled_ = true;
+        dirty_ = true;
     }
 
     void disable() {
@@ -55,9 +59,6 @@ public:
         return lightID_;
     }
 
-    void setLightID(int newid) {
-        lightID_ = newid;
-    }
 
     float getFloat(std::string key) {
         auto it = floats_.find(key);
@@ -68,8 +69,14 @@ public:
             throw error;
         }
     }
+
     void setFloat(std::string key, float value) {
+        if (getOffset(key) < 0)
+            offsets_[key] = floats_.size();
         floats_[key] = value;
+        if (enabled_) {
+            dirty_ = true;
+        }
     }
 
     glm::vec3 getVec3(std::string key) {
@@ -84,6 +91,9 @@ public:
 
     void setVec3(std::string key, glm::vec3 vector) {
         vec3s_[key] = vector;
+        if (enabled_) {
+            dirty_ = true;
+        }
     }
 
     glm::vec4 getVec4(std::string key) {
@@ -98,7 +108,18 @@ public:
 
     void setVec4(std::string key, glm::vec4 vector) {
         vec4s_[key] = vector;
+        if (enabled_) {
+            dirty_ = true;
+        }
     }
+
+    /**
+     * Internal function called at the start of each frame
+     * to update the light uniform block (if necessary).
+     * @param program    ID of GL shader program
+     * @param lightindex 0-based light index
+     */
+    void render(int program, int lightindex);
 
 private:
     Light(const Light& light);
@@ -106,12 +127,28 @@ private:
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
 
+    /*
+     * Get the GL uniform offset for this light.
+     */
+    int getOffset(std::string key) {
+        auto it = offsets_.find(key);
+        if (it != offsets_.end()) {
+            return it->second;
+        } else {
+            return -1;
+        }
+    }
+
 private:
     bool enabled_;
+    bool dirty_;
     int lightID_;
+    int size_;
+    std::string lightName_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
+    std::map<std::string, int> offsets_;
 };
 }
 #endif

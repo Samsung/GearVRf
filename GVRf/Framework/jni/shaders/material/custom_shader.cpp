@@ -106,7 +106,8 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* render_data, Material* material) {
+void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
+        const std::vector<Light*> lightList, Material* material) {
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         Texture* texture = material->getTextureNoError(it->second);
         // If any texture is not ready, do not render the material at all
@@ -119,6 +120,18 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
 
     glUseProgram(program_->id());
 
+    /*
+     * Update the uniforms for the lights
+     */
+    int lightindex = -1;
+    for (auto it = lightList.begin();
+         it != lightList.end();
+         ++it) {
+        Light* light = (*it);
+        ++lightindex;
+        if (light != NULL)
+            light->render(program_->id(), lightindex);
+    }
     if(mesh->isVaoDirty()) {
 		for (auto it = attribute_float_keys_.begin();
 				it != attribute_float_keys_.end(); ++it) {
