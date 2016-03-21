@@ -49,7 +49,7 @@ public class GVRPhongLight extends GVRLight {
      * @return The current {@code vec4 light_pos} as a three-element array
      */
     public float[] getPosition() {
-        return getVec3("position");
+        return getVec3("world_position");
     }
 
     /**
@@ -69,7 +69,7 @@ public class GVRPhongLight extends GVRLight {
      *            z-coordinate in camera coordinate system
      */
     public void setPosition(float x, float y, float z) {
-        setVec3("position", x, y, z);
+        setVec3("world_position", x, y, z);
     }
 
     /**
