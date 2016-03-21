@@ -16,7 +16,6 @@
 package org.gearvrf;
 
 import org.gearvrf.GVRActivity.DockListener;
-import org.gearvrf.utility.DockEventReceiver;
 
 import android.app.Activity;
 import android.content.Context;

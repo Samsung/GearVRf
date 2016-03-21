@@ -51,12 +51,9 @@ private:
 
     jmethodID onDrawEyeMethodId = nullptr;
     jmethodID updateSensoredSceneMethodId = nullptr;
-    jmethodID handleOnDockMethodId = nullptr;
-    jmethodID handleOnUndockMethodId = nullptr;
 
     jobject activity_;
     jobject activityRenderingCallbacks_;
-    bool isDocked_ = false;
 
     ConfigurationHelper configurationHelper_;
 
@@ -92,6 +89,7 @@ public:
     void showGlobalMenu();
     void showConfirmQuit();
 
+    bool isHmtConnected() const;
     ovrMobile* getOculusContext() { return oculusMobile_; }
     ovrHeadModelParms* getOculusHeadModelParms() { return &oculusHeadModelParms_; }
 };

@@ -81,14 +81,6 @@ public class GVRActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
-
-        mActivityNative = GVRActivityNative.createObject(this, mAppSettings, mRenderingCallbacks);
-
-        try {
-            mActivityHandler = new VrapiActivityHandler(this, mRenderingCallbacks);
-        } catch (final Exception ignored) {
-            // will fall back to mono rendering in that case
-        }
         mDockEventReceiver = new DockEventReceiver(this,
                 new Runnable() {
                     @Override
@@ -101,9 +93,23 @@ public class GVRActivity extends Activity {
                         handleOnUndock();
                     }
                 });
+        mDockEventReceiver.start();
+
+        mActivityNative = GVRActivityNative.createObject(this, mAppSettings, mRenderingCallbacks);
+
+        try {
+            mActivityHandler = new VrapiActivityHandler(this, mRenderingCallbacks);
+        } catch (final Exception ignored) {
+            // will fall back to mono rendering in that case
+        }
     }
 
+    /**
+     * <em>Derived classes must call through to the super class's implementation of this method.</em>
+     * </p>
+     */
     protected void onInitAppSettings(VrAppSettings appSettings) {
+        GVRConfigurationManager.onInitialize(this);
     }
 
     public VrAppSettings getAppSettings() {
@@ -189,7 +195,18 @@ public class GVRActivity extends Activity {
                 mViewManager = new GVRMonoscopicViewManager(this, gvrScript,
                         xmlParser);
             }
+
             if (null != mActivityHandler) {
+                mViewManager.registerDrawFrameListener(new GVRDrawFrameListener() {
+                    @Override
+                    public void onDrawFrame(float frameTime) {
+                        if (GVRConfigurationManager.getInstance().isHmtConnected()) {
+                            handleOnDock();
+                            mViewManager.unregisterDrawFrameListener(this);
+                        }
+                    }
+                });
+
                 mActivityHandler.onSetScript();
             }
         } else {
@@ -352,16 +369,18 @@ public class GVRActivity extends Activity {
 
     private boolean mIsDocked = false;
 
-    void handleOnDock() {
+    private void handleOnDock() {
         Log.i(TAG, "handleOnDock");
         final Runnable r = new Runnable() {
             @Override
             public void run() {
                 if (!mIsDocked) {
                     mIsDocked = true;
+
                     if (null != mActivityNative) {
                         mActivityNative.onDock();
                     }
+
                     for (final DockListener dl : mDockListeners) {
                         dl.onDock();
                     }
@@ -371,16 +390,18 @@ public class GVRActivity extends Activity {
         runOnUiThread(r);
     }
 
-    void handleOnUndock() {
+    private void handleOnUndock() {
         Log.i(TAG, "handleOnUndock");
         final Runnable r = new Runnable() {
             @Override
             public void run() {
                 if (mIsDocked) {
                     mIsDocked = false;
+
                     if (null != mActivityNative) {
                         mActivityNative.onUndock();
                     }
+
                     for (final DockListener dl : mDockListeners) {
                         dl.onUndock();
                     }
@@ -394,6 +415,7 @@ public class GVRActivity extends Activity {
         void onDock();
         void onUndock();
     }
+
     private final List<DockListener> mDockListeners = new CopyOnWriteArrayList<DockListener>();
 
     void addDockListener(final DockListener dl) {
