@@ -10,3 +10,4 @@ gl_Position = u_mvp * vec4(a_position.xyz, 1.0);
 #else
    diffuse_coord = vec2(0, 0);
 #endif
+   view_direction = normalize(u_eye_pos - world_position.xyz);
