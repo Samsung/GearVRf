@@ -40,7 +40,8 @@ public class GVRBitmapTexture extends GVRTexture {
      * @param gvrContext
      *            Current {@link GVRContext}
      * @param bitmap
-     *            A non-null {@link Bitmap} instance.
+     *            A non-null {@link Bitmap} instance; do *not* call
+     *            recycle on the bitmap
      */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap) {
         this(gvrContext, bitmap, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
@@ -53,7 +54,8 @@ public class GVRBitmapTexture extends GVRTexture {
      * @param gvrContext
      *            Current {@link GVRContext}
      * @param bitmap
-     *            A non-null {@link Bitmap} instance.
+     *            A non-null {@link Bitmap} instance; do *not* call
+     *            recycle on the bitmap
      * @param textureParameters
      *            User defined object for {@link GVRTextureParameters} which may
      *            also contain default values.
