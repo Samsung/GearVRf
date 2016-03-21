@@ -750,6 +750,16 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                                 public void finished(GVRAnimation animation) {
                                     if (mNextMainScene != null) {
                                         setMainScene(mNextMainScene);
+
+                                        // Initialize the main scene
+                                        GVRViewManager.this.getEventManager().sendEvent(
+                                                mMainScene, ISceneEvents.class,
+                                                "onInit", GVRViewManager.this, mMainScene);
+
+                                        // Late-initialize the main scene
+                                        GVRViewManager.this.getEventManager().sendEvent(
+                                                mMainScene, ISceneEvents.class,
+                                                "onAfterInit");
                                     } else {
                                         getMainScene().removeSceneObject(
                                                 splashScreen);
@@ -783,6 +793,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             try {
                 GVRViewManager.this.getEventManager().sendEvent(
                         mScript, IScriptEvents.class, "onStep");
+
+                // Issue "onStep" to the scene
+                GVRViewManager.this.getEventManager().sendEvent(
+                        mMainScene, ISceneEvents.class, "onStep");
             } catch (final Exception exc) {
                 Log.e(TAG, "Exception from onStep: %s", exc.toString());
                 exc.printStackTrace();
