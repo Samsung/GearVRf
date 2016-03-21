@@ -87,6 +87,9 @@ public:
         return directional_light_;
     }
 
+    const std::vector<Light*>& getLightList() const {
+        return lightList;
+    }
 
 private:
     Scene(const Scene& scene);

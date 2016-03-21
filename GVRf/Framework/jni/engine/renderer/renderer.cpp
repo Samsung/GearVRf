@@ -264,7 +264,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager, modeShadow));
+                    camera->render_mask(), shader_manager,
+                    scene->getLightList(), modeShadow));
         }
     } else {
         RenderTexture* texture_render_texture = post_effect_render_texture_a;
@@ -282,7 +283,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager, modeShadow));
+                    camera->render_mask(), shader_manager,
+                    scene->getLightList(), modeShadow));
         }
 
         GL(glDisable(GL_DEPTH_TEST));
@@ -640,7 +642,8 @@ void Renderer::calculateShadow(ShaderManager* shader_manager,
 
 void Renderer::renderRenderData(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager, int modeShadow) {
+        int render_mask, ShaderManager* shader_manager,
+        const std::vector<Light*>& lightList, int modeShadow) {
 
     if (!render_mask || !render_data->render_mask())
         return;
@@ -663,7 +666,8 @@ void Renderer::renderRenderData(RenderData* render_data,
 
     if (render_data->mesh() != 0) {
         GL(renderMesh(render_data, view_matrix, projection_matrix,
-                    render_mask, shader_manager, modeShadow));
+                    render_mask, shader_manager,
+                    lightList, modeShadow));
     }
 
     // Restoring to Default.
@@ -690,7 +694,8 @@ void Renderer::renderRenderData(RenderData* render_data,
 
 void Renderer::renderMesh(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager, int modeShadow) {
+        int render_mask, ShaderManager* shader_manager,
+        const std::vector<Light*> lightList, int modeShadow) {
 
     for (int curr_pass = 0; curr_pass < render_data->pass_count();
             ++curr_pass) {
@@ -703,14 +708,16 @@ void Renderer::renderMesh(RenderData* render_data,
 
         if (curr_material != nullptr) {
             GL(renderMaterialShader(render_data, view_matrix, projection_matrix,
-                        render_mask, shader_manager, modeShadow, curr_material));
+                        render_mask, shader_manager,
+                        lightList, modeShadow, curr_material));
         }
     }
 }
 
 void Renderer::renderMaterialShader(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager, int modeShadow,
+        int render_mask, ShaderManager* shader_manager,
+        const std::vector<Light*> lightList, int modeShadow,
         Material *curr_material) {
 
     //Skip the material whose texture is not ready with some exceptions
@@ -727,7 +734,10 @@ void Renderer::renderMaterialShader(RenderData* render_data,
     uniforms.u_mv = view_matrix * uniforms.u_model;
     uniforms.u_mvp = projection_matrix * uniforms.u_mv;
     uniforms.u_mv_it = glm::inverseTranspose(uniforms.u_mv);
-    try {
+    uniforms.u_eyepos.x = view_matrix[3][0];
+    uniforms.u_eyepos.y = view_matrix[3][1];
+    uniforms.u_eyepos.z = view_matrix[3][2];
+     try {
         bool right = render_mask
             & RenderData::RenderMaskBit::Right;
 
@@ -822,7 +832,7 @@ void Renderer::renderMaterialShader(RenderData* render_data,
                 break;
             default:
                 shader_manager->getCustomShader(
-                        curr_material->shader_type())->render(uniforms, render_data, curr_material);
+                        curr_material->shader_type())->render(uniforms, render_data, lightList, curr_material);
                 break;
         }
     } catch (const std::string &error) {
