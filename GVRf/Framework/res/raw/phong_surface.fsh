@@ -53,9 +53,7 @@ Surface @ShaderName()
 	diffuse.w *= texture2D(opacityTexture, diffuse_coord.xy).a;
 #endif
 #ifdef HAS_specularTexture
-	specular = texture2D(specularTexture, diffuse_coord.xy);
-#else
-	specular = vec4(0.0, 0.0, 0.0, 0.0);
+	specular *= texture2D(specularTexture, diffuse_coord.xy);
 #endif
 #ifdef HAS_emissiveTexture
 	emission = texture2D(emissiveTexture, diffuse_coord.xy);
