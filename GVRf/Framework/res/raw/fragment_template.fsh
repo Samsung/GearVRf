@@ -22,10 +22,10 @@ vec3 AddLight(Surface s, Radiance r)
 	vec3 kA = s.ambient.xyz * r.ambient_intensity.xyz;
 	vec3 kD = s.diffuse.xyz * r.diffuse_intensity.xyz;
 	vec3 kS = s.specular.xyz * r.specular_intensity.xyz;
-	vec3 kEmit = s.emission.xyz;
+	vec3 kE = s.emission.xyz;
 	if (specularExponent > 0.0)
 		kS *= pow(max(dot(world_normal, H), 0.0), specularExponent);
-	return kA + kD + kS + kEmit;
+	return kA + kD + kS + kE;
 }
 
 @LIGHTSOURCES
