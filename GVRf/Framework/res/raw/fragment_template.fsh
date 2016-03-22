@@ -11,6 +11,7 @@ struct Radiance
    vec3 diffuse_intensity;
    vec3 specular_intensity;
    vec3 world_direction;
+   vec3 reflection;
 };
 
 @FragmentSurface
@@ -18,13 +19,16 @@ struct Radiance
 vec3 AddLight(Surface s, Radiance r)
 {
 	vec3 L = r.world_direction.xyz;	// From surface towards light, unit length, world-space
-	vec3 H = normalize(L + view_direction);
+    float specular = dot(view_direction, r.reflection);
 	vec3 kA = s.ambient.xyz * r.ambient_intensity.xyz;
 	vec3 kD = s.diffuse.xyz * r.diffuse_intensity.xyz;
-	vec3 kS = s.specular.xyz * r.specular_intensity.xyz;
+	vec3 kS = vec3(0.0, 0.0, 0.0);
 	vec3 kE = s.emission.xyz;
-	if (specularExponent > 0.0)
-		kS *= pow(max(dot(world_normal, H), 0.0), specularExponent);
+	if ((specular > 0.0) && (specularExponent > 0.0))
+	{
+		kS = s.specular.xyz * r.specular_intensity.xyz;	
+		kS *= pow(specular, specularExponent);
+	}
 	return kA + kD + kS + kE;
 }
 
