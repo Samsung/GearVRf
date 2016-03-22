@@ -225,10 +225,12 @@ public class GVRShader
         return defines + combinedSource;
     }
     
-    public GVRMaterialShaderId bindShader(GVRContext ctx, GVRRenderData rdata, GVRLight[] lightlist)
+    public GVRMaterialShaderId bindShader(GVRContext ctx, GVRRenderData rdata, GVRScene scene)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
+        GVRLight[] lightlist = scene.getLightList();
+        
         if ((mesh == null) ||
             (material == null))
         {
@@ -306,6 +308,7 @@ public class GVRShader
         String lightFunction = "vec3 LightPixel(Surface s) {\n" + "   vec3 color = vec3(0.0, 0.0, 0.0);\n";
         String lightDefs = "";
         Integer lightid = 0;
+        Set<String> classNames = new HashSet<String>();
 
         for (GVRLight light : lightlist)
         {
@@ -315,12 +318,16 @@ public class GVRShader
             {
                 String id = lightid.toString();
                 lightSources += "uniform Data" + lightClassName + " light" + id + ";\n";
-                lightDefs += light.getShaderStruct();
+                if (!classNames.contains(lightClassName))
+                {
+                    classNames.add(lightClassName);
+                    lightDefs += light.getShaderStruct();
+                    lightShader = lightShader.replace("@LightType", lightClassName);
+                    lightDefs += lightShader;
+                }
                 lightFunction += "   Radiance r" + id + " = " + lightClassName + "(s, light" + id + ");\n";
                 lightFunction += "   color =+ AddLight(s, r" + id + ");\n";
-                lightShader = lightShader.replace("@LightType", lightClassName);
-                lightDefs += lightShader;
-            }
+             }
             ++lightid;
         }
         lightFunction += "   return color; }\n";

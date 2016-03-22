@@ -17,7 +17,9 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
@@ -39,10 +41,11 @@ import org.gearvrf.utility.Log;
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
-
+    private static final Integer MAX_LIGHTS = 16;
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
+    private Set<GVRLight> mLightList = new HashSet<GVRLight>();
 
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
@@ -372,10 +375,15 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     
     public void addLight(GVRLight light) {
         if (light != null) {
+            mLightList.add(light);
             NativeScene.addLight(getNative(), light.getNative());
-        } else {
-            NativeScene.addLight(getNative(), 0);
         }
+    }
+    
+    public GVRLight[] getLightList() {
+        GVRLight[] list = new GVRLight[mLightList.size()];
+        mLightList.toArray(list);
+        return list;
     }
 
     /**
