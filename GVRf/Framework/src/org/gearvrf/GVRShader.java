@@ -326,7 +326,7 @@ public class GVRShader
                     lightDefs += lightShader;
                 }
                 lightFunction += "   Radiance r" + id + " = " + lightClassName + "(s, light" + id + ");\n";
-                lightFunction += "   color =+ AddLight(s, r" + id + ");\n";
+                lightFunction += "   color += AddLight(s, r" + id + ");\n";
              }
             ++lightid;
         }
