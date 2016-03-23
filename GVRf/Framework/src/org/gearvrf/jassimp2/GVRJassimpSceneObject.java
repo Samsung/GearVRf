@@ -193,7 +193,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         sceneObject.attachRenderData(sceneObjectRenderData);
         GVRShader shader = new GVRPhongShader(getGVRContext());
         
-        shader.bindShader(getGVRContext(),  sceneObjectRenderData, gvrScene);
+        shader.bindShader(gvrScene,  sceneObjectRenderData);
 
         return sceneObject;
     }

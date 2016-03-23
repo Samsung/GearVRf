@@ -602,10 +602,9 @@ public class GVRMaterial extends GVRHybridObject implements
 
     public void setTexture(String key, GVRTexture texture) {
         checkStringNotNullOrEmpty("key", key);
-        checkNotNull("texture", texture);
-        GVRShaderType.Assimp.setBit(mShaderFeatureSet, GVRShader.textureMap.get(key));
         textures.put(key, texture);
-        NativeMaterial.setTexture(getNative(), key, texture.getNative());
+        if (texture != null)
+            NativeMaterial.setTexture(getNative(), key, texture.getNative());
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
@@ -616,6 +615,7 @@ public class GVRMaterial extends GVRHybridObject implements
                 e.printStackTrace();
             }
         } else {
+            textures.put(key, null);
             Threads.spawn(new Runnable() {
 
                 @Override

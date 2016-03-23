@@ -21,15 +21,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRSceneObject;
 
 public class GVRLight extends GVRHybridObject {
+
+    public GVRLight(GVRContext gvrContext, GVRSceneObject parent) {
+        super(gvrContext, NativeLight.ctor());
+        isEnabled = true;
+        if (parent != null) {
+            NativeLight.setParent(getNative(), parent.getNative());
+        }
+        sceneParent = parent;
+        lightID = -1;
+    }
 
     public GVRLight(GVRContext gvrContext) {
         super(gvrContext, NativeLight.ctor());
         isEnabled = true;
+        sceneParent = null;
         lightID = -1;
     }
-
+    
     /**
      * Enable the light.
      */
@@ -65,7 +77,17 @@ public class GVRLight extends GVRHybridObject {
     public int getLightID() {
         return lightID;
     }
-
+    
+    /**
+     * Get the GVRSceneObject this light is attached to.
+     * 
+     * If a light is attached to a scene object, its position
+     * and direction are obtained from the scene object's transform.
+     */
+    public GVRSceneObject getParent() {
+        return sceneParent;
+    }
+    
     /**
      * Access the shader source code implementing this light.
      *
@@ -167,11 +189,20 @@ public class GVRLight extends GVRHybridObject {
         return structDesc;
     }
     
+    /**
+     * Define the shader source to compute the illumination from this light.
+     * 
+     * This source must be defined at the time the light is constructed.
+     * Typically, different subclasses of GVRLight will have different
+     * illumination functions.
+     * @param source String with shader source code.
+     */
     protected void setShaderSource(String source) {
         shaderSource = source;
     }
     
     private boolean isEnabled;
+    protected GVRSceneObject sceneParent = null;
     protected int  lightID;
     protected String shaderSource = null;
     protected String uniformDescriptor = null;
@@ -196,4 +227,6 @@ class NativeLight {
 
     static native void setVec4(long light, String key, float x, float y,
             float z, float w);
+    
+    static native void setParent(long light, long sceneobj);
 }

@@ -152,6 +152,7 @@ private:
             const int modeShadow, glm::vec3& lightPosition,
             glm::mat4& vp_matrixLightModel);
 
+    static void transformLights(Scene* scene);
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);

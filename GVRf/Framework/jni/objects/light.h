@@ -30,12 +30,14 @@
 
 namespace gvr {
 class Color;
+class SceneObject;
 
 class Light: public HybridObject {
 public:
     explicit Light()
     :   enabled_(true),
         dirty_(false),
+        parent_(NULL),
         lightID_(-1) {
     }
 
@@ -121,6 +123,23 @@ public:
      */
     void render(int program, int lightindex);
 
+    /**
+     * Get the GVRSceneObject this light is attached to.
+     *
+     * If a light is attached to a scene object, its position
+     * and direction are obtained from the scene object's transform.
+     */
+    SceneObject* parent() { return parent_; }
+
+    /**
+     * Attach this light to a scene object.
+     *
+     * Its position and direction are obtained from the scene object's transform.
+     */
+    void setParent(SceneObject* parent) {
+        parent_ = parent;
+    }
+
 private:
     Light(const Light& light);
     Light(Light&& light);
@@ -144,6 +163,7 @@ private:
     bool dirty_;
     int lightID_;
     int size_;
+    SceneObject* parent_;
     std::string lightName_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
