@@ -35,7 +35,8 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 
 ifndef OVR_MOBILE_SDK
-	OVR_MOBILE_SDK=../../ovr_sdk_mobile
+#	OVR_MOBILE_SDK=../../ovr_sdk_mobile
+	OVR_MOBILE_SDK=../../../../../ovr_sdk_mobile
 endif
 
 #include $(OVR_MOBILE_SDK)/VRLib/import_vrlib.mk
@@ -44,7 +45,6 @@ include $(OVR_MOBILE_SDK)/cflags.mk
 #$(call import-module,$(OVR_MOBILE_SDK)/LibOVR/Projects/Android/jni)
 #$(call import-module,$(OVR_MOBILE_SDK)/VrApi/Projects/AndroidPrebuilt/jni)
 #$(call import-module,$(OVR_MOBILE_SDK)/VrAppFramework/Projects/Android/jni)
-
 
 
 LOCAL_MODULE := gvrf
@@ -57,6 +57,7 @@ LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/LibOVRKernel/Include
 LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/LibOVRKernel/Src
 LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrApi/Include
 LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrAppSupport/Src
+LOCAL_C_INCLUDES += $(OVR_MOBILE_SDK)/VrAppSupport/SystemUtils/Include
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
@@ -140,6 +141,8 @@ LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 #LOCAL_LDLIBS += -L../libs/armeabi-v7a/ 
 
 include $(BUILD_SHARED_LIBRARY)
+
+$(call import-add-path, $(OVR_MOBILE_SDK))
 
 $(call import-module,LibOVRKernel/Projects/AndroidPrebuilt/jni)
 $(call import-module,VrApi/Projects/AndroidPrebuilt/jni)
