@@ -22,17 +22,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
+import java.util.Vector;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.jassimp.AiColor;
+//import org.gearvrf.jassimp.AiColor;
 import org.gearvrf.jassimp.AiMaterial;
 import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
+import org.gearvrf.jassimp2.AiLight;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
@@ -43,7 +47,7 @@ import org.gearvrf.utility.Log;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Environment;
-
+import org.gearvrf.jassimp.AiColor;
 /**
  * {@link GVRImporter} provides methods for importing 3D models and making them
  * available through instances of {@link GVRAssimpImporter}.
@@ -173,10 +177,39 @@ final class GVRImporter {
                     " from " + volumeType);
         }
 
-        return new GVRJassimpSceneObject(context, assimpScene,
+        List<AiLight> lights= assimpScene.getLights();
+      
+        GVRScene scene=context.getMainScene();
+        for(AiLight light: lights){
+           
+           org.gearvrf.jassimp2.AiColor ambientCol= light.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
+           org.gearvrf.jassimp2.AiColor diffuseCol= light.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
+           org.gearvrf.jassimp2.AiColor specular = light.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);
+           float[] pos = light.getPosition(GVRJassimpAdapter.sWrapperProvider);
+           float [] dir = light.getDirection(GVRJassimpAdapter.sWrapperProvider);
+                      
+           GVRPhongLight gvrLight = new GVRPhongLight(context);
+           gvrLight.setFloat("innercone", light.getAngleInnerCone());
+           gvrLight.setFloat("outercone", light.getAngleInnerCone());
+           gvrLight.setFloat("attenuationconstant", light.getAttenuationConstant());
+           gvrLight.setFloat("attenuation_linear", light.getAttenuationLinear());
+           gvrLight.setFloat("attenuation_quadratic", light.getAttenuationQuadratic());
+           
+           gvrLight.setVec3("world_position", pos[0], pos[1], pos[2]);
+           gvrLight.setVec3("world_direction", dir[0], dir[1], dir[2]);
+           gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+           gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+           gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+                
+           scene.addLight(gvrLight);
+
+       }
+        
+        GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
-                        cacheEnabled));
+                        cacheEnabled), scene);
+        return sceneOb;
     }
 
     static File downloadFile(Context context, String urlString) {
@@ -388,6 +421,8 @@ final class GVRImporter {
         float opacity = material.getOpacity();
         meshMaterial.setOpacity(opacity);
 
+
+        
         /* Diffuse Texture */
         final String texDiffuseFileName = material.getTextureFile(
                 AiTextureType.DIFFUSE, 0);

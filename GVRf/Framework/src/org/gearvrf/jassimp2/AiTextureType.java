@@ -190,7 +190,7 @@ public enum AiTextureType {
     * @param type the type to convert, may not be null
     * @return the rawValue corresponding to type
     */
-   static int toRawValue(AiTextureType type) {
+   public static int toRawValue(AiTextureType type) {
        return type.m_rawValue;
    }
 
