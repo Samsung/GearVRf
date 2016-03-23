@@ -56,6 +56,9 @@ Java_org_gearvrf_NativeLight_setVec4(JNIEnv * env,
 JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeLight_getVec4(JNIEnv * env,
         jobject obj, jlong jlight, jstring key);
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setParent(JNIEnv * env,
+        jobject obj, jlong jparent);
 }
 ;
 
@@ -148,4 +151,13 @@ Java_org_gearvrf_NativeLight_setVec4(JNIEnv * env,
     light->setVec4(native_key, glm::vec4(x, y, z, w));
     env->ReleaseStringUTFChars(key, char_key);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setParent(JNIEnv * env,
+        jobject jlight, jlong jparent) {
+    Light* light = reinterpret_cast<Light*>(jlight);
+    SceneObject* sceneobj = reinterpret_cast<SceneObject*>(jparent);
+    light->setParent(sceneobj);
 }
+}
+

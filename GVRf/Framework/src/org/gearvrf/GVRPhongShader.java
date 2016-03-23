@@ -31,7 +31,7 @@ import org.gearvrf.R;
            String fragTemplate = TextFile.readTextFile(context.getContext(), R.raw.fragment_template);
            String vtxTemplate = TextFile.readTextFile(context.getContext(), R.raw.vertex_template);
            String surfaceShader = TextFile.readTextFile(context.getContext(), R.raw.phong_surface);
-           String vtxShader = TextFile.readTextFile(context.getContext(), R.raw.pos_norm_tex);
+           String vtxShader = TextFile.readTextFile(context.getContext(), R.raw.pos_nmap_tex);
            setSegment("FragmentTemplate", fragTemplate);
            setSegment("VertexTemplate", vtxTemplate);
            setSegment("FragmentSurface", surfaceShader);

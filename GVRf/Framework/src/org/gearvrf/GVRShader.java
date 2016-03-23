@@ -150,19 +150,6 @@ public class GVRShader
         }
         return sig;
     }
-    static final Map<String,Integer> textureMap;
-    static
-    {
-        textureMap = new HashMap<String,Integer>();
-        textureMap.put("main_texture",0);
-        textureMap.put("diffuseTexture",0);
-        textureMap.put("ambientTexture",1);
-        textureMap.put("normalTexture",2);
-        textureMap.put("emissiveTexture",3);
-        textureMap.put("specularTexture",4);
-        textureMap.put("lightmapTexture",5);
-        textureMap.put("opacityTexture",6);
-    }
     
     /**
      * Generates the set of unique parameter names that make
@@ -175,17 +162,16 @@ public class GVRShader
      * @param sourceTemplate source code template for shader.
      * @return set of shader variable names actually defined by the material and mesh
      */
-    public Set<String> generateVariantDefines(GVRMesh mesh, GVRMaterial material)
+    private Set<String> generateVariantDefines(GVRMesh mesh, GVRMaterial material)
     {
         Set<String> definedNames = new HashSet<String>();
-        int featureSet = material.getShaderFeatureSet();
+        Set<String> texNames = material.getTextureNames();
      
          for (String name : mShaderDefines)
          {
-             boolean texture=textureMap.containsKey(name);
              if (mesh.hasAttribute(name) ||
-                material.hasUniform(name) ||
-               (texture && GVRShaderType.Assimp.isSet(featureSet,textureMap.get(name) )))
+                 material.hasUniform(name) ||
+                 texNames.contains(name))
                 {
                     definedNames.add(name);
                 }
@@ -243,7 +229,7 @@ public class GVRShader
         return defines + combinedSource;
     }
     
-    public GVRMaterialShaderId bindShader(GVRContext ctx, GVRRenderData rdata, GVRScene scene)
+    public GVRMaterialShaderId bindShader(GVRScene scene, GVRRenderData rdata)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
@@ -265,7 +251,7 @@ public class GVRShader
             variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
             mShaderVariants.put(signature, variant);
-            GVRMaterialShaderManager shaderManager = ctx.getMaterialShaderManager();
+            GVRMaterialShaderManager shaderManager = scene.getGVRContext().getMaterialShaderManager();
             Log.d("vertex", variant.VertexShaderSource);
             Log.d("fragment", variant.FragmentShaderSource);
             variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);

@@ -120,6 +120,36 @@ void Renderer::state_sort() {
     }
 }
 
+void Renderer::transformLights(Scene* scene) {
+    std::vector<Light*> lights = scene->getLightList();
+
+    for (auto it = lights.begin(); it != lights.end(); ++it) {
+        Light* light = (*it);
+        SceneObject* parent = light->parent();
+        if (parent == nullptr) {
+            continue;
+        }
+        glm::mat4 worldmtx;
+        glm::vec4 newdir(0, 0, 1, 0);
+        glm::vec3 olddir = light->getVec3("world_direction");
+        glm::vec3 oldpos = light->getVec3("world_position");
+        while (parent != NULL) {
+            worldmtx *= parent->transform()->getModelMatrix();
+            parent = parent->parent();
+        }
+        glm::vec3 newpos = glm::vec3(worldmtx[3][0], worldmtx[3][1], worldmtx[3][2]);
+        newdir = newdir * worldmtx;
+        if ((olddir.x != newdir.x) ||
+            (olddir.y != newdir.y) ||
+            (olddir.z != newdir.z)) {
+            light->setVec3(std::string("world_direction"), glm::vec3(newdir.x, newdir.y, newdir.z));
+        }
+        if (oldpos != newpos) {
+            light->setVec3(std::string("world_position"), newpos);
+        }
+    }
+}
+
 void Renderer::cull(Scene *scene, Camera *camera,
         ShaderManager* shader_manager) {
 
@@ -131,6 +161,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
+    transformLights(scene);
     render_data_vector.clear();
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
