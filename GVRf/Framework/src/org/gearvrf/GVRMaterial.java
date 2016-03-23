@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import org.gearvrf.jassimp2.AiTextureType;
 import org.gearvrf.utility.Colors;
 import org.gearvrf.utility.Threads;
 
@@ -130,10 +131,6 @@ public class GVRMaterial extends GVRHybridObject implements
              */
             public static int AS_DIFFUSE_TEXTURE = 0;
 
-            /**
-             * Set this feature enum if specular texture is present in Assimp
-             * material
-             */
             public static int AS_SPECULAR_TEXTURE = 1;
 
             /**
@@ -141,7 +138,29 @@ public class GVRMaterial extends GVRHybridObject implements
              * material
              */
             public static int AS_SKINNING = 2;
-
+            public static int AS_LIGHTMAP_TEXTURE   = 3;
+            public static int AS_NORMAL_TEXTURE     = 4;
+            public static int AS_AMBIENT_TEXTURE    = 5;
+            public static int AS_OPACITY_TEXTURE    = 6;
+            public static int AS_EMISSIVE_TEXTURE   = 7;
+                        
+            private static final Map<Integer, Integer> textureMap;
+            static
+            {
+                textureMap = new HashMap<Integer, Integer>();
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.DIFFUSE),AS_DIFFUSE_TEXTURE);
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.SPECULAR),AS_SPECULAR_TEXTURE);
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.LIGHTMAP),AS_LIGHTMAP_TEXTURE);
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.NORMALS),AS_NORMAL_TEXTURE);
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.AMBIENT),AS_AMBIENT_TEXTURE);
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.OPACITY),AS_OPACITY_TEXTURE);
+                textureMap.put(AiTextureType.toRawValue(AiTextureType.EMISSIVE),AS_EMISSIVE_TEXTURE);
+            }
+            
+            public static int getTextureBit(AiTextureType texType) {
+                return textureMap.get(AiTextureType.toRawValue(texType));
+                
+            }
             public static int setBit(int number, int index) {
                 return (number |= 1 << index);
             }
@@ -580,9 +599,11 @@ public class GVRMaterial extends GVRHybridObject implements
         return textures.get(key);
     }
 
+
     public void setTexture(String key, GVRTexture texture) {
         checkStringNotNullOrEmpty("key", key);
         checkNotNull("texture", texture);
+        GVRShaderType.Assimp.setBit(mShaderFeatureSet, GVRShader.textureMap.get(key));
         textures.put(key, texture);
         NativeMaterial.setTexture(getNative(), key, texture.getNative());
     }

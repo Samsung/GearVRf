@@ -16,12 +16,15 @@ package org.gearvrf;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRLight;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import android.util.Log;
 import android.util.Pair;
@@ -147,7 +150,20 @@ public class GVRShader
         }
         return sig;
     }
-
+    static final Map<String,Integer> textureMap;
+    static
+    {
+        textureMap = new HashMap<String,Integer>();
+        textureMap.put("main_texture",0);
+        textureMap.put("diffuseTexture",0);
+        textureMap.put("ambientTexture",1);
+        textureMap.put("normalTexture",2);
+        textureMap.put("emissiveTexture",3);
+        textureMap.put("specularTexture",4);
+        textureMap.put("lightmapTexture",5);
+        textureMap.put("opacityTexture",6);
+    }
+    
     /**
      * Generates the set of unique parameter names that make
      * a particular variant of the shader from the source template.
@@ -162,12 +178,14 @@ public class GVRShader
     public Set<String> generateVariantDefines(GVRMesh mesh, GVRMaterial material)
     {
         Set<String> definedNames = new HashSet<String>();
-        Set<String> texNames = material.getTextureNames();
+        int featureSet = material.getShaderFeatureSet();
+     
          for (String name : mShaderDefines)
          {
+             boolean texture=textureMap.containsKey(name);
              if (mesh.hasAttribute(name) ||
                 material.hasUniform(name) ||
-                texNames.contains(name))
+               (texture && GVRShaderType.Assimp.isSet(featureSet,textureMap.get(name) )))
                 {
                     definedNames.add(name);
                 }
