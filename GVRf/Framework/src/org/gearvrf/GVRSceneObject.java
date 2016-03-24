@@ -40,6 +40,16 @@ import org.gearvrf.utility.Log;
  * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attached.} Each
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
+ *
+ * <p>
+ * {@link GVRSceneObject} receives events defined in {@link ISceneObjectEvents}. To add a listener
+ * to these events, use the following code:
+ * <pre>
+ *     ISceneObjectEvents myEventListener = new ISceneObjectEvents() {
+ *         ...
+ *     };
+ *     getEventReceiver().addListener(myEventListener);
+ * </pre>
  */
 public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
 

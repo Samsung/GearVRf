@@ -717,6 +717,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     "onAfterInit");
 
             if (mSplashScreen == null) {
+                // No splash screen, notify main scene now.
+                GVRViewManager.this.notifyMainSceneReady();
+
                 mFrameHandler = normalFrames;
                 firstFrame = splashFrames = null;
             } else {
@@ -750,16 +753,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                                 public void finished(GVRAnimation animation) {
                                     if (mNextMainScene != null) {
                                         setMainScene(mNextMainScene);
-
-                                        // Initialize the main scene
-                                        GVRViewManager.this.getEventManager().sendEvent(
-                                                mMainScene, ISceneEvents.class,
-                                                "onInit", GVRViewManager.this, mMainScene);
-
-                                        // Late-initialize the main scene
-                                        GVRViewManager.this.getEventManager().sendEvent(
-                                                mMainScene, ISceneEvents.class,
-                                                "onAfterInit");
+                                        // Splash screen finishes. Notify main scene it is ready.
+                                        GVRViewManager.this.notifyMainSceneReady();
                                     } else {
                                         getMainScene().removeSceneObject(
                                                 splashScreen);
@@ -809,6 +804,21 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             mMainScene.updateStats();
         }
     };
+
+    // Send onInit and onAfterInit events to main scene when it is ready.
+    // When there is a splash screen, it is called after the splash screen has completed.
+    // If there is no splash screen, it is called after GVRScript.onInit() returns.
+    private void notifyMainSceneReady() {
+        // Initialize the main scene
+        GVRViewManager.this.getEventManager().sendEvent(
+                mMainScene, ISceneEvents.class,
+                "onInit", GVRViewManager.this, mMainScene);
+
+        // Late-initialize the main scene
+        GVRViewManager.this.getEventManager().sendEvent(
+                mMainScene, ISceneEvents.class,
+                "onAfterInit");
+    }
 
     /**
      * This is the code that needs to be executed before either eye is drawn.

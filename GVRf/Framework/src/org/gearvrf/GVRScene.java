@@ -24,8 +24,19 @@ import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
-/** The scene graph */
-public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, ISceneEvents, IEventReceiver {
+/**
+ * The scene graph.
+ *
+ * It receives events defined in {@link ISceneEvents}. To add a listener to these events, use the
+ * following code:
+ * <pre>
+ *     ISceneEvents mySceneEventListener = new ISceneEvents() {
+ *         ...
+ *     };
+ *     getEventReceiver().addListener(mySceneEventListener);
+ * </pre>
+ */
+public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
 
@@ -62,6 +73,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
 
         setMainCameraRig(cameraRig);
         setFrustumCulling(true);
+
+        getEventReceiver().addListener(mSceneEventListener);
     }
 
     private GVRScene(GVRContext gvrContext, long ptr) {
@@ -445,45 +458,48 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         return mEventReceiver;
     }
 
-    @Override
-    public void onInit(GVRContext gvrContext, GVRScene scene) {
-        for (GVRSceneObject child : mSceneObjects) {
-            recursivelySendOnInit(child);
+    // Default scene event handler
+    private ISceneEvents mSceneEventListener = new ISceneEvents() {
+        @Override
+        public void onInit(GVRContext gvrContext, GVRScene scene) {
+            for (GVRSceneObject child : mSceneObjects) {
+                recursivelySendOnInit(child);
+            }
         }
-    }
 
-    private void recursivelySendOnInit(GVRSceneObject sceneObject) {
-        getGVRContext().getEventManager().sendEvent(
-                sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
+        private void recursivelySendOnInit(GVRSceneObject sceneObject) {
+            getGVRContext().getEventManager().sendEvent(
+                    sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
 
-        for (GVRSceneObject child : sceneObject.rawGetChildren()) {
-            recursivelySendOnInit(child);
+            for (GVRSceneObject child : sceneObject.rawGetChildren()) {
+                recursivelySendOnInit(child);
+            }
         }
-    }
 
-    @Override
-    public void onAfterInit() {
-        for (GVRSceneObject child : mSceneObjects) {
-            recursivelySendSimpleEvent(child, "onAfterInit");
+        @Override
+        public void onAfterInit() {
+            for (GVRSceneObject child : mSceneObjects) {
+                recursivelySendSimpleEvent(child, "onAfterInit");
+            }
         }
-    }
 
-    @Override
-    public void onStep() {
-        // Send "onStep" to all scene objects and their children
-        for (GVRSceneObject child : mSceneObjects) {
-            recursivelySendSimpleEvent(child, "onStep");
+        @Override
+        public void onStep() {
+            // Send "onStep" to all scene objects and their children
+            for (GVRSceneObject child : mSceneObjects) {
+                recursivelySendSimpleEvent(child, "onStep");
+            }
         }
-    }
 
-    private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
-        getGVRContext().getEventManager().sendEvent(
-                sceneObject, ISceneObjectEvents.class, eventName);
+        private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
+            getGVRContext().getEventManager().sendEvent(
+                    sceneObject, ISceneObjectEvents.class, eventName);
 
-        for (GVRSceneObject child : sceneObject.rawGetChildren()) {
-            recursivelySendSimpleEvent(child, eventName);
+            for (GVRSceneObject child : sceneObject.rawGetChildren()) {
+                recursivelySendSimpleEvent(child, eventName);
+            }
         }
-    }
+    };
 }
 
 class NativeScene {
