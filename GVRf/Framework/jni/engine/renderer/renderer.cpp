@@ -120,7 +120,10 @@ void Renderer::state_sort() {
     }
 }
 
-void Renderer::transformLights(Scene* scene) {
+/**
+ * Transform all of the lights into world space.
+ */
+void Renderer::transformLights(Scene* scene, const glm::mat4& view_matrix) {
     std::vector<Light*> lights = scene->getLightList();
 
     for (auto it = lights.begin(); it != lights.end(); ++it) {
@@ -161,7 +164,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
-    transformLights(scene);
+    transformLights(scene, view_matrix);
     render_data_vector.clear();
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
@@ -765,9 +768,6 @@ void Renderer::renderMaterialShader(RenderData* render_data,
     uniforms.u_mv = view_matrix * uniforms.u_model;
     uniforms.u_mvp = projection_matrix * uniforms.u_mv;
     uniforms.u_mv_it = glm::inverseTranspose(uniforms.u_mv);
-    uniforms.u_eyepos.x = view_matrix[3][0];
-    uniforms.u_eyepos.y = view_matrix[3][1];
-    uniforms.u_eyepos.z = view_matrix[3][2];
      try {
         bool right = render_mask
             & RenderData::RenderMaskBit::Right;

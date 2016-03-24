@@ -61,7 +61,6 @@ struct ShaderUniformsPerObject {
     glm::mat4   u_mv;           // ModelView matrix
     glm::mat4   u_mvp;          // ModelViewProjection matrix
     glm::mat4   u_mv_it;        // inverse transpose of ModelView
-    glm::vec3   u_eyepos;       // eye position in world coordinates
     int         u_right;        // 1 = right eye, 0 = left
 };
 
@@ -152,7 +151,7 @@ private:
             const int modeShadow, glm::vec3& lightPosition,
             glm::mat4& vp_matrixLightModel);
 
-    static void transformLights(Scene* scene);
+    static void transformLights(Scene* scene, const glm::mat4& view_matrix);
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);

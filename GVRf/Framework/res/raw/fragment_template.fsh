@@ -1,6 +1,6 @@
-
-varying vec4 world_position;
-varying vec3 world_normal;
+uniform mat4 u_view;
+varying vec4 viewspace_position;
+varying vec3 viewspace_normal;
 varying vec2 diffuse_coord;
 varying vec3 view_direction;
 uniform vec3 u_eyepos;
@@ -10,26 +10,31 @@ struct Radiance
    vec3 ambient_intensity;
    vec3 diffuse_intensity;
    vec3 specular_intensity;
-   vec3 world_direction;
-   vec3 reflection;
+   vec3 direction; // view space direction from light to surface
+   float attenuation;
 };
 
 @FragmentSurface
 
 vec3 AddLight(Surface s, Radiance r)
 {
-	vec3 L = r.world_direction.xyz;	// From surface towards light, unit length, world-space
-    float specular = dot(view_direction, r.reflection);
-	vec3 kA = s.ambient.xyz * r.ambient_intensity.xyz;
-	vec3 kD = s.diffuse.xyz * r.diffuse_intensity.xyz;
-	vec3 kS = vec3(0.0, 0.0, 0.0);
-	vec3 kE = s.emission.xyz;
-	if ((specular > 0.0) && (specularExponent > 0.0))
+	vec3 L = r.direction.xyz;	// From surface to light, unit length, view-space
+	float nDotL = max(dot(viewspace_normal, L), 0.0);
+	
+	vec3 kA = s.ambient.xyz * r.ambient_intensity.xyz + s.emission.xyz;
+	vec3 kS = vec3(0, 0, 0);	
+	vec3 kD = nDotL * s.diffuse.xyz * r.diffuse_intensity.xyz;
+	if (nDotL > 0.0)
 	{
-		kS = s.specular.xyz * r.specular_intensity.xyz;	
-		kS *= pow(specular, specularExponent);
+		vec3 reflect = normalize(reflect(-L, viewspace_normal));
+    	float cosAngle = dot(view_direction, reflect);
+    	if (cosAngle > 0.0)
+    	{
+			kS = s.specular.xyz * r.specular_intensity;
+			kS *= pow(cosAngle, specularExponent);
+		}
 	}
-	return kA + kD + kS + kE;
+	return kA + r.attenuation * (kD + kS);
 }
 
 @LIGHTSOURCES
@@ -40,6 +45,7 @@ void main()
 	Surface s = @ShaderName();
 #if defined(HAS_LIGHTSOURCES)
 	color = LightPixel(s);
+	color = clamp(color, vec3(0), vec3(1));
 #else
 	color = (s.diffuse + s.specular + s.ambient + s.emission).xyz;
 #endif

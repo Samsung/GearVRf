@@ -31,13 +31,14 @@
 namespace gvr {
 CustomShader::CustomShader(std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), u_mvp_(0), u_mv_(0), u_right_(0),
+        program_(0), u_mvp_(0), u_mv_(0), u_right_(0), u_view_(0),
         texture_keys_(), attribute_float_keys_(),
         attribute_vec2_keys_(), attribute_vec3_keys_(), attribute_vec4_keys_(),
         uniform_float_keys_(), uniform_vec2_keys_(), uniform_vec3_keys_(),
         uniform_vec4_keys_(), uniform_mat4_keys_() {
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+    u_view_ = glGetUniformLocation(program_->id(), "u_view");
     u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
     u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
     u_right_ = glGetUniformLocation(program_->id(), "u_right");
@@ -164,6 +165,9 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
 
     if (u_mvp_ != -1) {
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mvp));
+    }
+    if (u_view_ != -1) {
+        glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(uniforms.u_view));
     }
     if (u_mv_ != -1) {
         glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv));
