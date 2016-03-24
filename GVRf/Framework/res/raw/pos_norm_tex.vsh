@@ -1,13 +1,15 @@
-world_position = u_mvp * vec4(a_position, 1.0);
+viewspace_position = u_mv * vec4(a_position, 1.0);
+vec4 normal; 
 #ifdef HAS_a_normal
-   world_normal = (u_mv_it * vec4(a_normal, 1.0)).xyz;
+   normal = vec4(normalize(a_normal), 0.0);
 #else
-   world_normal = vec3(0, 0, 1);
+   normal = vec4(0, 0, 1, 0);
 #endif
+viewspace_normal = normalize((u_mv_it * normal).xyz);
 gl_Position = u_mvp * vec4(a_position.xyz, 1.0);
 #ifdef HAS_a_texcoord
    diffuse_coord = a_texcoord.xy;
 #else
    diffuse_coord = vec2(0, 0);
 #endif
-   view_direction = normalize(u_eye_pos - world_position.xyz);
+view_direction = -viewspace_position.xyz;

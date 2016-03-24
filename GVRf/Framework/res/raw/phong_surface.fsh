@@ -61,7 +61,7 @@ Surface @ShaderName()
 	emission = vec4(0.0, 0.0, 0.0, 0.0);
 #endif
 #ifdef HAS_normalTexture
-	world_normal = texture2D(normalTexture, diffuse_coord.xy);
+	viewspace_normal = texture2D(normalTexture, diffuse_coord.xy);
 #endif
 #ifdef HAS_lightMapTexture
 	vec2 lmap_coord = (diffuse_coord * u_lightMap_scale) + u_lightMap_offset;

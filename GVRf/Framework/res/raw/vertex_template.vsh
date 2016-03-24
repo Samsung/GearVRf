@@ -15,10 +15,10 @@ attribute vec3 a_position;
 	attribute vec3 a_bitangent;
 #endif
 
-varying vec4 world_position;
-varying vec3 world_normal;
 varying vec2 diffuse_coord;
 varying vec3 view_direction;
+varying vec4 viewspace_position;
+varying vec3 viewspace_normal;
 
 void main() {
 @VertexShader

@@ -72,6 +72,7 @@ private:
     GLProgram* program_;
     GLuint u_mvp_;
     GLuint u_mv_;
+    GLuint u_view_;
     GLuint u_mv_it_;
     GLuint u_right_;
     std::map<int, std::string> texture_keys_;

@@ -48,7 +48,6 @@ void Light::render(int program, int lightindex) {
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
             offsets_[it->first] = offset;
-            LOGD("LIGHT: %s GL location = %d\n", key.c_str(), offset);
         }
         if (offset >= 0)
             glUniform1f(offset, it->second);
@@ -62,8 +61,7 @@ void Light::render(int program, int lightindex) {
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
             offsets_[it->first] = offset;
-            LOGD("LIGHT: %s GL location = %d\n", key.c_str(), offset);
-        }
+         }
         if (offset >= 0) {
             glm::vec3 v = it->second;
             glUniform3f(offset, v.x, v.y, v.z);
@@ -78,7 +76,6 @@ void Light::render(int program, int lightindex) {
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
             offsets_[it->first] = offset;
-            LOGD("LIGHT: %s GL location = %d\n", key.c_str(), offset);
         }
         if (offset >= 0) {
             glm::vec4 v = it->second;
