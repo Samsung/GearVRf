@@ -124,14 +124,12 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
     /*
      * Update the uniforms for the lights
      */
-    int lightindex = -1;
     for (auto it = lightList.begin();
          it != lightList.end();
          ++it) {
         Light* light = (*it);
-        ++lightindex;
-        if (light != NULL)
-            light->render(program_->id(), lightindex);
+         if (light != NULL)
+            light->render(program_->id());
     }
     if(mesh->isVaoDirty()) {
 		for (auto it = attribute_float_keys_.begin();

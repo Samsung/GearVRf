@@ -308,31 +308,45 @@ public class GVRShader
      */
     protected String generateLightShader(GVRLight[] lightlist)
     {
-        String lightSources = "";
         String lightFunction = "vec3 LightPixel(Surface s) {\n" + "   vec3 color = vec3(0.0, 0.0, 0.0);\n";
         String lightDefs = "";
-        Integer lightid = 0;
-        Set<String> classNames = new HashSet<String>();
-
+        Map<String, Integer> classNames = new HashMap<String, Integer>();
+        int lightindex = 0;
+        
         for (GVRLight light : lightlist)
         {
             String lightShader = light.getShaderSource();
             String lightClassName = light.getClass().getSimpleName();
-            if (lightShader != null)
+            String lightid = light.getLightID();
+
+            
+            if ((lightShader == null) || lightid.isEmpty())
             {
-                String id = lightid.toString();
-                lightSources += "uniform Data" + lightClassName + " light" + id + ";\n";
-                if (!classNames.contains(lightClassName))
-                {
-                    classNames.add(lightClassName);
-                    lightDefs += light.getShaderStruct();
-                    lightShader = lightShader.replace("@LightType", lightClassName);
-                    lightDefs += lightShader;
-                }
-                lightFunction += "   Radiance r" + id + " = " + lightClassName + "(s, light" + id + ");\n";
-                lightFunction += "   color += AddLight(s, r" + id + ");\n";
-             }
-            ++lightid;
+                continue;
+            }
+            Integer n = classNames.get(lightClassName);
+            if (n != null)
+            {
+                classNames.put(lightClassName, ++n);
+            }
+            else
+            {
+                n = 0;
+                classNames.put(lightClassName, 0);
+                lightDefs += light.getShaderStruct();
+                lightShader = lightShader.replace("@LightType", lightClassName);
+                lightDefs += lightShader;
+            }
+            lightFunction += "   Radiance r" + lightindex + " = " + lightClassName +
+                             "(s, " + lightid + ");\n";
+            lightFunction += "   color += AddLight(s, r" + lightindex + ");\n";
+            ++lightindex;
+        }
+        String lightSources = "";
+        for (Map.Entry<String, Integer> entry : classNames.entrySet())
+        {
+            int n = entry.getValue() + 1;
+            lightSources += "uniform Struct" + entry.getKey() + " Data" + entry.getKey() + "[" + n + "];\n";            
         }
         lightFunction += "   return color; }\n";
         return lightDefs + lightSources + lightFunction;

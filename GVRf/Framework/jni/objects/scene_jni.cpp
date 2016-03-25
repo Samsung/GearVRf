@@ -177,10 +177,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_addLight(JNIEnv * env,
         jobject obj, jlong jscene, jlong jlight) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
-
     if (jlight != 0) {
-        Light* light =
-                reinterpret_cast<Light*>(jlight);
+        Light* light = reinterpret_cast<Light*>(jlight);
         scene->addLight(light);
     } else {
         scene->addLight(0);

@@ -25,24 +25,23 @@
 
 namespace gvr {
 
+
 /*
  * Loads the uniforms associated with this light
  * into the GPU if they have changed.
  */
-void Light::render(int program, int lightindex) {
-    if (!dirty_) {
+void Light::render(int program) {
+    if (!dirty_ || lightID_.empty()) {
         return;
     }
     dirty_ = false;
     std::string key;
-    std::string lname;
+    std::string lname = lightID_ + ".";
     std::stringstream ss;
     int offset;
 
-    ss << "light" << lightindex << '.';
-    lname = ss.str();
-    for (auto it = floats_.begin();
-            it != floats_.end(); ++it) {
+
+    for (auto it = floats_.begin(); it != floats_.end(); ++it) {
         key = lname + it->first;
         offset = getOffset(it->first);
         if (offset <= 0) {
@@ -61,6 +60,7 @@ void Light::render(int program, int lightindex) {
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
             offsets_[it->first] = offset;
+            LOGD("LIGHT: offset %s = %d\n", key.c_str(), offset);
          }
         if (offset >= 0) {
             glm::vec3 v = it->second;

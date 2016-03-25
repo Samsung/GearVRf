@@ -1,4 +1,4 @@
-Radiance @LightType(Surface s, in Data@LightType data)
+Radiance @LightType(Surface s, in Struct@LightType data)
 {
 	vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
 	return Radiance(data.ambient_intensity.xyz,
