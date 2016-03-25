@@ -61,14 +61,11 @@ void Scene::exportToFile(std::string filepath) {
     Exporter::writeToFile(this, filepath);
 }
 
-int Scene::addLight(Light* light) {
+void Scene::addLight(Light* light) {
     auto it = std::find(lightList.begin(), lightList.end(), light);
     if (it != lightList.end())
-        return std::distance(lightList.begin(), it);
-    int lightindex = lightList.size();
-    LOGD("LIGHT: Adding light %d\n", lightindex);
-    lightList.push_back(light);
-    return lightindex;
+        return;
+     lightList.push_back(light);
 }
 }
 
