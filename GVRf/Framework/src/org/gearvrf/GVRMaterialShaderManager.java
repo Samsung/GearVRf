@@ -99,6 +99,7 @@ import org.gearvrf.utility.Log;
                     + templateClass.getSimpleName()
                     + tex.getMessage());
         }
+        // TODO: generate event to force rebinding of shaders
         return template;
     }
     

@@ -1,0 +1,22 @@
+viewspace_position = u_mv * vec4(a_position, 1.0);
+gl_Position = u_mvp * vec4(a_position.xyz, 1.0);
+vec4 normal; 
+#ifdef HAS_a_normal
+   normal = vec4(normalize(a_normal), 0.0);
+#else
+   normal = vec4(0, 0, 1, 0);
+#endif
+viewspace_normal = normalize((u_mv_it * normal).xyz);
+
+#ifdef HAS_a_texcoord
+   diffuse_coord = a_texcoord.xy;
+#else
+   diffuse_coord = vec2(0, 0);
+#endif
+#if defined(HAS_a_tangent) && defined(HAS_normalTexture)
+   mat3 tbnmtx = mat3(a_tangent, a_bitangent, a_normal);
+   mat3 wtts = tbnmtx * u_mv_it;
+   view_direction = normalize(wtts * -viewspace_position.xyz));
+#else
+   view_direction = normalize(-viewspace_position.xyz);
+#endif

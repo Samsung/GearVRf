@@ -143,6 +143,6 @@ public class GVRComponent extends GVRHybridObject {
      * @return GVRInterface of specified class or null if none exists.
      */
     public GVRComponent getInterface(Class<? extends GVRComponent> interfaceClass) {
-        return getOwnerObject().getInterface(interfaceClass);
+        return getOwnerObject().getComponent(interfaceClass);
     }
 }

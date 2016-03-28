@@ -21,6 +21,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRSceneObject;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+
 
 /**
  * Base class for defining light sources.
@@ -34,10 +37,12 @@ import org.gearvrf.GVRSceneObject;
  * 
  * {@link GVRShaderTemplate GVRRenderData.bindShader }
  */
-public class GVRLight extends GVRComponent {
+public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
 
+    
     public GVRLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, NativeLight.ctor(), parent);
+        isEnabled = true;
         if (parent != null) {
             NativeLight.setParent(getNative(), parent.getNative());
         }
@@ -45,21 +50,33 @@ public class GVRLight extends GVRComponent {
 
     public GVRLight(GVRContext gvrContext) {
         super(gvrContext, NativeLight.ctor());
+        isEnabled = true;
     }
     
     public void setOwnerObject(GVRSceneObject newOwner) {
+        if (owner == newOwner) {
+            return;
+        }
         if (newOwner != null) {
+            if (owner == null) {
+                getGVRContext().registerDrawFrameListener(this);
+            }
             NativeLight.setParent(getNative(), newOwner.getNative());
         }
         else {
+            if (owner != null) {
+                getGVRContext().unregisterDrawFrameListener(this);
+            }
             NativeLight.setParent(getNative(), 0);            
         }
+        super.setOwnerObject(newOwner);
     }
     
     /**
      * Enable the light.
      */
     public void enable() {
+        isEnabled = true;
         NativeLight.enable(getNative());
     }
 
@@ -67,6 +84,7 @@ public class GVRLight extends GVRComponent {
      * Disable the light.
      */
     public void disable() {
+        isEnabled = false;
         NativeLight.disable(getNative());
     }
     
@@ -201,6 +219,31 @@ public class GVRLight extends GVRComponent {
      */
     protected void setShaderSource(String source) {
         shaderSource = source;
+    }
+    
+    /**
+     * Updates the position and direction of this light
+     * from the transform of scene object that owns it.
+     */
+    public void onDrawFrame(float frameTime) {
+        if (!isEnabled || (owner == null)) {
+            return;
+        }
+        Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
+        Vector3f newdir = new Vector3f(0, 0, 1);
+        float[] temp = getVec3("world_direction");
+        Vector3f olddir = new Vector3f(temp[0], temp[1], temp[2]);
+        temp = getVec3("world_position");
+        Vector3f oldpos = new Vector3f(temp[0], temp[1], temp[2]);
+        Vector3f newpos = new Vector3f();
+        worldmtx.getTranslation(newpos);
+        newdir = newdir.mulDirection(worldmtx);
+        if (!olddir.equals(newdir)) {
+            setVec3("world_direction", newdir.x, newdir.y, newdir.z);
+        }
+        if (!oldpos.equals(newpos)) {
+            setVec3("world_position", newpos.x, newpos.y, newpos.z);
+        }       
     }
     
     private boolean isEnabled;

@@ -27,6 +27,7 @@ import java.lang.reflect.*;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
 import org.gearvrf.script.IScriptable;
+import org.gearvrf.utility.Exceptions;
 import org.gearvrf.utility.Log;
 
 /**
@@ -62,7 +63,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     private Object mTag;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
     private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
-    private final Map< Class<? extends GVRComponent>, GVRComponent > mInterfaces = new HashMap< Class<? extends GVRComponent>, GVRComponent >();
+    private final Map< Class<? extends GVRComponent>, GVRComponent > mComponents = new HashMap< Class<? extends GVRComponent>, GVRComponent >();
 
     /**
      * Constructs an empty scene object with a default {@link GVRTransform
@@ -314,101 +315,168 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Adds a new interface to this scene object.
+     * Adds a new component to this scene object.
      * 
-     * Interfaces are a way to extend the functionality of a scene object.
+     * Components are a way to extend the functionality of a scene object.
      * Render data, lights and cameras are attached this way.
      * 
-     * @param interfaceClass Java class of interface to add
-     * @return new interface created
+     * @param compClass Java class of component to add
+     * @return new GVRComponent created
      * 
-     * {@link GVRComponent getInterface GVRComponent.getOwnerObject }
+     * {@link GVRComponent getComponent GVRComponent.getOwnerObject }
      */
-    public GVRComponent addInterface(Class<? extends GVRComponent> interfaceClass) {
-        GVRComponent iface;
+    public GVRComponent addComponent(Class<? extends GVRComponent> compClass) {
+        GVRComponent component;
         
-        if (mInterfaces.containsKey(interfaceClass)) {
-            throw new UnsupportedOperationException("Cannot add an interface of class "
-                    + interfaceClass.getSimpleName()
+        if (mComponents.containsKey(compClass)) {
+            throw new UnsupportedOperationException("Cannot add an component of class "
+                    + compClass.getSimpleName()
                     + " - it is already there.");
         }
         try {
-            Constructor<? extends GVRComponent> constructor = interfaceClass.getConstructor(GVRContext.class, GVRSceneObject.class);
-            iface = (GVRComponent) constructor.newInstance(getGVRContext());
-            mInterfaces.put(interfaceClass, iface);
+            Constructor<? extends GVRComponent> constructor = compClass.getConstructor(GVRContext.class, GVRSceneObject.class);
+            component = (GVRComponent) constructor.newInstance(getGVRContext());
+            mComponents.put(compClass, component);
         }
         catch (NoSuchMethodException mex) {
-            throw new UnsupportedOperationException("interface of class "
-                    + interfaceClass.getSimpleName()
+            throw new UnsupportedOperationException("component of class "
+                    + compClass.getSimpleName()
                     + " does not have a constructor which takes GVRContext and GVRSceneObject "
                     + mex.getMessage());
         }
         catch (InstantiationException iex) {
-            throw new UnsupportedOperationException("error creating interface of class "
-                    + interfaceClass.getSimpleName()
+            throw new UnsupportedOperationException("error creating component of class "
+                    + compClass.getSimpleName()
                     + iex.getMessage());
         }
         catch (InvocationTargetException tex) {
-            throw new UnsupportedOperationException("error creating interface of class "
-                    + interfaceClass.getSimpleName()
+            throw new UnsupportedOperationException("error creating component of class "
+                    + compClass.getSimpleName()
                     + tex.getMessage());
         } 
         catch (IllegalAccessException aex) {
-            throw new UnsupportedOperationException("error creating interface of class "
-                    + interfaceClass.getSimpleName()
+            throw new UnsupportedOperationException("error creating component of class "
+                    + compClass.getSimpleName()
                     + aex.getMessage());
         }
-        return iface;
+        return component;
     }
     
-    public void addInterface(GVRComponent newInterface) {
-        GVRComponent oldInterface = getInterface(newInterface.getClass());
+    public void addComponent(GVRComponent newComponent) {
+        GVRComponent oldComponent = getComponent(newComponent.getClass());
         
-        if (oldInterface == newInterface) {
+        if (oldComponent == newComponent) {
             return;
         }
-        if (oldInterface != null) {
-            oldInterface.setOwnerObject(null);
+        if (oldComponent != null) {
+            oldComponent.setOwnerObject(null);
         }
-        newInterface.setOwnerObject(this);
-        mInterfaces.put(newInterface.getClass(), newInterface);
+        newComponent.setOwnerObject(this);
+        mComponents.put(newComponent.getClass(), newComponent);
     }
     
     /**
-     * Gets the interface of the specified class attached to this scene object.
+     * Gets the component of the specified class attached to this scene object.
      * 
-     * @param interfaceClass class of interface to access
+     * @param compClass class of component to access
      * @return GVRComponent of the specified class or null if none exists
-     * {@link addInterface GVRComponent }
+     * {@link addComponent GVRComponent }
      */
-    public GVRComponent getInterface(Class<? extends GVRComponent> interfaceClass) {
-        return mInterfaces.get(interfaceClass);
+    @SuppressWarnings("unchecked")
+    public <T extends GVRComponent> T getComponent(Class<? extends GVRComponent> compClass) {
+        GVRComponent component = mComponents.get(compClass);
+        if ((component != null) &&
+            !compClass.isAssignableFrom(component.getClass())) {
+            throw Exceptions.IllegalArgument("Component class %s cannot be converted to %s",
+                        compClass.getSimpleName(), component.getClass().getSimpleName());
+        }
+        return (T) component;
+    }
+
+    /**
+     * Gets the component derived from the specified class attached to this scene object.
+     * 
+     * This function is slower than getComponent because it must search the list
+     * of components for subclasses of the input class.
+     * 
+     * @param compClass base class of component to access
+     * @return GVRComponent of the specified class or null if none exists
+     * {@link addComponent GVRComponent }
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends GVRComponent> T getDerivedComponent(Class<? extends GVRComponent> compClass) {
+        for (GVRComponent component : mComponents.values()) {
+            if (compClass.isAssignableFrom(component.getClass())) {
+                return (T) component;
+            }
+        }
+        return null;
     }
     
     /**
-     * Removes the interface of the specified class if it is attached to this scene object.
-     * @param interfaceClass class of interface to remove
-     * {@link addInterface GVRComponent }
+     * Get a list of all the components of a given class attached to this
+     * scene object and all of its descendants.
+     * @param compClass GVRComponent subclass to look for
+     * @return list of components of designated class
+     * {@link getComponent addComponent }
      */
-    public void removeInterface(Class<? extends GVRComponent> interfaceClass) {
-        GVRComponent iface = mInterfaces.get(interfaceClass);
+    public <T extends GVRComponent> ArrayList<T> getAllComponents(Class<? extends GVRComponent> compClass) {
+        ArrayList<T> list = new ArrayList<T>();
+        T component = getComponent(compClass);
+        if (component != null) {
+            list.add(component);
+        }
+        for (GVRSceneObject child : mChildren) {
+            ArrayList<T> childlist = child.getAllComponents(compClass);
+            list.addAll(childlist);
+        }
+        return list;
+    }
+
+    /**
+     * Get a list of all the components derived from a given class attached to this
+     * scene object and all of its descendants.
+     * @param compClass GVRComponent base class to look for
+     * @return list of components of designated class
+     * {@link getComponent addComponent }
+     */
+    public <T extends GVRComponent> ArrayList<T> getAllDerivedComponents(Class<? extends GVRComponent> compClass) {
+        ArrayList<T> list = new ArrayList<T>();
+        T component = getDerivedComponent(compClass);
+        if (component != null) {
+            list.add(component);
+        }
+        for (GVRSceneObject child : mChildren) {
+            ArrayList<T> childlist = child.getAllDerivedComponents(compClass);
+            list.addAll(childlist);
+        }
+        return list;
+    }
+    
+    /**
+     * Removes the component of the specified class if it is attached to this scene object.
+     * @param compClass class of Component to remove
+     * {@link addComponent GVRComponent }
+     */
+    public void removeComponent(Class<? extends GVRComponent> compClass) {
+        GVRComponent iface = mComponents.get(compClass);
         if (iface != null) {
             iface.setOwnerObject(null);
-            mInterfaces.remove(interfaceClass);
+            mComponents.remove(compClass);
         }
      }
     
     /**
-     * Removes the given interface if it is attached to this scene object.
-     * @param interface GVRInterface object to remove
+     * Removes the given component if it is attached to this scene object.
+     * @param component GVRComponent object to remove
      * {@link addInterface GVRComponent }
      */
-    public void removeInterface(GVRComponent iface) {
-        GVRComponent temp = mInterfaces.get(iface.getClass());
+    public void removeComponent(GVRComponent component) {
+        GVRComponent temp = mComponents.get(component.getClass());
 
-        if (temp == iface) {
-            iface.setOwnerObject(null);
-            mInterfaces.remove(iface.getClass());
+        if (temp == component) {
+            component.setOwnerObject(null);
+            mComponents.remove(component.getClass());
         }
     }
     
@@ -419,7 +487,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New transform.
      */
     void attachTransform(GVRTransform transform) {
-        addInterface(transform);
+        addComponent(transform);
     }
 
     /**
@@ -427,7 +495,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * object will have no transformations associated with it.
      */
     void detachTransform() {
-        removeInterface(GVRTransform.class);
+        removeComponent(GVRTransform.class);
     }
 
     /**
@@ -441,7 +509,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         currently attached to the object, returns {@code null}.
      */
     public GVRTransform getTransform() {
-        return (GVRTransform) getInterface(GVRTransform.class);
+        return (GVRTransform) getComponent(GVRTransform.class);
     }
 
     /**
@@ -455,7 +523,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New rendering data.
      */
     public void attachRenderData(GVRRenderData renderData) {
-        addInterface(renderData);
+        addComponent(renderData);
     }
 
     /**
@@ -464,7 +532,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * An object with no {@link GVRRenderData} is not visible.
      */
     public void detachRenderData() {
-        removeInterface(GVRRenderData.class);
+        removeComponent(GVRRenderData.class);
     }
 
     /**
@@ -474,7 +542,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         data is currently attached to the object, returns {@code null}.
      */
     public GVRRenderData getRenderData() {
-        return (GVRRenderData) getInterface(GVRRenderData.class);
+        return (GVRRenderData) getComponent(GVRRenderData.class);
     }
 
     /**
@@ -497,14 +565,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New camera.
      */
     public void attachCamera(GVRCamera camera) {
-        addInterface(camera);
+        addComponent(camera);
     }
 
     /**
      * Detach the object's current {@link GVRCamera camera}.
      */
     public void detachCamera() {
-        removeInterface(GVRCamera.class);
+        removeComponent(GVRCamera.class);
     }
 
     /**
@@ -514,7 +582,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         is currently attached, returns {@code null}.
      */
     public GVRCamera getCamera() {
-        return (GVRCamera) getInterface(GVRCamera.class);
+        return (GVRCamera) getComponent(GVRCamera.class);
     }
 
     /**
@@ -527,14 +595,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New camera rig.
      */
     public void attachCameraRig(GVRCameraRig cameraRig) {
-        addInterface(cameraRig);
+        addComponent(cameraRig);
     }
 
     /**
      * Detach the object's current {@link GVRCameraRig camera rig}.
      */
     public void detachCameraRig() {
-        removeInterface(GVRCameraRig.class);
+        removeComponent(GVRCameraRig.class);
     }
 
     /**
@@ -544,7 +612,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         camera rig is currently attached, returns {@code null}.
      */
     public GVRCameraRig getCameraRig() {
-        return (GVRCameraRig) getInterface(GVRCameraRig.class);
+        return (GVRCameraRig) getComponent(GVRCameraRig.class);
     }
 
     /**
@@ -557,7 +625,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New {@link GVREyePointeeHolder}.
      */
     public void attachEyePointeeHolder(GVREyePointeeHolder eyePointeeHolder) {
-        addInterface(eyePointeeHolder);
+        addComponent(eyePointeeHolder);
 
     }
 
@@ -586,7 +654,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (eyePointee == null) {
             return false;
         }
-        GVREyePointeeHolder eyePointeeHolder = (GVREyePointeeHolder) addInterface(GVREyePointeeHolder.class);
+        GVREyePointeeHolder eyePointeeHolder = (GVREyePointeeHolder) addComponent(GVREyePointeeHolder.class);
         eyePointeeHolder.addPointee(eyePointee);
         return true;
     }
@@ -595,7 +663,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Detach the object's current {@link GVREyePointeeHolder}.
      */
     public void detachEyePointeeHolder() {
-        removeInterface(GVREyePointeeHolder.class);
+        removeComponent(GVREyePointeeHolder.class);
     }
 
     /**
@@ -606,7 +674,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         {@code null}.
      */
     public GVREyePointeeHolder getEyePointeeHolder() {
-        return (GVREyePointeeHolder) getInterface(GVREyePointeeHolder.class);
+        return (GVREyePointeeHolder) getComponent(GVREyePointeeHolder.class);
     }
 
     /**

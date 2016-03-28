@@ -197,8 +197,7 @@ public class GVRShaderTemplate
        
         if (template == null)
         {
-            // TODO: error vertex template missing
-            return null;
+            throw new IllegalArgumentException(type + "Template segment missing - cannot make shader");
         }
         String combinedSource = template;
         for (Map.Entry<String, String> entry : mShaderSegments.entrySet())
@@ -239,6 +238,9 @@ public class GVRShaderTemplate
             (material == null))
         {
             return null;
+        }
+        if (!rdata.isLightEnabled()) {
+            lightlist = null;
         }
         Set<String> variantDefines = generateVariantDefines(mesh, material);
         String signature = generateSignature(variantDefines, lightlist);
