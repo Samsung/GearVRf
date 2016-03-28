@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
@@ -178,8 +179,9 @@ final class GVRImporter {
         }
 
         List<AiLight> lights= assimpScene.getLights();
-      
-        GVRScene scene=context.getMainScene();
+        GVRScene scene = context.getNextMainScene();
+        Hashtable<String, GVRPhongLight> lightlist= new Hashtable<String, GVRPhongLight>();
+       
         for(AiLight light: lights){
            
            org.gearvrf.jassimp2.AiColor ambientCol= light.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
@@ -200,7 +202,10 @@ final class GVRImporter {
            gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
            gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
            gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
-                
+           String name = light.getName();
+           gvrLight.setLightID(name);
+         
+           lightlist.put(name, gvrLight);     
            scene.addLight(gvrLight);
 
        }
@@ -208,8 +213,15 @@ final class GVRImporter {
         GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
-                        cacheEnabled), scene);
+                        cacheEnabled), scene, lightlist);
+        CheckLights(scene);
         return sceneOb;
+    }
+    public static void CheckLights(GVRScene scene){
+        GVRLight[] lists = scene.getLightList();
+        for(GVRLight light: lists){
+            Log.e("RC", " parent name is " + light.getLightID());
+        }
     }
 
     static File downloadFile(Context context, String urlString) {
