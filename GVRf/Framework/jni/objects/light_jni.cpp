@@ -166,7 +166,7 @@ Java_org_gearvrf_NativeLight_setParent(JNIEnv * env,
         jobject obj, jlong jlight, jlong jparent) {
     Light* light = reinterpret_cast<Light*>(jlight);
     SceneObject* sceneobj = reinterpret_cast<SceneObject*>(jparent);
-    light->setParent(sceneobj);
+    light->set_owner_object(sceneobj);
 }
 
 JNIEXPORT jstring JNICALL

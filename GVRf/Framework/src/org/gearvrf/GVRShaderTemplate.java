@@ -56,7 +56,7 @@ import android.util.Pair;
  *
  *{@link GVRShaderSegment GVRPhongShader}
  */
-public class GVRShader
+public class GVRShaderTemplate
 {
     protected class ShaderVariant
     {
@@ -66,7 +66,7 @@ public class GVRShader
     };
 
 
-    public GVRShader(String name, String descriptor)
+    public GVRShaderTemplate(String name, String descriptor)
     {
         mName = name;
         mUniformDescriptor = descriptor;

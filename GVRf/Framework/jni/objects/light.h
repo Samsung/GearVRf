@@ -27,12 +27,13 @@
 #include "glm/glm.hpp"
 
 #include "objects/hybrid_object.h"
+#include "components/component.h"
 
 namespace gvr {
 class Color;
 class SceneObject;
 
-class Light: public HybridObject {
+class Light: public Component {
 public:
     explicit Light()
     :   enabled_(true),
@@ -115,23 +116,6 @@ public:
      * @param program    ID of GL shader program
      */
     void render(int program);
-
-    /**
-     * Get the GVRSceneObject this light is attached to.
-     *
-     * If a light is attached to a scene object, its position
-     * and direction are obtained from the scene object's transform.
-     */
-    SceneObject* parent() { return parent_; }
-
-    /**
-     * Attach this light to a scene object.
-     *
-     * Its position and direction are obtained from the scene object's transform.
-     */
-    void setParent(SceneObject* parent) {
-        parent_ = parent;
-    }
 
     std::string getLightID() {
         return lightID_;
