@@ -38,8 +38,6 @@ import org.joml.Vector3f;
  * {@link GVRShaderTemplate GVRRenderData.bindShader }
  */
 public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
-
-    
     public GVRLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, NativeLight.ctor(), parent);
         isEnabled = true;
@@ -71,7 +69,7 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
         }
         super.setOwnerObject(newOwner);
     }
-    
+
     /**
      * Enable the light.
      */

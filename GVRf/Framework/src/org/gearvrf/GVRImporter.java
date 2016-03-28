@@ -211,6 +211,12 @@ final class GVRImporter {
                         cacheEnabled), scene);
         return sceneOb;
     }
+    public static void CheckLights(GVRScene scene){
+        GVRLight[] lists = scene.getLightList();
+        for(GVRLight light: lists){
+            Log.e("RC", " parent name is " + light.getLightID());
+        }
+    }
 
     static File downloadFile(Context context, String urlString) {
         URL url = null;

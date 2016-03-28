@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -18,6 +19,7 @@ import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRPhongLight;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
@@ -50,7 +52,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     
     private void recurseAssimpNodes(
             GVRSceneObject parentSceneObject,
-            AiNode node,GVRScene scene) {
+             AiNode node,GVRScene scene) {
         try {
             GVRSceneObject sceneObject = null;
             if (node.getNumMeshes() == 0) {
@@ -76,7 +78,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }
            
             for (AiNode child : node.getChildren()) {
-                recurseAssimpNodes(sceneObject, child,scene);
+               recurseAssimpNodes(sceneObject, child,scene);
                 
             }
 
@@ -90,6 +92,16 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             e.printStackTrace();
         }
     }
+    void attachLights(Hashtable<String, GVRPhongLight> lightlist, GVRSceneObject sceneObject){
+        String name = sceneObject.getName();
+        GVRPhongLight light =  lightlist.get(name);
+        if(light != null){
+            sceneObject.addComponent(light); 
+        }
+
+    }
+       
+    
 
     /**
      * Helper method to create a new {@link GVRSceneObject} with the mesh at the
@@ -120,7 +132,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
      */
     private GVRSceneObject createSubSceneObject(
             AiNode node,
-            int index, GVRScene gvrScene)
+           int index, GVRScene gvrScene)
             throws IOException {
         AiMesh aiMesh = scene.getMeshes().get(node.getMeshes()[index]);
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
@@ -134,7 +146,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
 
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
-      
         meshMaterial.setVec4("diffuseColor",diffuseColor.getRed(),
                 diffuseColor.getGreen(), diffuseColor.getBlue(),diffuseColor.getAlpha());
 
@@ -195,7 +206,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         sceneObjectRenderData.setMaterial(meshMaterial);
         sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
         sceneObject.attachRenderData(sceneObjectRenderData);
-        sceneObjectRenderData.bindShader(gvrScene);
 
         return sceneObject;
     }
@@ -215,11 +225,12 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         int feature_set =0;
         final List<Integer> features = new ArrayList<Integer>();
         for (final AiTextureType texType : AiTextureType.values()) {
-            if(texType != AiTextureType.UNKNOWN && texType!=AiTextureType.NORMALS && texType!=AiTextureType.AMBIENT ){
+            if(texType != AiTextureType.UNKNOWN ){
             final String texFileName = material.getTextureFile(
                     texType, 0);
             
             if (texFileName != null && !texFileName.isEmpty()) {
+                meshMaterial.setTexture(textureMap.get(texType),(GVRTexture)null);
                 Log.e("RC", " texture type is: "+ texType + " filename is " + texFileName);
                 try {
                     if (volume != null) {
