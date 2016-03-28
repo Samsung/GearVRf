@@ -21,16 +21,30 @@ import java.util.List;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
+import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
-/** The scene graph */
-public class GVRScene extends GVRHybridObject implements PrettyPrint {
+/**
+ * The scene graph.
+ *
+ * It receives events defined in {@link ISceneEvents}. To add a listener to these events, use the
+ * following code:
+ * <pre>
+ *     ISceneEvents mySceneEventListener = new ISceneEvents() {
+ *         ...
+ *     };
+ *     getEventReceiver().addListener(mySceneEventListener);
+ * </pre>
+ */
+public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
 
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
+
+    private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
@@ -59,6 +73,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
 
         setMainCameraRig(cameraRig);
         setFrustumCulling(true);
+
+        getEventReceiver().addListener(mSceneEventListener);
     }
 
     private GVRScene(GVRContext gvrContext, long ptr) {
@@ -436,6 +452,54 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
         prettyPrint(sb, 0);
         return sb.toString();
     }
+
+    @Override
+    public GVREventReceiver getEventReceiver() {
+        return mEventReceiver;
+    }
+
+    // Default scene event handler
+    private ISceneEvents mSceneEventListener = new ISceneEvents() {
+        @Override
+        public void onInit(GVRContext gvrContext, GVRScene scene) {
+            for (GVRSceneObject child : mSceneObjects) {
+                recursivelySendOnInit(child);
+            }
+        }
+
+        private void recursivelySendOnInit(GVRSceneObject sceneObject) {
+            getGVRContext().getEventManager().sendEvent(
+                    sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
+
+            for (GVRSceneObject child : sceneObject.rawGetChildren()) {
+                recursivelySendOnInit(child);
+            }
+        }
+
+        @Override
+        public void onAfterInit() {
+            for (GVRSceneObject child : mSceneObjects) {
+                recursivelySendSimpleEvent(child, "onAfterInit");
+            }
+        }
+
+        @Override
+        public void onStep() {
+            // Send "onStep" to all scene objects and their children
+            for (GVRSceneObject child : mSceneObjects) {
+                recursivelySendSimpleEvent(child, "onStep");
+            }
+        }
+
+        private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
+            getGVRContext().getEventManager().sendEvent(
+                    sceneObject, ISceneObjectEvents.class, eventName);
+
+            for (GVRSceneObject child : sceneObject.rawGetChildren()) {
+                recursivelySendSimpleEvent(child, eventName);
+            }
+        }
+    };
 }
 
 class NativeScene {
