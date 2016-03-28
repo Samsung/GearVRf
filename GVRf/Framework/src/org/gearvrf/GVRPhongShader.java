@@ -17,21 +17,32 @@ package org.gearvrf;
 import java.util.HashMap;
 
 import org.gearvrf.utility.TextFile;
+
+import android.content.Context;
+
 import org.gearvrf.R;
 
    /**
     * Manages a set of variants on vertex and fragment shaders from the same source
     * code.
     */
-   public class GVRPhongShader extends org.gearvrf.GVRShader
+   public class GVRPhongShader extends org.gearvrf.GVRShaderTemplate
    {
-       public GVRPhongShader(GVRContext context)
+       private static String fragTemplate = null;
+       private static String vtxTemplate = null;
+       private static String surfaceShader = null;
+       private static String vtxShader = null;
+
+       public GVRPhongShader(GVRContext gvrcontext)
        {
            super("PhongShader", "float4 ambientColor; float4 diffuseColor; float4 specularColor; float specularExponent");
-           String fragTemplate = TextFile.readTextFile(context.getContext(), R.raw.fragment_template);
-           String vtxTemplate = TextFile.readTextFile(context.getContext(), R.raw.vertex_template);
-           String surfaceShader = TextFile.readTextFile(context.getContext(), R.raw.phong_surface);
-           String vtxShader = TextFile.readTextFile(context.getContext(), R.raw.pos_nmap_tex);
+           if (fragTemplate == null) {
+               Context context = gvrcontext.getContext();
+               fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template);
+               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template);
+               surfaceShader = TextFile.readTextFile(context, R.raw.phong_surface);
+               vtxShader = TextFile.readTextFile(context, R.raw.pos_nmap_tex);
+           }
            setSegment("FragmentTemplate", fragTemplate);
            setSegment("VertexTemplate", vtxTemplate);
            setSegment("FragmentSurface", surfaceShader);

@@ -21,23 +21,30 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.TextFile;
 
 public class GVRPhongLight extends GVRLight {
-
+    protected static String mPhongLightShaderSource = null;
+    
     public GVRPhongLight(GVRContext gvrContext) {
-        super(gvrContext);
+        this(gvrContext, null);
+     }
+
+    public GVRPhongLight(GVRContext gvrContext, GVRSceneObject parent) {
+        super(gvrContext, parent);
         uniformDescriptor = "float3 world_position"
                 + " float3 world_direction"
                 + " float4 diffuse_intensity"
                 + " float4 ambient_intensity"
                 + " float4 specular_intensity";
-        String lightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
+        if (mPhongLightShaderSource == null) {
+            mPhongLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
+        }
         // set light parameters to OpenGL default values
         setPosition(0.0f, 0.0f, 1.0f);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setShaderSource(lightShaderSource);
+        setShaderSource(mPhongLightShaderSource);
     }
-
+    
     /**
      * Get the {@code light_pos} uniform.
      * 

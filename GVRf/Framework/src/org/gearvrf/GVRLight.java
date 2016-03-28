@@ -20,24 +20,40 @@ import static org.gearvrf.utility.Assert.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRSceneObject;
 
-public class GVRLight extends GVRHybridObject {
+/**
+ * Base class for defining light sources.
+ *
+ * Lights are implemented by the fragment shader.
+ * Each different light implementation corresponds to a
+ * subclass of GVRLight which is responsible for
+ * supplying the shader source code for the light.
+ * GearVRF aggregates all of the light source
+ * implementations into a single fragment shader.
+ * 
+ * {@link GVRShaderTemplate GVRRenderData.bindShader }
+ */
+public class GVRLight extends GVRComponent {
 
     public GVRLight(GVRContext gvrContext, GVRSceneObject parent) {
-        super(gvrContext, NativeLight.ctor());
-        isEnabled = true;
+        super(gvrContext, NativeLight.ctor(), parent);
         if (parent != null) {
             NativeLight.setParent(getNative(), parent.getNative());
         }
-        sceneParent = parent;
     }
 
     public GVRLight(GVRContext gvrContext) {
         super(gvrContext, NativeLight.ctor());
-        isEnabled = true;
-        sceneParent = null;
+    }
+    
+    public void setOwnerObject(GVRSceneObject newOwner) {
+        if (newOwner != null) {
+            NativeLight.setParent(getNative(), newOwner.getNative());
+        }
+        else {
+            NativeLight.setParent(getNative(), 0);            
+        }
     }
     
     /**
@@ -45,7 +61,6 @@ public class GVRLight extends GVRHybridObject {
      */
     public void enable() {
         NativeLight.enable(getNative());
-        isEnabled = true;
     }
 
     /**
@@ -53,16 +68,6 @@ public class GVRLight extends GVRHybridObject {
      */
     public void disable() {
         NativeLight.disable(getNative());
-        isEnabled = false;
-    }
-
-    /**
-     * Get the enable/disable status for the light.
-     * 
-     * @return true if light is enabled, false if light is disabled.
-     */
-    public boolean isEnabled() {
-        return isEnabled;
     }
     
     /**
@@ -86,16 +91,6 @@ public class GVRLight extends GVRHybridObject {
     }
     
     /**
-     * Get the GVRSceneObject this light is attached to.
-     * 
-     * If a light is attached to a scene object, its position
-     * and direction are obtained from the scene object's transform.
-     */
-    public GVRSceneObject getParent() {
-        return sceneParent;
-    }
-    
-    /**
      * Access the shader source code implementing this light.
      *
      * The shader code for each light defines a function which
@@ -107,7 +102,7 @@ public class GVRLight extends GVRHybridObject {
      * the surface color and integrating the contribution
      * of each light to the final fragment color. It defines
      * the format of the <Radiance> and <Surface> structures.
-     * {@link GVRShader }
+     * {@link GVRShaderTemplate }
      * {@link getShaderDescriptor}
      * @return
      */
@@ -124,7 +119,7 @@ public class GVRLight extends GVRHybridObject {
      * maintains a copy of these values and sends them to
      * the shader when they are updated.
      * the format of the <Radiance> and <Surface> structures.
-     * {@link GVRShader }
+     * {@link GVRShaderTemplate }
      * {@link getShaderSource}
      * @return String describing light shader uniforms
      */

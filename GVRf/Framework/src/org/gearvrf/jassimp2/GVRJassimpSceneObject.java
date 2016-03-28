@@ -21,7 +21,7 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRShader;
+import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
@@ -193,11 +193,9 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
 
         
         sceneObjectRenderData.setMaterial(meshMaterial);
-        
+        sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
         sceneObject.attachRenderData(sceneObjectRenderData);
-        GVRShader shader = new GVRPhongShader(getGVRContext());
-        
-        shader.bindShader(gvrScene,  sceneObjectRenderData);
+        sceneObjectRenderData.bindShader(gvrScene);
 
         return sceneObject;
     }

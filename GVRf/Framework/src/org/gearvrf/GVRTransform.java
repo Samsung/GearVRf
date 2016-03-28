@@ -32,6 +32,24 @@ public class GVRTransform extends GVRComponent {
         super(gvrContext, NativeTransform.ctor());
     }
 
+    GVRTransform(GVRContext gvrContext, GVRSceneObject owner) {
+        super(gvrContext, NativeTransform.ctor(), owner);
+        NativeSceneObject.attachTransform(owner.getNative(), getNative());
+    }
+    
+    public void setOwnerObject(GVRSceneObject newOwner) {
+        if (owner == newOwner) {
+            return;
+        }
+        if (owner != null) {
+            NativeSceneObject.detachTransform(getOwnerObject().getNative());                    
+        }
+        if (newOwner != null) {
+            NativeSceneObject.attachTransform(newOwner.getNative(), getNative());            
+        }
+        super.setOwnerObject(newOwner);
+    }
+    
     private GVRTransform(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }

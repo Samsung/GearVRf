@@ -128,18 +128,14 @@ void Renderer::transformLights(Scene* scene, const glm::mat4& view_matrix) {
 
     for (auto it = lights.begin(); it != lights.end(); ++it) {
         Light* light = (*it);
-        SceneObject* parent = light->parent();
+        SceneObject* parent = light->owner_object();
         if (parent == nullptr) {
             continue;
         }
-        glm::mat4 worldmtx;
+        glm::mat4 worldmtx = parent->transform()->getModelMatrix();
         glm::vec4 newdir(0, 0, 1, 0);
         glm::vec3 olddir = light->getVec3("world_direction");
         glm::vec3 oldpos = light->getVec3("world_position");
-        while (parent != NULL) {
-            worldmtx *= parent->transform()->getModelMatrix();
-            parent = parent->parent();
-        }
         glm::vec3 newpos = glm::vec3(worldmtx[3][0], worldmtx[3][1], worldmtx[3][2]);
         newdir = newdir * worldmtx;
         if ((olddir.x != newdir.x) ||

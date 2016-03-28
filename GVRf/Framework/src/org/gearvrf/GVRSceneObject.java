@@ -17,9 +17,12 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
+import java.lang.reflect.*;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
@@ -53,16 +56,13 @@ import org.gearvrf.utility.Log;
  */
 public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
 
-    private GVRTransform mTransform;
-    private GVRRenderData mRenderData;
-    private GVRCamera mCamera;
-    private GVRCameraRig mCameraRig;
     private GVREyePointeeHolder mEyePointeeHolder;
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
     private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
     private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
+    private final Map< Class<? extends GVRComponent>, GVRComponent > mInterfaces = new HashMap< Class<? extends GVRComponent>, GVRComponent >();
 
     /**
      * Constructs an empty scene object with a default {@link GVRTransform
@@ -314,14 +314,112 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
+     * Adds a new interface to this scene object.
+     * 
+     * Interfaces are a way to extend the functionality of a scene object.
+     * Render data, lights and cameras are attached this way.
+     * 
+     * @param interfaceClass Java class of interface to add
+     * @return new interface created
+     * 
+     * {@link GVRComponent getInterface GVRComponent.getOwnerObject }
+     */
+    public GVRComponent addInterface(Class<? extends GVRComponent> interfaceClass) {
+        GVRComponent iface;
+        
+        if (mInterfaces.containsKey(interfaceClass)) {
+            throw new UnsupportedOperationException("Cannot add an interface of class "
+                    + interfaceClass.getSimpleName()
+                    + " - it is already there.");
+        }
+        try {
+            Constructor<? extends GVRComponent> constructor = interfaceClass.getConstructor(GVRContext.class, GVRSceneObject.class);
+            iface = (GVRComponent) constructor.newInstance(getGVRContext());
+            mInterfaces.put(interfaceClass, iface);
+        }
+        catch (NoSuchMethodException mex) {
+            throw new UnsupportedOperationException("interface of class "
+                    + interfaceClass.getSimpleName()
+                    + " does not have a constructor which takes GVRContext and GVRSceneObject "
+                    + mex.getMessage());
+        }
+        catch (InstantiationException iex) {
+            throw new UnsupportedOperationException("error creating interface of class "
+                    + interfaceClass.getSimpleName()
+                    + iex.getMessage());
+        }
+        catch (InvocationTargetException tex) {
+            throw new UnsupportedOperationException("error creating interface of class "
+                    + interfaceClass.getSimpleName()
+                    + tex.getMessage());
+        } 
+        catch (IllegalAccessException aex) {
+            throw new UnsupportedOperationException("error creating interface of class "
+                    + interfaceClass.getSimpleName()
+                    + aex.getMessage());
+        }
+        return iface;
+    }
+    
+    public void addInterface(GVRComponent newInterface) {
+        GVRComponent oldInterface = getInterface(newInterface.getClass());
+        
+        if (oldInterface == newInterface) {
+            return;
+        }
+        if (oldInterface != null) {
+            oldInterface.setOwnerObject(null);
+        }
+        newInterface.setOwnerObject(this);
+        mInterfaces.put(newInterface.getClass(), newInterface);
+    }
+    
+    /**
+     * Gets the interface of the specified class attached to this scene object.
+     * 
+     * @param interfaceClass class of interface to access
+     * @return GVRComponent of the specified class or null if none exists
+     * {@link addInterface GVRComponent }
+     */
+    public GVRComponent getInterface(Class<? extends GVRComponent> interfaceClass) {
+        return mInterfaces.get(interfaceClass);
+    }
+    
+    /**
+     * Removes the interface of the specified class if it is attached to this scene object.
+     * @param interfaceClass class of interface to remove
+     * {@link addInterface GVRComponent }
+     */
+    public void removeInterface(Class<? extends GVRComponent> interfaceClass) {
+        GVRComponent iface = mInterfaces.get(interfaceClass);
+        if (iface != null) {
+            iface.setOwnerObject(null);
+            mInterfaces.remove(interfaceClass);
+        }
+     }
+    
+    /**
+     * Removes the given interface if it is attached to this scene object.
+     * @param interface GVRInterface object to remove
+     * {@link addInterface GVRComponent }
+     */
+    public void removeInterface(GVRComponent iface) {
+        GVRComponent temp = mInterfaces.get(iface.getClass());
+
+        if (temp == iface) {
+            iface.setOwnerObject(null);
+            mInterfaces.remove(iface.getClass());
+        }
+    }
+    
+    /**
      * Replace the current {@link GVRTransform transform}
      * 
      * @param transform
      *            New transform.
      */
     void attachTransform(GVRTransform transform) {
-        mTransform = transform;
-        NativeSceneObject.attachTransform(getNative(), transform.getNative());
+        addInterface(transform);
     }
 
     /**
@@ -329,8 +427,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * object will have no transformations associated with it.
      */
     void detachTransform() {
-        mTransform = null;
-        NativeSceneObject.detachTransform(getNative());
+        removeInterface(GVRTransform.class);
     }
 
     /**
@@ -344,7 +441,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         currently attached to the object, returns {@code null}.
      */
     public GVRTransform getTransform() {
-        return mTransform;
+        return (GVRTransform) getInterface(GVRTransform.class);
     }
 
     /**
@@ -358,9 +455,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New rendering data.
      */
     public void attachRenderData(GVRRenderData renderData) {
-        mRenderData = renderData;
-        renderData.setOwnerObject(this);
-        NativeSceneObject.attachRenderData(getNative(), renderData.getNative());
+        addInterface(renderData);
     }
 
     /**
@@ -369,11 +464,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * An object with no {@link GVRRenderData} is not visible.
      */
     public void detachRenderData() {
-        if (mRenderData != null) {
-            mRenderData.setOwnerObject(null);
-        }
-        mRenderData = null;
-        NativeSceneObject.detachRenderData(getNative());
+        removeInterface(GVRRenderData.class);
     }
 
     /**
@@ -383,7 +474,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         data is currently attached to the object, returns {@code null}.
      */
     public GVRRenderData getRenderData() {
-        return mRenderData;
+        return (GVRRenderData) getInterface(GVRRenderData.class);
     }
 
     /**
@@ -406,20 +497,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New camera.
      */
     public void attachCamera(GVRCamera camera) {
-        mCamera = camera;
-        camera.setOwnerObject(this);
-        NativeSceneObject.attachCamera(getNative(), camera.getNative());
+        addInterface(camera);
     }
 
     /**
      * Detach the object's current {@link GVRCamera camera}.
      */
     public void detachCamera() {
-        if (mCamera != null) {
-            mCamera.setOwnerObject(null);
-        }
-        mCamera = null;
-        NativeSceneObject.detachCamera(getNative());
+        removeInterface(GVRCamera.class);
     }
 
     /**
@@ -429,7 +514,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         is currently attached, returns {@code null}.
      */
     public GVRCamera getCamera() {
-        return mCamera;
+        return (GVRCamera) getInterface(GVRCamera.class);
     }
 
     /**
@@ -442,20 +527,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New camera rig.
      */
     public void attachCameraRig(GVRCameraRig cameraRig) {
-        mCameraRig = cameraRig;
-        cameraRig.setOwnerObject(this);
-        NativeSceneObject.attachCameraRig(getNative(), cameraRig.getNative());
+        addInterface(cameraRig);
     }
 
     /**
      * Detach the object's current {@link GVRCameraRig camera rig}.
      */
     public void detachCameraRig() {
-        if (mCameraRig != null) {
-            mCameraRig.setOwnerObject(null);
-        }
-        mCameraRig = null;
-        NativeSceneObject.detachCameraRig(getNative());
+        removeInterface(GVRCameraRig.class);
     }
 
     /**
@@ -465,7 +544,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         camera rig is currently attached, returns {@code null}.
      */
     public GVRCameraRig getCameraRig() {
-        return mCameraRig;
+        return (GVRCameraRig) getInterface(GVRCameraRig.class);
     }
 
     /**
@@ -478,16 +557,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New {@link GVREyePointeeHolder}.
      */
     public void attachEyePointeeHolder(GVREyePointeeHolder eyePointeeHolder) {
-        // see GVRPicker.findObjects
-        GVRPicker.sFindObjectsLock.lock();
-        try {
-            mEyePointeeHolder = eyePointeeHolder;
-            eyePointeeHolder.setOwnerObject(this);
-            NativeSceneObject.attachEyePointeeHolder(getNative(),
-                eyePointeeHolder.getNative());
-        } finally {
-            GVRPicker.sFindObjectsLock.unlock();
-        }
+        addInterface(eyePointeeHolder);
+
     }
 
     /**
@@ -511,16 +582,12 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (renderData == null) {
             return false;
         }
-
         Future<GVREyePointee> eyePointee = renderData.getMeshEyePointee();
         if (eyePointee == null) {
             return false;
         }
-
-        GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
-                getGVRContext());
+        GVREyePointeeHolder eyePointeeHolder = (GVREyePointeeHolder) addInterface(GVREyePointeeHolder.class);
         eyePointeeHolder.addPointee(eyePointee);
-        attachEyePointeeHolder(eyePointeeHolder);
         return true;
     }
 
@@ -528,17 +595,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Detach the object's current {@link GVREyePointeeHolder}.
      */
     public void detachEyePointeeHolder() {
-        // see GVRPicker.findObjects
-        GVRPicker.sFindObjectsLock.lock();
-        try {
-            if (mEyePointeeHolder != null) {
-                mEyePointeeHolder.setOwnerObject(null);
-            }
-            mEyePointeeHolder = null;
-            NativeSceneObject.detachEyePointeeHolder(getNative());
-        } finally {
-            GVRPicker.sFindObjectsLock.unlock();
-        }
+        removeInterface(GVREyePointeeHolder.class);
     }
 
     /**
@@ -549,7 +606,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         {@code null}.
      */
     public GVREyePointeeHolder getEyePointeeHolder() {
-        return mEyePointeeHolder;
+        return (GVREyePointeeHolder) getInterface(GVREyePointeeHolder.class);
     }
 
     /**
@@ -952,16 +1009,17 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         sb.append(this.getName());
         sb.append("]");
         sb.append(System.lineSeparator());
-
-        if (mRenderData == null) {
+        GVRRenderData renderData = getRenderData();
+        
+        if (renderData == null) {
             sb.append(Log.getSpaces(indent + 2));
             sb.append("RenderData: null");
             sb.append(System.lineSeparator());
         } else {
-            mRenderData.prettyPrint(sb, indent + 2);
+            renderData.prettyPrint(sb, indent + 2);
         }
         sb.append(Log.getSpaces(indent + 2));
-        sb.append("Transform: "); sb.append(mTransform);
+        sb.append("Transform: "); sb.append(getTransform());
         sb.append(System.lineSeparator());
 
         // dump its children
