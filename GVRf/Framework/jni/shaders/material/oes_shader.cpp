@@ -84,7 +84,7 @@ void OESShader::render(const glm::mat4& mvp_matrix, RenderData* render_data, Mat
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
-    glBindVertexArray(mesh->getVAOId(Material::OES_SHADER));
+    glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);
