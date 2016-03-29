@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
@@ -37,6 +38,7 @@ import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.jassimp2.AiLight;
+import org.gearvrf.jassimp2.AiLightType;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
@@ -178,7 +180,8 @@ final class GVRImporter {
         }
 
         List<AiLight> lights= assimpScene.getLights();
-      
+        Hashtable<String, GVRPhongLight> lightlist= new Hashtable<String, GVRPhongLight>();
+
         GVRScene scene=context.getMainScene();
         for(AiLight light: lights){
            
@@ -187,28 +190,55 @@ final class GVRImporter {
            org.gearvrf.jassimp2.AiColor specular = light.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);
            float[] pos = light.getPosition(GVRJassimpAdapter.sWrapperProvider);
            float [] dir = light.getDirection(GVRJassimpAdapter.sWrapperProvider);
-                      
+                  
+           AiLightType type = light.getType();
+           if(type == AiLightType.DIRECTIONAL){
            GVRPhongLight gvrLight = new GVRPhongLight(context);
+           
            gvrLight.setFloat("innercone", light.getAngleInnerCone());
            gvrLight.setFloat("outercone", light.getAngleInnerCone());
            gvrLight.setFloat("attenuationconstant", light.getAttenuationConstant());
            gvrLight.setFloat("attenuation_linear", light.getAttenuationLinear());
            gvrLight.setFloat("attenuation_quadratic", light.getAttenuationQuadratic());
            
-           gvrLight.setVec3("world_position", pos[0], pos[1], pos[2]);
-           gvrLight.setVec3("world_direction", dir[0], dir[1], dir[2]);
            gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
            gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
            gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
-                
-           scene.addLight(gvrLight);
+           String name = light.getName();
+           
+
+           
+           lightlist.put(name, gvrLight);    
+           
+           }
+           if(type == AiLightType.POINT){
+               
+               GVRPhongPointLight gvrLight = new GVRPhongPointLight(context);
+               gvrLight.setFloat("innercone", light.getAngleInnerCone());
+               gvrLight.setFloat("outercone", light.getAngleInnerCone());
+               gvrLight.setFloat("attenuationconstant", light.getAttenuationConstant());
+               gvrLight.setFloat("attenuation_linear", light.getAttenuationLinear());
+               gvrLight.setFloat("attenuation_quadratic", light.getAttenuationQuadratic());
+               
+               gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+               gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+               gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+              // Log.e("RC", " diffuse color is  " + diffuseCol );     
+               
+               String name = light.getName();
+              
+               
+               lightlist.put(name, gvrLight);
+           }
+           
 
        }
+
         
         GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
-                        cacheEnabled), scene);
+                        cacheEnabled), scene, lightlist);
         return sceneOb;
     }
     public static void CheckLights(GVRScene scene){

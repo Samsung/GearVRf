@@ -962,7 +962,6 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         if (null != mMainScene) {
             getActivity().setCameraRig(mMainScene.getMainCameraRig());
             mInputManager.setScene(mMainScene);
-            scene.bindShaders();
         }
     }
 

@@ -19,14 +19,14 @@ struct Radiance
 vec3 AddLight(Surface s, Radiance r)
 {
 	vec3 L = r.direction.xyz;	// From surface to light, unit length, view-space
-	float nDotL = max(dot(viewspace_normal, L), 0.0);
+	float nDotL = max(dot(s.viewspaceNormal, L), 0.0);
 	
 	vec3 kA = s.ambient.xyz * r.ambient_intensity.xyz + s.emission.xyz;
 	vec3 kS = vec3(0, 0, 0);	
 	vec3 kD = nDotL * s.diffuse.xyz * r.diffuse_intensity.xyz;
 	if (nDotL > 0.0)
 	{
-		vec3 reflect = normalize(reflect(-L, viewspace_normal));
+		vec3 reflect = normalize(reflect(-L, s.viewspaceNormal));
     	float cosAngle = dot(view_direction, reflect);
     	if (cosAngle > 0.0)
     	{
@@ -34,6 +34,7 @@ vec3 AddLight(Surface s, Radiance r)
 			kS *= pow(cosAngle, specularExponent);
 		}
 	}
+//	return kD;
 	return kA + r.attenuation * (kD + kS);
 }
 
@@ -47,7 +48,7 @@ void main()
 	color = LightPixel(s);
 	color = clamp(color, vec3(0), vec3(1));
 #else
-	color = (s.diffuse + s.specular + s.ambient + s.emission).xyz;
+	color = s.diffuse.xyz;
 #endif
 	gl_FragColor = vec4(color.x, color.y, color.z, 1.0);
 }

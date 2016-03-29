@@ -34,13 +34,13 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     protected AiScene scene;
     protected GVRResourceVolume volume;
 
-  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume,GVRScene gvrScene) {
+  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume,GVRScene gvrScene, Hashtable<String, GVRPhongLight> lightlist) {
         super(gvrContext);
         this.volume = volume;
 
         if (scene != null) {
             this.scene = scene;
-            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), gvrScene);
+            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), gvrScene, lightlist);
 
             // Animations
             for (AiAnimation aiAnim : scene.getAnimations()) {
@@ -52,7 +52,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     
     private void recurseAssimpNodes(
             GVRSceneObject parentSceneObject,
-             AiNode node,GVRScene scene) {
+             AiNode node,GVRScene scene, Hashtable<String, GVRPhongLight> lightlist) {
         try {
             GVRSceneObject sceneObject = null;
             if (node.getNumMeshes() == 0) {
@@ -76,9 +76,9 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 sceneObject.getTransform().setModelMatrix(matrix);
                
             }
-           
+           attachLights(lightlist, sceneObject);
             for (AiNode child : node.getChildren()) {
-               recurseAssimpNodes(sceneObject, child,scene);
+               recurseAssimpNodes(sceneObject, child,scene, lightlist);
                 
             }
 

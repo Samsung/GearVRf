@@ -421,6 +421,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         GVRMaterialShaderManager shadermanager = getGVRContext().getMaterialShaderManager();
         mShaderTemplate = shadermanager.retrieveShaderTemplate(templateClass);
         mShaderDirty = true;
+        isLightEnabled = true;
     }
     
     /**
@@ -457,21 +458,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @param light
      *            The {@link GVRLight light} for rendering.
      */
-    public void setLight(GVRLight light) {
-        boolean supportsLight = false;
-        
-        for (int pass = 0; pass < mRenderPassList.size(); ++pass) {
-            if (mRenderPassList.get(pass).getMaterial().getShaderType() == GVRShaderType.Texture.ID) {
-                supportsLight = true;
-                break;
-            }
-        }
-        
-        if (!supportsLight) {
-            throw new UnsupportedOperationException(
-                    "Only Texture shader can has light.");
-        }
-        
+    public void setLight(GVRLight light) {  
         mLight = light;
         NativeRenderData.setLight(getNative(), light.getNative());
         isLightEnabled = true;
@@ -485,9 +472,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * lighting effect is enabled for the render_data.
      */
     public void enableLight() {
-        if (mLight == null) {
-            throw new UnsupportedOperationException("No light is added yet.");
-        }
         NativeRenderData.enableLight(getNative());
         isLightEnabled = true;
     }
@@ -500,9 +484,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * lighting effect is enabled for the render_data.
      */
     public void disableLight() {
-        if (mLight == null) {
-            throw new UnsupportedOperationException("No light is added yet.");
-        }
         NativeRenderData.disableLight(getNative());
         isLightEnabled = false;
     }

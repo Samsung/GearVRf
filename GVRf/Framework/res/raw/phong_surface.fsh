@@ -30,6 +30,7 @@ uniform float specularExponent;
 
 struct Surface
 {
+   vec3 viewspaceNormal;
    vec4 ambient;
    vec4 diffuse;
    vec4 specular;
@@ -42,7 +43,8 @@ Surface @ShaderName()
 	vec4 emission = emissiveColor;
 	vec4 specular = specularColor;
 	vec4 ambient = ambientColor;
-
+	vec3 viewspaceNormal;
+	
 #ifdef HAS_ambientTexture
 	ambient *= texture2D(ambientTexture, diffuse_coord.xy);
 #endif
@@ -61,13 +63,17 @@ Surface @ShaderName()
 	emission = vec4(0.0, 0.0, 0.0, 0.0);
 #endif
 #ifdef HAS_normalTexture
-	viewspace_normal = texture2D(normalTexture, diffuse_coord.xy);
+	viewspaceNormal = texture2D(normalTexture, diffuse_coord.xy).xyz;
+#else
+	viewspaceNormal = viewspace_normal;
 #endif
+
 #ifdef HAS_lightMapTexture
 	vec2 lmap_coord = (diffuse_coord * u_lightMap_scale) + u_lightMap_offset;
 	diffuse *= texture2D(lightMapTexture, vec2(lmap_coord.x, 1 - lmap_coord.y);
-	return Surface(ambient, vec4(0.0, 0.0, 0.0, 0.0), specular, diffuse);
+	return Surface(viewspaceNormal, ambient, vec4(0.0, 0.0, 0.0, 0.0), specular, diffuse);
 #else
-	return Surface(ambient, diffuse, specular, emission);
+	vec4 temp = vec4(0.0,0.0,0.0,1.0);
+	return Surface(viewspaceNormal, temp, diffuse, temp, temp);
 #endif
 }

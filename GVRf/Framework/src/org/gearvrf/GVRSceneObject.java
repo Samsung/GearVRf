@@ -335,7 +335,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
         try {
             Constructor<? extends GVRComponent> constructor = compClass.getConstructor(GVRContext.class, GVRSceneObject.class);
-            component = (GVRComponent) constructor.newInstance(getGVRContext());
+            component = (GVRComponent) constructor.newInstance(getGVRContext(), this);
             mComponents.put(compClass, component);
         }
         catch (NoSuchMethodException mex) {
