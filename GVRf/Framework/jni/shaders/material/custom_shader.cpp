@@ -113,7 +113,7 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
         Texture* texture = material->getTextureNoError(it->second);
         // If any texture is not ready, do not render the material at all
         if (texture == NULL || !texture->isReady()) {
-            return;
+             return;
         }
     }
 

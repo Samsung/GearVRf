@@ -35,7 +35,7 @@ vec3 AddLight(Surface s, Radiance r)
 		}
 	}
 //	return kD;
-	return kA + r.attenuation * (kD + kS);
+	return r.attenuation * (kA + kD + kS);
 }
 
 @LIGHTSOURCES

@@ -34,12 +34,12 @@ void Light::render(int program) {
     if (!dirty_ || lightID_.empty()) {
         return;
     }
+    LOGD("LIGHT: render %s\n", lightID_.c_str());
     dirty_ = false;
     std::string key;
     std::string lname = lightID_ + ".";
     std::stringstream ss;
     int offset;
-
 
     for (auto it = floats_.begin(); it != floats_.end(); ++it) {
         key = lname + it->first;

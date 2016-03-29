@@ -38,7 +38,8 @@ public class GVRPhongLight extends GVRLight {
             mPhongLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
         }
         // set light parameters to OpenGL default values
-        setPosition(0.0f, 0.0f, 1.0f);
+        setPosition(0.0f, 0.0f, 0.0f);
+        setVec3("world_direction", 0.0f, 0.0f, 1.0f);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);

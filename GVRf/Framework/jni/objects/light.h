@@ -28,7 +28,7 @@
 
 #include "objects/hybrid_object.h"
 #include "components/component.h"
-
+#include "util/gvr_jni.h"
 namespace gvr {
 class Color;
 class SceneObject;
@@ -81,6 +81,7 @@ public:
         if (it != vec3s_.end()) {
             return it->second;
         } else {
+            LOGD("LIGHT: key not %s found\n", key.c_str());
             std::string error = "Light::getVec3() : " + key + " not found";
             throw error;
         }

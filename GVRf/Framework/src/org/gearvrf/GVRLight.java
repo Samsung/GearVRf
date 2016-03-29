@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
 import org.gearvrf.GVRSceneObject;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
+
+import android.util.Log;
 
 
 /**
@@ -95,15 +98,6 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
       */
     public String getLightID() {
         return NativeLight.getLightID(getNative());
-    }
-    
-    /**
-     * Set the light ID.
-     * This is an internal function that establishes the name of
-     * the light uniform block. Do not call this function.
-     */
-    public void setLightID(String id) {
-        NativeLight.setLightID(getNative(),  id);
     }
     
     /**
@@ -227,25 +221,26 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
         if (!isEnabled || (owner == null)) {
             return;
         }
+        float[] odir = getVec3("world_direction");
+        float[] opos = getVec3("world_position");
         Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
+        Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
+        Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
         Vector3f newdir = new Vector3f(0, 0, 1);
-        float[] temp = getVec3("world_direction");
-        Vector3f olddir = new Vector3f(temp[0], temp[1], temp[2]);
-        temp = getVec3("world_position");
-        Vector3f oldpos = new Vector3f(temp[0], temp[1], temp[2]);
         Vector3f newpos = new Vector3f();
         worldmtx.getTranslation(newpos);
+        Vector4f d = new Vector4f();
+        worldmtx.getColumn(2, d);
         newdir = newdir.mulDirection(worldmtx);
         if (!olddir.equals(newdir)) {
             setVec3("world_direction", newdir.x, newdir.y, newdir.z);
         }
         if (!oldpos.equals(newpos)) {
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
-        }       
+        }
     }
     
     private boolean isEnabled;
-    protected GVRSceneObject sceneParent = null;
     protected String shaderSource = null;
     protected String uniformDescriptor = null;
 }

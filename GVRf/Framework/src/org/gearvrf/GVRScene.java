@@ -26,7 +26,7 @@ import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.utility.Log;
 
 /** The scene graph */
-public class GVRScene extends GVRHybridObject implements PrettyPrint {
+public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEvents {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
     private static final Integer MAX_LIGHTS = 16;
@@ -360,9 +360,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
      */
     public void bindShaders() {
         for (GVRSceneObject child : mSceneObjects) {
-            ArrayList<GVRLight> lights = child.getAllDerivedComponents(GVRLight.class);
+            ArrayList<GVRLight> lights = child.getAllComponents(GVRLight.class);
             for (GVRLight light : lights) {
                 addLight(light);
+                String name = light.getLightID();
+                Log.d("gvrf", "LIGHT: addLight %s\n", name);
             }
         }
         for (GVRSceneObject child : mSceneObjects) {
@@ -385,7 +387,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
         }
     }
     
-    public void addLight(GVRLight light) {
+    protected void addLight(GVRLight light) {
         if (light != null) {
             int lightIndex = 0;
             for (GVRLight l : mLightList) {
@@ -396,8 +398,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
                     ++lightIndex;
                 }
             }
-            light.setLightID("Data" + light.getClass().getSimpleName() + "[" + lightIndex + "]");
+            String name = "Data" + light.getClass().getSimpleName() + "[" + lightIndex + "]";
             mLightList.add(light);
+            NativeLight.setLightID(light.getNative(), name);
             NativeScene.addLight(getNative(), light.getNative());
         }
     }
@@ -489,6 +492,28 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint {
         StringBuffer sb = new StringBuffer();
         prettyPrint(sb, 0);
         return sb.toString();
+    }
+
+    @Override
+    public void onAfterInit()
+    {
+        if (getGVRContext().getMainScene() == this) {
+            bindShaders();
+        }        
+    }
+
+    @Override
+    public void onStep()
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void onInit(GVRContext gvrContext, GVRScene scene)
+    {
+        // TODO Auto-generated method stub
+        
     }
 }
 

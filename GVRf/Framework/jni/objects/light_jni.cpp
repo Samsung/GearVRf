@@ -183,7 +183,7 @@ Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
     Light* light = reinterpret_cast<Light*>(jlight);
     const char* char_id = env->GetStringUTFChars(id, 0);
     std::string native_id = std::string(char_id);
-   light->setLightID(native_id);
+    light->setLightID(native_id);
 }
 }
 

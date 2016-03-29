@@ -325,18 +325,22 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * 
      * {@link GVRComponent getComponent GVRComponent.getOwnerObject }
      */
-    public GVRComponent addComponent(Class<? extends GVRComponent> compClass) {
+    public <T extends GVRComponent> T addComponent(Class<? extends GVRComponent> compClass) {
         GVRComponent component;
+        Class<? extends GVRComponent> keyClass = compClass;
         
-        if (mComponents.containsKey(compClass)) {
+        if (GVRLight.class.isAssignableFrom(keyClass)) {
+            keyClass = GVRLight.class;
+        }
+        if (mComponents.containsKey(keyClass)) {
             throw new UnsupportedOperationException("Cannot add an component of class "
-                    + compClass.getSimpleName()
+                    + keyClass.getSimpleName()
                     + " - it is already there.");
         }
         try {
             Constructor<? extends GVRComponent> constructor = compClass.getConstructor(GVRContext.class, GVRSceneObject.class);
             component = (GVRComponent) constructor.newInstance(getGVRContext(), this);
-            mComponents.put(compClass, component);
+            mComponents.put(keyClass, component);
         }
         catch (NoSuchMethodException mex) {
             throw new UnsupportedOperationException("component of class "
@@ -359,20 +363,23 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
                     + compClass.getSimpleName()
                     + aex.getMessage());
         }
-        return component;
+        return (T) component;
     }
     
-    public void addComponent(GVRComponent newComponent) {
-        GVRComponent oldComponent = getComponent(newComponent.getClass());
-        
-        if (oldComponent == newComponent) {
-            return;
+    public <T extends GVRComponent> T addComponent(GVRComponent newComponent) {
+        Class<? extends GVRComponent> keyClass = newComponent.getClass();
+        if (GVRLight.class.isAssignableFrom(keyClass)) {
+            keyClass = GVRLight.class;
         }
-        if (oldComponent != null) {
-            oldComponent.setOwnerObject(null);
+        GVRComponent oldComponent = getComponent(keyClass);
+        if (oldComponent != newComponent) {
+            if (oldComponent != null) {
+                oldComponent.setOwnerObject(null);
+            }
+            newComponent.setOwnerObject(this);
+            mComponents.put(keyClass, newComponent);
         }
-        newComponent.setOwnerObject(this);
-        mComponents.put(newComponent.getClass(), newComponent);
+        return (T) newComponent;
     }
     
     /**
@@ -391,26 +398,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
                         compClass.getSimpleName(), component.getClass().getSimpleName());
         }
         return (T) component;
-    }
-
-    /**
-     * Gets the component derived from the specified class attached to this scene object.
-     * 
-     * This function is slower than getComponent because it must search the list
-     * of components for subclasses of the input class.
-     * 
-     * @param compClass base class of component to access
-     * @return GVRComponent of the specified class or null if none exists
-     * {@link addComponent GVRComponent }
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends GVRComponent> T getDerivedComponent(Class<? extends GVRComponent> compClass) {
-        for (GVRComponent component : mComponents.values()) {
-            if (compClass.isAssignableFrom(component.getClass())) {
-                return (T) component;
-            }
-        }
-        return null;
     }
     
     /**
@@ -432,26 +419,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
         return list;
     }
-
-    /**
-     * Get a list of all the components derived from a given class attached to this
-     * scene object and all of its descendants.
-     * @param compClass GVRComponent base class to look for
-     * @return list of components of designated class
-     * {@link getComponent addComponent }
-     */
-    public <T extends GVRComponent> ArrayList<T> getAllDerivedComponents(Class<? extends GVRComponent> compClass) {
-        ArrayList<T> list = new ArrayList<T>();
-        T component = getDerivedComponent(compClass);
-        if (component != null) {
-            list.add(component);
-        }
-        for (GVRSceneObject child : mChildren) {
-            ArrayList<T> childlist = child.getAllDerivedComponents(compClass);
-            list.addAll(childlist);
-        }
-        return list;
-    }
     
     /**
      * Removes the component of the specified class if it is attached to this scene object.
@@ -459,9 +426,12 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * {@link addComponent GVRComponent }
      */
     public void removeComponent(Class<? extends GVRComponent> compClass) {
-        GVRComponent iface = mComponents.get(compClass);
-        if (iface != null) {
-            iface.setOwnerObject(null);
+        GVRComponent component = mComponents.get(compClass);
+        if (GVRLight.class.isAssignableFrom(compClass)) {
+            compClass = GVRLight.class;
+        }
+        if (component != null) {
+            component.setOwnerObject(null);
             mComponents.remove(compClass);
         }
      }
@@ -472,11 +442,15 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * {@link addInterface GVRComponent }
      */
     public void removeComponent(GVRComponent component) {
-        GVRComponent temp = mComponents.get(component.getClass());
+        Class<? extends GVRComponent> compClass = component.getClass();
+        if (GVRLight.class.isAssignableFrom(compClass)) {
+            compClass = GVRLight.class;
+        }
+        GVRComponent temp = mComponents.get(compClass);
 
         if (temp == component) {
             component.setOwnerObject(null);
-            mComponents.remove(component.getClass());
+            mComponents.remove(compClass);
         }
     }
     
