@@ -21,12 +21,13 @@ public class GVRPhongSpotLight extends GVRPhongLight
     protected static String mSpotLightShaderSource = null;
     public GVRPhongSpotLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
-        uniformDescriptor += " float cone_angle";
+        uniformDescriptor += " float inner_cone_angle; float outer_cone_angle; ";
         if (mSpotLightShaderSource == null) {
             mSpotLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotlight);
         }
         setShaderSource(mSpotLightShaderSource);
-        setFloat("cone_angle", 90.0f);
+        setFloat("inner_cone_angle", 90.0f);
+        setFloat("outer_cone_angle", 90.0f);
     }
     
     public GVRPhongSpotLight(GVRContext gvrContext) {

@@ -185,55 +185,31 @@ final class GVRImporter {
         GVRScene scene=context.getMainScene();
         for(AiLight light: lights){
            
-           org.gearvrf.jassimp2.AiColor ambientCol= light.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
-           org.gearvrf.jassimp2.AiColor diffuseCol= light.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
-           org.gearvrf.jassimp2.AiColor specular = light.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);
-           float[] pos = light.getPosition(GVRJassimpAdapter.sWrapperProvider);
-           float [] dir = light.getDirection(GVRJassimpAdapter.sWrapperProvider);
-                  
            AiLightType type = light.getType();
-           if(type == AiLightType.DIRECTIONAL){
-           GVRPhongLight gvrLight = new GVRPhongLight(context);
-           
-           gvrLight.setFloat("innercone", light.getAngleInnerCone());
-           gvrLight.setFloat("outercone", light.getAngleInnerCone());
-           gvrLight.setFloat("attenuationconstant", light.getAttenuationConstant());
-           gvrLight.setFloat("attenuation_linear", light.getAttenuationLinear());
-           gvrLight.setFloat("attenuation_quadratic", light.getAttenuationQuadratic());
-           
-           gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
-           gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
-           gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
-           String name = light.getName();
-           
-
-           
-           lightlist.put(name, gvrLight);    
-           
+           if(type == AiLightType.DIRECTIONAL){               
+           GVRPhongLight gvrLight = new GVRPhongLight(context);  
+           setPhongLightProp(gvrLight,light);
+           setLightProp(gvrLight, light);
+           String name = light.getName();          
+           lightlist.put(name, gvrLight);               
            }
            if(type == AiLightType.POINT){
-               
                GVRPhongPointLight gvrLight = new GVRPhongPointLight(context);
-               gvrLight.setFloat("innercone", light.getAngleInnerCone());
-               gvrLight.setFloat("outercone", light.getAngleInnerCone());
-               gvrLight.setFloat("attenuationconstant", light.getAttenuationConstant());
-               gvrLight.setFloat("attenuation_linear", light.getAttenuationLinear());
-               gvrLight.setFloat("attenuation_quadratic", light.getAttenuationQuadratic());
-               
-               gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
-               gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
-               gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
-              // Log.e("RC", " diffuse color is  " + diffuseCol );     
-               
-               String name = light.getName();
-              
-               
+               setPhongLightProp(gvrLight,light);   
+               setLightProp(gvrLight, light);
+               String name = light.getName();              
                lightlist.put(name, gvrLight);
            }
-           
-
+           if(type == AiLightType.SPOT){
+               GVRPhongSpotLight gvrLight = new GVRPhongSpotLight(context);
+               setPhongLightProp(gvrLight,light);
+               setLightProp(gvrLight, light);
+               gvrLight.setFloat("inner_cone_angle", light.getAngleInnerCone());
+               gvrLight.setFloat("outer_cone_angle", light.getAngleOuterCone());
+               String name = light.getName();
+               lightlist.put(name, gvrLight);
+           }
        }
-
         
         GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
@@ -241,13 +217,21 @@ final class GVRImporter {
                         cacheEnabled), scene, lightlist);
         return sceneOb;
     }
-    public static void CheckLights(GVRScene scene){
-        GVRLight[] lists = scene.getLightList();
-        for(GVRLight light: lists){
-            Log.e("RC", " parent name is " + light.getLightID());
-        }
-    }
+    public static void setLightProp(GVRLight gvrLight, AiLight assimpLight){
+        gvrLight.setFloat("attenuationconstant", assimpLight.getAttenuationConstant());
+        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
+        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
+    }
+    public static void setPhongLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+        org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);       
+        gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+        gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+        gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+
+    }
     static File downloadFile(Context context, String urlString) {
         URL url = null;
         try {
