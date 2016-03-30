@@ -12,5 +12,5 @@ Radiance @LightType(Surface s, in Struct@LightType data)
 					data.diffuse_intensity.xyz,
 					data.specular_intensity.xyz,
 					normalize(-L.xyz),
-					attenuation);
+					1.0);
 }

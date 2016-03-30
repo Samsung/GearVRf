@@ -33,13 +33,19 @@ public class GVRPhongLight extends GVRLight {
                 + " float3 world_direction"
                 + " float4 diffuse_intensity"
                 + " float4 ambient_intensity"
-                + " float4 specular_intensity";
+                + " float4 specular_intensity"
+                + " float attenuation_constant"
+                + " float attenuation_linear"
+                + " float attenuation_quadratic";
         if (mPhongLightShaderSource == null) {
             mPhongLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
         }
         // set light parameters to OpenGL default values
         setPosition(0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
+        setFloat("attenuation_constant", 1);
+        setFloat("attenuation_linear", 0);
+        setFloat("attenuation_quadratic", 0);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
