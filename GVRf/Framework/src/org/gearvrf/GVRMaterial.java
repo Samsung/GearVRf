@@ -192,14 +192,13 @@ public class GVRMaterial extends GVRHybridObject implements
     public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
         super(gvrContext, NativeMaterial.ctor(shaderId.ID));
         this.shaderId = shaderId;
-        // if texture shader is used, set lighting coefficients to OpenGL default
-        // values
-        if (shaderId == GVRShaderType.Texture.ID) {
-            setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
-            setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
-            setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
-            setSpecularExponent(0.0f);
-        }
+        // set lighting coefficients to OpenGL default values
+        // TODO: Get rid of this - it does not belong here!
+        setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
+        setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
+        setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
+        setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
+        setSpecularExponent(0.0f);
         this.mShaderFeatureSet = 0;
     }
 

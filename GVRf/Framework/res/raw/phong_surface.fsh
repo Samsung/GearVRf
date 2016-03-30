@@ -22,11 +22,11 @@
 	uniform sampler2D normalTexture;
 #endif
 
-uniform vec4 ambientColor;
-uniform vec4 diffuseColor;
-uniform vec4 specularColor;
-uniform vec4 emissiveColor;
-uniform float specularExponent;
+uniform vec4 ambient_color;
+uniform vec4 diffuse_color;
+uniform vec4 specular_color;
+uniform vec4 emissive_color;
+uniform float specular_exponent;
 
 struct Surface
 {
@@ -39,10 +39,10 @@ struct Surface
 
 Surface @ShaderName()
 {
-	vec4 diffuse = diffuseColor;
-	vec4 emission = emissiveColor;
-	vec4 specular = specularColor;
-	vec4 ambient = ambientColor;
+	vec4 diffuse = diffuse_color;
+	vec4 emission = emissive_color;
+	vec4 specular = specular_color;
+	vec4 ambient = ambient_color;
 	vec3 viewspaceNormal;
 	
 #ifdef HAS_ambientTexture
@@ -73,7 +73,6 @@ Surface @ShaderName()
 	diffuse *= texture2D(lightMapTexture, vec2(lmap_coord.x, 1 - lmap_coord.y);
 	return Surface(viewspaceNormal, ambient, vec4(0.0, 0.0, 0.0, 0.0), specular, diffuse);
 #else
-	vec4 temp = vec4(0.0,0.0,0.0,1.0);
-	return Surface(viewspaceNormal, temp, diffuse, temp, temp);
+	return Surface(viewspaceNormal, ambient, diffuse, specular, emission);
 #endif
 }

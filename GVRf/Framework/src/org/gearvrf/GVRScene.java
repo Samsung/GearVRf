@@ -494,6 +494,13 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEven
         return sb.toString();
     }
 
+    /*
+     * When this scene becomes the main scene we should
+     * bind all the shaders. This will cause shader
+     * generation and compilation.
+     * 
+     * @see org.gearvrf.ILifeCycleEvents#onAfterInit()
+     */
     @Override
     public void onAfterInit()
     {

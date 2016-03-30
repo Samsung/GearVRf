@@ -15,7 +15,7 @@ viewspace_normal = normalize((u_mv_it * normal).xyz);
 #endif
 #if defined(HAS_a_tangent) && defined(HAS_normalTexture)
    mat3 tbnmtx = mat3(a_tangent, a_bitangent, a_normal);
-   mat3 wtts = tbnmtx * u_mv_it;
+   mat3 wtts = tbnmtx * mat3(u_mv_it);
    view_direction = normalize(wtts * -viewspace_position.xyz));
 #else
    view_direction = normalize(-viewspace_position.xyz);
