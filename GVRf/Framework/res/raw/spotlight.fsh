@@ -2,10 +2,16 @@ Radiance @LightType(Surface s, in Struct@LightType data)
 {
 	vec4 lightpos = u_view * vec4(data.world_position.xyz, 1.0);
 	vec4 lightdir = lightpos - viewspace_position;
-	float attenuation   = 1.0f;
-	vec4 spotDir = u_view * vec4(0.0, 0.0, 1.0, 0.0);
+		
 	
-	float cosSpotAngle = max(dot(-lightdir, spotDir), 0.0);
+	// Attenuation
+    float distance    = length(lightpos - viewspace_position);
+    float attenuation = 1.0 / (data.attenuation_constant + data.attenuation_linear * distance + 
+    data.attenuation_quadratic * (distance * distance));
+
+	vec4 spotDir =  normalize(u_view * vec4(0.0, 0.0, 1.0, 0.0));
+	
+	float cosSpotAngle = max(dot(normalize(-lightdir), spotDir), 0.0);
 
 	float coneAngle = (data.outer_cone_angle  + data.inner_cone_angle)/2.0;
 	
