@@ -223,19 +223,26 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
         }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
-        Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
+        GVRSceneObject parent = owner;
+        Matrix4f worldmtx = new Matrix4f();
+        while (parent != null) {
+            worldmtx.mul(parent.getTransform().getLocalModelMatrix4f());
+            parent = parent.getParent();
+        }
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0, 0, 1);
+        Vector4f newdir = new Vector4f();
         Vector3f newpos = new Vector3f();
         worldmtx.getTranslation(newpos);
-        Vector4f d = new Vector4f();
-        worldmtx.getColumn(2, d);
-        newdir = newdir.mulDirection(worldmtx);
-        if (!olddir.equals(newdir)) {
+        worldmtx.getColumn(2, newdir);
+        if ((olddir.x != newdir.x) ||
+            (olddir.y != newdir.y) ||
+            (olddir.z != newdir.z)) {
             setVec3("world_direction", newdir.x, newdir.y, newdir.z);
         }
-        if (!oldpos.equals(newpos)) {
+        if ((oldpos.x != newpos.x) ||
+            (oldpos.y != newpos.y) ||
+            (oldpos.z != newpos.z)) {
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
     }

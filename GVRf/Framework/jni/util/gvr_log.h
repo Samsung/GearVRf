@@ -40,7 +40,7 @@
 //#define clearGLError(msg)
 #define clearGLError(msg) checkGLError(msg);
 
-static bool DEBUG_RENDERER = true; //printf() or glGetError() per frame is expensive
+static bool DEBUG_RENDERER = false; //printf() or glGetError() per frame is expensive
 
 static const char * GlErrorString( GLenum error )
 {
