@@ -366,6 +366,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         return (T) component;
     }
     
+    @SuppressWarnings("unchecked")
     public <T extends GVRComponent> T addComponent(GVRComponent newComponent) {
         Class<? extends GVRComponent> keyClass = newComponent.getClass();
         if (GVRLight.class.isAssignableFrom(keyClass)) {
@@ -373,8 +374,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
         GVRComponent oldComponent = getComponent(keyClass);
         if (oldComponent != newComponent) {
-            if (oldComponent != null) {
-                oldComponent.setOwnerObject(null);
+            if ((oldComponent != null) &&
+                (oldComponent.getOwnerObject() != null)) {
+                throw new UnsupportedOperationException("Cannot add a component of class "
+                        + keyClass.getSimpleName()
+                        + " - it is already attached to another scene object.");
             }
             newComponent.setOwnerObject(this);
             mComponents.put(keyClass, newComponent);

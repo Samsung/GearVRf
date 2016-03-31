@@ -1,4 +1,5 @@
-viewspace_position = u_mv * vec4(a_position, 1.0);
+vec4 pos = u_mv * vec4(a_position, 1.0);
+viewspace_position = pos.xyz / pos.w;
 vec4 normal; 
 #ifdef HAS_a_normal
    normal = vec4(normalize(a_normal), 0.0);
@@ -12,4 +13,4 @@ gl_Position = u_mvp * vec4(a_position.xyz, 1.0);
 #else
    diffuse_coord = vec2(0, 0);
 #endif
-view_direction = -viewspace_position.xyz;
+view_direction = -viewspace_position;

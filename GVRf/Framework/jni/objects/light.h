@@ -68,8 +68,6 @@ public:
     }
 
     void setFloat(std::string key, float value) {
-        if (getOffset(key) < 0)
-            offsets_[key] = floats_.size();
         floats_[key] = value;
         if (enabled_) {
             dirty_ = true;

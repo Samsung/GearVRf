@@ -1,5 +1,5 @@
 uniform mat4 u_view;
-varying vec4 viewspace_position;
+varying vec3 viewspace_position;
 varying vec3 viewspace_normal;
 varying vec2 diffuse_coord;
 varying vec3 view_direction;

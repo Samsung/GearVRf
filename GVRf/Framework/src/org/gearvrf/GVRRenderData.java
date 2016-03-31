@@ -419,8 +419,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public void setShaderTemplate(Class<? extends GVRShaderTemplate> templateClass) {
         GVRMaterialShaderManager shadermanager = getGVRContext().getMaterialShaderManager();
-        mShaderTemplate = shadermanager.retrieveShaderTemplate(templateClass);
         mShaderDirty = true;
+        mShaderTemplate = shadermanager.retrieveShaderTemplate(templateClass);
         isLightEnabled = true;
     }
     
@@ -439,7 +439,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public void bindShader(GVRScene scene) {
         if (mShaderDirty && (mShaderTemplate != null)) {
-            mShaderTemplate.bindShader(scene, this);
+            mShaderTemplate.bindShader(scene.getGVRContext(), this, scene.getLightList());
             mShaderDirty = false;
         }
     }
@@ -472,8 +472,11 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * lighting effect is enabled for the render_data.
      */
     public void enableLight() {
-        NativeRenderData.enableLight(getNative());
-        isLightEnabled = true;
+        if (!isLightEnabled) {
+            NativeRenderData.enableLight(getNative());
+            isLightEnabled = true;
+            bindShader(getGVRContext().getMainScene());
+        }
     }
 
     /**
@@ -484,8 +487,13 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * lighting effect is enabled for the render_data.
      */
     public void disableLight() {
-        NativeRenderData.disableLight(getNative());
-        isLightEnabled = false;
+        if (isLightEnabled) {
+            NativeRenderData.disableLight(getNative());
+            isLightEnabled = false;
+            if (mShaderTemplate != null) {
+                mShaderTemplate.bindShader(getGVRContext(),  this,  null);
+            }
+        }
     }
 
     /**

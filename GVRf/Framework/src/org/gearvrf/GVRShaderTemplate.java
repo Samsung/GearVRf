@@ -66,9 +66,8 @@ public class GVRShaderTemplate
     };
 
 
-    public GVRShaderTemplate(String name, String descriptor)
+    public GVRShaderTemplate(String descriptor)
     {
-        mName = name;
         mUniformDescriptor = descriptor;
         mShaderSegments = new HashMap<String, String>();
     }
@@ -135,7 +134,7 @@ public class GVRShaderTemplate
      */
     public String generateSignature(Set<String> defined, GVRLight[] lightlist)
     {
-        String sig = mName + ":";
+        String sig = getClass().getSimpleName() + ":";
 
         for (String key : defined)
         {
@@ -216,7 +215,7 @@ public class GVRShaderTemplate
                     defines += "#define HAS_LIGHTSOURCES 1\n";
                 }
                 combinedSource = combinedSource.replace("@" + key, segmentSource);
-                combinedSource = combinedSource.replace("@ShaderName", mName);
+                combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
                 combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
                 ++nsegs;
             }
@@ -228,11 +227,10 @@ public class GVRShaderTemplate
         return defines + combinedSource;
     }
     
-    public GVRMaterialShaderId bindShader(GVRScene scene, GVRRenderData rdata)
+    public GVRMaterialShaderId bindShader(GVRContext context, GVRRenderData rdata, GVRLight[] lightlist)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
-        GVRLight[] lightlist = scene.getLightList();
         
         if ((mesh == null) ||
             (material == null))
@@ -253,7 +251,7 @@ public class GVRShaderTemplate
             variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
             mShaderVariants.put(signature, variant);
-            GVRMaterialShaderManager shaderManager = scene.getGVRContext().getMaterialShaderManager();
+            GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
             Log.d("vertex", variant.VertexShaderSource);
             Log.d("fragment", variant.FragmentShaderSource);
             variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
@@ -263,14 +261,14 @@ public class GVRShaderTemplate
         material.setShaderType(variant.ShaderID);
         return variant.ShaderID;
     }
-    
+
+   
     protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
     {
         Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
-        Matcher matcher = pattern.matcher(mUniformDescriptor);
-        
-
+        Matcher matcher = pattern.matcher(mUniformDescriptor);        
         Set<String> texNames = material.getTextureNames();
+        
         for (String s : texNames)
         {
             map.addTextureKey(s, s);
@@ -294,7 +292,7 @@ public class GVRShaderTemplate
                 // TODO: throw exception
                 break;
             }
-         }        
+         }
     }
     
     /**
@@ -310,7 +308,7 @@ public class GVRShaderTemplate
      */
     protected String generateLightShader(GVRLight[] lightlist)
     {
-        String lightFunction = "vec3 LightPixel(Surface s) {\n" + "   vec3 color = vec3(0.0, 0.0, 0.0);\n";
+        String lightFunction = "vec3 LightPixel(Surface s) {\n" + "   vec3 color = vec3(0.0, 0.0, 0.0);\n   float enable;\n";
         String lightDefs = "";
         Map<String, Integer> classNames = new HashMap<String, Integer>();
         int lightindex = 0;
@@ -341,7 +339,8 @@ public class GVRShaderTemplate
             }
             lightFunction += "   Radiance r" + lightindex + " = " + lightClassName +
                              "(s, " + lightid + ");\n";
-            lightFunction += "   color += AddLight(s, r" + lightindex + ");\n";
+            lightFunction += "   enable = " + lightid + ".enabled;"; 
+            lightFunction += "   color += vec3(enable, enable, enable) * AddLight(s, r" + lightindex + ");\n";
             ++lightindex;
         }
         String lightSources = "";
@@ -354,7 +353,6 @@ public class GVRShaderTemplate
         return lightDefs + lightSources + lightFunction;
     }
 
-    protected String mName;
     protected Map<String, String> mShaderSegments;
     protected Map<String, ShaderVariant> mShaderVariants;
     protected Set<String> mShaderDefines;

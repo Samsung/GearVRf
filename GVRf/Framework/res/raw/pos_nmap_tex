@@ -1,4 +1,5 @@
-viewspace_position = u_mv * vec4(a_position, 1.0);
+vec4 pos = u_mv * vec4(a_position, 1.0);
+viewspace_position = pos.xyz / pos.w;
 gl_Position = u_mvp * vec4(a_position.xyz, 1.0);
 vec4 normal; 
 #ifdef HAS_a_normal

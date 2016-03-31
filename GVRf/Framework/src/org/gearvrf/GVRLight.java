@@ -43,15 +43,21 @@ import android.util.Log;
 public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
     public GVRLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, NativeLight.ctor(), parent);
-        isEnabled = true;
         if (parent != null) {
             NativeLight.setParent(getNative(), parent.getNative());
         }
+        uniformDescriptor = "float enabled float3 world_position float3 world_direction";
+        setFloat("enabled", 1.0f);
+        setVec3("world_position", 0.0f, 0.0f, 0.0f);
+        setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
     public GVRLight(GVRContext gvrContext) {
         super(gvrContext, NativeLight.ctor());
-        isEnabled = true;
+        uniformDescriptor = "float enabled float3 world_position float3 world_direction";
+        setFloat("enabled", 1.0f);
+        setVec3("world_position", 0.0f, 0.0f, 0.0f);
+        setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
     
     public void setOwnerObject(GVRSceneObject newOwner) {
@@ -77,7 +83,7 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
      * Enable the light.
      */
     public void enable() {
-        isEnabled = true;
+        setFloat("enabled", 1.0f);
         NativeLight.enable(getNative());
     }
 
@@ -85,7 +91,7 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
      * Disable the light.
      */
     public void disable() {
-        isEnabled = false;
+        setFloat("enabled", 0.0f);
         NativeLight.disable(getNative());
     }
     
@@ -218,7 +224,7 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
      * from the transform of scene object that owns it.
      */
     public void onDrawFrame(float frameTime) {
-        if (!isEnabled || (owner == null)) {
+        if ((getFloat("enabled") <= 0.0f) || (owner == null)) {
             return;
         }
         float[] odir = getVec3("world_direction");
@@ -247,7 +253,6 @@ public class GVRLight extends GVRComponent implements GVRDrawFrameListener {
         }
     }
     
-    private boolean isEnabled;
     protected String shaderSource = null;
     protected String uniformDescriptor = null;
 }
