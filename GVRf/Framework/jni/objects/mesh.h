@@ -231,7 +231,6 @@ public:
     Mesh* createBoundingBox();
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
-    bool hasAttribute(std::string key) const;
 
     // /////////////////////////////////////////////////
     //  code for vertex attribute location

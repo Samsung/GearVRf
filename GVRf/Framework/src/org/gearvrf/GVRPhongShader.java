@@ -32,6 +32,8 @@ import org.gearvrf.R;
        private static String vtxTemplate = null;
        private static String surfaceShader = null;
        private static String vtxShader = null;
+       private static String normalShader = null;
+       private static String skinShader = null;
 
        public GVRPhongShader(GVRContext gvrcontext)
        {
@@ -41,13 +43,16 @@ import org.gearvrf.R;
                fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template);
                vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template);
                surfaceShader = TextFile.readTextFile(context, R.raw.phong_surface);
-               vtxShader = TextFile.readTextFile(context, R.raw.pos_nmap_tex);
+               vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_tex);
+               normalShader = TextFile.readTextFile(context, R.raw.normalmap);
+               skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
            }
            setSegment("FragmentTemplate", fragTemplate);
            setSegment("VertexTemplate", vtxTemplate);
            setSegment("FragmentSurface", surfaceShader);
            setSegment("VertexShader", vtxShader);
-           setSegment("VertexSkinShader", null);
+           setSegment("VertexNormalShader", normalShader);
+           setSegment("VertexSkinShader", skinShader);
        }
    }
 

@@ -165,10 +165,11 @@ public class GVRShaderTemplate
     {
         Set<String> definedNames = new HashSet<String>();
         Set<String> texNames = material.getTextureNames();
+        Set<String> vertNames = mesh.getAttributeNames();
      
          for (String name : mShaderDefines)
          {
-             if (mesh.hasAttribute(name) ||
+             if (vertNames.contains(name) ||
                  material.hasUniform(name) ||
                  texNames.contains(name))
                 {

@@ -51,10 +51,9 @@ Java_org_gearvrf_NativeShaderManager_addCustomShader(
     std::string native_vertex_shader = std::string(vertex_str);
     const char *fragment_str = env->GetStringUTFChars(fragment_shader, 0);
     std::string native_fragment_shader = std::string(fragment_str);
-
     int id = shader_manager->addCustomShader(native_vertex_shader,
             native_fragment_shader);
-
+LOGE("SHADER: end added custom shader %d\n", id);
     env->ReleaseStringUTFChars(vertex_shader, vertex_str);
     env->ReleaseStringUTFChars(fragment_shader, fragment_str);
     return id;

@@ -131,7 +131,30 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
          if (light != NULL)
             light->render(program_->id());
     }
-    if(mesh->isVaoDirty()) {
+    /*
+     * Update the bone matrices
+     */
+    int a_bone_indices = glGetAttribLocation(program_->id(), "a_bone_indices");
+    int a_bone_weights = glGetAttribLocation(program_->id(), "a_bone_weights");
+    int u_bone_matrices = glGetUniformLocation(program_->id(), "u_bone_matrix[0]");
+    if ((a_bone_indices >= 0) ||
+        (a_bone_weights >= 0) ||
+        (u_bone_matrices >= 0)) {
+        glm::mat4 finalTransform;
+        mesh->setBoneLoc(a_bone_indices, a_bone_weights);
+        mesh->generateBoneArrayBuffers();
+        int nBones = mesh->getVertexBoneData().getNumBones();
+        if (nBones > MAX_BONES)
+            nBones = MAX_BONES;
+        for (int i = 0; i < nBones; ++i) {
+            finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
+            glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
+        }
+    }
+    /*
+     * Update vertex information
+     */
+    if (mesh->isVaoDirty()) {
 		for (auto it = attribute_float_keys_.begin();
 				it != attribute_float_keys_.end(); ++it) {
 			mesh->setVertexAttribLocF(it->first, it->second);
@@ -210,8 +233,7 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
     }
 
     glBindVertexArray(mesh->getVAOId(material->shader_type()));
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0);
+    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 
     checkGlError("CustomShader::render");
