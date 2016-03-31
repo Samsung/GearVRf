@@ -57,6 +57,7 @@ public class GVRScriptManager {
     // For script bundles. All special targets start with @.
     public static final String TARGET_PREFIX = "@";
     public static final String TARGET_GVRSCRIPT = "@GVRScript";
+    public static final String TARGET_GVRACTIVITY = "@GVRActivity";
 
     interface TargetResolver {
         IScriptable getTarget(GVRContext gvrContext, String name);
@@ -74,6 +75,15 @@ public class GVRScriptManager {
             public IScriptable getTarget(GVRContext gvrContext,
                     String name) {
                 return gvrContext.getActivity().getScript();
+            }
+        });
+
+        // Target resolver for "@GVRActivity"
+        sBuiltinTargetMap.put(TARGET_GVRACTIVITY, new TargetResolver() {
+            @Override
+            public IScriptable getTarget(GVRContext gvrContext,
+                    String name) {
+                return gvrContext.getActivity();
             }
         });
     }
@@ -243,7 +253,8 @@ public class GVRScriptManager {
      */
     public void bindScriptBundle(final GVRScriptBundle scriptBundle, final GVRScript gvrScript, boolean bindToMainScene)
             throws IOException, GVRScriptException {
-        bindHelper(scriptBundle, null, BIND_MASK_GVRSCRIPT);
+        // Here, bind to all targets except SCENE_OBJECTS. Scene objects are bound when scene is set.
+        bindHelper(scriptBundle, null, BIND_MASK_GVRSCRIPT | BIND_MASK_GVRACTIVITY);
 
         if (bindToMainScene) {
             final IScriptEvents bindToSceneListener = new IScriptEvents() {
@@ -309,6 +320,7 @@ public class GVRScriptManager {
 
     protected int BIND_MASK_SCENE_OBJECTS = 0x0001;
     protected int BIND_MASK_GVRSCRIPT     = 0x0002;
+    protected int BIND_MASK_GVRACTIVITY   = 0x0004;
 
     // Helper function to bind script bundler to various targets
     protected void bindHelper(GVRScriptBundle scriptBundle, GVRSceneObject rootSceneObject, int bindMask)
@@ -337,6 +349,10 @@ public class GVRScriptManager {
                 // Apply mask
                 boolean toBind = false;
                 if ((bindMask & BIND_MASK_GVRSCRIPT) != 0 && targetName.equalsIgnoreCase(TARGET_GVRSCRIPT)) {
+                    toBind = true;
+                }
+
+                if ((bindMask & BIND_MASK_GVRACTIVITY) != 0 && targetName.equalsIgnoreCase(TARGET_GVRACTIVITY)) {
                     toBind = true;
                 }
 

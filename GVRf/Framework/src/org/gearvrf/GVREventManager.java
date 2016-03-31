@@ -61,6 +61,11 @@ public class GVREventManager {
     // Cache for Java handler methods
     private final Map<Object, Map<String, Method>> mHandlerMethodCache;
 
+    protected static final int SEND_MASK_OBJECT = 0x1;
+    protected static final int SEND_MASK_LISTENERS = 0x2;
+    protected static final int SEND_MASK_SCRIPTS = 0x4;
+    protected static final int SEND_MASK_ALL = SEND_MASK_OBJECT | SEND_MASK_LISTENERS | SEND_MASK_SCRIPTS;
+
     GVREventManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
         mHandlerMethodCache = new HashMap<Object, Map<String, Method>>();
@@ -99,43 +104,59 @@ public class GVREventManager {
      */
     public boolean sendEvent(Object target, Class<? extends IEvents> eventsClass,
             String eventName, Object... params) {
+        return sendEventWithMask(SEND_MASK_ALL, target, eventsClass, eventName, params);
+    }
+
+    protected boolean sendEventWithMask(int sendMask, Object target, Class<? extends IEvents> eventsClass,
+            String eventName, Object... params) {
+        return sendEventWithMaskParamArray(sendMask, target, eventsClass, eventName, params);
+    }
+
+    protected boolean sendEventWithMaskParamArray(int sendMask, Object target, Class<? extends IEvents> eventsClass,
+            String eventName, Object[] params) {
         // Set to true if an event is handled.
         boolean handledSuccessful = false;
 
-        // Check if the target directly handles the event by implementing the
-        // eventsClass interface.
-        Method method = findHandlerMethod(target, eventsClass, eventName, params);
+        if ((sendMask & SEND_MASK_OBJECT) != 0) {
+            // Check if the target directly handles the event by implementing the
+            // eventsClass interface.
+            Method method = findHandlerMethod(target, eventsClass, eventName, params);
 
-        if (method != null) {
-            // Try invoking the method in target
-            invokeMethod(target, method, params);
-            handledSuccessful = true;
+            if (method != null) {
+                // Try invoking the method in target
+                invokeMethod(target, method, params);
+                handledSuccessful = true;
+            }
         }
 
-        // Try to deliver to the event receiver (if any)
-        if (target instanceof IEventReceiver) {
-            IEventReceiver receivingTarget = (IEventReceiver) target;
-            GVREventReceiver receiver = receivingTarget.getEventReceiver();
+        if ((sendMask & SEND_MASK_LISTENERS) != 0) {
+            // Try to deliver to the event receiver (if any)
+            if (target instanceof IEventReceiver) {
+                IEventReceiver receivingTarget = (IEventReceiver) target;
+                GVREventReceiver receiver = receivingTarget.getEventReceiver();
 
-            List<IEvents> listeners = receiver.getListeners();
+                List<IEvents> listeners = receiver.getListeners();
 
-            for (IEvents listener : listeners) {
-                // Skip the listener due to different type, or has been removed
-                if (!eventsClass.isInstance(listener) || receiver.getOwner() != target)
-                    continue;
+                for (IEvents listener : listeners) {
+                    // Skip the listener due to different type, or has been removed
+                    if (!eventsClass.isInstance(listener) || receiver.getOwner() != target)
+                        continue;
 
-                Method listenerMethod = findHandlerMethod(listener, eventsClass, eventName, params);
-                if (listenerMethod != null) {
-                    // This may throw RuntimeException if the handler does so.
-                    invokeMethod(listener, listenerMethod, params);
-                    handledSuccessful = true;
+                    Method listenerMethod = findHandlerMethod(listener, eventsClass, eventName, params);
+                    if (listenerMethod != null) {
+                        // This may throw RuntimeException if the handler does so.
+                        invokeMethod(listener, listenerMethod, params);
+                        handledSuccessful = true;
+                    }
                 }
             }
         }
 
-        // Try invoking the handler in the script
-        if (target instanceof IScriptable) {
-            handledSuccessful |= tryInvokeScript((IScriptable)target, eventName, params);
+        if ((sendMask & SEND_MASK_SCRIPTS) != 0) {
+            // Try invoking the handler in the script
+            if (target instanceof IScriptable) {
+                handledSuccessful |= tryInvokeScript((IScriptable)target, eventName, params);
+            }
         }
 
         return handledSuccessful;
