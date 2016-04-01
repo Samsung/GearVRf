@@ -96,7 +96,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         String name = sceneObject.getName();
         GVRPhongLight light =  lightlist.get(name);
         if(light != null){
-            sceneObject.addComponent(light); 
+            sceneObject.attachLight(light); 
         }
 
     }

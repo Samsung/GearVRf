@@ -76,34 +76,7 @@ public class GVREyePointeeHolder extends GVRComponent {
         super(gvrContext, nativePointer, sCleanup);
         registerNativePointer(nativePointer);
     }
-
-    public void setOwnerObject(GVRSceneObject newOwner) {
-        if (owner == newOwner) {
-            return;
-        }
-        if (owner != null) {
-            GVRPicker.sFindObjectsLock.lock();
-            try {
-                NativeSceneObject.detachEyePointeeHolder(getOwnerObject().getNative());
-                owner = null;
-            }
-            finally {
-                GVRPicker.sFindObjectsLock.unlock();                
-            }
-        }
-        if (newOwner != null) {
-            GVRPicker.sFindObjectsLock.lock();
-            try {
-                NativeSceneObject.attachEyePointeeHolder(newOwner.getNative(), getNative());
-                owner = newOwner;
-            }
-            finally {
-                GVRPicker.sFindObjectsLock.unlock();                                
-            }
-        }
-    }
-    
-    
+        
     /**
      * Special constructor, for descendants that need to 'unregister' instances.
      * 

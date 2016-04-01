@@ -75,19 +75,6 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
         init(gvrContext);
     }
     
-    public void setOwnerObject(GVRSceneObject newOwner) {
-        if (owner == newOwner) {
-            return;
-        }
-        if (owner != null) {
-            NativeSceneObject.detachCameraRig(getOwnerObject().getNative());                    
-        }
-        if (newOwner != null) {
-            NativeSceneObject.attachCameraRig(newOwner.getNative(), getNative());            
-        }
-        super.setOwnerObject(newOwner);
-    }
-    
     /** Constructor helper */
     private void init(GVRContext gvrContext) {
         /*

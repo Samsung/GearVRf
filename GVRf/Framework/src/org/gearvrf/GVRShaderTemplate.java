@@ -23,7 +23,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.gearvrf.GVRLight;
+import org.gearvrf.GVRLightTemplate;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import android.util.Log;
@@ -124,7 +124,7 @@ public class GVRShaderTemplate
      * Spaces, commas, and other punctuation are ignored.
      * 
      * @return String with descriptor.
-     * {@link GVRLight.getUniformDescriptor }
+     * {@link GVRLightTemplate.getUniformDescriptor }
      */
     public String getUniformDescriptor() {
         return mUniformDescriptor;
@@ -136,7 +136,7 @@ public class GVRShaderTemplate
      * @param defined   list of names to be defined for this shader
      * @return string signature for shader
      */
-    public String generateSignature(Set<String> defined, GVRLight[] lightlist)
+    public String generateSignature(Set<String> defined, GVRLightTemplate[] lightlist)
     {
         String sig = getClass().getSimpleName() + ":";
 
@@ -146,7 +146,7 @@ public class GVRShaderTemplate
         }
         if (lightlist != null)
         {
-            for (GVRLight light : lightlist)
+            for (GVRLightTemplate light : lightlist)
             {
                 sig += ":" + light.getClass().getSimpleName();
             }
@@ -193,7 +193,7 @@ public class GVRShaderTemplate
      * @param definedNames set of names to define for this shader.
      * @return GL shader code with parameters substituted.
      */
-    public String generateShaderVariant(String type, Set<String> definedNames, GVRLight[] lightlist)
+    public String generateShaderVariant(String type, Set<String> definedNames, GVRLightTemplate[] lightlist)
     {
         String template = getSegment(type + "Template");
         int nsegs = 0;
@@ -232,7 +232,7 @@ public class GVRShaderTemplate
         return defines + combinedSource;
     }
     
-    public GVRMaterialShaderId bindShader(GVRContext context, GVRRenderData rdata, GVRLight[] lightlist)
+    public GVRMaterialShaderId bindShader(GVRContext context, GVRRenderData rdata, GVRLightTemplate[] lightlist)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
@@ -311,14 +311,14 @@ public class GVRShaderTemplate
      *            list of lights in the scene
      * @return string with shader source code for lighting
      */
-    protected String generateLightShader(GVRLight[] lightlist)
+    protected String generateLightShader(GVRLightTemplate[] lightlist)
     {
         String lightFunction = "vec3 LightPixel(Surface s) {\n" + "   vec3 color = vec3(0.0, 0.0, 0.0);\n   float enable;\n";
         String lightDefs = "";
         Map<String, Integer> classNames = new HashMap<String, Integer>();
         int lightindex = 0;
         
-        for (GVRLight light : lightlist)
+        for (GVRLightTemplate light : lightlist)
         {
             String lightShader = light.getShaderSource();
             String lightClassName = light.getClass().getSimpleName();

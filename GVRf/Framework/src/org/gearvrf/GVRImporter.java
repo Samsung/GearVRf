@@ -217,7 +217,7 @@ final class GVRImporter {
                         cacheEnabled), scene, lightlist);
         return sceneOb;
     }
-    public static void setLightProp(GVRLight gvrLight, AiLight assimpLight){
+    public static void setLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
         gvrLight.setFloat("attenuationconstant", assimpLight.getAttenuationConstant());
         gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
         gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());

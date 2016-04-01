@@ -56,19 +56,6 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         super(gvrContext, ptr, owner);
     }
     
-    public void setOwnerObject(GVRSceneObject newOwner) {
-        if (owner == newOwner) {
-            return;
-        }
-        if (owner != null) {
-            NativeSceneObject.detachCamera(getOwnerObject().getNative());                    
-        }
-        if (newOwner != null) {
-            NativeSceneObject.attachCamera(newOwner.getNative(), getNative());            
-        }
-        super.setOwnerObject(newOwner);
-    }
-    
     /** Get the background color as an Android {@link Color} */
     public int getBackgroundColor() {
         return Color.argb(Colors.glToByte(getBackgroundColorA()), //

@@ -20,7 +20,7 @@ import static org.gearvrf.utility.Assert.*;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.TextFile;
 
-public class GVRPhongLight extends GVRLight {
+public class GVRPhongLight extends GVRLightTemplate {
     protected static String mPhongLightShaderSource = null;
     
     public GVRPhongLight(GVRContext gvrContext) {

@@ -131,19 +131,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         addPass(basePass);
     }
     
-    public void setOwnerObject(GVRSceneObject newOwner) {
-        if (owner == newOwner) {
-            return;
-        }
-        if (owner != null) {
-            NativeSceneObject.detachRenderData(getOwnerObject().getNative());                    
-        }
-        if (newOwner != null) {
-            NativeSceneObject.attachRenderData(newOwner.getNative(), getNative());            
-        }
-        super.setOwnerObject(newOwner);
-    }
-    
     /**
      * @return The {@link GVRMesh mesh} being rendered. If there is
      * a pending future mesh, it is resolved.
