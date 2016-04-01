@@ -1,4 +1,4 @@
-#if defined(HAS_a_bone_indices) && defined(HAS_a_bone_weights)
+#if defined(HAS_a_bone_indices) && defined(HAS_a_bone_weights) && defined(HAS_u_bone_matrix)
 	vec4 weights = a_bone_weights;
 	ivec4 bone_idx = a_bone_indices;
 	mat4 bone = u_bone_matrix[bone_idx[0]] * weights[0];

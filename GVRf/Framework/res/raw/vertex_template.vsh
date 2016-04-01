@@ -1,19 +1,13 @@
 uniform mat4 u_mvp;
 uniform mat4 u_mv;
 uniform mat4 u_mv_it;
-uniform vec3 u_eye_pos;
+uniform mat4 u_bone_matrix[60];
 
 attribute vec3 a_position;
-#ifdef HAS_a_normal
-    attribute vec3 a_normal;
-#endif
-#ifdef HAS_a_texcoord
-    attribute vec2 a_texcoord;
-#endif
-#ifdef HAS_a_tangent
-	attribute vec3 a_tangent;
-	attribute vec3 a_bitangent;
-#endif
+attribute vec3 a_normal;
+attribute vec2 a_texcoord;
+attribute vec3 a_tangent;
+attribute vec3 a_bitangent;
 
 varying vec2 diffuse_coord;
 varying vec3 view_direction;

@@ -1,32 +1,19 @@
-#ifdef HAS_ambientTexture
-   uniform sampler2D ambientTexture;
-#endif
-#ifdef HAS_diffuseTexture
-   uniform sampler2D diffuseTexture;
-#endif
-#ifdef HAS_specularTexture
-   uniform sampler2D specularTexture;
-#endif
-#ifdef HAS_opacityTexture
-   uniform sampler2D opacityTexture;
-#endif
-#ifdef HAS_lightmapTexture
-	uniform sampler2D lightmapTexture;
-	uniform vec2 u_lightmap_offset;
-	uniform vec2 u_lightmap_scale;
-#endif
-#ifdef HAS_emissiveTexture
-	uniform sampler2D emissiveTexture;
-#endif
-#ifdef HAS_normalTexture
-	uniform sampler2D normalTexture;
-#endif
+
+uniform sampler2D ambientTexture;
+uniform sampler2D diffuseTexture;
+uniform sampler2D specularTexture;
+uniform sampler2D opacityTexture;
+uniform sampler2D lightmapTexture;
+uniform sampler2D emissiveTexture;
+uniform sampler2D normalTexture;
 
 uniform vec4 ambient_color;
 uniform vec4 diffuse_color;
 uniform vec4 specular_color;
 uniform vec4 emissive_color;
 uniform float specular_exponent;
+uniform vec2 u_lightmap_offset;
+uniform vec2 u_lightmap_scale;
 
 struct Surface
 {

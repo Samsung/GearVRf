@@ -363,8 +363,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEven
             ArrayList<GVRLight> lights = child.getAllComponents(GVRLight.class);
             for (GVRLight light : lights) {
                 addLight(light);
-                String name = light.getLightID();
-                Log.d("gvrf", "LIGHT: addLight %s\n", name);
             }
         }
         for (GVRSceneObject child : mSceneObjects) {

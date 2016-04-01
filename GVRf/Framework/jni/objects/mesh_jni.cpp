@@ -98,6 +98,10 @@ extern "C" {
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env,
             jobject obj, jlong jmesh, jlongArray jBonePtrArray);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
+            jobject obj, jlong jmesh, jfloatArray jsphere);
 };
 
 JNIEXPORT jlong JNICALL
@@ -403,4 +407,17 @@ Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env, jobject obj, jlong jmesh,
 	env->ReleaseLongArrayElements(jBonePtrArray, bonesPtr, JNI_ABORT);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
+        jobject obj, jlong jmesh, jfloatArray jsphere) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    const BoundingVolume& bvol = mesh->getBoundingVolume();
+    float   sphere[4];
+
+    sphere[0] = bvol.center().x;
+    sphere[1] = bvol.center().y;
+    sphere[2] = bvol.center().z;
+    sphere[3] = bvol.radius();
+    env->SetFloatArrayRegion(jsphere, 0, 4, sphere);
+}
 }

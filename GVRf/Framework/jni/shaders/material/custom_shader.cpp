@@ -155,25 +155,7 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
      * Update vertex information
      */
     if (mesh->isVaoDirty()) {
-		for (auto it = attribute_float_keys_.begin();
-				it != attribute_float_keys_.end(); ++it) {
-			mesh->setVertexAttribLocF(it->first, it->second);
-		}
-
-		for (auto it = attribute_vec2_keys_.begin();
-				it != attribute_vec2_keys_.end(); ++it) {
-			mesh->setVertexAttribLocV2(it->first, it->second);
-		}
-
-		for (auto it = attribute_vec3_keys_.begin();
-				it != attribute_vec3_keys_.end(); ++it) {
-			mesh->setVertexAttribLocV3(it->first, it->second);
-		}
-
-		for (auto it = attribute_vec4_keys_.begin();
-				it != attribute_vec4_keys_.end(); ++it) {
-			mesh->setVertexAttribLocV4(it->first, it->second);
-		}
+        mesh->bindVertexAttributes(program_->id());
 		mesh->unSetVaoDirty();
     }
     mesh->generateVAO();  // setup VAO

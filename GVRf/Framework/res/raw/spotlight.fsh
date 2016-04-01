@@ -15,7 +15,7 @@ Radiance @LightType(Surface s, in Struct@LightType data)
 
 	float coneAngle = (data.outer_cone_angle  + data.inner_cone_angle)/2.0;
 	
-	if (acos(cosSpotAngle)) < degrees(coneAngle)) {	
+	if (acos(cosSpotAngle) < degrees(coneAngle)) {	
 		return Radiance(data.ambient_intensity.xyz,
 					    data.diffuse_intensity.xyz,
 					    data.specular_intensity.xyz,

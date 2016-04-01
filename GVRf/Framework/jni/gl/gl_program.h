@@ -33,9 +33,7 @@ class GLProgram {
 public:
     GLProgram(const char* pVertexSourceStrings,
             const char* pFragmentSourceStrings) {
-LOGE("SHADER: GLProgram\n");
         deleter_ = getDeleterForThisThread();
-LOGE("SHADER: deleter_\n");
         GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
                 pVertexSourceStrings) };
         GLint fragment_shader_string_lengths[1] = { (GLint) strlen(
