@@ -100,13 +100,17 @@ public class GVRShaderTemplate
         mShaderSegments.put(segmentName, shaderSource);
         if (shaderSource == null)
             return;
-        Pattern pattern = Pattern.compile(".*HAS_([a-zA-Z0-9_]+)");
+        Pattern pattern = Pattern.compile("HAS_([a-zA-Z0-9_]+)");
         Matcher matcher = pattern.matcher(shaderSource);
         if (mShaderDefines == null)
-            mShaderDefines = new HashSet<String>();             
-        while (matcher.find())
+            mShaderDefines = new HashSet<String>();
+        int index = 0;
+        while (((index = shaderSource.indexOf("HAS_", index)) >= 0) &&
+                matcher.find(index))
         {
-            mShaderDefines.add(matcher.group(1));
+            String match = matcher.group(1);
+            mShaderDefines.add(match);
+            index = matcher.end();
         }
     }
 
