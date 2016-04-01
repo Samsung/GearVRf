@@ -27,6 +27,7 @@ import javax.script.ScriptEngine;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -257,7 +258,7 @@ public class GVRScriptManager {
         bindHelper(scriptBundle, null, BIND_MASK_GVRSCRIPT | BIND_MASK_GVRACTIVITY);
 
         if (bindToMainScene) {
-            final IScriptEvents bindToSceneListener = new IScriptEvents() {
+            final IScriptEvents bindToSceneListener = new GVREventListeners.ScriptEvents() {
                 GVRScene mainScene = null;
 
                 @Override
@@ -277,10 +278,6 @@ public class GVRScriptManager {
                         // Remove the listener itself
                         gvrScript.getEventReceiver().removeListener(this);
                     }
-                }
-
-                @Override
-                public void onStep() {
                 }
             };
 
