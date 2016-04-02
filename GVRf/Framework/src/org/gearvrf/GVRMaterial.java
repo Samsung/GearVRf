@@ -125,42 +125,7 @@ public class GVRMaterial extends GVRHybridObject implements
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     9);
 
-            /**
-             * Set this feature enum if diffuse texture is present in Assimp
-             * material Diffuse texture maps to main_texture in GearVRf
-             */
-            public static int AS_DIFFUSE_TEXTURE = 0;
-
-            public static int AS_SPECULAR_TEXTURE = 1;
-
-            /**
-             * Set this feature enum if skinning info is present in Assimp
-             * material
-             */
-            public static int AS_SKINNING = 2;
-            public static int AS_LIGHTMAP_TEXTURE   = 3;
-            public static int AS_NORMAL_TEXTURE     = 4;
-            public static int AS_AMBIENT_TEXTURE    = 5;
-            public static int AS_OPACITY_TEXTURE    = 6;
-            public static int AS_EMISSIVE_TEXTURE   = 7;
                         
-            private static final Map<Integer, Integer> textureMap;
-            static
-            {
-                textureMap = new HashMap<Integer, Integer>();
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.DIFFUSE),AS_DIFFUSE_TEXTURE);
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.SPECULAR),AS_SPECULAR_TEXTURE);
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.LIGHTMAP),AS_LIGHTMAP_TEXTURE);
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.NORMALS),AS_NORMAL_TEXTURE);
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.AMBIENT),AS_AMBIENT_TEXTURE);
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.OPACITY),AS_OPACITY_TEXTURE);
-                textureMap.put(AiTextureType.toRawValue(AiTextureType.EMISSIVE),AS_EMISSIVE_TEXTURE);
-            }
-            
-            public static int getTextureBit(AiTextureType texType) {
-                return textureMap.get(AiTextureType.toRawValue(texType));
-                
-            }
             public static int setBit(int number, int index) {
                 return (number |= 1 << index);
             }

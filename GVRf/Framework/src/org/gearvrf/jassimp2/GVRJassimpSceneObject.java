@@ -141,63 +141,43 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
         final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.Assimp.ID);
 
-        /* Feature set */
-        int assimpFeatureSet = 0x00000000;
-
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
-        meshMaterial.setVec4("diffuseColor",diffuseColor.getRed(),
+        meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
                 diffuseColor.getGreen(), diffuseColor.getBlue(),diffuseColor.getAlpha());
 
         /* Specular color */
         AiColor specularColor = material.getSpecularColor(GVRJassimpAdapter.sWrapperProvider);
-   /*     meshMaterial.setSpecularColor(specularColor.getRed(),
+        meshMaterial.setSpecularColor(specularColor.getRed(),
                 specularColor.getGreen(), specularColor.getBlue(),
                 specularColor.getAlpha());
-*/
-        meshMaterial.setVec4("specularColor",specularColor.getRed(),
-                specularColor.getGreen(), specularColor.getBlue(),specularColor.getAlpha());
+
         
         /* Ambient color */
         AiColor ambientColor = material.getAmbientColor(GVRJassimpAdapter.sWrapperProvider);
-    /*    meshMaterial.setAmbientColor(ambientColor.getRed(),
+        meshMaterial.setAmbientColor(ambientColor.getRed(),
                 ambientColor.getGreen(), ambientColor.getBlue(),
                 ambientColor.getAlpha());
-*/
-        meshMaterial.setVec4("ambientColor",ambientColor.getRed(),
-                ambientColor.getGreen(), ambientColor.getBlue(),ambientColor.getAlpha());
+
         
         /* Emissive color */
         AiColor emissiveColor = material.getEmissiveColor(GVRJassimpAdapter.sWrapperProvider);
-/*        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
                 emissiveColor.getGreen(), emissiveColor.getBlue(),
                 emissiveColor.getAlpha());
-*/
-        meshMaterial.setVec4("emissiveColor", emissiveColor.getRed(),
-                emissiveColor.getGreen(), emissiveColor.getBlue(),emissiveColor.getAlpha());
+
         
         /* Opacity */
         float opacity = material.getOpacity();
         meshMaterial.setOpacity(opacity);
         /* Specular Exponent */
         float specularExponent = material.getShininess();        
-     //   meshMaterial.setSpecularExponent(specularExponent);
-        meshMaterial.setFloat("specularExponent", specularExponent);
+        meshMaterial.setSpecularExponent(specularExponent);
         
         /* Diffuse Texture */
-       assimpFeatureSet = loadTextures( material, meshMaterial,  getGVRContext());
+       loadTextures( material, meshMaterial,  getGVRContext());
 
  
-        /* Skinning */
-        if (aiMesh.hasBones()) {
-            assimpFeatureSet = GVRShaderType.Assimp.setBit(
-                    assimpFeatureSet,
-                    GVRShaderType.Assimp.AS_SKINNING);
-        }
-
-        /* Apply feature set to the material */
-        meshMaterial.setShaderFeatureSet(assimpFeatureSet);
-
         GVRSceneObject sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
         GVRRenderData sceneObjectRenderData = new GVRRenderData(getGVRContext());
         sceneObjectRenderData.setMesh(futureMesh);
@@ -221,9 +201,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         textureMap.put(AiTextureType.LIGHTMAP,"lightmapTexture");
         textureMap.put(AiTextureType.OPACITY,"opacityTexture");
     }
-    private int loadTextures(AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
-        int feature_set =0;
-        final List<Integer> features = new ArrayList<Integer>();
+    private void loadTextures(AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
         for (final AiTextureType texType : AiTextureType.values()) {
             if(texType != AiTextureType.UNKNOWN ){
             final String texFileName = material.getTextureFile(
@@ -231,7 +209,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             
             if (texFileName != null && !texFileName.isEmpty()) {
                 meshMaterial.setTexture(textureMap.get(texType),(GVRTexture)null);
-                Log.e("RC", " texture type is: "+ texType + " filename is " + texFileName);
                 try {
                     if (volume != null) {
                         GVRAndroidResource resource = volume
@@ -264,7 +241,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
 
                         getGVRContext().loadTexture(callback, resource);
                     }
-                    features.add(GVRShaderType.Assimp.getTextureBit(texType));
                 } catch (FileNotFoundException file) {
                     Log.e(TAG, "Couldn't find texture: %s", texFileName);
                 } catch (IOException e) {
@@ -273,10 +249,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }      
             }
        }
-        for(Integer i : features )
-            feature_set |= (1<< i);
-        
-        return feature_set;
     }
 
 }

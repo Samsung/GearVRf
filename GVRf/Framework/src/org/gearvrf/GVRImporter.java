@@ -204,8 +204,8 @@ final class GVRImporter {
                GVRPhongSpotLight gvrLight = new GVRPhongSpotLight(context);
                setPhongLightProp(gvrLight,light);
                setLightProp(gvrLight, light);
-               gvrLight.setFloat("inner_cone_angle", light.getAngleInnerCone());
-               gvrLight.setFloat("outer_cone_angle", light.getAngleOuterCone());
+               gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
+               gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
                String name = light.getName();
                lightlist.put(name, gvrLight);
            }
@@ -218,7 +218,7 @@ final class GVRImporter {
         return sceneOb;
     }
     public static void setLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
-        gvrLight.setFloat("attenuationconstant", assimpLight.getAttenuationConstant());
+        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
         gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
         gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
