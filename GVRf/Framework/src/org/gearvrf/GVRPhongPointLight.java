@@ -64,4 +64,34 @@ public class GVRPhongPointLight extends GVRPhongLight
     public GVRPhongPointLight(GVRContext gvrContext) {
         this(gvrContext, null);
     }
+    
+    public float getAttenuationConstant() {
+       return getFloat("attenuation_constant");
+    }
+
+    public float getAttenuationLinear() {
+        return getFloat("attenuation_linear");
+    }
+
+    public float getAttenuationQuadratic() {
+        return getFloat("attenuation_quadratic");
+    }
+    
+    public void setAttenuationConstant(float v) {
+        setFloat("attenuation_constant", v);
+    }
+    
+    public void setAttenuationLinear(float v) {
+        setFloat("attenuation_linear", v);
+    }
+    
+    public void setAttenuationQuadratic(float v) {
+        setFloat("attenuation_quadratic", v);
+    }
+    
+    public void setAttenuation(float constant, float linear, float quadratic) {
+        setFloat("attenuation_constant", constant);
+        setFloat("attenuation_linear", constant);
+        setFloat("attenuation_quadratic", quadratic);
+    }
 }

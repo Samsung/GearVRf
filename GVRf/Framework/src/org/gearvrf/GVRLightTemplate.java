@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import org.gearvrf.GVRSceneObject;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -148,13 +149,23 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         return uniformDescriptor;
     }
     
-    // for future use
+    /**
+     * Gets the value of a floating uniform based on its name.
+     * @param key name of uniform to get
+     * @return floating point value of uniform
+     * @throws exception if uniform name not found
+     */
     @SuppressWarnings("unused")
     public float getFloat(String key) {
         return NativeLight.getFloat(getNative(), key);
     }
 
-    // for future use
+    /**
+     * Sets the value of a floating uniform based on its name.
+     * @param key name of uniform to get
+     * @param new floating point value of uniform
+     * @throws exception if uniform name not found
+     */
     @SuppressWarnings("unused")
     public void setFloat(String key, float value) {
         checkStringNotNullOrEmpty("key", key);
@@ -162,19 +173,43 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         NativeLight.setFloat(getNative(), key, value);
     }
 
+    /**
+     * Gets the value of a vec3 floating uniform based on its name.
+     * @param key name of uniform to get
+     * @return vec3 value of uniform
+     * @throws exception if uniform name not found
+     */
     public float[] getVec3(String key) {
         return NativeLight.getVec3(getNative(), key);
     }
 
+    /**
+     * Sets the value of a vec3 uniform based on its name.
+     * @param key name of uniform to get
+     * @param new vec3 value of uniform
+     * @throws exception if uniform name not found
+     */
     public void setVec3(String key, float x, float y, float z) {
         checkStringNotNullOrEmpty("key", key);
         NativeLight.setVec3(getNative(), key, x, y, z);
     }
-
+    
+    /**
+     * Gets the value of a vec4 floating uniform based on its name.
+     * @param key name of uniform to get
+     * @return vec4 value of uniform
+     * @throws exception if uniform name not found
+     */
     public float[] getVec4(String key) {
         return NativeLight.getVec4(getNative(), key);
     }
-
+    
+    /**
+     * Sets the value of a vec4 uniform based on its name.
+     * @param key name of uniform to get
+     * @param new vec4 value of uniform
+     * @throws exception if uniform name not found
+     */
     public void setVec4(String key, float x, float y, float z, float w) {
         checkStringNotNullOrEmpty("key", key);
         NativeLight.setVec4(getNative(), key, x, y, z, w);
@@ -225,6 +260,32 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
     }
     
     /**
+     * Get the default orientation of the light when there is
+     * no transformation applied.
+     */
+    public Quaternionf getDefaultOrientation() {
+        return defaultDir;
+    }
+    
+    /**
+     * Set the default orientation of the light when there is
+     * no transformation applied.
+     * 
+     * GearVRF lights default to looking down the positive Z axis
+     * with a light direction of (0, 0, 1). This function
+     * lets you change the initial forward vector for lights.
+     * This orientation is multiplied by the world transformation matrix
+     * of the scene object the light is attached to in order
+     * to derive the light direction in world space that is
+     * passed to the fragment shader.
+     * 
+     * @param orientation quaternion with the initial light orientation
+      */
+    public void setDefaultOrientation(Quaternionf orientation) {
+        defaultDir = orientation;
+    }
+    
+    /**
      * Updates the position and direction of this light
      * from the transform of scene object that owns it.
      */
@@ -236,17 +297,16 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         float[] opos = getVec3("world_position");
         GVRSceneObject parent = owner;
         Matrix4f worldmtx =  parent.getTransform().getModelMatrix4f();
+        Matrix4f lightrot = new Matrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
         Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
         Vector3f newpos = new Vector3f();
-        float temp;
         
+        defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);
+        lightrot.mul(worldmtx, worldmtx);
         worldmtx.transformDirection(newdir);
-        //temp = -newdir.y;
-        //newdir.y = newdir.z;
-        //newdir.z = temp;
         if ((olddir.x != newdir.x) ||
             (olddir.y != newdir.y) ||
             (olddir.z != newdir.z)) {
@@ -259,6 +319,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         }
     }
     
+    protected Quaternionf defaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
     protected String shaderSource = null;
     protected String uniformDescriptor = null;
 }

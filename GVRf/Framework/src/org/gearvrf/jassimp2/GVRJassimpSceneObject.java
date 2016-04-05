@@ -25,9 +25,11 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRTransform;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
+import org.joml.Quaternionf;
 
 public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
@@ -92,10 +94,14 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             e.printStackTrace();
         }
     }
+    
     void attachLights(Hashtable<String, GVRPhongLight> lightlist, GVRSceneObject sceneObject){
         String name = sceneObject.getName();
         GVRPhongLight light =  lightlist.get(name);
-        if(light != null){
+        if (light != null) {
+            Quaternionf q = new Quaternionf();
+            q.rotationX((float) -Math.PI / 2.0f);
+            light.setDefaultOrientation(q);
             sceneObject.attachLight(light); 
         }
 
