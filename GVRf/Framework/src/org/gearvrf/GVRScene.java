@@ -29,7 +29,7 @@ import org.gearvrf.utility.Log;
 public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEvents {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
-    private static final Integer MAX_LIGHTS = 16;
+    public static final Integer MAX_LIGHTS = 16;
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();

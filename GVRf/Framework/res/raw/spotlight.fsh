@@ -14,18 +14,15 @@ Radiance @LightType(Surface s, in Struct@LightType data)
      float cosSpotAngle = dot(spotDir.xyz, -lightdir);
      float outer = data.outer_cone_angle;
      float inner = data.inner_cone_angle;
-     outer = 0.5;
-     inner = 1.0;
+     //outer = 0.5;
+     //inner = 1.0;
      float inner_minus_outer = inner - outer;  
      float spot = clamp((cosSpotAngle - outer) / 
                     inner_minus_outer , 0.0, 1.0);
-     float temp = 0.0f;
-     if (cosSpotAngle > 0.0) temp = 1.0f;
-     vec3 c = vec3(temp, temp, temp);
-     return Radiance(c, //data.ambient_intensity.xyz,
-                     c, //data.diffuse_intensity.xyz,
-                     vec3(0.0, 0.0, 0.0),// data.specular_intensity.xyz,
+     return Radiance(data.ambient_intensity.xyz,
+                     data.diffuse_intensity.xyz,
+                     data.specular_intensity.xyz,
                      lightdir.xyz,
-                     1.0);  
+                     spot);  
                    
 }

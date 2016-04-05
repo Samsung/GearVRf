@@ -238,7 +238,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         Matrix4f worldmtx =  parent.getTransform().getModelMatrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
+        Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f newpos = new Vector3f();
         worldmtx.getTranslation(newpos);
         worldmtx.transformDirection(newdir);
