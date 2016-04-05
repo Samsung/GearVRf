@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.ConcurrentHashMap;
 
 import android.os.Environment;
 
@@ -108,6 +109,8 @@ public class GVRResourceVolume {
         this.enableUrlLocalCache = cacheEnabled;
     }
 
+    private static ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource> resourceMap = new ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource>();
+
     /**
      * Opens a file from the volume. The filePath is relative to the
      * defaultPath.
@@ -119,32 +122,52 @@ public class GVRResourceVolume {
      */
     public GVRAndroidResource openResource(String filePath) throws IOException {
         // Error tolerance: Remove initial '/' introduced by file::///filename
-        // In this case, the path is interpreted as relative to defaultPath, which
-        // is the root of the filesystem.
+        // In this case, the path is interpreted as relative to defaultPath,
+        // which is the root of the filesystem.
         if (filePath.startsWith(File.separator)) {
             filePath = filePath.substring(File.separator.length());
         }
 
         filePath = adaptFilePath(filePath);
 
+        GVRAndroidResource resourceKey;
         switch (volumeType) {
         case ANDROID_ASSETS:
-            return new GVRAndroidResource(gvrContext, getFullPath(defaultPath, filePath));
+            resourceKey = new GVRAndroidResource(gvrContext,
+                    getFullPath(defaultPath, filePath));
+            break;
 
         case LINUX_FILESYSTEM:
-            return new GVRAndroidResource(getFullPath(defaultPath, filePath));
+            resourceKey = new GVRAndroidResource(
+                    getFullPath(defaultPath, filePath));
+            break;
 
         case ANDROID_SDCARD:
-            String linuxPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-            return new GVRAndroidResource(getFullPath(linuxPath, defaultPath, filePath));
+            String linuxPath = Environment.getExternalStorageDirectory()
+                    .getAbsolutePath();
+            resourceKey = new GVRAndroidResource(
+                    getFullPath(linuxPath, defaultPath, filePath));
+            break;
 
         case NETWORK:
-            return new GVRAndroidResource(gvrContext,
+            resourceKey = new GVRAndroidResource(gvrContext,
                     getFullURL(defaultPath, filePath), enableUrlLocalCache);
+            break;
 
         default:
-            throw new IOException(String.format("Unrecognized volumeType %s", volumeType));
+            throw new IOException(
+                    String.format("Unrecognized volumeType %s", volumeType));
         }
+
+        GVRAndroidResource resourceValue = resourceMap.get(resourceKey);
+        if (resourceValue != null) {
+            return resourceValue;
+        }
+
+        // Only put the resourceKey into the map for the first time, later put
+        // will simply return the first resource
+        resourceValue = resourceMap.putIfAbsent(resourceKey, resourceKey);
+        return resourceValue == null ? resourceKey : resourceValue;
     }
 
     /**

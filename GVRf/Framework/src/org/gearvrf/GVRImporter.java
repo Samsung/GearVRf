@@ -172,6 +172,8 @@ final class GVRImporter {
             throw new IOException("Cannot load a model from path " + filePath +
                     " from " + volumeType);
         }
+        
+        Log.d(TAG, "start creating jassimp model %s", filePath);
 
         return new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,

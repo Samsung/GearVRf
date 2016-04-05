@@ -22,11 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import org.gearvrf.asynchronous.CompressedTexture;
+import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.MarkingFileInputStream;
 
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.util.TypedValue;
@@ -48,14 +49,18 @@ public class GVRAndroidResource {
     private static final String TAG = Log.tag(GVRAndroidResource.class);
 
     private enum DebugStates {
-        OPEN, READING, CLOSED
+        NEW, OPEN, READING, CLOSED
+    }
+
+    private enum ResourceType {
+        ANDROID_ASSETS, ANDROID_RESOURCE, LINUX_FILESYSTEM, NETWORK
     }
 
     /*
      * Instance members
      */
 
-    private final InputStream stream;
+    private InputStream stream;
     private DebugStates debugState;
 
     // Save parameters, for hashCode() and equals()
@@ -65,6 +70,10 @@ public class GVRAndroidResource {
     // For hint to Assimp
     private String resourceFilePath;
     private final URL url;
+    private boolean enableUrlLocalCache = false;
+    
+    private Context context = null;
+    private ResourceType resourceType;
 
     /**
      * Open any file you have permission to read.
@@ -76,14 +85,14 @@ public class GVRAndroidResource {
      *             File doesn't exist, or can't be read.
      */
     public GVRAndroidResource(String path) throws FileNotFoundException {
-        stream = new MarkingFileInputStream(path);
-        debugState = DebugStates.OPEN;
+        debugState = DebugStates.NEW;
 
         filePath = path;
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = null;
         resourceFilePath = null;
         url = null;
+        resourceType = ResourceType.LINUX_FILESYSTEM;
     }
 
     /**
@@ -120,9 +129,9 @@ public class GVRAndroidResource {
      *            A {@code R.raw} or {@code R.drawable} id
      */
     public GVRAndroidResource(Context context, int resourceId) {
+        this.context = context;
         Resources resources = context.getResources();
-        stream = resources.openRawResource(resourceId);
-        debugState = DebugStates.OPEN;
+        debugState = DebugStates.NEW;
 
         filePath = null;
         this.resourceId = resourceId;
@@ -131,6 +140,7 @@ public class GVRAndroidResource {
         TypedValue value = new TypedValue();
         resources.getValue(resourceId, value, true);
         resourceFilePath = value.string.toString();
+        resourceType = ResourceType.ANDROID_RESOURCE;
     }
 
     /**
@@ -166,15 +176,15 @@ public class GVRAndroidResource {
      */
     public GVRAndroidResource(Context context, String assetRelativeFilename)
             throws IOException {
-        AssetManager assets = context.getResources().getAssets();
-        stream = assets.open(assetRelativeFilename);
-        debugState = DebugStates.OPEN;
+        this.context = context;    
+        debugState = DebugStates.NEW;
 
         filePath = null;
         resourceId = 0; // No R.whatever field will ever be 0
         assetPath = assetRelativeFilename;
         resourceFilePath = null;
         url = null;
+        resourceType = ResourceType.ANDROID_ASSETS;
     }
 
     /**
@@ -240,24 +250,15 @@ public class GVRAndroidResource {
      */
     public GVRAndroidResource(GVRContext context, URL url,
             boolean enableUrlLocalCache) throws IOException {
-        if (!enableUrlLocalCache) {
-            Log.d(TAG,
-                    "Do not allow local caching, use streaming to get the resource");
-            stream = new URLBufferedInputStream(url);
-        } else {
-            Log.d(TAG,
-                    "Allow local caching, download the resource to local cache");
-            File file = GVRImporter.downloadFile(context.getContext(),
-                    url.toString());
-            stream = new MarkingFileInputStream(file);
-        }
+        this.enableUrlLocalCache = enableUrlLocalCache;
 
-        debugState = DebugStates.OPEN;
+        debugState = DebugStates.NEW;
         filePath = null;
         resourceId = 0;
         assetPath = null;
         resourceFilePath = null;
         this.url = url;
+        resourceType = ResourceType.NETWORK;
     }
 
     /**
@@ -267,9 +268,15 @@ public class GVRAndroidResource {
      * {@linkplain GVRAndroidResource.DebugStates#READING READING}.
      * 
      * @return An open {@link InputStream}.
+     * @throws IOException 
      */
     public final InputStream getStream() {
+        if (debugState == DebugStates.NEW || debugState == DebugStates.CLOSED) {
+            openStream();
+        }
+
         debugState = DebugStates.READING;
+
         return stream;
     }
 
@@ -291,6 +298,52 @@ public class GVRAndroidResource {
         try {
             debugState = DebugStates.CLOSED;
             stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 
+     * open the input stream for resource decoding
+     * 
+     */
+    public void openStream() {
+        try {
+            switch (resourceType) {
+            case ANDROID_ASSETS:
+                stream = context.getResources().getAssets().open(assetPath);
+                debugState = DebugStates.OPEN;
+                break;
+
+            case ANDROID_RESOURCE:
+                stream = context.getResources().openRawResource(resourceId);
+                debugState = DebugStates.OPEN;
+                break;
+
+            case LINUX_FILESYSTEM:
+                stream = new MarkingFileInputStream(filePath);
+                debugState = DebugStates.OPEN;
+                break;
+
+            case NETWORK:
+                if (!enableUrlLocalCache) {
+                    Log.d(TAG,
+                            "Do not allow local caching, use streaming to get the resource");
+                    stream = new URLBufferedInputStream(url);
+                    debugState = DebugStates.OPEN;
+                } else {
+                    Log.d(TAG,
+                            "Allow local caching, download the resource to local cache");
+                    File file = GVRImporter.downloadFile(context,
+                            url.toString());
+                    stream = new MarkingFileInputStream(file);
+                    debugState = DebugStates.OPEN;
+                }
+                break;
+            default:
+                stream = null;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -349,20 +402,24 @@ public class GVRAndroidResource {
      *         resource is not associated with any file
      */
     public String getResourceFilename() {
-        if (filePath != null) {
-            return filePath.substring(filePath.lastIndexOf(File.separator) + 1);
-        } else if (resourceId != 0) {
-            if (resourceFilePath != null) {
-                return resourceFilePath.substring(resourceFilePath
-                        .lastIndexOf(File.separator) + 1);
-            }
-        } else if (assetPath != null) {
+        switch (resourceType) {
+        case ANDROID_ASSETS:
             return assetPath
                     .substring(assetPath.lastIndexOf(File.separator) + 1);
-        } else if (url != null) {
+
+        case ANDROID_RESOURCE:
+            return resourceFilePath.substring(
+                    resourceFilePath.lastIndexOf(File.separator) + 1);
+
+        case LINUX_FILESYSTEM:
+            return filePath.substring(filePath.lastIndexOf(File.separator) + 1);
+
+        case NETWORK:
             return url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
+
+        default:
+            return null;
         }
-        return null;
     }
 
     /*
@@ -397,25 +454,24 @@ public class GVRAndroidResource {
         if (getClass() != obj.getClass()) {
             return false;
         }
+
         GVRAndroidResource other = (GVRAndroidResource) obj;
-        if (assetPath == null) {
-            if (other.assetPath != null) {
-                return false;
-            }
-        } else if (!assetPath.equals(other.assetPath)) {
+        switch (resourceType) {
+        case ANDROID_ASSETS:
+            return assetPath.equals(other.assetPath);
+
+        case ANDROID_RESOURCE:
+            return resourceId == other.resourceId;
+
+        case LINUX_FILESYSTEM:
+            return filePath.equals(other.filePath);
+
+        case NETWORK:
+            return url.equals(other.url);
+
+        default:
             return false;
         }
-        if (filePath == null) {
-            if (other.filePath != null) {
-                return false;
-            }
-        } else if (!filePath.equals(other.filePath)) {
-            return false;
-        }
-        if (resourceId != other.resourceId) {
-            return false;
-        }
-        return true;
     }
 
     /*
@@ -538,5 +594,38 @@ public class GVRAndroidResource {
 
     /** Callback for asynchronous mesh loads */
     public interface MeshCallback extends CancelableCallback<GVRMesh> {
+    }
+
+    private GVRCompressedTextureLoader compressedLoader = null;
+    private boolean isCompressedTextureSniffed = false;
+
+    public GVRCompressedTextureLoader getCompressedLoader() {
+        if (isCompressedTextureSniffed) {
+            return compressedLoader;
+        }
+
+        synchronized (GVRAndroidResource.this) {
+            if (!isCompressedTextureSniffed) {
+                try {
+                    Log.d(TAG, "Looking for compressed header");
+                    openStream();
+                    mark();
+                    try {
+                        compressedLoader = CompressedTexture.sniff(getStream());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        reset();
+                        closeStream();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+                isCompressedTextureSniffed = true;
+            }
+        }
+
+        return compressedLoader;
     }
 }
