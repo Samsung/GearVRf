@@ -16,15 +16,49 @@ package org.gearvrf;
 
 import org.gearvrf.utility.TextFile;
 
+/**
+ * Illuminates object in the scene with a point light source.
+ * 
+ * The position of the light is the position of the scene object
+ * the light is attached to. Light is emitted in all directions
+ * from that point.
+ *
+ * The intensity of the light diminishes with distance from the
+ * light. Three attenuation factors are provided to specify how
+ * the intensity of the light falls off with distance:
+ * {@code I = attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2}
+ *
+ * Point light uniforms:
+ * {@literal
+ *   world_position        position of light in world coordinates
+ *                         derived from scene object position
+ *   ambient_intensity     intensity of ambient light emitted
+ *   diffuse_intensity     intensity of diffuse light emitted
+ *   specular_intensity    intensity of specular light emitted
+ *   attenuation_constant  constant attenuation factor
+ *   attenuation_linear    linear attenuation factor
+ *   attenuation_quadratic quadratic attenuation factor
+ * }
+ * @see GVRPhongDirectLight
+ * @see GVRPhongSpotLight
+ * @see GVRLightTemplate
+ */
 public class GVRPhongPointLight extends GVRPhongLight
 {
     protected static String mPointLightShaderSource = null;
     public GVRPhongPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
+        uniformDescriptor += " float attenuation_constant"
+                + " float attenuation_linear"
+                + " float attenuation_quadratic";
+
         if (mPointLightShaderSource == null) {
             mPointLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
         }
         setShaderSource(mPointLightShaderSource);
+        setFloat("attenuation_constant", 1);
+        setFloat("attenuation_linear", 0);
+        setFloat("attenuation_quadratic", 0);
     }
     
     public GVRPhongPointLight(GVRContext gvrContext) {

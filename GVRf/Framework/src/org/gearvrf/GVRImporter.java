@@ -451,10 +451,6 @@ final class GVRImporter {
                 @Override
                 public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
                     meshMaterial.setMainTexture(texture);
-                    final int features = GVRShaderType.Assimp.setBit(
-                            meshMaterial.getShaderFeatureSet(),
-                            GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
-                    meshMaterial.setShaderFeatureSet(features);
                 }
 
                 @Override

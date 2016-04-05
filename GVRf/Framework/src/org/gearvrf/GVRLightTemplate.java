@@ -33,10 +33,15 @@ import android.util.Log;
  *
  * Lights are implemented by the fragment shader.
  * Each different light implementation corresponds to a
- * subclass of GVRLight which is responsible for
+ * subclass of GVRLightTemplate which is responsible for
  * supplying the shader source code for the light.
  * GearVRF aggregates all of the light source
  * implementations into a single fragment shader.
+ *
+ * Each subclass of GVRLightTemplate is a different light implementation
+ * and has different shader source. The uniform descriptor is a string
+ * which gives the name and type of all uniforms expected in the shader source.
+ * It is supplied when a light is created to describe the expected shader input.
  * 
  * {@link GVRShaderTemplate GVRRenderData.bindShader }
  */
@@ -120,7 +125,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
      * the format of the <Radiance> and <Surface> structures.
      * {@link GVRShaderTemplate }
      * {@link getShaderDescriptor}
-     * @return
+     * @return string with source for light shader
      */
     public String getShaderSource() {
     	return shaderSource;
@@ -233,10 +238,10 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         Matrix4f worldmtx =  parent.getTransform().getModelMatrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector4f newdir = new Vector4f();
+        Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
         Vector3f newpos = new Vector3f();
         worldmtx.getTranslation(newpos);
-        worldmtx.getColumn(2, newdir);
+        worldmtx.transformDirection(newdir);
         if ((olddir.x != newdir.x) ||
             (olddir.y != newdir.y) ||
             (olddir.z != newdir.z)) {

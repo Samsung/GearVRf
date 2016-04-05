@@ -20,6 +20,28 @@ import static org.gearvrf.utility.Assert.*;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.TextFile;
 
+/**
+ * Illuminates object in the scene with a directional light source.
+ * 
+ * The direction of the light is the forward orientation of the scene object
+ * the light is attached to. Light is emitted in that direction
+ * from infinitely far away.
+ *
+ * The intensity of the light remains constant and does not fall
+ * off with distance from the light.
+ *
+ * Point light uniforms:
+ * {@literal
+ *   world_direction       direction of light in world coordinates
+ *                         derived from scene object orientation
+ *   ambient_intensity     intensity of ambient light emitted
+ *   diffuse_intensity     intensity of diffuse light emitted
+ *   specular_intensity    intensity of specular light emitted
+ * }
+ * @see GVRPhongPointLight
+ * @see GVRPhongSpotLight
+ * @see GVRLightTemplate
+ */
 public class GVRPhongLight extends GVRLightTemplate {
     protected static String mPhongLightShaderSource = null;
     
@@ -31,17 +53,10 @@ public class GVRPhongLight extends GVRLightTemplate {
         super(gvrContext, parent);
         uniformDescriptor += " float4 diffuse_intensity"
                 + " float4 ambient_intensity"
-                + " float4 specular_intensity"
-                + " float attenuation_constant"
-                + " float attenuation_linear"
-                + " float attenuation_quadratic";
-        if (mPhongLightShaderSource == null) {
+                + " float4 specular_intensity";
+         if (mPhongLightShaderSource == null) {
             mPhongLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
         }
-        // set light parameters to OpenGL default values
-        setFloat("attenuation_constant", 1);
-        setFloat("attenuation_linear", 0);
-        setFloat("attenuation_quadratic", 0);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
@@ -156,15 +171,16 @@ public class GVRPhongLight extends GVRLightTemplate {
     }
 
     /**
-     * Get the {@code lightSpecularIntensity} uniform.
+     * Get the specular intensity of the light.
+     *
+     * This designates the color of the specular reflection.
+     * It is multiplied by the material specular color to derive
+     * the hue of the specular reflection for that material.
      * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightSpecularIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
+     * With the {@linkplain GVRShaderType.Lit 'lit'} or {@linkplain GVRPhongShader} shaders,
+     * this allows you to add an overlay color on top of the texture.
      * 
-     * @return The current {@code vec4 lightSpecularIntensity} as a four-element
-     *         array
+     * @return The current {@code vec4 specular_intensity} as a four-element array
      */
     public float[] getSpecularIntensity() {
         return getVec4("specular_intensity");
