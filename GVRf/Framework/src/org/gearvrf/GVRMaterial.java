@@ -28,7 +28,7 @@ import static org.gearvrf.utility.Assert.*;
 import android.graphics.Color;
 
 /**
- * This is one of the key GVRF classes: it holds shaders with textures.
+ * Encapsulates the data needed for shading, including textures and shader uniforms.
  * 
  * You can have invisible {@linkplain GVRSceneObject scene objects:} these have
  * a location and a set of child objects. This can be useful, to move a set of

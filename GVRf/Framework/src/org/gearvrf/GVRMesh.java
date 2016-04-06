@@ -26,9 +26,14 @@ import org.gearvrf.utility.Exceptions;
 import org.gearvrf.utility.Log;
 
 /**
- * This is one of the key GVRF classes: It holds GL meshes.
+ * Describes an indexed triangle mesh as a set of shared vertices with integer
+ * indices for each triangle.
  * 
- * A GL mesh is a net of triangles that define an object's surface geometry.
+ * Usually each mesh vertex may have a positions, normal and texture coordinate.
+ * Skinned mesh vertices will also have bone weights and indices.
+ * If the mesh uses a normal map for lighting, it will have tangents
+ * and bitangents as well. These vertex components correspond to vertex
+ * attributes in the OpenGL vertex shader.
  */
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     private static final String TAG = GVRMesh.class.getSimpleName();

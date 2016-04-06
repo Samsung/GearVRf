@@ -57,5 +57,15 @@ import org.gearvrf.R;
            setSegment("VertexNormalShader", normalShader);
            setSegment("VertexSkinShader", skinShader);
        }
+       
+       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata) {
+           HashMap<String, Integer> defines = new HashMap<String, Integer>();
+           
+           if (!rdata.isLightEnabled())
+               defines.put("LIGHTSOURCES", 0);
+           if (!rdata.isLightMapEnabled())
+               defines.put("lightMapTexture", 0);
+           return defines;
+       }       
    }
 
