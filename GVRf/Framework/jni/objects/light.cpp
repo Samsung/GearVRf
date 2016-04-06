@@ -34,7 +34,6 @@ void Light::render(int program) {
     if (!dirty_ || lightID_.empty()) {
         return;
     }
-    LOGD("LIGHT: render %s\n", lightID_.c_str());
     dirty_ = false;
     std::string key;
     std::string lname = lightID_ + ".";
@@ -60,8 +59,7 @@ void Light::render(int program) {
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
             offsets_[it->first] = offset;
-            LOGD("LIGHT: offset %s = %d\n", key.c_str(), offset);
-         }
+          }
         if (offset >= 0) {
             glm::vec3 v = it->second;
             glUniform3f(offset, v.x, v.y, v.z);

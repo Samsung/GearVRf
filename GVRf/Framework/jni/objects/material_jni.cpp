@@ -89,7 +89,6 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMaterial_setShaderType(JNIEnv * env,
     jobject obj, jlong jmaterial, jint shader_type) {
 Material* material = reinterpret_cast<Material*>(jmaterial);
-LOGD("LIGHT: setShaderType %d\n", shader_type);
 return material->set_shader_type(
         static_cast<Material::ShaderType>(shader_type));
 }

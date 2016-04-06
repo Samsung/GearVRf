@@ -238,8 +238,6 @@ public:
     void setBoneLoc(GLuint boneIndicesLoc, GLuint boneWeightsLoc) {
         boneIndicesLoc_ = boneIndicesLoc;
         boneWeightsLoc_ = boneWeightsLoc;
-        LOGD("LIGHT: attribute a_bone_indices %d\n", boneIndicesLoc_);
-        LOGD("LIGHT: attribute a_bone_weights %d\n", boneWeightsLoc_);
     }
 
     GLuint getBoneIndicesLoc() {

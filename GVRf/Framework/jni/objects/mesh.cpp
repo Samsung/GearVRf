@@ -265,7 +265,6 @@ void Mesh::generateVAO() {
     for (auto it = attribute_float_keys_.begin();
             it != attribute_float_keys_.end(); ++it) {
         glGenBuffers(1, &tmpID);
-        LOGD("LIGHT: attribute %s %d\n", it->first, tmpID);
         glBindBuffer(GL_ARRAY_BUFFER, tmpID);
         glBufferData(GL_ARRAY_BUFFER,
                 sizeof(GLfloat) * getFloatVector(it->second).size(),
@@ -278,7 +277,6 @@ void Mesh::generateVAO() {
             it != attribute_vec2_keys_.end(); ++it) {
 
         glGenBuffers(1, &tmpID);
-        LOGD("LIGHT", "attribute %s %d\n", it->first, tmpID);
         glBindBuffer(GL_ARRAY_BUFFER, tmpID);
         glBufferData(GL_ARRAY_BUFFER,
                 sizeof(glm::vec2) * getVec2Vector(it->second).size(),
@@ -290,7 +288,6 @@ void Mesh::generateVAO() {
     for (auto it = attribute_vec3_keys_.begin();
             it != attribute_vec3_keys_.end(); ++it) {
         glGenBuffers(1, &tmpID);
-        LOGD("LIGHT: attribute %s %d\n", it->first, tmpID);
         glBindBuffer(GL_ARRAY_BUFFER, tmpID);
         glBufferData(GL_ARRAY_BUFFER,
                 sizeof(glm::vec3) * getVec3Vector(it->second).size(),
@@ -302,7 +299,6 @@ void Mesh::generateVAO() {
     for (auto it = attribute_vec4_keys_.begin();
             it != attribute_vec4_keys_.end(); ++it) {
         glGenBuffers(1, &tmpID);
-        LOGD("LIGHT: attribute %s %d\n", it->first, tmpID);
         glBindBuffer(GL_ARRAY_BUFFER, tmpID);
         glBufferData(GL_ARRAY_BUFFER,
                 sizeof(glm::vec4) * getVec4Vector(it->second).size(),
