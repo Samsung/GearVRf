@@ -148,17 +148,23 @@ public class GVRShaderTemplate
     public String generateSignature(Set<String> defined, GVRLightTemplate[] lightlist)
     {
         String sig = getClass().getSimpleName() + ":";
-
+        HashMap<Class<? extends GVRLightTemplate>, Integer> lightCount = new HashMap<Class<? extends GVRLightTemplate>, Integer>();
+        
         for (String key : defined)
-        {
             sig += ":" + key;
-        }
         if (lightlist != null)
         {
             for (GVRLightTemplate light : lightlist)
             {
-                sig += ":" + light.getClass().getSimpleName();
+                Integer n = lightCount.get(light.getClass());
+                
+                if (n == null)
+                    lightCount.put(light.getClass(), 1);
+                else
+                    lightCount.put(light.getClass(), ++n);                
             }
+            for (GVRLightTemplate light : lightlist)
+                sig += ":" + light.getClass().getSimpleName() + lightCount.get(light.getClass());
         }
         return sig;
     }
@@ -186,10 +192,8 @@ public class GVRShaderTemplate
         for (String name : mShaderDefines)
         {
             if (vertNames.contains(name) || material.hasUniform(name) || texNames.contains(name))
-            {
-                definedNames.add(name);
-            }
-        }
+                 definedNames.add(name);
+         }
         return definedNames;
     }
 
@@ -208,7 +212,6 @@ public class GVRShaderTemplate
     public String generateShaderVariant(String type, Set<String> definedNames, GVRLightTemplate[] lightlist)
     {
         String template = getSegment(type + "Template");
-        int nsegs = 0;
         String defines = "";
 
         if (template == null) { throw new IllegalArgumentException(
@@ -232,7 +235,6 @@ public class GVRShaderTemplate
                 combinedSource = combinedSource.replace("@" + key, segmentSource);
                 combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
                 combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
-                ++nsegs;
             }
         }
         for (String name : definedNames)
@@ -260,7 +262,10 @@ public class GVRShaderTemplate
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
 
-        if ((mesh == null) || (material == null)) { return null; }
+        if ((mesh == null) || (material == null))
+        {
+            return null;
+        }
         if (!rdata.isLightEnabled())
         {
             lightlist = null;
@@ -276,11 +281,14 @@ public class GVRShaderTemplate
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
             mShaderVariants.put(signature, variant);
             GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
-            Log.d("vertex", variant.VertexShaderSource);
-            Log.d("fragment", variant.FragmentShaderSource);
             variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            Log.d("SHADER", "LIGHT: Generate shader #" + variant.ShaderID.ID + " " + signature);
             GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
             makeMaterialMap(material, materialMap);
+        }
+        else
+        {
+            Log.d("SHADER", "LIGHT: Reuse shader #" + variant.ShaderID.ID + " " + signature);            
         }
         material.setShaderType(variant.ShaderID);
         return variant.ShaderID;
@@ -321,8 +329,7 @@ public class GVRShaderTemplate
                 map.addUniformVec4Key(name, name);
                 break;
             default:
-                // TODO: throw exception
-                break;
+                throw new UnsupportedOperationException("Vertex attribute size " + nfloats + " unsupported");
             }
         }
     }
@@ -344,7 +351,6 @@ public class GVRShaderTemplate
                 + "   vec3 color = vec3(0.0, 0.0, 0.0);\n   float enable;\n   Radiance r;\n";
         String lightDefs = "";
         Map<String, Integer> classNames = new HashMap<String, Integer>();
-        int lightindex = 0;
         boolean doLooping = false;
 
         for (GVRLightTemplate light : lightlist)
@@ -372,13 +378,11 @@ public class GVRShaderTemplate
                 lightFunction += "   enable = " + lightid + ".enabled;";
                 lightFunction += "   color += vec3(enable, enable, enable) * AddLight(s, r);\n";
             }
-            ++lightindex;
-        }
+         }
         String lightSources = "";
         for (Map.Entry<String, Integer> entry : classNames.entrySet())
         {
             String lightdata = "Data" + entry.getKey();
-            int lightCount = entry.getValue() + 1;
             lightSources += "uniform Struct" + entry.getKey() + " " + lightdata + "[" + GVRScene.MAX_LIGHTS + "];\n";
             lightSources += "uniform int Count" + entry.getKey() + ";\n";
             if (doLooping)

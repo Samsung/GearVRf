@@ -37,7 +37,6 @@ class Light: public Component {
 public:
     explicit Light()
     :   enabled_(true),
-        dirty_(false),
         parent_(NULL) {
     }
 
@@ -50,11 +49,11 @@ public:
 
     void enable() {
         enabled_ = true;
-        dirty_ = true;
+        setDirty();
     }
 
     void disable() {
-        enabled_ = false;
+        setDirty();
     }
 
     float getFloat(std::string key) {
@@ -70,7 +69,7 @@ public:
     void setFloat(std::string key, float value) {
         floats_[key] = value;
         if (enabled_) {
-            dirty_ = true;
+            setDirty();
         }
     }
 
@@ -88,7 +87,7 @@ public:
     void setVec3(std::string key, glm::vec3 vector) {
         vec3s_[key] = vector;
         if (enabled_) {
-            dirty_ = true;
+            setDirty();
         }
     }
 
@@ -105,7 +104,7 @@ public:
     void setVec4(std::string key, glm::vec4 vector) {
         vec4s_[key] = vector;
         if (enabled_) {
-            dirty_ = true;
+            setDirty();
         }
     }
 
@@ -137,6 +136,15 @@ private:
     Light& operator=(Light&& light);
 
     /*
+     * Mark the light as needing update for all shaders using it
+     */
+    void setDirty() {
+        for (auto it = dirty_.begin(); it != dirty_.end(); ++it) {
+            it->second = true;
+        }
+    }
+
+    /*
      * Get the GL uniform offset for a named uniform.
      */
     int getOffset(std::string key) {
@@ -150,10 +158,10 @@ private:
 
 private:
     bool enabled_;
-    bool dirty_;
     int size_;
     std::string lightID_;
     SceneObject* parent_;
+    std::map<int, bool> dirty_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;

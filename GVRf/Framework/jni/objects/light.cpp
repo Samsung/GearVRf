@@ -22,6 +22,7 @@
 #include "util/gvr_log.h"
 #include <string>
 #include <sstream>
+#include <vector>
 
 namespace gvr {
 
@@ -31,10 +32,14 @@ namespace gvr {
  * into the GPU if they have changed.
  */
 void Light::render(int program) {
-    if (!dirty_ || lightID_.empty()) {
+    auto it = dirty_.find(program);
+
+    if (it != dirty_.end() && !it->second)
+        return;
+    if (lightID_.empty()) {
         return;
     }
-    dirty_ = false;
+    dirty_[program] = false;
     std::string key;
     std::string lname = lightID_ + ".";
     std::stringstream ss;
