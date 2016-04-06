@@ -48,7 +48,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
     private boolean isLightEnabled;
-    private boolean mShaderDirty;
     private GVRShaderTemplate mShaderTemplate;
     private HashMap<String, Integer> mShaderFeatures = new HashMap<String, Integer>();
 
@@ -113,7 +112,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         isLightEnabled = false;
         mLightMapEnabled = false;
         mShaderTemplate = null;
-        mShaderDirty = false;
     }
 
     private GVRRenderData(GVRContext gvrContext, long ptr) {
@@ -406,7 +404,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public void setShaderTemplate(Class<? extends GVRShaderTemplate> templateClass) {
         GVRMaterialShaderManager shadermanager = getGVRContext().getMaterialShaderManager();
-        mShaderDirty = true;
         mShaderTemplate = shadermanager.retrieveShaderTemplate(templateClass);
         isLightEnabled = true;
     }
@@ -425,10 +422,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @see GVRShaderTemplate setShaderTemplate GVRMaterialShader.retrieveShaderTemplate
      */
     public void bindShader(GVRScene scene) {
-        if (mShaderDirty && (mShaderTemplate != null)) {
+        if (mShaderTemplate != null) {
             mShaderTemplate.bindShader(scene.getGVRContext(), this, scene.getLightList());
-            mShaderDirty = false;
-        }
+         }
     }
 
     /**

@@ -22,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRLightTemplate;
+
 import android.util.Log;
 
 /**
@@ -276,13 +277,16 @@ public class GVRShaderTemplate
      *            or disabled at run time.
      * @return ID of vertex/fragment shader set
      */
-    public GVRMaterialShaderId bindShader(GVRContext context, GVRRenderData rdata,
+    public void bindShader(GVRContext context, GVRRenderData rdata,
                                           GVRLightTemplate[] lightlist)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
 
-        if ((mesh == null) || (material == null)) { return null; }
+        if ((mesh == null) || (material == null))
+        {
+            return;
+        }
         if (!rdata.isLightEnabled())
         {
             lightlist = null;
@@ -301,20 +305,31 @@ public class GVRShaderTemplate
             variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
             mShaderVariants.put(signature, variant);
-            GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
-            variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
-            Log.d("SHADER", "LIGHT: Generate shader #" + variant.ShaderID.ID + " " + signature);
-            GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
-            makeMaterialMap(material, materialMap);
+            Log.d("SHADER", "LIGHT: Create shader " + signature);
+            generateGLShader(context, variant, material);
         }
         else
         {
             Log.d("SHADER", "LIGHT: Reuse shader #" + variant.ShaderID.ID + " " + signature);
+            material.setShaderType(variant.ShaderID);
         }
-        material.setShaderType(variant.ShaderID);
-        return variant.ShaderID;
     }
 
+    private void generateGLShader(final GVRContext context, final ShaderVariant variant, final GVRMaterial material) {
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+                variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+                GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
+                makeMaterialMap(material, materialMap);
+                material.setShaderType(variant.ShaderID);
+                Log.d("SHADER", "LIGHT: Generated shader #" + variant.ShaderID.ID);
+            }
+        };
+        context.runOnGlThread(task);
+    }
+    
     /**
      * Generate shader-specific defines from the rendering information.
      * You can override this function in your shader class to change which
