@@ -25,12 +25,10 @@ import org.gearvrf.GVRLightTemplate;
 import android.util.Log;
 
 /**
- * Manages a set of variants on vertex and fragment shaders from the same source
- * code segments.
+ * Generates a set of vertex and fragment shaders from the same source template.
  *
- * A shader source code segment is represented as a GVRShaderSegment class.
- * 
- * The GVRShaderSegment attached in the "FragmentTemplate" slot is the master
+ * Each shader template keeps a set of named source code segments which are
+ * used to compose the shaders. The code in the "FragmentTemplate" slot is the master
  * template for the fragment shader, the one attached as "VertexTemplate" is the
  * master for the vertex shader. Any name in the fragment template that starts
  * with "@Fragment" is replaced by the shader segment attached in that slot.
@@ -47,9 +45,20 @@ import android.util.Log;
  * shader. Otherwise, it will not be defined.
  * 
  * Each shader variant generated has a unique signature so that the same variant
- * will not be made twice.
+ * will not be generated twice.
  *
- * {@link GVRShaderSegment GVRPhongShader}
+ * The shader template also defines a uniform descriptor which contains the names
+ * and types of all the uniforms in the material used by the shader. Each entry
+ * is a float or integer type, an optional count and the name of the uniform
+ * (e.g. "float3 diffuse_color, float specular_exponent, int is_enabled"
+ * 
+ * Multiple lights are supported by specifying light shader source code
+ * segments in GVRLightTemplate. You can define different light implementations
+ * with their own data structures and these will be included in the
+ * generated fragment shader.
+ * 
+ * @see GVRPhongShader
+ * @see GVRLightTemplate
  */
 public class GVRShaderTemplate
 {
@@ -60,6 +69,10 @@ public class GVRShaderTemplate
         GVRCustomMaterialShaderId ShaderID;
     };
 
+    /**
+     * Construct a shader template
+     * @param descriptor string describing uniform names and types
+     */
     public GVRShaderTemplate(String descriptor)
     {
         mUniformDescriptor = descriptor;
@@ -215,6 +228,7 @@ public class GVRShaderTemplate
                     lightShaderSource = generateLightShader(lightlist);
                     defines += "#define HAS_LIGHTSOURCES 1\n";
                 }
+                defines += "#define HAS_" + key + " 1;\n";
                 combinedSource = combinedSource.replace("@" + key, segmentSource);
                 combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
                 combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
@@ -225,9 +239,22 @@ public class GVRShaderTemplate
         {
             defines += "#define HAS_" + name + " 1\n";
         }
-        return defines + combinedSource;
+        return "#version 300 es\n" + defines + combinedSource;
     }
 
+    /**
+     * Select the specific vertex and fragment shader to use.
+     * 
+     * The shader template is used to generate the sources for
+     * the vertex and fragment shader based on the vertex, material and
+     * light properties. This function may compile the shader if
+     * it does not already exist.
+     * 
+     * @param context   GVRContext
+     * @param rdata     GVRRenderData with mesh and material to use
+     * @param lightlist list of lights illuminating the mesh
+     * @return ID of vertex/fragment shader set
+     */
     public GVRMaterialShaderId bindShader(GVRContext context, GVRRenderData rdata, GVRLightTemplate[] lightlist)
     {
         GVRMesh mesh = rdata.getMesh();

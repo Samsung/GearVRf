@@ -1,18 +1,21 @@
+
 uniform mat4 u_mvp;
 uniform mat4 u_mv;
 uniform mat4 u_mv_it;
 uniform mat4 u_bone_matrix[60];
 
-attribute vec3 a_position;
-attribute vec3 a_normal;
-attribute vec2 a_texcoord;
-attribute vec3 a_tangent;
-attribute vec3 a_bitangent;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec2 a_texcoord;
+layout(location = 2) in vec3 a_normal;
+in vec4 a_bone_weights;
+in ivec4 a_bone_indices;
+in vec3 a_tangent;
+in vec3 a_bitangent;
 
-varying vec2 diffuse_coord;
-varying vec3 view_direction;
-varying vec3 viewspace_position;
-varying vec3 viewspace_normal;
+out vec2 diffuse_coord;
+out vec3 view_direction;
+out vec3 viewspace_position;
+out vec3 viewspace_normal;
 
 struct Vertex
 {

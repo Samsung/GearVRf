@@ -368,6 +368,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
             }
         }
         if (getVertexBoneData() != null) {
+            mAttributeKeys.add("a_bone_indices");
+            mAttributeKeys.add("a_bone_weights");
             getVertexBoneData().normalizeWeights();
         }
     }

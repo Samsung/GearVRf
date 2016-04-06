@@ -1,9 +1,11 @@
+
 uniform mat4 u_view;
-varying vec3 viewspace_position;
-varying vec3 viewspace_normal;
-varying vec2 diffuse_coord;
-varying vec3 view_direction;
-uniform vec3 u_eyepos;
+
+in vec3 viewspace_position;
+in vec3 viewspace_normal;
+in vec2 diffuse_coord;
+in vec3 view_direction;
+out vec4 gl_FragColor;
 
 struct Radiance
 {
