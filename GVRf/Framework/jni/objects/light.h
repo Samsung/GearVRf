@@ -78,7 +78,6 @@ public:
         if (it != vec3s_.end()) {
             return it->second;
         } else {
-            LOGD("LIGHT: key not %s found\n", key.c_str());
             std::string error = "Light::getVec3() : " + key + " not found";
             throw error;
         }

@@ -54,7 +54,7 @@ void Light::render(int program) {
         }
         if (offset >= 0)
             glUniform1f(offset, it->second);
-            LOGD("LIGHT: %s = %f\n", key.c_str(), it->second);
+            //LOGD("LIGHT: %s = %f\n", key.c_str(), it->second);
     }
 
     for (auto it = vec3s_.begin();
@@ -68,7 +68,7 @@ void Light::render(int program) {
         if (offset >= 0) {
             glm::vec3 v = it->second;
             glUniform3f(offset, v.x, v.y, v.z);
-            LOGD("LIGHT: %s = %f, %f, %f\n", key.c_str(), v.x, v.y, v.z);
+            //LOGD("LIGHT: %s = %f, %f, %f\n", key.c_str(), v.x, v.y, v.z);
         }
     }
 
@@ -83,7 +83,7 @@ void Light::render(int program) {
         if (offset >= 0) {
             glm::vec4 v = it->second;
             glUniform4f(offset, v.x, v.y, v.z, v.w);
-            LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
+            //LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
         }
     }
 }

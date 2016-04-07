@@ -23,6 +23,7 @@ struct Vertex
 	vec4 local_normal;
 	vec3 viewspace_position;
 	vec3 viewspace_normal;
+	vec3 view_direction;
 };
 
 void main() {
@@ -39,6 +40,6 @@ void main() {
 #endif
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
-	view_direction = normalize(-viewspace_position);
+	view_direction = vertex.view_direction;
 	gl_Position = u_mvp * vertex.local_position;
 }

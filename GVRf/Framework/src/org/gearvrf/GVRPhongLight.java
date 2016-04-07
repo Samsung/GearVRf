@@ -64,84 +64,79 @@ public class GVRPhongLight extends GVRLightTemplate {
     }
     
     /**
-     * Get the {@code light_pos} uniform.
+     * Get the light position uniform.
      * 
-     * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code light_pos}. With the {@linkplain GVRShaderType.Lit 'lit' shader,}
-     * this allows you to add an overlay color on top of the texture.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec3} uniform named
+     * {@code world_position} to control the position of the light in world space.
+     * It is computed from the scene object the light is attached to.
      * 
-     * @return The current {@code vec4 light_pos} as a three-element array
+     * @return the world position of the light as a 3 element array
      */
     public float[] getPosition() {
         return getVec3("world_position");
     }
 
     /**
-     * Set the {@code light_pos} uniform for light.
+     * Set the world position of the light.
      * 
-     * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code light_pos}. With the {@linkplain GVRShaderType.Lit 'lit' shader,}
-     * this allows you to add an overlay lighting color on top of the texture.
-     * The position is in the camera coordinate system. The user is responsible
-     * to use the correct coordinate system.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec3} uniform named
+     * {@code world_position} to control the position of the light in world space.
+     * It is computed from the scene object the light is attached to.
      * 
      * @param x
-     *            x-coordinate in camera coordinate system
+     *            x-coordinate in world coordinate system
      * @param y
-     *            y-coordinate in camera coordinate system
+     *            y-coordinate in world coordinate system
      * @param z
-     *            z-coordinate in camera coordinate system
+     *            z-coordinate in world coordinate system
      */
     public void setPosition(float x, float y, float z) {
         setVec3("world_position", x, y, z);
     }
 
     /**
-     * Get the {@code lightAmbientIntensity} uniform.
+     * Get the ambient light intensity.
      * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightAmbientIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
+     * This designates the color of the ambient reflection.
+     * It is multiplied by the material ambient color to derive
+     * the hue of the ambient reflection for that material.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * {@code ambient_intensity} to control the intensity of ambient light reflected.
      * 
-     * @return The current {@code vec4 lightAmbientIntensity} as a four-element
-     *         array
+     * @return The current {@code vec4 ambient_intensity} as a four-element array
      */
     public float[] getAmbientIntensity() {
         return getVec4("ambient_intensity");
     }
 
     /**
-     * Set the {@code lightAmbientIntensity} uniform for lighting.
+     * Set the ambient light intensity.
      * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightAmbientIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay ambient light intensity
-     * on top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
-     * inclusive.
+     * This designates the color of the ambient reflection.
+     * It is multiplied by the material ambient color to derive
+     * the hue of the ambient reflection for that material.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * {@code ambient_intensity} to control the intensity of ambient light reflected.
      * 
-     * @param r
-     *            Red
-     * @param g
-     *            Green
-     * @param b
-     *            Blue
-     * @param a
-     *            Alpha
+     * @param r red component (0 to 1)
+     * @param g green component (0 to 1)
+     * @param b blue component (0 to 1)
+     * @param a alpha component (0 to 1)
      */
     public void setAmbientIntensity(float r, float g, float b, float a) {
         setVec4("ambient_intensity", r, g, b, a);
     }
 
     /**
-     * Get the {@code lightDiffuseIntensity} uniform.
+     * Get the diffuse light intensity.
      * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightDiffuseIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
+     * This designates the color of the diffuse reflection.
+     * It is multiplied by the material diffuse color to derive
+     * the hue of the diffuse reflection for that material.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
      * 
-     * @return The current {@code vec4 lightDiffuseIntensity} as a four-element
+     * @return The current {@code vec4 diffuse_intensity} as a four-element
      *         array
      */
     public float[] getDiffuseIntensity() {
@@ -149,22 +144,18 @@ public class GVRPhongLight extends GVRLightTemplate {
     }
 
     /**
-     * Set the {@code lightDiffuseIntensity} uniform for lighting.
+     * Set the diffuse light intensity.
      * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightDiffuseIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay diffuse light intensity
-     * on top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
-     * inclusive.
+     * This designates the color of the diffuse reflection.
+     * It is multiplied by the material diffuse color to derive
+     * the hue of the diffuse reflection for that material.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
      * 
-     * @param r
-     *            Red
-     * @param g
-     *            Green
-     * @param b
-     *            Blue
-     * @param a
-     *            Alpha
+     * @param r red component (0 to 1)
+     * @param g green component (0 to 1)
+     * @param b blue component (0 to 1)
+     * @param a alpha component (0 to 1)
      */
     public void setDiffuseIntensity(float r, float g, float b, float a) {
         setVec4("diffuse_intensity", r, g, b, a);
@@ -176,10 +167,9 @@ public class GVRPhongLight extends GVRLightTemplate {
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
-     * 
-     * With the {@linkplain GVRShaderType.Lit 'lit'} or {@linkplain GVRPhongShader} shaders,
-     * this allows you to add an overlay color on top of the texture.
-     * 
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * {@code specular_intensity} to control the specular intensity.
+     *
      * @return The current {@code vec4 specular_intensity} as a four-element array
      */
     public float[] getSpecularIntensity() {
@@ -187,22 +177,18 @@ public class GVRPhongLight extends GVRLightTemplate {
     }
 
     /**
-     * Set the {@code lightSpecularIntensity} uniform for lighting.
+     * Set the specular intensity of the light.
      * 
-     * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code lightSpecularIntensity}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay specular light intensity
-     * on top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
-     * inclusive.
+     * This designates the color of the specular reflection.
+     * It is multiplied by the material specular color to derive
+     * the hue of the specular reflection for that material.
+     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * {@code specular_intensity} to control the specular intensity.
      * 
-     * @param r
-     *            Red
-     * @param g
-     *            Green
-     * @param b
-     *            Blue
-     * @param a
-     *            Alpha
+     * @param r red component (0 to 1)
+     * @param g green component (0 to 1)
+     * @param b blue component (0 to 1)
+     * @param a alpha component (0 to 1)
      */
     public void setSpecularIntensity(float r, float g, float b, float a) {
         setVec4("specular_intensity", r, g, b, a);

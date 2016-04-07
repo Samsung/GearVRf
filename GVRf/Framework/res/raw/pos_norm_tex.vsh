@@ -7,3 +7,4 @@ vertex.viewspace_position = pos.xyz / pos.w;
    diffuse_coord = a_texcoord.xy;
 #endif
 vertex.viewspace_normal = normalize((u_mv_it * vertex.local_normal).xyz);
+vertex.view_direction = normalize(-vertex.viewspace_position);

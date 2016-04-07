@@ -305,16 +305,26 @@ public class GVRShaderTemplate
             variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
             mShaderVariants.put(signature, variant);
-            Log.d("SHADER", "LIGHT: Create shader " + signature);
+            Log.d("gvrf", "SHADER: Create shader " + signature);
             generateGLShader(context, variant, material);
         }
         else
         {
-            Log.d("SHADER", "LIGHT: Reuse shader #" + variant.ShaderID.ID + " " + signature);
+            Log.d("gvrf", "SHADER: Reuse shader #" + variant.ShaderID.ID + " " + signature);
             material.setShaderType(variant.ShaderID);
         }
     }
 
+    /**
+     * Generates a GL shader and adds it to the material.
+     * 
+     * The shader generation is actually performed by the GL thread.
+     * This function spawns a task to generate it.
+     * 
+     * @param context   GVRContext to use to generate shader
+     * @param variant   shader variant with sources
+     * @param material  material to use with shader
+     */
     private void generateGLShader(final GVRContext context, final ShaderVariant variant, final GVRMaterial material) {
         Runnable task = new Runnable() {
             @Override
@@ -324,7 +334,7 @@ public class GVRShaderTemplate
                 GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
                 makeMaterialMap(material, materialMap);
                 material.setShaderType(variant.ShaderID);
-                Log.d("SHADER", "LIGHT: Generated shader #" + variant.ShaderID.ID);
+                Log.d("gvrf", "SHADER: Generated shader #" + variant.ShaderID.ID);
             }
         };
         context.runOnGlThread(task);
@@ -342,6 +352,11 @@ public class GVRShaderTemplate
         return new HashMap<String, Integer>();
     }
     
+    /**
+     * Makes the material map for the shader.
+     * The material map does not change any names, just maps
+     * the keys in the material to themselves.
+     */
     protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
     {
         Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
