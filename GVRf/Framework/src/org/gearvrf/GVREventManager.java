@@ -117,13 +117,11 @@ public class GVREventManager {
         // Set to true if an event is handled.
         boolean handledSuccessful = false;
 
+        // Verify the event name and parameters (cached)
+        Method method = findHandlerMethod(target, eventsClass, eventName, params);
         if ((sendMask & SEND_MASK_OBJECT) != 0) {
-            // Check if the target directly handles the event by implementing the
-            // eventsClass interface.
-            Method method = findHandlerMethod(target, eventsClass, eventName, params);
-
-            if (method != null) {
-                // Try invoking the method in target
+            // Invoke the method if the target implements the interface
+            if (eventsClass.isInstance(target)) {
                 invokeMethod(target, method, params);
                 handledSuccessful = true;
             }
@@ -163,25 +161,27 @@ public class GVREventManager {
     }
 
     /*
-     * Return the method in the target by signature. It throws if the method is not found.
+     * Return the method in eventsClass by checking the signature.
+     * RuntimeException is thrown if the event is not found in the eventsClass interface,
+     * or the parameter types don't match.
      */
     private Method findHandlerMethod(Object target, Class<? extends IEvents> eventsClass,
             String eventName, Object[] params) {
-        // Use cached method if available
+        // Use cached method if available. Note: no further type checking is done if the
+        // method has been cached. It will be checked by JRE when the method is invoked.
         Method cachedMethod = getCachedMethod(target, eventName);
         if (cachedMethod != null) {
             return cachedMethod;
         }
 
-        // Check target event interface
-        if (!eventsClass.isInstance(target)) {
-            // The target object does not implement interface
-            return null;
-        }
-
+        // Check the event and params against the eventsClass interface object.
+        Method nameMatch = null;
+        Method signatureMatch = null;
         for (Method method : eventsClass.getMethods()) {
             // Match method name and event name
             if (method.getName().equals(eventName)) {
+                nameMatch = method;
+
                 // Check number of parameters
                 Class<?>[] types = method.getParameterTypes();
                 if (types.length != params.length)
@@ -192,21 +192,79 @@ public class GVREventManager {
                 boolean foundMatchedMethod = true;
                 for (Class<?> type : types) {
                     Object param = params[i++];
-                    if (!type.isInstance(param)) {
+                    if (!isInstanceWithAutoboxing(type, param)) {
                         foundMatchedMethod = false;
                         break;
                     }
                 }
 
                 if (foundMatchedMethod) {
-                    addCachedMethod(target, eventName, method);
-                    return method;
+                    signatureMatch = method;
+                    break;
                 }
             }
         }
 
-        // No matching method
-        return null;
+        // Error
+        if (nameMatch == null) {
+            throw new RuntimeException(String.format("The interface contains no method %s", eventName));
+        } else if (signatureMatch == null ){
+            throw new RuntimeException(String.format("The interface contains a method %s but "
+                    + "parameters don't match", eventName));
+        }
+
+        // Cache the method for the target, even if it doesn't implement the interface. This is
+        // to avoid always verifying the event.
+        addCachedMethod(target, eventName, signatureMatch);
+
+        return signatureMatch;
+    }
+
+    private boolean isInstanceWithAutoboxing(Class<?> type, Object value) {
+        if (type.isInstance(value)) {
+            return true;
+        }
+
+        // Allow null value for subtypes of Object but not int, float, etc.
+        if (value == null) {
+            return Object.class.isAssignableFrom(type);
+        }
+
+        // Return false if auto-boxing is not possible
+        if (!(value instanceof Number || value instanceof Boolean)) {
+            return false;
+        }
+
+        // Check auto-boxing of numeric and boolean values
+        if (type.equals(boolean.class) && Boolean.class.isInstance(value)) {
+            return true;
+        }
+
+        if (type.equals(int.class) && Integer.class.isInstance(value)) {
+            return true;
+        }
+
+        if (type.equals(long.class) && Long.class.isInstance(value)) {
+            return true;
+        }
+
+        if (type.equals(short.class) && Short.class.isInstance(value)) {
+            return true;
+        }
+
+        if (type.equals(byte.class) && Byte.class.isInstance(value)) {
+            return true;
+        }
+
+        if (type.equals(float.class) && Float.class.isInstance(value)) {
+            return true;
+        }
+
+        if (type.equals(double.class) && Double.class.isInstance(value)) {
+            return true;
+        }
+
+        return false;
     }
 
     private Method getCachedMethod(Object target, String eventName) {
