@@ -18,27 +18,36 @@ package org.gearvrf;
 import static org.gearvrf.utility.Assert.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.gearvrf.utility.Exceptions;
 import org.gearvrf.utility.Log;
 
 /**
- * This is one of the key GVRF classes: It holds GL meshes.
+ * Describes an indexed triangle mesh as a set of shared vertices with integer
+ * indices for each triangle.
  * 
- * A GL mesh is a net of triangles that define an object's surface geometry.
+ * Usually each mesh vertex may have a positions, normal and texture coordinate.
+ * Skinned mesh vertices will also have bone weights and indices.
+ * If the mesh uses a normal map for lighting, it will have tangents
+ * and bitangents as well. These vertex components correspond to vertex
+ * attributes in the OpenGL vertex shader.
  */
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     private static final String TAG = GVRMesh.class.getSimpleName();
 
     public GVRMesh(GVRContext gvrContext) {
         this(gvrContext, NativeMesh.ctor());
+        mAttributeKeys = new HashSet<String>();
     }
 
     GVRMesh(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
         setBones(new ArrayList<GVRBone>());
         mVertexBoneData = new GVRVertexBoneData(gvrContext, this);
+        mAttributeKeys = new HashSet<String>();
     }
 
     /**
@@ -66,6 +75,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVertices(float[] vertices) {
         checkValidFloatArray("vertices", vertices, 3);
+        mAttributeKeys.add("a_position");
         NativeMesh.setVertices(getNative(), vertices);
     }
 
@@ -92,6 +102,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setNormals(float[] normals) {
         checkValidFloatArray("normals", normals, 3);
+        mAttributeKeys.add("a_normal");
         NativeMesh.setNormals(getNative(), normals);
     }
 
@@ -118,6 +129,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setTexCoords(float[] texCoords) {
         checkValidFloatArray("texCoords", texCoords, 2);
+        mAttributeKeys.add("a_texcoord");
         NativeMesh.setTexCoords(getNative(), texCoords);
     }
 
@@ -200,6 +212,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setFloatVector(String key, float[] floatVector) {
         checkValidFloatVector("key", key, "floatVector", floatVector, 1);
+        mAttributeKeys.add(key);
         NativeMesh.setFloatVector(getNative(), key, floatVector);
     }
 
@@ -227,6 +240,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVec2Vector(String key, float[] vec2Vector) {
         checkValidFloatVector("key", key, "vec2Vector", vec2Vector, 2);
+        mAttributeKeys.add(key);
         NativeMesh.setVec2Vector(getNative(), key, vec2Vector);
     }
 
@@ -254,6 +268,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVec3Vector(String key, float[] vec3Vector) {
         checkValidFloatVector("key", key, "vec3Vector", vec3Vector, 3);
+        mAttributeKeys.add(key);
         NativeMesh.setVec3Vector(getNative(), key, vec3Vector);
     }
 
@@ -281,7 +296,25 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVec4Vector(String key, float[] vec4Vector) {
         checkValidFloatVector("key", key, "vec4Vector", vec4Vector, 4);
+        mAttributeKeys.add(key);
         NativeMesh.setVec4Vector(getNative(), key, vec4Vector);
+    }
+    
+    /**
+     * Get the names of all the vertex attributes on this mesh.
+     * @return array of string names
+     */
+    public Set<String> getAttributeNames() {
+        return mAttributeKeys;
+    }
+    
+    /**
+     * Calculate a bounding sphere from the mesh vertices.
+     * @param sphere        float[4] array to get center of sphere and radius
+     * @return sphere[0] = center.x, sphere[1] = center.y, sphere[2] = center.z, sphere[3] = radius
+     */
+    public void getSphereBound(float[] sphere) {
+        NativeMesh.getSphereBound(getNative(), sphere);
     }
 
     /**
@@ -340,6 +373,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
             }
         }
         if (getVertexBoneData() != null) {
+            mAttributeKeys.add("a_bone_indices");
+            mAttributeKeys.add("a_bone_weights");
             getVertexBoneData().normalizeWeights();
         }
     }
@@ -415,6 +450,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
     private List<GVRBone> mBones = new ArrayList<GVRBone>();
     private GVRVertexBoneData mVertexBoneData;
+    private Set<String> mAttributeKeys;
 }
 
 class NativeMesh {
@@ -459,4 +495,6 @@ class NativeMesh {
     static native long getBoundingBox(long mesh);
 
     static native void setBones(long mesh, long[] bonePtrs);
+    
+    static native void getSphereBound(long mesh, float[] sphere);
 }

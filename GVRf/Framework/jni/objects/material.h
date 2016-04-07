@@ -171,6 +171,25 @@ public:
         }
     }
 
+    bool hasUniform(const std::string& key) const {
+        if (vec3s_.find(key) != vec3s_.end()) {
+            return true;
+        }
+        if (vec2s_.find(key) != vec2s_.end()) {
+            return true;
+        }
+        if (vec4s_.find(key) != vec4s_.end()) {
+            return true;
+        }
+        if (mat4s_.find(key) != mat4s_.end()) {
+            return true;
+        }
+        if (floats_.find(key) != floats_.end()) {
+            return true;
+        }
+        return false;
+    }
+
     void setMat4(const std::string& key, glm::mat4 matrix) {
         mat4s_[key] = matrix;
     }

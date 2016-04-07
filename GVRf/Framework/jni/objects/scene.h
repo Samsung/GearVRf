@@ -30,6 +30,7 @@
 #include "engine/renderer/renderer.h"
 
 #include "objects/components/directional_light.h"
+#include "objects/light.h"
 
 namespace gvr {
 class SceneObject;
@@ -60,6 +61,7 @@ public:
 
     void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
     bool get_occlusion_culling(){ return occlusion_flag_; }
+    void addLight(Light* light);
 
     void resetStats() {
         if (!statsInitialized) {
@@ -85,6 +87,10 @@ public:
         return directional_light_;
     }
 
+    const std::vector<Light*>& getLightList() const {
+        return lightList;
+    }
+
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -101,7 +107,7 @@ private:
     bool frustum_flag_;
     bool occlusion_flag_;
     bool statsInitialized = false;
-
+    std::vector<Light*> lightList;
 };
 
 }

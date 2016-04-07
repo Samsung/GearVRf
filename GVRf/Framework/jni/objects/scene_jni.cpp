@@ -68,6 +68,10 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_attachDirectionalLight(
         JNIEnv * env, jobject obj, jlong jscene, jlong light);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_addLight(
+        JNIEnv * env, jobject obj, jlong jscene, jlong light);
+
 }
 ;
 
@@ -166,6 +170,18 @@ Java_org_gearvrf_NativeScene_attachDirectionalLight(JNIEnv * env,
         scene->attachDirectionalLight(directional_light);
     } else {
         scene->attachDirectionalLight(0);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_addLight(JNIEnv * env,
+        jobject obj, jlong jscene, jlong jlight) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    if (jlight != 0) {
+        Light* light = reinterpret_cast<Light*>(jlight);
+        scene->addLight(light);
+    } else {
+        scene->addLight(0);
     }
 }
 

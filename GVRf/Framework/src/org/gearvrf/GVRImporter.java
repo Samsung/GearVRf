@@ -22,17 +22,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.UUID;
+import java.util.Vector;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.jassimp.AiColor;
+//import org.gearvrf.jassimp.AiColor;
 import org.gearvrf.jassimp.AiMaterial;
 import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
+import org.gearvrf.jassimp2.AiLight;
+import org.gearvrf.jassimp2.AiLightType;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
@@ -43,7 +49,7 @@ import org.gearvrf.utility.Log;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Environment;
-
+import org.gearvrf.jassimp.AiColor;
 /**
  * {@link GVRImporter} provides methods for importing 3D models and making them
  * available through instances of {@link GVRAssimpImporter}.
@@ -175,12 +181,60 @@ final class GVRImporter {
         
         Log.d(TAG, "start creating jassimp model %s", filePath);
 
-        return new GVRJassimpSceneObject(context, assimpScene,
+        List<AiLight> lights= assimpScene.getLights();
+        Hashtable<String, GVRPhongLight> lightlist= new Hashtable<String, GVRPhongLight>();
+        importLights(lights, lightlist, context);
+
+        GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
-                        cacheEnabled));
+                        cacheEnabled), lightlist);
+        return sceneOb;
     }
+    static void importLights(List<AiLight> lights,Hashtable<String, GVRPhongLight> lightlist,final GVRContext context){
+        for(AiLight light: lights){            
+            AiLightType type = light.getType();
+                if(type == AiLightType.DIRECTIONAL){               
+                GVRPhongLight gvrLight = new GVRPhongLight(context);  
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                String name = light.getName();          
+                lightlist.put(name, gvrLight);               
+            }
+            if(type == AiLightType.POINT){
+                GVRPhongPointLight gvrLight = new GVRPhongPointLight(context);
+                setPhongLightProp(gvrLight,light);   
+                setLightProp(gvrLight, light);
+                String name = light.getName();              
+                lightlist.put(name, gvrLight);
+            }
+            if(type == AiLightType.SPOT){
+                GVRPhongSpotLight gvrLight = new GVRPhongSpotLight(context);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
+                gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+        }
+         
+    }
+    static void setLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
+        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
+        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
+    }
+    static void setPhongLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+        org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);       
+        gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+        gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+        gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+
+    }
     static File downloadFile(Context context, String urlString) {
         URL url = null;
         try {
@@ -390,6 +444,8 @@ final class GVRImporter {
         float opacity = material.getOpacity();
         meshMaterial.setOpacity(opacity);
 
+
+        
         /* Diffuse Texture */
         final String texDiffuseFileName = material.getTextureFile(
                 AiTextureType.DIFFUSE, 0);
@@ -398,10 +454,6 @@ final class GVRImporter {
                 @Override
                 public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
                     meshMaterial.setMainTexture(texture);
-                    final int features = GVRShaderType.Assimp.setBit(
-                            meshMaterial.getShaderFeatureSet(),
-                            GVRShaderType.Assimp.AS_DIFFUSE_TEXTURE);
-                    meshMaterial.setShaderFeatureSet(features);
                 }
 
                 @Override

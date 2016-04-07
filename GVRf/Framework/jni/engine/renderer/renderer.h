@@ -48,6 +48,21 @@ class PostEffectShaderManager;
 class RenderData;
 class RenderTexture;
 class ShaderManager;
+class Light;
+
+/*
+ * These uniforms are commonly used in shaders.
+ * They are calculated by the GearVRF renderer.
+ */
+struct ShaderUniformsPerObject {
+    glm::mat4   u_model;        // Model matrix
+    glm::mat4   u_view;         // View matrix
+    glm::mat4   u_view_inv;     // inverse of View matrix
+    glm::mat4   u_mv;           // ModelView matrix
+    glm::mat4   u_mvp;          // ModelViewProjection matrix
+    glm::mat4   u_mv_it;        // inverse transpose of ModelView
+    int         u_right;        // 1 = right eye, 0 = left
+};
 
 class Renderer {
 private:
@@ -98,15 +113,18 @@ public:
 private:
     static void renderRenderData(RenderData* render_data,
             const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager, int modeShadow);
+            int render_mask, ShaderManager* shader_manager,
+            const std::vector<Light*>& lights, int modeShadow);
 
     static void renderMesh(RenderData* render_data,
             const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager, int modeShadow);
+            int render_mask, ShaderManager* shader_manager,
+            const std::vector<Light*> lightList, int modeShadow);
 
     static void renderMaterialShader(RenderData* render_data,
             const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager, int modeShadow,
+            int render_mask, ShaderManager* shader_manager,
+            const std::vector<Light*> lightList, int modeShadow,
             Material *material);
 
     static void renderPostEffectData(Camera* camera,

@@ -20,10 +20,14 @@ import java.util.List;
 import org.gearvrf.utility.Exceptions;
 
 /**
- * Base class for classes that can be attached to a {@link GVRSceneObject scene
- * object}.
+ * Base class for defining interfaces to extend the scene object.
+ *
+ * A GVRSceneObject can have any number of interfaces but only
+ * one instance of each class. 
+ * 
+ * {@link GVRSceneObject.addInterface }
  */
-class GVRComponent extends GVRHybridObject {
+public class GVRComponent extends GVRHybridObject {
     // private static final String TAG = Log.tag(GVRComponent.class);
 
     /**
@@ -36,8 +40,15 @@ class GVRComponent extends GVRHybridObject {
      */
     protected GVRComponent(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        isEnabled = true;
     }
 
+    public GVRComponent(GVRContext gvrContext, long nativeConstructor, GVRSceneObject owner) {
+        super(gvrContext, nativeConstructor);
+        setOwnerObject(owner);
+        isEnabled = true;
+    }
+    
     /**
      * Special constructor, for descendants like {#link GVRMeshEyePointee} that
      * need to 'unregister' instances.
@@ -66,11 +77,12 @@ class GVRComponent extends GVRHybridObject {
     }
 
     protected GVRSceneObject owner;
+    protected boolean isEnabled;
 
     /**
      * @return The {@link GVRSceneObject} this object is currently attached to.
      */
-    protected GVRSceneObject getOwnerObject() {
+    public GVRSceneObject getOwnerObject() {
         if (owner != null) {
             return owner;
         }
@@ -79,7 +91,7 @@ class GVRComponent extends GVRHybridObject {
                 .getSimpleName());
     }
 
-    protected void setOwnerObject(GVRSceneObject owner) {
+    public void setOwnerObject(GVRSceneObject owner) {
         this.owner = owner;
     }
 
@@ -90,5 +102,47 @@ class GVRComponent extends GVRHybridObject {
      */
     public boolean hasOwnerObject() {
         return owner != null;
+    }
+    /**
+     * Enable the interface so it will be active in the scene.
+     */
+    public void enable() {
+        isEnabled = true;
+    }
+
+    /**
+     * Disable the interface so it will not be active in the scene.
+     */
+    public void disable() {
+        isEnabled = false;
+    }
+    
+    /**
+     * Get the enable/disable status for the interface.
+     * 
+     * @return true if interface is enabled, false if interface is disabled.
+     */
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+    
+    /**
+     * Get the transform of the scene object this interface is attached to.
+     * 
+     * @return GVRTransform of scene object
+     */
+    public GVRTransform getTransform() {
+        return getOwnerObject().getTransform();
+    }
+    
+    /**
+     * Get the interface of the specified class attached to the scene object.
+     * 
+     * If the scene object that owns this interface also has an interface
+     * of the given class, it will be returned.
+     * @return GVRInterface of specified class or null if none exists.
+     */
+    public GVRComponent getInterface(Class<? extends GVRComponent> interfaceClass) {
+        return getOwnerObject().getComponent(interfaceClass);
     }
 }

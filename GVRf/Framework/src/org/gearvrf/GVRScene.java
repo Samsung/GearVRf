@@ -17,34 +17,23 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
-import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
-/**
- * The scene graph.
- *
- * It receives events defined in {@link ISceneEvents}. To add a listener to these events, use the
- * following code:
- * <pre>
- *     ISceneEvents mySceneEventListener = new ISceneEvents() {
- *         ...
- *     };
- *     getEventReceiver().addListener(mySceneEventListener);
- * </pre>
- */
-public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
+/** The scene graph */
+public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEvents {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
-
+    public static final Integer MAX_LIGHTS = 16;
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
-
-    private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
+    private Set<GVRLightTemplate> mLightList = new HashSet<GVRLightTemplate>();
 
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
@@ -73,8 +62,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
 
         setMainCameraRig(cameraRig);
         setFrustumCulling(true);
-
-        getEventReceiver().addListener(mSceneEventListener);
     }
 
     private GVRScene(GVRContext gvrContext, long ptr) {
@@ -358,6 +345,34 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         NativeScene.exportToFile(getNative(), filepath);
     }
 
+    /**
+     * Bind the correct vertex and fragment shaders on all renderable objects.
+     * 
+     * Setting the shader template for a GVRRenderData selects what kind
+     * of shader to use but does not actually construct a vertex and fragment shader.
+     * This function does that for all the renderable objects that need it.
+     *
+     * All shaders should be bound after scene initialization is complete.
+     * If new assets are loaded that add lights to the scene after initialization,
+     * bindShaders may need to be called again to regenerate the correct shaders
+     * for the new lighting conditions.
+     * {@link GVRRenderData.bindShader GVRShaderTemplate }
+     */
+    public void bindShaders() {
+        for (GVRSceneObject child : mSceneObjects) {
+            ArrayList<GVRLightTemplate> lights = child.getAllComponents(GVRLightTemplate.class);
+            for (GVRLightTemplate light : lights) {
+                addLight(light);
+            }
+        }
+        for (GVRSceneObject child : mSceneObjects) {
+            ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.class);
+            for (GVRRenderData rdata : renderers) {
+                rdata.bindShader(this);
+            }
+        }
+    }
+    
     private GVRDirectionalLight mDirectionalLight;
 
     public void setDirectionalLight(GVRDirectionalLight light) {
@@ -368,6 +383,30 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         } else {
             NativeScene.attachDirectionalLight(getNative(), 0);
         }
+    }
+    
+    protected void addLight(GVRLightTemplate light) {
+        if (light != null) {
+            int lightIndex = 0;
+            for (GVRLightTemplate l : mLightList) {
+                if (l == light) {
+                    return;
+                }
+                if (l.getClass().equals(light.getClass())) {
+                    ++lightIndex;
+                }
+            }
+            String name = "Data" + light.getClass().getSimpleName() + "[" + lightIndex + "]";
+            mLightList.add(light);
+            NativeLight.setLightID(light.getNative(), name);
+            NativeScene.addLight(getNative(), light.getNative());
+        }
+    }
+    
+    public GVRLightTemplate[] getLightList() {
+        GVRLightTemplate[] list = new GVRLightTemplate[mLightList.size()];
+        mLightList.toArray(list);
+        return list;
     }
 
     /**
@@ -453,53 +492,34 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         return sb.toString();
     }
 
+    /*
+     * When this scene becomes the main scene we should
+     * bind all the shaders. This will cause shader
+     * generation and compilation.
+     * 
+     * @see org.gearvrf.ILifeCycleEvents#onAfterInit()
+     */
     @Override
-    public GVREventReceiver getEventReceiver() {
-        return mEventReceiver;
+    public void onAfterInit()
+    {
+        if (getGVRContext().getMainScene() == this) {
+            bindShaders();
+        }        
     }
 
-    // Default scene event handler
-    private ISceneEvents mSceneEventListener = new ISceneEvents() {
-        @Override
-        public void onInit(GVRContext gvrContext, GVRScene scene) {
-            for (GVRSceneObject child : mSceneObjects) {
-                recursivelySendOnInit(child);
-            }
-        }
+    @Override
+    public void onStep()
+    {
+        // TODO Auto-generated method stub
+        
+    }
 
-        private void recursivelySendOnInit(GVRSceneObject sceneObject) {
-            getGVRContext().getEventManager().sendEvent(
-                    sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
-
-            for (GVRSceneObject child : sceneObject.rawGetChildren()) {
-                recursivelySendOnInit(child);
-            }
-        }
-
-        @Override
-        public void onAfterInit() {
-            for (GVRSceneObject child : mSceneObjects) {
-                recursivelySendSimpleEvent(child, "onAfterInit");
-            }
-        }
-
-        @Override
-        public void onStep() {
-            // Send "onStep" to all scene objects and their children
-            for (GVRSceneObject child : mSceneObjects) {
-                recursivelySendSimpleEvent(child, "onStep");
-            }
-        }
-
-        private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
-            getGVRContext().getEventManager().sendEvent(
-                    sceneObject, ISceneObjectEvents.class, eventName);
-
-            for (GVRSceneObject child : sceneObject.rawGetChildren()) {
-                recursivelySendSimpleEvent(child, eventName);
-            }
-        }
-    };
+    @Override
+    public void onInit(GVRContext gvrContext, GVRScene scene)
+    {
+        // TODO Auto-generated method stub
+        
+    }
 }
 
 class NativeScene {
@@ -527,4 +547,6 @@ class NativeScene {
     public static native void exportToFile(long scene, String file_path);
 
     static native void attachDirectionalLight(long scene, long light);
+    
+    static native void addLight(long scene, long light);
 }
