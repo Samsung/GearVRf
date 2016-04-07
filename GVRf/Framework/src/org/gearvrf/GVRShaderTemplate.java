@@ -299,20 +299,17 @@ public class GVRShaderTemplate
         generateVariantDefines(variantDefines, mesh, material);
         String signature = generateSignature(variantDefines, lightlist);
         ShaderVariant variant = mShaderVariants.get(signature);
-        if (variant == null)
-        {
-            variant = new ShaderVariant();
-            variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
-            variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
-            mShaderVariants.put(signature, variant);
-            Log.d("gvrf", "SHADER: Create shader " + signature);
-            generateGLShader(context, variant, material);
-        }
-        else
+        if ((variant != null) && (variant.ShaderID != null))
         {
             Log.d("gvrf", "SHADER: Reuse shader #" + variant.ShaderID.ID + " " + signature);
             material.setShaderType(variant.ShaderID);
+            return;
         }
+        variant = new ShaderVariant();
+        variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
+        variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
+        mShaderVariants.put(signature, variant);
+        generateGLShader(context, material, signature);
     }
 
     /**
@@ -325,16 +322,20 @@ public class GVRShaderTemplate
      * @param variant   shader variant with sources
      * @param material  material to use with shader
      */
-    private void generateGLShader(final GVRContext context, final ShaderVariant variant, final GVRMaterial material) {
+    private void generateGLShader(final GVRContext context, final GVRMaterial material, final String signature) {
         Runnable task = new Runnable() {
             @Override
             public void run() {
+                ShaderVariant variant = mShaderVariants.get(signature);
                 GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
-                variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+                if (variant.ShaderID == null)
+                {
+                    variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+                    Log.d("gvrf", "SHADER: Generated shader #" + variant.ShaderID.ID + " " + signature);
+                }
                 GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
                 makeMaterialMap(material, materialMap);
                 material.setShaderType(variant.ShaderID);
-                Log.d("gvrf", "SHADER: Generated shader #" + variant.ShaderID.ID);
             }
         };
         context.runOnGlThread(task);
