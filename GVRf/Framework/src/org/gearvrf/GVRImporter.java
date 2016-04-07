@@ -181,49 +181,50 @@ final class GVRImporter {
 
         List<AiLight> lights= assimpScene.getLights();
         Hashtable<String, GVRPhongLight> lightlist= new Hashtable<String, GVRPhongLight>();
+        importLights(lights, lightlist, context);
 
-        GVRScene scene=context.getMainScene();
-        for(AiLight light: lights){
-           
-           AiLightType type = light.getType();
-           if(type == AiLightType.DIRECTIONAL){               
-           GVRPhongLight gvrLight = new GVRPhongLight(context);  
-           setPhongLightProp(gvrLight,light);
-           setLightProp(gvrLight, light);
-           String name = light.getName();          
-           lightlist.put(name, gvrLight);               
-           }
-           if(type == AiLightType.POINT){
-               GVRPhongPointLight gvrLight = new GVRPhongPointLight(context);
-               setPhongLightProp(gvrLight,light);   
-               setLightProp(gvrLight, light);
-               String name = light.getName();              
-               lightlist.put(name, gvrLight);
-           }
-           if(type == AiLightType.SPOT){
-               GVRPhongSpotLight gvrLight = new GVRPhongSpotLight(context);
-               setPhongLightProp(gvrLight,light);
-               setLightProp(gvrLight, light);
-               gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
-               gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
-               String name = light.getName();
-               lightlist.put(name, gvrLight);
-           }
-       }
-        
         GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
-                        cacheEnabled), scene, lightlist);
+                        cacheEnabled), lightlist);
         return sceneOb;
     }
-    public static void setLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+    static void importLights(List<AiLight> lights,Hashtable<String, GVRPhongLight> lightlist,final GVRContext context){
+        for(AiLight light: lights){            
+            AiLightType type = light.getType();
+                if(type == AiLightType.DIRECTIONAL){               
+                GVRPhongLight gvrLight = new GVRPhongLight(context);  
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                String name = light.getName();          
+                lightlist.put(name, gvrLight);               
+            }
+            if(type == AiLightType.POINT){
+                GVRPhongPointLight gvrLight = new GVRPhongPointLight(context);
+                setPhongLightProp(gvrLight,light);   
+                setLightProp(gvrLight, light);
+                String name = light.getName();              
+                lightlist.put(name, gvrLight);
+            }
+            if(type == AiLightType.SPOT){
+                GVRPhongSpotLight gvrLight = new GVRPhongSpotLight(context);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
+                gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+        }
+         
+    }
+    static void setLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
         gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
         gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
         gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
     }
-    public static void setPhongLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+    static void setPhongLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
         org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);       

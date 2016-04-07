@@ -36,13 +36,13 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     protected AiScene scene;
     protected GVRResourceVolume volume;
 
-  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume,GVRScene gvrScene, Hashtable<String, GVRPhongLight> lightlist) {
+  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRPhongLight> lightlist) {
         super(gvrContext);
         this.volume = volume;
 
         if (scene != null) {
             this.scene = scene;
-            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), gvrScene, lightlist);
+            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), lightlist);
 
             // Animations
             for (AiAnimation aiAnim : scene.getAnimations()) {
@@ -54,7 +54,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     
     private void recurseAssimpNodes(
             GVRSceneObject parentSceneObject,
-             AiNode node,GVRScene scene, Hashtable<String, GVRPhongLight> lightlist) {
+             AiNode node,Hashtable<String, GVRPhongLight> lightlist) {
         try {
             GVRSceneObject sceneObject = null;
             if (node.getNumMeshes() == 0) {
@@ -62,13 +62,13 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 parentSceneObject.addChildObject(sceneObject);
             } else if (node.getNumMeshes() == 1) {
                 // add the scene object to the scene graph
-                sceneObject = createSubSceneObject(node, 0,scene);
+                sceneObject = createSubSceneObject(node, 0);
                 parentSceneObject.addChildObject(sceneObject);
             } else {
                 sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
                 parentSceneObject.addChildObject(sceneObject);
                 for (int i = 0; i < node.getNumMeshes(); i++) {
-                    GVRSceneObject childSceneObject = createSubSceneObject(node, i,scene);
+                    GVRSceneObject childSceneObject = createSubSceneObject(node, i);
                     sceneObject.addChildObject(childSceneObject);
                 }
             }
@@ -80,7 +80,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }
            attachLights(lightlist, sceneObject);
             for (AiNode child : node.getChildren()) {
-               recurseAssimpNodes(sceneObject, child,scene, lightlist);
+               recurseAssimpNodes(sceneObject, child, lightlist);
                 
             }
 
@@ -138,7 +138,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
      */
     private GVRSceneObject createSubSceneObject(
             AiNode node,
-           int index, GVRScene gvrScene)
+           int index)
             throws IOException {
         AiMesh aiMesh = scene.getMeshes().get(node.getMeshes()[index]);
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
