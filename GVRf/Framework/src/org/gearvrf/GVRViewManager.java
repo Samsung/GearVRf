@@ -699,6 +699,10 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             try {
                 GVRViewManager.this.getEventManager().sendEvent(
                         mScript, IScriptEvents.class,
+                        "onEarlyInit", GVRViewManager.this);
+
+                GVRViewManager.this.getEventManager().sendEvent(
+                        mScript, IScriptEvents.class,
                         "onInit", GVRViewManager.this);
             } catch (Throwable t) {
                 t.printStackTrace();

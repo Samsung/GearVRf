@@ -27,6 +27,7 @@ import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -352,7 +353,53 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         if (handled == false) {
             handled = super.dispatchTouchEvent(event);// VrActivity's
         }
+
+        mViewManager.getEventManager().sendEventWithMask(
+                SEND_EVENT_MASK,
+                this,
+                IActivityEvents.class,
+                "dispatchTouchEvent", event);
+
         return handled;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        if (mViewManager != null) {
+            mViewManager.getEventManager().sendEventWithMask(
+                    SEND_EVENT_MASK,
+                    this,
+                    IActivityEvents.class,
+                    "onConfigurationChanged", newConfig);
+        }
+
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mViewManager != null) {
+            mViewManager.getEventManager().sendEventWithMask(
+                    SEND_EVENT_MASK,
+                    this,
+                    IActivityEvents.class,
+                    "onTouchEvent", event);
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (mViewManager != null) {
+            mViewManager.getEventManager().sendEventWithMask(
+                    SEND_EVENT_MASK,
+                    this,
+                    IActivityEvents.class,
+                    "onWindowFocusChanged", hasFocus);
+        }
+
+        super.onWindowFocusChanged(hasFocus);
     }
 
     boolean updateSensoredScene() {

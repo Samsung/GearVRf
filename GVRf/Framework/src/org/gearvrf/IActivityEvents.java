@@ -15,6 +15,10 @@
 
 package org.gearvrf;
 
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.view.MotionEvent;
+
 /**
  * This interface defines the callback interface of an Android {@code Activity}.
  * User can add a listener to {@code GVRActivity.getEventReceiver()} to handle
@@ -28,4 +32,14 @@ public interface IActivityEvents extends IEvents {
     void onDestroy();
 
     void onSetScript(GVRScript script);
+
+    void onWindowFocusChanged(boolean hasFocus);
+
+    void onConfigurationChanged(Configuration config);
+
+    void onActivityResult(int requestCode, int resultCode, Intent data);
+
+    void onTouchEvent(MotionEvent event);
+
+    void dispatchTouchEvent(MotionEvent event);
 }
