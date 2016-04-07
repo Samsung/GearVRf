@@ -48,8 +48,8 @@ import android.util.TypedValue;
 public class GVRAndroidResource {
     private static final String TAG = Log.tag(GVRAndroidResource.class);
 
-    private enum DebugStates {
-        NEW, OPEN, READING, CLOSED
+    private enum StreamStates {
+        NEW, OPEN, CLOSED
     }
 
     private enum ResourceType {
@@ -60,8 +60,8 @@ public class GVRAndroidResource {
      * Instance members
      */
 
-    private InputStream stream;
-    private DebugStates debugState;
+    private InputStream stream = null;
+    private StreamStates streamState;
 
     // Save parameters, for hashCode() and equals()
     private final String filePath;
@@ -85,7 +85,7 @@ public class GVRAndroidResource {
      *             File doesn't exist, or can't be read.
      */
     public GVRAndroidResource(String path) throws FileNotFoundException {
-        debugState = DebugStates.NEW;
+        streamState = StreamStates.NEW;
 
         filePath = path;
         resourceId = 0; // No R.whatever field will ever be 0
@@ -131,7 +131,7 @@ public class GVRAndroidResource {
     public GVRAndroidResource(Context context, int resourceId) {
         this.context = context;
         Resources resources = context.getResources();
-        debugState = DebugStates.NEW;
+        streamState = StreamStates.NEW;
 
         filePath = null;
         this.resourceId = resourceId;
@@ -177,7 +177,7 @@ public class GVRAndroidResource {
     public GVRAndroidResource(Context context, String assetRelativeFilename)
             throws IOException {
         this.context = context;    
-        debugState = DebugStates.NEW;
+        streamState = StreamStates.NEW;
 
         filePath = null;
         resourceId = 0; // No R.whatever field will ever be 0
@@ -252,7 +252,7 @@ public class GVRAndroidResource {
             boolean enableUrlLocalCache) throws IOException {
         this.enableUrlLocalCache = enableUrlLocalCache;
 
-        debugState = DebugStates.NEW;
+        streamState = StreamStates.NEW;
         filePath = null;
         resourceId = 0;
         assetPath = null;
@@ -265,17 +265,15 @@ public class GVRAndroidResource {
      * Get the open stream.
      * 
      * Changes the debug state (visible <i>via</i> {@link #toString()}) to
-     * {@linkplain GVRAndroidResource.DebugStates#READING READING}.
+     * {@linkplain GVRAndroidResource.StreamStates#READING READING}.
      * 
      * @return An open {@link InputStream}.
      * @throws IOException 
      */
     public final InputStream getStream() {
-        if (debugState == DebugStates.NEW || debugState == DebugStates.CLOSED) {
+        if (streamState != StreamStates.OPEN) {
             openStream();
         }
-
-        debugState = DebugStates.READING;
 
         return stream;
     }
@@ -289,15 +287,16 @@ public class GVRAndroidResource {
     /**
      * Close the open stream.
      * 
-     * It's OK to call code that closes the stream for you - the only point of
-     * this API is to update the debug state (visible <i>via</i>
-     * {@link #toString()}) to
-     * {@linkplain GVRAndroidResource.DebugStates#CLOSED CLOSED}.
+     * Close the stream if it was opened before
+     * 
      */
     public final void closeStream() {
         try {
-            debugState = DebugStates.CLOSED;
-            stream.close();
+            if (streamState == StreamStates.OPEN) {
+                stream.close();
+                stream = null;
+            }
+            streamState = StreamStates.CLOSED;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -305,7 +304,8 @@ public class GVRAndroidResource {
     
     /**
      * 
-     * open the input stream for resource decoding
+     * Open the input stream for resource decoding
+     * 
      * 
      */
     public void openStream() {
@@ -313,17 +313,17 @@ public class GVRAndroidResource {
             switch (resourceType) {
             case ANDROID_ASSETS:
                 stream = context.getResources().getAssets().open(assetPath);
-                debugState = DebugStates.OPEN;
+                streamState = StreamStates.OPEN;
                 break;
 
             case ANDROID_RESOURCE:
                 stream = context.getResources().openRawResource(resourceId);
-                debugState = DebugStates.OPEN;
+                streamState = StreamStates.OPEN;
                 break;
 
             case LINUX_FILESYSTEM:
                 stream = new MarkingFileInputStream(filePath);
-                debugState = DebugStates.OPEN;
+                streamState = StreamStates.OPEN;
                 break;
 
             case NETWORK:
@@ -331,14 +331,14 @@ public class GVRAndroidResource {
                     Log.d(TAG,
                             "Do not allow local caching, use streaming to get the resource");
                     stream = new URLBufferedInputStream(url);
-                    debugState = DebugStates.OPEN;
+                    streamState = StreamStates.OPEN;
                 } else {
                     Log.d(TAG,
                             "Allow local caching, download the resource to local cache");
                     File file = GVRImporter.downloadFile(context,
                             url.toString());
                     stream = new MarkingFileInputStream(file);
-                    debugState = DebugStates.OPEN;
+                    streamState = StreamStates.OPEN;
                 }
                 break;
             default:
@@ -362,11 +362,14 @@ public class GVRAndroidResource {
      * @since 1.6.7
      */
     public void mark() throws IOException {
-        if (stream.markSupported()) {
-            stream.mark(Integer.MAX_VALUE);
-        } else {
-            //In case a inputStream (e.g., fileInputStream) doesn't support mark, throw a exception
-            throw new IOException("Input stream doesn't support mark");
+        if (streamState == StreamStates.OPEN) {
+            if (stream.markSupported()) {
+                stream.mark(Integer.MAX_VALUE);
+            } else {
+                // In case a inputStream (e.g., fileInputStream) doesn't support
+                // mark, throw a exception
+                throw new IOException("Input stream doesn't support mark");
+            }
         }
     }
 
@@ -387,11 +390,14 @@ public class GVRAndroidResource {
      * @since 1.6.7
      */
     public void reset() throws IOException {
-        if (stream.markSupported()) {
-            stream.reset();
-        } else {
-            //In case a inputStream (e.g., fileInputStream) doesn't support mark, throw a exception
-            throw new IOException("Input stream doesn't support mark");
+        if (streamState == StreamStates.OPEN) {
+            if (stream.markSupported()) {
+                stream.reset();
+            } else {
+                // In case a inputStream (e.g., fileInputStream) doesn't support
+                // mark, throw a exception
+                throw new IOException("Input stream doesn't support mark");
+            }
         }
     }
 
@@ -485,7 +491,7 @@ public class GVRAndroidResource {
     @Override
     public String toString() {
         return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s, url=%s}",
-                debugState, filePath, resourceId, assetPath, url);
+                streamState, filePath, resourceId, assetPath, url);
     }
 
     /*
