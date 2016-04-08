@@ -78,24 +78,17 @@ class AsyncBitmapTexture {
                 resource, priority);
     }
 
+    private static final Class<GVRBitmapTexture> TEXTURE_CLASS = GVRBitmapTexture.class;
     /*
      * Singleton
      */
-    private static AsyncBitmapTexture sInstance;
+    private static AsyncBitmapTexture sInstance = new AsyncBitmapTexture();
 
     /**
      * Gets the {@link AsyncBitmapTexture} singleton for loading bitmap textures.
      * @return The {@link AsyncBitmapTexture} singleton.
      */
     public static AsyncBitmapTexture get() {
-        if (sInstance != null) {
-            return sInstance;
-        }
-
-        synchronized (AsyncBitmapTexture.class) {
-            sInstance = new AsyncBitmapTexture();
-        }
-
         return sInstance;
     }
 
@@ -119,7 +112,7 @@ class AsyncBitmapTexture {
 
     private static final String TAG = Log.tag(AsyncBitmapTexture.class);
 
-    private static final Class<GVRBitmapTexture> TEXTURE_CLASS = GVRBitmapTexture.class;
+    
 
     /** Ridiculous amounts of detail about decodeFile() */
     protected static final boolean VERBOSE_DECODE = false;

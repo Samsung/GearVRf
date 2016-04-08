@@ -48,22 +48,17 @@ class AsyncMesh {
     /*
      * Singleton
      */
+    
 
-    private static AsyncMesh sInstance;
+    private static final Class<GVRMesh> MESH_CLASS = GVRMesh.class;
+
+    private static AsyncMesh sInstance = new AsyncMesh();
 
     /**
      * Gets the {@link AsyncMesh} singleton for loading bitmap textures.
      * @return The {@link AsyncMesh} singleton.
      */
     public static AsyncMesh get() {
-        if (sInstance != null) {
-            return sInstance;
-        }
-
-        synchronized (AsyncBitmapTexture.class) {
-            sInstance = new AsyncMesh();
-        }
-
         return sInstance;
     }
 
@@ -104,6 +99,4 @@ class AsyncMesh {
             return gvrContext.loadMesh(resource);
         }
     }
-
-    private static final Class<GVRMesh> MESH_CLASS = GVRMesh.class;
 }

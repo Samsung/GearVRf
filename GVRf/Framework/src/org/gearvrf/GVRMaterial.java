@@ -588,15 +588,16 @@ public class GVRMaterial extends GVRHybridObject implements
                 e.printStackTrace();
             }
         } else {
-            setTexture(key, (GVRTexture) null);
-            TextureCallback callback = new TextureCallback() {
-                @Override
-                public void loaded(GVRTexture texture,
-                        GVRAndroidResource ignored) {
-                   setTexture(key, texture);
-                    Log.d(TAG, "Finish loading and setting texture %s",
-                            texture);
-                }
+            if (texture instanceof FutureResource<?>) {
+				setTexture(key, (GVRTexture) null);
+                TextureCallback callback = new TextureCallback() {
+                    @Override
+                    public void loaded(GVRTexture texture,
+                            GVRAndroidResource ignored) {
+                        setTexture(key, texture);
+                        Log.d(TAG, "Finish loading and setting texture %s",
+                                texture);
+                    }
 
                 @Override
                 public void failed(Throwable t,
@@ -611,8 +612,20 @@ public class GVRMaterial extends GVRHybridObject implements
                 }
             };
 
-            getGVRContext().loadTexture(callback,
-                    ((FutureResource<GVRTexture>) texture).getResource());
+                getGVRContext().loadTexture(callback,
+                        ((FutureResource<GVRTexture>) texture).getResource());
+            } else {
+                Threads.spawn(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            setTexture(key, texture.get());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -743,6 +756,4 @@ class NativeMaterial {
             float z4, float w4);
 
     static native void setShaderFeatureSet(long material, int featureSet);
-    
-    static native boolean hasUniform(long material, String key);
 }

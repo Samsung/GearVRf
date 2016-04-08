@@ -31,6 +31,7 @@ import static android.opengl.GLES30.*;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
 
 /**
  * Encapsulates the data associated with rendering a mesh.
@@ -192,28 +193,44 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
                 e.printStackTrace();
             }
         } else {
-            MeshCallback callback = new MeshCallback() {
-                @Override
-                public void loaded(GVRMesh mesh, GVRAndroidResource ignored) {
-                    setMesh(mesh);
-                    Log.d(TAG, "Finish loading and setting mesh %s", mesh);
-                }
+            if (mesh instanceof FutureResource<?>) {
 
-                @Override
-                public void failed(Throwable t,
-                        GVRAndroidResource androidResource) {
-                    Log.e(TAG, "Error loading mesh %s; exception: %s", mesh,
-                            t.getMessage());
-                }
+                MeshCallback callback = new MeshCallback() {
+                    @Override
+                    public void loaded(GVRMesh mesh,
+                            GVRAndroidResource ignored) {
+                        setMesh(mesh);
+                        Log.d(TAG, "Finish loading and setting mesh %s", mesh);
+                    }
 
-                @Override
-                public boolean stillWanted(GVRAndroidResource androidResource) {
-                    return true;
-                }
-            };
+                    @Override
+                    public void failed(Throwable t,
+                            GVRAndroidResource androidResource) {
+                        Log.e(TAG, "Error loading mesh %s; exception: %s", mesh,
+                                t.getMessage());
+                    }
 
-            getGVRContext().loadMesh(callback,
-                    ((FutureResource<GVRMesh>) mesh).getResource());
+                    @Override
+                    public boolean stillWanted(
+                            GVRAndroidResource androidResource) {
+                        return true;
+                    }
+                };
+
+                getGVRContext().loadMesh(callback,
+                        ((FutureResource<GVRMesh>) mesh).getResource());
+            } else {
+                Threads.spawn(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            setMesh(mesh.get());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
         }
     }
 
