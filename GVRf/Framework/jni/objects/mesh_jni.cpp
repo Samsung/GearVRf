@@ -26,80 +26,83 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getVertices(JNIEnv * env,
-        jobject obj, jlong jmesh);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getVertices(JNIEnv * env,
+            jobject obj, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setVertices(JNIEnv * env,
-        jobject obj, jlong jmesh, jfloatArray vertices);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getNormals(JNIEnv * env,
-        jobject obj, jlong jmesh);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setVertices(JNIEnv * env,
+            jobject obj, jlong jmesh, jfloatArray vertices);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getNormals(JNIEnv * env,
+            jobject obj, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setNormals(JNIEnv * env,
-        jobject obj, jlong jmesh, jfloatArray normals);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getTexCoords(JNIEnv * env,
-        jobject obj, jlong jmesh);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setNormals(JNIEnv * env,
+            jobject obj, jlong jmesh, jfloatArray normals);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getTexCoords(JNIEnv * env,
+            jobject obj, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setTexCoords(JNIEnv * env,
-        jobject obj, jlong jmesh, jfloatArray tex_coords);
-JNIEXPORT jcharArray JNICALL
-Java_org_gearvrf_NativeMesh_getTriangles(JNIEnv * env,
-        jobject obj, jlong jmesh);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setTexCoords(JNIEnv * env,
+            jobject obj, jlong jmesh, jfloatArray tex_coords);
+    JNIEXPORT jcharArray JNICALL
+    Java_org_gearvrf_NativeMesh_getTriangles(JNIEnv * env,
+            jobject obj, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setTriangles(JNIEnv * env,
-        jobject obj, jlong jmesh, jcharArray triangles);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getFloatVector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setTriangles(JNIEnv * env,
+            jobject obj, jlong jmesh, jcharArray triangles);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getFloatVector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key);
 
-JNIEXPORT jcharArray JNICALL
-Java_org_gearvrf_NativeMesh_getIndices(JNIEnv * env,
-        jobject obj, jlong jmesh);
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setIndices(JNIEnv * env,
-        jobject obj, jlong jmesh, jcharArray indices);
+    JNIEXPORT jcharArray JNICALL
+    Java_org_gearvrf_NativeMesh_getIndices(JNIEnv * env,
+            jobject obj, jlong jmesh);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setIndices(JNIEnv * env,
+            jobject obj, jlong jmesh, jcharArray indices);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setFloatVector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key, jfloatArray float_vector);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getVec2Vector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setFloatVector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key, jfloatArray float_vector);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getVec2Vector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setVec2Vector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key, jfloatArray vec2_vector);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getVec3Vector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setVec2Vector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key, jfloatArray vec2_vector);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getVec3Vector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setVec3Vector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key, jfloatArray vec3_vector);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMesh_getVec4Vector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setVec3Vector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key, jfloatArray vec3_vector);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getVec4Vector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setVec4Vector(JNIEnv * env,
-        jobject obj, jlong jmesh, jstring key, jfloatArray vec4_vector);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMesh_getBoundingBox(JNIEnv * env,
-        jobject obj, jlong jmesh);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setVec4Vector(JNIEnv * env,
+            jobject obj, jlong jmesh, jstring key, jfloatArray vec4_vector);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMesh_getBoundingBox(JNIEnv * env,
+            jobject obj, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env,
-        jobject obj, jlong jmesh, jlongArray jBonePtrArray);
-}
-;
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env,
+            jobject obj, jlong jmesh, jlongArray jBonePtrArray);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
+            jobject obj, jlong jmesh, jfloatArray jsphere);
+};
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj) {
@@ -404,4 +407,17 @@ Java_org_gearvrf_NativeMesh_setBones(JNIEnv * env, jobject obj, jlong jmesh,
 	env->ReleaseLongArrayElements(jBonePtrArray, bonesPtr, JNI_ABORT);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
+        jobject obj, jlong jmesh, jfloatArray jsphere) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    const BoundingVolume& bvol = mesh->getBoundingVolume();
+    float   sphere[4];
+
+    sphere[0] = bvol.center().x;
+    sphere[1] = bvol.center().y;
+    sphere[2] = bvol.center().z;
+    sphere[3] = bvol.radius();
+    env->SetFloatArrayRegion(jsphere, 0, 4, sphere);
+}
 }

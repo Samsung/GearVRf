@@ -34,11 +34,11 @@ public:
     GLProgram(const char* pVertexSourceStrings,
             const char* pFragmentSourceStrings) {
         deleter_ = getDeleterForThisThread();
-
         GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
                 pVertexSourceStrings) };
         GLint fragment_shader_string_lengths[1] = { (GLint) strlen(
                 pFragmentSourceStrings) };
+
         id_ = createProgram(1, &pVertexSourceStrings,
                 vertex_shader_string_lengths, &pFragmentSourceStrings,
                 fragment_shader_string_lengths);

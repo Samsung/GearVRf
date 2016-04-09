@@ -264,7 +264,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager, modeShadow));
+                    camera->render_mask(), shader_manager,
+                    scene->getLightList(), modeShadow));
         }
     } else {
         RenderTexture* texture_render_texture = post_effect_render_texture_a;
@@ -282,7 +283,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager, modeShadow));
+                    camera->render_mask(), shader_manager,
+                    scene->getLightList(), modeShadow));
         }
 
         GL(glDisable(GL_DEPTH_TEST));
@@ -640,7 +642,8 @@ void Renderer::calculateShadow(ShaderManager* shader_manager,
 
 void Renderer::renderRenderData(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager, int modeShadow) {
+        int render_mask, ShaderManager* shader_manager,
+        const std::vector<Light*>& lightList, int modeShadow) {
 
     if (!render_mask || !render_data->render_mask())
         return;
@@ -663,7 +666,8 @@ void Renderer::renderRenderData(RenderData* render_data,
 
     if (render_data->mesh() != 0) {
         GL(renderMesh(render_data, view_matrix, projection_matrix,
-                    render_mask, shader_manager, modeShadow));
+                    render_mask, shader_manager,
+                    lightList, modeShadow));
     }
 
     // Restoring to Default.
@@ -690,7 +694,8 @@ void Renderer::renderRenderData(RenderData* render_data,
 
 void Renderer::renderMesh(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager, int modeShadow) {
+        int render_mask, ShaderManager* shader_manager,
+        const std::vector<Light*> lightList, int modeShadow) {
 
     for (int curr_pass = 0; curr_pass < render_data->pass_count();
             ++curr_pass) {
@@ -703,14 +708,16 @@ void Renderer::renderMesh(RenderData* render_data,
 
         if (curr_material != nullptr) {
             GL(renderMaterialShader(render_data, view_matrix, projection_matrix,
-                        render_mask, shader_manager, modeShadow, curr_material));
+                        render_mask, shader_manager,
+                        lightList, modeShadow, curr_material));
         }
     }
 }
 
 void Renderer::renderMaterialShader(RenderData* render_data,
         const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager, int modeShadow,
+        int render_mask, ShaderManager* shader_manager,
+        const std::vector<Light*> lightList, int modeShadow,
         Material *curr_material) {
 
     //Skip the material whose texture is not ready with some exceptions
@@ -721,27 +728,29 @@ void Renderer::renderMaterialShader(RenderData* render_data,
 
     if (t == nullptr)
         return;
-
-    glm::mat4 model_matrix(t->getModelMatrix());
-    glm::mat4 mv_matrix(view_matrix * model_matrix);
-    glm::mat4 mvp_matrix(projection_matrix * mv_matrix);
-    try {
+    ShaderUniformsPerObject uniforms;
+    uniforms.u_model = t->getModelMatrix();
+    uniforms.u_view = view_matrix;
+    uniforms.u_mv = view_matrix * uniforms.u_model;
+    uniforms.u_mvp = projection_matrix * uniforms.u_mv;
+    uniforms.u_mv_it = glm::inverseTranspose(uniforms.u_mv);
+     try {
         bool right = render_mask
             & RenderData::RenderMaskBit::Right;
 
         glm::mat4 vp_matrixLightModel;
         glm::vec3 lightPosition;
 
-        calculateShadow(shader_manager, curr_material, model_matrix,
+        calculateShadow(shader_manager, curr_material, uniforms.u_model,
                 modeShadow, lightPosition, vp_matrixLightModel);
 
         if (modeShadow == ShadowShader::RENDER_WITH_SHADOW
                 && isDefaultPosition3d(curr_material)) {
             // render the shadow
             shader_manager->getShadowShader()->render(
-                    mvp_matrix, vp_matrixLightModel, mv_matrix,
-                    glm::inverseTranspose(mv_matrix),
-                    view_matrix, model_matrix, lightPosition,
+                    uniforms.u_mvp, vp_matrixLightModel, uniforms.u_mv,
+                    uniforms.u_mv_it,
+                    uniforms.u_view, uniforms.u_model, lightPosition,
                     render_data, curr_material, modeShadow);
             return;
         }
@@ -751,7 +760,7 @@ void Renderer::renderMaterialShader(RenderData* render_data,
 
         if (modeShadow == ShadowShader::RENDER_FROM_LIGHT) { // ShadowMap
             // generates the ShadowMap from light
-            mvp_matrix = vp_matrixLightModel;
+            uniforms.u_mvp = vp_matrixLightModel;
 
             // if (!render_data->mesh()->hasShadow()) // TODO
             //  continue;
@@ -761,67 +770,66 @@ void Renderer::renderMaterialShader(RenderData* render_data,
         switch (curr_material->shader_type()) {
             case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
                 shader_manager->getUnlitHorizontalStereoShader()->render(
-                        mvp_matrix, render_data, curr_material,
-                        right);
+                        uniforms.u_mvp, render_data, curr_material,
+                        uniforms.u_right);
                 break;
             case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
                 shader_manager->getUnlitVerticalStereoShader()->render(
-                        mvp_matrix, render_data, curr_material,
-                        right);
+                        uniforms.u_mvp, render_data, curr_material,
+                        uniforms.u_right);
                 break;
             case Material::ShaderType::OES_SHADER:
                 shader_manager->getOESShader()->render(
-                        mvp_matrix, render_data, curr_material);
+                        uniforms.u_mvp, render_data, curr_material);
                 break;
             case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
                 shader_manager->getOESHorizontalStereoShader()->render(
-                        mvp_matrix, render_data, curr_material,
-                        right);
+                        uniforms.u_mvp, render_data, curr_material,
+                        uniforms.u_right);
                 break;
             case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
                 shader_manager->getOESVerticalStereoShader()->render(
-                        mvp_matrix, render_data, curr_material,
-                        right);
+                        uniforms.u_mvp, render_data, curr_material,
+                        uniforms.u_right);
                 break;
             case Material::ShaderType::CUBEMAP_SHADER:
                 shader_manager->getCubemapShader()->render(
-                        model_matrix, mvp_matrix, render_data,
+                        uniforms.u_model, uniforms.u_mvp, render_data,
                         curr_material);
                 break;
             case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
+                uniforms.u_view_inv = glm::inverse(view_matrix);
                 shader_manager->getCubemapReflectionShader()->render(
-                        mv_matrix,
-                        glm::inverseTranspose(mv_matrix),
-                        glm::inverse(view_matrix), mvp_matrix,
+                        uniforms.u_mv,
+                        uniforms.u_mv_it,
+                        uniforms.u_view_inv, uniforms.u_mvp,
                         render_data, curr_material);
                 break;
             case Material::ShaderType::TEXTURE_SHADER:
                 shader_manager->getTextureShader()->render(
-                        mv_matrix,
-                        glm::inverseTranspose(mv_matrix),
-                        mvp_matrix, render_data, curr_material);
+                        uniforms.u_mv,
+                        uniforms.u_mv_it,
+                        uniforms.u_mvp, render_data, curr_material);
                 break;
             case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
                 shader_manager->getExternalRendererShader()->render(
-                        mv_matrix,
-                        glm::inverseTranspose(mv_matrix),
-                        mvp_matrix, render_data);
+                        uniforms.u_mv,
+                        uniforms.u_mv_it,
+                        uniforms.u_mvp, render_data);
                 break;
             case Material::ShaderType::ASSIMP_SHADER:
                 shader_manager->getAssimpShader()->render(
-                        mv_matrix,
-                        glm::inverseTranspose(mv_matrix),
-                        mvp_matrix, render_data, curr_material);
+                        uniforms.u_mv,
+                        uniforms.u_mv_it,
+                        uniforms.u_mvp, render_data, curr_material);
                 break;
             case Material::ShaderType::LIGHTMAP_SHADER:
-                shader_manager->getLightMapShader()->render(mvp_matrix,
+                shader_manager->getLightMapShader()->render(uniforms.u_mvp,
                         render_data, curr_material);
                 break;
             default:
                 shader_manager->getCustomShader(
-                        curr_material->shader_type())->render(
-                        mvp_matrix, render_data, curr_material,
-                        right);
+                        curr_material->shader_type())->render(uniforms, render_data, lightList, curr_material);
                 break;
         }
     } catch (const std::string &error) {
@@ -829,7 +837,7 @@ void Renderer::renderMaterialShader(RenderData* render_data,
                 "Error detected in Renderer::renderRenderData; name : %s, error : %s",
                 render_data->owner_object()->name().c_str(),
                 error.c_str());
-        shader_manager->getErrorShader()->render(mvp_matrix,
+        shader_manager->getErrorShader()->render(uniforms.u_mvp,
                 render_data);
     }
 }

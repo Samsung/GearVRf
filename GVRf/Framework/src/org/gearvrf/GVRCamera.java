@@ -52,6 +52,10 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         super(gvrContext, ptr);
     }
 
+    protected GVRCamera(GVRContext gvrContext, long ptr, GVRSceneObject owner) {
+        super(gvrContext, ptr, owner);
+    }
+    
     /** Get the background color as an Android {@link Color} */
     public int getBackgroundColor() {
         return Color.argb(Colors.glToByte(getBackgroundColorA()), //

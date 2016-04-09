@@ -209,7 +209,7 @@ void TextureShader::render(const glm::mat4& mv_matrix,
     GL(glBindTexture(texture->getTarget(), texture->getId()));
 
     if (use_light) {
-        glm::vec3 light_position = light->getVec3("position");
+        glm::vec3 light_position = light->getVec3("world_position");
         glm::vec4 light_ambient_intensity = light->getVec4("ambient_intensity");
         glm::vec4 light_diffuse_intensity = light->getVec4("diffuse_intensity");
         glm::vec4 light_specular_intensity = light->getVec4(

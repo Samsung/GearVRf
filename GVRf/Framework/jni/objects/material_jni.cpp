@@ -23,59 +23,61 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMaterial_ctor(JNIEnv * env, jobject obj,
-        jint shader_type);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMaterial_ctor(JNIEnv * env, jobject obj,
+            jint shader_type);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setShaderType(JNIEnv * env,
-        jobject obj, jlong jmaterial, jint shader_type);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setShaderType(JNIEnv * env,
+            jobject obj, jlong jmaterial, jint shader_type);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key, jlong texture);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeMaterial_getFloat(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setTexture(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key, jlong texture);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeMaterial_getFloat(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setFloat(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key, jfloat value);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMaterial_getVec2(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setFloat(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key, jfloat value);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMaterial_getVec2(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setVec2(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMaterial_getVec3(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setVec2(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMaterial_getVec3(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setVec3(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y,
-        jfloat z);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setVec3(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y,
+            jfloat z);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setVec4(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y, jfloat z,
-        jfloat w);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeMaterial_getVec4(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setVec4(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key, jfloat x, jfloat y, jfloat z,
+            jfloat w);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMaterial_getVec4(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMaterial_setMat4(JNIEnv * env,
-        jobject obj, jlong jmaterial, jstring key, jfloat x1, jfloat y1,
-        jfloat z1, jfloat w1, jfloat x2, jfloat y2, jfloat z2, jfloat w2,
-        jfloat x3, jfloat y3, jfloat z3, jfloat w3, jfloat x4, jfloat y4,
-        jfloat z4, jfloat w4);
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMaterial_setShaderFeatureSet(JNIEnv * env, jobject obj,
-        jlong jmaterial, jint feature_set);
-}
-;
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMaterial_setMat4(JNIEnv * env,
+            jobject obj, jlong jmaterial, jstring key, jfloat x1, jfloat y1,
+            jfloat z1, jfloat w1, jfloat x2, jfloat y2, jfloat z2, jfloat w2,
+            jfloat x3, jfloat y3, jfloat z3, jfloat w3, jfloat x4, jfloat y4,
+            jfloat z4, jfloat w4);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMaterial_setShaderFeatureSet(JNIEnv * env, jobject obj,
+            jlong jmaterial, jint feature_set);
+
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeMaterial_hasUniform(JNIEnv *, jobject, jlong, jstring);
+};
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMaterial_ctor(JNIEnv * env, jobject obj,
@@ -184,6 +186,17 @@ env->SetFloatArrayRegion(jvec4, 0, 4,
         reinterpret_cast<jfloat*>(&material_vec4));
 env->ReleaseStringUTFChars(key, char_key);
 return jvec4;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeMaterial_hasUniform(JNIEnv * env,
+        jobject obj, jlong jmaterial, jstring key) {
+Material* material = reinterpret_cast<Material*>(jmaterial);
+const char* char_key = env->GetStringUTFChars(key, 0);
+std::string native_key = std::string(char_key);
+jboolean result = (material->hasUniform(native_key) == true);
+env->ReleaseStringUTFChars(key, char_key);
+return result;
 }
 
 JNIEXPORT void JNICALL

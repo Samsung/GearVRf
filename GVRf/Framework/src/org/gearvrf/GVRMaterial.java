@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
@@ -29,7 +30,7 @@ import static org.gearvrf.utility.Assert.*;
 import android.graphics.Color;
 
 /**
- * This is one of the key GVRF classes: it holds shaders with textures.
+ * Encapsulates the data needed for shading, including textures and shader uniforms.
  * 
  * You can have invisible {@linkplain GVRSceneObject scene objects:} these have
  * a location and a set of child objects. This can be useful, to move a set of
@@ -127,24 +128,7 @@ public class GVRMaterial extends GVRHybridObject implements
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     9);
 
-            /**
-             * Set this feature enum if diffuse texture is present in Assimp
-             * material Diffuse texture maps to main_texture in GearVRf
-             */
-            public static int AS_DIFFUSE_TEXTURE = 0;
-
-            /**
-             * Set this feature enum if specular texture is present in Assimp
-             * material
-             */
-            public static int AS_SPECULAR_TEXTURE = 1;
-
-            /**
-             * Set this feature enum if skinning info is present in Assimp
-             * material
-             */
-            public static int AS_SKINNING = 2;
-
+                        
             public static int setBit(int number, int index) {
                 return (number |= 1 << index);
             }
@@ -176,14 +160,13 @@ public class GVRMaterial extends GVRHybridObject implements
     public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
         super(gvrContext, NativeMaterial.ctor(shaderId.ID));
         this.shaderId = shaderId;
-        // if texture shader is used, set lighting coefficients to OpenGL default
-        // values
-        if (shaderId == GVRShaderType.Texture.ID) {
-            setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
-            setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
-            setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
-            setSpecularExponent(0.0f);
-        }
+        // set lighting coefficients to OpenGL default values
+        // TODO: Get rid of this - it does not belong here!
+        setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
+        setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
+        setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
+        setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
+        setSpecularExponent(0.0f);
         this.mShaderFeatureSet = 0;
     }
 
@@ -583,11 +566,12 @@ public class GVRMaterial extends GVRHybridObject implements
         return textures.get(key);
     }
 
+
     public void setTexture(String key, GVRTexture texture) {
         checkStringNotNullOrEmpty("key", key);
-        checkNotNull("texture", texture);
         textures.put(key, texture);
-        NativeMaterial.setTexture(getNative(), key, texture.getNative());
+        if (texture != null)
+            NativeMaterial.setTexture(getNative(), key, texture.getNative());
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
@@ -598,6 +582,7 @@ public class GVRMaterial extends GVRHybridObject implements
                 e.printStackTrace();
             }
         } else {
+            setTexture(key, (GVRTexture) null);
             TextureCallback callback = new TextureCallback() {
                 @Override
                 public void loaded(GVRTexture texture,
@@ -677,6 +662,24 @@ public class GVRMaterial extends GVRHybridObject implements
     }
     
     /**
+     * Determine whether a named uniform is defined
+     * by this material.
+     * @param name of uniform in shader and material
+     * @return true if uniform defined, else false
+     */
+    public boolean hasUniform(String name) {
+    	return NativeMaterial.hasUniform(getNative(), name);
+    }
+
+    /**
+     * Return the list of texture keys for this material.
+     * @return set of unique texture names.
+     */
+    public Set<String> getTextureNames() {
+        return textures.keySet();
+    }
+    
+    /**
      * Set the feature set for pre-built shader's. Pre-built shader could be
      * written to support all the properties of a material system with
      * preprocessor macro to On/Off features. feature set would determine which
@@ -734,4 +737,6 @@ class NativeMaterial {
             float z4, float w4);
 
     static native void setShaderFeatureSet(long material, int featureSet);
+    
+    static native boolean hasUniform(long material, String key);
 }
