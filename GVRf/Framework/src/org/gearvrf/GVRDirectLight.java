@@ -38,18 +38,18 @@ import org.gearvrf.utility.TextFile;
  *   diffuse_intensity     intensity of diffuse light emitted
  *   specular_intensity    intensity of specular light emitted
  * }
- * @see GVRPhongPointLight
- * @see GVRPhongSpotLight
- * @see GVRLightTemplate
+ * @see GVRPointLight
+ * @see GVRSpotLight
+ * @see GVRLightBase
  */
-public class GVRPhongLight extends GVRLightTemplate {
+public class GVRDirectLight extends GVRLightBase {
     protected static String mPhongLightShaderSource = null;
     
-    public GVRPhongLight(GVRContext gvrContext) {
+    public GVRDirectLight(GVRContext gvrContext) {
         this(gvrContext, null);
      }
 
-    public GVRPhongLight(GVRContext gvrContext, GVRSceneObject parent) {
+    public GVRDirectLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
         uniformDescriptor += " float4 diffuse_intensity"
                 + " float4 ambient_intensity"

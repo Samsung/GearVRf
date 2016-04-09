@@ -49,13 +49,13 @@ import org.gearvrf.utility.TextFile;
  *   outer_cone_angle      cosine of outer cone angle
  * }
  * 
- * @see GVRPhongPointLight
- * @see GVRLightTemplate
+ * @see GVRPointLight
+ * @see GVRLightBase
  */
-public class GVRPhongSpotLight extends GVRPhongPointLight
+public class GVRSpotLight extends GVRPointLight
 {
     protected static String mSpotLightShaderSource = null;
-    public GVRPhongSpotLight(GVRContext gvrContext, GVRSceneObject owner) {
+    public GVRSpotLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
         uniformDescriptor += " float inner_cone_angle; float outer_cone_angle; ";
         if (mSpotLightShaderSource == null) {
@@ -66,7 +66,7 @@ public class GVRPhongSpotLight extends GVRPhongPointLight
         setFloat("outer_cone_angle", 90.0f);
     }
     
-    public GVRPhongSpotLight(GVRContext gvrContext) {
+    public GVRSpotLight(GVRContext gvrContext) {
         this(gvrContext, null);
     }
 

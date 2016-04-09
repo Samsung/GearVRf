@@ -58,7 +58,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     private GVRCamera mCamera;
     private GVRCameraRig mCameraRig;
     private GVREyePointeeHolder mEyePointeeHolder;
-    private GVRLightTemplate mLight;
+    private GVRLightBase mLight;
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
@@ -474,12 +474,12 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Get the attached {@link GVRLightTemplate}. Any subclass of GVRLightTemplate may
+     * Get the attached {@link GVRLightBase}. Any subclass of GVRLightBase may
      * be attached to a scene object. The light's position and direction will be calculated
      * from the transform attached to the scene object.
      * @return The light attached to the object. If no light is currently attached, returns null.
      */
-    public GVRLightTemplate getLight() {
+    public GVRLightBase getLight() {
         return mLight;
     }
     
@@ -492,13 +492,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * 
      * @param light New light to attach.
      */
-    public void attachLight(GVRLightTemplate light) {
+    public void attachLight(GVRLightBase light) {
         mLight = light;
         light.setOwnerObject(this);
     }
     
     /**
-     * Detach the object's current {@link GVRLightTemplate}.
+     * Detach the object's current {@link GVRLightBase}.
      */
     public void detachLight() {
         if (mLight != null) {
@@ -510,7 +510,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Get a component of a specific class from this scene object.
      * @param compClass class derived from GVRComponent
-     *                  (like GVRTransform, GVRRenderData, GVRLightTemplate, ...)
+     *                  (like GVRTransform, GVRRenderData, GVRLightBase, ...)
      * @return component of specified class or null if none.
      */
     @SuppressWarnings("unchecked")
@@ -521,7 +521,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (GVRRenderData.class.isAssignableFrom(compClass)) {
             return (T) mRenderData;
         }
-        if (GVRLightTemplate.class.isAssignableFrom(compClass)) {
+        if (GVRLightBase.class.isAssignableFrom(compClass)) {
             return (T) mLight;
         }
         if (GVRCamera.class.isAssignableFrom(compClass)) {
@@ -539,7 +539,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Get all components of a specific class from this scene object and its descendants.
      * @param compClass class derived from GVRComponent
-     *                  (like GVRTransform, GVRRenderData, GVRLightTemplate, ...)
+     *                  (like GVRTransform, GVRRenderData, GVRLightBase, ...)
      * @return ArrayList of components with the specified class.
      */
     public <T extends GVRComponent> ArrayList<T> getAllComponents(Class<? extends GVRComponent> compClass) {

@@ -182,7 +182,7 @@ final class GVRImporter {
         Log.d(TAG, "start creating jassimp model %s", filePath);
 
         List<AiLight> lights= assimpScene.getLights();
-        Hashtable<String, GVRPhongLight> lightlist= new Hashtable<String, GVRPhongLight>();
+        Hashtable<String, GVRDirectLight> lightlist= new Hashtable<String, GVRDirectLight>();
         importLights(lights, lightlist, context);
 
         GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
@@ -191,25 +191,25 @@ final class GVRImporter {
                         cacheEnabled), lightlist);
         return sceneOb;
     }
-    static void importLights(List<AiLight> lights,Hashtable<String, GVRPhongLight> lightlist,final GVRContext context){
+    static void importLights(List<AiLight> lights,Hashtable<String, GVRDirectLight> lightlist,final GVRContext context){
         for(AiLight light: lights){            
             AiLightType type = light.getType();
                 if(type == AiLightType.DIRECTIONAL){               
-                GVRPhongLight gvrLight = new GVRPhongLight(context);  
+                GVRDirectLight gvrLight = new GVRDirectLight(context);  
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 String name = light.getName();          
                 lightlist.put(name, gvrLight);               
             }
             if(type == AiLightType.POINT){
-                GVRPhongPointLight gvrLight = new GVRPhongPointLight(context);
+                GVRPointLight gvrLight = new GVRPointLight(context);
                 setPhongLightProp(gvrLight,light);   
                 setLightProp(gvrLight, light);
                 String name = light.getName();              
                 lightlist.put(name, gvrLight);
             }
             if(type == AiLightType.SPOT){
-                GVRPhongSpotLight gvrLight = new GVRPhongSpotLight(context);
+                GVRSpotLight gvrLight = new GVRSpotLight(context);
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
@@ -220,13 +220,13 @@ final class GVRImporter {
         }
          
     }
-    static void setLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+    static void setLightProp(GVRDirectLight gvrLight, AiLight assimpLight){
         gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
         gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
         gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
     }
-    static void setPhongLightProp(GVRPhongLight gvrLight, AiLight assimpLight){
+    static void setPhongLightProp(GVRDirectLight gvrLight, AiLight assimpLight){
         org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);       

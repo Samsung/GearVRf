@@ -32,21 +32,21 @@ import android.util.Log;
  * Base class for defining light sources.
  *
  * Lights are implemented by the fragment shader. Each different light
- * implementation corresponds to a subclass of GVRLightTemplate which is
+ * implementation corresponds to a subclass of GVRLightBase which is
  * responsible for supplying the shader source code for the light. GearVRF
  * aggregates all of the light source implementations into a single fragment
  * shader.
  *
- * Each subclass of GVRLightTemplate is a different light implementation and has
+ * Each subclass of GVRLightBase is a different light implementation and has
  * different shader source. The uniform descriptor is a string which gives the
  * name and type of all uniforms expected in the shader source. It is supplied
  * when a light is created to describe the expected shader input.
  * 
  * {@link GVRShaderTemplate GVRRenderData.bindShader }
  */
-public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListener
+public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 {
-    public GVRLightTemplate(GVRContext gvrContext, GVRSceneObject parent)
+    public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
         super(gvrContext, NativeLight.ctor(), parent);
         if (parent != null)
@@ -59,7 +59,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
-    public GVRLightTemplate(GVRContext gvrContext)
+    public GVRLightBase(GVRContext gvrContext)
     {
         super(gvrContext, NativeLight.ctor());
         uniformDescriptor = "float enabled float3 world_position float3 world_direction";
@@ -285,7 +285,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
      * Define the shader source to compute the illumination from this light.
      * 
      * This source must be defined at the time the light is constructed.
-     * Typically, different subclasses of GVRLightTemplate will have different
+     * Typically, different subclasses of GVRLightBase will have different
      * illumination functions.
      * 
      * @param source

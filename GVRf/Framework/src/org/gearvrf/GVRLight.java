@@ -17,7 +17,7 @@ package org.gearvrf;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.TextFile;
 
-public class GVRLight extends GVRPhongPointLight 
+public class GVRLight extends GVRPointLight 
 {
     protected static String mPointLightShaderSource = null;
     public GVRLight (GVRContext gvrContext, GVRSceneObject owner) {

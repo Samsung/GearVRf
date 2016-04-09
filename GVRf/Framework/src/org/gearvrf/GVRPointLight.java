@@ -40,13 +40,13 @@ import org.gearvrf.utility.TextFile;
  *   attenuation_quadratic quadratic attenuation factor
  * }
  * @see GVRPhongDirectLight
- * @see GVRPhongSpotLight
- * @see GVRLightTemplate
+ * @see GVRSpotLight
+ * @see GVRLightBase
  */
-public class GVRPhongPointLight extends GVRPhongLight
+public class GVRPointLight extends GVRDirectLight
 {
     protected static String mPointLightShaderSource = null;
-    public GVRPhongPointLight(GVRContext gvrContext, GVRSceneObject owner) {
+    public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
         uniformDescriptor += " float attenuation_constant"
                 + " float attenuation_linear"
@@ -61,7 +61,7 @@ public class GVRPhongPointLight extends GVRPhongLight
         setFloat("attenuation_quadratic", 0);
     }
     
-    public GVRPhongPointLight(GVRContext gvrContext) {
+    public GVRPointLight(GVRContext gvrContext) {
         this(gvrContext, null);
     }
     

@@ -33,7 +33,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEven
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
-    private Set<GVRLightTemplate> mLightList = new HashSet<GVRLightTemplate>();
+    private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
 
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
@@ -360,8 +360,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEven
      */
     public void bindShaders() {
         for (GVRSceneObject child : mSceneObjects) {
-            ArrayList<GVRLightTemplate> lights = child.getAllComponents(GVRLightTemplate.class);
-            for (GVRLightTemplate light : lights) {
+            ArrayList<GVRLightBase> lights = child.getAllComponents(GVRLightBase.class);
+            for (GVRLightBase light : lights) {
                 addLight(light);
             }
         }
@@ -385,10 +385,10 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEven
         }
     }
     
-    protected void addLight(GVRLightTemplate light) {
+    protected void addLight(GVRLightBase light) {
         if (light != null) {
             int lightIndex = 0;
-            for (GVRLightTemplate l : mLightList) {
+            for (GVRLightBase l : mLightList) {
                 if (l == light) {
                     return;
                 }
@@ -403,8 +403,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, ISceneEven
         }
     }
     
-    public GVRLightTemplate[] getLightList() {
-        GVRLightTemplate[] list = new GVRLightTemplate[mLightList.size()];
+    public GVRLightBase[] getLightList() {
+        GVRLightBase[] list = new GVRLightBase[mLightList.size()];
         mLightList.toArray(list);
         return list;
     }

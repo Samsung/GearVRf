@@ -19,7 +19,7 @@ import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRPhongLight;
+import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
@@ -36,7 +36,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     protected AiScene scene;
     protected GVRResourceVolume volume;
 
-  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRPhongLight> lightlist) {
+  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRDirectLight> lightlist) {
         super(gvrContext);
         this.volume = volume;
 
@@ -54,7 +54,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     
     private void recurseAssimpNodes(
             GVRSceneObject parentSceneObject,
-             AiNode node,Hashtable<String, GVRPhongLight> lightlist) {
+             AiNode node,Hashtable<String, GVRDirectLight> lightlist) {
         try {
             GVRSceneObject sceneObject = null;
             if (node.getNumMeshes() == 0) {
@@ -95,9 +95,9 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         }
     }
     
-    void attachLights(Hashtable<String, GVRPhongLight> lightlist, GVRSceneObject sceneObject){
+    void attachLights(Hashtable<String, GVRDirectLight> lightlist, GVRSceneObject sceneObject){
         String name = sceneObject.getName();
-        GVRPhongLight light =  lightlist.get(name);
+        GVRDirectLight light =  lightlist.get(name);
         if (light != null) {
             Quaternionf q = new Quaternionf();
             q.rotationX((float) -Math.PI / 2.0f);
