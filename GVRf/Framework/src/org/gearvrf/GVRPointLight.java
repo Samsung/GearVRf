@@ -43,12 +43,15 @@ import org.gearvrf.utility.TextFile;
  * @see GVRSpotLight
  * @see GVRLightBase
  */
-public class GVRPointLight extends GVRDirectLight
+public class GVRPointLight extends GVRLightBase
 {
     protected static String mPointLightShaderSource = null;
     public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
-        uniformDescriptor += " float attenuation_constant"
+        uniformDescriptor += " float4 diffuse_intensity"
+                + " float4 ambient_intensity"
+                + " float4 specular_intensity"
+                + " float attenuation_constant"
                 + " float attenuation_linear"
                 + " float attenuation_quadratic";
 
@@ -64,7 +67,107 @@ public class GVRPointLight extends GVRDirectLight
     public GVRPointLight(GVRContext gvrContext) {
         this(gvrContext, null);
     }
-    
+
+    /**
+    * Get the ambient light intensity.
+    * 
+    * This designates the color of the ambient reflection.
+    * It is multiplied by the material ambient color to derive
+    * the hue of the ambient reflection for that material.
+    * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+    * {@code ambient_intensity} to control the intensity of ambient light reflected.
+    * 
+    * @return The current {@code vec4 ambient_intensity} as a four-element array
+    */
+   public float[] getAmbientIntensity() {
+       return getVec4("ambient_intensity");
+   }
+
+   /**
+    * Set the ambient light intensity.
+    * 
+    * This designates the color of the ambient reflection.
+    * It is multiplied by the material ambient color to derive
+    * the hue of the ambient reflection for that material.
+    * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+    * {@code ambient_intensity} to control the intensity of ambient light reflected.
+    * 
+    * @param r red component (0 to 1)
+    * @param g green component (0 to 1)
+    * @param b blue component (0 to 1)
+    * @param a alpha component (0 to 1)
+    */
+   public void setAmbientIntensity(float r, float g, float b, float a) {
+       setVec4("ambient_intensity", r, g, b, a);
+   }
+
+   /**
+    * Get the diffuse light intensity.
+    * 
+    * This designates the color of the diffuse reflection.
+    * It is multiplied by the material diffuse color to derive
+    * the hue of the diffuse reflection for that material.
+    * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+    * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
+    * 
+    * @return The current {@code vec4 diffuse_intensity} as a four-element
+    *         array
+    */
+   public float[] getDiffuseIntensity() {
+       return getVec4("diffuse_intensity");
+   }
+
+   /**
+    * Set the diffuse light intensity.
+    * 
+    * This designates the color of the diffuse reflection.
+    * It is multiplied by the material diffuse color to derive
+    * the hue of the diffuse reflection for that material.
+    * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+    * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
+    * 
+    * @param r red component (0 to 1)
+    * @param g green component (0 to 1)
+    * @param b blue component (0 to 1)
+    * @param a alpha component (0 to 1)
+    */
+   public void setDiffuseIntensity(float r, float g, float b, float a) {
+       setVec4("diffuse_intensity", r, g, b, a);
+   }
+
+   /**
+    * Get the specular intensity of the light.
+    *
+    * This designates the color of the specular reflection.
+    * It is multiplied by the material specular color to derive
+    * the hue of the specular reflection for that material.
+    * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+    * {@code specular_intensity} to control the specular intensity.
+    *
+    * @return The current {@code vec4 specular_intensity} as a four-element array
+    */
+   public float[] getSpecularIntensity() {
+       return getVec4("specular_intensity");
+   }
+
+   /**
+    * Set the specular intensity of the light.
+    * 
+    * This designates the color of the specular reflection.
+    * It is multiplied by the material specular color to derive
+    * the hue of the specular reflection for that material.
+    * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+    * {@code specular_intensity} to control the specular intensity.
+    * 
+    * @param r red component (0 to 1)
+    * @param g green component (0 to 1)
+    * @param b blue component (0 to 1)
+    * @param a alpha component (0 to 1)
+    */
+   public void setSpecularIntensity(float r, float g, float b, float a) {
+       setVec4("specular_intensity", r, g, b, a);
+   }
+
     /**
      * Get the constant attenuation factor.
      * This dims the light by a constant amount: {@code 1 / attenuation_constant}.

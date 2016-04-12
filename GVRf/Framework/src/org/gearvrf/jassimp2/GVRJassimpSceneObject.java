@@ -14,6 +14,7 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRLight;
+import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
@@ -36,7 +37,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     protected AiScene scene;
     protected GVRResourceVolume volume;
 
-  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRDirectLight> lightlist) {
+  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRLightBase> lightlist) {
         super(gvrContext);
         this.volume = volume;
 
@@ -54,7 +55,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     
     private void recurseAssimpNodes(
             GVRSceneObject parentSceneObject,
-             AiNode node,Hashtable<String, GVRDirectLight> lightlist) {
+            AiNode node,Hashtable<String, GVRLightBase> lightlist) {
         try {
             GVRSceneObject sceneObject = null;
             if (node.getNumMeshes() == 0) {
@@ -78,7 +79,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 sceneObject.getTransform().setModelMatrix(matrix);
                
             }
-           attachLights(lightlist, sceneObject);
+            attachLights(lightlist, sceneObject);
             for (AiNode child : node.getChildren()) {
                recurseAssimpNodes(sceneObject, child, lightlist);
                 
@@ -95,9 +96,9 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         }
     }
     
-    void attachLights(Hashtable<String, GVRDirectLight> lightlist, GVRSceneObject sceneObject){
+    void attachLights(Hashtable<String, GVRLightBase> lightlist, GVRSceneObject sceneObject){
         String name = sceneObject.getName();
-        GVRDirectLight light =  lightlist.get(name);
+        GVRLightBase light =  lightlist.get(name);
         if (light != null) {
             Quaternionf q = new Quaternionf();
             q.rotationX((float) -Math.PI / 2.0f);

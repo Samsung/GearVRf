@@ -107,6 +107,35 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         setFloat("enabled", 0.0f);
         NativeLight.disable(getNative());
     }
+    
+    /**
+     * Get the position of the light in world coordinates.
+     * 
+     * The position is computed from the scene object the light is attached to.
+     * It corresponds to the "world_position" uniform for the light.
+     * 
+     * @return the world position of the light as a 3 element array
+     */
+    public float[] getPosition() {
+        return getVec3("world_position");
+    }
+
+    /**
+     * Set the world position of the light.
+     * 
+     * The position is computed from the scene object the light is attached to.
+     * It corresponds to the "world_position" uniform for the light.
+     * 
+     * @param x
+     *            x-coordinate in world coordinate system
+     * @param y
+     *            y-coordinate in world coordinate system
+     * @param z
+     *            z-coordinate in world coordinate system
+     */
+    public void setPosition(float x, float y, float z) {
+        setVec3("world_position", x, y, z);
+    }
 
     /**
      * Get the light ID.

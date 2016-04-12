@@ -181,8 +181,8 @@ final class GVRImporter {
         
         Log.d(TAG, "start creating jassimp model %s", filePath);
 
-        List<AiLight> lights= assimpScene.getLights();
-        Hashtable<String, GVRDirectLight> lightlist= new Hashtable<String, GVRDirectLight>();
+        List<AiLight> lights = assimpScene.getLights();
+        Hashtable<String, GVRLightBase> lightlist= new Hashtable<String, GVRLightBase>();
         importLights(lights, lightlist, context);
 
         GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
@@ -191,7 +191,7 @@ final class GVRImporter {
                         cacheEnabled), lightlist);
         return sceneOb;
     }
-    static void importLights(List<AiLight> lights,Hashtable<String, GVRDirectLight> lightlist,final GVRContext context){
+    static void importLights(List<AiLight> lights,Hashtable<String, GVRLightBase> lightlist,final GVRContext context){
         for(AiLight light: lights){            
             AiLightType type = light.getType();
                 if(type == AiLightType.DIRECTIONAL){               
@@ -220,19 +220,19 @@ final class GVRImporter {
         }
          
     }
-    static void setLightProp(GVRDirectLight gvrLight, AiLight assimpLight){
+    static void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
         gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
         gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
         gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
     }
-    static void setPhongLightProp(GVRDirectLight gvrLight, AiLight assimpLight){
+    static void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
         org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);       
-        gvrLight.setAmbientIntensity( ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
-        gvrLight.setDiffuseIntensity(diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
-        gvrLight.setSpecularIntensity(specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+        gvrLight.setVec4("ambient_intensity", ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+        gvrLight.setVec4("diffuse_intensity", diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+        gvrLight.setVec4("specular_intensity", specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
 
     }
     static File downloadFile(Context context, String urlString) {

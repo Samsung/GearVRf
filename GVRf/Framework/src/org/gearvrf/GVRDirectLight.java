@@ -63,38 +63,7 @@ public class GVRDirectLight extends GVRLightBase {
         setShaderSource(mPhongLightShaderSource);
     }
     
-    /**
-     * Get the light position uniform.
-     * 
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec3} uniform named
-     * {@code world_position} to control the position of the light in world space.
-     * It is computed from the scene object the light is attached to.
-     * 
-     * @return the world position of the light as a 3 element array
-     */
-    public float[] getPosition() {
-        return getVec3("world_position");
-    }
-
-    /**
-     * Set the world position of the light.
-     * 
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec3} uniform named
-     * {@code world_position} to control the position of the light in world space.
-     * It is computed from the scene object the light is attached to.
-     * 
-     * @param x
-     *            x-coordinate in world coordinate system
-     * @param y
-     *            y-coordinate in world coordinate system
-     * @param z
-     *            z-coordinate in world coordinate system
-     */
-    public void setPosition(float x, float y, float z) {
-        setVec3("world_position", x, y, z);
-    }
-
-    /**
+     /**
      * Get the ambient light intensity.
      * 
      * This designates the color of the ambient reflection.
