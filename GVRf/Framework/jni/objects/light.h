@@ -52,6 +52,15 @@ public:
         setDirty();
     }
 
+    bool castShadow() {
+        return castshadow_;
+    }
+
+    void castShadow(bool flag) {
+        castshadow_ = flag;
+        setDirty();
+    }
+
     void disable() {
         setDirty();
     }
@@ -171,6 +180,7 @@ private:
 
 private:
     bool enabled_;
+    bool castshadow_;
     int size_;
     std::string lightID_;
     SceneObject* parent_;

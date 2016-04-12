@@ -78,6 +78,7 @@ public class GVRSpotShadowLight extends GVRSpotLight {
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setFloat("has_shadow_map", 0);
         setShaderSource(shaderSource);
+        NativeLight.castShadow(getNative(), true);
     }
     
     /**

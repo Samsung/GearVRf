@@ -86,5 +86,9 @@ void Light::render(int program) {
             //LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
         }
     }
+    if (castshadow_)
+    {
+        // TODO: calculate shadow map here and bind shadow_map sampler
+    }
 }
 }

@@ -33,6 +33,9 @@ Java_org_gearvrf_NativeLight_enable(JNIEnv * env, jobject obj, jlong jlight);
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_disable(JNIEnv * env, jobject obj, jlong jlight);
 
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeLight_castShadow(JNIEnv * env, jobject obj, jlong jlight);
+
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeLight_getFloat(JNIEnv * env,
         jobject obj, jlong jlight, jstring key);
@@ -224,4 +227,11 @@ Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
     env->ReleaseStringUTFChars(key, char_key);
 }
 
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeLight_castShadow(JNIEnv * env, jobject obj, jlong jlight)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    return light->castShadow();
+}
 }

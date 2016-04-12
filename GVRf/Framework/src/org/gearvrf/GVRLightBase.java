@@ -445,4 +445,6 @@ class NativeLight
     static native void getMat4(long light, String key, float[] matrix);
     
     static native void setMat4(long light, String key, float[] matrix);
+    
+    static native void castShadow(long light, boolean flag);
 }
