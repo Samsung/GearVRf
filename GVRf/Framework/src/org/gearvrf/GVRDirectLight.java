@@ -38,18 +38,18 @@ import org.gearvrf.utility.TextFile;
  *   diffuse_intensity     intensity of diffuse light emitted
  *   specular_intensity    intensity of specular light emitted
  * }
- * @see GVRPhongPointLight
- * @see GVRPhongSpotLight
- * @see GVRLightTemplate
+ * @see GVRPointLight
+ * @see GVRSpotLight
+ * @see GVRLightBase
  */
-public class GVRPhongLight extends GVRLightTemplate {
+public class GVRDirectLight extends GVRLightBase {
     protected static String mPhongLightShaderSource = null;
     
-    public GVRPhongLight(GVRContext gvrContext) {
+    public GVRDirectLight(GVRContext gvrContext) {
         this(gvrContext, null);
      }
 
-    public GVRPhongLight(GVRContext gvrContext, GVRSceneObject parent) {
+    public GVRDirectLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
         uniformDescriptor += " float4 diffuse_intensity"
                 + " float4 ambient_intensity"
@@ -63,38 +63,7 @@ public class GVRPhongLight extends GVRLightTemplate {
         setShaderSource(mPhongLightShaderSource);
     }
     
-    /**
-     * Get the light position uniform.
-     * 
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec3} uniform named
-     * {@code world_position} to control the position of the light in world space.
-     * It is computed from the scene object the light is attached to.
-     * 
-     * @return the world position of the light as a 3 element array
-     */
-    public float[] getPosition() {
-        return getVec3("world_position");
-    }
-
-    /**
-     * Set the world position of the light.
-     * 
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec3} uniform named
-     * {@code world_position} to control the position of the light in world space.
-     * It is computed from the scene object the light is attached to.
-     * 
-     * @param x
-     *            x-coordinate in world coordinate system
-     * @param y
-     *            y-coordinate in world coordinate system
-     * @param z
-     *            z-coordinate in world coordinate system
-     */
-    public void setPosition(float x, float y, float z) {
-        setVec3("world_position", x, y, z);
-    }
-
-    /**
+     /**
      * Get the ambient light intensity.
      * 
      * This designates the color of the ambient reflection.

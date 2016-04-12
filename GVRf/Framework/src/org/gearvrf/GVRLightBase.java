@@ -32,21 +32,21 @@ import android.util.Log;
  * Base class for defining light sources.
  *
  * Lights are implemented by the fragment shader. Each different light
- * implementation corresponds to a subclass of GVRLightTemplate which is
+ * implementation corresponds to a subclass of GVRLightBase which is
  * responsible for supplying the shader source code for the light. GearVRF
  * aggregates all of the light source implementations into a single fragment
  * shader.
  *
- * Each subclass of GVRLightTemplate is a different light implementation and has
+ * Each subclass of GVRLightBase is a different light implementation and has
  * different shader source. The uniform descriptor is a string which gives the
  * name and type of all uniforms expected in the shader source. It is supplied
  * when a light is created to describe the expected shader input.
  * 
  * {@link GVRShaderTemplate GVRRenderData.bindShader }
  */
-public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListener
+public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 {
-    public GVRLightTemplate(GVRContext gvrContext, GVRSceneObject parent)
+    public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
         super(gvrContext, NativeLight.ctor(), parent);
         if (parent != null)
@@ -59,7 +59,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
-    public GVRLightTemplate(GVRContext gvrContext)
+    public GVRLightBase(GVRContext gvrContext)
     {
         super(gvrContext, NativeLight.ctor());
         uniformDescriptor = "float enabled float3 world_position float3 world_direction";
@@ -106,6 +106,35 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
     {
         setFloat("enabled", 0.0f);
         NativeLight.disable(getNative());
+    }
+    
+    /**
+     * Get the position of the light in world coordinates.
+     * 
+     * The position is computed from the scene object the light is attached to.
+     * It corresponds to the "world_position" uniform for the light.
+     * 
+     * @return the world position of the light as a 3 element array
+     */
+    public float[] getPosition() {
+        return getVec3("world_position");
+    }
+
+    /**
+     * Set the world position of the light.
+     * 
+     * The position is computed from the scene object the light is attached to.
+     * It corresponds to the "world_position" uniform for the light.
+     * 
+     * @param x
+     *            x-coordinate in world coordinate system
+     * @param y
+     *            y-coordinate in world coordinate system
+     * @param z
+     *            z-coordinate in world coordinate system
+     */
+    public void setPosition(float x, float y, float z) {
+        setVec3("world_position", x, y, z);
     }
 
     /**
@@ -285,7 +314,7 @@ public class GVRLightTemplate extends GVRComponent implements GVRDrawFrameListen
      * Define the shader source to compute the illumination from this light.
      * 
      * This source must be defined at the time the light is constructed.
-     * Typically, different subclasses of GVRLightTemplate will have different
+     * Typically, different subclasses of GVRLightBase will have different
      * illumination functions.
      * 
      * @param source

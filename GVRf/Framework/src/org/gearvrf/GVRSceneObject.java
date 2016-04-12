@@ -58,7 +58,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     private GVRCamera mCamera;
     private GVRCameraRig mCameraRig;
     private GVREyePointeeHolder mEyePointeeHolder;
-    private GVRLightTemplate mLight;
+    private GVRLightBase mLight;
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
@@ -474,17 +474,17 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Get the attached {@link GVRLightTemplate}. Any subclass of GVRLightTemplate may
+     * Get the attached light component. Any subclass of GVRLightBase may
      * be attached to a scene object. The light's position and direction will be calculated
      * from the transform attached to the scene object.
      * @return The light attached to the object. If no light is currently attached, returns null.
      */
-    public GVRLightTemplate getLight() {
+    public GVRLightBase getLight() {
         return mLight;
     }
     
     /**
-     * Attach a new {@linkplain GVRightTemplate}.
+     * Attach a new light component.
      * 
      * If another light is currently attached, it is replaced with the new
      * one. The light's position and direction will follow the scene object's
@@ -492,7 +492,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * 
      * @param light New light to attach.
      */
-    public void attachLight(GVRLightTemplate light) {
+    public void attachLight(GVRLightBase light) {
         mLight = light;
         light.setOwnerObject(this);
     }
@@ -521,7 +521,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (GVRRenderData.class.isAssignableFrom(compClass)) {
             return (T) mRenderData;
         }
-        if (GVRLightTemplate.class.isAssignableFrom(compClass)) {
+        if (GVRLightBase.class.isAssignableFrom(compClass)) {
             return (T) mLight;
         }
         if (GVRCamera.class.isAssignableFrom(compClass)) {
