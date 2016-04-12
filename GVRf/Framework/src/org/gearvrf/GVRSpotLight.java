@@ -35,7 +35,7 @@ import org.gearvrf.utility.TextFile;
  *
  * Spot light uniforms:
  * {@literal
- *   world_position        position of spot light in world coordinates
+*   enabled               1 = light is enabled, 0 = light is disabled *   world_position        position of spot light in world coordinates
  *                         derived from scene object position
  *   world_direction       direction of spot light in world coordinates
  *                         derived from scene object orientation
@@ -77,7 +77,7 @@ public class GVRSpotLight extends GVRPointLight
      * {@link setInnerConeAngle setOuterConeAngle}
      */
     public float getInnerConeAngle() {
-        return getFloat("inner_cone_angle");
+        return (float) Math.toDegrees(Math.acos(getFloat("inner_cone_angle")));
     }
 
     /**
@@ -100,7 +100,7 @@ public class GVRSpotLight extends GVRPointLight
      * {@link setInnerConeAngle setOuterConeAngle}
      */
     public float getOuterConeAngle() {
-        return getFloat("outer_cone_angle");
+        return (float) Math.toDegrees(Math.acos(getFloat("outer_cone_angle")));
     }
     
     /**

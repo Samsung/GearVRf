@@ -107,6 +107,20 @@ public:
         }
     }
 
+    void getMat4(std::string key, glm::mat4& matrix) {
+        auto it = mat4s_.find(key);
+        if (it != mat4s_.end()) {
+            matrix = it->second;
+        }
+    }
+
+    void setMat4(std::string key, glm::mat4 matrix) {
+        mat4s_[key] = matrix;
+        if (enabled_) {
+            setDirty();
+        }
+    }
+
     /**
      * Internal function called at the start of each frame
      * to update the light uniform block (if necessary).
@@ -164,8 +178,8 @@ private:
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
+    std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, int> offsets_;
-
 };
 }
 #endif

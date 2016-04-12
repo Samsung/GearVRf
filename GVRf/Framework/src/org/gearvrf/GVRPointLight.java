@@ -30,6 +30,7 @@ import org.gearvrf.utility.TextFile;
  *
  * Point light uniforms:
  * {@literal
+ *   enabled               1 = light is enabled, 0 = light is disabled
  *   world_position        position of light in world coordinates
  *                         derived from scene object position
  *   ambient_intensity     intensity of ambient light emitted
@@ -48,9 +49,9 @@ public class GVRPointLight extends GVRLightBase
     protected static String mPointLightShaderSource = null;
     public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
-        uniformDescriptor += " float4 diffuse_intensity"
-                + " float4 ambient_intensity"
-                + " float4 specular_intensity"
+        uniformDescriptor += " vec4 diffuse_intensity"
+                + " vec4 ambient_intensity"
+                + " vec4 specular_intensity"
                 + " float attenuation_constant"
                 + " float attenuation_linear"
                 + " float attenuation_quadratic";

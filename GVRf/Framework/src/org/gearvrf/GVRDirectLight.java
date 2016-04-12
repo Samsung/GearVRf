@@ -30,7 +30,7 @@ import org.gearvrf.utility.TextFile;
  * The intensity of the light remains constant and does not fall
  * off with distance from the light.
  *
- * Point light uniforms:
+ * Dlrect light uniforms:
  * {@literal
  *   world_direction       direction of light in world coordinates
  *                         derived from scene object orientation
@@ -43,7 +43,7 @@ import org.gearvrf.utility.TextFile;
  * @see GVRLightBase
  */
 public class GVRDirectLight extends GVRLightBase {
-    protected static String mPhongLightShaderSource = null;
+    private static String shaderSource = null;
     
     public GVRDirectLight(GVRContext gvrContext) {
         this(gvrContext, null);
@@ -51,16 +51,16 @@ public class GVRDirectLight extends GVRLightBase {
 
     public GVRDirectLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
-        uniformDescriptor += " float4 diffuse_intensity"
-                + " float4 ambient_intensity"
-                + " float4 specular_intensity";
-         if (mPhongLightShaderSource == null) {
-            mPhongLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
+        uniformDescriptor += " vec4 diffuse_intensity"
+                + " vec4 ambient_intensity"
+                + " vec4 specular_intensity";
+         if (shaderSource == null) {
+             shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
         }
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setShaderSource(mPhongLightShaderSource);
+        setShaderSource(shaderSource);
     }
     
      /**

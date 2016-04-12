@@ -53,7 +53,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         {
             NativeLight.setParent(getNative(), parent.getNative());
         }
-        uniformDescriptor = "float enabled float3 world_position float3 world_direction";
+        uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
@@ -62,7 +62,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     public GVRLightBase(GVRContext gvrContext)
     {
         super(gvrContext, NativeLight.ctor());
-        uniformDescriptor = "float enabled float3 world_position float3 world_direction";
+        uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
@@ -278,6 +278,41 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
+     * Sets the value of a 4x4 matrix uniform based on its name.
+     * 
+     * @param key
+     *            name of uniform to get
+     * @param new
+     *            4x4 matrix value of uniform
+     * @throws exception
+     *             if uniform name not found
+     */
+    public void setMat4(String key, Matrix4f matrix)
+    {
+        float[] data = new float[16];
+        matrix.get(data);
+        checkStringNotNullOrEmpty("key", key);
+        NativeLight.setMat4(getNative(), key, data);
+    }
+
+    /**
+     * Gets the value of a 4x4 matrix uniform based on its name.
+     * 
+     * @param key
+     *            name of uniform to get
+     * @throws exception
+     *             if uniform name not found
+     */
+    public Matrix4f getMat4(String key)
+    {
+        float[] data = new float[16];
+        checkStringNotNullOrEmpty("key", key);
+        NativeLight.getMat4(getNative(), key, data);
+        Matrix4f matrix = new Matrix4f();
+        matrix.set(data);
+    }
+    
+    /**
      * Get the GLSL structure describing this light. The name of the structure
      * is derived from the light class name. It is assumed that each different
      * type of light will be represented by a different Java class.
@@ -286,7 +321,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public String getShaderStruct()
     {
-        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
+        Pattern pattern = Pattern.compile("[ ]*([a-zA-Z]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
         Matcher matcher = pattern.matcher(uniformDescriptor);
         String structDesc = "struct Struct" + getClass().getSimpleName() + " {\n";
         while (matcher.find())
@@ -295,15 +330,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             String size = matcher.group(2);
             String type = matcher.group(1);
 
-            if (size.length() > 0)
-            {
-                if (type.toLowerCase().startsWith("i"))
-                    structDesc += "   ivec" + size;
-                else
-                    structDesc += "   vec" + size;
-            }
-            else
-                structDesc += type;
+            structDesc += type;
             structDesc += " " + name + ";\n";
         }
         structDesc += "};\n";
@@ -372,7 +399,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
         defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);
-//        lightrot.mul(worldmtx, worldmtx);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
@@ -415,4 +441,8 @@ class NativeLight
     static native String getLightID(long light);
 
     static native void setLightID(long light, String id);
+    
+    static native void getMat4(long light, String key, float[] matrix);
+    
+    static native void setMat4(long light, String key, float[] matrix);
 }

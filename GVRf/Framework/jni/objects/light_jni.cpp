@@ -20,6 +20,7 @@
 #include "light.h"
 
 #include "util/gvr_jni.h"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace gvr {
 extern "C" {
@@ -68,6 +69,15 @@ Java_org_gearvrf_NativeLight_getLightID(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
         jobject obj, jlong jlight, jstring id);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jlong matrix);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jlong matrix);
+
 }
 ;
 
@@ -185,5 +195,33 @@ Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
     std::string native_id = std::string(char_id);
     light->setLightID(native_id);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jfloatArray jmatrix)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    glm::mat4 cmatrix;
+    light->getMat4(native_key, cmatrix);
+    env->SetFloatArrayRegion(jmatrix, 0, 16,
+            reinterpret_cast<const jfloat*>(glm::value_ptr(cmatrix)));
+    env->ReleaseStringUTFChars(key, char_key);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jfloatArray jmatrix)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    jfloat* matrix_data = env->GetFloatArrayElements(jmatrix, 0);
+    glm::mat4 cmatrix;
+    cmatrix = glm::make_mat4(matrix_data);
+    light->setMat4(native_key, cmatrix);
+    env->ReleaseStringUTFChars(key, char_key);
+}
+
+}
