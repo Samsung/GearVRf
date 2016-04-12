@@ -21,26 +21,18 @@
 #ifndef UNLIT_HORIZONTAL_STEREO_SHADER_H_
 #define UNLIT_HORIZONTAL_STEREO_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
+#include "shaderbase.h"
 #include "objects/eye_type.h"
-#include "objects/hybrid_object.h"
 
 namespace gvr {
-class GLProgram;
-class RenderData;
-class Material;
 
-class UnlitHorizontalStereoShader: public HybridObject {
+
+class UnlitHorizontalStereoShader: public ShaderBase {
 public:
     UnlitHorizontalStereoShader();
     virtual ~UnlitHorizontalStereoShader();
 
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material, bool right);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     UnlitHorizontalStereoShader(
@@ -52,7 +44,6 @@ private:
             UnlitHorizontalStereoShader&& unlit_shader);
 
 private:
-    GLProgram* program_;
     GLuint u_mvp_;
     GLuint u_texture_;
     GLuint u_color_;

@@ -5,10 +5,7 @@
 #ifndef EXTERNAL_RENDERER_SHADER_H_
 #define EXTERNAL_RENDERER_SHADER_H_
 
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 typedef void (*GVRF_ExternalRenderer)(long data,
                                       const float* bounding_volume, int vcount,
@@ -18,13 +15,11 @@ typedef void (*GVRF_ExternalRenderer)(long data,
 extern "C" void GVRF_installExternalRenderer(GVRF_ExternalRenderer renderer);
 
 namespace gvr {
-class RenderData;
 
-class ExternalRendererShader : public HybridObject {
+class ExternalRendererShader : public ShaderBase {
 public:
     ExternalRendererShader() {}
-    void render(const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
-                const glm::mat4& mvp_matrix, RenderData* render_data);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     ExternalRendererShader(

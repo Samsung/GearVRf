@@ -21,6 +21,7 @@
 #include "engine/renderer/renderer.h"
 #include "gl/gl_program.h"
 #include "objects/material.h"
+#include "objects/scene.h"
 #include "objects/mesh.h"
 #include "objects/textures/texture.h"
 #include "objects/components/render_data.h"
@@ -31,7 +32,7 @@
 namespace gvr {
 CustomShader::CustomShader(std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), u_mvp_(0), u_mv_(0), u_right_(0), u_view_(0),
+        u_mvp_(0), u_mv_(0), u_right_(0), u_view_(0),
         texture_keys_(), attribute_float_keys_(),
         attribute_vec2_keys_(), attribute_vec3_keys_(), attribute_vec4_keys_(),
         uniform_float_keys_(), uniform_vec2_keys_(), uniform_vec3_keys_(),
@@ -107,8 +108,7 @@ void CustomShader::addUniformMat4Key(std::string variable_name,
     uniform_mat4_keys_[location] = key;
 }
 
-void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
-        const std::vector<Light*> lightList, Material* material) {
+void CustomShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         Texture* texture = material->getTextureNoError(it->second);
         // If any texture is not ready, do not render the material at all
@@ -118,14 +118,14 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
     }
 
     Mesh* mesh = render_data->mesh();
-
+    const std::vector<Light*>& lightlist = rstate->scene->getLightList();
     glUseProgram(program_->id());
 
     /*
      * Update the uniforms for the lights
      */
-    for (auto it = lightList.begin();
-         it != lightList.end();
+    for (auto it = lightlist.begin();
+         it != lightlist.end();
          ++it) {
         Light* light = (*it);
          if (light != NULL)
@@ -167,19 +167,19 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
     }
 
     if (u_mvp_ != -1) {
-        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mvp));
+        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     }
     if (u_view_ != -1) {
-        glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(uniforms.u_view));
+        glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
     }
     if (u_mv_ != -1) {
-        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv));
+        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
     }
     if (u_mv_it_ != -1) {
-        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv_it));
+        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
     }
     if (u_right_ != 0) {
-        glUniform1i(u_right_, uniforms.u_right ? 1 : 0);
+        glUniform1i(u_right_, rstate->uniforms.u_right ? 1 : 0);
     }
 
     int texture_index = 0;
@@ -214,7 +214,7 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
 
-    glBindVertexArray(mesh->getVAOId(material->shader_type()));
+    glBindVertexArray(mesh->getVAOId(Material::ShaderType::TEXTURE_SHADER));
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 

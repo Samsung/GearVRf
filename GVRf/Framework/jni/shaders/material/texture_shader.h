@@ -20,26 +20,17 @@
 #ifndef TEXTURE_SHADER_H_
 #define TEXTURE_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 namespace gvr {
 class GLProgram;
-class RenderData;
-class Material;
 
-class TextureShader: public HybridObject {
+class TextureShader: public ShaderBase {
 public:
     TextureShader();
     virtual ~TextureShader();
 
-    void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
-            const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     TextureShader(const TextureShader& texture_shader);

@@ -25,6 +25,7 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "util/gvr_gl.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
@@ -55,7 +56,7 @@ static const char FRAGMENT_SHADER[] = "precision mediump float;\n"
         "}";
 
 LightMapShader::LightMapShader() :
-        program_(0), u_mvp_(0), u_texture_(0), u_lightmap_texture_(0),
+        u_mvp_(0), u_texture_(0), u_lightmap_texture_(0),
         u_lightmap_offset_(0), u_lightmap_scale_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -70,7 +71,7 @@ LightMapShader::~LightMapShader() {
     delete program_;
 }
 
-void LightMapShader::render(const glm::mat4& mvp_matrix,
+void LightMapShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
 
     Mesh* mesh = render_data->mesh();
@@ -83,7 +84,7 @@ void LightMapShader::render(const glm::mat4& mvp_matrix,
 
     glUseProgram(program_->id());
 
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
 
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
@@ -96,7 +97,7 @@ void LightMapShader::render(const glm::mat4& mvp_matrix,
     glUniform2f(u_lightmap_offset_, lightmap_offset.x, lightmap_offset.y);
     glUniform2f(u_lightmap_scale_, lightmap_scale.x, lightmap_scale.y);
 
-    glBindVertexArray(mesh->getVAOId(Material::LIGHTMAP_SHADER));
+    glBindVertexArray(mesh->getVAOId(Material::ShaderType::LIGHTMAP_SHADER));
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 

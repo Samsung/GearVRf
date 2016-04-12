@@ -21,25 +21,19 @@
 #ifndef SOLID_COLOR_SHADER_H_
 #define SOLID_COLOR_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 namespace gvr {
 class Color;
 class GLProgram;
 class RenderData;
 
-class ErrorShader: public HybridObject {
+class ErrorShader: public ShaderBase {
 public:
     ErrorShader();
     virtual ~ErrorShader();
 
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     ErrorShader(const ErrorShader& error_shader);

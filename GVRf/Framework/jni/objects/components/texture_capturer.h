@@ -18,6 +18,7 @@
 
 namespace gvr {
 class RenderData;
+struct RenderState;
 
 class TextureCapturer : public Component {
 public:
@@ -35,8 +36,7 @@ public:
 
     void startReadBack();
 
-    void render(const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
-                const glm::mat4& mvp_matrix, RenderData* render_data);
+    void render(RenderState* rstate, RenderData* render_data);
 
     glm::mat4 getModelViewMatrix();
     glm::mat4 getMvpMatrix(float width, float height);

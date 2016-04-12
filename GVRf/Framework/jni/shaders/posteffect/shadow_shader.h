@@ -42,6 +42,7 @@ class RenderTexture;
 class PostEffectData;
 class RenderData;
 class Material;
+struct RenderState;
 
 class ShadowShader // : RecyclableObject
 {
@@ -58,13 +59,9 @@ public:
     ~ShadowShader();
     void recycle();
 
-    void render(const glm::mat4& mvp_matrix_cam,
-            const glm::mat4& mvp_matrix_light_cam, const glm::mat4& mv_matrix,
-            const glm::mat4& mv_it_matrix, const glm::mat4& mv_it_cam,
-            const glm::mat4& mv_it_model,
-            //const glm::mat4& mvp_matrix_light,
-            glm::vec3 light_position, RenderData* render_data,
-            Material* material, int mode);
+    void render(RenderState *rstate,
+            RenderData* render_data,
+            Material* material, glm::vec3 light_position, const glm::mat4& mvp_matrix_light_cam);
 
     GLuint getFBOFromLight() {
         return fbo_light;

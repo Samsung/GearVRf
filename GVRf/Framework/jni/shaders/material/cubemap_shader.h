@@ -20,26 +20,17 @@
 #ifndef CUBEMAP_SHADER_H_
 #define CUBEMAP_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 namespace gvr {
-class GLProgram;
-class RenderData;
-class Material;
 
-class CubemapShader: public HybridObject {
+
+class CubemapShader: public ShaderBase {
 public:
     CubemapShader();
     virtual ~CubemapShader();
 
-    void render(const glm::mat4& model_matrix, const glm::mat4& mvp_matrix,
-            RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     CubemapShader(const CubemapShader& cubemap_shader);
@@ -48,7 +39,6 @@ private:
     CubemapShader& operator=(CubemapShader&& cubemap_shader);
 
 private:
-    GLProgram* program_;
     GLuint u_model_;
     GLuint u_mvp_;
     GLuint u_texture_;

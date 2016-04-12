@@ -176,12 +176,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
     state_sort();
 }
 
-void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
-        int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-        ShaderManager* shader_manager,
-        PostEffectShaderManager* post_effect_shader_manager,
-        RenderTexture* post_effect_render_texture_a,
-        RenderTexture* post_effect_render_texture_b) {
+void Renderer::renderCamera(RenderState* rstate, int framebufferId) {
     // there is no need to flat and sort every frame.
     // however let's keep it as is and assume we are not changed
     // This is not right way to do data conversion. However since GVRF doesn't support
@@ -190,57 +185,40 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     //  LOGI(" Render Camera Framebuffer %d ", framebufferId);
 
-    DirectionalLight *cameraLight = scene->getDirectionalLight();
+    DirectionalLight *cameraLight = rstate->scene->getDirectionalLight();
 
     bool renderShadow = cameraLight; // TODO reader from scene;
 
     if (!renderShadow) {
-        renderCamera(scene, camera, framebufferId, viewportX, viewportY,
-                viewportWidth, viewportHeight, shader_manager,
-                post_effect_shader_manager, post_effect_render_texture_a,
-                post_effect_render_texture_b, ShadowShader::RENDER_DEFAULT);
+        renderToFrameBuffer(rstate, framebufferId);
 
     } else {
-        shader_manager->getShadowShader()->setCameraLight(cameraLight);
-        shader_manager->getShadowShader()->updateViewportInfo(viewportWidth, viewportHeight);
-
-        renderCamera(scene, camera,
-                shader_manager->getShadowShader()->getFBOFromLight(),
-                0, 0, viewportWidth, viewportHeight, shader_manager,
-                post_effect_shader_manager, post_effect_render_texture_a,
-                post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
-
-  /*      renderCamera(scene, camera,
-                shader_manager->getShadowShader()->getFBOFromCamera(),
-                0, 0, viewportWidth, viewportHeight,
-                shader_manager, post_effect_shader_manager,
-                post_effect_render_texture_a, post_effect_render_texture_b,
-                ShadowShader::RENDER_FROM_CAMERA);
-*/
-        renderCamera(scene, camera, framebufferId, viewportX, viewportY,
-                viewportWidth, viewportHeight, shader_manager,
-                post_effect_shader_manager, post_effect_render_texture_a,
-                post_effect_render_texture_b, ShadowShader::RENDER_WITH_SHADOW);
+        ShadowShader* shadow_shader = rstate->shader_manager->getShadowShader();
+        RenderState lightState = *rstate;
+        lightState.viewportX = 0;
+        lightState.viewportY = 0;
+        lightState.render_mode = ShadowShader::RENDER_FROM_LIGHT;
+        shadow_shader->setCameraLight(cameraLight);
+        shadow_shader->updateViewportInfo(lightState.viewportWidth, lightState.viewportHeight);
+        renderToFrameBuffer(rstate, shadow_shader->getFBOFromLight());
+        lightState.render_mode = ShadowShader::RENDER_FROM_CAMERA;
+        renderToFrameBuffer(rstate, shadow_shader->getFBOFromCamera());
+        rstate->render_mode = ShadowShader::RENDER_WITH_SHADOW;
+        renderToFrameBuffer(rstate, framebufferId);
     }
-
 }
 
-void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
-        int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-        ShaderManager* shader_manager,
-        PostEffectShaderManager* post_effect_shader_manager,
-        RenderTexture* post_effect_render_texture_a,
-        RenderTexture* post_effect_render_texture_b, int modeShadow) {
+void Renderer::renderToFrameBuffer(RenderState* rstate, int framebufferId) {
+
+    Camera* camera = rstate->camera;
+    std::vector<PostEffectData*> post_effects = camera->post_effect_data();
+    rstate->uniforms.u_view = camera->getViewMatrix();
+    rstate->render_mask = camera->render_mask();
+    rstate->projection_matrix = camera->getProjectionMatrix();
+    glm::mat4 vp_matrix = glm::mat4(rstate->projection_matrix * rstate->uniforms.u_view);
 
     numberDrawCalls = 0;
     numberTriangles = 0;
-
-    glm::mat4 view_matrix = camera->getViewMatrix();
-    glm::mat4 projection_matrix = camera->getProjectionMatrix();
-    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
-
-    std::vector<PostEffectData*> post_effects = camera->post_effect_data();
-
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));
     GL(glEnable (GL_CULL_FACE));
@@ -254,7 +232,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     if (post_effects.size() == 0) {
         GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-        GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
+        GL(glViewport(rstate->viewportX, rstate->viewportY, rstate->viewportWidth, rstate->viewportHeight));
 
         GL(glClearColor(camera->background_color_r(),
                 camera->background_color_g(), camera->background_color_b(),
@@ -263,12 +241,10 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
-            GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager,
-                    scene->getLightList(), modeShadow));
+            GL(renderRenderData(*it, rstate));
         }
     } else {
-        RenderTexture* texture_render_texture = post_effect_render_texture_a;
+        RenderTexture* texture_render_texture = rstate->post_effect_texture_a;
         RenderTexture* target_render_texture;
 
         GL(glBindFramebuffer(GL_FRAMEBUFFER,
@@ -282,9 +258,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
-            GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager,
-                    scene->getLightList(), modeShadow));
+            GL(renderRenderData(*it, rstate));
         }
 
         GL(glDisable(GL_DEPTH_TEST));
@@ -292,24 +266,24 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
         for (int i = 0; i < post_effects.size() - 1; ++i) {
             if (i % 2 == 0) {
-                texture_render_texture = post_effect_render_texture_a;
-                target_render_texture = post_effect_render_texture_b;
+                texture_render_texture = rstate->post_effect_texture_a;
+                target_render_texture = rstate->post_effect_texture_b;
             } else {
-                texture_render_texture = post_effect_render_texture_b;
-                target_render_texture = post_effect_render_texture_a;
+                texture_render_texture = rstate->post_effect_texture_b;
+                target_render_texture = rstate->post_effect_texture_a;
             }
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-            GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
+            GL(glViewport(rstate->viewportX, rstate->viewportY, rstate->viewportWidth, rstate->viewportHeight));
 
             GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
             GL(renderPostEffectData(camera, texture_render_texture,
-                    post_effects[i], post_effect_shader_manager));
+                    post_effects[i], rstate->post_effect_shader_manager));
         }
 
         GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-        GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
+        GL(glViewport(rstate->viewportX, rstate->viewportY, rstate->viewportWidth, rstate->viewportHeight));
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-        renderPostEffectData(camera, texture_render_texture, post_effects.back(), post_effect_shader_manager);
+        renderPostEffectData(camera, texture_render_texture, post_effects.back(), rstate->post_effect_shader_manager);
     }
 
     GL(glDisable(GL_DEPTH_TEST));
@@ -521,24 +495,32 @@ void Renderer::renderCamera(Scene* scene, Camera* camera,
         RenderTexture* post_effect_render_texture_b) {
     GLint curFBO;
     GLint viewport[4];
+    RenderState rstate;
+
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curFBO);
     glGetIntegerv(GL_VIEWPORT, viewport);
-
-    renderCamera(scene, camera, curFBO, viewport[0], viewport[1], viewport[2],
-            viewport[3], shader_manager, post_effect_shader_manager,
-            post_effect_render_texture_a, post_effect_render_texture_b);
+    rstate.scene = scene;
+    rstate.camera = camera;
+    rstate.shader_manager = shader_manager;
+    rstate.post_effect_shader_manager = post_effect_shader_manager;
+    rstate.post_effect_texture_a = post_effect_render_texture_a;
+    rstate.post_effect_texture_b = post_effect_render_texture_b;
+    rstate.viewportX = viewport[0];
+    rstate.viewportY = viewport[1];
+    rstate.viewportWidth = viewport[2];
+    rstate.viewportHeight = viewport[3];
+    rstate.render_mode = ShadowShader::RENDER_DEFAULT;
+    renderToFrameBuffer(&rstate, curFBO);
 }
 
-void Renderer::renderCamera(Scene* scene, Camera* camera,
-        RenderTexture* render_texture, ShaderManager* shader_manager,
-        PostEffectShaderManager* post_effect_shader_manager,
-        RenderTexture* post_effect_render_texture_a,
-        RenderTexture* post_effect_render_texture_b) {
-
-    renderCamera(scene, camera, render_texture->getFrameBufferId(), 0, 0,
-            render_texture->width(), render_texture->height(), shader_manager,
-            post_effect_shader_manager, post_effect_render_texture_a,
-            post_effect_render_texture_b);
+void Renderer::renderToTexture(RenderState* rstate,
+        RenderTexture* render_texture) {
+    RenderState newState = *rstate;
+    newState.viewportX = 0;
+    newState.viewportY = 0;
+    newState.viewportWidth = render_texture->width();
+    newState.viewportHeight = render_texture->height();
+    renderToFrameBuffer(&newState, render_texture->getFrameBufferId());
 
 }
 
@@ -548,10 +530,19 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int viewportX,
         PostEffectShaderManager* post_effect_shader_manager,
         RenderTexture* post_effect_render_texture_a,
         RenderTexture* post_effect_render_texture_b) {
-
-    renderCamera(scene, camera, 0, viewportX, viewportY, viewportWidth,
-            viewportHeight, shader_manager, post_effect_shader_manager,
-            post_effect_render_texture_a, post_effect_render_texture_b);
+        RenderState rstate;
+        rstate.scene = scene;
+        rstate.camera = camera;
+        rstate.shader_manager = shader_manager;
+        rstate.post_effect_shader_manager = post_effect_shader_manager;
+        rstate.post_effect_texture_a = post_effect_render_texture_a;
+        rstate.post_effect_texture_b = post_effect_render_texture_b;
+        rstate.viewportX = viewportX;
+        rstate.viewportY = viewportY;
+        rstate.viewportWidth = viewportWidth;
+        rstate.viewportHeight = viewportHeight;
+        rstate.render_mode = ShadowShader::RENDER_DEFAULT;
+        renderToFrameBuffer(&rstate, 0);
 }
 
 bool Renderer::isShader3d(const Material* curr_material) {
@@ -594,18 +585,16 @@ bool Renderer::isDefaultPosition3d(const Material* curr_material) {
     return defaultShadersForm;
 }
 
-void Renderer::calculateShadow(ShaderManager* shader_manager,
-        const Material* curr_material, const glm::mat4& model_matrix,
-        const int modeShadow, glm::vec3& lightPosition,
+void Renderer::calculateShadow(RenderState* rstate, glm::vec3& lightPosition,
         glm::mat4& vp_matrixLightModel) {
 
-    bool isShadowMode = modeShadow != 0
-            && modeShadow != ShadowShader::RENDER_FROM_CAMERA;
+    bool isShadowMode = rstate->render_mode != 0
+            && rstate->render_mode != ShadowShader::RENDER_FROM_CAMERA;
 
-    if (isShadowMode && isShader3d(curr_material)) {
+    if (isShadowMode) {
 
         DirectionalLight *cameraLight =
-                shader_manager->getShadowShader()->getCameraLight();
+                rstate->shader_manager->getShadowShader()->getCameraLight();
 
         lightPosition = cameraLight->getLightPosition();
         glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -633,19 +622,16 @@ void Renderer::calculateShadow(ShaderManager* shader_manager,
         glm::mat4 vp_matrixLook = glm::lookAt(lightPosition,
                 cameraLight->getLightDirection(), UP);
         vp_matrixLightModel = glm::mat4(
-                vp_matrixProj * vp_matrixLook * model_matrix);
+                vp_matrixProj * vp_matrixLook * rstate->uniforms.u_model);
 
         glm::mat4 vp_matrixLight = glm::mat4(vp_matrixLook);
         vp_matrixLight = glm::mat4(1);
     }
 }
 
-void Renderer::renderRenderData(RenderData* render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager,
-        const std::vector<Light*>& lightList, int modeShadow) {
+void Renderer::renderRenderData(RenderData* render_data, RenderState* rstate) {
 
-    if (!render_mask || !render_data->render_mask())
+    if (!rstate->render_mask || !render_data->render_mask())
         return;
 
     if (render_data->offset()) {
@@ -665,9 +651,7 @@ void Renderer::renderRenderData(RenderData* render_data,
     }
 
     if (render_data->mesh() != 0) {
-        GL(renderMesh(render_data, view_matrix, projection_matrix,
-                    render_mask, shader_manager,
-                    lightList, modeShadow));
+        GL(renderMesh(render_data, rstate));
     }
 
     // Restoring to Default.
@@ -692,10 +676,7 @@ void Renderer::renderRenderData(RenderData* render_data,
     }
 }
 
-void Renderer::renderMesh(RenderData* render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager,
-        const std::vector<Light*> lightList, int modeShadow) {
+void Renderer::renderMesh(RenderData* render_data, RenderState* rstate) {
 
     for (int curr_pass = 0; curr_pass < render_data->pass_count();
             ++curr_pass) {
@@ -705,140 +686,115 @@ void Renderer::renderMesh(RenderData* render_data,
         set_face_culling(render_data->pass(curr_pass)->cull_face());
         Material* curr_material =
             render_data->pass(curr_pass)->material();
+        Transform* const t = render_data->owner_object()->transform();
 
-        if (curr_material != nullptr) {
-            GL(renderMaterialShader(render_data, view_matrix, projection_matrix,
-                        render_mask, shader_manager,
-                        lightList, modeShadow, curr_material));
+        if (t != nullptr)
+        {
+            rstate->uniforms.u_model = t->getModelMatrix();
+            rstate->uniforms.u_mv = rstate->uniforms.u_view * rstate->uniforms.u_model;
+            rstate->uniforms.u_mvp = rstate->projection_matrix * rstate->uniforms.u_mv;
+            rstate->uniforms.u_mv_it = glm::inverseTranspose(rstate->uniforms.u_mv);
+        }
+        if (rstate->render_mode == ShadowShader::RENDER_WITH_SHADOW
+                && isDefaultPosition3d(curr_material)) {
+            renderWithShadow(rstate, render_data, curr_material);
+        }
+        else if (curr_material != nullptr) {
+            GL(renderMaterialShader(render_data, rstate, curr_material));
         }
     }
 }
 
-void Renderer::renderMaterialShader(RenderData* render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager,
-        const std::vector<Light*> lightList, int modeShadow,
+
+void Renderer::renderMaterialShader(RenderData* render_data, RenderState* rstate,
         Material *curr_material) {
 
     //Skip the material whose texture is not ready with some exceptions
     if (!checkTextureReady(curr_material))
         return;
 
-    Transform* const t = render_data->owner_object()->transform();
-
-    if (t == nullptr)
-        return;
-    ShaderUniformsPerObject uniforms;
-    uniforms.u_model = t->getModelMatrix();
-    uniforms.u_view = view_matrix;
-    uniforms.u_mv = view_matrix * uniforms.u_model;
-    uniforms.u_mvp = projection_matrix * uniforms.u_mv;
-    uniforms.u_mv_it = glm::inverseTranspose(uniforms.u_mv);
      try {
-        bool right = render_mask
+        bool right = rstate->render_mask
             & RenderData::RenderMaskBit::Right;
 
-        glm::mat4 vp_matrixLightModel;
-        glm::vec3 lightPosition;
+        if (rstate->render_mode == ShadowShader::RENDER_FROM_LIGHT) { // ShadowMap
+            glm::mat4 vp_matrixLightModel;
+            glm::vec3 lightPosition;
 
-        calculateShadow(shader_manager, curr_material, uniforms.u_model,
-                modeShadow, lightPosition, vp_matrixLightModel);
-
-        if (modeShadow == ShadowShader::RENDER_WITH_SHADOW
-                && isDefaultPosition3d(curr_material)) {
-            // render the shadow
-            shader_manager->getShadowShader()->render(
-                    uniforms.u_mvp, vp_matrixLightModel, uniforms.u_mv,
-                    uniforms.u_mv_it,
-                    uniforms.u_view, uniforms.u_model, lightPosition,
-                    render_data, curr_material, modeShadow);
-            return;
-        }
-
-        //ShadowShader::RENDER_FROM_LIGHT
-        //ShadowShader::RENDER_FROM_CAMERA
-
-        if (modeShadow == ShadowShader::RENDER_FROM_LIGHT) { // ShadowMap
+            calculateShadow(rstate, lightPosition, vp_matrixLightModel);
             // generates the ShadowMap from light
-            uniforms.u_mvp = vp_matrixLightModel;
+            rstate->uniforms.u_mvp = vp_matrixLightModel;
 
-            // if (!render_data->mesh()->hasShadow()) // TODO
-            //  continue;
         }
-
+        ShaderBase* shader = NULL;
         //TODO: Improve this logic to avoid a big "switch case"
         switch (curr_material->shader_type()) {
             case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
-                shader_manager->getUnlitHorizontalStereoShader()->render(
-                        uniforms.u_mvp, render_data, curr_material,
-                        uniforms.u_right);
+                shader = rstate->shader_manager->getUnlitHorizontalStereoShader();
                 break;
             case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
-                shader_manager->getUnlitVerticalStereoShader()->render(
-                        uniforms.u_mvp, render_data, curr_material,
-                        uniforms.u_right);
+                shader = rstate->shader_manager->getUnlitVerticalStereoShader();
                 break;
             case Material::ShaderType::OES_SHADER:
-                shader_manager->getOESShader()->render(
-                        uniforms.u_mvp, render_data, curr_material);
+                shader = rstate->shader_manager->getOESShader();
                 break;
             case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
-                shader_manager->getOESHorizontalStereoShader()->render(
-                        uniforms.u_mvp, render_data, curr_material,
-                        uniforms.u_right);
+                shader = rstate->shader_manager->getOESHorizontalStereoShader();
                 break;
             case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
-                shader_manager->getOESVerticalStereoShader()->render(
-                        uniforms.u_mvp, render_data, curr_material,
-                        uniforms.u_right);
+                shader = rstate->shader_manager->getOESVerticalStereoShader();
                 break;
             case Material::ShaderType::CUBEMAP_SHADER:
-                shader_manager->getCubemapShader()->render(
-                        uniforms.u_model, uniforms.u_mvp, render_data,
-                        curr_material);
+                shader = rstate->shader_manager->getCubemapShader();
                 break;
             case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                uniforms.u_view_inv = glm::inverse(view_matrix);
-                shader_manager->getCubemapReflectionShader()->render(
-                        uniforms.u_mv,
-                        uniforms.u_mv_it,
-                        uniforms.u_view_inv, uniforms.u_mvp,
-                        render_data, curr_material);
+                rstate->uniforms.u_view_inv = glm::inverse(rstate->uniforms.u_view);
+                shader = rstate->shader_manager->getCubemapReflectionShader();
                 break;
             case Material::ShaderType::TEXTURE_SHADER:
-                shader_manager->getTextureShader()->render(
-                        uniforms.u_mv,
-                        uniforms.u_mv_it,
-                        uniforms.u_mvp, render_data, curr_material);
+                shader = rstate->shader_manager->getTextureShader();
                 break;
             case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
-                shader_manager->getExternalRendererShader()->render(
-                        uniforms.u_mv,
-                        uniforms.u_mv_it,
-                        uniforms.u_mvp, render_data);
+                shader = rstate->shader_manager->getExternalRendererShader();
                 break;
             case Material::ShaderType::ASSIMP_SHADER:
-                shader_manager->getAssimpShader()->render(
-                        uniforms.u_mv,
-                        uniforms.u_mv_it,
-                        uniforms.u_mvp, render_data, curr_material);
+                shader = rstate->shader_manager->getAssimpShader();
                 break;
             case Material::ShaderType::LIGHTMAP_SHADER:
-                shader_manager->getLightMapShader()->render(uniforms.u_mvp,
-                        render_data, curr_material);
+                shader = rstate->shader_manager->getLightMapShader();
                 break;
             default:
-                shader_manager->getCustomShader(
-                        curr_material->shader_type())->render(uniforms, render_data, lightList, curr_material);
+                shader = rstate->shader_manager->getCustomShader(curr_material->shader_type());
                 break;
         }
+        shader->render(rstate, render_data, curr_material);
     } catch (const std::string &error) {
         LOGE(
                 "Error detected in Renderer::renderRenderData; name : %s, error : %s",
                 render_data->owner_object()->name().c_str(),
                 error.c_str());
-        shader_manager->getErrorShader()->render(uniforms.u_mvp,
-                render_data);
+        rstate->shader_manager->getErrorShader()->render(rstate, render_data, curr_material);
+    }
+}
+
+void Renderer::renderWithShadow(RenderState* rstate, RenderData* render_data,  Material* curr_material) {
+
+    try {
+        bool right = rstate->render_mask & RenderData::RenderMaskBit::Right;
+
+        glm::mat4 vp_matrixLightModel;
+        glm::vec3 lightPosition;
+
+        calculateShadow(rstate, lightPosition, vp_matrixLightModel);
+        // render the shadow
+        rstate->shader_manager->getShadowShader()->render(rstate, render_data,
+                curr_material, lightPosition, vp_matrixLightModel);
+     } catch (const std::string &error) {
+        LOGE(
+                "Error detected in Renderer::renderRenderData; name : %s, error : %s",
+                render_data->owner_object()->name().c_str(),
+                error.c_str());
+        rstate->shader_manager->getErrorShader()->render(rstate, render_data, curr_material);
     }
 }
 

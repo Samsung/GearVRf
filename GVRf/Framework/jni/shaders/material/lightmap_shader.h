@@ -20,26 +20,16 @@
 #ifndef LIGHTMAP_SHADER_H_
 #define LIGHTMAP_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 namespace gvr {
-class GLProgram;
-class RenderData;
-class Material;
 
-class LightMapShader: public HybridObject {
+class LightMapShader: public ShaderBase {
 public:
     LightMapShader();
     virtual ~LightMapShader();
 
-    void render(const glm::mat4& mvp_matrix,
-            RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     LightMapShader(const LightMapShader& lightmap_shader);
@@ -48,7 +38,6 @@ private:
     LightMapShader& operator=(LightMapShader&& lightmap_shader);
 
 private:
-    GLProgram* program_;
     GLuint u_mvp_;
     GLuint u_texture_;
     GLuint u_lightmap_texture_;

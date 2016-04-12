@@ -22,27 +22,19 @@
 #define CUSTOM_SHADER_H_
 
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
+#include "shaderbase.h"
 #include "objects/eye_type.h"
 #include "objects/hybrid_object.h"
 #include "objects/light.h"
 
 namespace gvr {
 
-class GLProgram;
-class RenderData;
-class Material;
-
 struct ShaderUniformsPerObject;
 
-class CustomShader: public HybridObject {
+class CustomShader: public ShaderBase {
 public:
     explicit CustomShader(std::string vertex_shader,
             std::string fragment_shader);
@@ -58,8 +50,7 @@ public:
     void addUniformVec3Key(std::string variable_name, std::string key);
     void addUniformVec4Key(std::string variable_name, std::string key);
     void addUniformMat4Key(std::string variable_name, std::string key);
-    void render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
-                const std::vector< Light* > lightList, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
     static int getGLTexture(int n);
 
 private:
@@ -69,7 +60,6 @@ private:
     CustomShader& operator=(CustomShader&& custom_shader);
 
 private:
-    GLProgram* program_;
     GLuint u_mvp_;
     GLuint u_mv_;
     GLuint u_view_;

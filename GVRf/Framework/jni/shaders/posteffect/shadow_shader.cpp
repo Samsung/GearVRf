@@ -28,6 +28,7 @@
 
 #include "objects/mesh.h"
 #include "objects/light.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = ""
@@ -121,8 +122,8 @@ static const char FRAGMENT_SHADER[] =
 
         //////////////////////////////////////////////////////////////////////////////////////////
         /// Test Mode
-   //     "   if (u_mode == 2) { gl_FragColor = vec4( pow( texture2D(u_texture_light_color, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
-   //     "   if (u_mode == 3) { gl_FragColor = vec4( pow( texture2D(u_texture_camera_depth, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
+        "   if (u_mode == 2) { gl_FragColor = vec4( pow( texture2D(u_texture_light_color, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
+        "   if (u_mode == 3) { gl_FragColor = vec4( pow( texture2D(u_texture_camera_depth, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
 
 
         //////////////////////////////////////////////////////////////////////////////////////////
@@ -210,8 +211,8 @@ static const char FRAGMENT_SHADER[] =
 
         /////////////////////////////////////////////
         /// Color all others shader
- //       "	vec4 colorShader = texture2D(u_texture, (v_position_world.xy / v_position_world.w + 1.0) / 2.0);\n"
-		"	vec4 colorShader = texture(u_texture, v_tex_coord);\n"
+        "	vec4 colorShader = texture2D(u_texture, (v_position_world.xy / v_position_world.w + 1.0) / 2.0);\n"
+
         /////////////////////////////////////////////
         /// Combination
         "   gl_FragColor = colorShader * clamp(lightAndShadow + ambientShadow, 0.0, 1.0);\n"
@@ -350,11 +351,9 @@ void ShadowShader::recycle() {
     program_ = 0;
 }
 
-void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
-        const glm::mat4& mvp_matrix_light_cam, const glm::mat4& mv_matrix,
-        const glm::mat4& mv_it_matrix, const glm::mat4& mv_it_cam,
-        const glm::mat4& mv_it_model, glm::vec3 light_position,
-        RenderData* render_data, Material* material, int mode) {
+void ShadowShader::render(RenderState* rstate,
+        RenderData* render_data, Material* material,
+        glm::vec3 light_position, const glm::mat4& mvp_matrix_light_cam) {
 
     checkGlError("ShadowShader::render init");
 
@@ -374,12 +373,6 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 //			use_light = true;
 //		}
 //	}
-    Texture* texture = material->getTexture("diffuseTexture");
-
-    if (texture->getTarget() != GL_TEXTURE_2D) {
-        std::string error = "TextureShader::render : texture with wrong target.";
-        throw error;
-    }
 
     mesh->generateVAO();
 
@@ -389,26 +382,25 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
     checkGlError("ShadowShader::render program");
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture->getId());
+    glBindTexture(GL_TEXTURE_2D, texture_camera_color->id());
     checkGlError("ShadowShader::render glBindTexture texture_camera_color");
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture_light_depth->id());
     checkGlError("ShadowShader::render glBindTexture texture_light_depth");
 
-/*    glActiveTexture(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, texture_camera_depth->id());
     checkGlError("ShadowShader::render glBindTexture texture_camera_depth");
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, texture_light_color->id());
     checkGlError("ShadowShader::render glBindTexture texture_light_color");
-*/
 
     glUniform3f(glGetUniformLocation(program_->id(), "u_light_position"),
             light_position.x, light_position.y, light_position.z);
 
-    switch (mode) {
+    switch (rstate->render_mode) {
     case ShadowShader::RENDER_FROM_LIGHT:
         glViewport(0, 0, viewportWidth, viewportHeight);
 //        glCullFace(GL_FRONT); // TODO
@@ -467,23 +459,22 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
         break;
     }
 
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix_cam));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
 
     glm::mat4 biasMatrix = glm::make_mat4(BIAS_MATRIX);
     glUniformMatrix4fv(u_matrix_bias_, 1, GL_FALSE, glm::value_ptr(biasMatrix));
     glUniformMatrix4fv(u_matrix_light_view_projection_, 1, GL_FALSE,
             glm::value_ptr(mvp_matrix_light_cam));
-
     glUniformMatrix4fv(glGetUniformLocation(program_->id(), "u_mv"), 1,
-            GL_FALSE, glm::value_ptr(mv_matrix));
+            GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
     glUniformMatrix4fv(glGetUniformLocation(program_->id(), "u_mv_it"), 1,
-            GL_FALSE, glm::value_ptr(mv_it_matrix));
+            GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
     glUniformMatrix4fv(glGetUniformLocation(program_->id(), "u_mv_cam"), 1,
-            GL_FALSE, glm::value_ptr(mv_it_cam));
+            GL_FALSE, glm::value_ptr(mvp_matrix_light_cam));
     glUniformMatrix4fv(glGetUniformLocation(program_->id(), "u_mv_model"), 1,
-            GL_FALSE, glm::value_ptr(mv_it_model));
+            GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
 
-    glBindVertexArray(mesh->getVAOId(Material::TEXTURE_SHADER));
+    glBindVertexArray(mesh->getVAOId(Material::ShaderType::TEXTURE_SHADER));
 
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);
