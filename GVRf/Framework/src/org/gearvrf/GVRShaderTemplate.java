@@ -111,7 +111,8 @@ public class GVRShaderTemplate
     public void setSegment(String segmentName, String shaderSource)
     {
         mShaderSegments.put(segmentName, shaderSource);
-        if (shaderSource == null) return;
+        if (shaderSource == null)
+            throw new java.lang.IllegalArgumentException("Shader source is null for segment " + segmentName + " of shader");
         Pattern pattern = Pattern.compile("HAS_([a-zA-Z0-9_]+)");
         Matcher matcher = pattern.matcher(shaderSource);
         if (mShaderDefines == null) mShaderDefines = new HashSet<String>();
@@ -453,7 +454,7 @@ public class GVRShaderTemplate
                 lightFunction += "    for (int i = 0; i < Count" + entry.getKey() + "; ++i)\n";
                 lightFunction += "    {\n";
                 lightFunction += "        r = " + name + "(s, " + lightdata + "[i]);\n";
-                lightFunction += "        enable = " + lightdata + "[i].enabled;";
+                lightFunction += "        enable = " + lightdata + "[i].enabled;\n";
                 lightFunction += "        color += vec3(enable, enable, enable) * AddLight(s, r);\n";
                 lightFunction += "    };\n";
             }
