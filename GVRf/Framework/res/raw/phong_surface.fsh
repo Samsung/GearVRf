@@ -6,6 +6,8 @@ uniform sampler2D opacityTexture;
 uniform sampler2D lightmapTexture;
 uniform sampler2D emissiveTexture;
 uniform sampler2D normalTexture;
+uniform sampler2D shadowTexture;
+
 
 uniform vec4 ambient_color;
 uniform vec4 diffuse_color;

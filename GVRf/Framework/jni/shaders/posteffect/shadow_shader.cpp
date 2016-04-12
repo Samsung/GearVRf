@@ -121,8 +121,8 @@ static const char FRAGMENT_SHADER[] =
 
         //////////////////////////////////////////////////////////////////////////////////////////
         /// Test Mode
-        "   if (u_mode == 2) { gl_FragColor = vec4( pow( texture2D(u_texture_light_color, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
-        "   if (u_mode == 3) { gl_FragColor = vec4( pow( texture2D(u_texture_camera_depth, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
+   //     "   if (u_mode == 2) { gl_FragColor = vec4( pow( texture2D(u_texture_light_color, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
+   //     "   if (u_mode == 3) { gl_FragColor = vec4( pow( texture2D(u_texture_camera_depth, (v_position_world.xy / v_position_world.w + 1.0) / 2.0).z, 10.0) ); return; } \n" //
 
 
         //////////////////////////////////////////////////////////////////////////////////////////
@@ -210,8 +210,8 @@ static const char FRAGMENT_SHADER[] =
 
         /////////////////////////////////////////////
         /// Color all others shader
-        "	vec4 colorShader = texture2D(u_texture, (v_position_world.xy / v_position_world.w + 1.0) / 2.0);\n"
-
+ //       "	vec4 colorShader = texture2D(u_texture, (v_position_world.xy / v_position_world.w + 1.0) / 2.0);\n"
+		"	vec4 colorShader = texture(u_texture, v_tex_coord);\n"
         /////////////////////////////////////////////
         /// Combination
         "   gl_FragColor = colorShader * clamp(lightAndShadow + ambientShadow, 0.0, 1.0);\n"
@@ -374,6 +374,12 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
 //			use_light = true;
 //		}
 //	}
+    Texture* texture = material->getTexture("diffuseTexture");
+
+    if (texture->getTarget() != GL_TEXTURE_2D) {
+        std::string error = "TextureShader::render : texture with wrong target.";
+        throw error;
+    }
 
     mesh->generateVAO();
 
@@ -383,20 +389,21 @@ void ShadowShader::render(const glm::mat4& mvp_matrix_cam,
     checkGlError("ShadowShader::render program");
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture_camera_color->id());
+    glBindTexture(GL_TEXTURE_2D, texture->getId());
     checkGlError("ShadowShader::render glBindTexture texture_camera_color");
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture_light_depth->id());
     checkGlError("ShadowShader::render glBindTexture texture_light_depth");
 
-    glActiveTexture(GL_TEXTURE2);
+/*    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, texture_camera_depth->id());
     checkGlError("ShadowShader::render glBindTexture texture_camera_depth");
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, texture_light_color->id());
     checkGlError("ShadowShader::render glBindTexture texture_light_color");
+*/
 
     glUniform3f(glGetUniformLocation(program_->id(), "u_light_position"),
             light_position.x, light_position.y, light_position.z);

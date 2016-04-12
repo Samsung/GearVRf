@@ -210,13 +210,13 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 post_effect_shader_manager, post_effect_render_texture_a,
                 post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
 
-        renderCamera(scene, camera,
+  /*      renderCamera(scene, camera,
                 shader_manager->getShadowShader()->getFBOFromCamera(),
                 0, 0, viewportWidth, viewportHeight,
                 shader_manager, post_effect_shader_manager,
                 post_effect_render_texture_a, post_effect_render_texture_b,
                 ShadowShader::RENDER_FROM_CAMERA);
-
+*/
         renderCamera(scene, camera, framebufferId, viewportX, viewportY,
                 viewportWidth, viewportHeight, shader_manager,
                 post_effect_shader_manager, post_effect_render_texture_a,
