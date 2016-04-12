@@ -429,8 +429,7 @@ public class GVRShaderTemplate
                 classNames.put(lightClassName, ++n);
             else
             {
-                n = 0;
-                classNames.put(lightClassName, 0);
+                classNames.put(lightClassName, 1);
                 lightDefs += light.getShaderStruct();
                 lightShader = lightShader.replace("@LightType", lightClassName);
                 lightDefs += lightShader;
@@ -445,17 +444,23 @@ public class GVRShaderTemplate
         String lightSources = "";
         for (Map.Entry<String, Integer> entry : classNames.entrySet())
         {
-            String lightdata = "Data" + entry.getKey();
-            lightSources += "uniform Struct" + entry.getKey() + " " + lightdata + "[4];\n";
-            lightSources += "uniform int Count" + entry.getKey() + ";\n";
+            String name = entry.getKey();
+            String lightdata = "Data" + name;
             if (doLooping)
             {
+                lightSources += "uniform int Count" + name + ";\n";
+                lightSources += "uniform Struct" + name + " " + lightdata + "[4];\n";
                 lightFunction += "    for (int i = 0; i < Count" + entry.getKey() + "; ++i)\n";
                 lightFunction += "    {\n";
-                lightFunction += "        r = " + entry.getKey() + "(s, " + lightdata + "[i]);\n";
+                lightFunction += "        r = " + name + "(s, " + lightdata + "[i]);\n";
                 lightFunction += "        enable = " + lightdata + "[i].enabled;";
                 lightFunction += "        color += vec3(enable, enable, enable) * AddLight(s, r);\n";
                 lightFunction += "    };\n";
+            }
+            else
+            {
+                Integer count = entry.getValue();
+                lightSources += "uniform Struct" + name + " " + lightdata + "[" + count.toString() + "];\n";
             }
         }
         lightFunction += "   return color; }\n";
