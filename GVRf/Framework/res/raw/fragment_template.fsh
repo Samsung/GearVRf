@@ -1,11 +1,11 @@
-
+precision mediump float;
 uniform mat4 u_view;
 
 in vec3 viewspace_position;
 in vec3 viewspace_normal;
 in vec2 diffuse_coord;
 in vec3 view_direction;
-out vec4 gl_FragColor;
+out vec4 fragColor;
 
 struct Radiance
 {
@@ -17,9 +17,6 @@ struct Radiance
 };
 
 @FragmentSurface
-
-
-precision mediump float;
 
 @FragmentAddLight
 
@@ -35,5 +32,5 @@ void main()
 #else
 	color = s.diffuse.xyz;
 #endif
-	gl_FragColor = vec4(color.x, color.y, color.z, 1.0);
+	fragColor = vec4(color.x, color.y, color.z, 1.0);
 }
