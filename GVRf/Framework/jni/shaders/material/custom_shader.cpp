@@ -137,7 +137,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     int a_bone_indices = glGetAttribLocation(program_->id(), "a_bone_indices");
     int a_bone_weights = glGetAttribLocation(program_->id(), "a_bone_weights");
     int u_bone_matrices = glGetUniformLocation(program_->id(), "u_bone_matrix[0]");
-    LOGD("SHADER: a_bone_indices %d a_bone_weights %d u_bone_matrix %d\n", a_bone_indices, a_bone_weights, u_bone_matrices);
     if ((a_bone_indices >= 0) ||
         (a_bone_weights >= 0) ||
         (u_bone_matrices >= 0)) {
@@ -151,8 +150,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
             glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
-        LOGE("SHADER: updated bones\n");
-    }
+     }
     /*
      * Update vertex information
      */
