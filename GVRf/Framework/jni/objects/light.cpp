@@ -24,6 +24,8 @@
 #include <sstream>
 #include <vector>
 #include "glm/gtc/type_ptr.hpp"
+#include "engine/renderer/renderer.h"
+#include "shaders/posteffect/shadow_shader.h"
 
 namespace gvr {
 
@@ -100,5 +102,38 @@ void Light::render(int program) {
             glUniformMatrix4fv(offset, 1, GL_FALSE, glm::value_ptr(v));
         }
     }
+}
+
+// This is the code from renderer.cpp that renders the shadow maps
+// shader_manager->getShadowShader()->setCameraLight(cameraLight);
+// shader_manager->getShadowShader()->updateViewportInfo(viewportWidth, viewportHeight);
+// renderCamera(scene, camera,
+//         shader_manager->getShadowShader()->getFBOFromLight(),
+//         0, 0, viewportWidth, viewportHeight, shader_manager,
+//         post_effect_shader_manager, post_effect_render_texture_a,
+//         post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
+
+// This function should replace the code above
+void Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager) {
+    RenderState rstate;
+    int framebufferId = 0;  // TODO: get a valid FB ID
+
+    if (shadowMaterial_ == NULL)
+        return;
+    rstate.render_mask;
+    // TODO: set viewport based on framebuffer size
+    //rstate.viewportX;
+    //rstate.viewportY;
+    //rstate.viewportWidth;
+    //rstate.viewportHeight;
+    rstate.scene = scene;
+    rstate.material_override = shadowMaterial_;
+    rstate.shader_manager = shader_manager;
+    rstate.render_mode = ShadowShader::RENDER_FROM_LIGHT;
+    // TODO: set up matrix from viewpoint of light
+    //rstate.uniforms.u_view = camera->getViewMatrix();
+    //rstate.uniforms.u_proj = camera->getProjectionMatrix();
+
+    Renderer::renderShadowMap(rstate, framebufferId);
 }
 }

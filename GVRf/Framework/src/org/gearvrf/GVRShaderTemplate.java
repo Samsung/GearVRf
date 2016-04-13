@@ -183,22 +183,28 @@ public class GVRShaderTemplate
      * attribute used in the material or mesh, a "#define" for that name is
      * generated.
      * 
-     * @param variantDefines
-     *            set of names which are used by material & mesh.
-     * @param sourceTemplate
-     *            source code template for shader.
+     * @param definedNames
+     *            set with defined names for this shader
+     * @param mesh
+     *            GVRMesh or null if vertex attributes should be ignored
+     * @param material
+     *            GVRMaterial used with this shader (may not be null)
      * @return shader variable names actually defined by the material and mesh
      */
     private void generateVariantDefines(HashMap<String, Integer> definedNames, GVRMesh mesh, GVRMaterial material)
     {
         Set<String> texNames = material.getTextureNames();
-        Set<String> vertNames = mesh.getAttributeNames();
+        Set<String> vertNames = null;
 
+        if (mesh != null)
+            vertNames = mesh.getAttributeNames();
         for (String name : mShaderDefines)
         {
             if (definedNames.containsKey(name))
                 continue;
-            if (vertNames.contains(name) || material.hasUniform(name) || texNames.contains(name))
+            if (material.hasUniform(name) || texNames.contains(name))
+                definedNames.put(name, 1);
+            else if ((vertNames != null) && vertNames.contains(name))
                 definedNames.put(name, 1);
         }
     }
@@ -272,19 +278,14 @@ public class GVRShaderTemplate
      *            GVRRenderData with mesh and material to use
      * @param lightlist
      *            list of lights illuminating the mesh
-     * @param shaderDefines
-     *            symbols to define or undefine when creating the shader.
-     *            These are shader-specific but permit features to be enabled
-     *            or disabled at run time.
      * @return ID of vertex/fragment shader set
      */
-    public void bindShader(GVRContext context, GVRRenderData rdata,
-                                          GVRLightBase[] lightlist)
+    public void bindShader(GVRContext context, GVRRenderData rdata, GVRLightBase[] lightlist)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRMaterial material = rdata.getMaterial();
 
-        if ((mesh == null) || (material == null))
+        if (material == null)
         {
             return;
         }
@@ -314,6 +315,52 @@ public class GVRShaderTemplate
             variant = new ShaderVariant();
             variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist);
+            mShaderVariants.put(signature, variant);            
+        }
+        generateGLShader(context, material, signature);
+    }
+
+    /**
+     * Select the specific vertex and fragment shader to use with this material.
+     * 
+     * The shader template is used to generate the sources for the vertex and
+     * fragment shader based on the material and light properties.
+     * It will ignore the mesh attributes since no mesh is provided.
+     * 
+     * @param context
+     *            GVRContext
+     * @param material
+     *            material to use with the shader
+     * @return ID of vertex/fragment shader set
+     */
+    public void bindShader(GVRContext context, GVRMaterial material)
+    {
+        if (material == null)
+        {
+            return;
+        }
+        HashMap<String, Integer> variantDefines = new HashMap<String, Integer>();
+        if (mShaderVariants == null)
+        {
+            mShaderVariants = new HashMap<String, ShaderVariant>();
+        }
+        generateVariantDefines(variantDefines, null, material);
+        String signature = generateSignature(variantDefines, null);
+        ShaderVariant variant = mShaderVariants.get(signature);
+        if (variant != null)
+        {
+            if (variant.ShaderID != null)
+            {
+                Log.d("gvrf", "SHADER: Reuse shader #" + variant.ShaderID.ID + " " + signature);
+                material.setShaderType(variant.ShaderID);
+                return;
+            }
+        }
+        else
+        {
+            variant = new ShaderVariant();
+            variant.VertexShaderSource = generateShaderVariant("Vertex", variantDefines, null);
+            variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, null);
             mShaderVariants.put(signature, variant);            
         }
         generateGLShader(context, material, signature);

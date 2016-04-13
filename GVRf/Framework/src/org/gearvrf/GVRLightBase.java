@@ -68,6 +68,22 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
+    /**
+     * Enable shadow casting by this light.
+     * This function creates the material and shader used for making shadow maps.
+     * @param context GVRContext to use to bind shader
+     */
+    protected void castShadow(GVRContext context)
+    {
+        if (mShadowMaterial == null)
+        {
+            mShadowMaterial = new GVRMaterial(context);
+            GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
+            depthShader.bindShader(context, mShadowMaterial);
+            NativeLight.setShadowMaterial(getNative(), mShadowMaterial.getNative());
+        }
+    }
+    
     public void setOwnerObject(GVRSceneObject newOwner)
     {
         if (owner == newOwner) { return; }
@@ -415,6 +431,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     protected Quaternionf defaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
     protected String shaderSource = null;
     protected String uniformDescriptor = null;
+    static protected GVRMaterial mShadowMaterial = null;
 }
 
 class NativeLight
@@ -447,5 +464,5 @@ class NativeLight
     
     static native void setMat4(long light, String key, float[] matrix);
     
-    static native void castShadow(long light, boolean flag);
+    static native void setShadowMaterial(long light, long material);
 }

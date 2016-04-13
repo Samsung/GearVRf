@@ -6,5 +6,4 @@
 	bone += u_bone_matrix[bone_idx[2]] * weights[2];
 	bone += u_bone_matrix[bone_idx[3]] * weights[3];
 	vertex.local_position = bone * vertex.local_position;
-	//vertex.local_normal = bone * vertex.local_normal;
 #endif

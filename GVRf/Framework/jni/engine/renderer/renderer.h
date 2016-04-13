@@ -57,6 +57,7 @@ class Light;
 struct ShaderUniformsPerObject {
     glm::mat4   u_model;        // Model matrix
     glm::mat4   u_view;         // View matrix
+    glm::mat4   u_proj;         // projection matrix
     glm::mat4   u_view_inv;     // inverse of View matrix
     glm::mat4   u_mv;           // ModelView matrix
     glm::mat4   u_mvp;          // ModelViewProjection matrix
@@ -71,14 +72,10 @@ struct RenderState {
     int                     viewportWidth;
     int                     viewportHeight;
     Scene*                  scene;
-    Camera*                 camera;
+    Material*               material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
-    RenderTexture*          post_effect_texture_a;
-    RenderTexture*          post_effect_texture_b;
-    PostEffectShaderManager* post_effect_shader_manager;
     int                     render_mode;
-    glm::mat4               projection_matrix;
 };
 
 class Renderer {
@@ -118,7 +115,8 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
+    static void renderShadowMap(RenderState& rstate, int framebufferId);
     static void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);
 
@@ -128,21 +126,11 @@ public:
     static int getNumberTriangles();
 
 private:
-    static void renderRenderData(RenderData* render_data,
-            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager,
-            Scene* scene, int modeShadow);
+    static void renderRenderData(RenderState& rstate, RenderData* render_data);
 
-    static void renderMesh(RenderData* render_data,
-            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager,
-            Scene* scene, int modeShadow);
+    static void renderMesh(RenderState& rstate, RenderData* render_data);
 
-    static void renderMaterialShader(RenderData* render_data,
-            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager,
-            Scene* scene, int modeShadow,
-            Material *material);
+    static void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material);
 
     static void renderPostEffectData(Camera* camera,
             RenderTexture* render_texture, PostEffectData* post_effect_data,

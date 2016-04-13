@@ -235,9 +235,21 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     numberDrawCalls = 0;
     numberTriangles = 0;
 
-    glm::mat4 view_matrix = camera->getViewMatrix();
-    glm::mat4 projection_matrix = camera->getProjectionMatrix();
-    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
+    RenderState rstate;
+    rstate.material_override = NULL;
+    rstate.viewportX = viewportX;
+    rstate.viewportY = viewportY;
+    rstate.viewportWidth = viewportWidth;
+    rstate.viewportHeight = viewportHeight;
+    rstate.shader_manager = shader_manager;
+    rstate.uniforms.u_view = camera->getViewMatrix();
+    rstate.uniforms.u_proj = camera->getProjectionMatrix();
+    rstate.render_mode = modeShadow;
+    rstate.shader_manager = shader_manager;
+    rstate.scene = scene;
+    rstate.render_mask = camera->render_mask();
+    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+
 
     std::vector<PostEffectData*> post_effects = camera->post_effect_data();
 
@@ -263,9 +275,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
-            GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager,
-                    scene, modeShadow));
+            GL(renderRenderData(rstate, *it));
         }
     } else {
         RenderTexture* texture_render_texture = post_effect_render_texture_a;
@@ -282,9 +292,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
-            GL(renderRenderData(*it, view_matrix, projection_matrix,
-                    camera->render_mask(), shader_manager,
-                    scene, modeShadow));
+            GL(renderRenderData(rstate, *it));
         }
 
         GL(glDisable(GL_DEPTH_TEST));
@@ -312,6 +320,49 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         renderPostEffectData(camera, texture_render_texture, post_effects.back(), post_effect_shader_manager);
     }
 
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+    GL(glDisable(GL_BLEND));
+}
+
+/**
+ * Generate shadow maps for all the lights that cast shadows.
+ * @see Renderer::renderShadowMap Light::makeShadowMap
+ */
+void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager) {
+    const std::vector<Light*> lights = scene->getLightList();
+    for (auto it = lights.begin(); it != lights.end(); ++it) {
+        (*it)->makeShadowMap(scene, shader_manager);
+    }
+}
+
+/**
+ * Generates a shadow map into the specified framebuffer.
+ * @param rstate RenderState with rendering parameters
+ * @see Light::makeShadowMap Renderer::makeShadowMaps
+ */
+void Renderer::renderShadowMap(RenderState& rstate, int framebufferId) {
+    GL(glEnable (GL_DEPTH_TEST));
+    GL(glDepthFunc (GL_LEQUAL));
+    GL(glEnable (GL_CULL_FACE));
+    GL(glFrontFace (GL_CCW));
+    GL(glCullFace (GL_BACK));
+    GL(glEnable (GL_BLEND));
+    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+    GL(glBlendEquation (GL_FUNC_ADD));
+    GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
+    GL(glDisable (GL_POLYGON_OFFSET_FILL));
+
+    GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+    GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
+
+    GL(glClearColor(0, 0, 0, 1));
+    GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
+
+    for (auto it = render_data_vector.begin();
+            it != render_data_vector.end(); ++it) {
+        GL(renderRenderData(rstate, *it));
+    }
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
     GL(glDisable(GL_BLEND));
@@ -640,12 +691,9 @@ void Renderer::calculateShadow(ShaderManager* shader_manager,
     }
 }
 
-void Renderer::renderRenderData(RenderData* render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager,
-        Scene* scene, int modeShadow) {
+void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
 
-    if (!render_mask || !render_data->render_mask())
+    if (!rstate.render_mask || !render_data->render_mask())
         return;
     if (render_data->offset()) {
         GL(glEnable (GL_POLYGON_OFFSET_FILL));
@@ -662,11 +710,8 @@ void Renderer::renderRenderData(RenderData* render_data,
         GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
         GL(glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask()));
     }
-
     if (render_data->mesh() != 0) {
-        GL(renderMesh(render_data, view_matrix, projection_matrix,
-                    render_mask, shader_manager,
-                    scene, modeShadow));
+        GL(renderMesh(rstate, render_data));
     }
 
     // Restoring to Default.
@@ -691,10 +736,7 @@ void Renderer::renderRenderData(RenderData* render_data,
     }
 }
 
-void Renderer::renderMesh(RenderData* render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager,
-        Scene* scene, int modeShadow) {
+void Renderer::renderMesh(RenderState& rstate, RenderData* render_data) {
 
     for (int curr_pass = 0; curr_pass < render_data->pass_count();
             ++curr_pass) {
@@ -702,42 +744,31 @@ void Renderer::renderMesh(RenderData* render_data,
         numberDrawCalls++;
 
         set_face_culling(render_data->pass(curr_pass)->cull_face());
-        Material* curr_material =
-            render_data->pass(curr_pass)->material();
+        Material* curr_material = rstate.material_override;
+
+        if (curr_material == nullptr)
+            curr_material = render_data->pass(curr_pass)->material();
         if (curr_material != nullptr) {
-            GL(renderMaterialShader(render_data, view_matrix, projection_matrix,
-                        render_mask, shader_manager,
-                        scene, modeShadow, curr_material));
+            GL(renderMaterialShader(rstate, render_data, curr_material));
         }
     }
 }
 
-void Renderer::renderMaterialShader(RenderData* render_data,
-        const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-        int render_mask, ShaderManager* shader_manager,
-        Scene* scene, int modeShadow,
-        Material *curr_material) {
+void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *curr_material) {
 
     //Skip the material whose texture is not ready with some exceptions
     if (!checkTextureReady(curr_material))
         return;
-
+    ShaderManager* shader_manager = rstate.shader_manager;
     Transform* const t = render_data->owner_object()->transform();
 
     if (t == nullptr)
         return;
-    RenderState rstate;
     rstate.uniforms.u_model = t->getModelMatrix();
-    rstate.uniforms.u_view = view_matrix;
-    rstate.uniforms.u_mv = view_matrix * rstate.uniforms.u_model;
-    rstate.uniforms.u_mvp = projection_matrix * rstate.uniforms.u_mv;
     rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
-    rstate.uniforms.u_right = render_mask & RenderData::RenderMaskBit::Right;
-    rstate.render_mask = render_mask;
-    rstate.render_mode = modeShadow;
-    rstate.shader_manager = shader_manager;
-    rstate.scene = scene;
-
+    rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
+    rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
+    int modeShadow = rstate.render_mode;
     try {
         if (modeShadow == ShadowShader::RENDER_WITH_SHADOW
                 && isDefaultPosition3d(curr_material)) {

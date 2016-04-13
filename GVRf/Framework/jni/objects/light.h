@@ -29,15 +29,20 @@
 #include "objects/hybrid_object.h"
 #include "components/component.h"
 #include "util/gvr_jni.h"
+#include "objects/material.h"
+
 namespace gvr {
 class Color;
 class SceneObject;
+class Scene;
+class ShaderManager;
 
 class Light: public Component {
 public:
     explicit Light()
     :   enabled_(true),
-        parent_(NULL) {
+        parent_(NULL),
+        shadowMaterial_(NULL) {
     }
 
     ~Light() {
@@ -53,13 +58,15 @@ public:
     }
 
     bool castShadow() {
-        return castshadow_;
+        return shadowMaterial_ != NULL;
     }
 
-    void castShadow(bool flag) {
-        castshadow_ = flag;
+    void castShadow(Material* material) {
+        shadowMaterial_ = material;
         setDirty();
     }
+
+    void makeShadowMap();
 
     void disable() {
         setDirty();
@@ -131,11 +138,17 @@ public:
     }
 
     /**
-     * Internal function called at the start of each frame
-     * to update the light uniform block (if necessary).
+     * Internal function called at the start of each shader
+     * to update the light uniforms (if necessary).
      * @param program    ID of GL shader program
      */
     void render(int program);
+
+    /**
+     * Internal function called at the start of each frame
+     * to update the shadow map.
+     */
+    void makeShadowMap(Scene* scene, ShaderManager* shader_manager);
 
     std::string getLightID() {
         return lightID_;
@@ -183,7 +196,7 @@ private:
 
 private:
     bool enabled_;
-    bool castshadow_;
+    Material* shadowMaterial_;
     int size_;
     std::string lightID_;
     SceneObject* parent_;

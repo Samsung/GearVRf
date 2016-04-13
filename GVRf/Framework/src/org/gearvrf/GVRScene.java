@@ -36,7 +36,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private StringBuilder mStatMessage = new StringBuilder();
     private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
-
+    private GVRMaterial mShadowMaterial = null;
 
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
@@ -62,7 +62,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         cameraRig.attachCenterCamera(centerCamera);
 
         addSceneObject(cameraRig.getOwnerObject());
-
         setMainCameraRig(cameraRig);
         setFrustumCulling(true);
         getEventReceiver().addListener(mSceneEventListener);
@@ -389,6 +388,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
     }
     
+    /**
+     * Add a light to the scene's light list.
+     * @param light light to add
+     * @see GVRScene.getLightList
+     */
     protected void addLight(GVRLightBase light) {
         if (light != null) {
             int lightIndex = 0;
@@ -407,6 +411,14 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
     }
     
+    /**
+     * Get the list of lights used by this scene.
+     * 
+     * This list is maintained by GearVRF by gathering the
+     * lights attached to the scene objects in the scene.
+     * 
+     * @return array of lights
+     */
     public GVRLightBase[] getLightList() {
         GVRLightBase[] list = new GVRLightBase[mLightList.size()];
         mLightList.toArray(list);
