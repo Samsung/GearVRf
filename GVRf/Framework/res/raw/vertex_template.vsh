@@ -46,6 +46,6 @@ void main() {
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
-	proj_position = vertex.proj_position;
-	gl_Position = vertex.proj_position;
+	proj_position = u_mvp * vertex.local_position;	
+	gl_Position = proj_position;
 }

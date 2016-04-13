@@ -150,14 +150,11 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
             glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
-     }
+      }
     /*
      * Update vertex information
      */
-    if (mesh->isVaoDirty()) {
-        mesh->bindVertexAttributes(program_->id());
-        mesh->unSetVaoDirty();
-    }
+    mesh->bindVertexAttributes(program_->id());
     mesh->generateVAO();  // setup VAO
 
     ///////////// uniform /////////

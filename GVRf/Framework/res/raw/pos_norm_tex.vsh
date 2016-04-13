@@ -8,4 +8,3 @@ vertex.viewspace_position = pos.xyz / pos.w;
 #endif
 vertex.viewspace_normal = normalize((u_mv_it * vertex.local_normal).xyz);
 vertex.view_direction = normalize(-vertex.viewspace_position);
-vertex.proj_position = u_mvp * vertex.local_position;

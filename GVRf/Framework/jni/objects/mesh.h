@@ -252,24 +252,28 @@ public:
         attribute_float_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     // generate VAO
