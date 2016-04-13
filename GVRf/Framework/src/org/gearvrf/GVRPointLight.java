@@ -46,7 +46,7 @@ import org.gearvrf.utility.TextFile;
  */
 public class GVRPointLight extends GVRLightBase
 {
-    protected static String mPointLightShaderSource = null;
+    private static String shaderSource = null;
     public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
         uniformDescriptor += " vec4 diffuse_intensity"
@@ -56,10 +56,10 @@ public class GVRPointLight extends GVRLightBase
                 + " float attenuation_linear"
                 + " float attenuation_quadratic";
 
-        if (mPointLightShaderSource == null) {
-            mPointLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
+        if (shaderSource == null) {
+            shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
         }
-        setShaderSource(mPointLightShaderSource);
+        setShaderSource(shaderSource);
         setFloat("attenuation_constant", 1);
         setFloat("attenuation_linear", 0);
         setFloat("attenuation_quadratic", 0);

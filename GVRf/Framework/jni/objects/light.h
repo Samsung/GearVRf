@@ -169,13 +169,16 @@ private:
     /*
      * Get the GL uniform offset for a named uniform.
      */
-    int getOffset(std::string key) {
+    int getOffset(std::string key, int programId) {
         auto it = offsets_.find(key);
         if (it != offsets_.end()) {
-            return it->second;
-        } else {
-            return -1;
+            std::map<int, int> offsets = it->second;
+            auto it2 = offsets.find(programId);
+            if (it2 != offsets.end()) {
+                return it2->second;
+            }
         }
+        return -1;
     }
 
 private:
@@ -189,7 +192,7 @@ private:
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
-    std::map<std::string, int> offsets_;
+    std::map<std::string, std::map<int, int> > offsets_;
 };
 }
 #endif

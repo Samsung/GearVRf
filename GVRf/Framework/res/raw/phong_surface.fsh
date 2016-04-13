@@ -6,8 +6,6 @@ uniform sampler2D opacityTexture;
 uniform sampler2D lightmapTexture;
 uniform sampler2D emissiveTexture;
 uniform sampler2D normalTexture;
-uniform sampler2D shadowTexture;
-
 
 uniform vec4 ambient_color;
 uniform vec4 diffuse_color;
@@ -52,7 +50,7 @@ Surface @ShaderName()
 	emission = vec4(0.0, 0.0, 0.0, 0.0);
 #endif
 #ifdef HAS_normalTexture
-	viewspaceNormal = texture(normalTexture, diffuse_coord.xy).xyz;
+	viewspaceNormal = texture(normalTexture, diffuse_coord.xy).xyz * 2.0 - 1.0;
 #else
 	viewspaceNormal = viewspace_normal;
 #endif

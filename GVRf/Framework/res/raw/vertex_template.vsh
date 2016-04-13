@@ -27,7 +27,7 @@ struct Vertex
 	vec3 viewspace_position;
 	vec3 viewspace_normal;
 	vec3 view_direction;
-	vec3 proj_position;
+	vec4 proj_position;
 };
 
 void main() {

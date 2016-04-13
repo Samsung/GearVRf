@@ -123,7 +123,6 @@ void CubemapShader::render(RenderState* rstate, RenderData* render_data, Materia
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
 
-    glBindVertexArray(mesh->getVAOId(Material::ShaderType::CUBEMAP_SHADER));
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

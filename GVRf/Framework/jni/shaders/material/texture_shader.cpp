@@ -244,7 +244,6 @@ void TextureShader::render(RenderState* rstate,
                 light_specular_intensity.g, light_specular_intensity.b,
                 light_specular_intensity.a);
 
-        glBindVertexArray(mesh->getVAOId(Material::ShaderType::TEXTURE_SHADER));
     } else {
         glUniformMatrix4fv(u_mvp_no_light_, 1, GL_FALSE,
                 glm::value_ptr(rstate->uniforms.u_mvp));
@@ -252,8 +251,7 @@ void TextureShader::render(RenderState* rstate,
         glUniform1i(u_texture_no_light_, 0);
         glUniform3f(u_color_no_light_, color.r, color.g, color.b);
         glUniform1f(u_opacity_no_light_, opacity);
-
-        glBindVertexArray(mesh->getVAOId(Material::ShaderType::TEXTURE_SHADER_NOLIGHT));
+        glBindVertexArray(mesh->getVAOId());
     }
 
     GL(glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,

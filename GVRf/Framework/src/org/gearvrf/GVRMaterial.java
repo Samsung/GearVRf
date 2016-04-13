@@ -20,9 +20,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import org.gearvrf.jassimp2.AiTextureType;
+import org.gearvrf.GVRAndroidResource.TextureCallback;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 import org.gearvrf.utility.Colors;
 import org.gearvrf.utility.Threads;
+import org.gearvrf.utility.Log;
 
 import static org.gearvrf.utility.Assert.*;
 import android.graphics.Color;
@@ -68,6 +70,7 @@ import android.graphics.Color;
  */
 public class GVRMaterial extends GVRHybridObject implements
         GVRShaders<GVRMaterialShaderId> {
+    private static final String TAG = Log.tag(GVRHybridObject.class);
 
     private int mShaderFeatureSet;
     private GVRMaterialShaderId shaderId;
@@ -579,18 +582,31 @@ public class GVRMaterial extends GVRHybridObject implements
                 e.printStackTrace();
             }
         } else {
-            textures.put(key, null);
-            Threads.spawn(new Runnable() {
+            setTexture(key, (GVRTexture) null);
+            TextureCallback callback = new TextureCallback() {
+                @Override
+                public void loaded(GVRTexture texture,
+                        GVRAndroidResource ignored) {
+                   setTexture(key, texture);
+                    Log.d(TAG, "Finish loading and setting texture %s",
+                            texture);
+                }
 
                 @Override
-                public void run() {
-                    try {
-                        setTexture(key, texture.get());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                public void failed(Throwable t,
+                        GVRAndroidResource androidResource) {
+                    Log.e(TAG, "Error loading texture %s; exception: %s",
+                            texture, t.getMessage());
                 }
-            });
+
+                @Override
+                public boolean stillWanted(GVRAndroidResource androidResource) {
+                    return true;
+                }
+            };
+
+            getGVRContext().loadTexture(callback,
+                    ((FutureResource<GVRTexture>) texture).getResource());
         }
     }
 

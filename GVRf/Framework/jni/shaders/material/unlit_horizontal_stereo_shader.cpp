@@ -98,7 +98,6 @@ void UnlitHorizontalStereoShader::render(RenderState* rstate,
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, mono_rendering || rstate->uniforms.u_right ? 1 : 0);
 
-    glBindVertexArray(mesh->getVAOId(Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER));
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

@@ -310,6 +310,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         NativeLight.getMat4(getNative(), key, data);
         Matrix4f matrix = new Matrix4f();
         matrix.set(data);
+        return matrix;
     }
     
     /**
@@ -330,7 +331,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             String size = matcher.group(2);
             String type = matcher.group(1);
 
-            structDesc += type;
+            structDesc += type + size;
             structDesc += " " + name + ";\n";
         }
         structDesc += "};\n";

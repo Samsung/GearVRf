@@ -39,7 +39,6 @@
 #include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
 
-
 namespace gvr {
 class Camera;
 class Scene;
@@ -93,23 +92,32 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
+
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-            int viewportX, int viewportY, int viewportWidth,
+              int viewportX, int viewportY, int viewportWidth, int viewportHeight,
+              ShaderManager* shader_manager,
+              PostEffectShaderManager* post_effect_shader_manager,
+              RenderTexture* post_effect_render_texture_a,
+              RenderTexture* post_effect_render_texture_b, int modeShadow);
+
+    static void renderCamera(Scene* scene, Camera* camera,
+            RenderTexture* render_texture, ShaderManager* shader_manager,
+            PostEffectShaderManager* post_effect_shader_manager,
+            RenderTexture* post_effect_render_texture_a,
+            RenderTexture* post_effect_render_texture_b);
+
+    static void renderCamera(Scene* scene, Camera* camera, int viewportX,
+            int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
+
     static void renderCamera(Scene* scene, Camera* camera,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-    static void renderCamera(RenderState* rstate, int framebufferId);
-    static void renderToFrameBuffer(RenderState* rstate, int framebufferId);
-
-    static void renderToTexture(RenderState* rstate, RenderTexture* render_texture);
-
-    static void renderWithShadow(RenderState* rstate, RenderData* render_data, Material* material);
 
     static void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);
@@ -120,11 +128,21 @@ public:
     static int getNumberTriangles();
 
 private:
-    static void renderRenderData(RenderData* render_data, RenderState* rstate);
+    static void renderRenderData(RenderData* render_data,
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager,
+            Scene* scene, int modeShadow);
 
-    static void renderMesh(RenderData* render_data, RenderState* rstate);
+    static void renderMesh(RenderData* render_data,
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager,
+            Scene* scene, int modeShadow);
 
-    static void renderMaterialShader(RenderData* render_data, RenderState* rstate, Material *material);
+    static void renderMaterialShader(RenderData* render_data,
+            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
+            int render_mask, ShaderManager* shader_manager,
+            Scene* scene, int modeShadow,
+            Material *material);
 
     static void renderPostEffectData(Camera* camera,
             RenderTexture* render_texture, PostEffectData* post_effect_data,
@@ -138,14 +156,16 @@ private:
     static void build_frustum(float frustum[6][4], const float *vp_matrix);
     static void frustum_cull(Camera *camera, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
-            bool continue_cull, int planeMask);	
-	static void state_sort();
+            bool continue_cull, int planeMask);
+    static void state_sort();
 
     static void set_face_culling(int cull_face);
 
     static bool isShader3d(const Material* curr_material);
     static bool isDefaultPosition3d(const Material* curr_material);
-    static void calculateShadow(RenderState* rstate, glm::vec3& lightPosition,
+    static void calculateShadow(ShaderManager* shader_manager,
+            const Material* curr_material, const glm::mat4& model_matrix,
+            const int modeShadow, glm::vec3& lightPosition,
             glm::mat4& vp_matrixLightModel);
 
     Renderer(const Renderer& render_engine);
@@ -156,3 +176,4 @@ private:
 
 }
 #endif
+

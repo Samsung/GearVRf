@@ -474,7 +474,6 @@ void ShadowShader::render(RenderState* rstate,
     glUniformMatrix4fv(glGetUniformLocation(program_->id(), "u_mv_model"), 1,
             GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
 
-    glBindVertexArray(mesh->getVAOId(Material::ShaderType::TEXTURE_SHADER));
 
     glDrawElements(GL_TRIANGLES, mesh->triangles().size(), GL_UNSIGNED_SHORT,
             0);

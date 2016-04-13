@@ -16,8 +16,8 @@
 package org.gearvrf.utility;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
@@ -40,14 +40,14 @@ import org.gearvrf.GVRTexture;
  * @since 2.0.2
  */
 public class ResourceCache<T extends GVRHybridObject> {
-    // private static final String TAG = Log.tag(ResourceCache.class);
+    private static final String TAG = Log.tag(ResourceCache.class);
 
     private final Map<GVRAndroidResource, WeakReference<T>> cache //
-    = new HashMap<GVRAndroidResource, WeakReference<T>>();
+    = new ConcurrentHashMap<GVRAndroidResource, WeakReference<T>>();
 
     /** Save a weak reference to the resource */
     public void put(GVRAndroidResource androidResource, T resource) {
-        // Log.d(TAG, "put(%s) saving %s", androidResource, resource);
+        Log.d(TAG, "put resource %s to cache", androidResource);
 
         cache.put(androidResource, new WeakReference<T>(resource));
     }

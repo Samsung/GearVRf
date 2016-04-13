@@ -23,6 +23,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include "glm/gtc/type_ptr.hpp"
 
 namespace gvr {
 
@@ -47,48 +48,57 @@ void Light::render(int program) {
 
     for (auto it = floats_.begin(); it != floats_.end(); ++it) {
         key = lname + it->first;
-        offset = getOffset(it->first);
+        offset = getOffset(it->first, program);
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
-            offsets_[it->first] = offset;
+            offsets_[it->first][program] = offset;
         }
         if (offset >= 0)
             glUniform1f(offset, it->second);
-            //LOGD("LIGHT: %s = %f\n", key.c_str(), it->second);
+            LOGD("LIGHT: %s = %f\n", key.c_str(), it->second);
     }
 
     for (auto it = vec3s_.begin();
          it != vec3s_.end(); ++it) {
-        offset = getOffset(it->first);
+        offset = getOffset(it->first, program);
         key = lname + it->first;
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
-            offsets_[it->first] = offset;
+            offsets_[it->first][program] = offset;
           }
         if (offset >= 0) {
             glm::vec3 v = it->second;
             glUniform3f(offset, v.x, v.y, v.z);
-            //LOGD("LIGHT: %s = %f, %f, %f\n", key.c_str(), v.x, v.y, v.z);
+            LOGD("LIGHT: %s = %f, %f, %f\n", key.c_str(), v.x, v.y, v.z);
         }
     }
 
     for (auto it = vec4s_.begin();
             it != vec4s_.end(); ++it) {
-        offset = getOffset(it->first);
+        offset = getOffset(it->first, program);
         key = lname + it->first;
         if (offset <= 0) {
             offset = glGetUniformLocation(program, key.c_str());
-            offsets_[it->first] = offset;
+            offsets_[it->first][program] = offset;
         }
         if (offset >= 0) {
             glm::vec4 v = it->second;
             glUniform4f(offset, v.x, v.y, v.z, v.w);
-            //LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
+            LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
         }
     }
-    if (castshadow_)
-    {
-        // TODO: calculate shadow map here and bind shadow_map sampler
+    for (auto it = mat4s_.begin();
+            it != mat4s_.end(); ++it) {
+        offset = getOffset(it->first, program);
+        key = lname + it->first;
+        if (offset <= 0) {
+            offset = glGetUniformLocation(program, key.c_str());
+            offsets_[it->first][program] = offset;
+        }
+        if (offset >= 0) {
+            glm::mat4 v = it->second;
+            glUniformMatrix4fv(offset, 1, GL_FALSE, glm::value_ptr(v));
+        }
     }
 }
 }

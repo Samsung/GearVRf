@@ -54,7 +54,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     
     private void recurseAssimpNodes(
             GVRSceneObject parentSceneObject,
-             AiNode node,Hashtable<String, GVRLightBase> lightlist) {
+            AiNode node,Hashtable<String, GVRLightBase> lightlist) {
         try {
             GVRSceneObject sceneObject = null;
             if (node.getNumMeshes() == 0) {

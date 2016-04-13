@@ -118,12 +118,12 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     }
 
     Mesh* mesh = render_data->mesh();
-    const std::vector<Light*>& lightlist = rstate->scene->getLightList();
     glUseProgram(program_->id());
 
     /*
      * Update the uniforms for the lights
      */
+    const std::vector<Light*>& lightlist = rstate->scene->getLightList();
     for (auto it = lightlist.begin();
          it != lightlist.end();
          ++it) {
@@ -137,6 +137,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     int a_bone_indices = glGetAttribLocation(program_->id(), "a_bone_indices");
     int a_bone_weights = glGetAttribLocation(program_->id(), "a_bone_weights");
     int u_bone_matrices = glGetUniformLocation(program_->id(), "u_bone_matrix[0]");
+    LOGD("SHADER: a_bone_indices %d a_bone_weights %d u_bone_matrix %d\n", a_bone_indices, a_bone_weights, u_bone_matrices);
     if ((a_bone_indices >= 0) ||
         (a_bone_weights >= 0) ||
         (u_bone_matrices >= 0)) {
@@ -150,13 +151,14 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
             glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
+        LOGE("SHADER: updated bones\n");
     }
     /*
      * Update vertex information
      */
     if (mesh->isVaoDirty()) {
         mesh->bindVertexAttributes(program_->id());
-		mesh->unSetVaoDirty();
+        mesh->unSetVaoDirty();
     }
     mesh->generateVAO();  // setup VAO
 
@@ -189,7 +191,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
-
     for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
             ++it) {
         glm::vec2 v = material->getVec2(it->second);
@@ -213,11 +214,9 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         glm::mat4 m = material->getMat4(it->second);
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
-
-    glBindVertexArray(mesh->getVAOId(Material::ShaderType::TEXTURE_SHADER));
+    glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
-
     checkGlError("CustomShader::render");
 }
 

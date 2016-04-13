@@ -178,8 +178,10 @@ final class GVRImporter {
             throw new IOException("Cannot load a model from path " + filePath +
                     " from " + volumeType);
         }
+        
+        Log.d(TAG, "start creating jassimp model %s", filePath);
 
-        List<AiLight> lights= assimpScene.getLights();
+        List<AiLight> lights = assimpScene.getLights();
         Hashtable<String, GVRLightBase> lightlist= new Hashtable<String, GVRLightBase>();
         importLights(lights, lightlist, context);
 

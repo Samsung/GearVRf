@@ -68,6 +68,7 @@ public class GVRScriptBundle {
             GVRResourceVolume volume) throws IOException {
         GVRAndroidResource fileRes = volume.openResource(filePath);
         String fileText = TextFile.readTextFile(fileRes.getStream());
+        fileRes.closeStream();
 
         GVRScriptBundle bundle = new GVRScriptBundle();
         Gson gson = new Gson();

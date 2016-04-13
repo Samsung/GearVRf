@@ -54,7 +54,7 @@ import org.gearvrf.R;
            setSegment("FragmentSurface", surfaceShader);
            setSegment("FragmentAddLight", addLight);
            setSegment("VertexShader", vtxShader);
-           //setSegment("VertexNormalShader", normalShader);
+           setSegment("VertexNormalShader", normalShader);
            setSegment("VertexSkinShader", skinShader);
        }
        
