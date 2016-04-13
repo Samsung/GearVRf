@@ -341,31 +341,32 @@ void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager) {
  * @param rstate RenderState with rendering parameters
  * @see Light::makeShadowMap Renderer::makeShadowMaps
  */
-void Renderer::renderShadowMap(RenderState& rstate, int framebufferId) {
+void Renderer::renderShadowMap(RenderState& rstate, GLuint framebufferId) {
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));
     GL(glEnable (GL_CULL_FACE));
     GL(glFrontFace (GL_CCW));
     GL(glCullFace (GL_BACK));
-    GL(glEnable (GL_BLEND));
+/*    GL(glEnable (GL_BLEND));
     GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
     GL(glBlendEquation (GL_FUNC_ADD));
     GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
     GL(glDisable (GL_POLYGON_OFFSET_FILL));
-
+*/
     GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
 
-    GL(glClearColor(0, 0, 0, 1));
-    GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
+//    GL(glClearColor(0, 0, 0, 1));
+//    GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
     for (auto it = render_data_vector.begin();
             it != render_data_vector.end(); ++it) {
+    	rstate.uniforms.u_model = (*it)->owner_object()->transform()->getModelMatrix();
         GL(renderRenderData(rstate, *it));
     }
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
-    GL(glDisable(GL_BLEND));
+//    GL(glDisable(GL_BLEND));
 }
 
 void addRenderData(RenderData *render_data) {

@@ -103,7 +103,28 @@ void Light::render(int program) {
         }
     }
 }
+void Light::generateFBO(int realWidth, int realHeight) {
+	    depth_texture_ = new GLTexture(GL_TEXTURE_2D);
+	    glBindTexture(GL_TEXTURE_2D, depth_texture_->id());
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, realWidth, realHeight, 0,
+	            GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+	    glGenFramebuffers(1, &fboId_);
+	    glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+	    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+	    		depth_texture_->id(), 0);
+	    const GLenum bufs [ ] = {GL_NONE};
+	    glDrawBuffers(1,bufs);
+	    ////////// Check FrameBuffer was created with success ///
+	    int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+	        LOGE("Could not create FBO: %d", fboStatus);
+	        throw std::exception(); // "Could not create FBO: " + fboStatus
+	    }
 
+	    ////////// Release bind for texture and FrameBuffer /////
+	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
 // This is the code from renderer.cpp that renders the shadow maps
 // shader_manager->getShadowShader()->setCameraLight(cameraLight);
 // shader_manager->getShadowShader()->updateViewportInfo(viewportWidth, viewportHeight);
@@ -118,8 +139,13 @@ void Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager) {
     RenderState rstate;
     int framebufferId = 0;  // TODO: get a valid FB ID
 
-    if (shadowMaterial_ == NULL)
+    if (-1 == fboId_  && nullptr == depth_texture_ ){
+    	generateFBO(1024,1024);
+    }
+
+    if (shadowMaterial_ == nullptr)
         return;
+
     rstate.render_mask;
     // TODO: set viewport based on framebuffer size
     //rstate.viewportX;
@@ -134,6 +160,7 @@ void Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager) {
     //rstate.uniforms.u_view = camera->getViewMatrix();
     //rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-    Renderer::renderShadowMap(rstate, framebufferId);
+    getMat4("shadow_matrix",rstate.uniforms.u_mvp);
+    Renderer::renderShadowMap(rstate, fboId_);
 }
 }

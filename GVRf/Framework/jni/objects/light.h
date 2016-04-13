@@ -41,8 +41,10 @@ class Light: public Component {
 public:
     explicit Light()
     :   enabled_(true),
-        parent_(NULL),
-        shadowMaterial_(NULL) {
+        parent_(nullptr),
+        shadowMaterial_(nullptr),
+		fboId_(-1),
+		depth_texture_(nullptr){
     }
 
     ~Light() {
@@ -67,7 +69,7 @@ public:
     }
 
     void makeShadowMap();
-
+    void generateFBO(int , int );
     void disable() {
         setDirty();
     }
@@ -206,6 +208,8 @@ private:
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
+    GLuint fboId_;
+    GLTexture* depth_texture_;
 };
 }
 #endif
