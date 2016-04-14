@@ -142,8 +142,8 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * splash screen behavior
      */
 
-    private GVRViewManager mViewManager;    
-    private ArrayList<GVRPlugin> mPlugins;
+    private GVRViewManager mViewManager;   
+    
 
     /**
      * Whether the splash screen should be displayed, and for how long.
@@ -318,18 +318,6 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
                 GVRRenderData.GVRRenderingOrder.OVERLAY);
         onSplashScreenCreated(splashScreen);
         return splashScreen;
-    }
-
-    public void addPlugin(GVRPlugin plugin) {
-        if(mPlugins == null){
-            mPlugins = new ArrayList<GVRPlugin>();
-        }
-        mPlugins.add(plugin); 
-       
-    }
-
-    public ArrayList<GVRPlugin> getPlugins() {
-        return mPlugins;
-    } 
+    }  
 
 }

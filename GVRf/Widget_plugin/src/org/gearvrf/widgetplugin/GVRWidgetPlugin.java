@@ -1,30 +1,17 @@
-/* Copyright 2015 Samsung Electronics Co., LTD
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.gearvrf.widgetplugin;
 
 import java.lang.reflect.Method;
-import java.util.Objects;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLContext;
 
 import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRScript;
-import org.gearvrf.plugin.GVRPlugin;
+import org.gearvrf.IActivityEvents;
+import org.gearvrf.IScriptEvents;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -36,8 +23,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
 import android.os.Handler;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -48,12 +33,9 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Audio;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.LifecycleListener;
 import com.badlogic.gdx.Net;
 import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.Application.ApplicationType;
-import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationBase;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.badlogic.gdx.backends.android.AndroidAudio;
@@ -75,8 +57,7 @@ import com.badlogic.gdx.utils.GdxNativesLoader;
  * it together with GVR activity context. Base activity for GVR apps which use
  * GVRWidgets
  */
-public class GVRWidgetPluginActivity extends GVRActivity implements
-        AndroidApplicationBase, GVRPlugin {
+public class GVRWidgetPlugin implements AndroidApplicationBase {
 
     static {
         GdxNativesLoader.load();
@@ -110,6 +91,88 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
     protected int mFBOTextureId = 0;
     private Object mSync = new Object();
     private EGLContext mEGLContext;
+    private GVRActivity mActivity;
+
+    private IActivityEvents mActivityEventsListener = new GVREventListeners.ActivityEvents() {
+        @Override
+        public void onPause() {
+            if(mGraphics != null){
+            boolean isContinuous = mGraphics.isContinuousRendering();
+            boolean isContinuousEnforced = AndroidGraphics.enforceContinuousRendering;
+
+            // from here we don't want non continuous rendering
+            AndroidGraphics.enforceContinuousRendering = true;
+            mGraphics.setContinuousRendering(true);
+            // calls to setContinuousRendering(false) from other thread (ex:
+            // GLThread)
+            // will be ignored at this point...
+            mGraphics.pause();
+
+            mInputDispatcher.getInput().onPause();
+
+            if (mActivity.isFinishing()) {
+                mGraphics.clearManagedCaches();
+                mGraphics.destroy();
+            }
+
+            AndroidGraphics.enforceContinuousRendering = isContinuousEnforced;
+            mGraphics.setContinuousRendering(isContinuous);
+
+            mGraphics.onPauseGLSurfaceView();
+            }
+        }
+
+        @Override
+        public void onSetScript(GVRScript script) {
+            script.getEventReceiver().addListener(mScriptEventsListener);
+        }
+
+        @Override
+        public void onWindowFocusChanged(boolean hasFocus) {
+            useImmersiveMode(GVRWidgetPlugin.this.mUseImmersiveMode);
+            hideStatusBar(GVRWidgetPlugin.this.mHideStatusBar);
+            if (hasFocus) {
+                GVRWidgetPlugin.this.mWasFocusChanged = 1;
+                if (GVRWidgetPlugin.this.mIsWaitingForAudio) {
+                    GVRWidgetPlugin.this.mAudio.resume();
+                    GVRWidgetPlugin.this.mIsWaitingForAudio = false;
+                }
+            } else {
+                GVRWidgetPlugin.this.mWasFocusChanged = 0;
+            }
+        }
+
+        @Override
+        public void onConfigurationChanged(Configuration config) {
+            boolean keyboardAvailable = false;
+            if (config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO)
+                keyboardAvailable = true;
+            mInputDispatcher.getInput().keyboardAvailable = keyboardAvailable;
+        }
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            // forward events to our listeners if there are any installed
+            synchronized (mAndroidEventListeners) {
+                for (int i = 0; i < mAndroidEventListeners.size; i++) {
+                    mAndroidEventListeners.get(i).onActivityResult(requestCode,
+                            resultCode, data);
+                }
+            }
+        }        
+    };
+
+    private IScriptEvents mScriptEventsListener = new GVREventListeners.ScriptEvents() {
+        @Override
+        public void onEarlyInit(GVRContext context) {
+            initWidget();
+        }  
+    };
+
+    public GVRWidgetPlugin(GVRActivity activity) {
+        mActivity = activity;
+        activity.getEventReceiver().addListener(mActivityEventsListener);
+    }
 
     /**
      * This method has to be called in the {@link Activity#onCreate(Bundle)}
@@ -195,10 +258,10 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
                         : config.resolutionStrategy, sharedcontext);
 
         mInputDispatcher.setInput(AndroidInputFactory.newAndroidInput(this,
-                this, mGraphics.getView(), config));        
-        mAudio = new AndroidAudio(this, config);
-        this.getFilesDir(); // workaround for Android bug #10515463
-        mFiles = new AndroidFiles(this.getAssets(), this.getFilesDir()
+                mActivity, mGraphics.getView(), config));        
+        mAudio = new AndroidAudio(mActivity, config);
+        mActivity.getFilesDir(); // workaround for Android bug #10515463
+        mFiles = new AndroidFiles(mActivity.getAssets(), mActivity.getFilesDir()
                 .getAbsolutePath());
         mNet = new AndroidNet(this);
         this.mListener = listener;
@@ -234,17 +297,17 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
 
         if (!isForView) {
             try {
-                requestWindowFeature(Window.FEATURE_NO_TITLE);
+                mActivity.requestWindowFeature(Window.FEATURE_NO_TITLE);
             } catch (Exception ex) {
                 log("AndroidApplication",
                         "Content already displayed, cannot request FEATURE_NO_TITLE",
                         ex);
             }
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            mActivity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            getWindow().clearFlags(
+            mActivity.getWindow().clearFlags(
                     WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-            setContentView(mGraphics.getView(), createLayoutParams());
+            mActivity.setContentView(mGraphics.getView(), createLayoutParams());
         }
 
         createWakeLock(config.useWakelock);
@@ -276,9 +339,14 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         return layoutParams;
     }
 
+    public void setViewSize(int width, int height) {
+        mViewWidth = width;
+        mViewHeight = height;
+    }
+
     protected void createWakeLock(boolean use) {
         if (use) {
-            getWindow()
+            mActivity.getWindow()
                     .addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
     }
@@ -287,7 +355,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         if (!hide || getVersion() < 11)
             return;
 
-        View rootView = getWindow().getDecorView();
+        View rootView = mActivity.getWindow().getDecorView();
 
         try {
             Method m = View.class.getMethod("setSystemUiVisibility", int.class);
@@ -299,29 +367,13 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         }
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        useImmersiveMode(this.mUseImmersiveMode);
-        hideStatusBar(this.mHideStatusBar);
-        if (hasFocus) {
-            this.mWasFocusChanged = 1;
-            if (this.mIsWaitingForAudio) {
-                this.mAudio.resume();
-                this.mIsWaitingForAudio = false;
-            }
-        } else {
-            this.mWasFocusChanged = 0;
-        }
-    }
-
     @TargetApi(19)
     @Override
     public void useImmersiveMode(boolean use) {
         if (!use || getVersion() < Build.VERSION_CODES.KITKAT)
             return;
 
-        View view = getWindow().getDecorView();
+        View view = mActivity.getWindow().getDecorView();
         try {
             Method m = View.class.getMethod("setSystemUiVisibility", int.class);
             int code = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -334,46 +386,6 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         } catch (Exception e) {
             log("AndroidApplication", "Can't set immersive mode", e);
         }
-    }
-
-    @Override
-    protected void onPause() {
-        if(mGraphics != null){
-        boolean isContinuous = mGraphics.isContinuousRendering();
-        boolean isContinuousEnforced = AndroidGraphics.enforceContinuousRendering;
-
-        // from here we don't want non continuous rendering
-        AndroidGraphics.enforceContinuousRendering = true;
-        mGraphics.setContinuousRendering(true);
-        // calls to setContinuousRendering(false) from other thread (ex:
-        // GLThread)
-        // will be ignored at this point...
-        mGraphics.pause();
-
-        mInputDispatcher.getInput().onPause();
-
-        if (isFinishing()) {
-            mGraphics.clearManagedCaches();
-            mGraphics.destroy();
-        }
-
-        AndroidGraphics.enforceContinuousRendering = isContinuousEnforced;
-        mGraphics.setContinuousRendering(isContinuous);
-
-        mGraphics.onPauseGLSurfaceView();
-        }
-
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -429,7 +441,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
 
     @Override
     public Preferences getPreferences(String name) {
-        return new AndroidPreferences(getSharedPreferences(name,
+        return new AndroidPreferences(mActivity.getSharedPreferences(name,
                 Context.MODE_PRIVATE));
     }
 
@@ -438,7 +450,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
     @Override
     public Clipboard getClipboard() {
         if (clipboard == null) {
-            clipboard = new AndroidClipboard(this);
+            clipboard = new AndroidClipboard(mActivity);
         }
         return clipboard;
     }
@@ -452,20 +464,11 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
     }
 
     @Override
-    public void onConfigurationChanged(Configuration config) {
-        super.onConfigurationChanged(config);
-        boolean keyboardAvailable = false;
-        if (config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO)
-            keyboardAvailable = true;
-        mInputDispatcher.getInput().keyboardAvailable = keyboardAvailable;
-    }
-
-    @Override
     public void exit() {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                GVRWidgetPluginActivity.this.finish();
+                mActivity.finish();
             }
         });
     }
@@ -481,19 +484,6 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
     public void removeLifecycleListener(LifecycleListener listener) {
         synchronized (mLifecycleListeners) {
             mLifecycleListeners.removeValue(listener, true);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        // forward events to our listeners if there are any installed
-        synchronized (mAndroidEventListeners) {
-            for (int i = 0; i < mAndroidEventListeners.size; i++) {
-                mAndroidEventListeners.get(i).onActivityResult(requestCode,
-                        resultCode, data);
-            }
         }
     }
 
@@ -519,7 +509,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
 
     @Override
     public Context getContext() {
-        return this;
+        return mActivity;
     }
 
     @Override
@@ -539,7 +529,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
 
     @Override
     public Window getApplicationWindow() {
-        return this.getWindow();
+        return mActivity.getWindow();
     }
 
     @Override
@@ -547,46 +537,12 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         return this.mHandler;
     }
 
-    @Override
-    public void init(Object... args) {     
-        // TODO Auto-generated method stub       
-        mEGLContext = ((EGL10) EGLContext.getEGL())
-                .eglGetCurrentContext();
-        syncNotify();        
+    protected void initWidget() {
+        mEGLContext = ((EGL10) EGLContext.getEGL()).eglGetCurrentContext();
+        syncNotify();
         while (!isInitialised()) {
            syncWait();
         }
-        
-    }
-
-    @Override
-    public void destroy() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void onCreateCallback(Bundle savedInstanceState) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void onResumeCallback() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void onPauseCallback() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void onDestroyCallback() {
-        // TODO Auto-generated method stub
-
     }
 
     public View getWidgetView() {
@@ -601,8 +557,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         return mViewHeight;
     }
 
-    @Override
-    public boolean isInitialised() {
+    protected boolean isInitialised() {
         return mWidget.isInitialised();
     }
 
@@ -616,7 +571,6 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
 
     public void setCurrentScript(GVRScript script) {
         mScript = script;
-        mScript.addPlugin(this);
     }
 
     public void setPickedObject(GVRSceneObject obj) {
@@ -659,7 +613,7 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         mWidgetView = (GLSurfaceView) initializeForView(widget,
                 new AndroidApplicationConfiguration(), mEGLContext);
 
-        addContentView(mWidgetView, createLayoutParams());
+        mActivity.addContentView(mWidgetView, createLayoutParams());
         Gdx.app = this;
         Gdx.input = this.getInput();
         Gdx.audio = this.getAudio();
@@ -685,26 +639,14 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
         }
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {         
-        
-        boolean handled = mInputDispatcher.dispatchEvent(event, mWidgetView);       
-        if(!handled)
-            return super.dispatchTouchEvent(event);
-        return true;
-    }
-
-    @Override
-    public void syncNotify() {
+    protected void syncNotify() {
         // TODO Auto-generated method stub
         synchronized (mSync) {
             mSync.notifyAll();
         }
-
     }
 
-    @Override
-    public void syncWait() {
+    protected void syncWait() {
         // TODO Auto-generated method stub
         synchronized (mSync) {
             try {
@@ -761,7 +703,32 @@ public class GVRWidgetPluginActivity extends GVRActivity implements
     @Override
     public void setLogLevel(int arg0) {
         // TODO Auto-generated method stub
-
     }
 
+    @Override
+    public WindowManager getWindowManager() {
+        return mActivity.getWindowManager();
+    }
+
+    @Override
+    public void runOnUiThread(Runnable arg0) {
+        mActivity.runOnUiThread(arg0);
+    }
+
+    @Override
+    public void startActivity(Intent arg0) {
+        mActivity.startActivity(arg0);
+    }
+
+    public GVRActivity getGVRActivity() {
+        return mActivity;
+    }
+    
+    public boolean dispatchTouchEvent(MotionEvent event) {
+    	return  mInputDispatcher.dispatchEvent(event, mWidgetView) ? true:     	      	
+    	        	 mActivity.onTouchEvent(event);		    	       
+    	
+    }
+    
+   
 }
