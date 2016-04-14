@@ -15,8 +15,14 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+
 import org.gearvrf.animation.GVRAnimation;
+
+import org.gearvrf.plugin.GVRPlugin;
+
 import org.gearvrf.script.IScriptable;
+
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -136,7 +142,8 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * splash screen behavior
      */
 
-    private GVRViewManager mViewManager;
+    private GVRViewManager mViewManager;   
+    
 
     /**
      * Whether the splash screen should be displayed, and for how long.
@@ -311,5 +318,6 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
                 GVRRenderData.GVRRenderingOrder.OVERLAY);
         onSplashScreenCreated(splashScreen);
         return splashScreen;
-    }
+    }  
+
 }

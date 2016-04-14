@@ -47,7 +47,10 @@ public:
     {
         pending_gl_task_ = GL_TASK_INIT_NO_PARAM;
     }
-
+    explicit GLTexture(GLenum target, int texture_id) :
+            target_(target) {
+        id_ = texture_id;
+    }
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
         pending_gl_task_ = GL_TASK_INIT_WITH_PARAM;

@@ -142,9 +142,16 @@ public class GVRMaterial extends GVRHybridObject implements
             }
         }
 
+
+        public abstract static class UnlitFBO {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    20);
+					}
+
         public abstract static class LightMap {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     11);
+
         }
     };
 
@@ -592,6 +599,7 @@ public class GVRMaterial extends GVRHybridObject implements
                             texture);
                 }
 
+
                 @Override
                 public void failed(Throwable t,
                         GVRAndroidResource androidResource) {
@@ -603,6 +611,7 @@ public class GVRMaterial extends GVRHybridObject implements
                 public boolean stillWanted(GVRAndroidResource androidResource) {
                     return true;
                 }
+
             };
 
             getGVRContext().loadTexture(callback,

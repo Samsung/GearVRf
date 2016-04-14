@@ -697,13 +697,19 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             }
 
             try {
+
+                           
+               
                 GVRViewManager.this.getEventManager().sendEvent(
                         mScript, IScriptEvents.class,
                         "onEarlyInit", GVRViewManager.this);
 
+              
+
                 GVRViewManager.this.getEventManager().sendEvent(
                         mScript, IScriptEvents.class,
                         "onInit", GVRViewManager.this);
+
             } catch (Throwable t) {
                 t.printStackTrace();
                 mActivity.finish();
@@ -1022,6 +1028,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         return mInputManager;
     }
 
+
     @Override
     public GVREventManager getEventManager() {
         return mEventManager;
@@ -1051,4 +1058,5 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         //strictly one-time per process op hence the static block
         NativeGLDelete.createTlsKey();
     }
+
 }
