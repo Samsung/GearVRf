@@ -3,6 +3,8 @@ uniform mat4 u_view;
 
 in vec3 viewspace_position;
 in vec3 viewspace_normal;
+out vec4 local_position;
+out vec4 proj_position;
 in vec2 diffuse_coord;
 in vec3 view_direction;
 out vec4 fragColor;

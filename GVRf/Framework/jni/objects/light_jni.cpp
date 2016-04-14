@@ -75,13 +75,21 @@ Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
-        jobject obj, jlong jlight, jstring key, jlong matrix);
+        jobject obj, jlong jlight, jstring key, jfloatArray matrix);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
-        jobject obj, jlong jlight, jstring key, jlong matrix);
+        jobject obj, jlong jlight, jstring key, jfloatArray matrix);
 
 }
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeLight_getTexture(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key);
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeLight_setTexture(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jlong jtexture);
 ;
 
 JNIEXPORT jlong JNICALL
@@ -233,5 +241,28 @@ Java_org_gearvrf_NativeLight_castShadow(JNIEnv * env, jobject obj, jlong jlight,
     Light* light = reinterpret_cast<Light*>(jlight);
     Material* material = reinterpret_cast<Material*>(jmaterial);
     light->castShadow(material);
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeLight_getTexture(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    Texture* texture = light->getTexture(native_key);
+    env->ReleaseStringUTFChars(key, char_key);
+    return (jlong) light;
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeLight_setTexture(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jlong jtexture)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
+    light->setTexture(native_key, texture);
 }
 }

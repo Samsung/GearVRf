@@ -3,9 +3,9 @@ Radiance @LightType(Surface s, in Struct@LightType data)
 	vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
 	float attenuation = 1.0f;
     
-	if (data.has_shadow_map != 0)
+	if (data.has_shadow_map != 0.0)
 	{
-   		vec4 ShadowCoord = data.shadow_matrix * vec4(local_position, 1);
+   		vec4 ShadowCoord = data.shadow_matrix * local_position;
 		if (texture(data.shadow_map, ShadowCoord.xy).z < ShadowCoord.z)
     		attenuation = 0.5;
 	}

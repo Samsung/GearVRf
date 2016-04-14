@@ -148,14 +148,14 @@ void Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager) {
 
     rstate.render_mask;
     // TODO: set viewport based on framebuffer size
-    //rstate.viewportX;
-    //rstate.viewportY;
-    //rstate.viewportWidth;
-    //rstate.viewportHeight;
+    rstate.viewportX = 0;
+    rstate.viewportY = 0;
+    rstate.viewportWidth = 1024;
+    rstate.viewportHeight = 1024;
     rstate.scene = scene;
     rstate.material_override = shadowMaterial_;
     rstate.shader_manager = shader_manager;
-    rstate.render_mode = ShadowShader::RENDER_FROM_LIGHT;
+    rstate.render_mode = 0;
     // TODO: set up matrix from viewpoint of light
     //rstate.uniforms.u_view = camera->getViewMatrix();
     //rstate.uniforms.u_proj = camera->getProjectionMatrix();

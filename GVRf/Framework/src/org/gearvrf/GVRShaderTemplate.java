@@ -414,23 +414,29 @@ public class GVRShaderTemplate
      */
     protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
     {
-        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
-        Matcher matcher = pattern.matcher(mUniformDescriptor);
+        Pattern pattern1 = Pattern.compile("[ ]*([A-Za-z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
+        Pattern pattern2 = Pattern.compile("([A-Za-z]+)([0-9_]+)");
+        Matcher matcher1 = pattern1.matcher(mUniformDescriptor);
         Set<String> texNames = material.getTextureNames();
 
         for (String s : texNames)
         {
             map.addTextureKey(s, s);
         }
-        while (matcher.find())
+        while (matcher1.find())
         {
-            String name = matcher.group(3);
-            String size = matcher.group(2);
+            String type = matcher1.group(1);
+            String name = matcher1.group(2);
+            Matcher matcher2 = pattern2.matcher(type);
             int nfloats = 1;
-
-            if (size.length() > 0)
+            
+            if (matcher2.find())
             {
-                nfloats = Integer.parseInt(size);
+                String size = matcher2.group(2);
+                if (size.length() > 0)
+                {
+                    nfloats = Integer.parseInt(size);
+                }
             }
             switch (nfloats)
             {
@@ -514,7 +520,7 @@ public class GVRShaderTemplate
             else
             {
                 Integer count = entry.getValue();
-                lightSources += "uniform Struct" + name + " " + lightdata + "[" + count.toString() + "];\n";
+                lightSources += "\nuniform Struct" + name + " " + lightdata + "[" + count.toString() + "];\n";
             }
         }
         lightFunction += "   return color; }\n";

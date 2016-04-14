@@ -139,6 +139,18 @@ public:
         }
     }
 
+    Texture* getTexture(std::string key) {
+        return textures_[key];
+    }
+
+    void setTexture(std::string key, Texture* texture)
+    {
+        textures_[key] = texture;
+        if (enabled_) {
+            setDirty();
+        }
+    }
+
     /**
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
@@ -208,6 +220,7 @@ private:
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
+    std::map<std::string, Texture*> textures_;
     GLuint fboId_;
     GLTexture* depth_texture_;
 };
