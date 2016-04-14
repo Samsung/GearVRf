@@ -497,7 +497,7 @@ public class GVRShaderTemplate
             if (!doLooping)
             {
                 lightFunction += "   r = " + lightClassName + "(s, " + lightid + ");\n";
-                lightFunction += "   enable = " + lightid + ".enabled;";
+                lightFunction += "   enable = " + lightid + ".enabled;\n";
                 lightFunction += "   color += vec3(enable, enable, enable) * AddLight(s, r);\n";
             }
         }

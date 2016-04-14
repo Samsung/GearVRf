@@ -331,8 +331,10 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
  */
 void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager) {
     const std::vector<Light*> lights = scene->getLightList();
+    int texIndex = 0;
     for (auto it = lights.begin(); it != lights.end(); ++it) {
-        (*it)->makeShadowMap(scene, shader_manager);
+        if ((*it)->makeShadowMap(scene, shader_manager, texIndex))
+            ++texIndex;
     }
 }
 

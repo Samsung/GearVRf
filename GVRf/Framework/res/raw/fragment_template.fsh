@@ -1,5 +1,6 @@
 precision mediump float;
 uniform mat4 u_view;
+uniform sampler2DArray u_shadow_maps;
 
 in vec3 viewspace_position;
 in vec3 viewspace_normal;

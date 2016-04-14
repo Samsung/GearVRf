@@ -77,7 +77,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     protected void castShadow(GVRContext context)
     {
-        mTextures.put("shadow_map", null);
         if (mShadowMaterial == null)
         {
             mShadowMaterial = new GVRMaterial(context);
@@ -85,6 +84,11 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             depthShader.bindShader(context, mShadowMaterial);
             //NativeLight.castShadow(getNative(), mShadowMaterial.getNative());
         }
+    }
+    
+    public boolean castShadow()
+    {
+        return mShadowMaterial != null;
     }
     
     public void setOwnerObject(GVRSceneObject newOwner)
@@ -331,33 +335,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         matrix.set(data);
         return matrix;
     }
-    
-    /**
-     * Gets a texture associated with this light by name.
-     * @param key name of texture to get
-     * @return GVRTexture or null if no texture by that name is attached to this light.
-     */
-    public GVRTexture getTexture(String key) {
-        return mTextures.get(key);
-    }
-    
-    /**
-     * Attach a texture to this light.
-     * 
-     * Textures are used in light shaders as shadow maps or
-     * for environment lighting. Textures attached here are
-     * bound to the fragment shader.
-     * 
-     * @param key       key to retrieve texture
-     * @param texture   texture to attach
-     */
-    public void setTexture(String key, GVRTexture texture) {
-        if (texture != null) {
-            mTextures.put(key, texture);
-            NativeLight.setTexture(getNative(), key, texture.getNative());
-        }
-    }
-    
+        
     /**
      * Get the GLSL structure describing this light. The name of the structure
      * is derived from the light class name. It is assumed that each different
@@ -376,10 +354,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             String type = matcher.group(1);
 
             structDesc += type + " " + name + ";\n";
-        }
-        for (Map.Entry<String,GVRTexture> entry : mTextures.entrySet())
-        {
-            structDesc += "sampler2D " + entry.getKey() + ";\n";
         }
         structDesc += "};\n";
         return structDesc;
@@ -462,7 +436,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     protected Quaternionf defaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
     protected String shaderSource = null;
     protected String uniformDescriptor = null;
-    protected HashMap<String, GVRTexture> mTextures = new HashMap<String, GVRTexture>();
     static protected GVRMaterial mShadowMaterial = null;
 }
 
@@ -497,6 +470,4 @@ class NativeLight
     static native void setMat4(long light, String key, float[] matrix);
     
     static native void castShadow(long light, long material);
-    
-    static native void setTexture(long light, String key, long texture);
 }

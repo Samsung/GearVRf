@@ -29,14 +29,15 @@
 
 namespace gvr {
 
+GLTexture* Light::depth_texture_ = NULL;
 
 /*
  * Loads the uniforms associated with this light
  * into the GPU if they have changed.
- * @param program ID of shader program light is bound ot
- * @param texLoc  next available texture location
+ * @param program   ID of shader program light is bound ot
+ * @param texIndex  next available texture location
  */
-void Light::render(int program, int texLoc) {
+void Light::render(int program, int texIndex) {
     auto it = dirty_.find(program);
 
     if (it != dirty_.end() && !it->second)
@@ -49,6 +50,25 @@ void Light::render(int program, int texLoc) {
     std::string lname = lightID_ + ".";
     std::stringstream ss;
     int offset;
+
+    /*
+     * If this light casts shadows and has a shadow map,
+     * bind the shadow map texture to the shader and
+     * set the shadow_map_index with the index of the map.
+     */
+    if (castShadow()) {
+        GLTexture* shadowmap = depth_texture_;
+        if (shadowmap == NULL) {
+            depth_texture_ = shadowmap = new GLTexture(GL_TEXTURE_2D_ARRAY);
+            LOGD("LIGHT: %s create shadow map array\n", lightID_.c_str());
+       }
+        int loc = glGetUniformLocation(program, "u_shadow_maps");
+        glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+        glActiveTexture(GL_TEXTURE0 + texIndex);
+        glUniform1i(loc, shadowMapIndex_);
+        floats_[lname + "shadow_map_index"] = (float) shadowMapIndex_;
+        LOGD("LIGHT: %s bind shadow map %d\n", lightID_.c_str(), shadowMapIndex_);
+    }
 
     for (auto it = floats_.begin(); it != floats_.end(); ++it) {
         key = lname + it->first;
@@ -102,43 +122,30 @@ void Light::render(int program, int texLoc) {
         if (offset >= 0) {
             glm::mat4 v = it->second;
             glUniformMatrix4fv(offset, 1, GL_FALSE, glm::value_ptr(v));
-        }
-    }
-    int texture_index = texLoc;
-    for (auto it = textures_.begin();
-            it != textures_.end(); ++it) {
-        if (it->second != NULL) {
-            glActiveTexture(GL_TEXTURE0 + texture_index);
-            Texture* texture = it->second;
-            glBindTexture(texture->getTarget(), texture->getId());
-            int location = glGetUniformLocation(program, it->first.c_str());
-            glUniform1i(location, texture_index++);
-            LOGD("LIGHT: %s = %d\n", key.c_str(), location);
+            LOGD("LIGHT: %s\n", key.c_str());
         }
     }
 }
 
-void Light::generateFBO(int realWidth, int realHeight) {
-	    depth_texture_ = new GLTexture(GL_TEXTURE_2D);
-	    glBindTexture(GL_TEXTURE_2D, depth_texture_->id());
-	    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, realWidth, realHeight, 0,
-	            GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
-	    glGenFramebuffers(1, &fboId_);
-	    glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
-	    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-	    		depth_texture_->id(), 0);
-	    const GLenum bufs [ ] = {GL_NONE};
-	    glDrawBuffers(1,bufs);
-	    ////////// Check FrameBuffer was created with success ///
-	    int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-	        LOGE("Could not create FBO: %d", fboStatus);
-	        throw std::exception(); // "Could not create FBO: " + fboStatus
-	    }
-
-	    ////////// Release bind for texture and FrameBuffer /////
-	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+void Light::generateFBO() {
+    glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+    glTexImage2D(GL_TEXTURE_2D_ARRAY, shadowMapIndex_, GL_DEPTH_COMPONENT, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 0,
+            GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+    glGenFramebuffers(1, &fboId_);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY,
+            depth_texture_->id(), shadowMapIndex_);
+    const GLenum bufs [ ] = {GL_NONE};
+    glDrawBuffers(1, bufs);
+    ////////// Check FrameBuffer was created with success ///
+    int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+        LOGE("Could not create FBO: %d", fboStatus);
+        throw std::exception(); // "Could not create FBO: " + fboStatus
+    }
+    LOGD("LIGHT: %s create shadow map framebuffer %d\n", lightID_.c_str(), shadowMapIndex_);
+    ////////// Release bind for texture and FrameBuffer /////
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 // This is the code from renderer.cpp that renders the shadow maps
 // shader_manager->getShadowShader()->setCameraLight(cameraLight);
@@ -150,16 +157,16 @@ void Light::generateFBO(int realWidth, int realHeight) {
 //         post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
 
 // This function should replace the code above
-void Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager) {
+bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex) {
     RenderState rstate;
     int framebufferId = 0;  // TODO: get a valid FB ID
 
-    if (-1 == fboId_  && nullptr == depth_texture_ ){
-    	generateFBO(1024,1024);
+    if (-1 == fboId_  && nullptr == depth_texture_ ) {
+        shadowMapIndex_ = texIndex;
+    	generateFBO();
     }
-
     if (shadowMaterial_ == nullptr)
-        return;
+        return false;
 
     rstate.render_mask;
     // TODO: set viewport based on framebuffer size
@@ -177,5 +184,6 @@ void Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager) {
 
     getMat4("shadow_matrix",rstate.uniforms.u_mvp);
     Renderer::renderShadowMap(rstate, fboId_);
+    return true;
 }
 }

@@ -39,12 +39,14 @@ class ShaderManager;
 
 class Light: public Component {
 public:
+    const int MAX_SHADOW_MAPS = 4;
+    const int SHADOW_MAP_SIZE = 1024;
     explicit Light()
     :   enabled_(true),
         parent_(nullptr),
         shadowMaterial_(nullptr),
 		fboId_(-1),
-		depth_texture_(nullptr){
+		shadowMapIndex_(-1) {
     }
 
     ~Light() {
@@ -68,8 +70,6 @@ public:
         setDirty();
     }
 
-    void makeShadowMap();
-    void generateFBO(int , int );
     void disable() {
         setDirty();
     }
@@ -139,23 +139,11 @@ public:
         }
     }
 
-    Texture* getTexture(std::string key) {
-        return textures_[key];
-    }
-
-    void setTexture(std::string key, Texture* texture)
-    {
-        textures_[key] = texture;
-        if (enabled_) {
-            setDirty();
-        }
-    }
-
     /**
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
-     * @param program    ID of GL shader program
-     * @param texIndex   next available GL texture index
+     * @param program   ID of GL shader program
+     * @param texIndex  GL texture index for shadow map
      */
     void render(int program, int texIndex);
 
@@ -163,7 +151,7 @@ public:
      * Internal function called at the start of each frame
      * to update the shadow map.
      */
-    void makeShadowMap(Scene* scene, ShaderManager* shader_manager);
+    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
 
     std::string getLightID() {
         return lightID_;
@@ -184,6 +172,8 @@ private:
     Light(Light&& light);
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
+
+    void generateFBO();
 
     /*
      * Mark the light as needing update for all shaders using it
@@ -213,6 +203,7 @@ private:
     bool enabled_;
     Material* shadowMaterial_;
     int size_;
+    int shadowMapIndex_;
     std::string lightID_;
     SceneObject* parent_;
     std::map<int, bool> dirty_;
@@ -223,7 +214,7 @@ private:
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
     GLuint fboId_;
-    GLTexture* depth_texture_;
+    static GLTexture* depth_texture_;
 };
 }
 #endif

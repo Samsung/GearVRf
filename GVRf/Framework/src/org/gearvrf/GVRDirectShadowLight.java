@@ -55,14 +55,14 @@ public class GVRDirectShadowLight extends GVRDirectLight {
 
     public GVRDirectShadowLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
-        uniformDescriptor += " float has_shadow_map mat4 shadow_matrix";
+        uniformDescriptor += " float shadow_map_index mat4 shadow_matrix";
          if (shaderSource == null) {
             shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
         }
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setFloat("has_shadow_map", 0);
+        setFloat("shadow_map_index", -1);
         setShaderSource(shaderSource);
         castShadow(gvrContext);
     }
