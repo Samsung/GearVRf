@@ -309,12 +309,19 @@ public:
     }
     void generateBoneArrayBuffers();
 
+    /**
+     * Bind the vertex attributes to the shader.
+     * @param id shader ID
+     */
+    void bindVertexAttributes(GLuint id);
+
     //must be called by the thread on which the mesh cleanup should happen
     void obtainDeleter() {
         if (nullptr == deleter_) {
             deleter_ = getDeleterForThisThread();
         }
     }
+
 
 private:
     Mesh(const Mesh& mesh);

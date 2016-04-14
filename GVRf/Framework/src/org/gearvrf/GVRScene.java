@@ -17,7 +17,9 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
@@ -43,7 +45,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
-
+    private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
     /**
@@ -369,7 +371,58 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             NativeScene.attachDirectionalLight(getNative(), 0);
         }
     }
-
+    /**
+     * Bind the correct vertex and fragment shaders on all renderable objects.
+     * 
+     * Setting the shader template for a GVRRenderData selects what kind
+     * of shader to use but does not actually construct a vertex and fragment shader.
+     * This function does that for all the renderable objects that need it.
+     *
+     * All shaders should be bound after scene initialization is complete.
+     * If new assets are loaded that add lights to the scene after initialization,
+     * bindShaders may need to be called again to regenerate the correct shaders
+     * for the new lighting conditions.
+     * {@link GVRRenderData.bindShader GVRShaderTemplate }
+     */
+    public void bindShaders() {
+        for (GVRSceneObject child : mSceneObjects) {
+            ArrayList<GVRLightBase> lights = child.getAllComponents(GVRLightBase.class);
+            for (GVRLightBase light : lights) {
+                addLight(light);
+            }
+        }
+        for (GVRSceneObject child : mSceneObjects) {
+            ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.class);
+            for (GVRRenderData rdata : renderers) {
+                rdata.bindShader(this);
+            }
+        }
+    }
+    
+    protected void addLight(GVRLightBase light) {
+        if (light != null) {
+            int lightIndex = 0;
+            for (GVRLightBase l : mLightList) {
+                if (l == light) {
+                    return;
+                }
+                if (l.getClass().equals(light.getClass())) {
+                    ++lightIndex;
+                }
+            }
+            String name = "Data" + light.getClass().getSimpleName() + "[" + lightIndex + "]";
+            mLightList.add(light);
+            NativeLight.setLightID(light.getNative(), name);
+            NativeScene.addLight(getNative(), light.getNative());
+        }
+    }
+    
+    public GVRLightBase[] getLightList() {
+        GVRLightBase[] list = new GVRLightBase[mLightList.size()];
+        mLightList.toArray(list);
+        return list;
+    }
+    
     /**
      * Prints the {@link GVRScene} object with indentation.
      *
@@ -478,6 +531,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
 
         @Override
         public void onAfterInit() {
+            bindShaders();
             for (GVRSceneObject child : mSceneObjects) {
                 recursivelySendSimpleEvent(child, "onAfterInit");
             }
@@ -527,4 +581,6 @@ class NativeScene {
     public static native void exportToFile(long scene, String file_path);
 
     static native void attachDirectionalLight(long scene, long light);
+
+    static native void addLight(long scene, long light);
 }

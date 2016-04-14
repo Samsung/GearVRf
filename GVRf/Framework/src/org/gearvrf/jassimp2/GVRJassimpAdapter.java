@@ -63,6 +63,22 @@ public class GVRJassimpAdapter {
             mesh.setVertices(verticesArray);
         }
 
+        // Tangents
+        FloatBuffer tangetsBuffer = aiMesh.getTangentBuffer();
+        if(tangetsBuffer != null) {
+            float[] tangentsArray = new float[tangetsBuffer.capacity()];
+            tangetsBuffer.get(tangentsArray, 0, tangetsBuffer.capacity());
+            mesh.setVec3Vector("a_tangent", tangentsArray);
+        }
+        
+        // Bitangents
+        FloatBuffer bitangentsBuffer = aiMesh.getBitangentBuffer();
+        if(bitangentsBuffer != null) {
+            float[] bitangentsArray = new float[bitangentsBuffer.capacity()];
+            bitangentsBuffer.get(bitangentsArray, 0, bitangentsBuffer.capacity());
+            mesh.setVec3Vector("a_bitangent", bitangentsArray);
+        }
+        
         // Normals
         FloatBuffer normalsBuffer = aiMesh.getNormalBuffer();
         if (normalsBuffer != null) {

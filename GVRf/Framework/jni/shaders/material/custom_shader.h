@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "GLES3/gl3.h"
 #include "glm/glm.hpp"
@@ -31,12 +32,15 @@
 
 #include "objects/eye_type.h"
 #include "objects/hybrid_object.h"
+#include "objects/light.h"
 
 namespace gvr {
 
 class GLProgram;
 class RenderData;
 class Material;
+
+struct ShaderUniformsPerObject;
 
 class CustomShader: public HybridObject {
 public:
@@ -54,7 +58,8 @@ public:
     void addUniformVec3Key(std::string variable_name, std::string key);
     void addUniformVec4Key(std::string variable_name, std::string key);
     void addUniformMat4Key(std::string variable_name, std::string key);
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material, bool right);
+    void render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
+                const std::vector< Light* > lightList, Material* material);
     static int getGLTexture(int n);
 
 private:
@@ -66,6 +71,9 @@ private:
 private:
     GLProgram* program_;
     GLuint u_mvp_;
+    GLuint u_mv_;
+    GLuint u_view_;
+    GLuint u_mv_it_;
     GLuint u_right_;
     std::map<int, std::string> texture_keys_;
     std::map<int, std::string> attribute_float_keys_;

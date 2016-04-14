@@ -67,11 +67,16 @@ public class GVREyePointeeHolder extends GVRComponent {
         this(gvrContext, NativeEyePointeeHolder.ctor());
     }
 
+    public GVREyePointeeHolder(GVRContext gvrContext, GVRSceneObject owner) {
+        this(gvrContext, NativeEyePointeeHolder.ctor(), sCleanup);
+        setOwnerObject(owner);
+    }
+    
     private GVREyePointeeHolder(GVRContext gvrContext, long nativePointer) {
         super(gvrContext, nativePointer, sCleanup);
         registerNativePointer(nativePointer);
     }
-
+        
     /**
      * Special constructor, for descendants that need to 'unregister' instances.
      * 
