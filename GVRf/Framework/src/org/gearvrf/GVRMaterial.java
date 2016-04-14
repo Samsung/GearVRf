@@ -614,6 +614,7 @@ public class GVRMaterial extends GVRHybridObject implements
                             texture);
                 }
 
+
                 @Override
                 public void failed(Throwable t,
                         GVRAndroidResource androidResource) {
@@ -625,6 +626,7 @@ public class GVRMaterial extends GVRHybridObject implements
                 public boolean stillWanted(GVRAndroidResource androidResource) {
                     return true;
                 }
+
             };
 
             getGVRContext().loadTexture(callback,
