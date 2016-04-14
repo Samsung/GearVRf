@@ -22,7 +22,9 @@ import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.DockEventReceiver;
+import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
@@ -78,6 +80,13 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         android.util.Log.i(TAG, "onCreate " + Integer.toHexString(hashCode()));
+        super.onCreate(savedInstanceState);
+
+        if (null != Threads.getThreadPool()) {
+            Threads.getThreadPool().shutdownNow();
+        }
+        Threads.setThreadPool(new GrowBeforeQueueThreadPoolExecutor("gvrf"));
+
         /*
          * Removes the title bar and the status bar.
          */
@@ -86,7 +95,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         mAppSettings = new VrAppSettings();
-        super.onCreate(savedInstanceState);
 
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
         mDockEventReceiver = new DockEventReceiver(this,

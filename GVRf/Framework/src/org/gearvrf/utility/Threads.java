@@ -232,7 +232,7 @@ public abstract class Threads {
         return threadPool.submit(callable);
     }
 
-    private static ExecutorService threadPool = new GrowBeforeQueueThreadPoolExecutor("gvrf");
+    private static ExecutorService threadPool;
 
     /**
      * By default, the spawn() methods use their own
