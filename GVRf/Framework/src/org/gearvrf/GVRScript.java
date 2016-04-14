@@ -62,6 +62,15 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      */
 
     /**
+     * Called before {@link #onInit(GVRContext).
+     *
+     * This is used for initializing plug-ins and other early components.
+     */
+    @Override
+    public void onEarlyInit(GVRContext gvrContext) {
+    }
+
+    /**
      * Called when the GL surface is created, when your app is loaded.
      * 
      * This is where you should build your initial scene graph. Any expensive

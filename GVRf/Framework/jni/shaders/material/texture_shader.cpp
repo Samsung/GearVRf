@@ -245,7 +245,7 @@ void TextureShader::render(const glm::mat4& mv_matrix,
                 light_specular_intensity.g, light_specular_intensity.b,
                 light_specular_intensity.a);
 
-        glBindVertexArray(mesh->getVAOId(Material::TEXTURE_SHADER));
+        glBindVertexArray(mesh->getVAOId());
     } else {
         glUniformMatrix4fv(u_mvp_no_light_, 1, GL_FALSE,
                 glm::value_ptr(mvp_matrix));
@@ -254,7 +254,7 @@ void TextureShader::render(const glm::mat4& mv_matrix,
         glUniform3f(u_color_no_light_, color.r, color.g, color.b);
         glUniform1f(u_opacity_no_light_, opacity);
 
-        glBindVertexArray(mesh->getVAOId(Material::TEXTURE_SHADER_NOLIGHT));
+        glBindVertexArray(mesh->getVAOId());
     }
 
     GL(glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,

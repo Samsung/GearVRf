@@ -96,7 +96,7 @@ void LightMapShader::render(const glm::mat4& mvp_matrix,
     glUniform2f(u_lightmap_offset_, lightmap_offset.x, lightmap_offset.y);
     glUniform2f(u_lightmap_scale_, lightmap_scale.x, lightmap_scale.y);
 
-    glBindVertexArray(mesh->getVAOId(Material::LIGHTMAP_SHADER));
+    glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 

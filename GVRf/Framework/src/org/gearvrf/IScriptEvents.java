@@ -20,6 +20,8 @@ package org.gearvrf;
  * events that are handled by an application.
  */
 public interface IScriptEvents extends IEvents {
+    void onEarlyInit(GVRContext gvrContext);
+
     void onInit(GVRContext gvrContext) throws Throwable;
 
     void onAfterInit();

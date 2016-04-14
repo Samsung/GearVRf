@@ -64,7 +64,7 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glUniform4f(u_color_, r, g, b, a);
 
-    glBindVertexArray(mesh->getVAOId(material->shader_type()));
+    glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

@@ -1,6 +1,5 @@
 package org.gearvrf.utility;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -11,12 +10,11 @@ public class GrowBeforeQueueThreadPoolExecutor extends ThreadPoolExecutor {
 
     private static final int NUM_CPUS = Runtime.getRuntime().availableProcessors();
 
-    private int userSpecifiedCorePoolSize;
-    private int taskCount;
-    private Object syncObj = new Object();
+    private int minCorePoolSize;
+    private AtomicInteger taskCount = new AtomicInteger(0);
 
     public GrowBeforeQueueThreadPoolExecutor(final String prefix) {
-        this(
+        super(
         /* core size    */Math.min(2, NUM_CPUS),
         /* max  size    */Math.max(Math.min(2, NUM_CPUS), 2 * NUM_CPUS),
         /* idle timeout */60, TimeUnit.SECONDS,
@@ -29,43 +27,31 @@ public class GrowBeforeQueueThreadPoolExecutor extends ThreadPoolExecutor {
                 return new Thread(r, prefix + "-" + threadNumber.getAndIncrement());
             }
         });
-    }
-
-    /*package*/ GrowBeforeQueueThreadPoolExecutor(int corePoolSize, int maximumPoolSize,
-            long keepAliveTime, TimeUnit unit,
-            BlockingQueue<Runnable> workQueue,
-            ThreadFactory threadFactory) {
-
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
-        userSpecifiedCorePoolSize = corePoolSize;
+        
+        minCorePoolSize = Math.min(2, NUM_CPUS);
     }
 
     @Override
     public void execute(Runnable runnable) {
-        synchronized (syncObj) {
-            taskCount++;
-            setCorePoolSizeToTaskCountWithinBounds();
-        }
+        setCorePoolSizeToTaskCountWithinBounds(taskCount.incrementAndGet());
+
         super.execute(runnable);
     }
 
     @Override
     protected void afterExecute(Runnable runnable, Throwable throwable) {
         super.afterExecute(runnable, throwable);
-        synchronized (syncObj) {
-            taskCount--;
-            setCorePoolSizeToTaskCountWithinBounds();
-        }
+
+        setCorePoolSizeToTaskCountWithinBounds(taskCount.decrementAndGet());
     }
 
-    private void setCorePoolSizeToTaskCountWithinBounds() {
-        int threads = taskCount;
-        if (threads < userSpecifiedCorePoolSize) {
-            threads = userSpecifiedCorePoolSize;
+    private synchronized void setCorePoolSizeToTaskCountWithinBounds(int taskCount) {
+        int corePoolSize = getCorePoolSize();
+        if (taskCount > corePoolSize) {
+            setCorePoolSize(Math.min(getMaximumPoolSize(), (corePoolSize << 1)));
         }
-        if (threads > getMaximumPoolSize()) {
-            threads = getMaximumPoolSize();
+        else if (taskCount < (corePoolSize >> 1)) {
+            setCorePoolSize(Math.max(minCorePoolSize, (corePoolSize >> 1)));
         }
-        setCorePoolSize(threads);
     }
 }

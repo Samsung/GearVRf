@@ -97,7 +97,7 @@ void UnlitVerticalStereoShader::render(const glm::mat4& mvp_matrix,
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
 
-    glBindVertexArray(mesh->getVAOId(Material::UNLIT_VERTICAL_STEREO_SHADER));
+    glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
     glBindVertexArray(0);

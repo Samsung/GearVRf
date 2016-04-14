@@ -275,8 +275,8 @@ public:
     // generate VAO
     void generateVAO();
 
-    const GLuint getVAOId(Material::ShaderType key) const {
-    	return vaoID_;
+    const GLuint getVAOId() const {
+        return vaoID_;
     }
 
     GLuint getNumTriangles() {

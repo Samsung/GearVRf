@@ -40,6 +40,16 @@ import org.gearvrf.utility.Log;
  * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attached.} Each
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
+ *
+ * <p>
+ * {@link GVRSceneObject} receives events defined in {@link ISceneObjectEvents}. To add a listener
+ * to these events, use the following code:
+ * <pre>
+ *     ISceneObjectEvents myEventListener = new ISceneObjectEvents() {
+ *         ...
+ *     };
+ *     getEventReceiver().addListener(myEventListener);
+ * </pre>
  */
 public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
 
@@ -62,13 +72,12 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            current {@link GVRContext}
      */
     public GVRSceneObject(GVRContext gvrContext) {
-        super(gvrContext, NativeSceneObject.ctor());
-        attachTransform(new GVRTransform(getGVRContext()));
+        this(gvrContext, null, null, null);
     }
 
     /**
      * Constructs a scene object with an arbitrarily complex mesh.
-     * 
+     *
      * @param gvrContext
      *            current {@link GVRContext}
      * @param mesh
@@ -77,10 +86,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            {@link GVRContext#createQuad(float, float)}
      */
     public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh) {
-        this(gvrContext);
-        GVRRenderData renderData = new GVRRenderData(gvrContext);
-        attachRenderData(renderData);
-        renderData.setMesh(mesh);
+        this(gvrContext, mesh, null, null);
     }
 
     /**
@@ -118,11 +124,21 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh,
             GVRTexture texture, GVRMaterialShaderId shaderId) {
-        this(gvrContext, mesh);
+        super(gvrContext, NativeSceneObject.ctor());
 
-        GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
-        material.setMainTexture(texture);
-        getRenderData().setMaterial(material);
+        attachTransform(new GVRTransform(getGVRContext()));
+
+        if (mesh != null) {
+            GVRRenderData renderData = new GVRRenderData(gvrContext);
+            attachRenderData(renderData);
+            renderData.setMesh(mesh);
+        }
+
+        if (texture != null) {
+            GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
+            material.setMainTexture(texture);
+            getRenderData().setMaterial(material);
+        }
     }
 
     private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
@@ -920,12 +936,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (childComponent.getOwnerObject() != null) {
             removeChildObject(childComponent.getOwnerObject());
         }
-    }
-
-    /**
-     * Called when the scene object has been loaded from a model.
-     */
-    public void onLoaded() {
     }
 
     /**

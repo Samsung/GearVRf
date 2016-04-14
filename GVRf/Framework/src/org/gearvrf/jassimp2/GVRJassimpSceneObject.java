@@ -2,6 +2,7 @@ package org.gearvrf.jassimp2;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
@@ -14,8 +15,10 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 
 public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
@@ -59,7 +62,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }
 
             if (node.getTransform(GVRJassimpAdapter.sWrapperProvider) != null) {
-            	float[] matrix = node.getTransform(GVRJassimpAdapter.sWrapperProvider);
+                float[] matrix = node.getTransform(GVRJassimpAdapter.sWrapperProvider);
                 sceneObject.getTransform().setModelMatrix(matrix);
             }
 
@@ -68,7 +71,10 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }
 
             // Inform the loaded object after it has been attached to the scene graph
-            sceneObject.onLoaded();
+            getGVRContext().getEventManager().sendEvent(
+                    sceneObject,
+                    ISceneObjectEvents.class,
+                    "onLoaded");
         } catch (Exception e) {
             // Error while recursing the Scene Graph
             e.printStackTrace();
