@@ -155,8 +155,9 @@ public:
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
      * @param program    ID of GL shader program
+     * @param texIndex   next available GL texture index
      */
-    void render(int program);
+    void render(int program, int texIndex);
 
     /**
      * Internal function called at the start of each frame

@@ -33,8 +33,10 @@ namespace gvr {
 /*
  * Loads the uniforms associated with this light
  * into the GPU if they have changed.
+ * @param program ID of shader program light is bound ot
+ * @param texLoc  next available texture location
  */
-void Light::render(int program) {
+void Light::render(int program, int texLoc) {
     auto it = dirty_.find(program);
 
     if (it != dirty_.end() && !it->second)
@@ -102,7 +104,20 @@ void Light::render(int program) {
             glUniformMatrix4fv(offset, 1, GL_FALSE, glm::value_ptr(v));
         }
     }
+    int texture_index = texLoc;
+    for (auto it = textures_.begin();
+            it != textures_.end(); ++it) {
+        if (it->second != NULL) {
+            glActiveTexture(GL_TEXTURE0 + texture_index);
+            Texture* texture = it->second;
+            glBindTexture(texture->getTarget(), texture->getId());
+            int location = glGetUniformLocation(program, it->first.c_str());
+            glUniform1i(location, texture_index++);
+            LOGD("LIGHT: %s = %d\n", key.c_str(), location);
+        }
+    }
 }
+
 void Light::generateFBO(int realWidth, int realHeight) {
 	    depth_texture_ = new GLTexture(GL_TEXTURE_2D);
 	    glBindTexture(GL_TEXTURE_2D, depth_texture_->id());

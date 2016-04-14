@@ -121,17 +121,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     glUseProgram(program_->id());
 
     /*
-     * Update the uniforms for the lights
-     */
-    const std::vector<Light*>& lightlist = rstate->scene->getLightList();
-    for (auto it = lightlist.begin();
-         it != lightlist.end();
-         ++it) {
-        Light* light = (*it);
-         if (light != NULL)
-            light->render(program_->id());
-    }
-    /*
      * Update the bone matrices
      */
     int a_bone_indices = glGetAttribLocation(program_->id(), "a_bone_indices");
@@ -190,6 +179,17 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             ++it) {
         glm::vec2 v = material->getVec2(it->second);
         glUniform2f(it->first, v.x, v.y);
+    }
+    /*
+     * Update the uniforms for the lights
+     */
+    const std::vector<Light*>& lightlist = rstate->scene->getLightList();
+    for (auto it = lightlist.begin();
+         it != lightlist.end();
+         ++it) {
+        Light* light = (*it);
+         if (light != NULL)
+            light->render(program_->id(), texture_index);
     }
 
     for (auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end();
