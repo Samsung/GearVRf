@@ -30,7 +30,7 @@
 #include "components/component.h"
 #include "util/gvr_jni.h"
 #include "objects/material.h"
-
+#include "../engine/renderer/renderer.h"
 namespace gvr {
 class Color;
 class SceneObject;
@@ -130,7 +130,9 @@ public:
             setDirty();
         }
     }
-
+    Material* getShadowMaterial(){
+    	return shadowMaterial_;
+    }
     bool castShadow() {
          return shadowMaterial_ != NULL;
     }
@@ -152,7 +154,7 @@ public:
      * Internal function called at the start of each frame
      * to update the shadow map.
      */
-    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
+    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, RenderState &);
     static void bindShadowMaps(int program, int texIndex);
 
     std::string getLightID() {

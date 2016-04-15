@@ -177,18 +177,19 @@ void Light::generateFBO() {
 //         post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
 
 // This function should replace the code above
-bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex) {
-    RenderState rstate;
+bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex,RenderState &rstate) {
+
     int framebufferId = 0;  // TODO: get a valid FB ID
 
     if (-1 == fboId_  && nullptr == depth_texture_ ) {
         shadowMapIndex_ = texIndex;
     	generateFBO();
     }
+
     if (shadowMaterial_ == nullptr)
         return false;
 
-    rstate.render_mask;
+  //  rstate.render_mask;
     // TODO: set viewport based on framebuffer size
     rstate.viewportX = 0;
     rstate.viewportY = 0;
@@ -202,7 +203,6 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     //rstate.uniforms.u_view = camera->getViewMatrix();
     //rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-    getMat4("shadow_matrix",rstate.uniforms.u_mvp);
     Renderer::renderShadowMap(rstate, fboId_);
     return true;
 }

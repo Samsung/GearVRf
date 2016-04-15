@@ -43,12 +43,15 @@ CustomShader::CustomShader(std::string vertex_shader,
     u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
     u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
     u_right_ = glGetUniformLocation(program_->id(), "u_right");
+    u_model_ = glGetUniformLocation(program_->id(), "u_model");
 }
 
 CustomShader::~CustomShader() {
     delete program_;
 }
-
+GLuint CustomShader::getProgramId(){
+	return program_->id();
+}
 void CustomShader::addTextureKey(std::string variable_name, std::string key) {
     int location = glGetUniformLocation(program_->id(), variable_name.c_str());
     texture_keys_[location] = key;
@@ -152,7 +155,9 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             ++it) {
         glUniform1f(it->first, material->getFloat(it->second));
     }
-
+    if (u_model_ != -1){
+    	glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
+    }
     if (u_mvp_ != -1) {
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     }

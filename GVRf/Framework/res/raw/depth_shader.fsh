@@ -1,9 +1,7 @@
 precision mediump float;
-
-uniform vec4 diffuse_color;
-out vec4 fragColor;
-
+out vec4 color;
 void main()
 {
-	fragColor = diffuse_color;
+	//color = vec4(0.5,0.5,0.5,1.0);
+	color = vec4(gl_FragCoord.z,gl_FragCoord.z,gl_FragCoord.z,1.0);
 }

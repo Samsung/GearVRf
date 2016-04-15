@@ -115,7 +115,7 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager,RenderState &);
     static void renderShadowMap(RenderState& rstate, GLuint framebufferId);
     static void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);

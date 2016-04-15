@@ -52,7 +52,7 @@ public:
     void addUniformMat4Key(std::string variable_name, std::string key);
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
     static int getGLTexture(int n);
-
+    GLuint getProgramId();
 private:
     CustomShader(const CustomShader& custom_shader);
     CustomShader(CustomShader&& custom_shader);
@@ -65,6 +65,7 @@ private:
     GLuint u_view_;
     GLuint u_mv_it_;
     GLuint u_right_;
+    GLuint u_model_;
     std::map<int, std::string> texture_keys_;
     std::map<int, std::string> attribute_float_keys_;
     std::map<int, std::string> attribute_vec2_keys_;

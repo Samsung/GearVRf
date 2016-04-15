@@ -38,17 +38,15 @@ import org.gearvrf.R;
 
        public GVRDepthShader(GVRContext gvrcontext)
        {
-           super("float4 diffuse_color");
+           super("");
            if (fragTemplate == null) {
                Context context = gvrcontext.getContext();
                fragTemplate = TextFile.readTextFile(context, R.raw.depth_shader);
-               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template);
-               vtxShader = TextFile.readTextFile(context, R.raw.pos_only);
+               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template_depth);
                skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
            }
            setSegment("FragmentTemplate", fragTemplate);
            setSegment("VertexTemplate", vtxTemplate);
-           setSegment("VertexShader", vtxShader);
-           setSegment("VertexSkinShader", skinShader);
+            setSegment("VertexSkinShader", skinShader);
        }       
    }

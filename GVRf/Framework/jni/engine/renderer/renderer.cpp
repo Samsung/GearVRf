@@ -224,7 +224,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     }
 
 }
-
+Camera* g_camera;
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
         ShaderManager* shader_manager,
@@ -234,7 +234,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     numberDrawCalls = 0;
     numberTriangles = 0;
-
+    g_camera = camera;
     RenderState rstate;
     rstate.material_override = NULL;
     rstate.viewportX = viewportX;
@@ -271,8 +271,9 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         GL(glClearColor(camera->background_color_r(),
                 camera->background_color_g(), camera->background_color_b(),
                 camera->background_color_a()));
+      //  glClearColor(1,1,1,1);
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-
+      //  makeShadowMaps(scene,shader_manager, rstate);
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(rstate, *it));
@@ -325,15 +326,49 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glDisable(GL_BLEND));
 }
 
+/*
+ * Calculate the orthographic projection matrix based on planes
+ * it takes input as 6 planes
+
+*/glm::mat4 my_ortho(float left, float right, float bottom, float top, float near, float far)
+{
+	glm::mat4 ortho;
+	ortho[0][0]= 2.0 / (right - left);
+	ortho[1][1]= 2.0 / (top - bottom);
+	ortho[2][2]= -2.0 / (far-near);
+	ortho[3][0]= -(right + left)/(right-left);
+	ortho[3][1]=-(top+bottom)/(top-bottom);
+	ortho[3][2]= -(far+near)/(far-near);
+	return ortho;
+}
+/*
+ * Binds shadow matrix to program object
+ * it takes model matrix from parent object of light and calculates shadow_matrix
+ * using view and projection
+ *
+ */
+void bindShadowMatrix(ShaderManager* shader_manager,Light* light){
+	CustomShader* shader= shader_manager->getCustomShader(light->getShadowMaterial()->shader_type());
+	GLuint programId = shader->getProgramId();
+	glUseProgram(programId);
+	GLuint loc = glGetUniformLocation(programId, "shadow_matrix");
+	glm::mat4 model_matrix = (light)->owner_object()->transform()->getModelMatrix();
+	glm::mat4 shadow_matrix = my_ortho(-1.0f,1.0f,-1.0,1.0,-1.0f,60.0f)* glm::affineInverse(model_matrix);
+	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(shadow_matrix) );
+}
 /**
  * Generate shadow maps for all the lights that cast shadows.
  * @see Renderer::renderShadowMap Light::makeShadowMap
  */
-void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager) {
+void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager,RenderState &rstate) {
     const std::vector<Light*> lights = scene->getLightList();
     int texIndex = 0;
     for (auto it = lights.begin(); it != lights.end(); ++it) {
-        if ((*it)->makeShadowMap(scene, shader_manager, texIndex))
+    	Material *shadowMaterial= (*it)->getShadowMaterial();
+    	if(shadowMaterial==NULL)
+    		return;
+    	bindShadowMatrix(shader_manager,*it);
+    	if ((*it)->makeShadowMap(scene, shader_manager, texIndex,rstate))
             ++texIndex;
     }
 }
@@ -355,15 +390,14 @@ void Renderer::renderShadowMap(RenderState& rstate, GLuint framebufferId) {
     GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
     GL(glDisable (GL_POLYGON_OFFSET_FILL));
 */
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-    GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
+//    GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+//    GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
 
 //    GL(glClearColor(0, 0, 0, 1));
 //    GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
     for (auto it = render_data_vector.begin();
             it != render_data_vector.end(); ++it) {
-    	rstate.uniforms.u_model = (*it)->owner_object()->transform()->getModelMatrix();
         GL(renderRenderData(rstate, *it));
     }
     GL(glDisable(GL_DEPTH_TEST));
