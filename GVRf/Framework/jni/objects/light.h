@@ -39,7 +39,7 @@ class ShaderManager;
 
 class Light: public Component {
 public:
-    const int MAX_SHADOW_MAPS = 4;
+    const int MAX_SHADOW_MAPS = 2;
     const int SHADOW_MAP_SIZE = 1024;
     explicit Light()
     :   enabled_(true),

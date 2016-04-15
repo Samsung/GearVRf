@@ -60,14 +60,22 @@ void Light::render(int program, int texIndex) {
         GLTexture* shadowmap = depth_texture_;
         if (shadowmap == NULL) {
             depth_texture_ = shadowmap = new GLTexture(GL_TEXTURE_2D_ARRAY);
-            LOGD("LIGHT: %s create shadow map array\n", lightID_.c_str());
-       }
-        int loc = glGetUniformLocation(program, "u_shadow_maps");
+            LOGD("LIGHT: %s create shadow map array id = %d\n", lightID_.c_str(), depth_texture_->id());
+        }
         glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
-        glActiveTexture(GL_TEXTURE0 + texIndex);
-        glUniform1i(loc, shadowMapIndex_);
-        floats_[lname + "shadow_map_index"] = (float) shadowMapIndex_;
-        LOGD("LIGHT: %s bind shadow map %d\n", lightID_.c_str(), shadowMapIndex_);
+        int loc = glGetUniformLocation(program, "u_shadow_maps");
+        if (loc >= 0) {
+            LOGD("LIGHT: %s found shadow map in shader %d\n", lightID_.c_str(), loc);
+            if (shadowMapIndex_ >= 0) {
+                glActiveTexture(GL_TEXTURE0 + texIndex);
+                glUniform1i(loc, shadowMapIndex_);
+                floats_[lname + "shadow_map_index"] = (float) shadowMapIndex_;
+                LOGD("LIGHT: %s set shadow map index %d\n", lightID_.c_str(), shadowMapIndex_);
+            }
+        }
+        else {
+             LOGE("LIGHT: Cannot bind shadow map %d\n", shadowMapIndex_);
+        }
     }
 
     for (auto it = floats_.begin(); it != floats_.end(); ++it) {

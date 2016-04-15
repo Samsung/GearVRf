@@ -139,7 +139,8 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
             glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
-      }
+        checkGlError("CustomShader after bones");
+    }
     /*
      * Update vertex information
      */
@@ -190,25 +191,34 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         Light* light = (*it);
          if (light != NULL)
             light->render(program_->id(), texture_index);
-    }
+     }
 
+    for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();
+            ++it) {
+        float v = material->getFloat(it->second);
+        glUniform1f(it->first, v);
+    }
+    for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
+            ++it) {
+        glm::vec2 v = material->getVec2(it->second);
+        glUniform2f(it->first, v.x, v.y);
+    }
     for (auto it = uniform_vec3_keys_.begin(); it != uniform_vec3_keys_.end();
             ++it) {
         glm::vec3 v = material->getVec3(it->second);
         glUniform3f(it->first, v.x, v.y, v.z);
     }
-
     for (auto it = uniform_vec4_keys_.begin(); it != uniform_vec4_keys_.end();
             ++it) {
         glm::vec4 v = material->getVec4(it->second);
         glUniform4f(it->first, v.x, v.y, v.z, v.w);
     }
-
     for (auto it = uniform_mat4_keys_.begin(); it != uniform_mat4_keys_.end();
             ++it) {
         glm::mat4 m = material->getMat4(it->second);
         glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
     }
+    checkGlError("CustomShader after set uniforms");
     glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);

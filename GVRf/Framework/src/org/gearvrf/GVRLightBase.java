@@ -82,7 +82,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             mShadowMaterial = new GVRMaterial(context);
             GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
             depthShader.bindShader(context, mShadowMaterial);
-            //NativeLight.castShadow(getNative(), mShadowMaterial.getNative());
+            NativeLight.castShadow(getNative(), mShadowMaterial.getNative());
         }
     }
     
@@ -416,7 +416,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         Matrix4f lightrot = new Matrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
+        Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f newpos = new Vector3f();
 
         defaultDir.get(lightrot);

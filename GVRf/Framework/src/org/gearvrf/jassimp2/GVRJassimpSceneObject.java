@@ -100,7 +100,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         GVRLightBase light =  lightlist.get(name);
         if (light != null) {
             Quaternionf q = new Quaternionf();
-            q.rotationX((float) -Math.PI / 2.0f);
+            q.rotationX((float) Math.PI / 2.0f);
             light.setDefaultOrientation(q);
             sceneObject.attachLight(light); 
         }

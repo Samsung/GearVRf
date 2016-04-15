@@ -62,7 +62,7 @@ public class GVRDirectShadowLight extends GVRDirectLight {
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setFloat("shadow_map_index", -1);
+        setFloat("shadow_map_index", 0);
         setShaderSource(shaderSource);
         castShadow(gvrContext);
     }
@@ -82,7 +82,7 @@ public class GVRDirectShadowLight extends GVRDirectLight {
         Matrix4f lightrot = new Matrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
+        Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f newpos = new Vector3f();
 
         defaultDir.get(lightrot);
@@ -97,7 +97,6 @@ public class GVRDirectShadowLight extends GVRDirectLight {
         {
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
-        worldmtx.lookAt(newpos, newdir, new Vector3f(0, 1, 0));
         worldmtx.ortho(-1, 1, -1, 1, 0.1f, 60.0f);
         setMat4("shadow_matrix", worldmtx);
     }
