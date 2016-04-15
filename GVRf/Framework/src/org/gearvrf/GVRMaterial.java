@@ -142,6 +142,12 @@ public class GVRMaterial extends GVRHybridObject implements
             }
         }
 
+
+        public abstract static class UnlitFBO {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
+                    20);
+					}
+
         public abstract static class LightMap {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     11);

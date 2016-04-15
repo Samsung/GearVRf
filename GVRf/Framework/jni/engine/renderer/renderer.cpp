@@ -827,6 +827,10 @@ void Renderer::renderMaterialShader(RenderData* render_data,
                 shader_manager->getLightMapShader()->render(uniforms.u_mvp,
                         render_data, curr_material);
                 break;
+			case Material::ShaderType::UNLIT_FBO_SHADER:
+                shader_manager->getUnlitFboShader()->render(
+                        uniforms.u_mvp, render_data, curr_material);
+                break;
             default:
                 shader_manager->getCustomShader(
                         curr_material->shader_type())->render(uniforms, render_data, lightList, curr_material);
