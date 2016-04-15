@@ -176,11 +176,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
-    for (auto it = uniform_vec2_keys_.begin(); it != uniform_vec2_keys_.end();
-            ++it) {
-        glm::vec2 v = material->getVec2(it->second);
-        glUniform2f(it->first, v.x, v.y);
-    }
+    Light::bindShadowMaps(program_->id(), texture_index);
     /*
      * Update the uniforms for the lights
      */
@@ -191,7 +187,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         Light* light = (*it);
          if (light != NULL)
             light->render(program_->id(), texture_index);
-     }
+    }
 
     for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();
             ++it) {

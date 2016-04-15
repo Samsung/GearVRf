@@ -28,8 +28,10 @@
 #include "shaders/posteffect/shadow_shader.h"
 
 namespace gvr {
-
+const int Light::MAX_SHADOW_MAPS = 2;
+const int Light::SHADOW_MAP_SIZE = 1024;
 GLTexture* Light::depth_texture_ = NULL;
+
 
 /*
  * Loads the uniforms associated with this light
@@ -57,25 +59,8 @@ void Light::render(int program, int texIndex) {
      * set the shadow_map_index with the index of the map.
      */
     if (castShadow()) {
-        GLTexture* shadowmap = depth_texture_;
-        if (shadowmap == NULL) {
-            depth_texture_ = shadowmap = new GLTexture(GL_TEXTURE_2D_ARRAY);
-            LOGD("LIGHT: %s create shadow map array id = %d\n", lightID_.c_str(), depth_texture_->id());
-        }
-        glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
-        int loc = glGetUniformLocation(program, "u_shadow_maps");
-        if (loc >= 0) {
-            LOGD("LIGHT: %s found shadow map in shader %d\n", lightID_.c_str(), loc);
-            if (shadowMapIndex_ >= 0) {
-                glActiveTexture(GL_TEXTURE0 + texIndex);
-                glUniform1i(loc, shadowMapIndex_);
-                floats_[lname + "shadow_map_index"] = (float) shadowMapIndex_;
-                LOGD("LIGHT: %s set shadow map index %d\n", lightID_.c_str(), shadowMapIndex_);
-            }
-        }
-        else {
-             LOGE("LIGHT: Cannot bind shadow map %d\n", shadowMapIndex_);
-        }
+        floats_[lname + "shadow_map_index"] = (float) shadowMapIndex_;
+        LOGD("LIGHT: %s set shadow map index %d\n", lightID_.c_str(), shadowMapIndex_);
     }
 
     for (auto it = floats_.begin(); it != floats_.end(); ++it) {
@@ -132,6 +117,33 @@ void Light::render(int program, int texIndex) {
             glUniformMatrix4fv(offset, 1, GL_FALSE, glm::value_ptr(v));
             LOGD("LIGHT: %s\n", key.c_str());
         }
+    }
+}
+
+/*
+ * If this light casts shadows and has a shadow map,
+ * bind the shadow map texture to the shader and
+ * set the shadow_map_index with the index of the map.
+ */
+void Light::bindShadowMaps(int program, int texIndex) {
+    GLTexture* shadowmap = depth_texture_;
+    int loc = glGetUniformLocation(program, "u_shadow_maps");
+    if (loc >= 0) {
+        LOGD("LIGHT: found shadow map in shader %d\n", loc);
+        if (shadowmap == NULL) {
+            depth_texture_ = shadowmap = new GLTexture(GL_TEXTURE_2D_ARRAY);
+            LOGD("LIGHT: create shadow map array id = %d\n", depth_texture_->id());
+            glActiveTexture(GL_TEXTURE0 + texIndex);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+            glTexStorage3D(GL_TEXTURE_2D_ARRAY, MAX_SHADOW_MAPS, GL_DEPTH_COMPONENT16, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 1);
+            checkGlError("Light::render create shadow map");
+        }
+        else {
+            glActiveTexture(GL_TEXTURE0 + texIndex);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+        }
+        glUniform1i(loc, texIndex);
+        checkGlError("Light::render bind shadow map");
     }
 }
 

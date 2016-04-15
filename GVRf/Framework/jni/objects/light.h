@@ -39,13 +39,14 @@ class ShaderManager;
 
 class Light: public Component {
 public:
-    const int MAX_SHADOW_MAPS = 2;
-    const int SHADOW_MAP_SIZE = 1024;
+    static const int MAX_SHADOW_MAPS;
+    static const int SHADOW_MAP_SIZE;
+
     explicit Light()
     :   enabled_(true),
         parent_(nullptr),
         shadowMaterial_(nullptr),
-		fboId_(-1),
+ 		fboId_(-1),
 		shadowMapIndex_(-1) {
     }
 
@@ -58,15 +59,6 @@ public:
 
     void enable() {
         enabled_ = true;
-        setDirty();
-    }
-
-    bool castShadow() {
-        return shadowMaterial_ != NULL;
-    }
-
-    void castShadow(Material* material) {
-        shadowMaterial_ = material;
         setDirty();
     }
 
@@ -139,6 +131,15 @@ public:
         }
     }
 
+    bool castShadow() {
+         return shadowMaterial_ != NULL;
+    }
+
+    void castShadow(Material* material) {
+        shadowMaterial_ = material;
+        setDirty();
+    }
+
     /**
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
@@ -152,6 +153,7 @@ public:
      * to update the shadow map.
      */
     bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
+    static void bindShadowMaps(int program, int texIndex);
 
     std::string getLightID() {
         return lightID_;
@@ -201,11 +203,12 @@ private:
 
 private:
     bool enabled_;
-    Material* shadowMaterial_;
     int size_;
     int shadowMapIndex_;
+    GLuint fboId_;
     std::string lightID_;
     SceneObject* parent_;
+    Material* shadowMaterial_;
     std::map<int, bool> dirty_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
@@ -213,7 +216,6 @@ private:
     std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
-    GLuint fboId_;
     static GLTexture* depth_texture_;
 };
 }

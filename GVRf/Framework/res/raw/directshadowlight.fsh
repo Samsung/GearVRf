@@ -5,8 +5,10 @@ Radiance @LightType(Surface s, in Struct@LightType data)
     
 	if (data.shadow_map_index >= 0.0)
 	{
-   		vec4 ShadowCoord = data.shadow_matrix * local_position;
-   		vec3 texcoord = vec3(ShadowCoord.x, ShadowCoord.y, data.shadow_map_index);
+   		//vec4 ShadowCoord = data.shadow_matrix * local_position;
+  		//vec3 texcoord = vec3(ShadowCoord.x, ShadowCoord.y, data.shadow_map_index);
+   		vec4 ShadowCoord = local_position;
+   		vec3 texcoord = vec3(0, 0, 0);
 		if (texture(u_shadow_maps, texcoord).z < ShadowCoord.z)
     		attenuation = 0.5;
 	}

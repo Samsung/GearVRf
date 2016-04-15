@@ -4,8 +4,8 @@ uniform sampler2DArray u_shadow_maps;
 
 in vec3 viewspace_position;
 in vec3 viewspace_normal;
-out vec4 local_position;
-out vec4 proj_position;
+in vec4 local_position;
+in vec4 proj_position;
 in vec2 diffuse_coord;
 in vec3 view_direction;
 out vec4 fragColor;

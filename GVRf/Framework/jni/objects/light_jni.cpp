@@ -220,10 +220,10 @@ Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     jfloat* matrix_data = env->GetFloatArrayElements(jmatrix, 0);
-    glm::mat4 cmatrix;
-    cmatrix = glm::make_mat4(matrix_data);
+    glm::mat4 cmatrix = glm::make_mat4(matrix_data);
     light->setMat4(native_key, cmatrix);
     env->ReleaseStringUTFChars(key, char_key);
+    env->ReleaseFloatArrayElements(jmatrix, matrix_data, 0);
 }
 
 JNIEXPORT void JNICALL
