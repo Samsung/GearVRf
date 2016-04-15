@@ -22,8 +22,10 @@
 #define CUSTOM_SHADER_H_
 
 #include <map>
+#include <set>
 #include <memory>
 #include <string>
+#include <mutex>
 #include <vector>
 
 #include "GLES3/gl3.h"
@@ -39,25 +41,30 @@ namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
+class Mesh;
 
 struct ShaderUniformsPerObject;
 
+typedef std::function<void(Mesh&, GLuint)> AttributeVariableBind;
+typedef std::function<void(Material&, GLuint)> UniformVariableBind;
+
 class CustomShader: public HybridObject {
 public:
-    explicit CustomShader(std::string vertex_shader,
-            std::string fragment_shader);
+    explicit CustomShader(const std::string& vertex_shader,
+            const std::string& fragment_shader);
     virtual ~CustomShader();
 
-    void addTextureKey(std::string variable_name, std::string key);
-    void addAttributeFloatKey(std::string variable_name, std::string key);
-    void addAttributeVec2Key(std::string variable_name, std::string key);
-    void addAttributeVec3Key(std::string variable_name, std::string key);
-    void addAttributeVec4Key(std::string variable_name, std::string key);
-    void addUniformFloatKey(std::string variable_name, std::string key);
-    void addUniformVec2Key(std::string variable_name, std::string key);
-    void addUniformVec3Key(std::string variable_name, std::string key);
-    void addUniformVec4Key(std::string variable_name, std::string key);
-    void addUniformMat4Key(std::string variable_name, std::string key);
+    void addTextureKey(const std::string& variable_name, const std::string& key);
+
+    void addAttributeFloatKey(const std::string& variable_name, const std::string& key);
+    void addAttributeVec2Key(const std::string& variable_name, const std::string& key);
+    void addAttributeVec3Key(const std::string& variable_name, const std::string& key);
+    void addAttributeVec4Key(const std::string& variable_name, const std::string& key);
+    void addUniformFloatKey(const std::string& variable_name, const std::string& key);
+    void addUniformVec2Key(const std::string& variable_name, const std::string& key);
+    void addUniformVec3Key(const std::string& variable_name, const std::string& key);
+    void addUniformVec4Key(const std::string& variable_name, const std::string& key);
+    void addUniformMat4Key(const std::string& variable_name, const std::string& key);
     void render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
                 const std::vector< Light* > lightList, Material* material);
     static int getGLTexture(int n);
@@ -68,23 +75,66 @@ private:
     CustomShader& operator=(const CustomShader& custom_shader);
     CustomShader& operator=(CustomShader&& custom_shader);
 
+    void addAttributeKey(const std::string& variable_name, const std::string& key, AttributeVariableBind f);
+    void addUniformKey(const std::string& variable_name, const std::string& key, UniformVariableBind f);
+
+    void initializeOnDemand();
+
+    template <class T> struct Descriptor {
+        Descriptor(const std::string& v, const std::string& k) : variable(v), key(k) {
+        }
+
+        const std::string variable;
+        const std::string key;
+        mutable int location = -1;
+        T variableType;
+    };
+
+    template <class T> struct DescriptorComparator {
+        bool operator() (const Descriptor<T>& lhs, const Descriptor<T>& rhs) const {
+            const std::string lhsKey = lhs.variable + lhs.key;
+            const std::string rhsKey = rhs.variable + rhs.key;
+            return lhsKey < rhsKey;
+        }
+    };
+
+    struct TextureVariable {
+        std::function<int(GLuint)> f_getLocation;
+        std::function<void(int&, const Material&, GLuint)> f_bind;
+    };
+
+    struct AttributeVariable {
+        std::function<int(GLuint)> f_getLocation;
+        AttributeVariableBind f_bind;
+    };
+
+    struct UniformVariable {
+        std::function<int(GLuint)> f_getLocation;
+        UniformVariableBind f_bind;
+    };
+
 private:
-    GLProgram* program_;
-    GLuint u_mvp_;
-    GLuint u_mv_;
-    GLuint u_view_;
-    GLuint u_mv_it_;
-    GLuint u_right_;
-    std::map<int, std::string> texture_keys_;
-    std::map<int, std::string> attribute_float_keys_;
-    std::map<int, std::string> attribute_vec2_keys_;
-    std::map<int, std::string> attribute_vec3_keys_;
-    std::map<int, std::string> attribute_vec4_keys_;
-    std::map<int, std::string> uniform_float_keys_;
-    std::map<int, std::string> uniform_vec2_keys_;
-    std::map<int, std::string> uniform_vec3_keys_;
-    std::map<int, std::string> uniform_vec4_keys_;
-    std::map<int, std::string> uniform_mat4_keys_;
+    GLProgram* program_ = nullptr;
+    GLuint u_mvp_ = 0;
+    GLuint u_mv_ = 0;
+    GLuint u_view_ = 0;
+    GLuint u_mv_it_ = 0;
+    GLuint u_right_ = 0;
+
+    bool textureVariablesDirty_ = false;
+    std::mutex textureVariablesLock_;
+    std::set<Descriptor<TextureVariable>, DescriptorComparator<TextureVariable>> textureVariables_;
+
+    bool attributeVariablesDirty_ = false;
+    std::mutex attributeVariablesLock_;
+    std::set<Descriptor<AttributeVariable>, DescriptorComparator<AttributeVariable>> attributeVariables_;
+
+    bool uniformVariablesDirty_ = false;
+    std::mutex uniformVariablesLock_;
+    std::set<Descriptor<UniformVariable>, DescriptorComparator<UniformVariable>> uniformVariables_;
+
+    std::string vertexShader_;
+    std::string fragmentShader_;
 };
 
 }
