@@ -109,7 +109,7 @@ public class GVRResourceVolume {
         this.enableUrlLocalCache = cacheEnabled;
     }
 
-    private static ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource> resourceMap = new ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource>();
+    private ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource> resourceMap = new ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource>();
 
     /**
      * Opens a file from the volume. The filePath is relative to the

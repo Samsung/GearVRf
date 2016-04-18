@@ -270,7 +270,7 @@ public class GVRAndroidResource {
      * @return An open {@link InputStream}.
      * @throws IOException 
      */
-    public final InputStream getStream() {
+    public synchronized final InputStream getStream() {
         if (streamState != StreamStates.OPEN) {
             openStream();
         }
@@ -290,7 +290,7 @@ public class GVRAndroidResource {
      * Close the stream if it was opened before
      * 
      */
-    public final void closeStream() {
+    public synchronized final void closeStream() {
         try {
             if (streamState == StreamStates.OPEN) {
                 stream.close();
@@ -308,7 +308,7 @@ public class GVRAndroidResource {
      * 
      * 
      */
-    public void openStream() {
+    public synchronized void openStream() {
         try {
             switch (resourceType) {
             case ANDROID_ASSETS:
@@ -361,7 +361,7 @@ public class GVRAndroidResource {
      * 
      * @since 1.6.7
      */
-    public void mark() throws IOException {
+    private void mark() throws IOException {
         if (streamState == StreamStates.OPEN) {
             if (stream.markSupported()) {
                 stream.mark(Integer.MAX_VALUE);
@@ -389,7 +389,7 @@ public class GVRAndroidResource {
      * 
      * @since 1.6.7
      */
-    public void reset() throws IOException {
+    private void reset() throws IOException {
         if (streamState == StreamStates.OPEN) {
             if (stream.markSupported()) {
                 stream.reset();
@@ -605,29 +605,23 @@ public class GVRAndroidResource {
     private GVRCompressedTextureLoader compressedLoader = null;
     private boolean isCompressedTextureSniffed = false;
 
-    public GVRCompressedTextureLoader getCompressedLoader() {
-        if (isCompressedTextureSniffed) {
-            return compressedLoader;
-        }
-
-        synchronized (GVRAndroidResource.this) {
-            if (!isCompressedTextureSniffed) {
+    public synchronized GVRCompressedTextureLoader getCompressedLoader() {
+        if (!isCompressedTextureSniffed) {
+            try {
+                Log.d(TAG, "Looking for compressed header");
+                openStream();
+                mark();
                 try {
-                    Log.d(TAG, "Looking for compressed header");
-                    openStream();
-                    mark();
-                    try {
-                        compressedLoader = CompressedTexture.sniff(getStream());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        reset();
-                        closeStream();
-                    }
-                } catch (Exception e) {
+                    compressedLoader = CompressedTexture.sniff(getStream());
+                } catch (IOException e) {
                     e.printStackTrace();
-                    return null;
+                } finally {
+                    reset();
+                    closeStream();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
                 isCompressedTextureSniffed = true;
             }
         }

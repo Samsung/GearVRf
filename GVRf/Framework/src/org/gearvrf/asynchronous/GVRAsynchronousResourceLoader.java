@@ -280,51 +280,23 @@ public class GVRAsynchronousResourceLoader {
                 final GVRTexture cached = textureCache == null ? null
                         : textureCache.get(resource);
                 if (cached != null) {
-                    gvrContext.runOnGlThread(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            callback.loaded(cached, resource);
-                        }
-                    });
+                    callback.loaded(cached, resource);
                 } else {
                     // 'Sniff' out compressed textures on a thread from the
                     // thread-pool
                     final GVRCompressedTextureLoader loader = resource
                             .getCompressedLoader();
                     if (loader != null) {
-                        Log.d("ASYNC", "use compressed texture loader");
-                        // We have a compressed texture
-                        try {
-                            final CompressedTexture compressedTexture;
-                            compressedTexture = CompressedTexture
-                                    .parse(resource.getStream(), false, loader);
-                            resource.closeStream();
+                        CancelableCallback<GVRTexture> actualCallback = textureCache == null
+                                ? callback
+                                : textureCache.wrapCallback(callback);
 
-                            // Create texture on GL thread
-                            gvrContext.runOnGlThread(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    GVRTexture texture;
-                                    if (textureParams == null) {
-                                        texture = compressedTexture
-                                                .toTexture(gvrContext, quality);
-                                    } else {
-                                        texture = compressedTexture.toTexture(
-                                                gvrContext, quality,
-                                                textureParams);
-                                    }
-                                    textureCache.put(resource, texture);
-                                    callback.loaded(texture, resource);
-                                }
-                            });
-                        } catch (IOException e) {
-                            callback.failed(e, resource);
-                        }
+                        AsyncCompressedTexture.loadTexture(gvrContext,
+                                CancelableCallbackWrapper.wrap(
+                                        GVRCompressedTexture.class,
+                                        actualCallback),
+                                resource, priority);
                     } else {
-                        Log.d("ASYNC", "no compressed texture loader found");
-
                         // We don't have a compressed texture: pass to
                         // AsyncBitmapTexture code
                         CancelableCallback<GVRTexture> actualCallback = textureCache == null

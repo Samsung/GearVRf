@@ -44,7 +44,7 @@ class AsyncCompressedCubemapTexture {
      * The API
      */
 
-    void loadTexture(GVRContext gvrContext,
+    static void loadTexture(GVRContext gvrContext,
             CancelableCallback<GVRCompressedCubemapTexture> callback,
             GVRAndroidResource resource, int priority, Map<String, Integer> map) {
         faceIndexMap = map;
@@ -52,25 +52,20 @@ class AsyncCompressedCubemapTexture {
                 resource, priority);
     }
 
+    private static Map<String, Integer> faceIndexMap;
+    
+    private static final Class<GVRCompressedCubemapTexture> TEXTURE_CLASS = GVRCompressedCubemapTexture.class;
+
     /*
      * Singleton
      */
-
-    private static AsyncCompressedCubemapTexture sInstance;
+    private static AsyncCompressedCubemapTexture sInstance = new AsyncCompressedCubemapTexture();
 
     /**
-     * Gets the {@link AsyncCompressedCubemapTexture} singleton for loading bitmap textures.
+     * Gets the {@link AsyncCompressedCubemapTexture} singleton for loading compressed cubmap textures.
      * @return The {@link AsyncCompressedCubemapTexture} singleton.
      */
     public static AsyncCompressedCubemapTexture get() {
-        if (sInstance != null) {
-            return sInstance;
-        }
-
-        synchronized (AsyncBitmapTexture.class) {
-            sInstance = new AsyncCompressedCubemapTexture();
-        }
-
         return sInstance;
     }
 
@@ -93,10 +88,6 @@ class AsyncCompressedCubemapTexture {
     /*
      * Static constants
      */
-
-    // private static final String TAG = Log.tag(AsyncCubemapTexture.class);
-
-    private static final Class<GVRCompressedCubemapTexture> TEXTURE_CLASS = GVRCompressedCubemapTexture.class;
 
     /*
      * Asynchronous loader for compressed cubemap texture
@@ -161,6 +152,4 @@ class AsyncCompressedCubemapTexture {
         return textureArray;
       }
     }
-
-    private static Map<String, Integer> faceIndexMap;
 }

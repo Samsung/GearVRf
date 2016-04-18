@@ -62,27 +62,6 @@ class Throttler implements Scheduler {
     }
 
     /*
-     * Singleton
-     */
-
-    private static Throttler mInstance;
-
-    public static Throttler get() {
-        if (mInstance != null) {
-            return mInstance;
-        }
-
-        synchronized (Throttler.class) {
-            mInstance = new Throttler();
-        }
-
-        return mInstance;
-    }
-
-    private Throttler() {
-    }
-
-    /*
      * Static constants
      */
 
@@ -107,6 +86,19 @@ class Throttler implements Scheduler {
      * suspended.
      */
     private static final int DECODE_THREAD_LIMIT = Math.max(CORE_COUNT - 1, 1);
+    
+    /*
+     * Singleton
+     */
+
+    private static Throttler mInstance = new Throttler();
+
+    public static Throttler get() {
+        return mInstance;
+    }
+
+    private Throttler() {
+    }
 
     /*
      * Extension points
@@ -196,20 +188,14 @@ class Throttler implements Scheduler {
             } finally {
                 if (async != null) {
                     final INTERMEDIATE loadedResource = async;
-                    gvrContext.runOnGlThread(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            try  {
-                                OUTPUT gvrfResource = converter.convert(gvrContext,
-                                        loadedResource);
-                                callback.loaded(gvrfResource, resource);
-                            } catch (Throwable t) {
-                                // Catch converter errors
-                                callback.failed(t, resource);
-                            }
-                        }
-                    });
+                    try {
+                        OUTPUT gvrfResource = converter.convert(gvrContext,
+                                loadedResource);
+                        callback.loaded(gvrfResource, resource);
+                    } catch (Throwable t) {
+                        // Catch converter errors
+                        callback.failed(t, resource);
+                    }
                 } else {
                     // loadResource() returned null
                     callback.failed(null, resource);

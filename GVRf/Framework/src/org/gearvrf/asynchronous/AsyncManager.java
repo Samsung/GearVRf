@@ -83,11 +83,5 @@ public class AsyncManager {
 
         // Setup default scheduler to Throttler
         mScheduler = Throttler.get();
-
-        // Poke all loaders to get them registered.
-        AsyncBitmapTexture.get();
-        AsyncCubemapTexture.get();
-        AsyncCompressedCubemapTexture.get();
-        AsyncMesh.get();
     }
 }
