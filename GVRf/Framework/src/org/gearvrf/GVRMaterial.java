@@ -756,4 +756,6 @@ class NativeMaterial {
             float z4, float w4);
 
     static native void setShaderFeatureSet(long material, int featureSet);
+
+    static native boolean hasUniform(long material, String key);
 }
