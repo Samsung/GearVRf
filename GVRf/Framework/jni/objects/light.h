@@ -27,10 +27,12 @@
 #include "glm/glm.hpp"
 
 #include "objects/hybrid_object.h"
+#include "../objects/scene_object.h"
 #include "components/component.h"
 #include "util/gvr_jni.h"
 #include "objects/material.h"
 #include "../engine/renderer/renderer.h"
+#include "glm/gtc/matrix_inverse.hpp"
 namespace gvr {
 class Color;
 class SceneObject;
@@ -142,6 +144,7 @@ public:
         setDirty();
     }
 
+
     /**
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
@@ -156,6 +159,9 @@ public:
      */
     bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, RenderState &);
     static void bindShadowMaps(int program, int texIndex);
+    void static createDepthTexture(int width, int height, int depth);
+
+
 
     std::string getLightID() {
         return lightID_;
@@ -171,6 +177,7 @@ public:
         lightID_ = lightid;
     };
 
+
 private:
     Light(const Light& light);
     Light(Light&& light);
@@ -178,7 +185,6 @@ private:
     Light& operator=(Light&& light);
 
     void generateFBO();
-
     /*
      * Mark the light as needing update for all shaders using it
      */
@@ -212,6 +218,7 @@ private:
     SceneObject* parent_;
     Material* shadowMaterial_;
     std::map<int, bool> dirty_;
+    glm::mat4 shadow_matrix_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
@@ -219,6 +226,7 @@ private:
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
     static GLTexture* depth_texture_;
+
 };
 }
 #endif

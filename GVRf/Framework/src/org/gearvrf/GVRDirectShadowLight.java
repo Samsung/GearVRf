@@ -15,9 +15,13 @@
 
 package org.gearvrf;
 
+import java.util.Arrays;
+
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+
+import android.util.Log;
 
 /**
  * Illuminates object in the scene with a directional light source
@@ -78,26 +82,34 @@ public class GVRDirectShadowLight extends GVRDirectLight {
         GVRSceneObject parent = owner;
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
+        boolean changed = false;
         Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
         Matrix4f lightrot = new Matrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
         Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f newpos = new Vector3f();
-
+       
         defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
         {
+            changed = true;
             setVec3("world_direction", newdir.x, newdir.y, newdir.z);
         }
         if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
         {
+            changed = true;
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
-        worldmtx.ortho(-1, 1, -1, 1, 0.1f, 60.0f);
-        setMat4("shadow_matrix", worldmtx);
+        if(changed){
+            worldmtx.invert();
+            Matrix4f proj = new Matrix4f();        
+            proj.ortho(-2, 2, -2, 2, -60.0f, 60.0f);
+            worldmtx = proj.mul(worldmtx);
+            setMat4("shadow_matrix", worldmtx);
+        }
     }
 }
