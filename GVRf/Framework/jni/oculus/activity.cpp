@@ -210,9 +210,31 @@ void GVRActivity::endRenderingEye(const int eye) {
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
 
-    frameBuffer_[eye].resolve();
-    GL(glFlush());  //per vrAppFw
+    // quote off VrApi_Types.h:
+    // <quote>
+    // Because OpenGL ES does not support clampToBorder, it is the
+    // application's responsibility to make sure that all mip levels
+    // of the primary eye texture have a black border that will show
+    // up when time warp pushes the texture partially off screen.
+    // </quote>
+    // also see EyePostRender::FillEdgeColor in VrAppFramework
+    GL(glClearColor(0, 0, 0, 1));
+    GL(glEnable(GL_SCISSOR_TEST));
 
+    GL(glScissor(0, 0, mWidthConfiguration, 1));
+    GL(glClear( GL_COLOR_BUFFER_BIT));
+    GL(glScissor(0, mHeightConfiguration - 1, mWidthConfiguration, 1));
+    GL(glClear( GL_COLOR_BUFFER_BIT));
+    GL(glScissor(0, 0, 1, mHeightConfiguration));
+    GL(glClear( GL_COLOR_BUFFER_BIT));
+    GL(glScissor(mWidthConfiguration - 1, 0, 1, mHeightConfiguration));
+    GL(glClear( GL_COLOR_BUFFER_BIT));
+
+    GL(glDisable(GL_SCISSOR_TEST));
+
+    //per vrAppFw
+    GL(glFlush());
+    frameBuffer_[eye].resolve();
     frameBuffer_[eye].advance();
 }
 
