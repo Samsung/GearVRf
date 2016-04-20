@@ -136,9 +136,9 @@ class GVRMonoscopicViewManager extends GVRViewManager {
     @Override
     void onDrawFrame() {
         // Log.v(TAG, "onDrawFrame");
-        mFrameHandler.beforeDrawEyes();
+        beforeDrawEyes();
         drawEyes();
-        mFrameHandler.afterDrawEyes();
+        afterDrawEyes();
     }
 
     private void drawEyes() {
