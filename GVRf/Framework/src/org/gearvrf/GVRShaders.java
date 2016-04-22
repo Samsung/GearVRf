@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 
 /**
  * The API shared by {@link GVRMaterial} and {@link GVRPostEffect}.
- * 
+ *
  * <p>
  * <table border="1">
  * <tr>
@@ -46,7 +46,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Set shader id
-     * 
+     *
      * @param shaderId
      *            The new shader id. This is an opaque type, used to keep object
      *            and scene shader ids in distinct namespaces.
@@ -56,9 +56,9 @@ public interface GVRShaders<ID> {
     /**
      * The {@link GVRTexture texture} currently bound to the
      * {@code main_texture} shader uniform.
-     * 
+     *
      * With most shaders, this is the texture that is actually displayed.
-     * 
+     *
      * @return The {@linkplain GVRTexture main texture}
      */
     public GVRTexture getMainTexture();
@@ -66,7 +66,7 @@ public interface GVRShaders<ID> {
     /**
      * Bind a different {@link GVRTexture texture} to the {@code main_texture}
      * shader uniform.
-     * 
+     *
      * @param texture
      *            The {@link GVRTexture} to bind.
      */
@@ -75,17 +75,17 @@ public interface GVRShaders<ID> {
     /**
      * Asynchronously bind a different {@link GVRTexture texture} to the
      * {@code main_texture} shader uniform.
-     * 
+     *
      * Uses a background thread from the thread pool to wait for the
      * {@code Future.get()} method; unless you are loading dozens of textures
      * asynchronously, the extra overhead should be modest compared to the cost
      * of loading a texture.
-     * 
+     *
      * @param texture
      *            A future texture, from one of the the
      *            {@link GVRContext#loadFutureTexture(GVRAndroidResource)}
      *            methods
-     * 
+     *
      * @since 1.6.7
      */
     public void setMainTexture(Future<GVRTexture> texture);
@@ -93,7 +93,7 @@ public interface GVRShaders<ID> {
     /**
      * Get the {@link GVRTexture texture} currently bound to the shader uniform
      * {@code key}.
-     * 
+     *
      * @param key
      *            A texture name
      * @return The current {@link GVRTexture texture}.
@@ -102,7 +102,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@link GVRTexture texture} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the texture to.
      * @param texture
@@ -113,24 +113,24 @@ public interface GVRShaders<ID> {
     /**
      * Asynchronously bind a {@link GVRTexture texture} to the shader uniform
      * {@code key}.
-     * 
+     *
      * Uses a background thread from the thread pool to wait for the
      * {@code Future.get()} method; unless you are loading dozens of textures
      * asynchronously, the extra overhead should be modest compared to the cost
      * of loading a texture.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the texture to.
      * @param texture
      *            The {@link GVRTexture texture} to bind.
-     * 
+     *
      * @since 1.6.7
      */
     public void setTexture(String key, Future<GVRTexture> texture);
 
     /**
      * Get the {@code float} bound to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @return The bound {@code float} value.
@@ -139,7 +139,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code float} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @param value
@@ -149,7 +149,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Get the {@code float[2]} vector bound to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @return The {@code vec2} as a Java {@code float[2]}
@@ -158,7 +158,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code vec2} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @param x
@@ -170,7 +170,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Get the {@code float[3]} vector bound to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @return The {@code vec3} as a Java {@code float[3]}
@@ -179,7 +179,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code vec3} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the data to.
      * @param x
@@ -193,7 +193,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Get the {@code float[4]} vector bound to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @return The {@code vec4} as a Java {@code float[3]}
@@ -202,7 +202,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code vec4} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the data to.
      * @param x
@@ -218,7 +218,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code mat4} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the data to.
      */
