@@ -506,5 +506,7 @@ class NativeMesh {
     static native void setBones(long mesh, long[] bonePtrs);
     
     static native void getSphereBound(long mesh, float[] sphere);
+    
+    static native boolean hasAttribute(long mesh, String key);
 
 }

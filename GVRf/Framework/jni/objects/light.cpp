@@ -33,6 +33,34 @@ const int Light::SHADOW_MAP_SIZE = 1024;
 GLTexture* Light::depth_texture_ = NULL;
 GLTexture* Light::color_texture_ = NULL;
 
+class LightCamera : public Camera
+{
+public:
+    LightCamera(Light* light) : Camera()
+    {
+        set_owner_object(light->owner_object());
+    }
+
+    virtual glm::mat4 getProjectionMatrix() const
+    {
+        glm::mat4 ortho;
+        float left = -1.0f;
+        float right = 1.0f;
+        float top = 1.0f;
+        float bottom = -1.0f;
+        float near = -1.0f;
+        float far = 60.0f;
+
+        ortho[0][0]= 2.0 / (right - left);
+        ortho[1][1]= 2.0 / (top - bottom);
+        ortho[2][2]= -2.0 / (far-near);
+        ortho[3][0]= -(right + left)/(right-left);
+        ortho[3][1]=-(top+bottom)/(top-bottom);
+        ortho[3][2]= -(far+near)/(far-near);
+        return ortho;
+    }
+};
+
 /*
  * Loads the uniforms associated with this light
  * into the GPU if they have changed.
@@ -54,11 +82,9 @@ void Light::render(int program, int texIndex) {
     int offset;
 
     GLuint loc = glGetUniformLocation(program, "shadow_matrix");
-	if(loc != -1 && shadowMaterial_!= nullptr){
-
+	if (loc != -1 && shadowMaterial_!= nullptr) {
 		glm::mat4 shadow_matrix;
 		getMat4("shadow_matrix", shadow_matrix);
-
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr((shadow_matrix)));
 	}
     /*
@@ -244,9 +270,8 @@ void Light::createDepthTexture(int width, int height, int depth){
     checkGLError("glBindTexture");
     glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
     checkGlError("Light::render create shadow map");
+
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
-
 }
 
 */
@@ -298,18 +323,14 @@ void Light::createDepthTexture(int width, int height, int depth){
 
 }
 
-
-// This is the code from renderer.cpp that renders the shadow maps
-// shader_manager->getShadowShader()->setCameraLight(cameraLight);
-// shader_manager->getShadowShader()->updateViewportInfo(viewportWidth, viewportHeight);
-// renderCamera(scene, camera,
-//         shader_manager->getShadowShader()->getFBOFromLight(),
-//         0, 0, viewportWidth, viewportHeight, shader_manager,
-//         post_effect_shader_manager, post_effect_render_texture_a,
-//         post_effect_render_texture_b, ShadowShader::RENDER_FROM_LIGHT);
-
-// This function should replace the code above
-bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex,RenderState &rstate) {
+/**
+ * Renders the shadow map for this light
+ * @param scene             Scene to use for rendering
+ * @param shader_manager    ShaderManager to use
+ * @param texIndex          texture index for shadow map
+ * @param scene_objects     temporary storage for culling
+ */
+bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects) {
 
     int framebufferId = 0;  // TODO: get a valid FB ID
     if (shadowMaterial_ == nullptr)
@@ -324,10 +345,8 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     	generateFBO();
     }
 
-
-
-  //  rstate.render_mask;
-    // TODO: set viewport based on framebuffer size
+    LightCamera lightcam(this);
+    RenderState rstate;
     rstate.viewportX = 0;
     rstate.viewportY = 0;
     rstate.viewportWidth = 1024;
@@ -336,11 +355,11 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     rstate.material_override = shadowMaterial_;
     rstate.shader_manager = shader_manager;
     rstate.render_mode = 0;
-    // TODO: set up matrix from viewpoint of light
-    //rstate.uniforms.u_view = camera->getViewMatrix();
-    //rstate.uniforms.u_proj = camera->getProjectionMatrix();
-
-    Renderer::renderShadowMap(rstate, fboId_, light_render_data_vector);
+    rstate.uniforms.u_model = owner_object()->transform()->getModelMatrix();
+    rstate.uniforms.u_view = lightcam.getViewMatrix();
+    rstate.uniforms.u_proj = lightcam.getProjectionMatrix();
+    rstate.render_mask = 0;
+    Renderer::renderShadowMap(rstate, &lightcam, fboId_, scene_objects);
     return true;
 }
 }

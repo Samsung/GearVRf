@@ -44,8 +44,7 @@ void main() {
 #ifdef HAS_VertexNormalShader
 	@VertexNormalShader
 #endif
-	local_position = shadow_matrix * u_model * vertex.local_position;
-//	local_position =  vertex.local_position;
+	local_position =  vertex.local_position;
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;

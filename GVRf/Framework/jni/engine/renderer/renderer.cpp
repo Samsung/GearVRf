@@ -96,7 +96,7 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
     }
 }
 
-void Renderer::state_sort(std::vector<RenderData*>& render_data_vector) {
+void Renderer::state_sort() {
     // The current implementation of sorting is based on
     // 1. rendering order first to maintain specified order
     // 2. shader type second to minimize the gl cost of switching shader
@@ -131,8 +131,6 @@ void Renderer::cull(Scene *scene, Camera *camera,
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
-
-    render_data_vector.clear();
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
 
@@ -142,6 +140,29 @@ void Renderer::cull(Scene *scene, Camera *camera,
         if (DEBUG_RENDERER) {
             LOGD("FRUSTUM: start frustum culling\n");
         }
+        cullFromCamera(scene, camera, shader_manager, scene_objects, vp_matrix);
+    }
+    else {
+        scene_objects = scene->getWholeSceneObjects();
+    }
+    // 2. do occlusion culling, if enabled
+    occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
+
+    // 3. do state sorting
+    // Note: this needs to be scaled to sort on N states
+    state_sort();
+    //renderDepthMaps();
+}
+
+/*
+ * Perform view frustum culling from a specific camera viewpoint
+ */
+void Renderer::cullFromCamera(Scene *scene, Camera* camera,
+        ShaderManager* shader_manager,
+        std::vector<SceneObject*>& scene_objects,
+        const glm::mat4& vp_matrix) {
+    render_data_vector.clear();
+    scene_objects.clear();
 
         // 1. Build the view frustum
         float frustum[6][4];
@@ -166,117 +187,6 @@ void Renderer::cull(Scene *scene, Camera *camera,
         if (DEBUG_RENDERER) {
             LOGD("FRUSTUM: end frustum culling\n");
         }
-    } else {
-        scene_objects = scene->getWholeSceneObjects();
-    }
-
-    // 2. do occlusion culling, if enabled
-    occlusion_cull(scene, scene_objects, shader_manager, vp_matrix, render_data_vector);
-
-    // 3. do state sorting
-    // Note: this needs to be scaled to sort on N states
-    state_sort(render_data_vector);
-
-   renderDepthMaps(camera, scene,shader_manager);
-
-
-}
-void prepareRenderState(Camera *camera, Scene *scene,ShaderManager* shader_manager, RenderState& rstate){
-
-    rstate.material_override = NULL;
-
-    // TODO: modify viewport
-    rstate.viewportX = 0;
-    rstate.viewportY = 0;
-    rstate.viewportWidth = 1024;
-    rstate.viewportHeight = 1024;
-    rstate.shader_manager = shader_manager;
-    rstate.uniforms.u_view = camera->getViewMatrix();
-    rstate.uniforms.u_proj = camera->getProjectionMatrix();
-    rstate.render_mode = -1; 	// modify this later
-    rstate.shader_manager = shader_manager;
-    rstate.scene = scene;
-    rstate.render_mask = camera->render_mask();
-    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
-}
-void Renderer::renderDepthMaps(Camera *camera, Scene *scene,ShaderManager* shader_manager){
-	const std::vector<Light*> lights = scene->getLightList();
-
-	int texIndex = 0;
-
-	RenderState rstate;
-	prepareRenderState(camera,scene, shader_manager,rstate);
-
-    GL(glEnable (GL_DEPTH_TEST));
-    GL(glDepthFunc (GL_LEQUAL));
-    GL(glEnable (GL_CULL_FACE));
-    GL(glFrontFace (GL_CCW));
-    GL(glCullFace (GL_BACK));
-    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-    GL(glDisable (GL_POLYGON_OFFSET_FILL));
-
-
-	for (auto it = lights.begin(); it != lights.end(); ++it) {
-    	Light* light = *it;
-
-    	if(light->getShadowMaterial() == nullptr)
-    		return;
-
-
-    	glm::mat4 shadow_matrix;
-    	light->getMat4("shadow_matrix",shadow_matrix);
-
-    	std::vector<RenderData*>& light_render_data_vector = light->getRenderData();
-    	light_render_data_vector.clear();
-        std::vector<SceneObject*> scene_objects;
-        scene_objects.reserve(1024);
-
-        if (scene->get_frustum_culling()) {
-            if (DEBUG_RENDERER) {
-                LOGD("FRUSTUM: start frustum culling\n");
-            }
-
-            // 1. Build the view frustum
-            float frustum[6][4];
-            build_frustum(frustum, (const float*) glm::value_ptr(shadow_matrix));
-
-            // 2. Iteratively execute frustum culling for each root object (as well as its children objects recursively)
-            std::vector<SceneObject*> root_objects = scene->scene_objects();
-            for (auto it = root_objects.begin(); it != root_objects.end(); ++it) {
-                SceneObject *object = *it;
-                if (DEBUG_RENDERER) {
-                    LOGD("FRUSTUM: start frustum culling for root %s\n",
-                            object->name().c_str());
-                }
-
-                frustum_cull(light->owner_object()->transform()->position(), object, frustum, scene_objects, true, 0);
-
-                if (DEBUG_RENDERER) {
-                    LOGD("FRUSTUM: end frustum culling for root %s\n",
-                            object->name().c_str());
-                }
-            }
-            if (DEBUG_RENDERER) {
-                LOGD("FRUSTUM: end frustum culling\n");
-            }
-        } else {
-            scene_objects = scene->getWholeSceneObjects();
-        }
-
-        // 2. do occlusion culling, if enabled
-        occlusion_cull(scene, scene_objects, shader_manager, shadow_matrix, light_render_data_vector);
-        // 3. do state sorting
-        // Note: this needs to be scaled to sort on N states
-        state_sort(light_render_data_vector);
-
-        if(light->makeShadowMap(scene, shader_manager,texIndex, rstate))
-        	texIndex++;
-     }
-
-	GL(glDisable(GL_DEPTH_TEST));
-	GL(glDisable(GL_CULL_FACE));
-	GL(glDisable(GL_BLEND));
-
 }
 
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -388,7 +298,6 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 camera->background_color_a()));
         glClearColor(1,1,1,1);
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-
        for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(rstate, *it));
@@ -441,44 +350,60 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glDisable(GL_BLEND));
 }
 
-
-
 /**
  * Generate shadow maps for all the lights that cast shadows.
+ * The scene is rendered from the viewpoint of the light using a
+ * special depth shader (GVRDepthShader) to create the shadow map.
  * @see Renderer::renderShadowMap Light::makeShadowMap
  */
-void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager,RenderState rstate) {
+void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
+{
     const std::vector<Light*> lights = scene->getLightList();
     int texIndex = 0;
+    std::vector<SceneObject*> scene_objects;
+    scene_objects.reserve(1024);
     for (auto it = lights.begin(); it != lights.end(); ++it) {
-
-    	if ((*it)->makeShadowMap(scene, shader_manager, texIndex,rstate))
+    	Material *shadowMaterial= (*it)->getShadowMaterial();
+    	if (shadowMaterial == NULL)
+    		return;
+    	if ((*it)->makeShadowMap(scene, shader_manager, texIndex, scene_objects))
             ++texIndex;
     }
 }
 
 /**
  * Generates a shadow map into the specified framebuffer.
- * @param rstate RenderState with rendering parameters
+ * @param rstate        RenderState with rendering parameters
+ * @param camera        camera with light viewpoint
+ * @param framebufferId ID of framebuffer to render shadow map into
+ * @param scene_objects temporary storage for culling
  * @see Light::makeShadowMap Renderer::makeShadowMaps
  */
-void Renderer::renderShadowMap(RenderState& rstate, GLuint framebufferId, std::vector<RenderData*>& light_render_data_vector) {
-
+void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) {
+    glm::mat4 vp_matrix = rstate.uniforms.u_view * rstate.uniforms.u_proj;
+    cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects, vp_matrix);
     GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
     checkGLError("glBindFramebuffer");
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
     checkGLError("colormask 1 ");
-
-    GL(glClear(GL_DEPTH_BUFFER_BIT ));
+    GL(glEnable (GL_DEPTH_TEST));
+    GL(glDepthFunc (GL_LEQUAL));
+    GL(glEnable (GL_CULL_FACE));
+    GL(glFrontFace (GL_CCW));
+    GL(glCullFace (GL_BACK));
+    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+    GL(glDisable (GL_POLYGON_OFFSET_FILL));
     checkGLError("colormask 2");
-
-    for (auto it = light_render_data_vector.begin();
-            it != light_render_data_vector.end(); ++it) {
+    for (auto it = render_data_vector.begin();
+            it != render_data_vector.end(); ++it) {
         GL(renderRenderData(rstate, *it));
     }
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+    GL(glDisable(GL_BLEND));
 }
 
-void addRenderData(RenderData *render_data, std::vector<RenderData*>& renderDataVector) {
+void addRenderData(RenderData *render_data) {
     if (render_data == 0 || render_data->material(0) == 0) {
         return;
     }
@@ -491,13 +416,13 @@ void addRenderData(RenderData *render_data, std::vector<RenderData*>& renderData
         return;
     }
 
-    renderDataVector.push_back(render_data);
+    render_data_vector.push_back(render_data);
     return;
 }
 
 void Renderer::occlusion_cull(Scene* scene,
         std::vector<SceneObject*>& scene_objects, ShaderManager *shader_manager,
-        glm::mat4 vp_matrix, std::vector<RenderData*>& renderDataVector) {
+        glm::mat4 vp_matrix) {
 
     bool do_culling = scene->get_occlusion_culling();
     if (!do_culling) {
@@ -505,7 +430,7 @@ void Renderer::occlusion_cull(Scene* scene,
 
             SceneObject *scene_object = (*it);
             RenderData* render_data = scene_object->render_data();
-            addRenderData(render_data, renderDataVector);
+            addRenderData(render_data);
         }
         return;
     }
@@ -577,7 +502,7 @@ void Renderer::occlusion_cull(Scene* scene,
 
             (*it)->set_visible(visibility);
             (*it)->set_query_issued(false);
-            addRenderData((*it)->render_data(), renderDataVector);
+            addRenderData((*it)->render_data());
         }
     }
 }
@@ -904,6 +829,8 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
         }
          //TODO: Improve this logic to avoid a big "switch case"
         ShaderBase* shader = NULL;
+        if (rstate.material_override != nullptr)
+            curr_material = rstate.material_override;
          switch (curr_material->shader_type()) {
             case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
                 break;

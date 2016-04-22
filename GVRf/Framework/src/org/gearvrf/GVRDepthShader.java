@@ -47,6 +47,6 @@ import org.gearvrf.R;
            }
            setSegment("FragmentTemplate", fragTemplate);
            setSegment("VertexTemplate", vtxTemplate);
-            setSegment("VertexSkinShader", skinShader);
+           setSegment("VertexSkinShader", skinShader);
        }       
    }

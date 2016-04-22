@@ -157,7 +157,7 @@ public:
      * Internal function called at the start of each frame
      * to update the shadow map.
      */
-    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, RenderState &);
+    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects);
     static void bindShadowMaps(int program, int texIndex);
     void static createDepthTexture(int width, int height, int depth);
 

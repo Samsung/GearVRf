@@ -115,17 +115,20 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager,RenderState);
-    static void renderShadowMap(RenderState& rstate, GLuint framebufferId, std::vector<RenderData*>& light_render_data_vector);
     static void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);
-    static void renderDepthMaps(Camera *camera, Scene *scene,ShaderManager* shader_manager);
     static void initializeStats();
     static void resetStats();
     static int getNumberDrawCalls();
     static int getNumberTriangles();
+    static void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
 
 private:
+    static void cullFromCamera(Scene *scene, Camera *camera,
+            ShaderManager* shader_manager,
+            std::vector<SceneObject*>& scene_objects,
+            const glm::mat4& vp_matrix);
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
     static void renderRenderData(RenderState& rstate, RenderData* render_data);
 
     static void renderMesh(RenderState& rstate, RenderData* render_data);
@@ -140,12 +143,12 @@ private:
 
     static void occlusion_cull(Scene* scene,
             std::vector<SceneObject*>& scene_objects,
-            ShaderManager *shader_manager, glm::mat4 vp_matrix, std::vector<RenderData*>&);
+            ShaderManager *shader_manager, glm::mat4 vp_matrix);
     static void build_frustum(float frustum[6][4], const float *vp_matrix);
     static void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
-    static void state_sort(std::vector<RenderData*>&);
+    static void state_sort();
 
     static void set_face_culling(int cull_face);
 
