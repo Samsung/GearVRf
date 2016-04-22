@@ -122,6 +122,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     private final GVRScriptManager mScriptManager;
 
     private native void cull(long scene, long camera, long shader_manager);
+    private native void makeShadowMaps(long scene, long shader_manager);
+    
+    
     private native void renderCamera(long appPtr, long scene, long camera,
             long shaderManager, long postEffectShaderManager,
             long postEffectRenderTextureA, long postEffectRenderTextureB);
@@ -614,6 +617,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
     void onDrawFrame() {
         GVRPerspectiveCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
+        makeShadowMaps(mMainScene.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
         cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
 
         if (mCurrentEye == 1) {

@@ -122,13 +122,13 @@ public:
     static int getNumberDrawCalls();
     static int getNumberTriangles();
     static void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
-
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
 private:
     static void cullFromCamera(Scene *scene, Camera *camera,
             ShaderManager* shader_manager,
             std::vector<SceneObject*>& scene_objects,
             const glm::mat4& vp_matrix);
-    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
+
     static void renderRenderData(RenderState& rstate, RenderData* render_data);
 
     static void renderMesh(RenderState& rstate, RenderData* render_data);
@@ -140,7 +140,7 @@ private:
             PostEffectShaderManager* post_effect_shader_manager);
 
     static bool checkTextureReady(Material* material);
-
+    static void cullDepthMaps(RenderState& rstate,Camera* camera, std::vector<SceneObject*>& scene_objects);
     static void occlusion_cull(Scene* scene,
             std::vector<SceneObject*>& scene_objects,
             ShaderManager *shader_manager, glm::mat4 vp_matrix);

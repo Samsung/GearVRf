@@ -11,7 +11,7 @@ Radiance @LightType(Surface s, in Struct@LightType data)
 		ShadowCoord = ShadowCoord * 0.5 + 0.5;
   		vec3 texcoord = vec3(ShadowCoord.x, ShadowCoord.y, data.shadow_map_index);
   
-   		if (texture(u_shadow_maps, texcoord.xy).r < ShadowCoord.z - 0.0009)
+   		if (texture(u_shadow_maps, texcoord).r < ShadowCoord.z - 0.0015)
       		attenuation = 0.0;
     //	data.diffuse_intensity.xyz = texture(u_shadow_maps, texcoord.xy).xyz;
     

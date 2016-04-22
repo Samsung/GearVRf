@@ -359,6 +359,14 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
 {
     const std::vector<Light*> lights = scene->getLightList();
+    GL(glEnable (GL_DEPTH_TEST));
+    GL(glDepthFunc (GL_LEQUAL));
+    GL(glEnable (GL_CULL_FACE));
+    GL(glFrontFace (GL_CCW));
+    GL(glCullFace (GL_BACK));
+    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+
+
     int texIndex = 0;
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
@@ -369,8 +377,28 @@ void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
     	if ((*it)->makeShadowMap(scene, shader_manager, texIndex, scene_objects))
             ++texIndex;
     }
-}
 
+
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+
+}
+void Renderer::cullDepthMaps(RenderState& rstate,Camera* camera, std::vector<SceneObject*>& scene_objects){
+    glm::mat4 vp_matrix =  rstate.uniforms.u_proj * rstate.uniforms.u_view;
+
+    if(rstate.scene->get_frustum_culling()){
+    	cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects, vp_matrix);
+    }
+    else {
+    	scene_objects.clear();
+    	render_data_vector.clear();
+    	scene_objects = rstate.scene->getWholeSceneObjects();
+    }
+
+    occlusion_cull(rstate.scene, scene_objects, rstate.shader_manager, vp_matrix);
+
+
+}
 /**
  * Generates a shadow map into the specified framebuffer.
  * @param rstate        RenderState with rendering parameters
@@ -380,27 +408,22 @@ void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
  * @see Light::makeShadowMap Renderer::makeShadowMaps
  */
 void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) {
-    glm::mat4 vp_matrix = rstate.uniforms.u_view * rstate.uniforms.u_proj;
-    cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects, vp_matrix);
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+
+	cullDepthMaps(rstate,camera, scene_objects);
+
+	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
     checkGLError("glBindFramebuffer");
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
-    checkGLError("colormask 1 ");
-    GL(glEnable (GL_DEPTH_TEST));
-    GL(glDepthFunc (GL_LEQUAL));
-    GL(glEnable (GL_CULL_FACE));
-    GL(glFrontFace (GL_CCW));
-    GL(glCullFace (GL_BACK));
-    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-    GL(glDisable (GL_POLYGON_OFFSET_FILL));
-    checkGLError("colormask 2");
+    checkGLError("glViewport  ");
+    glClearColor(0,0,0,1);
+    GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
+
+
     for (auto it = render_data_vector.begin();
             it != render_data_vector.end(); ++it) {
         GL(renderRenderData(rstate, *it));
     }
-    GL(glDisable(GL_DEPTH_TEST));
-    GL(glDisable(GL_CULL_FACE));
-    GL(glDisable(GL_BLEND));
+
 }
 
 void addRenderData(RenderData *render_data) {
