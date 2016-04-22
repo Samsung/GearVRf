@@ -1,6 +1,8 @@
-precision mediump float;
+precision highp float;
+precision highp sampler2DArray;
 uniform mat4 u_view;
-uniform sampler2DArray u_shadow_maps;
+//uniform sampler2DArray u_shadow_maps;
+uniform sampler2D u_shadow_maps;
 uniform mat4 shadow_matrix;
 uniform mat4 u_model;
 in vec3 viewspace_position;

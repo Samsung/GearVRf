@@ -385,7 +385,7 @@ enum AABB_STATE {
 // 1 when the HBV of the object is intersecting the frustum but the object itself is not: cull it out and continue culling test with its children
 // 2 when the HBV of the object is intersecting the frustum and the mesh BV of the object are intersecting (inside) the frustum: render itself and continue culling test with its children
 // 3 when the HBV of the object is completely inside the frustum: render itself and all its children without further culling test
-int SceneObject::frustumCull(Camera *camera, const float frustum[6][4],
+int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4],
         int& planeMask) {
     if (!visible_) {
         if (DEBUG_RENDERER) {
@@ -438,7 +438,7 @@ int SceneObject::frustumCull(Camera *camera, const float frustum[6][4],
     glm::vec4 transformed_sphere_center(bounding_volume_.center(), 1.0f);
 
     // Calculate distance from camera
-    glm::vec3 camera_position = camera->owner_object()->transform()->position();
+  //  glm::vec3 camera_position = camera->owner_object()->transform()->position();
     glm::vec4 position(camera_position, 1.0f);
     glm::vec4 difference = transformed_sphere_center - position;
     float distance = glm::dot(difference, difference);

@@ -152,7 +152,7 @@ public:
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
 
-    int frustumCull(Camera *camera, const float frustum[6][4], int& planeMask);
+    int frustumCull(glm::vec3 camera_position, const float frustum[6][4], int& planeMask);
 
 private:
     std::string name_;

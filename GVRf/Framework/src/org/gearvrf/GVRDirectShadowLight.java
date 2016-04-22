@@ -94,7 +94,7 @@ public class GVRDirectShadowLight extends GVRDirectLight {
         worldmtx.getTranslation(newpos);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
-        if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
+         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
         {
             changed = true;
             setVec3("world_direction", newdir.x, newdir.y, newdir.z);
@@ -105,11 +105,12 @@ public class GVRDirectShadowLight extends GVRDirectLight {
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
         if(changed){
+
+            Matrix4f proj = new Matrix4f();
+            proj.perspective((float)Math.toRadians(100), 1, 0.1f, 1000);
             worldmtx.invert();
-            Matrix4f proj = new Matrix4f();        
-            proj.ortho(-2, 2, -2, 2, -60.0f, 60.0f);
-            worldmtx = proj.mul(worldmtx);
-            setMat4("shadow_matrix", worldmtx);
+            proj.mul(worldmtx);
+            setMat4("shadow_matrix", proj);
         }
     }
 }

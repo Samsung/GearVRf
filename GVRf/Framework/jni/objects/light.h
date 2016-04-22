@@ -177,7 +177,9 @@ public:
         lightID_ = lightid;
     };
 
-
+     std::vector<RenderData*>& getRenderData(){
+    	return light_render_data_vector;
+    }
 private:
     Light(const Light& light);
     Light(Light&& light);
@@ -225,8 +227,9 @@ private:
     std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
+    std::vector<RenderData*> light_render_data_vector;
     static GLTexture* depth_texture_;
-
+    static GLTexture* color_texture_;
 };
 }
 #endif

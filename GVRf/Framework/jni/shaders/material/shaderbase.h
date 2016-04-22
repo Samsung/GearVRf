@@ -39,7 +39,7 @@ class ShaderBase: public HybridObject {
 public:
     ShaderBase() : program_(0) { };
 
-    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material)=0;
 
 protected:
     GLProgram* program_;

@@ -1,8 +1,10 @@
-
+uniform mat4 u_view;
 uniform mat4 u_mvp;
 uniform mat4 u_mv;
 uniform mat4 u_mv_it;
 uniform mat4 u_bone_matrix[60];
+uniform mat4 u_model;
+uniform mat4 shadow_matrix;
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_texcoord;
@@ -42,7 +44,8 @@ void main() {
 #ifdef HAS_VertexNormalShader
 	@VertexNormalShader
 #endif
-	local_position = vertex.local_position;
+	local_position = shadow_matrix * u_model * vertex.local_position;
+//	local_position =  vertex.local_position;
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;

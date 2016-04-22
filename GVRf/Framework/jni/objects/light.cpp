@@ -31,7 +31,7 @@ namespace gvr {
 const int Light::MAX_SHADOW_MAPS = 2;
 const int Light::SHADOW_MAP_SIZE = 1024;
 GLTexture* Light::depth_texture_ = NULL;
-
+GLTexture* Light::color_texture_ = NULL;
 
 /*
  * Loads the uniforms associated with this light
@@ -52,10 +52,13 @@ void Light::render(int program, int texIndex) {
     std::string lname = lightID_ + ".";
     std::stringstream ss;
     int offset;
+
     GLuint loc = glGetUniformLocation(program, "shadow_matrix");
 	if(loc != -1 && shadowMaterial_!= nullptr){
+
 		glm::mat4 shadow_matrix;
 		getMat4("shadow_matrix", shadow_matrix);
+
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr((shadow_matrix)));
 	}
     /*
@@ -137,6 +140,7 @@ void Light::bindShadowMaps(int program, int texIndex) {
     if (loc >= 0) {
         LOGD("LIGHT: found shadow map in shader %d\n", loc);
         if (shadowmap == NULL) {
+        	LOGE("shadowmap null");
             depth_texture_ = shadowmap = new GLTexture(GL_TEXTURE_2D_ARRAY);
             LOGD("LIGHT: create shadow map array id = %d\n", depth_texture_->id());
             glActiveTexture(GL_TEXTURE0 + texIndex);
@@ -145,10 +149,15 @@ void Light::bindShadowMaps(int program, int texIndex) {
             checkGlError("Light::render create shadow map");
         }
         else {
+
             glActiveTexture(GL_TEXTURE0 + texIndex);
             checkGLError("glBindTexture");
-            glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+            glBindTexture(GL_TEXTURE_2D, depth_texture_->id());
             checkGLError("glBindTexture");
+
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            checkGLError("glBindTexture");
+
         }
 
         glUniform1i(loc, texIndex);
@@ -156,26 +165,50 @@ void Light::bindShadowMaps(int program, int texIndex) {
 
     }
 }
-
+/*
 void Light::generateFBO() {
-	LOGE("generate FBO");
-    glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
-    checkGLError("glBindTexture");
+
+	GLTexture* colorTexture = new GLTexture(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, colorTexture->id());
+    checkGLError("colorTexture");
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 1024, 0, GL_RGB,
+            GL_UNSIGNED_BYTE, NULL);
+    checkGLError("glTexImage2D color");
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+GLenum attachments[2]={GL_NONE};
     glGenFramebuffers(1, &fboId_);
     checkGLError("glGenFramebuffers");
     glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
     checkGLError("glBindFramebuffer");
+  //  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+  //                      GL_TEXTURE_2D, colorTexture->id(), 0);
+
+
+ //   glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+ //           color_texture_->id(), 0, shadowMapIndex_);
+    glDrawBuffers(1,attachments);
+    checkGLError("colorattachment");
     glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
             depth_texture_->id(), 0, shadowMapIndex_);
     checkGLError("glFramebufferTextureLayer");
-    const GLenum bufs [ ] = {GL_NONE};
-    glDrawBuffers(1, bufs);
-    checkGLError("glDrawBuffers");
-   // glReadBuffer(1, GL_NONE);
+
     ////////// Check FrameBuffer was created with success ///
     int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
         LOGE("Could not create FBO: %d", fboStatus);
+        switch(fboStatus){
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
+        	LOGE("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+			break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        	LOGE("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+        	break;
+
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+        	LOGE("GL_FRAMEBUFFER_UNSUPPORTED");
+        	break;
+        }
         throw std::exception(); // "Could not create FBO: " + fboStatus
     }
     LOGD("LIGHT: %s create shadow map framebuffer %d\n", lightID_.c_str(), shadowMapIndex_);
@@ -189,11 +222,81 @@ void Light::createDepthTexture(int width, int height, int depth){
 	depth_texture_  = new GLTexture(GL_TEXTURE_2D_ARRAY);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
     checkGLError("glBindTexture");
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, MAX_SHADOW_MAPS, GL_DEPTH_COMPONENT16, width, height, depth);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    checkGLError("glBindTexture");
+ //   glTexStorage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, width, height, depth);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_DEPTH_COMPONENT16, width,height,depth,0,GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT,NULL);
     checkGlError("Light::render create shadow map");
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_NONE);
+
+       glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    checkGlError("Light::render create shadow map");
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_S, GL_REPEAT);
+    checkGlError("Light::render create shadow map");
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_T, GL_REPEAT);
+    checkGlError("Light::render create shadow map");
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    color_texture_ = new GLTexture(GL_TEXTURE_2D_ARRAY);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, color_texture_->id());
+    checkGLError("glBindTexture 2");
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    checkGLError("glBindTexture");
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
+    checkGlError("Light::render create shadow map");
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
 
 }
 
+*/
+
+
+void Light::generateFBO() {
+	LOGE("generate FBO");
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glGenFramebuffers(1, &fboId_);
+    checkGLError("glGenFramebuffers");
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+    checkGLError("glBindFramebuffer");
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture_->id(), 0);
+    checkGLError("glFramebufferTextureLayer");
+
+    ////////// Check FrameBuffer was created with success ///
+    int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+        LOGE("Could not create FBO: %d", fboStatus);
+        switch(fboStatus){
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
+        	LOGE("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+			break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        	LOGE("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+        	break;
+
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+        	LOGE("GL_FRAMEBUFFER_UNSUPPORTED");
+        	break;
+        }
+        throw std::exception(); // "Could not create FBO: " + fboStatus
+    }
+    LOGD("LIGHT: %s create shadow map framebuffer %d\n", lightID_.c_str(), shadowMapIndex_);
+    ////////// Release bind for texture and FrameBuffer /////
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void Light::createDepthTexture(int width, int height, int depth){
+	LOGE("creating depth texture");
+	depth_texture_  = new GLTexture(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, depth_texture_->id());
+    checkGLError("glBindTexture");
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, 0);
+    checkGlError("Light::glTexImage2D");
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+}
 
 
 // This is the code from renderer.cpp that renders the shadow maps
@@ -212,15 +315,15 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     if (shadowMaterial_ == nullptr)
         return false;
 
-  /*  if(nullptr == depth_texture_){
-    	createDepthTexture(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 3);
+    if(nullptr == depth_texture_){
+    	createDepthTexture(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 2);
     }
 
     if (-1 == fboId_ ) {
         shadowMapIndex_ = texIndex;
     	generateFBO();
     }
-*/
+
 
 
   //  rstate.render_mask;
@@ -237,7 +340,7 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     //rstate.uniforms.u_view = camera->getViewMatrix();
     //rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-    Renderer::renderShadowMap(rstate, fboId_);
+    Renderer::renderShadowMap(rstate, fboId_, light_render_data_vector);
     return true;
 }
 }

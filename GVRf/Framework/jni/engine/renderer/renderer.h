@@ -38,7 +38,7 @@
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
-
+//#include "../../shaders/shader_manager.h"
 namespace gvr {
 class Camera;
 class Scene;
@@ -115,11 +115,11 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager,RenderState &);
-    static void renderShadowMap(RenderState& rstate, GLuint framebufferId);
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager,RenderState);
+    static void renderShadowMap(RenderState& rstate, GLuint framebufferId, std::vector<RenderData*>& light_render_data_vector);
     static void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);
-
+    static void renderDepthMaps(Camera *camera, Scene *scene,ShaderManager* shader_manager);
     static void initializeStats();
     static void resetStats();
     static int getNumberDrawCalls();
@@ -140,12 +140,12 @@ private:
 
     static void occlusion_cull(Scene* scene,
             std::vector<SceneObject*>& scene_objects,
-            ShaderManager *shader_manager, glm::mat4 vp_matrix);
+            ShaderManager *shader_manager, glm::mat4 vp_matrix, std::vector<RenderData*>&);
     static void build_frustum(float frustum[6][4], const float *vp_matrix);
-    static void frustum_cull(Camera *camera, SceneObject *object,
+    static void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
-    static void state_sort();
+    static void state_sort(std::vector<RenderData*>&);
 
     static void set_face_culling(int cull_face);
 
@@ -155,7 +155,7 @@ private:
             const Material* curr_material, const glm::mat4& model_matrix,
             const int modeShadow, glm::vec3& lightPosition,
             glm::mat4& vp_matrixLightModel);
-
+    void light_cull(Scene *scene, ShaderManager* shader_manager);
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);

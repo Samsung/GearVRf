@@ -69,14 +69,14 @@ public class GVRSpotShadowLight extends GVRSpotLight {
 
     public GVRSpotShadowLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
-        uniformDescriptor += " float has_shadow_map mat4 shadow_matrix";
+        uniformDescriptor += " float shadow_map_index mat4 shadow_matrix";
          if (shaderSource == null) {
             shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotshadowlight);
         }
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setFloat("has_shadow_map", 0);
+        setFloat("shadow_map_index", -1.0f);
         setShaderSource(shaderSource);
         castShadow(gvrContext);
     }
@@ -96,24 +96,32 @@ public class GVRSpotShadowLight extends GVRSpotLight {
         Matrix4f lightrot = new Matrix4f();
         Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
         Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
+        Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f newpos = new Vector3f();
-
+        boolean changed = false;
         defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
         {
+            changed = true;
             setVec3("world_direction", newdir.x, newdir.y, newdir.z);
         }
         if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
         {
+            changed = true;
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
-        worldmtx.lookAt(newpos, newdir, new Vector3f(0, 1, 0));
-        worldmtx.perspective(getOuterConeAngle(), 1, 0.1f, 1000.0f);
-        setMat4("shadow_matrix", worldmtx);
+
+        if(changed){
+
+            Matrix4f proj = new Matrix4f();
+            proj.perspective((float)Math.toRadians(90), 1, 0.1f, 1000);
+            worldmtx.invert();
+            proj.mul(worldmtx);
+            setMat4("shadow_matrix", proj);
+        }  
     }
 }
 
