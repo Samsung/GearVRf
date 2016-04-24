@@ -126,8 +126,7 @@ public:
 private:
     static void cullFromCamera(Scene *scene, Camera *camera,
             ShaderManager* shader_manager,
-            std::vector<SceneObject*>& scene_objects,
-            const glm::mat4& vp_matrix);
+            std::vector<SceneObject*>& scene_objects);
 
     static void renderRenderData(RenderState& rstate, RenderData* render_data);
 

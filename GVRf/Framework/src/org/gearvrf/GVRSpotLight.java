@@ -61,7 +61,7 @@ public class GVRSpotLight extends GVRPointLight
         if (mSpotLightShaderSource == null) {
             mSpotLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotlight);
         }
-        setShaderSource(mSpotLightShaderSource);
+        fragmentShaderSource = mSpotLightShaderSource;
         setFloat("inner_cone_angle", 90.0f);
         setFloat("outer_cone_angle", 90.0f);
     }

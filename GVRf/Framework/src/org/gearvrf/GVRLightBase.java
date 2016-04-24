@@ -56,6 +56,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             NativeLight.setParent(getNative(), parent.getNative());
         }
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
+        vertexDescriptor = null;
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
@@ -65,6 +66,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     {
         super(gvrContext, NativeLight.ctor());
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
+        vertexDescriptor = null;
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
@@ -173,32 +175,51 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Access the shader source code implementing this light.
+     * Access the fragment shader source code implementing this light.
      *
-     * The shader code for each light defines a function which computes the
+     * The shader code defines a function which computes the
      * color contributed by this light. It takes a structure of uniforms and a
      * <Surface> structure as input and outputs a <Radiance> structure. The
      * format of the uniforms is defined by the shader descriptor. The fragment
      * shader is responsible for computing the surface color and integrating the
      * contribution of each light to the final fragment color. It defines the
      * format of the <Radiance> and <Surface> structures.
-     * {@link GVRShaderTemplate } {@link getShaderDescriptor}
+     * {@link GVRShaderTemplate } {@link getUniformDescriptor}
      * 
-     * @return string with source for light shader
+     * @return string with source for light fragment shader
      */
-    public String getShaderSource()
+    public String getFragmentShaderSource()
     {
-        return shaderSource;
+        return fragmentShaderSource;
     }
 
+
+    /**
+     * Access the vertex shader source code implementing this light.
+     *
+     * The shader code defines a function which computes the per-vertex
+     * outputs for this light. The input is a structure of uniforms and the output
+     * is a varying structure which is used by the fragment shader.
+     * The format of the vertex output for the light is defined
+     * by the vertex shader descriptor.
+     * 
+     * {@link GVRShaderTemplate } {@link getVertexDescriptor}
+     * 
+     * @return string with source for light vertex shader
+     */
+    public String getVertexShaderSource()
+    {
+        return vertexShaderSource;
+    }
+    
     /**
      * Access the descriptor defining the shader uniforms used by this light.
      *
      * Defines the GLSL structure representing the uniform data passed to this
-     * light. These must match the structure defined in the shader source code.
+     * light. These produce the structure defined in the shader source code.
      * Each light object maintains a copy of these values and sends them to the
      * shader when they are updated. the format of the <Radiance> and
-     * <Surface> structures. {@link GVRShaderTemplate } {@link getShaderSource}
+     * <Surface> structures. {@link GVRShaderTemplate } {@link getFragmentShaderSource}
      * 
      * @return String describing light shader uniforms
      */
@@ -207,6 +228,21 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         return uniformDescriptor;
     }
 
+    /**
+     * Access the descriptor defining the vertex shader output produced by this light.
+     *
+     * Defines the GLSL structure representing the varying data for this light.
+     * These produce the structure defined in the shader source code.
+     * Each light object maintains a copy of these values and sends them to the
+     * shader when they are updated.
+     * 
+     * @return String describing light vertex shader output
+     */
+    public String getVertexDescriptor()
+    {
+        return vertexDescriptor;
+    }
+    
     /**
      * Gets the value of a floating uniform based on its name.
      * 
@@ -335,44 +371,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         matrix.set(data);
         return matrix;
     }
-        
-    /**
-     * Get the GLSL structure describing this light. The name of the structure
-     * is derived from the light class name. It is assumed that each different
-     * type of light will be represented by a different Java class.
-     *
-     * @return String with shader structure description.
-     */
-    public String getShaderStruct()
-    {
-        Pattern pattern = Pattern.compile("[ ]*([a-zA-Z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
-        Matcher matcher = pattern.matcher(uniformDescriptor);
-        String structDesc = "struct Struct" + getClass().getSimpleName() + " {\n";
-        while (matcher.find())
-        {
-            String name = matcher.group(2);
-            String type = matcher.group(1);
-
-            structDesc += type + " " + name + ";\n";
-        }
-        structDesc += "};\n";
-        return structDesc;
-    }
-
-    /**
-     * Define the shader source to compute the illumination from this light.
-     * 
-     * This source must be defined at the time the light is constructed.
-     * Typically, different subclasses of GVRLightBase will have different
-     * illumination functions.
-     * 
-     * @param source
-     *            String with shader source code.
-     */
-    protected void setShaderSource(String source)
-    {
-        shaderSource = source;
-    }
 
     /**
      * Get the default orientation of the light when there is no transformation
@@ -434,8 +432,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     protected Quaternionf defaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
-    protected String shaderSource = null;
+    protected String fragmentShaderSource = null;
+    protected String vertexShaderSource = null;
     protected String uniformDescriptor = null;
+    protected String vertexDescriptor = null;
     static protected GVRMaterial mShadowMaterial = null;
 }
 

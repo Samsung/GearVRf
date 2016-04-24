@@ -128,30 +128,15 @@ void Renderer::cull(Scene *scene, Camera *camera,
             || camera->owner_object()->transform() == nullptr) {
         return;
     }
-    glm::mat4 view_matrix = camera->getViewMatrix();
-    glm::mat4 projection_matrix = camera->getProjectionMatrix();
-    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
 
-    // 1. Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
-     if (scene->get_frustum_culling()) {
-   //if (0){
-        if (DEBUG_RENDERER) {
-            LOGD("FRUSTUM: start frustum culling\n");
-        }
-        cullFromCamera(scene, camera, shader_manager, scene_objects, vp_matrix);
-    }
-    else {
-        scene_objects = scene->getWholeSceneObjects();
-    }
-    // 2. do occlusion culling, if enabled
-    occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
+    makeShadowMaps(scene, shader_manager);
+    cullFromCamera(scene, camera, shader_manager, scene_objects);
 
-    // 3. do state sorting
     // Note: this needs to be scaled to sort on N states
     state_sort();
-    //renderDepthMaps();
+
 }
 
 /*
@@ -159,10 +144,19 @@ void Renderer::cull(Scene *scene, Camera *camera,
  */
 void Renderer::cullFromCamera(Scene *scene, Camera* camera,
         ShaderManager* shader_manager,
-        std::vector<SceneObject*>& scene_objects,
-        const glm::mat4& vp_matrix) {
+        std::vector<SceneObject*>& scene_objects) {
     render_data_vector.clear();
     scene_objects.clear();
+
+    glm::mat4 view_matrix = camera->getViewMatrix();
+    glm::mat4 projection_matrix = camera->getProjectionMatrix();
+    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
+
+    // 1. Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
+    if (scene->get_frustum_culling()) {
+        if (DEBUG_RENDERER) {
+           LOGD("FRUSTUM: start frustum culling\n");
+       }
 
         // 1. Build the view frustum
         float frustum[6][4];
@@ -176,9 +170,7 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
                 LOGD("FRUSTUM: start frustum culling for root %s\n",
                         object->name().c_str());
             }
-
             frustum_cull(camera->owner_object()->transform()->position(), object, frustum, scene_objects, true, 0);
-
             if (DEBUG_RENDERER) {
                 LOGD("FRUSTUM: end frustum culling for root %s\n",
                         object->name().c_str());
@@ -187,6 +179,11 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
         if (DEBUG_RENDERER) {
             LOGD("FRUSTUM: end frustum culling\n");
         }
+    }
+    else
+        scene_objects = scene->getWholeSceneObjects();
+    // 2. do occlusion culling, if enabled
+    occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
 }
 
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -235,7 +232,6 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 post_effect_shader_manager, post_effect_render_texture_a,
                 post_effect_render_texture_b, ShadowShader::RENDER_WITH_SHADOW);
     }
-
 }
 
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -377,28 +373,10 @@ void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
     	if ((*it)->makeShadowMap(scene, shader_manager, texIndex, scene_objects))
             ++texIndex;
     }
-
-
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
-
 }
-void Renderer::cullDepthMaps(RenderState& rstate,Camera* camera, std::vector<SceneObject*>& scene_objects){
-    glm::mat4 vp_matrix =  rstate.uniforms.u_proj * rstate.uniforms.u_view;
 
-    if(rstate.scene->get_frustum_culling()){
-    	cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects, vp_matrix);
-    }
-    else {
-    	scene_objects.clear();
-    	render_data_vector.clear();
-    	scene_objects = rstate.scene->getWholeSceneObjects();
-    }
-
-    occlusion_cull(rstate.scene, scene_objects, rstate.shader_manager, vp_matrix);
-
-
-}
 /**
  * Generates a shadow map into the specified framebuffer.
  * @param rstate        RenderState with rendering parameters
@@ -409,7 +387,7 @@ void Renderer::cullDepthMaps(RenderState& rstate,Camera* camera, std::vector<Sce
  */
 void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) {
 
-	cullDepthMaps(rstate,camera, scene_objects);
+	cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects);
 
 	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
     checkGLError("glBindFramebuffer");
@@ -418,12 +396,10 @@ void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint frame
     glClearColor(0,0,0,1);
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
-
     for (auto it = render_data_vector.begin();
             it != render_data_vector.end(); ++it) {
         GL(renderRenderData(rstate, *it));
     }
-
 }
 
 void addRenderData(RenderData *render_data) {

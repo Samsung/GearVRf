@@ -59,7 +59,7 @@ public class GVRPointLight extends GVRLightBase
         if (shaderSource == null) {
             shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
         }
-        setShaderSource(shaderSource);
+        fragmentShaderSource = shaderSource;
         setFloat("attenuation_constant", 1);
         setFloat("attenuation_linear", 0);
         setFloat("attenuation_quadratic", 0);

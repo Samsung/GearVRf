@@ -60,7 +60,7 @@ public class GVRDirectLight extends GVRLightBase {
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setShaderSource(shaderSource);
+        fragmentShaderSource = shaderSource;
     }
     
      /**

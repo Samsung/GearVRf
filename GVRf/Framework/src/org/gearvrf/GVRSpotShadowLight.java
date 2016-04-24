@@ -61,7 +61,8 @@ import org.joml.Vector3f;
 * @see GVRLightBase
 */
 public class GVRSpotShadowLight extends GVRSpotLight {
-    private static String shaderSource = null;
+    private static String fragmentShader = null;
+    private static String vertexShader = null;
     
     public GVRSpotShadowLight(GVRContext gvrContext) {
         this(gvrContext, null);
@@ -70,14 +71,19 @@ public class GVRSpotShadowLight extends GVRSpotLight {
     public GVRSpotShadowLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
         uniformDescriptor += " float shadow_map_index mat4 shadow_matrix";
-         if (shaderSource == null) {
-            shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotshadowlight);
+        vertexDescriptor = "vec4 shadow_position";
+        if (fragmentShader == null) {
+             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotshadowlight);
         }
+        if (vertexShader == null) {
+            vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
+       }
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setFloat("shadow_map_index", -1.0f);
-        setShaderSource(shaderSource);
+        fragmentShaderSource = fragmentShader;
+        vertexShaderSource = vertexShader;
         castShadow(gvrContext);
     }
     

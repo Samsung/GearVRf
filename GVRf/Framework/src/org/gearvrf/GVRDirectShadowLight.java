@@ -67,7 +67,7 @@ public class GVRDirectShadowLight extends GVRDirectLight {
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setFloat("shadow_map_index", -1.0f);
-        setShaderSource(shaderSource);
+        fragmentShaderSource = shaderSource;
         castShadow(gvrContext);
     }
     

@@ -43,24 +43,7 @@ public:
 
     virtual glm::mat4 getProjectionMatrix() const
     {
-  /*      glm::mat4 ortho;
-        float left = -1.0f;
-        float right = 1.0f;
-        float top = 1.0f;
-        float bottom = -1.0f;
-        float near = -1.0f;
-        float far = 60.0f;
-
-        ortho[0][0]= 2.0 / (right - left);
-        ortho[1][1]= 2.0 / (top - bottom);
-        ortho[2][2]= -2.0 / (far-near);
-        ortho[3][0]= -(right + left)/(right-left);
-        ortho[3][1]=-(top+bottom)/(top-bottom);
-        ortho[3][2]= -(far+near)/(far-near);
-        return ortho;*/
-
-
-    	return glm::perspective(100.0f,1.0f,0.1f,1000.0f);
+    	return glm::perspective(100.0f, 1.0f, 0.1f, 1000.0f);
     }
 };
 
@@ -177,15 +160,11 @@ void Light::bindShadowMaps(int program, int texIndex) {
             checkGLError("glBindTexture");
             glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
             checkGLError("glBindTexture");
-
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
-           checkGLError("glBindTexture");
-
+            checkGLError("glBindTexture");
         }
-
         glUniform1i(loc, texIndex);
         checkGlError("Light::render bind shadow map");
-
     }
 }
 
@@ -235,9 +214,7 @@ void Light::createDepthTexture(int width, int height, int depth){
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
     glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_R16F, width,height,depth,0,GL_RED, GL_HALF_FLOAT,NULL);
     checkGlError("Light::render create shadow map");
-
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
 }
 
 
@@ -321,7 +298,6 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     rstate.material_override = shadowMaterial_;
     rstate.shader_manager = shader_manager;
     rstate.render_mode = 0;
-  //  rstate.uniforms.u_model = owner_object()->transform()->getModelMatrix();
     rstate.uniforms.u_view = lightcam.getViewMatrix();
     rstate.uniforms.u_proj = lightcam.getProjectionMatrix();
     rstate.render_mask = 1;

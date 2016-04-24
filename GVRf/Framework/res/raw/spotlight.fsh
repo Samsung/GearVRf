@@ -1,4 +1,4 @@
-Radiance @LightType(Surface s, in Struct@LightType data)
+Radiance @LightType(Surface s, in Uniform@LightType data)
 {
      vec4 lightpos = u_view * vec4(data.world_position.xyz, 1.0);
      vec3 lightdir = normalize(lightpos.xyz - viewspace_position.xyz);
