@@ -1,0 +1,3 @@
+//include ':vrlibrary'
+
+//project(':vrlibrary').projectDir = new File('../../oculus_vr/VRLib/vRLib')
