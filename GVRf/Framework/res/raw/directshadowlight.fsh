@@ -1,13 +1,12 @@
-Radiance @LightType(Surface s, in Uniform@LightType data)
+Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType vertex)
 {
 	vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
 	float attenuation = 1.0;
     
     if (data.shadow_map_index >= 0.0)
 	{
-   	//	vec4 ShadowCoord = data.shadow_matrix * u_model * local_position;
-   		vec4 ShadowCoord = local_position;
-  		ShadowCoord = ShadowCoord.xyzw / ShadowCoord.w;
+   		vec4 ShadowCoord = vertex.shadow_position;
+ 		ShadowCoord = ShadowCoord.xyzw / ShadowCoord.w;
 		ShadowCoord = ShadowCoord * 0.5 + 0.5;
   		vec3 texcoord = vec3(ShadowCoord.x, ShadowCoord.y, data.shadow_map_index);
   

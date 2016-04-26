@@ -395,16 +395,17 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     protected void addLight(GVRLightBase light) {
         if (light != null) {
-            int lightIndex = 0;
+            int classIndex = 0;
             for (GVRLightBase l : mLightList) {
                 if (l == light) {
                     return;
                 }
                 if (l.getClass().equals(light.getClass())) {
-                    ++lightIndex;
+                    ++classIndex;
                 }
             }
-            String name = "Data" + light.getClass().getSimpleName() + "[" + lightIndex + "]";
+            Integer lightIndex = mLightList.size();
+            String name = "light" + lightIndex.toString();
             mLightList.add(light);
             NativeLight.setLightID(light.getNative(), name);
             NativeScene.addLight(getNative(), light.getNative());

@@ -509,44 +509,37 @@ public class GVRShaderTemplate
         for (GVRLightBase light : lightlist)
         {
             String lightClassName = light.getClass().getSimpleName();
-            String lightid = light.getLightID();
+            String uniformId = light.getLightID();
+            String vertexId = "v" + uniformId;
 
-            if (lightid.isEmpty())
-                continue;
             if (light.getFragmentShaderSource() != null)
             {
                 String vertDesc = light.getVertexDescriptor();
                 if (vertDesc != null)
                 {
-                    String outBase = lightClassName + index.toString();
-                    String lightBase = lightid.substring(lightid.indexOf(lightClassName));
-                    lightFunction += makeVertexCopy(vertDesc, outBase, "Out" + lightBase);
-                    lightFunction += "   r = " + lightClassName + "(s, " + lightid + ", Out" + lightBase;
+                    lightFunction += makeVertexCopy(vertDesc, vertexId, vertexId);
+                    lightFunction += "   r = " + lightClassName + "(s, " + uniformId + ", " + vertexId;
                     lightFunction += ");\n";
-                    lightDefs += makeVertexOutputs(vertDesc, outBase, "in ");                    
+                    lightDefs += makeVertexOutputs(vertDesc, vertexId, "in ");                    
+                    lightSources += "Vertex" + lightClassName + " " + vertexId + ";\n";
                 }
                 else
-                    lightFunction += "   r = " + lightClassName + "(s, " + lightid + ");\n";
-                lightFunction += "   enable = " + lightid + ".enabled;\n";
+                    lightFunction += "   r = " + lightClassName + "(s, " + uniformId + ");\n";
+                lightFunction += "   enable = " + uniformId + ".enabled;\n";
                 lightFunction += "   color += vec3(enable, enable, enable) * AddLight(s, r);\n";
+                lightSources += "\nuniform Uniform" + lightClassName + " " + uniformId + ";\n";
             }
             ++index;
         }
         for (Map.Entry<String, LightClass> entry : lightClasses.entrySet())
         {
-            String name = entry.getKey();
             LightClass lclass = entry.getValue();
             
             if (lclass.FragmentShader == null)
                 continue;
-            lightDefs += "\n" + lclass.FragmentUniforms;
-            
-            lightSources += "\nuniform Uniform" + name + " Data" + name + "[" + lclass.Count.toString() + "];\n";
+            lightDefs += "\n" + lclass.FragmentUniforms;            
             if (lclass.VertexOutputs != null)
-            {
                 lightDefs += "\n" + lclass.VertexOutputs;
-                lightSources += "\nVertex" + name + " Out" + name + "[" + lclass.Count.toString() + "];\n";                
-            }
             lightDefs += lclass.FragmentShader;
         }
         lightFunction += "   return color; }\n";
@@ -578,27 +571,23 @@ public class GVRShaderTemplate
                 continue;
             if (lightShader != null)
             {
-                String baseName = light.getClass().getSimpleName() + index.toString();
+                String vertexId = "v_" + lightid;
                 
-                lightShader = lightShader.replace("@LIGHTOUT", baseName);
+                lightShader = lightShader.replace("@LIGHTOUT", vertexId);
                 lightShader = lightShader.replace("@LIGHTIN", lightid);
                 lightFunction += lightShader;
-                lightDefs += makeVertexOutputs(light.getVertexDescriptor(), baseName, "out ");
+                lightDefs += makeVertexOutputs(light.getVertexDescriptor(), vertexId, "out ");
+                lightSources += "\nuniform Uniform" + light.getClass().getSimpleName() + " " + lightid + ";\n";
             }
             ++index;
         }
         lightFunction += "}\n";
         for (Map.Entry<String, LightClass> entry : lightClasses.entrySet())
         {
-            String name = entry.getKey();
             LightClass lclass = entry.getValue();
-            String count = lclass.Count.toString();
             
             if (lclass.VertexShader != null)
-            {
                 lightDefs += lclass.VertexUniforms;
-                lightSources += "\nuniform Uniform" + name + " Data" + name + "[" + count + "];\n";
-            }
         }
         return lightDefs + lightSources + lightFunction;
     }

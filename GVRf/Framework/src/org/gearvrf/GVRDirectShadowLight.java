@@ -51,7 +51,8 @@ import android.util.Log;
  * @see GVRLightBase
  */
 public class GVRDirectShadowLight extends GVRDirectLight {
-    private static String shaderSource = null;
+    private static String fragmentShader = null;
+    private static String vertexShader = null;
     
     public GVRDirectShadowLight(GVRContext gvrContext) {
         this(gvrContext, null);
@@ -59,15 +60,20 @@ public class GVRDirectShadowLight extends GVRDirectLight {
 
     public GVRDirectShadowLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
+        vertexDescriptor = "vec4 shadow_position";
         uniformDescriptor += " float shadow_map_index mat4 shadow_matrix";
-         if (shaderSource == null) {
-            shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
+         if (fragmentShader == null) {
+            fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
+        }
+         if (vertexShader == null) {
+             vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
         }
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setFloat("shadow_map_index", -1.0f);
-        fragmentShaderSource = shaderSource;
+        fragmentShaderSource = fragmentShader;
+        vertexShaderSource = vertexShader;
         castShadow(gvrContext);
     }
     
