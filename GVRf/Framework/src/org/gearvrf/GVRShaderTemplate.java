@@ -571,7 +571,7 @@ public class GVRShaderTemplate
                 continue;
             if (lightShader != null)
             {
-                String vertexId = "v_" + lightid;
+                String vertexId = "v" + lightid;
                 
                 lightShader = lightShader.replace("@LIGHTOUT", vertexId);
                 lightShader = lightShader.replace("@LIGHTIN", lightid);
@@ -587,7 +587,7 @@ public class GVRShaderTemplate
             LightClass lclass = entry.getValue();
             
             if (lclass.VertexShader != null)
-                lightDefs += lclass.VertexUniforms;
+                lightDefs += lclass.FragmentUniforms;
         }
         return lightDefs + lightSources + lightFunction;
     }
