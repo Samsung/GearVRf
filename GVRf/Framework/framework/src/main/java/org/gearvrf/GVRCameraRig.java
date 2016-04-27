@@ -504,6 +504,19 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     }
 
     /**
+     * Remove all children that have been added to the owner object of this camera rig; except the
+     * camera objects.
+     */
+    public void removeAllChildren() {
+        for (final GVRSceneObject so : headTransformObject.getChildren()) {
+            final boolean notCamera = (so != leftCameraObject && so != rightCameraObject && so != centerCameraObject);
+            if (notCamera) {
+                headTransformObject.removeChildObject(so);
+            }
+        }
+    }
+
+    /**
      * Get the head {@link GVRTransform transform} for setting sensor data. In contrast,
      * use {@link #getTransform()} for additional camera positioning, such as the game
      * character moving and turning.
