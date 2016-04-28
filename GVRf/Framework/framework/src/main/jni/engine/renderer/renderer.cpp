@@ -645,7 +645,7 @@ void Renderer::renderRenderData(RenderData* render_data,
         int render_mask, ShaderManager* shader_manager,
         const std::vector<Light*>& lightList, int modeShadow) {
 
-    if (!render_mask || !render_data->render_mask())
+    if (!(render_mask & render_data->render_mask()))
         return;
 
     if (render_data->offset()) {
