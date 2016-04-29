@@ -38,6 +38,8 @@ public class GVRFrameLayout extends FrameLayout implements GVRView {
 
         // Canvas attached to GVRViewSceneObject to draw on
         Canvas attachedCanvas = mSceneObject.lockCanvas();
+        // Clear the canvas
+        attachedCanvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
         // draw the view to provided canvas
         super.draw(attachedCanvas);
 
