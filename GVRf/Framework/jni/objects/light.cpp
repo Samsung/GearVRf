@@ -24,6 +24,7 @@
 #include <sstream>
 #include <vector>
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_access.hpp"
 #include "engine/renderer/renderer.h"
 #include "shaders/posteffect/shadow_shader.h"
 
@@ -67,12 +68,29 @@ void Light::render(int program, int texIndex) {
     std::stringstream ss;
     int offset;
 
-    GLuint loc = glGetUniformLocation(program, "shadow_matrix");
+    /*
+    GLuint loc = glGetUniformLocation(program, "s.shadow_matrix[0]");
 	if (loc != -1 && shadowMaterial_!= nullptr) {
 		glm::mat4 shadow_matrix;
 		getMat4("shadow_matrix", shadow_matrix);
-		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr((shadow_matrix)));
+		float* ptr = glm::value_ptr(shadow_matrix);
+		glUniform4fv(loc, 1, ptr);
+		LOGD("LIGHT: shadow_matrix[0] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
+		ptr += 4;
+		loc = glGetUniformLocation(program, "s.shadow_matrix[1]");
+        LOGD("LIGHT: shadow_matrix[1] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
+        glUniform4fv(loc, 1, ptr);
+        ptr += 4;
+        loc = glGetUniformLocation(program, "s.shadow_matrix[2]");
+        LOGD("LIGHT: shadow_matrix[2] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
+        glUniform4fv(loc, 1, ptr);
+        loc = glGetUniformLocation(program, "s.shadow_matrix[3]");
+        ptr += 4;
+        LOGD("LIGHT: shadow_matrix[3] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
+        glUniform4fv(loc, 1, ptr);
+		//glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr((shadow_matrix)));
 	}
+	*/
     /*
      * If this light casts shadows and has a shadow map,
      * bind the shadow map texture to the shader and
@@ -150,7 +168,7 @@ void Light::bindShadowMaps(int program, int texIndex) {
     int loc = glGetUniformLocation(program, "u_shadow_maps");
     checkGLError("in bind shadowmaps");
     if (loc >= 0) {
-        LOGD("LIGHT: found shadow map in shader %d\n", loc);
+        //LOGD("LIGHT: found shadow map in shader %d\n", loc);
         if (shadowmap == NULL) {
             std::string error = " Depth Map is not created ";
             throw error;

@@ -18,6 +18,7 @@ package org.gearvrf;
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 /** Illuminates object in the scene with a cone shaped beam
 * which casts shadows on the scene objects.
@@ -70,7 +71,7 @@ public class GVRSpotShadowLight extends GVRSpotLight {
 
     public GVRSpotShadowLight(GVRContext gvrContext, GVRSceneObject parent) {
         super(gvrContext, parent);
-        uniformDescriptor += " float shadow_map_index mat4 shadow_matrix";
+        uniformDescriptor += " float shadow_map_index vec4 sm0 vec4 sm1 vec4 sm2 vec4 sm3";
         vertexDescriptor = "vec4 shadow_position";
         if (fragmentShader == null) {
              fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotshadowlight);
@@ -120,14 +121,22 @@ public class GVRSpotShadowLight extends GVRSpotLight {
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
 
-        if(changed){
-
+        if (changed)
+        {
             Matrix4f proj = new Matrix4f();
+            Vector4f v = new Vector4f();
             proj.perspective((float)Math.toRadians(90), 1, 0.1f, 1000);
             worldmtx.invert();
             proj.mul(worldmtx);
-            setMat4("shadow_matrix", proj);
-        }  
+            proj.getColumn(0, v);
+            setVec4("sm0", v.x, v.y, v.z, v.w);
+            proj.getColumn(1, v);
+            setVec4("sm1", v.x, v.y, v.z, v.w);
+            proj.getColumn(2, v);
+            setVec4("sm2", v.x, v.y, v.z, v.w);
+            proj.getColumn(3, v);
+            setVec4("sm3", v.x, v.y, v.z, v.w);
+        }
     }
 }
 

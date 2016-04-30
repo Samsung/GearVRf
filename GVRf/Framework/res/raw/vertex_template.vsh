@@ -4,6 +4,12 @@ uniform mat4 u_mvp;
 uniform mat4 u_mv;
 uniform mat4 u_mv_it;
 
+struct shadowvecs {
+	vec4 shadow_matrix[4];
+};
+	
+uniform shadowvecs s;
+
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_texcoord;
 layout(location = 2) in vec3 a_normal;
@@ -34,7 +40,9 @@ struct Vertex
 	vec3 view_direction;
 };
 
-@LIGHTSOURCES
+#ifdef HAS_LIGHTSOURCES
+	@LIGHTSOURCES
+#endif
 	
 void main() {
 	Vertex vertex;
@@ -50,7 +58,7 @@ void main() {
 #endif
 #ifdef HAS_LIGHTSOURCES
 	LightVertex(vertex);
-#endif	
+#endif
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
