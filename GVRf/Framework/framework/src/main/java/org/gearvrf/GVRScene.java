@@ -110,8 +110,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * Remove all scene objects.
      */
     public void removeAllSceneObjects() {
+        getMainCameraRig().removeAllChildren();
         mSceneObjects.clear();
         NativeScene.removeAllSceneObjects(getNative());
+
+        addSceneObject(getMainCameraRig().getOwnerObject());
     }
 
     /**
