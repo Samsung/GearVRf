@@ -146,7 +146,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         		GVRJassimpAdapter.get().createMesh(getGVRContext(), aiMesh));
 
         AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
-        final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.Assimp.ID);
+        final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.BeingGenerated.ID);
 
         /* Diffuse color */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
@@ -182,14 +182,13 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         meshMaterial.setSpecularExponent(specularExponent);
         
         /* Diffuse Texture */
-       loadTextures( material, meshMaterial,  getGVRContext());
+        loadTextures( material, meshMaterial,  getGVRContext());
 
  
         GVRSceneObject sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
         GVRRenderData sceneObjectRenderData = new GVRRenderData(getGVRContext());
         sceneObjectRenderData.setMesh(futureMesh);
 
-        
         sceneObjectRenderData.setMaterial(meshMaterial);
         sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
         sceneObject.attachRenderData(sceneObjectRenderData);
