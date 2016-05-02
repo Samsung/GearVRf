@@ -75,7 +75,6 @@ struct RenderState {
     Material*               material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
-    int                     render_mode;
 };
 
 class Renderer {
@@ -89,13 +88,6 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-
-    static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-              int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-              ShaderManager* shader_manager,
-              PostEffectShaderManager* post_effect_shader_manager,
-              RenderTexture* post_effect_render_texture_a,
-              RenderTexture* post_effect_render_texture_b, int modeShadow);
 
     static void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
@@ -153,10 +145,6 @@ private:
 
     static bool isShader3d(const Material* curr_material);
     static bool isDefaultPosition3d(const Material* curr_material);
-    static void calculateShadow(ShaderManager* shader_manager,
-            const Material* curr_material, const glm::mat4& model_matrix,
-            const int modeShadow, glm::vec3& lightPosition,
-            glm::mat4& vp_matrixLightModel);
     void light_cull(Scene *scene, ShaderManager* shader_manager);
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);

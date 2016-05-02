@@ -321,7 +321,7 @@ public class GVRShaderTemplate
         {
             lightlist = null;
         }
-        HashMap<String, Integer> variantDefines = getRenderDefines(rdata);
+        HashMap<String, Integer> variantDefines = getRenderDefines(rdata, lightlist);
         if (mShaderVariants == null)
         {
             mShaderVariants = new HashMap<String, ShaderVariant>();
@@ -429,11 +429,25 @@ public class GVRShaderTemplate
      * You can override this function in your shader class to change which
      * variant is generated depending on the GVRRenderData settings.
      * 
+     * The base implementation LIGHTSOURCES as 0 if lighting is not enabled by the render data,
+     * and it defines SHADOWS as 1 if any light source enables shadow casting. 
+     * 
      * @param rdata GVRRenderData being used by this shader
+     * @param lights list of lights used by this shader
      * @return list of symbols to be defined (value 1) or undefined (value 0) in the shader
+     * 
+     * @see GVRLightBase.setCastShadow
      */
-    public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata) {
-        return new HashMap<String, Integer>();
+    public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRLightBase[] lights) {
+        HashMap<String, Integer> defines = new HashMap<String, Integer>();
+        int castShadow = 0;
+        if (!rdata.isLightEnabled())
+            defines.put("LIGHTSOURCES", 0);
+        for (GVRLightBase light : lights)
+            if (light.getCastShadow())
+                castShadow = 1;
+        defines.put("SHADOWS", castShadow);
+        return defines;
     }
     
     /**

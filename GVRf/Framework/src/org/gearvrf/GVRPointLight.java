@@ -40,6 +40,10 @@ import org.gearvrf.utility.TextFile;
  *   attenuation_linear    linear attenuation factor
  *   attenuation_quadratic quadratic attenuation factor
  * }
+ * 
+ * Point lights currently cannot cast shadows. Enabling shadows for
+ * this light type will waste resources.
+ * 
  * @see GVRPhongDirectLight
  * @see GVRSpotLight
  * @see GVRLightBase

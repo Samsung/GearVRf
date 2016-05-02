@@ -375,19 +375,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             }
         }
     }
-    
-    private GVRDirectionalLight mDirectionalLight;
-
-    public void setDirectionalLight(GVRDirectionalLight light) {
-        mDirectionalLight = light;
-
-        if (light != null) {
-            NativeScene.attachDirectionalLight(getNative(), light.getNative());
-        } else {
-            NativeScene.attachDirectionalLight(getNative(), 0);
-        }
-    }
-    
+        
     /**
      * Add a light to the scene's light list.
      * @param light light to add
@@ -582,7 +570,5 @@ class NativeScene {
 
     public static native void exportToFile(long scene, String file_path);
 
-    static native void attachDirectionalLight(long scene, long light);
-    
     static native void addLight(long scene, long light);
 }

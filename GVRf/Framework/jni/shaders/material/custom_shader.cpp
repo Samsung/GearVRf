@@ -181,18 +181,23 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         glBindTexture(texture->getTarget(), texture->getId());
         glUniform1i(it->first, texture_index++);
     }
-    Light::bindShadowMaps(program_->id(), texture_index);
     /*
      * Update the uniforms for the lights
      */
     const std::vector<Light*>& lightlist = rstate->scene->getLightList();
+    bool castShadow = false;
     for (auto it = lightlist.begin();
          it != lightlist.end();
          ++it) {
         Light* light = (*it);
-         if (light != NULL)
+         if (light != NULL) {
             light->render(program_->id(), texture_index);
+            if (light->castShadow())
+                castShadow = true;
+         }
     }
+    if (castShadow)
+        Light::bindShadowMap(program_->id(), texture_index);
 
     for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();
             ++it) {

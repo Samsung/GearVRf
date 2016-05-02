@@ -4,12 +4,6 @@ uniform mat4 u_mvp;
 uniform mat4 u_mv;
 uniform mat4 u_mv_it;
 
-struct shadowvecs {
-	vec4 shadow_matrix[4];
-};
-	
-uniform shadowvecs s;
-
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_texcoord;
 layout(location = 2) in vec3 a_normal;

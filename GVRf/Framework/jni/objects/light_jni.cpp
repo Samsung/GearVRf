@@ -34,7 +34,10 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_disable(JNIEnv * env, jobject obj, jlong jlight);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeLight_castShadow(JNIEnv * env, jobject obj, jlong jlight, jlong jmaterial);
+Java_org_gearvrf_NativeLight_setCastShadow(JNIEnv * env, jobject obj, jlong jlight, jlong jmaterial);
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeLight_getCastShadow(JNIEnv * env, jobject obj, jlong jlight);
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeLight_getFloat(JNIEnv * env,
@@ -226,8 +229,15 @@ Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
     env->ReleaseFloatArrayElements(jmatrix, matrix_data, 0);
 }
 
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeLight_getCastShadow(JNIEnv * env, jobject obj, jlong jlight)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    return light->castShadow();
+}
+
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeLight_castShadow(JNIEnv * env, jobject obj, jlong jlight, jlong jmaterial)
+Java_org_gearvrf_NativeLight_setCastShadow(JNIEnv * env, jobject obj, jlong jlight, jlong jmaterial)
 {
     Light* light = reinterpret_cast<Light*>(jlight);
     Material* material = reinterpret_cast<Material*>(jmaterial);

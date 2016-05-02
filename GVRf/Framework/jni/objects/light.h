@@ -119,11 +119,13 @@ public:
         }
     }
 
-    void getMat4(std::string key, glm::mat4& matrix) {
+    bool getMat4(std::string key, glm::mat4& matrix) {
         auto it = mat4s_.find(key);
         if (it != mat4s_.end()) {
             matrix = it->second;
+            return true;
         }
+        return false;
     }
 
     void setMat4(std::string key, glm::mat4 matrix) {
@@ -135,10 +137,19 @@ public:
     Material* getShadowMaterial(){
     	return shadowMaterial_;
     }
+
     bool castShadow() {
          return shadowMaterial_ != NULL;
     }
 
+    /**
+     * Enables or disables shadow casting.
+     *
+     * If shadows are enabled, makeShadowMap will compute a shadow map
+     * by rendering the scene from the viewpoint of the light and
+     * bindShadowMaps will bind the resulting framebuffer as a
+     * texture on the light.
+     */
     void castShadow(Material* material) {
         shadowMaterial_ = material;
         setDirty();
@@ -158,10 +169,17 @@ public:
      * to update the shadow map.
      */
     bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects);
-    static void bindShadowMaps(int program, int texIndex);
+
+    /**
+     * Internal function called during rendering to bind the shadow map
+     * framebuffer to the texture for this light.
+     */
+    static void bindShadowMap(int program, int texIndex);
+
+    /***
+     * Creates the storage for shadow maps
+     */
     void static createDepthTexture(int width, int height, int depth);
-
-
 
     std::string getLightID() {
         return lightID_;
@@ -186,7 +204,11 @@ private:
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
 
+    /*
+     * Generate the framebuffer used for shadow map generation
+     */
     void generateFBO();
+
     /*
      * Mark the light as needing update for all shaders using it
      */

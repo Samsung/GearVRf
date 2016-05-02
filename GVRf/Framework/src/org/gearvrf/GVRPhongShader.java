@@ -15,6 +15,7 @@
 package org.gearvrf;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.gearvrf.utility.TextFile;
 
@@ -58,11 +59,9 @@ import org.gearvrf.R;
            setSegment("VertexSkinShader", skinShader);
        }
        
-       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata) {
-           HashMap<String, Integer> defines = new HashMap<String, Integer>();
+       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRLightBase[] lights) {
+           HashMap<String, Integer> defines = super.getRenderDefines(rdata, lights);
            
-           if (!rdata.isLightEnabled())
-               defines.put("LIGHTSOURCES", 0);
            if (!rdata.isLightMapEnabled())
                defines.put("lightMapTexture", 0);
            return defines;

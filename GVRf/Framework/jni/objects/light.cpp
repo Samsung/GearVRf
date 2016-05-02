@@ -26,7 +26,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_access.hpp"
 #include "engine/renderer/renderer.h"
-#include "shaders/posteffect/shadow_shader.h"
+#include "objects/components/camera.h"
 
 namespace gvr {
 const int Light::MAX_SHADOW_MAPS = 2;
@@ -36,15 +36,22 @@ GLTexture* Light::color_texture_ = NULL;
 
 class LightCamera : public Camera
 {
+    Light* mLight = NULL;
+    glm::mat4 mProj;
+
 public:
     LightCamera(Light* light) : Camera()
     {
+        mLight = light;
         set_owner_object(light->owner_object());
     }
 
     virtual glm::mat4 getProjectionMatrix() const
     {
-    	return glm::perspective(100.0f, 1.0f, 0.1f, 1000.0f);
+        glm::mat4& proj = (glm::mat4&) mProj;
+        if (mLight->getMat4(std::string("projMatrix"), proj))
+            return proj;
+        return glm::perspective(100.0f, 1.0f, 0.1f, 1000.0f);
     }
 };
 
@@ -69,34 +76,10 @@ void Light::render(int program, int texIndex) {
     int offset;
 
     /*
-    GLuint loc = glGetUniformLocation(program, "s.shadow_matrix[0]");
-	if (loc != -1 && shadowMaterial_!= nullptr) {
-		glm::mat4 shadow_matrix;
-		getMat4("shadow_matrix", shadow_matrix);
-		float* ptr = glm::value_ptr(shadow_matrix);
-		glUniform4fv(loc, 1, ptr);
-		LOGD("LIGHT: shadow_matrix[0] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
-		ptr += 4;
-		loc = glGetUniformLocation(program, "s.shadow_matrix[1]");
-        LOGD("LIGHT: shadow_matrix[1] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
-        glUniform4fv(loc, 1, ptr);
-        ptr += 4;
-        loc = glGetUniformLocation(program, "s.shadow_matrix[2]");
-        LOGD("LIGHT: shadow_matrix[2] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
-        glUniform4fv(loc, 1, ptr);
-        loc = glGetUniformLocation(program, "s.shadow_matrix[3]");
-        ptr += 4;
-        LOGD("LIGHT: shadow_matrix[3] %d = %f, %f, %f, %f\n", loc, ptr[0], ptr[1], ptr[2], ptr[3]);
-        glUniform4fv(loc, 1, ptr);
-		//glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr((shadow_matrix)));
-	}
-	*/
-    /*
-     * If this light casts shadows and has a shadow map,
-     * bind the shadow map texture to the shader and
-     * set the shadow_map_index with the index of the map.
+     * If this light implements shadow casting,
+     * set the shadow map index.
      */
-    if (castShadow()) {
+    if (floats_.find("shadow_map_index") != floats_.end()) {
         floats_["shadow_map_index"] = (float) shadowMapIndex_;
         LOGD("LIGHT: %s set shadow map index %d\n", lightID_.c_str(), shadowMapIndex_);
     }
@@ -158,16 +141,16 @@ void Light::render(int program, int texIndex) {
     }
 }
 
-/*
+/**
  * If this light casts shadows and has a shadow map,
  * bind the shadow map texture to the shader and
  * set the shadow_map_index with the index of the map.
  */
-void Light::bindShadowMaps(int program, int texIndex) {
+void Light::bindShadowMap(int program, int texIndex) {
     GLTexture* shadowmap = depth_texture_;
     int loc = glGetUniformLocation(program, "u_shadow_maps");
-    checkGLError("in bind shadowmaps");
-    if (loc >= 0) {
+
+    if ((loc >= 0) && depth_texture_) {
         //LOGD("LIGHT: found shadow map in shader %d\n", loc);
         if (shadowmap == NULL) {
             std::string error = " Depth Map is not created ";
@@ -175,11 +158,8 @@ void Light::bindShadowMaps(int program, int texIndex) {
         }
         else {
             glActiveTexture(GL_TEXTURE0 + texIndex);
-            checkGLError("glBindTexture");
             glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
-            checkGLError("glBindTexture");
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            checkGLError("glBindTexture");
         }
         glUniform1i(loc, texIndex);
         checkGlError("Light::render bind shadow map");
@@ -221,9 +201,8 @@ void Light::generateFBO() {
 
 }
 
-
 void Light::createDepthTexture(int width, int height, int depth){
-	LOGE("creating depth texture");
+	LOGE("LIGHT: creating depth texture");
     depth_texture_ = new GLTexture(GL_TEXTURE_2D_ARRAY);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
     checkGLError("glBindTexture 2");
@@ -231,61 +210,12 @@ void Light::createDepthTexture(int width, int height, int depth){
     checkGLError("glPixelStorei");
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
     glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_R16F, width,height,depth,0,GL_RED, GL_HALF_FLOAT,NULL);
-    checkGlError("Light::render create shadow map");
+    checkGlError("LIGHT::render create shadow map");
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
-
-/*
-
-void Light::generateFBO() {
-	LOGE("generate FBO");
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glGenFramebuffers(1, &fboId_);
-    checkGLError("glGenFramebuffers");
-    glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
-    checkGLError("glBindFramebuffer");
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture_->id(), 0);
-    checkGLError("glFramebufferTextureLayer");
-
-    ////////// Check FrameBuffer was created with success ///
-    int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-        LOGE("Could not create FBO: %d", fboStatus);
-        switch(fboStatus){
-        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
-        	LOGE("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-			break;
-        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-        	LOGE("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
-        	break;
-
-        case GL_FRAMEBUFFER_UNSUPPORTED:
-        	LOGE("GL_FRAMEBUFFER_UNSUPPORTED");
-        	break;
-        }
-        throw std::exception(); // "Could not create FBO: " + fboStatus
-    }
-    LOGD("LIGHT: %s create shadow map framebuffer %d\n", lightID_.c_str(), shadowMapIndex_);
-    ////////// Release bind for texture and FrameBuffer /////
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-
-void Light::createDepthTexture(int width, int height, int depth){
-	LOGE("creating depth texture");
-	depth_texture_  = new GLTexture(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, depth_texture_->id());
-    checkGLError("glBindTexture");
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, 0);
-    checkGlError("Light::glTexImage2D");
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-}
-*/
 /**
- * Renders the shadow map for this light
+ * Renders the shadow map for this light.
  * @param scene             Scene to use for rendering
  * @param shader_manager    ShaderManager to use
  * @param texIndex          texture index for shadow map
@@ -297,11 +227,11 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     if (shadowMaterial_ == nullptr)
         return false;
 
-    if(nullptr == depth_texture_){
+    if (nullptr == depth_texture_) {
     	createDepthTexture(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 4);
     }
 
-    if (-1 == fboId_ ) {
+    if (-1 == fboId_) {
         shadowMapIndex_ = texIndex;
     	generateFBO();
     }
@@ -315,7 +245,6 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     rstate.scene = scene;
     rstate.material_override = shadowMaterial_;
     rstate.shader_manager = shader_manager;
-    rstate.render_mode = 0;
     rstate.uniforms.u_view = lightcam.getViewMatrix();
     rstate.uniforms.u_proj = lightcam.getProjectionMatrix();
     rstate.render_mask = 1;
