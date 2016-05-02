@@ -5,6 +5,7 @@ import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -39,7 +40,7 @@ public class GVRFrameLayout extends FrameLayout implements GVRView {
         // Canvas attached to GVRViewSceneObject to draw on
         Canvas attachedCanvas = mSceneObject.lockCanvas();
         // Clear the canvas
-        attachedCanvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
+        attachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         // draw the view to provided canvas
         super.draw(attachedCanvas);
 
