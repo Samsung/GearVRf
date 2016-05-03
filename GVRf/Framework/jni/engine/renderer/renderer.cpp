@@ -129,7 +129,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
 
-    makeShadowMaps(scene, shader_manager);
+//    makeShadowMaps(scene, shader_manager);
     cullFromCamera(scene, camera, shader_manager, scene_objects);
 
     // Note: this needs to be scaled to sort on N states
@@ -224,23 +224,12 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glDisable (GL_POLYGON_OFFSET_FILL));
     GL(glDisable(GL_CULL_FACE));
     if (post_effects.size() == 0) {
-        GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+         GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
         GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
 
         GL(glClearColor(camera->background_color_r(),
                 camera->background_color_g(), camera->background_color_b(),
                 camera->background_color_a()));
-        glClearColor(1,0,0,1);
-       // glClearDepthf(1.0f);
-
-        GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-        GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-        GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
-
-        GL(glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(),
-                camera->background_color_a()));
-        glClearColor(1,1,1,1);
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
@@ -335,9 +324,7 @@ void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint frame
 	cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects);
 
 	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-    checkGLError("glBindFramebuffer");
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
-    checkGLError("glViewport  ");
     glClearColor(0,0,0,1);
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
@@ -699,9 +686,9 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
     if (t == nullptr)
         return;
     rstate.uniforms.u_model = t->getModelMatrix();
-    rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
 	rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
-    rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
+	rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
+	rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
     try {
          //TODO: Improve this logic to avoid a big "switch case"
         ShaderBase* shader = NULL;

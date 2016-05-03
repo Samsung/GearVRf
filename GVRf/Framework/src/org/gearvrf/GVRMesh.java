@@ -48,7 +48,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         setBones(new ArrayList<GVRBone>());
         mVertexBoneData = new GVRVertexBoneData(gvrContext, this);
         mAttributeKeys = new HashSet<String>();
-    }
+     }
 
     /**
      * Get the 3D vertices of the mesh. Each vertex is represented as a packed
@@ -305,7 +305,15 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return array of string names
      */
     public Set<String> getAttributeNames() {
-        return mAttributeKeys;
+        if(mAttributeKeys.size() > 0)
+            return mAttributeKeys;
+        
+        String[] attribKeys = NativeMesh.getAttribNames(getNative());
+        
+        for(String i : attribKeys){
+            mAttributeKeys.add(i);
+        }
+        return mAttributeKeys;    
     }
     
     /**
@@ -464,7 +472,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
 class NativeMesh {
     static native long ctor();
-
+    
+    static native String[] getAttribNames(long mesh);
+    
     static native float[] getVertices(long mesh);
 
     static native void setVertices(long mesh, float[] vertices);

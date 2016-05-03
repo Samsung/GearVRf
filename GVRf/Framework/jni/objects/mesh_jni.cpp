@@ -102,7 +102,30 @@ extern "C" {
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
             jobject obj, jlong jmesh, jfloatArray jsphere);
+
+    JNIEXPORT jobjectArray JNICALL
+    Java_org_gearvrf_NativeMesh_getAttribNames(JNIEnv * env,
+            jobject obj, jlong jmesh);
 };
+
+JNIEXPORT jobjectArray JNICALL
+Java_org_gearvrf_NativeMesh_getAttribNames(JNIEnv * env,
+        jobject obj, jlong jmesh)
+{
+   jobjectArray ret;
+   int i=0;
+   std::set<std::string> attrib_names;
+   Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+   mesh->getAttribNames(attrib_names);
+   ret= (jobjectArray)env->NewObjectArray(attrib_names.size(),
+        env->FindClass("java/lang/String"),
+        env->NewStringUTF(""));
+   for(auto it :attrib_names) {
+       env->SetObjectArrayElement(
+       ret,i++,env->NewStringUTF(it.c_str()));
+   }
+   return(ret);
+}
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj) {

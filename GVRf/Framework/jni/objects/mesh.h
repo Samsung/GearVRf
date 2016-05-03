@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 #include <string>
-
+#include <set>
 #ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
 #endif
@@ -341,7 +341,35 @@ public:
             deleter_ = getDeleterForThisThread();
         }
     }
+     void getAttribNames(std::set<std::string> &attrib_names){
+    	 if(vertices_.size() > 0)
+    		 attrib_names.insert("a_position");
 
+    	 if(tex_coords_.size() > 0)
+    		 attrib_names.insert("a_texcoord");
+
+    	 if(normals_.size() > 0)
+    		 attrib_names.insert("a_normal");
+
+    	 if(hasBones()){
+    		 attrib_names.insert("a_bone_indices");
+    		 attrib_names.insert("a_bone_weights");
+    	 }
+
+    	 for(auto it : vec2_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : vec3_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : vec4_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : float_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+
+    }
 
 private:
     Mesh(const Mesh& mesh);

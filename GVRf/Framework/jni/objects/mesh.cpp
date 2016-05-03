@@ -179,30 +179,33 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 
 void Mesh::bindVertexAttributes(GLuint programID)
 {
-    for (auto it = attribute_float_keys_.begin();
-            it != attribute_float_keys_.end(); ++it) {
-        std::string s = it->second;
-        int loc = glGetAttribLocation(programID, s.c_str());
-        setVertexAttribLocF(loc, s);
+    if(isVaoDirty()){
+		for (auto it = attribute_float_keys_.begin();
+				it != attribute_float_keys_.end(); ++it) {
+			std::string s = it->second;
+			int loc = glGetAttribLocation(programID, s.c_str());
+			setVertexAttribLocF(loc, s);
+		}
+		for (auto it = attribute_vec2_keys_.begin();
+				it != attribute_vec2_keys_.end(); ++it) {
+			std::string s = it->second;
+			int loc = glGetAttribLocation(programID, s.c_str());
+			setVertexAttribLocV2(loc, s);
+		}
+		for (auto it = attribute_vec3_keys_.begin();
+				it != attribute_vec3_keys_.end(); ++it) {
+			std::string s = it->second;
+			int loc = glGetAttribLocation(programID, s.c_str());
+			setVertexAttribLocV3(loc, s);
+		}
+		for (auto it = attribute_vec4_keys_.begin();
+				it != attribute_vec4_keys_.end(); ++it) {
+			std::string s = it->second;
+			int loc = glGetAttribLocation(programID, s.c_str());
+			setVertexAttribLocV4(loc, s);
+		}
     }
-    for (auto it = attribute_vec2_keys_.begin();
-            it != attribute_vec2_keys_.end(); ++it) {
-        std::string s = it->second;
-        int loc = glGetAttribLocation(programID, s.c_str());
-        setVertexAttribLocV2(loc, s);
-    }
-    for (auto it = attribute_vec3_keys_.begin();
-            it != attribute_vec3_keys_.end(); ++it) {
-        std::string s = it->second;
-        int loc = glGetAttribLocation(programID, s.c_str());
-        setVertexAttribLocV3(loc, s);
-    }
-    for (auto it = attribute_vec4_keys_.begin();
-            it != attribute_vec4_keys_.end(); ++it) {
-        std::string s = it->second;
-        int loc = glGetAttribLocation(programID, s.c_str());
-        setVertexAttribLocV4(loc, s);
-    }
+    unSetVaoDirty();
 }
 
 // generate vertex array object

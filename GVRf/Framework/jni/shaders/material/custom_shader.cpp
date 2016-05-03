@@ -120,9 +120,9 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         }
     }
 
+
     Mesh* mesh = render_data->mesh();
     glUseProgram(program_->id());
-
     /*
      * Update the bone matrices
      */
@@ -196,8 +196,9 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
                 castShadow = true;
          }
     }
-    if (castShadow)
-        Light::bindShadowMap(program_->id(), texture_index);
+    if (castShadow){
+    	Light::bindShadowMap(program_->id(), texture_index);
+    }
 
     for (auto it = uniform_float_keys_.begin(); it != uniform_float_keys_.end();
             ++it) {
