@@ -80,7 +80,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
         mSceneObjects.add(sceneObject);
-        getGVRContext().getMainScene().inValidateShadowMap();
+        inValidateShadowMap();
         NativeScene.addSceneObject(getNative(), sceneObject.getNative());
     }
 
