@@ -209,7 +209,8 @@ void Light::createDepthTexture(int width, int height, int depth){
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     checkGLError("glPixelStorei");
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_R16F, width,height,depth,0,GL_RED, GL_HALF_FLOAT,NULL);
+ //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_R16F, width,height,depth,0,GL_RED, GL_HALF_FLOAT,NULL);  // it does not for S6 edge
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB10_A2, width,height,depth,0,GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV,NULL);
     checkGlError("LIGHT::render create shadow map");
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
