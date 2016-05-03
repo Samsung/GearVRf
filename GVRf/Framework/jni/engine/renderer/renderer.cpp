@@ -291,6 +291,9 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
  */
 void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
 {
+    if(!scene->isShadowMapsInvalid())
+    	return;
+
     const std::vector<Light*> lights = scene->getLightList();
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));
@@ -309,6 +312,8 @@ void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
     }
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
+
+    scene->validateShadowMaps();
 }
 
 /**

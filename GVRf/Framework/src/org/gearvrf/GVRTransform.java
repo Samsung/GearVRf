@@ -81,6 +81,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the absolute position.
      */
     public void setPosition(float x, float y, float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setPosition(getNative(), x, y, z);
     }
 
@@ -93,6 +94,7 @@ public class GVRTransform extends GVRComponent {
      *            New 'X' component of the absolute position.
      */
     public void setPositionX(float x) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setPositionX(getNative(), x);
     }
 
@@ -105,6 +107,7 @@ public class GVRTransform extends GVRComponent {
      *            New 'Y' component of the absolute position.
      */
     public void setPositionY(float y) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setPositionY(getNative(), y);
     }
 
@@ -117,6 +120,7 @@ public class GVRTransform extends GVRComponent {
      *            New 'Z' component of the absolute position.
      */
     public void setPositionZ(float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setPositionZ(getNative(), z);
     }
 
@@ -207,6 +211,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the quaternion.
      */
     public void setRotation(float w, float x, float y, float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setRotation(getNative(), w, x, y, z);
     }
 
@@ -258,6 +263,7 @@ public class GVRTransform extends GVRComponent {
      *            Scaling factor on the 'X' axis.
      */
     public void setScaleX(float x) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setScaleX(getNative(), x);
     }
 
@@ -268,6 +274,7 @@ public class GVRTransform extends GVRComponent {
      *            Scaling factor on the 'Y' axis.
      */
     public void setScaleY(float y) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setScaleY(getNative(), y);
     }
 
@@ -278,6 +285,7 @@ public class GVRTransform extends GVRComponent {
      *            Scaling factor on the 'Z' axis.
      */
     public void setScaleZ(float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setScaleZ(getNative(), z);
     }
 
@@ -337,6 +345,7 @@ public class GVRTransform extends GVRComponent {
         if (mat.length != 16) {
             throw new IllegalArgumentException("Size not equal to 16.");
         }
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setModelMatrix(getNative(), mat);
     }
 
@@ -349,6 +358,7 @@ public class GVRTransform extends GVRComponent {
      *            OpenGL-compatible column-major format.
      */
     public void setModelMatrix(Matrix4f mat) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         setModelMatrix(mat.get(new float[16]));
     }
 
@@ -366,6 +376,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' delta
      */
     public void translate(float x, float y, float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.translate(getNative(), x, y, z);
     }
 
@@ -390,6 +401,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the axis.
      */
     public void setRotationByAxis(float angle, float x, float y, float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.setRotationByAxis(getNative(), angle, x, y, z);
     }
 
@@ -406,6 +418,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the quaternion.
      */
     public void rotate(float w, float x, float y, float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.rotate(getNative(), w, x, y, z);
     }
 
@@ -422,6 +435,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the axis.
      */
     public void rotateByAxis(float angle, float x, float y, float z) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.rotateByAxis(getNative(), angle, x, y, z);
     }
 
@@ -446,6 +460,7 @@ public class GVRTransform extends GVRComponent {
      */
     public void rotateByAxisWithPivot(float angle, float axisX, float axisY,
             float axisZ, float pivotX, float pivotY, float pivotZ) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.rotateByAxisWithPivot(getNative(), angle, axisX, axisY,
                 axisZ, pivotX, pivotY, pivotZ);
     }
@@ -471,6 +486,7 @@ public class GVRTransform extends GVRComponent {
      */
     public void rotateWithPivot(float quatW, float quatX, float quatY,
             float quatZ, float pivotX, float pivotY, float pivotZ) {
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.rotateWithPivot(getNative(), quatW, quatX, quatY,
                 quatZ, pivotX, pivotY, pivotZ);
     }
@@ -482,6 +498,7 @@ public class GVRTransform extends GVRComponent {
      * This will undo any translations, rotations, or scaling and reset the Transform back to default values.  This is the equivilent to setting the Transform to an identity matrix.
      */
     public void reset() {
+        getGVRContext().getMainScene().inValidateShadowMap();
         setPosition(0, 0, 0);
         setRotation(1, 0, 0, 0);
         setScale(1, 1, 1);

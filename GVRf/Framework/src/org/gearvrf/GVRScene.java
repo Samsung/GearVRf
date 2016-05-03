@@ -37,7 +37,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
     private GVRMaterial mShadowMaterial = null;
-
+    private boolean mShadowMapDirty = true;
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -80,6 +80,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
         mSceneObjects.add(sceneObject);
+        getGVRContext().getMainScene().inValidateShadowMap();
         NativeScene.addSceneObject(getNative(), sceneObject.getNative());
     }
 
@@ -225,7 +226,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return null;
     }
-
+    public void inValidateShadowMap(){
+        NativeScene.invalidateShadowMap(getNative());
+    }
     /**
      * Sets the frustum culling for the {@link GVRScene}.
      */
@@ -551,6 +554,7 @@ class NativeScene {
     static native long ctor();
 
     static native void addSceneObject(long scene, long sceneObject);
+    public static native void invalidateShadowMap(long scene);
 
     static native void removeSceneObject(long scene, long sceneObject);
 

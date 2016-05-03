@@ -80,7 +80,16 @@ public:
     const std::vector<Light*>& getLightList() const {
         return lightList;
     }
+    void validateShadowMaps(){
+    	is_shadowmap_invalid = false;
+    }
+    void invalidateShadowMaps(){
+    	is_shadowmap_invalid = true;
+    }
+    const bool isShadowMapsInvalid(){
+    	return is_shadowmap_invalid;
 
+    }
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -95,6 +104,7 @@ private:
     bool occlusion_flag_;
     bool statsInitialized = false;
     std::vector<Light*> lightList;
+    bool is_shadowmap_invalid;
 };
 
 }
