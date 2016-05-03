@@ -27,7 +27,6 @@
 #include "objects/scene.h"
 #include "objects/scene_object.h"
 #include "objects/components/camera.h"
-#include "objects/components/eye_pointee_holder.h"
 #include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
 #include "shaders/shader_manager.h"
@@ -728,16 +727,16 @@ void Renderer::renderMaterialShader(RenderData* render_data,
 
     if (t == nullptr)
         return;
+
     ShaderUniformsPerObject uniforms;
     uniforms.u_model = t->getModelMatrix();
     uniforms.u_view = view_matrix;
     uniforms.u_mv = view_matrix * uniforms.u_model;
     uniforms.u_mvp = projection_matrix * uniforms.u_mv;
     uniforms.u_mv_it = glm::inverseTranspose(uniforms.u_mv);
-     try {
-        bool right = render_mask
-            & RenderData::RenderMaskBit::Right;
+    uniforms.u_right = render_mask & RenderData::RenderMaskBit::Right;
 
+    try {
         glm::mat4 vp_matrixLightModel;
         glm::vec3 lightPosition;
 
