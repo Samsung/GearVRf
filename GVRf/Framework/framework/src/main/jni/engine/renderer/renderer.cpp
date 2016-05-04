@@ -27,7 +27,6 @@
 #include "objects/scene.h"
 #include "objects/scene_object.h"
 #include "objects/components/camera.h"
-#include "objects/components/eye_pointee_holder.h"
 #include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
 #include "shaders/shader_manager.h"
@@ -696,7 +695,8 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
 	rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
 	rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
 	rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
-    try {
+    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+	try {
          //TODO: Improve this logic to avoid a big "switch case"
         ShaderBase* shader = NULL;
         if (rstate.material_override != nullptr)
