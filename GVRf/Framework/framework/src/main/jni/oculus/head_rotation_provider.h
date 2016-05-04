@@ -17,37 +17,10 @@
 
 #include "VrApi_Types.h"
 
-/**
- * To switch to gvrf's native orientation provider, uncomment the
- * following line
- */
-//#define USE_FEATURE_KSENSOR
-
-#ifdef USE_FEATURE_KSENSOR
-#include "objects/rotation_sensor_data.h"
-#include "sensor/ksensor/k_sensor.h"
-#endif
-
 namespace gvr {
 
 class GVRActivity;
 
-#ifdef USE_FEATURE_KSENSOR
-class KSensorHeadRotation {
-public:
-    void predict(GVRActivity& gvrActivity, const ovrFrameParms&, const float time);
-    bool receivingUpdates();
-    void onDock();
-    void onUndock();
-
-public:
-    std::unique_ptr<KSensor> sensor_;
-    RotationSensorData rotationSensorData_;
-};
-
-typedef KSensorHeadRotation HeadRotationProvider;
-
-#else
 class OculusHeadRotation {
     bool docked_ = false;
 public:
@@ -58,7 +31,6 @@ public:
 };
 
 typedef OculusHeadRotation HeadRotationProvider;
-#endif
 
 }
 #endif
