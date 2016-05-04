@@ -128,6 +128,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         final GVRActivity activity = gvrContext.getActivity();
         mTextView = new TextView(activity);
         mTextView.setBackgroundColor(Color.TRANSPARENT);
+        mTextView.setTextColor(Color.WHITE);
         mTextView.setText(text);
         mTextView.setVisibility(View.VISIBLE);
         mTextView.setLayoutParams(new LayoutParams(canvasWidth, canvasHeight));
