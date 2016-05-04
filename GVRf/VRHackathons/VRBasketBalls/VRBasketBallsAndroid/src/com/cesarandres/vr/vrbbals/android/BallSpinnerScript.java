@@ -149,7 +149,7 @@ public class BallSpinnerScript extends GVRScript {
 		root = new GVRSceneObject(ctx);
 		scene.addSceneObject(root);
 
-		textPanel = new GVRTextViewSceneObject(context, core, 7, 4, "");
+		textPanel = new GVRTextViewSceneObject(context, 7, 4, "");
 
 		// set the scene object position
 		textPanel.setTextColor(Color.GREEN);
