@@ -45,7 +45,6 @@ public:
         TEXTURE_SHADER = 7,
         EXTERNAL_RENDERER_SHADER = 8,
         ASSIMP_SHADER = 9,
-
         BOUNDING_BOX_SHADER = 10,
         LIGHTMAP_SHADER = 11,
         DISTORTION_SHADER = 90, // this shader is implemented and loaded in the distorter
@@ -54,7 +53,6 @@ public:
 
         TEXTURE_SHADER_NOLIGHT = 100,
         BUILTIN_SHADER_SIZE = 101
-
     };
 
     explicit Material(ShaderType shader_type) :

@@ -1,11 +1,19 @@
-precision mediump float;
-uniform mat4 u_view;
+precision highp float;
+precision highp sampler2DArray;
 
+uniform mat4 u_view;
+uniform mat4 u_model;
 in vec3 viewspace_position;
 in vec3 viewspace_normal;
+in vec4 local_position;
+in vec4 proj_position;
 in vec2 diffuse_coord;
 in vec3 view_direction;
 out vec4 fragColor;
+
+#ifdef HAS_SHADOWS
+uniform sampler2DArray u_shadow_maps;
+#endif
 
 struct Radiance
 {

@@ -65,21 +65,25 @@ Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
         jobject obj, jlong jscene);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_attachDirectionalLight(
-        JNIEnv * env, jobject obj, jlong jscene, jlong light);
-
-JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_addLight(
         JNIEnv * env, jobject obj, jlong jscene, jlong light);
 
-}
-;
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
+        jobject obj, jlong jscene);
+};
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeScene_ctor(JNIEnv * env, jobject obj) {
     return reinterpret_cast<jlong>(new Scene());
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
+        jobject obj, jlong jscene){
+	 Scene* scene = reinterpret_cast<Scene*>(jscene);
+	 scene->invalidateShadowMaps();
+}
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
         jobject obj, jlong jscene, jlong jscene_object) {
@@ -159,19 +163,6 @@ Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
     env->ReleaseStringUTFChars(filepath, native_filepath);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_attachDirectionalLight(JNIEnv * env,
-        jobject obj, jlong jscene, jlong light) {
-    Scene* scene = reinterpret_cast<Scene*>(jscene);
-
-    if (light != 0) {
-        DirectionalLight* directional_light =
-                reinterpret_cast<DirectionalLight*>(light);
-        scene->attachDirectionalLight(directional_light);
-    } else {
-        scene->attachDirectionalLight(0);
-    }
-}
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_addLight(JNIEnv * env,

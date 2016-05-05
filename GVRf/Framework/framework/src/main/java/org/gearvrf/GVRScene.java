@@ -41,13 +41,14 @@ import org.gearvrf.utility.Log;
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
-
+    public static final Integer MAX_LIGHTS = 16;
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
     private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
-
+    private GVRMaterial mShadowMaterial = null;
+    private boolean mShadowMapDirty = true;
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -92,6 +93,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
         mSceneObjects.add(sceneObject);
+        inValidateShadowMap();
         NativeScene.addSceneObject(getNative(), sceneObject.getNative());
     }
 
@@ -240,7 +242,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return null;
     }
-
+    public void inValidateShadowMap(){
+        NativeScene.invalidateShadowMap(getNative());
+    }
     /**
      * Sets the frustum culling for the {@link GVRScene}.
      */
@@ -363,17 +367,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         NativeScene.exportToFile(getNative(), filepath);
     }
 
-    private GVRDirectionalLight mDirectionalLight;
-
-    public void setDirectionalLight(GVRDirectionalLight light) {
-        mDirectionalLight = light;
-
-        if (light != null) {
-            NativeScene.attachDirectionalLight(getNative(), light.getNative());
-        } else {
-            NativeScene.attachDirectionalLight(getNative(), 0);
-        }
-    }
     /**
      * Bind the correct vertex and fragment shaders on all renderable objects.
      * 
@@ -401,25 +394,39 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             }
         }
     }
-    
+        
+    /**
+     * Add a light to the scene's light list.
+     * @param light light to add
+     * @see GVRScene.getLightList
+     */
     protected void addLight(GVRLightBase light) {
         if (light != null) {
-            int lightIndex = 0;
+            int classIndex = 0;
             for (GVRLightBase l : mLightList) {
                 if (l == light) {
                     return;
                 }
                 if (l.getClass().equals(light.getClass())) {
-                    ++lightIndex;
+                    ++classIndex;
                 }
             }
-            String name = "Data" + light.getClass().getSimpleName() + "[" + lightIndex + "]";
+            Integer lightIndex = mLightList.size();
+            String name = "light" + lightIndex.toString();
             mLightList.add(light);
             NativeLight.setLightID(light.getNative(), name);
             NativeScene.addLight(getNative(), light.getNative());
         }
     }
     
+    /**
+     * Get the list of lights used by this scene.
+     * 
+     * This list is maintained by GearVRF by gathering the
+     * lights attached to the scene objects in the scene.
+     * 
+     * @return array of lights
+     */
     public GVRLightBase[] getLightList() {
         GVRLightBase[] list = new GVRLightBase[mLightList.size()];
         mLightList.toArray(list);
@@ -508,7 +515,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         prettyPrint(sb, 0);
         return sb.toString();
     }
-
+    
     @Override
     public GVREventReceiver getEventReceiver() {
         return mEventReceiver;
@@ -522,7 +529,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
                 recursivelySendOnInit(child);
             }
         }
-
         private void recursivelySendOnInit(GVRSceneObject sceneObject) {
             getGVRContext().getEventManager().sendEvent(
                     sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
@@ -564,6 +570,8 @@ class NativeScene {
     static native long ctor();
 
     static native void addSceneObject(long scene, long sceneObject);
+   
+    public static native void invalidateShadowMap(long scene);
 
     static native void removeSceneObject(long scene, long sceneObject);
 
@@ -582,8 +590,6 @@ class NativeScene {
     public static native int getNumberTriangles(long scene);
 
     public static native void exportToFile(long scene, String file_path);
-
-    static native void attachDirectionalLight(long scene, long light);
 
     static native void addLight(long scene, long light);
 }

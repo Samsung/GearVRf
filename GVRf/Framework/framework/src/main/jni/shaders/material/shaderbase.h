@@ -15,37 +15,36 @@
 
 
 /***************************************************************************
- * GL program for rendering a object with an error.
+ * Renders a GL_TEXTURE_EXTERNAL_OES texture.
  ***************************************************************************/
 
-#ifndef SOLID_COLOR_SHADER_H_
-#define SOLID_COLOR_SHADER_H_
+#ifndef SHADER_BASE_H_
+#define SHADER_BASE_H_
 
-#include "shaderbase.h"
+#define __gl2_h_
+#include "GLES3/gl3.h"
+#include <GLES2/gl2ext.h>
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+#include "objects/hybrid_object.h"
 
 namespace gvr {
-class Color;
-class GLProgram;
+struct RenderState;
 class RenderData;
+class Material;
+class GLProgram;
 
-class ErrorShader: public ShaderBase {
+class ShaderBase: public HybridObject {
 public:
-    ErrorShader();
-    virtual ~ErrorShader();
+    ShaderBase() : program_(nullptr) { };
 
-    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material)=0;
 
-private:
-    ErrorShader(const ErrorShader& error_shader);
-    ErrorShader(ErrorShader&& error_shader);
-    ErrorShader& operator=(const ErrorShader& error_shader);
-    ErrorShader& operator=(ErrorShader&& error_shader);
-
-private:
+protected:
     GLProgram* program_;
-    GLuint u_mvp_;
-    GLuint u_color_;
 };
 
 }
+
 #endif

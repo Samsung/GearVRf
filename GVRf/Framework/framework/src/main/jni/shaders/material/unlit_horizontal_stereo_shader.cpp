@@ -25,6 +25,7 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "util/gvr_gl.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
@@ -51,7 +52,7 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 UnlitHorizontalStereoShader::UnlitHorizontalStereoShader() :
-        program_(0), u_mvp_(0), u_texture_(0), u_color_(
+        u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0), u_right_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -65,8 +66,8 @@ UnlitHorizontalStereoShader::~UnlitHorizontalStereoShader() {
     delete program_;
 }
 
-void UnlitHorizontalStereoShader::render(const glm::mat4& mvp_matrix,
-        RenderData* render_data, Material* material, bool right) {
+void UnlitHorizontalStereoShader::render(RenderState* rstate,
+        RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
@@ -89,13 +90,13 @@ void UnlitHorizontalStereoShader::render(const glm::mat4& mvp_matrix,
 
     glUseProgram(program_->id());
 
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-    glUniform1i(u_right_, mono_rendering || right ? 1 : 0);
+    glUniform1i(u_right_, mono_rendering || rstate->uniforms.u_right ? 1 : 0);
 
     glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,

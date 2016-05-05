@@ -20,13 +20,7 @@
 #ifndef ASSIMP_SHADER_H_
 #define ASSIMP_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 #define SETBIT(num, i)                   num = (num | (1 << i))
 #define ISSET(num, i)                    ((num & (1 << i)) != 0)
@@ -51,16 +45,13 @@
 
 namespace gvr {
 class GLProgram;
-class RenderData;
-class Material;
 
-class AssimpShader: public HybridObject {
+class AssimpShader: public ShaderBase {
 public:
     AssimpShader();
     virtual ~AssimpShader();
 
-    void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
-            const glm::mat4& mvp_matrix, RenderData* render_data,
+    virtual void render(RenderState* rstate,  RenderData* render_data,
             Material* material);
 
 private:
@@ -70,7 +61,6 @@ private:
     AssimpShader& operator=(AssimpShader&& assimp_shader);
 
 private:
-    GLProgram* program_;
     GLProgram** program_list_;
 
     GLuint u_mvp_;

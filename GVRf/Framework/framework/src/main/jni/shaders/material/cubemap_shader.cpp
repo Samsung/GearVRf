@@ -25,6 +25,7 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "util/gvr_gl.h"
+#include "engine/renderer/renderer.h"
 
 // OpenGL Cube map texture uses coordinate system different to other OpenGL functions:
 // Positive x pointing right, positive y pointing up, positive z pointing inward.
@@ -85,7 +86,7 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 CubemapShader::CubemapShader() :
-        program_(0), u_model_(0), u_mvp_(0), u_texture_(0), u_color_(
+         u_model_(0), u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     u_model_ = glGetUniformLocation(program_->id(), "u_model");
@@ -99,8 +100,7 @@ CubemapShader::~CubemapShader() {
     delete program_;
 }
 
-void CubemapShader::render(const glm::mat4& model_matrix,
-        const glm::mat4& mvp_matrix, RenderData* render_data, Material* material) {
+void CubemapShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
@@ -115,8 +115,8 @@ void CubemapShader::render(const glm::mat4& model_matrix,
 
     glUseProgram(program_->id());
 
-    glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(model_matrix));
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);

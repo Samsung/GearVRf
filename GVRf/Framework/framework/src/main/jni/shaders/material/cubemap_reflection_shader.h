@@ -21,27 +21,16 @@
 #ifndef CUBEMAP_REFLECTION_SHADER_H_
 #define CUBEMAP_REFLECTION_SHADER_H_
 
-#include <memory>
-
-#include "GLES3/gl3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 namespace gvr {
-class GLProgram;
-class RenderData;
-class Material;
 
-class CubemapReflectionShader: public HybridObject {
+class CubemapReflectionShader: public ShaderBase {
 public:
     CubemapReflectionShader();
     virtual ~CubemapReflectionShader();
 
-    void render(const glm::mat4& model_matrix, const glm::mat4& model_it_matrix,
-            const glm::mat4& view_invers_matrix, const glm::mat4& mvp_matrix,
-            RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     CubemapReflectionShader(const CubemapReflectionShader& cubemap_shader);
@@ -50,7 +39,6 @@ private:
     CubemapReflectionShader& operator=(CubemapReflectionShader&& cubemap_shader);
 
 private:
-    GLProgram* program_;
     GLuint u_mv_;
     GLuint u_mv_it_;
     GLuint u_mvp_;

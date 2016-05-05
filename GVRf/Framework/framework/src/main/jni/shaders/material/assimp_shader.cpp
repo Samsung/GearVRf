@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "assimp_shader.h"
-
+#include "engine/renderer/renderer.h"
 #include "gl/gl_program.h"
 #include "objects/material.h"
 #include "objects/mesh.h"
@@ -114,7 +114,7 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 AssimpShader::AssimpShader() :
-        program_(0), u_mvp_(0), u_diffuse_color_(0), u_ambient_color_(
+         u_mvp_(0), u_diffuse_color_(0), u_ambient_color_(
                 0), u_texture_(0), u_color_(0), u_opacity_(
                 0), program_list_(0) {
     program_list_ = new GLProgram*[AS_TOTAL_GL_PROGRAM_COUNT];
@@ -198,8 +198,7 @@ AssimpShader::~AssimpShader() {
     }
 }
 
-void AssimpShader::render(const glm::mat4& mv_matrix,
-        const glm::mat4& mv_it_matrix, const glm::mat4& mvp_matrix,
+void AssimpShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture;
@@ -232,7 +231,7 @@ void AssimpShader::render(const glm::mat4& mv_matrix,
     mesh->generateVAO();
 
     glUseProgram(program_->id());
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
 
     if (ISSET(feature_set, AS_DIFFUSE_TEXTURE)) {
         glActiveTexture (GL_TEXTURE0);

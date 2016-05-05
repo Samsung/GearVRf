@@ -15,7 +15,6 @@
 package org.gearvrf;
 
 import java.util.HashMap;
-import java.util.List;
 
 import org.gearvrf.utility.TextFile;
 
@@ -27,7 +26,7 @@ import org.gearvrf.R;
     * Manages a set of variants on vertex and fragment shaders from the same source
     * code.
     */
-   public class GVRPhongShader extends org.gearvrf.GVRShaderTemplate
+   public class GVRDepthShader extends org.gearvrf.GVRShaderTemplate
    {
        private static String fragTemplate = null;
        private static String vtxTemplate = null;
@@ -37,34 +36,17 @@ import org.gearvrf.R;
        private static String normalShader = null;
        private static String skinShader = null;
 
-       public GVRPhongShader(GVRContext gvrcontext)
+       public GVRDepthShader(GVRContext gvrcontext)
        {
-           super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent");
+           super("");
            if (fragTemplate == null) {
                Context context = gvrcontext.getContext();
-               fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template);
-               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template);
-               surfaceShader = TextFile.readTextFile(context, R.raw.phong_surface);
-               vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_tex);
-               normalShader = TextFile.readTextFile(context, R.raw.normalmap);
+               fragTemplate = TextFile.readTextFile(context, R.raw.depth_shader);
+               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template_depth);
                skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
-               addLight = TextFile.readTextFile(context, R.raw.addlight);
            }
            setSegment("FragmentTemplate", fragTemplate);
            setSegment("VertexTemplate", vtxTemplate);
-           setSegment("FragmentSurface", surfaceShader);
-           setSegment("FragmentAddLight", addLight);
-           setSegment("VertexShader", vtxShader);
-           setSegment("VertexNormalShader", normalShader);
            setSegment("VertexSkinShader", skinShader);
-       }
-       
-       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRLightBase[] lights) {
-           HashMap<String, Integer> defines = super.getRenderDefines(rdata, lights);
-           
-           if (!rdata.isLightMapEnabled())
-               defines.put("lightMapTexture", 0);
-           return defines;
        }       
    }
-

@@ -46,7 +46,7 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 UnlitFboShader::UnlitFboShader() :
-        program_(0), u_mvp_(0), u_texture_(0), u_color_(0), u_opacity_(0) {
+         u_mvp_(0), u_texture_(0), u_color_(0), u_opacity_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
@@ -65,7 +65,7 @@ void UnlitFboShader::recycle() {
     program_ = 0;
 }
 
-void UnlitFboShader::render(const glm::mat4& mvp_matrix,
+void UnlitFboShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
@@ -81,7 +81,7 @@ void UnlitFboShader::render(const glm::mat4& mvp_matrix,
 
     glUseProgram(program_->id());
 
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);
