@@ -20,6 +20,7 @@
 #include "light.h"
 
 #include "util/gvr_jni.h"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace gvr {
 extern "C" {
@@ -31,6 +32,12 @@ Java_org_gearvrf_NativeLight_enable(JNIEnv * env, jobject obj, jlong jlight);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_disable(JNIEnv * env, jobject obj, jlong jlight);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setCastShadow(JNIEnv * env, jobject obj, jlong jlight, jlong jmaterial);
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeLight_getCastShadow(JNIEnv * env, jobject obj, jlong jlight);
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeLight_getFloat(JNIEnv * env,
@@ -68,8 +75,16 @@ Java_org_gearvrf_NativeLight_getLightID(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
         jobject obj, jlong jlight, jstring id);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jfloatArray matrix);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jfloatArray matrix);
+
 }
-;
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj) {
@@ -185,5 +200,48 @@ Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
     std::string native_id = std::string(char_id);
     light->setLightID(native_id);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jfloatArray jmatrix)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    glm::mat4 cmatrix;
+    light->getMat4(native_key, cmatrix);
+    env->SetFloatArrayRegion(jmatrix, 0, 16,
+            reinterpret_cast<const jfloat*>(glm::value_ptr(cmatrix)));
+    env->ReleaseStringUTFChars(key, char_key);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
+        jobject obj, jlong jlight, jstring key, jfloatArray jmatrix)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_key = env->GetStringUTFChars(key, 0);
+    std::string native_key = std::string(char_key);
+    jfloat* matrix_data = env->GetFloatArrayElements(jmatrix, 0);
+    glm::mat4 cmatrix = glm::make_mat4(matrix_data);
+    light->setMat4(native_key, cmatrix);
+    env->ReleaseStringUTFChars(key, char_key);
+    env->ReleaseFloatArrayElements(jmatrix, matrix_data, 0);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeLight_getCastShadow(JNIEnv * env, jobject obj, jlong jlight)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    return light->castShadow();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setCastShadow(JNIEnv * env, jobject obj, jlong jlight, jlong jmaterial)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    Material* material = reinterpret_cast<Material*>(jmaterial);
+    light->castShadow(material);
+}
+
+}

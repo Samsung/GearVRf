@@ -27,7 +27,7 @@
 #include <string>
 #include <mutex>
 #include <vector>
-
+#include "shaderbase.h"
 #include "GLES3/gl3.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -38,17 +38,12 @@
 
 namespace gvr {
 
-class GLProgram;
-class RenderData;
-class Material;
-class Mesh;
-
 struct ShaderUniformsPerObject;
 
 typedef std::function<void(Mesh&, GLuint)> AttributeVariableBind;
 typedef std::function<void(Material&, GLuint)> UniformVariableBind;
 
-class CustomShader: public HybridObject {
+class CustomShader: public ShaderBase {
 public:
     explicit CustomShader(const std::string& vertex_shader,
             const std::string& fragment_shader);
@@ -65,10 +60,9 @@ public:
     void addUniformVec3Key(const std::string& variable_name, const std::string& key);
     void addUniformVec4Key(const std::string& variable_name, const std::string& key);
     void addUniformMat4Key(const std::string& variable_name, const std::string& key);
-    void render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
-                const std::vector< Light* > lightList, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
     static int getGLTexture(int n);
-
+    GLuint getProgramId();
 private:
     CustomShader(const CustomShader& custom_shader);
     CustomShader(CustomShader&& custom_shader);
@@ -114,13 +108,12 @@ private:
     };
 
 private:
-    GLProgram* program_ = nullptr;
-    GLuint u_mvp_ = 0;
-    GLuint u_mv_ = 0;
-    GLuint u_view_ = 0;
-    GLuint u_mv_it_ = 0;
-    GLuint u_right_ = 0;
-
+    GLuint u_mvp_;
+    GLuint u_mv_;
+    GLuint u_view_;
+    GLuint u_mv_it_;
+    GLuint u_right_;
+    GLuint u_model_;
     bool textureVariablesDirty_ = false;
     std::mutex textureVariablesLock_;
     std::set<Descriptor<TextureVariable>, DescriptorComparator<TextureVariable>> textureVariables_;
@@ -135,6 +128,7 @@ private:
 
     std::string vertexShader_;
     std::string fragmentShader_;
+
 };
 
 }

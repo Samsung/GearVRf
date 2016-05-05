@@ -25,6 +25,7 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "util/gvr_gl.h"
+#include "engine/renderer/renderer.h"
 
 // OpenGL Cube map texture uses coordinate system different to other OpenGL functions:
 // Positive x pointing right, positive y pointing up, positive z pointing inward.
@@ -95,7 +96,7 @@ static const char FRAGMENT_SHADER[] =
                 "}\n";
 
 CubemapReflectionShader::CubemapReflectionShader() :
-        program_(0), u_mv_(0), u_mv_it_(0), u_mvp_(
+        u_mv_(0), u_mv_it_(0), u_mvp_(
                 0), u_view_i_(0), u_texture_(0), u_color_(0), u_opacity_(0) {
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
@@ -111,9 +112,7 @@ CubemapReflectionShader::~CubemapReflectionShader() {
     delete program_;
 }
 
-void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
-        const glm::mat4& mv_it_matrix, const glm::mat4& view_invers_matrix,
-        const glm::mat4& mvp_matrix, RenderData* render_data, Material* material) {
+void CubemapReflectionShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
@@ -129,11 +128,11 @@ void CubemapReflectionShader::render(const glm::mat4& mv_matrix,
 
     glUseProgram(program_->id());
 
-    glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
-    glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
+    glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glUniformMatrix4fv(u_view_i_, 1, GL_FALSE,
-            glm::value_ptr(view_invers_matrix));
+            glm::value_ptr(rstate->uniforms.u_view_inv));
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);

@@ -24,6 +24,7 @@
 #include "objects/mesh.h"
 #include "objects/components/render_data.h"
 #include "util/gvr_gl.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
@@ -49,7 +50,7 @@ ErrorShader::~ErrorShader() {
     delete program_;
 }
 
-void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
+void ErrorShader::render(RenderState* rstate, RenderData* render_data, Material* mtl_unused) {
     Mesh* mesh = render_data->mesh();
     float r = 0.0f;
     float g = 1.0f;
@@ -61,7 +62,7 @@ void ErrorShader::render(const glm::mat4& mvp_matrix, RenderData* render_data) {
 
     glUseProgram(program_->id());
 
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glUniform4f(u_color_, r, g, b, a);
 
     glBindVertexArray(mesh->getVAOId());

@@ -474,7 +474,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Get the attached {@link GVRLightBase}. Any subclass of GVRLightBase may
+     * Get the attached light component. Any subclass of GVRLightBase may
      * be attached to a scene object. The light's position and direction will be calculated
      * from the transform attached to the scene object.
      * @return The light attached to the object. If no light is currently attached, returns null.
@@ -484,7 +484,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
     
     /**
-     * Attach a new {@linkplain GVRightTemplate}.
+     * Attach a new light component.
      * 
      * If another light is currently attached, it is replaced with the new
      * one. The light's position and direction will follow the scene object's
@@ -498,7 +498,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
     
     /**
-     * Detach the object's current {@link GVRLightBase}.
+     * Detach the object's current {@link GVRLightTemplate}.
      */
     public void detachLight() {
         if (mLight != null) {
@@ -510,7 +510,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Get a component of a specific class from this scene object.
      * @param compClass class derived from GVRComponent
-     *                  (like GVRTransform, GVRRenderData, GVRLightBase, ...)
+     *                  (like GVRTransform, GVRRenderData, GVRLightTemplate, ...)
      * @return component of specified class or null if none.
      */
     @SuppressWarnings("unchecked")
@@ -539,7 +539,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Get all components of a specific class from this scene object and its descendants.
      * @param compClass class derived from GVRComponent
-     *                  (like GVRTransform, GVRRenderData, GVRLightBase, ...)
+     *                  (like GVRTransform, GVRRenderData, GVRLightTemplate, ...)
      * @return ArrayList of components with the specified class.
      */
     public <T extends GVRComponent> ArrayList<T> getAllComponents(Class<? extends GVRComponent> compClass) {

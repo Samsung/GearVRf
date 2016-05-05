@@ -21,27 +21,20 @@
 #ifndef OES_SHADER_H_
 #define OES_SHADER_H_
 
-#include <memory>
-
-#define __gl2_h_
-#include "GLES3/gl3.h"
-#include <GLES2/gl2ext.h>
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include "objects/hybrid_object.h"
+#include "shaderbase.h"
 
 namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
+struct RenderState;
 
-class OESShader: public HybridObject {
+class OESShader: public ShaderBase {
 public:
     OESShader();
     virtual ~OESShader();
 
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     OESShader(const OESShader& oes_shader);
@@ -50,8 +43,7 @@ private:
     OESShader& operator=(OESShader&& oes_shader);
 
 private:
-    GLProgram* program_;
-    GLuint u_mvp_;
+     GLuint u_mvp_;
     GLuint u_texture_;
     GLuint u_color_;
     GLuint u_opacity_;

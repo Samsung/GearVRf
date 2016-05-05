@@ -30,6 +30,7 @@ import org.gearvrf.utility.TextFile;
  *
  * Point light uniforms:
  * {@literal
+ *   enabled               1 = light is enabled, 0 = light is disabled
  *   world_position        position of light in world coordinates
  *                         derived from scene object position
  *   ambient_intensity     intensity of ambient light emitted
@@ -39,26 +40,30 @@ import org.gearvrf.utility.TextFile;
  *   attenuation_linear    linear attenuation factor
  *   attenuation_quadratic quadratic attenuation factor
  * }
+ * 
+ * Point lights currently cannot cast shadows. Enabling shadows for
+ * this light type will waste resources.
+ * 
  * @see GVRPhongDirectLight
  * @see GVRSpotLight
  * @see GVRLightBase
  */
 public class GVRPointLight extends GVRLightBase
 {
-    protected static String mPointLightShaderSource = null;
+    private static String shaderSource = null;
     public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
-        uniformDescriptor += " float4 diffuse_intensity"
-                + " float4 ambient_intensity"
-                + " float4 specular_intensity"
+        uniformDescriptor += " vec4 diffuse_intensity"
+                + " vec4 ambient_intensity"
+                + " vec4 specular_intensity"
                 + " float attenuation_constant"
                 + " float attenuation_linear"
                 + " float attenuation_quadratic";
 
-        if (mPointLightShaderSource == null) {
-            mPointLightShaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
+        if (shaderSource == null) {
+            shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
         }
-        setShaderSource(mPointLightShaderSource);
+        fragmentShaderSource = shaderSource;
         setFloat("attenuation_constant", 1);
         setFloat("attenuation_linear", 0);
         setFloat("attenuation_quadratic", 0);

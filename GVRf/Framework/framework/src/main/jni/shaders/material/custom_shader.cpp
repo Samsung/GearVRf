@@ -21,6 +21,7 @@
 #include "engine/renderer/renderer.h"
 #include "gl/gl_program.h"
 #include "objects/material.h"
+#include "objects/scene.h"
 #include "objects/mesh.h"
 #include "objects/textures/texture.h"
 #include "objects/components/render_data.h"
@@ -33,25 +34,19 @@ CustomShader::CustomShader(const std::string& vertex_shader, const std::string& 
     : vertexShader_(vertex_shader), fragmentShader_(fragment_shader) {
 }
 
-CustomShader::~CustomShader() {
-    delete program_;
-}
-
 void CustomShader::initializeOnDemand() {
     if (nullptr == program_) {
         program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
         vertexShader_.clear();
         fragmentShader_.clear();
-
-        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
-        u_right_ = glGetUniformLocation(program_->id(), "u_right");
-
-        u_view_ = glGetUniformLocation(program_->id(), "u_view");
-        u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
-        u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
-    }
-
-    if (textureVariablesDirty_) {
+	    u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+	    u_view_ = glGetUniformLocation(program_->id(), "u_view");
+	    u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
+	    u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
+	    u_right_ = glGetUniformLocation(program_->id(), "u_right");
+    	u_model_ = glGetUniformLocation(program_->id(), "u_model");
+	}
+   if (textureVariablesDirty_) {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
             if (-1 == it->location) {
@@ -88,6 +83,15 @@ void CustomShader::initializeOnDemand() {
     }
 }
 
+
+	
+
+CustomShader::~CustomShader() {
+    delete program_;
+}
+GLuint CustomShader::getProgramId(){
+	return program_->id();
+}
 void CustomShader::addTextureKey(const std::string& variable_name, const std::string& key) {
     LOGV("CustomShader::texture:add variable: %s key: %s", variable_name.c_str(), key.c_str());
     Descriptor<TextureVariable> d(variable_name, key);
@@ -110,6 +114,7 @@ void CustomShader::addTextureKey(const std::string& variable_name, const std::st
     textureVariablesDirty_ = true;
 }
 
+
 void CustomShader::addAttributeFloatKey(const std::string& variable_name,
         const std::string& key) {
     AttributeVariableBind f =
@@ -119,6 +124,7 @@ void CustomShader::addAttributeFloatKey(const std::string& variable_name,
     addAttributeKey(variable_name, key, f);
 }
 
+
 void CustomShader::addAttributeVec2Key(const std::string& variable_name,
         const std::string& key) {
     AttributeVariableBind f =
@@ -127,7 +133,6 @@ void CustomShader::addAttributeVec2Key(const std::string& variable_name,
             };
     addAttributeKey(variable_name, key, f);
 }
-
 void CustomShader::addAttributeKey(const std::string& variable_name,
         const std::string& key, AttributeVariableBind f) {
     Descriptor<AttributeVariable> d(variable_name, key);
@@ -142,6 +147,7 @@ void CustomShader::addAttributeKey(const std::string& variable_name,
     attributeVariablesDirty_ = true;
 }
 
+
 void CustomShader::addAttributeVec3Key(const std::string& variable_name,
         const std::string& key) {
     AttributeVariableBind f =
@@ -151,6 +157,7 @@ void CustomShader::addAttributeVec3Key(const std::string& variable_name,
     addAttributeKey(variable_name, key, f);
 }
 
+
 void CustomShader::addAttributeVec4Key(const std::string& variable_name,
         const std::string& key) {
     AttributeVariableBind f =
@@ -159,7 +166,6 @@ void CustomShader::addAttributeVec4Key(const std::string& variable_name,
             };
     addAttributeKey(variable_name, key, f);
 }
-
 void CustomShader::addUniformKey(const std::string& variable_name,
         const std::string& key, UniformVariableBind f) {
     LOGV("CustomShader::uniform:add variable: %s key: %s", variable_name.c_str(), key.c_str());
@@ -175,6 +181,7 @@ void CustomShader::addUniformKey(const std::string& variable_name,
     uniformVariablesDirty_ = true;
 }
 
+
 void CustomShader::addUniformFloatKey(const std::string& variable_name,
         const std::string& key) {
     UniformVariableBind f =
@@ -183,6 +190,7 @@ void CustomShader::addUniformFloatKey(const std::string& variable_name,
             };
     addUniformKey(variable_name, key, f);
 }
+
 
 void CustomShader::addUniformVec2Key(const std::string& variable_name,
         const std::string& key) {
@@ -194,6 +202,7 @@ void CustomShader::addUniformVec2Key(const std::string& variable_name,
     addUniformKey(variable_name, key, f);
 }
 
+
 void CustomShader::addUniformVec3Key(const std::string& variable_name,
         const std::string& key) {
     UniformVariableBind f =
@@ -203,6 +212,7 @@ void CustomShader::addUniformVec3Key(const std::string& variable_name,
             };
     addUniformKey(variable_name, key, f);
 }
+
 
 void CustomShader::addUniformVec4Key(const std::string& variable_name,
         const std::string& key) {
@@ -224,35 +234,27 @@ void CustomShader::addUniformMat4Key(const std::string& variable_name,
     addUniformKey(variable_name, key, f);
 }
 
-void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* render_data,
-        const std::vector<Light*> lightList, Material* material) {
-    initializeOnDemand();
 
+void CustomShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
+	//LOGE(" start of render %s", render_data->owner_object()->name().c_str());
+	initializeOnDemand();
     {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
             Texture* texture = material->getTextureNoError(it->key);
+            if (texture == NULL)
+            	LOGE(" texture is null for %s", render_data->owner_object()->name().c_str());
             // If any texture is not ready, do not render the material at all
-            if (texture == NULL || !texture->isReady()) {
+            if (!texture->isReady()) {
+            	LOGE(" texture is not ready for %s", render_data->owner_object()->name().c_str());
                 return;
             }
         }
     }
+   // LOGE("rendering %s with program %d", render_data->owner_object()->name().c_str(), program_->id());
 
     Mesh* mesh = render_data->mesh();
-
     glUseProgram(program_->id());
-
-    /*
-     * Update the uniforms for the lights
-     */
-    for (auto it = lightList.begin();
-         it != lightList.end();
-         ++it) {
-        Light* light = (*it);
-         if (light != NULL)
-            light->render(program_->id());
-    }
     /*
      * Update the bone matrices
      */
@@ -272,18 +274,16 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
             glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
+        checkGlError("CustomShader after bones");
     }
-
     /*
      * Update vertex information
      */
-    if (mesh->isVaoDirty()) {
-        mesh->bindVertexAttributes(program_->id());
-        mesh->unSetVaoDirty();
-    }
+    mesh->bindVertexAttributes(program_->id());
     mesh->generateVAO();  // setup VAO
 
     ///////////// uniform /////////
+
     {
         std::lock_guard<std::mutex> lock(uniformVariablesLock_);
         for (auto it = uniformVariables_.begin(); it != uniformVariables_.end(); ++it) {
@@ -296,20 +296,23 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
         }
     }
 
+    if (u_model_ != -1){
+    	glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
+    }
     if (u_mvp_ != -1) {
-        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mvp));
+        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     }
     if (u_view_ != -1) {
-        glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(uniforms.u_view));
+        glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
     }
     if (u_mv_ != -1) {
-        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv));
+        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
     }
     if (u_mv_it_ != -1) {
-        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(uniforms.u_mv_it));
+        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
     }
     if (u_right_ != 0) {
-        glUniform1i(u_right_, uniforms.u_right ? 1 : 0);
+        glUniform1i(u_right_, rstate->uniforms.u_right ? 1 : 0);
     }
 
     int texture_index = 0;
@@ -318,13 +321,33 @@ void CustomShader::render(const ShaderUniformsPerObject& uniforms, RenderData* r
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
             auto d = *it;
             d.variableType.f_bind(texture_index, *material, d.location);
+            texture_index++;
         }
     }
+
+    /*
+     * Update the uniforms for the lights
+     */
+    const std::vector<Light*>& lightlist = rstate->scene->getLightList();
+    bool castShadow = false;
+    for (auto it = lightlist.begin();
+         it != lightlist.end();
+         ++it) {
+        Light* light = (*it);
+         if (light != NULL) {
+            light->render(program_->id(), texture_index);
+            if (light->castShadow())
+                castShadow = true;
+         }
+    }
+    if (castShadow){
+    	Light::bindShadowMap(program_->id(), texture_index);
+    }
+
 
     glBindVertexArray(mesh->getVAOId());
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
-
     checkGlError("CustomShader::render");
 }
 

@@ -13,6 +13,7 @@
 #include "objects/textures/external_renderer_texture.h"
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
+#include "engine/renderer/renderer.h"
 
 static GVRF_ExternalRenderer externalRenderer = NULL;
 
@@ -22,9 +23,7 @@ void GVRF_installExternalRenderer(GVRF_ExternalRenderer fct) {
 
 namespace gvr {
 
-void ExternalRendererShader::render(
-        const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
-        const glm::mat4& mvp_matrix, RenderData* render_data) {
+void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, Material* mtl_unused) {
     if (externalRenderer == NULL) {
         LOGE("External renderer not installed");
         return;
@@ -75,7 +74,7 @@ void ExternalRendererShader::render(
         // Original rendering
         externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
                          scratchBuffer, 6,
-                         glm::value_ptr(mvp_matrix), 16,
+                         glm::value_ptr(rstate->uniforms.u_mvp), 16,
                          glm::value_ptr(*mesh->tex_coords().data()), mesh->tex_coords().size() * 2,
                          material->getFloat("opacity"));
     } else {
@@ -99,7 +98,7 @@ void ExternalRendererShader::render(
         capturer->endCapture();
 
         // Render to original target
-        capturer->render(mv_matrix, mv_it_matrix, mvp_matrix, render_data);
+        capturer->render(rstate, render_data);
 
         // Callback
         capturer->callback(TCCB_NEW_CAPTURE, 0);

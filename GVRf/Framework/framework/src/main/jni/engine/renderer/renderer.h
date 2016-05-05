@@ -57,11 +57,24 @@ class Light;
 struct ShaderUniformsPerObject {
     glm::mat4   u_model;        // Model matrix
     glm::mat4   u_view;         // View matrix
+    glm::mat4   u_proj;         // projection matrix
     glm::mat4   u_view_inv;     // inverse of View matrix
     glm::mat4   u_mv;           // ModelView matrix
     glm::mat4   u_mvp;          // ModelViewProjection matrix
     glm::mat4   u_mv_it;        // inverse transpose of ModelView
     int         u_right;        // 1 = right eye, 0 = left
+};
+
+struct RenderState {
+    int                     render_mask;
+    int                     viewportX;
+    int                     viewportY;
+    int                     viewportWidth;
+    int                     viewportHeight;
+    Scene*                  scene;
+    Material*               material_override;
+    ShaderUniformsPerObject uniforms;
+    ShaderManager*          shader_manager;
 };
 
 class Renderer {
@@ -75,13 +88,6 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-
-    static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-              int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-              ShaderManager* shader_manager,
-              PostEffectShaderManager* post_effect_shader_manager,
-              RenderTexture* post_effect_render_texture_a,
-              RenderTexture* post_effect_render_texture_b, int modeShadow);
 
     static void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
@@ -101,56 +107,45 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
-
     static void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);
-
     static void initializeStats();
     static void resetStats();
     static int getNumberDrawCalls();
     static int getNumberTriangles();
-
+    static void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
 private:
-    static void renderRenderData(RenderData* render_data,
-            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager,
-            const std::vector<Light*>& lights, int modeShadow);
+    static void cullFromCamera(Scene *scene, Camera *camera,
+            ShaderManager* shader_manager,
+            std::vector<SceneObject*>& scene_objects);
 
-    static void renderMesh(RenderData* render_data,
-            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager,
-            const std::vector<Light*> lightList, int modeShadow);
+    static void renderRenderData(RenderState& rstate, RenderData* render_data);
 
-    static void renderMaterialShader(RenderData* render_data,
-            const glm::mat4& view_matrix, const glm::mat4& projection_matrix,
-            int render_mask, ShaderManager* shader_manager,
-            const std::vector<Light*> lightList, int modeShadow,
-            Material *material);
+    static void renderMesh(RenderState& rstate, RenderData* render_data);
+
+    static void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material);
 
     static void renderPostEffectData(Camera* camera,
             RenderTexture* render_texture, PostEffectData* post_effect_data,
             PostEffectShaderManager* post_effect_shader_manager);
 
     static bool checkTextureReady(Material* material);
-
+    static void cullDepthMaps(RenderState& rstate,Camera* camera, std::vector<SceneObject*>& scene_objects);
     static void occlusion_cull(Scene* scene,
             std::vector<SceneObject*>& scene_objects,
             ShaderManager *shader_manager, glm::mat4 vp_matrix);
     static void build_frustum(float frustum[6][4], const float *vp_matrix);
-    static void frustum_cull(Camera *camera, SceneObject *object,
+    static void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
-            bool continue_cull, int planeMask);	
-	static void state_sort();
+            bool continue_cull, int planeMask);
+    static void state_sort();
 
     static void set_face_culling(int cull_face);
 
     static bool isShader3d(const Material* curr_material);
     static bool isDefaultPosition3d(const Material* curr_material);
-    static void calculateShadow(ShaderManager* shader_manager,
-            const Material* curr_material, const glm::mat4& model_matrix,
-            const int modeShadow, glm::vec3& lightPosition,
-            glm::mat4& vp_matrixLightModel);
-
+    void light_cull(Scene *scene, ShaderManager* shader_manager);
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);
