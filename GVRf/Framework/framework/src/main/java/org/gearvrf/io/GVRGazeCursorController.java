@@ -43,11 +43,12 @@ class GVRGazeCursorController extends GVRBaseController
     private final Vector3f setPosition;
 
     public GVRGazeCursorController(GVRContext context,
-            GVRCursorType cursorType) {
-        super(cursorType);
+                                   GVRControllerType controllerType, String name, int vendorId,
+                                   int productId) {
+        super(controllerType, name, vendorId, productId);
         this.context = context;
         gazePosition = new Vector3f();
-        setPosition = new Vector3f();        
+        setPosition = new Vector3f();
     }
 
     /*
@@ -106,7 +107,7 @@ class GVRGazeCursorController extends GVRBaseController
         super.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
     }
 
-    void close() {       
+    void close() {
         // unregister the draw frame listener
         if (referenceCount > 0) {
             context.unregisterDrawFrameListener(this);

@@ -32,8 +32,9 @@ import android.view.MotionEvent;
  */
 abstract class GVRBaseController extends GVRCursorController {
 
-    public GVRBaseController(GVRCursorType cursorType) {
-        super(cursorType);
+    public GVRBaseController(GVRControllerType controllerType, String name,
+            int vendorId, int productId) {
+        super(controllerType, name, vendorId, productId);
     }
 
     abstract boolean dispatchKeyEvent(KeyEvent event);

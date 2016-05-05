@@ -30,8 +30,8 @@ public interface CursorControllerListener {
      * 
      * Use {@link GVRCursorController#getId()} to uniquely identify the
      * {@link GVRCursorController} and use
-     * {@link GVRCursorController#getCursorType()} to know its
-     * {@link GVRCursorType}.
+     * {@link GVRCursorController#getControllerType()} to know its
+     * {@link GVRControllerType}.
      * 
      * @param controller
      *            the {@link GVRCursorController} added.
@@ -44,8 +44,8 @@ public interface CursorControllerListener {
      * 
      * Use {@link GVRCursorController#getId()} to uniquely identify the
      * {@link GVRCursorController} and
-     * {@link GVRCursorController#getCursorType()} to know its
-     * {@link GVRCursorType}.
+     * {@link GVRCursorController#getControllerType()} to know its
+     * {@link GVRControllerType}.
      * 
      * @param controller
      *            the {@link GVRCursorController} removed.

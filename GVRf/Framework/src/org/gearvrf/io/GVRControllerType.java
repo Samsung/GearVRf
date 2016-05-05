@@ -19,6 +19,6 @@ package org.gearvrf.io;
  * IO device types supported by the GVRf IO framework.
  *
  */
-public enum GVRCursorType {
+public enum GVRControllerType {
     MOUSE, CONTROLLER, GAZE, EXTERNAL, UNKNOWN
 }

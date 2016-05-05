@@ -16,6 +16,7 @@
 package org.gearvrf.io;
 
 class GVRDeviceConstants {
+    public static final String OCULUS_GEARVR_DEVICE_NAME = "GearVR";
     public static final int GPIO_KEYBOARD_PRODUCT_ID = 1;
     public static final int GPIO_KEYBOARD_VENDOR_ID = 1;
     public static final int OCULUS_GEARVR_TOUCHPAD_VENDOR_ID = 1256;
