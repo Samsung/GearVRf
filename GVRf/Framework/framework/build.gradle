@@ -4,7 +4,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    buildToolsVersion '23.0.3'
 
     defaultConfig {
         minSdkVersion 19
@@ -29,6 +29,9 @@ android {
     }
 
     task buildNative(type: Exec) {
+        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
+            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
+        }
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             commandLine 'ndk-build.cmd', '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
         } else {
@@ -37,6 +40,9 @@ android {
     }
 
     task cleanNative(type: Exec) {
+        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
+            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
+        }
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             commandLine 'ndk-build.cmd', '-C', file('src/main').absolutePath, '-j', 16, 'clean'
         } else {
