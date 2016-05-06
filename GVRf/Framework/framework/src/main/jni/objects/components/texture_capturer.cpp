@@ -85,6 +85,8 @@ void TextureCapturer::beginCapture() {
     glGetIntegerv(GL_VIEWPORT, mSavedViewport);
     glGetIntegerv(GL_SCISSOR_BOX, mSavedScissor);
     mIsCullFace = glIsEnabled(GL_CULL_FACE);
+    mIsBlend = glIsEnabled(GL_BLEND);
+    mIsPolygonOffsetFill = glIsEnabled(GL_POLYGON_OFFSET_FILL);
 
     // Setup FBO
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mRenderTexture->getFrameBufferId());
@@ -119,6 +121,16 @@ void TextureCapturer::endCapture() {
         glEnable(GL_CULL_FACE);
     else
         glDisable(GL_CULL_FACE);
+
+    if (mIsBlend)
+        glEnable(GL_BLEND);
+    else
+        glDisable(GL_BLEND);
+
+    if (mIsPolygonOffsetFill)
+        glEnable(GL_POLYGON_OFFSET_FILL);
+    else
+        glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
 void TextureCapturer::render(
