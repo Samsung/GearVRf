@@ -102,6 +102,10 @@ extern "C" {
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
             jobject obj, jlong jmesh, jfloatArray jsphere);
+
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeMesh_getBoundingVolume(JNIEnv * env,
+            jobject obj, jlong jmesh);
 };
 
 JNIEXPORT jlong JNICALL
@@ -420,4 +424,28 @@ Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
     sphere[3] = bvol.radius();
     env->SetFloatArrayRegion(jsphere, 0, 4, sphere);
 }
+
+JNIEXPORT jfloatArray JNICALL
+Java_org_gearvrf_NativeMesh_getBoundingVolume(JNIEnv * env,
+        jobject obj, jlong jmesh) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    const BoundingVolume& bvol = mesh->getBoundingVolume();
+
+    jfloat temp[10];
+    temp[0] = bvol.center().x;
+    temp[1] = bvol.center().y;
+    temp[2] = bvol.center().z;
+    temp[3] = bvol.radius();
+    temp[4] = bvol.min_corner().x;
+    temp[5] = bvol.min_corner().y;
+    temp[6] = bvol.min_corner().z;
+    temp[7] = bvol.max_corner().x;
+    temp[8] = bvol.max_corner().y;
+    temp[9] = bvol.max_corner().z;
+
+    jfloatArray result = env->NewFloatArray(10);
+    env->SetFloatArrayRegion(result, 0, 10, temp);
+    return result;
+}
+
 }
