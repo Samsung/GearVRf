@@ -106,7 +106,7 @@ const BoundingVolume& Mesh::getBoundingVolume() {
     if (have_bounding_volume_) {
         return bounding_volume;
     }
-
+    bounding_volume.reset();
     for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
         bounding_volume.expand(*it);
     }
