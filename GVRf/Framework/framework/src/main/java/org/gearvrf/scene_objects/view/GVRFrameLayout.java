@@ -56,4 +56,9 @@ public class GVRFrameLayout extends FrameLayout implements GVRView {
     public View getView() {
         return this;
     }
+
+    @Override
+    public void unregisterView(GVRActivity context){
+        context.unregisterView(this);
+    }
 }
