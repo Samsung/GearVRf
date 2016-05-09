@@ -62,6 +62,8 @@ private:
     GLint mSavedViewport[4];
     GLint mSavedScissor[4];
     bool  mIsCullFace;
+    bool  mIsBlend;
+    bool  mIsPolygonOffsetFill;
 
     // Data for callback
     JNIEnv  *mJNIEnv;
