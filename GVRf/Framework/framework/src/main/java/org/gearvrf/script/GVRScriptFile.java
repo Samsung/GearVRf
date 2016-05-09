@@ -140,6 +140,17 @@ public abstract class GVRScriptFile {
     }
 
     /**
+     * Invokes the script.
+     *
+     */
+    public void invoke() {
+        // Run script if it is dirty. This makes sure the script is run
+        // on the same thread as the caller (suppose the caller is always
+        // calling from the same thread).
+        checkDirty();
+    }
+
+    /**
      * Invokes a function defined in the script.
      *
      * @param funcName
