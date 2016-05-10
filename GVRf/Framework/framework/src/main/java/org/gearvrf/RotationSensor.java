@@ -112,6 +112,9 @@ class RotationSensor {
         if (null == mInternalSensorListener) {
             final SensorManager sensorManager = (SensorManager)mApplicationContext.getSystemService(Context.SENSOR_SERVICE);
             final Sensor internalSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+            if (internalSensor == null) {
+                Log.e("RotationSensor", "This phone does not have a rotation sensor - it cannot run GearVRF applications");
+            }
             mInternalSensorListener = new GVRInternalSensorListener(this);
             sensorManager.registerListener(mInternalSensorListener, internalSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
