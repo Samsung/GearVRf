@@ -35,6 +35,7 @@ class Color;
 class Material: public HybridObject {
 public:
     enum ShaderType {
+        BEING_GENERATED = -1,
         UNLIT_HORIZONTAL_STEREO_SHADER = 0,
         UNLIT_VERTICAL_STEREO_SHADER = 1,
         OES_SHADER = 2,

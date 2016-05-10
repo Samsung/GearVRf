@@ -79,6 +79,10 @@ public class GVRMaterial extends GVRHybridObject implements
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
 
+        public abstract static class BeingGenerated {
+            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(-1);
+        }
+
         public abstract static class UnlitHorizontalStereo {
             public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
                     0);

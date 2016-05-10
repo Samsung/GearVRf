@@ -719,6 +719,10 @@ void Renderer::renderMaterialShader(RenderData* render_data,
         const std::vector<Light*> lightList, int modeShadow,
         Material *curr_material) {
 
+    if (Material::ShaderType::BEING_GENERATED == curr_material->shader_type()) {
+        return;
+    }
+
     //Skip the material whose texture is not ready with some exceptions
     if (!checkTextureReady(curr_material))
         return;

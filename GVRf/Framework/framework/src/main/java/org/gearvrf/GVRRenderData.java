@@ -15,23 +15,26 @@
 
 package org.gearvrf;
 
+import org.gearvrf.GVRAndroidResource.MeshCallback;
+import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
+import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
-import org.gearvrf.GVRRenderPass;
-import org.gearvrf.GVRAndroidResource.MeshCallback;
-import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
-
-import static android.opengl.GLES30.*;
-
-import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.Threads;
+import static android.opengl.GLES30.GL_LINES;
+import static android.opengl.GLES30.GL_LINE_LOOP;
+import static android.opengl.GLES30.GL_LINE_STRIP;
+import static android.opengl.GLES30.GL_POINTS;
+import static android.opengl.GLES30.GL_TRIANGLES;
+import static android.opengl.GLES30.GL_TRIANGLE_FAN;
+import static android.opengl.GLES30.GL_TRIANGLE_STRIP;
 
 /**
  * Encapsulates the data associated with rendering a mesh.
@@ -114,14 +117,6 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         isLightEnabled = false;
         mLightMapEnabled = false;
         mShaderTemplate = null;
-    }
-
-    private GVRRenderData(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
-        
-        GVRRenderPass basePass = new GVRRenderPass(gvrContext);
-        mRenderPassList = new ArrayList<GVRRenderPass>();
-        addPass(basePass);
     }
 
     public GVRRenderData(GVRContext gvrContext, GVRSceneObject owner) {
