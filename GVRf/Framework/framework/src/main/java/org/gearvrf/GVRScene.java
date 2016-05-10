@@ -41,7 +41,7 @@ import org.gearvrf.utility.Log;
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
-    public static final Integer MAX_LIGHTS = 16;
+    public static final int MAX_LIGHTS = 16;
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
@@ -93,7 +93,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
         mSceneObjects.add(sceneObject);
-        inValidateShadowMap();
         NativeScene.addSceneObject(getNative(), sceneObject.getNative());
     }
 

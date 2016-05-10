@@ -457,9 +457,9 @@ public class GVRShaderTemplate
      */
     protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
     {
-        Pattern pattern1 = Pattern.compile("[ ]*([A-Za-z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
-        Pattern pattern2 = Pattern.compile("([A-Za-z]+)([0-9_]+)");
-        Matcher matcher1 = pattern1.matcher(mUniformDescriptor);
+        Pattern uniformPattern = Pattern.compile("[ ]*([A-Za-z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
+        Pattern uniformTypePattern = Pattern.compile("([A-Za-z]+)([0-9_]+)");
+        Matcher matcher1 = uniformPattern.matcher(mUniformDescriptor);
         Set<String> texNames = material.getTextureNames();
 
         for (String s : texNames)
@@ -470,7 +470,7 @@ public class GVRShaderTemplate
         {
             String type = matcher1.group(1);
             String name = matcher1.group(2);
-            Matcher matcher2 = pattern2.matcher(type);
+            Matcher matcher2 = uniformTypePattern.matcher(type);
             int nfloats = 1;
             
             if (matcher2.find())

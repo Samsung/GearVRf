@@ -54,6 +54,12 @@ import android.util.Log;
  */
 public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 {
+    protected Matrix4f lightrot;
+    protected Vector3f olddir;
+    protected Vector3f oldpos;
+    protected Vector3f newdir;
+    protected Vector3f newpos;
+    
     public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
         super(gvrContext, NativeLight.ctor(), parent);
@@ -64,6 +70,11 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         vertexDescriptor = null;
         setFloat("enabled", 1.0f);
+        lightrot = new Matrix4f();
+        newdir = new Vector3f(0.0f, 0.0f, -1.0f);
+        olddir = new Vector3f();
+        oldpos = new Vector3f();
+        newpos = new Vector3f();
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
@@ -73,6 +84,11 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         super(gvrContext, NativeLight.ctor());
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         vertexDescriptor = null;
+        lightrot = new Matrix4f();
+        olddir = new Vector3f();
+        oldpos = new Vector3f();
+        newpos = new Vector3f();
+        newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
@@ -440,19 +456,29 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * Updates the position and direction of this light from the transform of
      * scene object that owns it.
      */
+    
     public void onDrawFrame(float frameTime)
     {
+      
         if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
         GVRSceneObject parent = owner;
         Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
-        Matrix4f lightrot = new Matrix4f();
-        Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
-        Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
-        Vector3f newpos = new Vector3f();
+        olddir.x = odir[0];
+        olddir.y = odir[1];
+        olddir.z = odir[2];
+        
+        oldpos.x = opos[0];
+        oldpos.y = opos[1];
+        oldpos.z = opos[2];
 
+        newdir.x = 0.0f;
+        newdir.y = 0.0f;
+        newdir.z = -1.0f;
+        
+        lightrot.identity();
+        
         defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);
         worldmtx.mul(lightrot);

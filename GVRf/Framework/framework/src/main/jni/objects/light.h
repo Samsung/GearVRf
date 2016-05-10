@@ -168,7 +168,7 @@ public:
      * Internal function called at the start of each frame
      * to update the shadow map.
      */
-    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects);
+    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects, int, int);
 
     /**
      * Internal function called during rendering to bind the shadow map

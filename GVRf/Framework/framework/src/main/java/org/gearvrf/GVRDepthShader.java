@@ -26,27 +26,23 @@ import org.gearvrf.R;
     * Manages a set of variants on vertex and fragment shaders from the same source
     * code.
     */
-   public class GVRDepthShader extends org.gearvrf.GVRShaderTemplate
-   {
-       private static String fragTemplate = null;
-       private static String vtxTemplate = null;
-       private static String surfaceShader = null;
-       private static String addLight = null;
-       private static String vtxShader = null;
-       private static String normalShader = null;
-       private static String skinShader = null;
+public class GVRDepthShader extends GVRShaderTemplate
+{
+    private static String fragTemplate = null;
+    private static String vtxTemplate = null;
+    private static String skinShader = null;
 
-       public GVRDepthShader(GVRContext gvrcontext)
-       {
-           super("");
-           if (fragTemplate == null) {
-               Context context = gvrcontext.getContext();
-               fragTemplate = TextFile.readTextFile(context, R.raw.depth_shader);
-               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template_depth);
-               skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
-           }
-           setSegment("FragmentTemplate", fragTemplate);
-           setSegment("VertexTemplate", vtxTemplate);
-           setSegment("VertexSkinShader", skinShader);
-       }       
-   }
+    public GVRDepthShader(GVRContext gvrcontext)
+    {
+        super("");
+        if (fragTemplate == null) {
+            Context context = gvrcontext.getContext();
+            fragTemplate = TextFile.readTextFile(context, R.raw.depth_shader);
+            vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template_depth);
+            skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
+        }
+        setSegment("FragmentTemplate", fragTemplate);
+        setSegment("VertexTemplate", vtxTemplate);
+        setSegment("VertexSkinShader", skinShader);
+    }       
+}

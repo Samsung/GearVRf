@@ -27,7 +27,7 @@ import org.gearvrf.R;
     * Manages a set of variants on vertex and fragment shaders from the same source
     * code.
     */
-   public class GVRPhongShader extends org.gearvrf.GVRShaderTemplate
+   public class GVRPhongShader extends GVRShaderTemplate
    {
        private static String fragTemplate = null;
        private static String vtxTemplate = null;

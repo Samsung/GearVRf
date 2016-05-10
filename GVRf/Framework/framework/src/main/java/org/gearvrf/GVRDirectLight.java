@@ -201,11 +201,19 @@ public class GVRDirectLight extends GVRLightBase {
         float[] opos = getVec3("world_position");
         boolean changed = false;
         Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
-        Matrix4f lightrot = new Matrix4f();
-        Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
-        Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, -1.0f);
-        Vector3f newpos = new Vector3f();
+        olddir.x = odir[0];
+        olddir.y = odir[1];
+        olddir.z = odir[2];
+        
+        oldpos.x = opos[0];
+        oldpos.y = opos[1];
+        oldpos.z = opos[2];
+
+        newdir.x = 0.0f;
+        newdir.y = 0.0f;
+        newdir.z = -1.0f;
+        
+        lightrot.identity();
        
         defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);

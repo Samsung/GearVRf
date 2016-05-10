@@ -289,11 +289,8 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
  * special depth shader (GVRDepthShader) to create the shadow map.
  * @see Renderer::renderShadowMap Light::makeShadowMap
  */
-void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
+void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height)
 {
-    if(!scene->isShadowMapsInvalid())
-    	return;
-
     const std::vector<Light*> lights = scene->getLightList();
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));
@@ -307,13 +304,12 @@ void Renderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
     scene_objects.reserve(1024);
     for (auto it = lights.begin(); it != lights.end(); ++it) {
      	if ((*it)->castShadow() &&
-     	    (*it)->makeShadowMap(scene, shader_manager, texIndex, scene_objects))
+     	    (*it)->makeShadowMap(scene, shader_manager, texIndex, scene_objects, width, height))
             ++texIndex;
     }
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
 
-    scene->validateShadowMaps();
 }
 
 /**

@@ -214,7 +214,7 @@ void Light::createDepthTexture(int width, int height, int depth){
  * @param texIndex          texture index for shadow map
  * @param scene_objects     temporary storage for culling
  */
-bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects) {
+bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects, int viewport_width, int viewport_height) {
 
     int framebufferId = 0;  // TODO: get a valid FB ID
     if (shadowMaterial_ == nullptr)
@@ -233,8 +233,8 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     RenderState rstate;
     rstate.viewportX = 0;
     rstate.viewportY = 0;
-    rstate.viewportWidth = 1024;
-    rstate.viewportHeight = 1024;
+    rstate.viewportWidth = viewport_width;
+    rstate.viewportHeight = viewport_height;
     rstate.scene = scene;
     rstate.material_override = shadowMaterial_;
     rstate.shader_manager = shader_manager;

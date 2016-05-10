@@ -114,7 +114,7 @@ public:
     static int getNumberDrawCalls();
     static int getNumberTriangles();
     static void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
-    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
+    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height);
 private:
     static void cullFromCamera(Scene *scene, Camera *camera,
             ShaderManager* shader_manager,
