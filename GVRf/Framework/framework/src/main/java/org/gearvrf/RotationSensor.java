@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 /**
  * Wrapper class for rotation-related sensors. Combines handling a device's
@@ -112,6 +113,9 @@ class RotationSensor {
         if (null == mInternalSensorListener) {
             final SensorManager sensorManager = (SensorManager)mApplicationContext.getSystemService(Context.SENSOR_SERVICE);
             final Sensor internalSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+            if (internalSensor == null) {
+                Log.e("RotationSensor", "This phone does not have a rotation sensor - it cannot run GearVRF applications");
+            }
             mInternalSensorListener = new GVRInternalSensorListener(this);
             sensorManager.registerListener(mInternalSensorListener, internalSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
