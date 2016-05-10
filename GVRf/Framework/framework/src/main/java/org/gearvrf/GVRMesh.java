@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.gearvrf.utility.Exceptions;
 import org.gearvrf.utility.Log;
-import org.joml.Vector3f;
 
 /**
  * Describes an indexed triangle mesh as a set of shared vertices with integer
@@ -449,30 +448,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         }
     }
 
-    /**
-     * @todo
-     */
-    public static final class BoundingVolume {
-        public final Vector3f center;
-        public final float radius;
-        public final Vector3f minCorner;
-        public final Vector3f maxCorner;
-        private BoundingVolume(float[] rawValues) {
-            center = new Vector3f(rawValues[0], rawValues[1], rawValues[2]);
-            radius = rawValues[3];
-            minCorner = new Vector3f(rawValues[4], rawValues[5], rawValues[6]);
-            maxCorner = new Vector3f(rawValues[7], rawValues[8], rawValues[9]);
-        }
-    }
-
-    /**
-     * @todo
-     * @return
-     */
-    public final BoundingVolume getBoundingVolume() {
-        return new BoundingVolume(NativeMesh.getBoundingVolume(getNative()));
-    }
-
     private List<GVRBone> mBones = new ArrayList<GVRBone>();
     private GVRVertexBoneData mVertexBoneData;
     private Set<String> mAttributeKeys;
@@ -522,6 +497,4 @@ class NativeMesh {
     static native void setBones(long mesh, long[] bonePtrs);
     
     static native void getSphereBound(long mesh, float[] sphere);
-
-    static native float[] getBoundingVolume(long mesh);
 }

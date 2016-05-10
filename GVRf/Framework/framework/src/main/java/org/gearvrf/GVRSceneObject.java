@@ -25,6 +25,7 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
+import org.joml.Vector3f;
 
 /**
  * One of the key GVRF classes: a scene object.
@@ -1067,6 +1068,69 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVREventReceiver getEventReceiver() {
         return mEventReceiver;
     }
+
+    /**
+     * @todo
+     */
+    public static final class BoundingVolume {
+        public final Vector3f center;
+        public final float radius;
+        public final Vector3f minCorner;
+        public final Vector3f maxCorner;
+        private BoundingVolume(float[] rawValues) {
+            center = new Vector3f(rawValues[0], rawValues[1], rawValues[2]);
+            radius = rawValues[3];
+            minCorner = new Vector3f(rawValues[4], rawValues[5], rawValues[6]);
+            maxCorner = new Vector3f(rawValues[7], rawValues[8], rawValues[9]);
+        }
+    }
+
+    /**
+     * @return
+     * @todo
+     */
+    public final BoundingVolume getBoundingVolume() {
+        return new BoundingVolume(NativeSceneObject.getBoundingVolume(getNative()));
+    }
+
+    /**
+     * Expand the current volume by the given point
+     * @return
+     */
+    public final BoundingVolume expandBoundingVolume(final float pointX, final float pointY, final float pointZ) {
+        return new BoundingVolume(
+                NativeSceneObject.expandBoundingVolumeByPoint(
+                        getNative(), pointX, pointY, pointZ));
+    }
+
+    /**
+     * Expand the current volume by the given point
+     * @return
+     */
+    public final BoundingVolume expandBoundingVolume(final Vector3f point) {
+        return expandBoundingVolume(point.x, point.y, point.z);
+    }
+
+    /**
+     * Expand the volume by the incoming center and radius
+     *
+     * @return
+     */
+    public final BoundingVolume expandBoundingVolume(
+            final float centerX, final float centerY, final float centerZ, final float radius) {
+        return new BoundingVolume(
+                NativeSceneObject.expandBoundingVolumeByCenterAndRadius(
+                        getNative(), centerX, centerY, centerZ, radius));
+    }
+
+    /**
+     * Expand the volume by the incoming center and radius
+     *
+     * @return
+     */
+    public final BoundingVolume expandBoundingVolume(final Vector3f center, final float radius) {
+        return expandBoundingVolume(center.x, center.y, center.z, radius);
+    }
 }
 
 class NativeSceneObject {
@@ -1111,4 +1175,12 @@ class NativeSceneObject {
     static native void setLODRange(long sceneObject, float minRange, float maxRange);
     static native float getLODMinRange(long sceneObject);
     static native float getLODMaxRange(long sceneObject);
+
+    static native float[] getBoundingVolume(long sceneObject);
+
+    static native float[] expandBoundingVolumeByPoint(
+            long sceneObject, float pointX, float pointY, float pointZ);
+
+    static native float[] expandBoundingVolumeByCenterAndRadius(
+            long sceneObject, float centerX, float centerY, float centerZ, float radius);
 }
