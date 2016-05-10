@@ -191,6 +191,11 @@ void CameraRig::setRotation(const glm::quat& transform_rotation) {
     }
 }
 
+void CameraRig::setPosition(const glm::vec3& transform_position) {
+	Transform* transform = getHeadTransform();
+	transform->set_position(transform_position);
+}
+
 Transform* CameraRig::getHeadTransform() const {
 	return owner_object()->getChildByIndex(0)->transform();
 }

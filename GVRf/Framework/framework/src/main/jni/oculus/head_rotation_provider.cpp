@@ -30,6 +30,9 @@ void OculusHeadRotation::predict(GVRActivity& gvrActivity, const ovrFrameParms& 
         const ovrQuatf& orientation = tracking.HeadPose.Pose.Orientation;
         glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
         gvrActivity.cameraRig_->setRotation(glm::conjugate(glm::inverse(quat)));
+        const ovrVector3f& position = tracking.HeadPose.Pose.Position;
+        glm::vec3 pos(position.x, position.y, position.z);
+        gvrActivity.cameraRig_->setPosition(pos);
     } else if (nullptr != gvrActivity.cameraRig_) {
         gvrActivity.cameraRig_->predict(time);
     } else {

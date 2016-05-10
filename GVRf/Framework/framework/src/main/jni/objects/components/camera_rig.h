@@ -150,6 +150,7 @@ public:
     Transform* getHeadTransform() const; // for rotation/k-sensor
     glm::vec3 getLookAt() const;
     void setRotation(const glm::quat& transform_rotation);
+    void setPosition(const glm::vec3& transform_position);
 
 private:
     CameraRig(const CameraRig& camera_rig);
