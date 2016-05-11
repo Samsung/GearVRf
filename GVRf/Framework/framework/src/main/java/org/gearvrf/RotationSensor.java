@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 /**
  * Wrapper class for rotation-related sensors. Combines handling a device's
