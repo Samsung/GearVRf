@@ -20,66 +20,39 @@
 #ifndef BASE_TEXTURE_H_
 #define BASE_TEXTURE_H_
 
-#include <string>
-
-#include <android/bitmap.h>
-
 #include "objects/textures/texture.h"
 #include "util/gvr_log.h"
 #include "util/jni_utils.h"
 
 namespace gvr {
+
+static const char* kTextureClassName = "org/gearvrf/GVRTexture";
+static const char* kIdAvailableMethodName = "idAvailable";
+static const char* kIdAvailableMethodSignature = "(I)V";
+
 class BaseTexture: public Texture {
 public:
-    explicit BaseTexture(JNIEnv* env, jobject bitmap) :
-            Texture(new GLTexture(TARGET)) {
-        int ret;
-        if (bitmap == NULL) {
-            std::string error =
-                    "new BaseTexture() failed! Input bitmap is NULL.";
-            throw error;
-        }
-
-        if ((ret = AndroidBitmap_getInfo(env, bitmap, &info_)) < 0) {
-            std::string error = "AndroidBitmap_getInfo () failed! error = "
-                    + ret;
-            throw error;
-        }
-
-        if (JNI_OK != env->GetJavaVM(&javaVm_)) {
-            FAIL("GetJavaVM failed");
-        }
-        bitmapRef_ = env->NewGlobalRef(bitmap);
-
-        pending_gl_task_ = GL_TASK_INIT_BITMAP;
-    }
-
-    explicit BaseTexture(int width, int height, const unsigned char* pixels,
-            int* texture_parameters) :
-            Texture(new GLTexture(TARGET, texture_parameters)),
-            pixels_(pixels)
-    {
-        width_ = width;
-        height_ = height;
-
-        javaVm_ = nullptr;
-        pending_gl_task_ = GL_TASK_INIT_PIXELS_PARAMS;
-    }
 
     explicit BaseTexture(int* texture_parameters) :
-            Texture(new GLTexture(TARGET, texture_parameters)), pending_gl_task_(GL_TASK_NONE) {
+        Texture(new GLTexture(TARGET, texture_parameters)) {
+    }
+
+    void setJavaOwner(JNIEnv& env, jobject javaObject) {
+        env.GetJavaVM(&javaVm_);
+
+        gvrTextureClass_ = GetGlobalClassReference(env, kTextureClassName);
+        javaMethodIdAvailable_ = GetMethodId(env, gvrTextureClass_, kIdAvailableMethodName,
+                kIdAvailableMethodSignature);
+        textureObjectWeak_ = env.NewWeakGlobalRef(javaObject);
     }
 
     virtual ~BaseTexture() {
-        switch (pending_gl_task_) {
-        case GL_TASK_INIT_BITMAP: {
-            JNIEnv* env = getCurrentEnv(javaVm_);
-            env->DeleteGlobalRef(bitmapRef_);
-            break;
+        JNIEnv* env = getCurrentEnv(javaVm_);
+        if (nullptr != gvrTextureClass_) {
+            env->DeleteGlobalRef(gvrTextureClass_);
         }
-
-        default:
-            break;
+        if (nullptr != textureObjectWeak_) {
+            env->DeleteWeakGlobalRef(textureObjectWeak_);
         }
     }
 
@@ -98,41 +71,18 @@ public:
     virtual void runPendingGL() {
         Texture::runPendingGL();
 
-        switch (pending_gl_task_) {
-        case GL_TASK_NONE:
-            return;
-
-        case GL_TASK_INIT_BITMAP: {
+        if (nullptr != textureObjectWeak_) {
             JNIEnv* env = getCurrentEnv(javaVm_);
 
-            int ret;
-            if ((ret = AndroidBitmap_lockPixels(env, bitmapRef_, (void**)&pixels_)) < 0) {
-                std::string error = "AndroidBitmap_lockPixels () failed! error = "
-                        + ret;
-                throw error;
+            jobject textureObject = env->NewLocalRef(textureObjectWeak_);
+            if (nullptr != textureObject) {
+                env->CallVoidMethod(textureObject, javaMethodIdAvailable_, gl_texture_->id());
+                env->DeleteLocalRef(textureObject);
             }
 
-            glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info_.width, info_.height, 0,
-                    GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            AndroidBitmap_unlockPixels(env, bitmapRef_);
-            env->DeleteGlobalRef(bitmapRef_);
-            break;
+            env->DeleteWeakGlobalRef(textureObjectWeak_);
+            textureObjectWeak_ = nullptr;
         }
-
-        case GL_TASK_INIT_PIXELS_PARAMS: {
-            glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
-                    GL_UNSIGNED_BYTE, pixels_);
-            glGenerateMipmap (GL_TEXTURE_2D);
-            break;
-        }
-
-        } // switch
-
-        pending_gl_task_ = GL_TASK_NONE;
     }
 
 private:
@@ -144,23 +94,11 @@ private:
 private:
     static const GLenum TARGET = GL_TEXTURE_2D;
 
-    // Enum for pending GL tasks. Keep a comma with each line
-    // for easier merging.
-    enum {
-        GL_TASK_NONE = 0,
-        GL_TASK_INIT_BITMAP,
-        GL_TASK_INIT_PIXELS_PARAMS,
-        GL_TASK_INIT_PARAMS,
-    };
-    int pending_gl_task_;
+    JavaVM* javaVm_ = nullptr;
 
-    JavaVM* javaVm_;
-    jobject bitmapRef_;
-    AndroidBitmapInfo info_;
-    const unsigned char* pixels_;
-
-    int width_;
-    int height_;
+    jweak textureObjectWeak_ = nullptr;
+    jclass gvrTextureClass_ = nullptr;
+    jmethodID javaMethodIdAvailable_;
 };
 
 }

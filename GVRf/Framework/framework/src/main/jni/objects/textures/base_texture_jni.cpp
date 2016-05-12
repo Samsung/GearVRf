@@ -24,21 +24,31 @@
 
 
 namespace gvr {
+
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
-        jlong jtexture, jint width, jint height, jbyteArray jdata);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBaseTexture_setJavaOwner(JNIEnv * env, jobject obj, jlong jtexture, jobject owner);
+
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
+            jlong jtexture, jint width, jint height, jbyteArray jdata);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters) {
-
     jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
     jlong result =  reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
     env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
     return result;
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeBaseTexture_setJavaOwner(JNIEnv * env, jobject obj, jlong jtexture, jobject owner) {
+    BaseTexture* texture = reinterpret_cast<BaseTexture*>(jtexture);
+    texture->setJavaOwner(*env, owner);
 }
 
 JNIEXPORT jboolean JNICALL

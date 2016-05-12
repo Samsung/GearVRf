@@ -45,6 +45,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.view.KeyEvent;
 
 /**
@@ -2679,4 +2681,41 @@ public abstract class GVRContext {
         return mTag;
     }
 
+    private boolean mUseTheFrameworkThread;
+    void setUseTheFrameworkThread(boolean useTheFrameworkThread) {
+        if (null != mHandlerThread) {
+            throw new IllegalStateException();
+        }
+        mUseTheFrameworkThread = useTheFrameworkThread;
+        mHandlerThread = new HandlerThread("gvrf-main");
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
+    }
+
+    private HandlerThread mHandlerThread;
+    private Handler mHandler;
+
+    /**
+     * Execute on the so called framework thread. For now this is mostly for
+     * internal use. To actually enable the use of this framework thread you
+     * should derive from the GVRMain base class instead of GVRScript.
+     */
+    public void runOnTheFrameworkThread(final Runnable runnable) {
+        if (mUseTheFrameworkThread) {
+            mHandler.post(runnable);
+        } else {
+            runnable.run();
+        }
+    }
+
+    @Override
+    public void finalize() throws Throwable {
+        try {
+            if (null != mHandlerThread) {
+                mHandlerThread.getLooper().quitSafely();
+            }
+        } finally {
+            super.finalize();
+        }
+    }
 }
