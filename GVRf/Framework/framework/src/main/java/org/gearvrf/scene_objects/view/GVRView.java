@@ -42,7 +42,10 @@ import android.view.View;
  *   }
  * }
  * </pre>
- * 
+ *
+ * Once you are done with a particular instance you need to call
+ * {@link GVRActivity#unregisterView(View)} on it to avoid memory leaks.
+ *
  * See {@link GVRWebView} and {@link GVRViewSceneObject}
  */
 public interface GVRView {
