@@ -305,7 +305,15 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return array of string names
      */
     public Set<String> getAttributeNames() {
-        return mAttributeKeys;
+        if(mAttributeKeys.size() > 0)
+            return mAttributeKeys;
+        
+        String[] attribKeys = NativeMesh.getAttribNames(getNative());
+        
+        for(String i : attribKeys){
+            mAttributeKeys.add(i);
+        }
+        return mAttributeKeys;    
     }
     
     /**
@@ -317,6 +325,15 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         NativeMesh.getSphereBound(getNative(), sphere);
     }
 
+    /**
+     * Determine if a named attribute exists in this mesh.
+     * @param key Name of the shader attribute
+     * @return true if attribute exists, false if not
+     */
+    public boolean hasAttribute(String key) {
+    	return NativeMesh.hasAttribute(getNative(), key);
+    }
+    
     /**
      * Constructs a {@link GVRMesh mesh} that contains this mesh.
      * 
@@ -455,7 +472,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
 class NativeMesh {
     static native long ctor();
-
+    
+    static native String[] getAttribNames(long mesh);
+    
     static native float[] getVertices(long mesh);
 
     static native void setVertices(long mesh, float[] vertices);
@@ -497,4 +516,7 @@ class NativeMesh {
     static native void setBones(long mesh, long[] bonePtrs);
     
     static native void getSphereBound(long mesh, float[] sphere);
+    
+    static native boolean hasAttribute(long mesh, String key);
+
 }

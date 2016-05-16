@@ -133,9 +133,7 @@ void TextureCapturer::endCapture() {
         glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void TextureCapturer::render(
-        const glm::mat4& mv_matrix, const glm::mat4& mv_it_matrix,
-        const glm::mat4& mvp_matrix, RenderData* render_data) {
+void TextureCapturer::render(RenderState* rstate, RenderData* render_data) {
 
     Material* material = render_data->pass(0)->material();
     if (material == NULL) {
@@ -156,8 +154,7 @@ void TextureCapturer::render(
 
     TextureShader *textureShader = mShaderManager->getTextureShader();
 
-    textureShader->render(mv_matrix, mv_it_matrix, mvp_matrix, render_data,
-                          &textureMaterial);
+    textureShader->render(rstate, render_data, &textureMaterial);
 }
 
 glm::mat4 TextureCapturer::getModelViewMatrix() {

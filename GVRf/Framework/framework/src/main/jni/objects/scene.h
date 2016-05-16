@@ -28,8 +28,6 @@
 #include "objects/hybrid_object.h"
 #include "components/camera_rig.h"
 #include "engine/renderer/renderer.h"
-
-#include "objects/components/directional_light.h"
 #include "objects/light.h"
 
 namespace gvr {
@@ -79,18 +77,19 @@ public:
 
     void exportToFile(std::string filepath);
 
-    void attachDirectionalLight(DirectionalLight* directional_light) {
-        directional_light_ = directional_light;
-    }
-
-    DirectionalLight* getDirectionalLight() const {
-        return directional_light_;
-    }
-
     const std::vector<Light*>& getLightList() const {
         return lightList;
     }
+    void validateShadowMaps(){
+    	is_shadowmap_invalid = false;
+    }
+    void invalidateShadowMaps(){
+    	is_shadowmap_invalid = true;
+    }
+    const bool isShadowMapsInvalid(){
+    	return is_shadowmap_invalid;
 
+    }
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -100,14 +99,12 @@ private:
 private:
     std::vector<SceneObject*> scene_objects_;
     CameraRig* main_camera_rig_;
-
-    DirectionalLight* directional_light_;
-
     int dirtyFlag_;
     bool frustum_flag_;
     bool occlusion_flag_;
     bool statsInitialized = false;
     std::vector<Light*> lightList;
+    bool is_shadowmap_invalid;
 };
 
 }

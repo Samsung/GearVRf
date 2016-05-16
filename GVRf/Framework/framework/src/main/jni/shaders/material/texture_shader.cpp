@@ -26,8 +26,8 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "util/gvr_gl.h"
-
 #include "util/gvr_log.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 static const char USE_LIGHT[] = "#define USE_LIGHT\n";
@@ -171,8 +171,7 @@ TextureShader::~TextureShader() {
     delete program_no_light_;
 }
 
-void TextureShader::render(const glm::mat4& mv_matrix,
-        const glm::mat4& mv_it_matrix, const glm::mat4& mvp_matrix,
+void TextureShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
     Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
@@ -215,9 +214,9 @@ void TextureShader::render(const glm::mat4& mv_matrix,
         glm::vec4 light_specular_intensity = light->getVec4(
                 "specular_intensity");
 
-        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(mv_matrix));
-        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(mv_it_matrix));
+        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
+        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
         glUniform3f(u_light_pos_, light_position.x, light_position.y,
                 light_position.z);
 
@@ -248,12 +247,11 @@ void TextureShader::render(const glm::mat4& mv_matrix,
         glBindVertexArray(mesh->getVAOId());
     } else {
         glUniformMatrix4fv(u_mvp_no_light_, 1, GL_FALSE,
-                glm::value_ptr(mvp_matrix));
+                glm::value_ptr(rstate->uniforms.u_mvp));
 
         glUniform1i(u_texture_no_light_, 0);
         glUniform3f(u_color_no_light_, color.r, color.g, color.b);
         glUniform1f(u_opacity_no_light_, opacity);
-
         glBindVertexArray(mesh->getVAOId());
     }
 

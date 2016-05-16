@@ -27,17 +27,29 @@
 #include "glm/glm.hpp"
 
 #include "objects/hybrid_object.h"
+#include "../objects/scene_object.h"
 #include "components/component.h"
 #include "util/gvr_jni.h"
+#include "objects/material.h"
+#include "../engine/renderer/renderer.h"
+#include "glm/gtc/matrix_inverse.hpp"
 namespace gvr {
 class Color;
 class SceneObject;
+class Scene;
+class ShaderManager;
 
 class Light: public Component {
 public:
+    static const int MAX_SHADOW_MAPS;
+    static const int SHADOW_MAP_SIZE;
+
     explicit Light()
     :   enabled_(true),
-        parent_(NULL) {
+        parent_(nullptr),
+        shadowMaterial_(nullptr),
+ 		fboId_(-1),
+		shadowMapIndex_(-1) {
     }
 
     ~Light() {
@@ -107,12 +119,67 @@ public:
         }
     }
 
+    bool getMat4(std::string key, glm::mat4& matrix) {
+        auto it = mat4s_.find(key);
+        if (it != mat4s_.end()) {
+            matrix = it->second;
+            return true;
+        }
+        return false;
+    }
+
+    void setMat4(std::string key, glm::mat4 matrix) {
+        mat4s_[key] = matrix;
+        if (enabled_) {
+            setDirty();
+        }
+    }
+    Material* getShadowMaterial(){
+    	return shadowMaterial_;
+    }
+
+    bool castShadow() {
+         return shadowMaterial_ != NULL;
+    }
+
+    /**
+     * Enables or disables shadow casting.
+     *
+     * If shadows are enabled, makeShadowMap will compute a shadow map
+     * by rendering the scene from the viewpoint of the light and
+     * bindShadowMaps will bind the resulting framebuffer as a
+     * texture on the light.
+     */
+    void castShadow(Material* material) {
+        shadowMaterial_ = material;
+        setDirty();
+    }
+
+
+    /**
+     * Internal function called at the start of each shader
+     * to update the light uniforms (if necessary).
+     * @param program   ID of GL shader program
+     * @param texIndex  GL texture index for shadow map
+     */
+    void render(int program, int texIndex);
+
     /**
      * Internal function called at the start of each frame
-     * to update the light uniform block (if necessary).
-     * @param program    ID of GL shader program
+     * to update the shadow map.
      */
-    void render(int program);
+    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects, int, int);
+
+    /**
+     * Internal function called during rendering to bind the shadow map
+     * framebuffer to the texture for this light.
+     */
+    static void bindShadowMap(int program, int texIndex);
+
+    /***
+     * Creates the storage for shadow maps
+     */
+    void static createDepthTexture(int width, int height, int depth);
 
     std::string getLightID() {
         return lightID_;
@@ -133,6 +200,11 @@ private:
     Light(Light&& light);
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
+
+    /*
+     * Generate the framebuffer used for shadow map generation
+     */
+    void generateFBO();
 
     /*
      * Mark the light as needing update for all shaders using it
@@ -161,14 +233,21 @@ private:
 private:
     bool enabled_;
     int size_;
+    int shadowMapIndex_;
+    GLuint fboId_;
     std::string lightID_;
     SceneObject* parent_;
+    Material* shadowMaterial_;
     std::map<int, bool> dirty_;
+    glm::mat4 shadow_matrix_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
+    std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
-
+    std::map<std::string, Texture*> textures_;
+    static GLTexture* depth_texture_;
+    static GLTexture* color_texture_;
 };
 }
 #endif

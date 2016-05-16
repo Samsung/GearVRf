@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 
 /**
  * The API shared by {@link GVRMaterial} and {@link GVRPostEffect}.
- * 
+ *
  * <p>
  * <table border="1">
  * <tr>
@@ -46,7 +46,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Set shader id
-     * 
+     *
      * @param shaderId
      *            The new shader id. This is an opaque type, used to keep object
      *            and scene shader ids in distinct namespaces.
@@ -179,7 +179,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code vec3} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the data to.
      * @param x
@@ -193,7 +193,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Get the {@code float[4]} vector bound to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform
      * @return The {@code vec4} as a Java {@code float[3]}
@@ -202,7 +202,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code vec4} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the data to.
      * @param x
@@ -218,7 +218,7 @@ public interface GVRShaders<ID> {
 
     /**
      * Bind a {@code mat4} to the shader uniform {@code key}.
-     * 
+     *
      * @param key
      *            Name of the shader uniform to bind the data to.
      */

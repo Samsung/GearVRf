@@ -17,6 +17,8 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,11 +43,23 @@ import android.util.Log;
  * different shader source. The uniform descriptor is a string which gives the
  * name and type of all uniforms expected in the shader source. It is supplied
  * when a light is created to describe the expected shader input.
+ *
+ * GearVRF will automatically compute shadow maps for a light if shadow casting
+ * is enabled. The light vertex and fragment shader must be implemented to take
+ * advantage of these shadow maps.
  * 
- * {@link GVRShaderTemplate GVRRenderData.bindShader }
+ * @see GVRShaderTemplate
+ * @see GVRRenderData.bindShader
+ * @see GVRLightBase.setCastShadow
  */
 public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 {
+    protected Matrix4f lightrot;
+    protected Vector3f olddir;
+    protected Vector3f oldpos;
+    protected Vector3f newdir;
+    protected Vector3f newpos;
+    
     public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
         super(gvrContext, NativeLight.ctor(), parent);
@@ -53,8 +67,14 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         {
             NativeLight.setParent(getNative(), parent.getNative());
         }
-        uniformDescriptor = "float enabled float3 world_position float3 world_direction";
+        uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
+        vertexDescriptor = null;
         setFloat("enabled", 1.0f);
+        lightrot = new Matrix4f();
+        newdir = new Vector3f(0.0f, 0.0f, -1.0f);
+        olddir = new Vector3f();
+        oldpos = new Vector3f();
+        newpos = new Vector3f();
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
@@ -62,12 +82,67 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     public GVRLightBase(GVRContext gvrContext)
     {
         super(gvrContext, NativeLight.ctor());
-        uniformDescriptor = "float enabled float3 world_position float3 world_direction";
+        uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
+        vertexDescriptor = null;
+        lightrot = new Matrix4f();
+        olddir = new Vector3f();
+        oldpos = new Vector3f();
+        newpos = new Vector3f();
+        newdir = new Vector3f(0.0f, 0.0f, -1.0f);
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
+
+    /**
+     * Enable or disable shadow casting by this light.
+     *
+     * If shadow casting is enabled, GearVRF will compute shadow maps
+     * for the all of the lights which cast shadows. This is computationally
+     * intensive because it requires rendering the entire scene from the viewpoint
+     * of the light. It is memory intensive because it requires keeping a framebuffer
+     * (shadow map) for each shadow-casting light.
+     * 
+     * In order for a light to actually produce shadows, it must employ a
+     * shader that performs the shadow map calculation. The built-in {@link GVRDirectLight}
+     * and {@link GVRSpotLight} can produce shadows. {@link GVRPointLight} does not currently implement
+     * shadow casting.
+     * 
+     * This function will create the material and shader used for making shadow maps
+     * if necessary. It will also cause the HAS_SHADOWS symbol to be defined in the
+     * shader if shadow casting is enabled.
+     *
+     * @param enableFlag true to enable shadow casting, false to disable
+     */
+    public void setCastShadow(boolean enableFlag)
+    {
+        GVRContext context = getGVRContext();
+        if (enableFlag)
+        {
+            if (mShadowMaterial == null)
+            {
+                mShadowMaterial = new GVRMaterial(context);
+                GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
+                depthShader.bindShader(context, mShadowMaterial);
+            }
+            NativeLight.setCastShadow(getNative(), mShadowMaterial.getNative());
+        }
+        else
+        {
+            NativeLight.setCastShadow(getNative(), 0);            
+        }
+     }
+    
+    /**
+     * Determines if this light is currently casting shadows.
+     * @return true if shadow casting enabled, else false
+     */
+    public boolean getCastShadow()
+    {
+        return NativeLight.getCastShadow(getNative());
+    }
+    
     public void setOwnerObject(GVRSceneObject newOwner)
     {
         if (owner == newOwner) { return; }
@@ -141,8 +216,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * Get the light ID.
      * 
      * This is a string that uniquely identifies the light and is generated by
-     * GearVRF when it is added to the scene. It is used to generate fragment
-     * shader code.
+     * GearVRF when it is added to the scene. It is used to generate shader code.
      */
     public String getLightID()
     {
@@ -150,32 +224,54 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Access the shader source code implementing this light.
+     * Access the fragment shader source code implementing this light.
      *
-     * The shader code for each light defines a function which computes the
+     * The shader code defines a function which computes the
      * color contributed by this light. It takes a structure of uniforms and a
      * <Surface> structure as input and outputs a <Radiance> structure. The
-     * format of the uniforms is defined by the shader descriptor. The fragment
+     * contents of the uniform structure is defined by the uniform descriptor. The fragment
      * shader is responsible for computing the surface color and integrating the
      * contribution of each light to the final fragment color. It defines the
      * format of the <Radiance> and <Surface> structures.
-     * {@link GVRShaderTemplate } {@link getShaderDescriptor}
+     * @see GVRShaderTemplate
+     * @see GVRLightBase.getUniformDescriptor
      * 
-     * @return string with source for light shader
+     * @return string with source for light fragment shader
      */
-    public String getShaderSource()
+    public String getFragmentShaderSource()
     {
-        return shaderSource;
+        return fragmentShaderSource;
     }
 
     /**
+     * Access the vertex shader source code implementing this light.
+     *
+     * The shader code defines a function which computes the per-vertex
+     * outputs for this light. The input is a structure of uniforms and the output
+     * is a varying structure which is used by the fragment shader.
+     * The format of the vertex output for the light is defined
+     * by the vertex shader descriptor.
+     * 
+     * @see GVRShaderTemplate
+     * @see GVRLightBase.getVertexDescriptor
+     * 
+     * @return string with source for light vertex shader
+     */
+    public String getVertexShaderSource()
+    {
+        return vertexShaderSource;
+    }
+    
+    /**
      * Access the descriptor defining the shader uniforms used by this light.
      *
-     * Defines the GLSL structure representing the uniform data passed to this
-     * light. These must match the structure defined in the shader source code.
+     * Describes the uniform data passed to the shader for this light.
+     * This string produces the structure defined in the shader source code.
      * Each light object maintains a copy of these values and sends them to the
-     * shader when they are updated. the format of the <Radiance> and
-     * <Surface> structures. {@link GVRShaderTemplate } {@link getShaderSource}
+     * shader when they are updated.
+     * 
+     * @see GVRShaderTemplate
+     * @see GVRLightBase.getFragmentShaderSource
      * 
      * @return String describing light shader uniforms
      */
@@ -184,6 +280,21 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         return uniformDescriptor;
     }
 
+    /**
+     * Access the descriptor defining the vertex shader output produced by this light.
+     *
+     * Defines the GLSL structure representing the varying data for this light.
+     * These produce the structure defined in the shader source code.
+     * Each light object maintains a copy of these values and sends them to the
+     * shader when they are updated.
+     * 
+     * @return String describing light vertex shader output
+     */
+    public String getVertexDescriptor()
+    {
+        return vertexDescriptor;
+    }
+    
     /**
      * Gets the value of a floating uniform based on its name.
      * 
@@ -278,51 +389,39 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Get the GLSL structure describing this light. The name of the structure
-     * is derived from the light class name. It is assumed that each different
-     * type of light will be represented by a different Java class.
-     *
-     * @return String with shader structure description.
+     * Sets the value of a 4x4 matrix uniform based on its name.
+     * 
+     * @param key
+     *            name of uniform to get
+     * @param new
+     *            4x4 matrix value of uniform
+     * @throws exception
+     *             if uniform name not found
      */
-    public String getShaderStruct()
+    public void setMat4(String key, Matrix4f matrix)
     {
-        Pattern pattern = Pattern.compile("[ ]*([fFiI][loatn]+)([0-9]*)[ ]+([A-Za-z0-9_]+)[,;:]*");
-        Matcher matcher = pattern.matcher(uniformDescriptor);
-        String structDesc = "struct Struct" + getClass().getSimpleName() + " {\n";
-        while (matcher.find())
-        {
-            String name = matcher.group(3);
-            String size = matcher.group(2);
-            String type = matcher.group(1);
-
-            if (size.length() > 0)
-            {
-                if (type.toLowerCase().startsWith("i"))
-                    structDesc += "   ivec" + size;
-                else
-                    structDesc += "   vec" + size;
-            }
-            else
-                structDesc += type;
-            structDesc += " " + name + ";\n";
-        }
-        structDesc += "};\n";
-        return structDesc;
+        float[] data = new float[16];
+        matrix.get(data);
+        checkStringNotNullOrEmpty("key", key);
+        NativeLight.setMat4(getNative(), key, data);
     }
 
     /**
-     * Define the shader source to compute the illumination from this light.
+     * Gets the value of a 4x4 matrix uniform based on its name.
      * 
-     * This source must be defined at the time the light is constructed.
-     * Typically, different subclasses of GVRLightBase will have different
-     * illumination functions.
-     * 
-     * @param source
-     *            String with shader source code.
+     * @param key
+     *            name of uniform to get
+     * @throws exception
+     *             if uniform name not found
      */
-    protected void setShaderSource(String source)
+    public Matrix4f getMat4(String key)
     {
-        shaderSource = source;
+        float[] data = new float[16];
+        checkStringNotNullOrEmpty("key", key);
+        NativeLight.getMat4(getNative(), key, data);
+        Matrix4f matrix = new Matrix4f();
+        matrix.set(data);
+        return matrix;
     }
 
     /**
@@ -357,22 +456,31 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * Updates the position and direction of this light from the transform of
      * scene object that owns it.
      */
+    
     public void onDrawFrame(float frameTime)
     {
+      
         if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
         GVRSceneObject parent = owner;
         Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
-        Matrix4f lightrot = new Matrix4f();
-        Vector3f olddir = new Vector3f(odir[0], odir[1], odir[2]);
-        Vector3f oldpos = new Vector3f(opos[0], opos[1], opos[2]);
-        Vector3f newdir = new Vector3f(0.0f, 0.0f, 1.0f);
-        Vector3f newpos = new Vector3f();
+        olddir.x = odir[0];
+        olddir.y = odir[1];
+        olddir.z = odir[2];
+        
+        oldpos.x = opos[0];
+        oldpos.y = opos[1];
+        oldpos.z = opos[2];
 
+        newdir.x = 0.0f;
+        newdir.y = 0.0f;
+        newdir.z = -1.0f;
+        
+        lightrot.identity();
+        
         defaultDir.get(lightrot);
         worldmtx.getTranslation(newpos);
-//        lightrot.mul(worldmtx, worldmtx);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
@@ -386,8 +494,11 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     protected Quaternionf defaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
-    protected String shaderSource = null;
+    protected String fragmentShaderSource = null;
+    protected String vertexShaderSource = null;
     protected String uniformDescriptor = null;
+    protected String vertexDescriptor = null;
+    static protected GVRMaterial mShadowMaterial = null;
 }
 
 class NativeLight
@@ -415,4 +526,12 @@ class NativeLight
     static native String getLightID(long light);
 
     static native void setLightID(long light, String id);
+    
+    static native void getMat4(long light, String key, float[] matrix);
+    
+    static native void setMat4(long light, String key, float[] matrix);
+    
+    static native void setCastShadow(long light, long material);
+    
+    static native boolean getCastShadow(long light);
 }

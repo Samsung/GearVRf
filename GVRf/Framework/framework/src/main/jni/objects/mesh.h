@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 #include <string>
-
+#include <set>
 #ifndef GL_ES_VERSION_3_0
 #include "GLES3/gl3.h"
 #endif
@@ -167,6 +167,22 @@ public:
         vao_dirty_ = true;
     }
 
+    bool hasAttribute(std::string key) const {
+        if (vec3_vectors_.find(key) != vec3_vectors_.end()) {
+            return true;
+        }
+        if (vec2_vectors_.find(key) != vec2_vectors_.end()) {
+            return true;
+        }
+        if (vec4_vectors_.find(key) != vec4_vectors_.end()) {
+            return true;
+        }
+        if (float_vectors_.find(key) != float_vectors_.end()) {
+            return true;
+        }
+        return false;
+    }
+
     const std::vector<float>& getFloatVector(std::string key) const {
         auto it = float_vectors_.find(key);
         if (it != float_vectors_.end()) {
@@ -252,24 +268,28 @@ public:
         attribute_float_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
         vao_dirty_ = true;
         regenerate_vao_ = true;
+        LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     // generate VAO
@@ -321,7 +341,35 @@ public:
             deleter_ = getDeleterForThisThread();
         }
     }
+     void getAttribNames(std::set<std::string> &attrib_names){
+    	 if(vertices_.size() > 0)
+    		 attrib_names.insert("a_position");
 
+    	 if(tex_coords_.size() > 0)
+    		 attrib_names.insert("a_texcoord");
+
+    	 if(normals_.size() > 0)
+    		 attrib_names.insert("a_normal");
+
+    	 if(hasBones()){
+    		 attrib_names.insert("a_bone_indices");
+    		 attrib_names.insert("a_bone_weights");
+    	 }
+
+    	 for(auto it : vec2_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : vec3_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : vec4_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : float_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+
+    }
 
 private:
     Mesh(const Mesh& mesh);

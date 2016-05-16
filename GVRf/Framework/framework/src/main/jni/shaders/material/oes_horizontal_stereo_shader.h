@@ -21,29 +21,22 @@
 #ifndef OES_HORIZONTAL_STEREO_SHADER_H_
 #define OES_HORIZONTAL_STEREO_SHADER_H_
 
-#include <memory>
-
-#define __gl2_h_
-#include "GLES3/gl3.h"
-#include <GLES2/gl2ext.h>
-
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
+#include "shaderbase.h"
 #include "objects/eye_type.h"
-#include "objects/hybrid_object.h"
+
 
 namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
+struct RenderState;
 
-class OESHorizontalStereoShader: public HybridObject {
+class OESHorizontalStereoShader: public ShaderBase {
 public:
     OESHorizontalStereoShader();
     virtual ~OESHorizontalStereoShader();
 
-    void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material, bool right);
+    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
     OESHorizontalStereoShader(
@@ -56,7 +49,6 @@ private:
             OESHorizontalStereoShader&& oes_horizontal_stereo_shader);
 
 private:
-    GLProgram* program_;
     GLuint u_mvp_;
     GLuint u_texture_;
     GLuint u_color_;

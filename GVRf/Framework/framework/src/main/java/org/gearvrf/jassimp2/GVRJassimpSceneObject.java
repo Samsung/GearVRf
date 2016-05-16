@@ -20,7 +20,6 @@ import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
@@ -101,7 +100,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         GVRLightBase light =  lightlist.get(name);
         if (light != null) {
             Quaternionf q = new Quaternionf();
-            q.rotationX((float) -Math.PI / 2.0f);
+            q.rotationX((float) Math.PI / 2.0f);
             light.setDefaultOrientation(q);
             sceneObject.attachLight(light); 
         }
