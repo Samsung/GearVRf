@@ -15,7 +15,7 @@
 
 #include "activity.h"
 #include "../util/jni_utils.h"
-
+#include "../eglextension/msaa/msaa.h"
 #include <jni.h>
 #include "VrApi.h"
 #include "VrApi_Types.h"
@@ -119,6 +119,7 @@ void GVRActivity::onSurfaceCreated(JNIEnv& env) {
 }
 
 void GVRActivity::onSurfaceChanged(JNIEnv& env) {
+    int maxSamples = MSAA::getMaxSampleCount();
     LOGV("GVRActivityT::onSurfaceChanged");
     initializeOculusJava(env, oculusJavaGlThread_);
 
@@ -132,6 +133,8 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
 
         oculusHeadModelParms_ = vrapi_DefaultHeadModelParms();
         configurationHelper_.getHeadModelConfiguration(env, oculusHeadModelParms_);
+        if (mMultisamplesConfiguration > maxSamples)
+            mMultisamplesConfiguration = maxSamples;
 
         for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
             bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
