@@ -17,6 +17,7 @@
 #define GL_DELETE_H_
 
 #include "util/gvr_log.h"
+#include "util/gvr_cpp_stack_trace.h"
 
 #include <vector>
 #include <pthread.h>
@@ -112,6 +113,7 @@ private:
 static GlDelete* getDeleterForThisThread() {
     GlDelete* deleter = static_cast<GlDelete*>(pthread_getspecific(deleter_key));
     if (nullptr == deleter) {
+        printStackTrace();
         LOGE("fatal error: no deleter associated with this thread!");
         std::terminate();
     }

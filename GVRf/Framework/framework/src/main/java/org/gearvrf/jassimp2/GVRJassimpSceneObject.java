@@ -2,30 +2,23 @@ package org.gearvrf.jassimp2;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRLight;
 import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRResourceVolume;
-import org.gearvrf.GVRScene;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRTransform;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
@@ -56,7 +49,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             GVRSceneObject parentSceneObject,
             AiNode node,Hashtable<String, GVRLightBase> lightlist) {
         try {
-            GVRSceneObject sceneObject = null;
+            final GVRSceneObject sceneObject;
             if (node.getNumMeshes() == 0) {
                 sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
                 parentSceneObject.addChildObject(sceneObject);
@@ -76,19 +69,21 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             if (node.getTransform(GVRJassimpAdapter.sWrapperProvider) != null) {
                 float[] matrix = node.getTransform(GVRJassimpAdapter.sWrapperProvider);
                 sceneObject.getTransform().setModelMatrix(matrix);
-               
             }
             attachLights(lightlist, sceneObject);
             for (AiNode child : node.getChildren()) {
                recurseAssimpNodes(sceneObject, child, lightlist);
-                
             }
 
-            // Inform the loaded object after it has been attached to the scene graph
-            getGVRContext().getEventManager().sendEvent(
-                    sceneObject,
-                    ISceneObjectEvents.class,
-                    "onLoaded");
+            getGVRContext().runOnTheFrameworkThread(new Runnable() {
+                public void run() {
+                    // Inform the loaded object after it has been attached to the scene graph
+                    getGVRContext().getEventManager().sendEvent(
+                            sceneObject,
+                            ISceneObjectEvents.class,
+                            "onLoaded");
+                }
+            });
         } catch (Exception e) {
             // Error while recursing the Scene Graph
             e.printStackTrace();
