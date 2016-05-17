@@ -1070,7 +1070,12 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * @todo
+     * Describes the BoundingVolume of this SceneObject.
+     *
+     * Describes the BoundingVolume of this SceneObject.  The bounding
+     * volume encompases this GVRSceneObject and all of its children.
+     * The volume includes both the bounding sphere (described by the center and radius) and the bounding box (described by the minCorner and maxCorner).
+     *
      */
     public static final class BoundingVolume {
         public final Vector3f center;
@@ -1086,8 +1091,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * @return
-     * @todo
+     * @return The BoundingVolume for this GVRSceneObject.
      */
     public final BoundingVolume getBoundingVolume() {
         return new BoundingVolume(NativeSceneObject.getBoundingVolume(getNative()));
@@ -1095,7 +1099,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     /**
      * Expand the current volume by the given point
-     * @return
+     * @return the updated BoundingVolume.
      */
     public final BoundingVolume expandBoundingVolume(final float pointX, final float pointY, final float pointZ) {
         return new BoundingVolume(
@@ -1105,7 +1109,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     /**
      * Expand the current volume by the given point
-     * @return
+     * @return the updated BoundingVolume.
      */
     public final BoundingVolume expandBoundingVolume(final Vector3f point) {
         return expandBoundingVolume(point.x, point.y, point.z);
@@ -1114,7 +1118,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Expand the volume by the incoming center and radius
      *
-     * @return
+     * @return the updated BoundingVolume.
      */
     public final BoundingVolume expandBoundingVolume(
             final float centerX, final float centerY, final float centerZ, final float radius) {
@@ -1126,7 +1130,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Expand the volume by the incoming center and radius
      *
-     * @return
+     * @return the updated BoundingVolume.
      */
     public final BoundingVolume expandBoundingVolume(final Vector3f center, final float radius) {
         return expandBoundingVolume(center.x, center.y, center.z, radius);
