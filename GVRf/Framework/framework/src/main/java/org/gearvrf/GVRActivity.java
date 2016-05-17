@@ -230,6 +230,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                         xmlParser);
             }
 
+            if (gvrScript instanceof GVRMain) {
+                mViewManager.setUseTheFrameworkThread(true);
+            }
+
             mViewManager.getEventManager().sendEventWithMask(
                     SEND_EVENT_MASK,
                     this,

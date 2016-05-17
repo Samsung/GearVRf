@@ -667,26 +667,45 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mSplashScreen = null;
             }
 
-            try {
-                GVRViewManager.this.getEventManager().sendEvent(mScript, IScriptEvents.class, "onEarlyInit",
-                        GVRViewManager.this);
+            runOnTheFrameworkThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        GVRViewManager.this.getEventManager().sendEvent(
+                                mScript, IScriptEvents.class,
+                                "onEarlyInit", GVRViewManager.this);
 
-                GVRViewManager.this.getEventManager().sendEvent(mScript, IScriptEvents.class, "onInit",
-                        GVRViewManager.this);
-            } catch (Throwable t) {
-                t.printStackTrace();
-                mActivity.finish();
+                        GVRViewManager.this.getEventManager().sendEvent(
+                                mScript, IScriptEvents.class,
+                                "onInit", GVRViewManager.this);
 
-                // Just to be safe ...
-                mFrameHandler = splashFrames;
-                firstFrame = null;
+                        if (null != mSplashScreen && SplashMode.AUTOMATIC == mScript.getSplashMode()) {
+                            runOnGlThread(new Runnable() {
+                                public void run() {
+                                    mSplashScreen.closeSplashScreen();
+                                }
+                            });
+                        }
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        GVRViewManager.this.runOnGlThread(new Runnable() {
+                            public void run() {
+                                mActivity.finish();
 
-                return;
-            }
+                                // Just to be safe ...
+                                mFrameHandler = splashFrames;
+                                firstFrame = null;
+                            }
+                        });
+                    }
 
-            // Trigger event "onAfterInit" for post-processing of scene graph
-            // after initialization.
-            GVRViewManager.this.getEventManager().sendEvent(mScript, IScriptEvents.class, "onAfterInit");
+                    // Trigger event "onAfterInit" for post-processing of scene
+                    // graph after initialization.
+                    GVRViewManager.this.getEventManager().sendEvent(
+                            mScript, IScriptEvents.class,
+                            "onAfterInit");
+                }
+            });
 
             if (mSplashScreen == null) {
                 // No splash screen, notify main scene now.
@@ -712,8 +731,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             // splash screen post-init animations
             long currentTime = doMemoryManagementAndPerFrameCallbacks();
 
-            if (mSplashScreen != null && currentTime >= mSplashScreen.mTimeout) {
-                if (mSplashScreen.closeRequested() || mScript.getSplashMode() == SplashMode.AUTOMATIC) {
+            if (mSplashScreen != null && (currentTime >= mSplashScreen.mTimeout || mSplashScreen.closeRequested())) {
+                if (mSplashScreen.closeRequested()
+                        || mScript.getSplashMode() == SplashMode.AUTOMATIC) {
 
                     final SplashScreen splashScreen = mSplashScreen;
                     new GVROpacityAnimation(mSplashScreen, mScript.getSplashFadeTime(), 0) //
@@ -755,15 +775,20 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
             doMemoryManagementAndPerFrameCallbacks();
 
-            try {
-                GVRViewManager.this.getEventManager().sendEvent(mScript, IScriptEvents.class, "onStep");
+            runOnTheFrameworkThread(new Runnable() {
+                public void run() {
+                    try {
+                        getEventManager().sendEvent(mScript, IScriptEvents.class, "onStep");
 
-                // Issue "onStep" to the scene
-                GVRViewManager.this.getEventManager().sendEvent(mMainScene, ISceneEvents.class, "onStep");
-            } catch (final Exception exc) {
-                Log.e(TAG, "Exception from onStep: %s", exc.toString());
-                exc.printStackTrace();
-            }
+                        // Issue "onStep" to the scene
+                        GVRViewManager.this.getEventManager().sendEvent(
+                            mMainScene, ISceneEvents.class, "onStep");
+                    } catch (final Exception exc) {
+                        Log.e(TAG, "Exception from onStep: %s", exc.toString());
+                        exc.printStackTrace();
+                    }
+                }
+            });
         }
 
         @Override
@@ -779,12 +804,20 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     // If there is no splash screen, it is called after GVRScript.onInit()
     // returns.
     private void notifyMainSceneReady() {
-        // Initialize the main scene
-        GVRViewManager.this.getEventManager().sendEvent(mMainScene, ISceneEvents.class, "onInit", GVRViewManager.this,
-                mMainScene);
+        runOnTheFrameworkThread(new Runnable() {
+            @Override
+            public void run() {
+                // Initialize the main scene
+                GVRViewManager.this.getEventManager().sendEvent(
+                        mMainScene, ISceneEvents.class,
+                        "onInit", GVRViewManager.this, mMainScene);
 
-        // Late-initialize the main scene
-        GVRViewManager.this.getEventManager().sendEvent(mMainScene, ISceneEvents.class, "onAfterInit");
+                // Late-initialize the main scene
+                GVRViewManager.this.getEventManager().sendEvent(
+                        mMainScene, ISceneEvents.class,
+                        "onAfterInit");
+            }
+        });
     }
 
     /**
@@ -951,7 +984,11 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
 
     @Override
     public void runOnGlThread(Runnable runnable) {
-        mRunnables.add(runnable);
+        if (mGLThreadID == Thread.currentThread().getId()) {
+            runnable.run();
+        } else {
+            mRunnables.add(runnable);
+        }
     }
 
     @Override
@@ -1009,4 +1046,5 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         // strictly one-time per process op hence the static block
         NativeGLDelete.createTlsKey();
     }
+
 }
