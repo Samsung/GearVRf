@@ -24,88 +24,99 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeSceneObject_ctor(JNIEnv * env,
-        jobject obj);
-JNIEXPORT jstring JNICALL
-Java_org_gearvrf_NativeSceneObject_getName(JNIEnv * env,
-        jobject obj, jlong jscene_object);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeSceneObject_ctor(JNIEnv * env,
+            jobject obj);
+    JNIEXPORT jstring JNICALL
+    Java_org_gearvrf_NativeSceneObject_getName(JNIEnv * env,
+            jobject obj, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
-        jobject obj, jlong jscene_object, jstring name);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
+            jobject obj, jlong jscene_object, jstring name);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachTransform(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jtransform);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachTransform(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jtransform);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachTransform(JNIEnv * env,
-        jobject obj, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachTransform(JNIEnv * env,
+            jobject obj, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachRenderData(
-        JNIEnv * env, jobject obj, jlong jscene_object, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachRenderData(
+            JNIEnv * env, jobject obj, jlong jscene_object, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachRenderData(
-        JNIEnv * env, jobject obj, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachRenderData(
+            JNIEnv * env, jobject obj, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachCamera(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jcamera);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachCamera(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jcamera);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachCamera(JNIEnv * env,
-        jobject obj, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachCamera(JNIEnv * env,
+            jobject obj, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachCameraRig(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jcamera_rig);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachCameraRig(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jcamera_rig);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachCameraRig(JNIEnv * env,
-        jobject obj, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachCameraRig(JNIEnv * env,
+            jobject obj, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachEyePointeeHolder(
-        JNIEnv * env, jobject obj, jlong jscene_object,
-        jlong jeye_pointee_holder);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachEyePointeeHolder(
+            JNIEnv * env, jobject obj, jlong jscene_object,
+            jlong jeye_pointee_holder);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachEyePointeeHolder(
-        JNIEnv * env, jobject obj, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachEyePointeeHolder(
+            JNIEnv * env, jobject obj, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_addChildObject(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jchild);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_addChildObject(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jchild);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_removeChildObject(
-        JNIEnv * env, jobject obj, jlong jscene_object, jlong jchild);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_removeChildObject(
+            JNIEnv * env, jobject obj, jlong jscene_object, jlong jchild);
 
-JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeSceneObject_isColliding(
-        JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_isColliding(
+            JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 
-JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
-        jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
-        jfloat rdx, jfloat rdy, jfloat rdz);
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
+            jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
+            jfloat rdx, jfloat rdy, jfloat rdz);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_setLODRange(
-        JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeSceneObject_setLODRange(
+            JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range);
 
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeSceneObject_getLODMinRange(
-        JNIEnv * env, jobject obj, jlong jscene_object);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeSceneObject_getLODMinRange(
+            JNIEnv * env, jobject obj, jlong jscene_object);
 
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
-        JNIEnv * env, jobject obj, jlong jscene_object);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
+            JNIEnv * env, jobject obj, jlong jscene_object);
 
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeSceneObject_getBoundingVolume(JNIEnv * env,
+            jobject obj, jlong jSceneObject);
 
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeSceneObject_expandBoundingVolumeByPoint(JNIEnv * env,
+            jobject obj, jlong jSceneObject, jfloat pointX, jfloat pointY, jfloat pointZ);
+
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeSceneObject_expandBoundingVolumeByCenterAndRadius(JNIEnv * env,
+            jobject obj, jlong jSceneObject, jfloat centerX, jfloat centerY, jfloat centerZ, jfloat radius);
+} // extern "C"
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeSceneObject_ctor(JNIEnv * env,
@@ -261,6 +272,52 @@ Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
     return scene_object->getLODMaxRange();
 }
 
-} // extern "C"
+jfloatArray boundingVolumeToArray(JNIEnv* env, const BoundingVolume& bvol) {
+    jfloat temp[10];
+    temp[0] = bvol.center().x;
+    temp[1] = bvol.center().y;
+    temp[2] = bvol.center().z;
+    temp[3] = bvol.radius();
+    temp[4] = bvol.min_corner().x;
+    temp[5] = bvol.min_corner().y;
+    temp[6] = bvol.min_corner().z;
+    temp[7] = bvol.max_corner().x;
+    temp[8] = bvol.max_corner().y;
+    temp[9] = bvol.max_corner().z;
+
+    jfloatArray result = env->NewFloatArray(10);
+    env->SetFloatArrayRegion(result, 0, 10, temp);
+    return result;
+}
+
+JNIEXPORT jfloatArray JNICALL
+Java_org_gearvrf_NativeSceneObject_getBoundingVolume(JNIEnv * env,
+        jobject obj, jlong jSceneObject) {
+    SceneObject* sceneObject = reinterpret_cast<SceneObject*>(jSceneObject);
+    const BoundingVolume& bvol = sceneObject->getBoundingVolume();
+    return boundingVolumeToArray(env, bvol);
+}
+
+JNIEXPORT jfloatArray JNICALL
+Java_org_gearvrf_NativeSceneObject_expandBoundingVolumeByPoint(JNIEnv * env,
+        jobject obj, jlong jSceneObject, jfloat pointX, jfloat pointY, jfloat pointZ) {
+
+    SceneObject* sceneObject = reinterpret_cast<SceneObject*>(jSceneObject);
+    BoundingVolume& bvol = sceneObject->getBoundingVolume();
+    bvol.expand(glm::vec3(pointX, pointY, pointZ));
+
+    return boundingVolumeToArray(env, bvol);
+}
+
+JNIEXPORT jfloatArray JNICALL
+Java_org_gearvrf_NativeSceneObject_expandBoundingVolumeByCenterAndRadius(JNIEnv * env,
+        jobject obj, jlong jSceneObject, jfloat centerX, jfloat centerY, jfloat centerZ, jfloat radius) {
+
+    SceneObject* sceneObject = reinterpret_cast<SceneObject*>(jSceneObject);
+    BoundingVolume& bvol = sceneObject->getBoundingVolume();
+    bvol.expand(glm::vec3(centerX, centerY, centerZ), radius);
+
+    return boundingVolumeToArray(env, bvol);
+}
 
 } // namespace gvr
