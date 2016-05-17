@@ -63,6 +63,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     private GVRViewManager mViewManager;
     private GVRScript mGVRScript;
+    private GVRMain mGVRMain;
     private VrAppSettings mAppSettings;
 
     // Group of views that are going to be drawn
@@ -196,31 +197,25 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     /**
      * Links {@linkplain GVRScript a script} to the activity; sets the version;
-     * sets the lens distortion compensation parameters.
      * 
      * @param gvrScript
      *            An instance of {@link GVRScript} to handle callbacks on the GL
      *            thread.
-     * @param distortionDataFileName
-     *            Name of the XML file containing the device parameters. We
-     *            currently only support the Galaxy Note 4 because that is the
-     *            only shipping device with the proper GL extensions. When more
-     *            devices support GVRF, we will publish new device files, along
-     *            with app-level auto-detect guidelines. This approach will let
-     *            you support new devices, using the same version of GVRF that
-     *            you have already tested and approved.
+     * @param dataFileName
+     *            Name of the XML file containing the framebuffer parameters. 
      * 
      *            <p>
      *            The XML filename is relative to the application's
      *            {@code assets} directory, and can specify a file in a
      *            directory under the application's {@code assets} directory.
+     * @deprecated
      */
-    public void setScript(GVRScript gvrScript, String distortionDataFileName) {
+    public void setScript(GVRScript gvrScript, String dataFileName) {
         this.mGVRScript = gvrScript;
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
 
             GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
-                    distortionDataFileName, mAppSettings);
+                    dataFileName, mAppSettings);
             onInitAppSettings(mAppSettings);
             if (null != mActivityHandler && !mAppSettings.getMonoScopicModeParms().isMonoScopicMode()) {
                 mViewManager = new GVRViewManager(this, gvrScript, xmlParser);
@@ -262,9 +257,37 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     /**
      * Gets the {@linkplain GVRScript a script} linked to the activity.
      * @return the {@link GVRScript}.
+     * @deprecated
      */
     public GVRScript getScript() {
         return mGVRScript;
+    }
+
+    /**
+     * Links {@linkplain GVRMain} to the activity; sets the version;
+     * 
+     * @param gvrMain
+     *            An instance of {@link GVRMain} to handle callbacks on the framework
+     *            thread.
+     * @param dataFileName
+     *            Name of the XML file containing the framebuffer parameters. 
+     *            <p>
+     *            The XML filename is relative to the application's
+     *            {@code assets} directory, and can specify a file in a
+     *            directory under the application's {@code assets} directory.
+     */
+    public void setMain(GVRMain gvrMain, String dataFileName) {
+        this.mGVRScript = gvrMain;
+        this.mGVRMain = gvrMain;
+        setScript(gvrMain, dataFileName);
+    }
+
+    /**
+     * Gets the {@linkplain GVRMain} linked to the activity.
+     * @return the {@link GVRMain}.
+     */
+    public GVRMain getMain() {
+        return mGVRMain;
     }
 
     /**
@@ -272,11 +295,11 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * 
      * @param force
      *            If true, will create a GVRMonoscopicViewManager when
-     *            {@linkplain setScript setScript()} is called. If false, will
+     *            {@linkplain setMain setMain()} is called. If false, will
      *            proceed to auto-detect whether the device supports VR
      *            rendering and choose the appropriate ViewManager. This call
      *            will only have an effect if it is called before
-     *            {@linkplain #setScript(GVRScript, String) setScript()}.
+     *            {@linkplain #setMain(GVRMain, String) setMain()}.
      * @deprecated
      */
     @Deprecated
@@ -286,7 +309,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     /**
      * Returns whether a monoscopic view was asked to be forced during
-     * {@linkplain #setScript(GVRScript, String) setScript()}.
+     * {@linkplain #setMain(GVRMain, String) setMain()}.
      * 
      * @see setForceMonoscopic
      * @deprecated
