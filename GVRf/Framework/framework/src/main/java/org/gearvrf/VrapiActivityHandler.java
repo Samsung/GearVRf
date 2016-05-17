@@ -27,6 +27,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
+import org.joml.Vector2f;
 
 import android.graphics.PixelFormat;
 import android.opengl.EGL14;
@@ -53,6 +54,7 @@ class VrapiActivityHandler implements ActivityHandler {
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
     boolean mVrApiInitialized;
+    private Vector2f mScreenDimensions = null;
 
     VrapiActivityHandler(final GVRActivity activity,
             final ActivityHandlerRenderingCallbacks callbacks) throws VrapiNotAvailableException {
@@ -150,17 +152,25 @@ class VrapiActivityHandler implements ActivityHandler {
         holder.setFormat(PixelFormat.TRANSLUCENT);
 
         final VrAppSettings appSettings = mActivity.getAppSettings();
-        final int framebufferHeight = appSettings.getFramebufferPixelsHigh();
-        final int framebufferWidth = appSettings.getFramebufferPixelsWide();
-        if (-1 != framebufferHeight && -1 != framebufferWidth && screenWidthPixels != framebufferWidth
-                && screenHeightPixels != framebufferHeight) {
-            Log.v(TAG, "--- window configuration ---");
-            Log.v(TAG, "--- width: %d", framebufferWidth);
-            Log.v(TAG, "--- height: %d", framebufferHeight);
-            //a different resolution of the native window requested 
-            holder.setFixedSize(framebufferWidth, framebufferHeight);
-            Log.v(TAG, "----------------------------");
+        mScreenDimensions = new Vector2f(appSettings.getFramebufferPixelsHigh(), appSettings.getFramebufferPixelsWide());
+        if ((-1 != mScreenDimensions.y) && (-1 != mScreenDimensions.x)) {
+            if ((screenWidthPixels != mScreenDimensions.x) && (screenHeightPixels != mScreenDimensions.x)) {
+                Log.v(TAG, "--- window configuration ---");
+                Log.v(TAG, "--- width: %d", mScreenDimensions.x);
+                Log.v(TAG, "--- height: %d", mScreenDimensions.y);
+                //a different resolution of the native window requested
+                holder.setFixedSize((int) mScreenDimensions.x, (int) mScreenDimensions.y);
+                Log.v(TAG, "----------------------------");
+            }
         }
+        else {
+            mScreenDimensions.x = screenWidthPixels;
+            mScreenDimensions.y = screenHeightPixels;
+        }
+    }
+
+    public Vector2f getScreenDimensions() {
+        return mScreenDimensions;
     }
 
     private final EGLContextFactory mContextFactory = new EGLContextFactory() {
