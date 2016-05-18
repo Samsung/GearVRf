@@ -51,7 +51,7 @@ public:
     };
 
     RenderData() :
-            Component(), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),
+            Component(RenderData::getComponentType()), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),
                     render_mask_(DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
@@ -252,13 +252,7 @@ public:
     }
 
     static long long getComponentType() {
-        return componentType_;
-    }
-
-    virtual void setType(long long type) {
-        Component::setType(type);
-        if (componentType_ == 0)
-            componentType_ = type;
+        return (long long) &getComponentType;
     }
 
 private:
@@ -268,7 +262,6 @@ private:
     RenderData& operator=(RenderData&& render_data);
 
 private:
-    static long long componentType_;
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
     Mesh* mesh_;

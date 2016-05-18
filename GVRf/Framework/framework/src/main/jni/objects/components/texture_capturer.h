@@ -43,6 +43,10 @@ public:
 
     void callback(int msg, char *info);
 
+    static long long getComponentType() {
+        return (long long) &getComponentType;
+    }
+
 private:
     TextureCapturer(const TextureCapturer& capturer);
     TextureCapturer(TextureCapturer&& capturer);

@@ -86,14 +86,9 @@ public:
     glm::mat4 getCenterViewMatrix();
 
     static long long getComponentType() {
-        return componentType_;
+        return (long long) & getComponentType;
     }
 
-    virtual void setType(long long type) {
-        Component::setType(type);
-        if (componentType_ == 0)
-            componentType_ = type;
-    }
 
 private:
     Camera(const Camera& camera);
@@ -108,7 +103,6 @@ private:
     float background_color_a_;
     int render_mask_;
     std::vector<PostEffectData*> post_effect_data_;
-    static long long componentType_;
 };
 
 }

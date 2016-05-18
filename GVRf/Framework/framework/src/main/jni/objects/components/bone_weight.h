@@ -18,6 +18,10 @@ public:
     int getVertexId();
     float getWeight();
 
+    static long long getComponentType() {
+        return (long long) & getComponentType;
+    }
+
 private:
     BoneWeight(const BoneWeight& boneWeight);
     BoneWeight(BoneWeight&& boneWeight);

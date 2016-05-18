@@ -38,18 +38,13 @@ public class GVRComponent extends GVRHybridObject {
      * @param nativePointer
      *            The native pointer, returned by the native constructor
      */
-    protected GVRComponent(GVRContext gvrContext, long nativeConstructor, Class<? extends GVRComponent> type) {
+    protected GVRComponent(GVRContext gvrContext, long nativeConstructor) {
         super(gvrContext, nativeConstructor);
-        long nativeType = GVRComponent.typeFromClass(type);
-        NativeComponent.setType(getNative(), nativeType);
         isEnabled = true;
     }
 
-    public GVRComponent(GVRContext gvrContext, long nativeConstructor, Class<? extends GVRComponent> type, GVRSceneObject owner) {
+    public GVRComponent(GVRContext gvrContext, long nativeConstructor, GVRSceneObject owner) {
         super(gvrContext, nativeConstructor);
-        long nativeType = GVRComponent.typeFromClass(type);
-        NativeComponent.setType(getNative(), nativeType);
-        setOwnerObject(owner);
         isEnabled = true;
     }
     
@@ -75,11 +70,9 @@ public class GVRComponent extends GVRHybridObject {
      *            concatenated lists - see {@link GVREyePointeeHolder} for an
      *            example.
      */
-    protected GVRComponent(GVRContext gvrContext, long nativePointer, Class<? extends GVRComponent> type,
+    protected GVRComponent(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> cleanupHandlers) {
         super(gvrContext, nativePointer, cleanupHandlers);
-        long nativeType = GVRComponent.typeFromClass(type);
-        NativeComponent.setType(getNative(), nativeType);
     }
 
     protected GVRSceneObject owner;
@@ -132,6 +125,10 @@ public class GVRComponent extends GVRHybridObject {
         return isEnabled;
     }
     
+    /**
+     * Get the type of this component.
+     * @return component type
+     */
     public long getType() {
         return NativeComponent.getType(getNative());
     }
@@ -152,25 +149,11 @@ public class GVRComponent extends GVRHybridObject {
      * of the given class, it will be returned.
      * @return GVRComponent of specified class or null if none exists.
      */
-    public GVRComponent getComponent(Class<? extends GVRComponent> componentClass) {
-        return getOwnerObject().getComponent(componentClass);
+    public GVRComponent getComponent(long type) {
+        return getOwnerObject().getComponent(type);
     }
-    
-    static public long typeFromClass(Class<? extends GVRComponent> jclass) {
-        String s = jclass.getSimpleName();
-        long h = 98764321261L; 
-        int l = s.length();
-        char[] chars = s.toCharArray();
-        
-        for (int i = 0; i < l; i++) {
-          h = 31 * h + chars[i];
-        }
-        return h;
-    }
-
 }
 
 class NativeComponent {
     static native long getType(long component);
-    static native void setType(long component, long type);
 }

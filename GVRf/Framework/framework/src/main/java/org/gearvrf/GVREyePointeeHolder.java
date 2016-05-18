@@ -73,7 +73,7 @@ public class GVREyePointeeHolder extends GVRComponent {
     }
     
     private GVREyePointeeHolder(GVRContext gvrContext, long nativePointer) {
-        super(gvrContext, nativePointer, GVREyePointeeHolder.class, sCleanup);
+        super(gvrContext, nativePointer, sCleanup);
         registerNativePointer(nativePointer);
     }
         
@@ -99,11 +99,16 @@ public class GVREyePointeeHolder extends GVRComponent {
      */
     protected GVREyePointeeHolder(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> descendantsCleanupHandlerList) {
-        super(gvrContext, nativePointer, GVREyePointeeHolder.class, sConcatenations
+        super(gvrContext, nativePointer, sConcatenations
                 .getUniqueConcatenation(descendantsCleanupHandlerList));
         registerNativePointer(nativePointer);
     }
 
+
+    static public long getComponentType() {
+        return NativeEyePointeeHolder.getComponentType();
+    }
+    
     private void registerNativePointer(long nativePointer) {
         sEyePointeeHolders.put(nativePointer,
                 new WeakReference<GVREyePointeeHolder>(this));
@@ -233,6 +238,8 @@ public class GVREyePointeeHolder extends GVRComponent {
 
 class NativeEyePointeeHolder {
     static native long ctor();
+
+    static native long getComponentType();
 
     static native boolean getEnable(long eyePointeeHolder);
 

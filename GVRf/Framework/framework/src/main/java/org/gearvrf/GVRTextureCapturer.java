@@ -79,6 +79,11 @@ public class GVRTextureCapturer extends GVRHybridObject {
         update(width, height, sampleCount);
     }
 
+
+    static public long getComponentType() {
+        return NativeTextureCapturer.getComponentType();
+    }
+    
     /**
      * Updates the backing render texture. This method should not
      * be called when capturing is in progress.
@@ -190,6 +195,7 @@ public class GVRTextureCapturer extends GVRHybridObject {
 
 class NativeTextureCapturer {
     static native long ctor(long shaderManagerPtr);
+    static native long getComponentType();
     static native void setCapturerObject(long capturer, GVRTextureCapturer capturerObject);
     static native void setRenderTexture(long capturer, long ptr);
     static native void setCapture(long capturer, boolean capture, float fps);

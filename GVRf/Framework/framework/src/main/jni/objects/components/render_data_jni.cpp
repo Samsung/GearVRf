@@ -31,6 +31,9 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
         jobject obj);
 
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
         jobject obj, jlong jrender_data, jlong jmesh);
@@ -152,6 +155,11 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
     jobject obj) {
 return reinterpret_cast<jlong>(new RenderData());
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj) {
+    return RenderData::getComponentType();
 }
 
 JNIEXPORT void JNICALL

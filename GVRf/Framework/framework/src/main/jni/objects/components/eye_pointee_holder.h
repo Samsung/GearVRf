@@ -55,13 +55,7 @@ public:
     }
 
     static long long getComponentType() {
-        return componentType_;
-    }
-
-    virtual void setType(long long type) {
-        Component::setType(type);
-        if (componentType_ == 0)
-            componentType_ = type;
+        return (long long) &getComponentType;
     }
 
     void addPointee(EyePointee* pointee);
@@ -80,7 +74,6 @@ private:
     bool enable_;
     glm::vec3 hit_;
     std::vector<EyePointee*> pointees_;
-    static long long componentType_;
 };
 
 }

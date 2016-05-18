@@ -21,23 +21,11 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeComponent_setType(JNIEnv * env,
-        jobject obj, jlong jcomponent, jlong type);
-
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
         jobject obj, jlong jcomponent);
 
 }
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeComponent_setType(JNIEnv * env,
-        jobject obj, jlong jcomponent, jlong type) {
-    Component* component = reinterpret_cast<Component*>(jcomponent);
-    component->setType(type);
-}
-
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,

@@ -58,6 +58,7 @@ public final class GVRBoneWeight extends GVRHybridObject {
 
 class NativeBoneWeight {
     static native long ctor();
+    static native long getComponentType();
     static native void setVertexId(long ptr, int vertexId);
     static native int getVertexId(long ptr);
     static native void setWeight(long ptr, float weight);

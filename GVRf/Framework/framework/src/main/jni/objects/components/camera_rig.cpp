@@ -28,12 +28,11 @@
 #include "util/gvr_time.h"
 
 namespace gvr {
-long long CameraRig::componentType_ = 0;
 
 float CameraRig::default_camera_separation_distance_ = 0.062f;
 
 CameraRig::CameraRig() :
-        Component(), camera_rig_type_(DEFAULT_CAMERA_RIG_TYPE), left_camera_(), right_camera_(), center_camera_(), camera_separation_distance_(
+        Component(CameraRig::getComponentType()), camera_rig_type_(DEFAULT_CAMERA_RIG_TYPE), left_camera_(), right_camera_(), center_camera_(), camera_separation_distance_(
                 default_camera_separation_distance_), floats_(), vec2s_(), vec3s_(), vec4s_(), complementary_rotation_(), rotation_sensor_data_() {
 }
 

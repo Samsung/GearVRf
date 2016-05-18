@@ -29,18 +29,21 @@ import org.joml.Matrix4f;
  */
 public class GVRTransform extends GVRComponent {
     GVRTransform(GVRContext gvrContext) {
-        super(gvrContext, NativeTransform.ctor(), GVRTransform.class);
+        super(gvrContext, NativeTransform.ctor());
     }
 
     GVRTransform(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeTransform.ctor(), GVRTransform.class, owner);
-        NativeSceneObject.attachTransform(owner.getNative(), getNative());
+        super(gvrContext, NativeTransform.ctor(), owner);
     }
     
     private GVRTransform(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr, GVRTransform.class);
+        super(gvrContext, ptr);
     }
 
+    static public long getComponentType() {
+        return NativeTransform.getComponentType();
+    }
+    
     /**
      * Get the X component of the transform's position.
      * 
@@ -502,6 +505,8 @@ public class GVRTransform extends GVRComponent {
 
 class NativeTransform {
     static native long ctor();
+
+    static native long getComponentType();
 
     static native float getPositionX(long transform);
 

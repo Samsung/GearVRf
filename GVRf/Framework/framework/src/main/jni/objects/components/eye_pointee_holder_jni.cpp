@@ -29,6 +29,9 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_ctor(JNIEnv * env,
         jobject obj);
 
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeEyePointeeHolder_getComponentType(JNIEnv * env, jobject obj);
+
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_getEnable(JNIEnv * env,
         jobject obj, jlong jeye_pointee_holder);
@@ -58,6 +61,12 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeEyePointeeHolder_ctor(JNIEnv * env,
         jobject obj) {
     return reinterpret_cast<jlong>(new EyePointeeHolder());
+}
+
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeEyePointeeHolder_getComponentType(JNIEnv * env, jobject obj) {
+    return EyePointeeHolder::getComponentType();
 }
 
 JNIEXPORT jboolean JNICALL

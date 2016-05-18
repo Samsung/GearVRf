@@ -138,13 +138,7 @@ public:
     }
 
     static long long getComponentType() {
-        return componentType_;
-    }
-
-    virtual void setType(long long type) {
-        Component::setType(type);
-        if (componentType_ == 0)
-            componentType_ = type;
+        return (long long) getComponentType;
     }
 
     void attachLeftCamera(Camera* const left_camera);
@@ -183,7 +177,6 @@ private:
     std::map<std::string, glm::vec4> vec4s_;
     glm::quat complementary_rotation_;
     RotationSensorData rotation_sensor_data_;
-    static long long componentType_;
 };
 
 }

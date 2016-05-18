@@ -109,7 +109,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            Current {@link GVRContext}
      */
     public GVRRenderData(GVRContext gvrContext) {
-        super(gvrContext, NativeRenderData.ctor(), GVRRenderData.class);
+        super(gvrContext, NativeRenderData.ctor());
         
         GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
@@ -120,11 +120,16 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     }
 
     public GVRRenderData(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeRenderData.ctor(), GVRRenderData.class, owner);
+        super(gvrContext, NativeRenderData.ctor(), owner);
         
         GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
         addPass(basePass);
+    }
+    
+
+    static public long getComponentType() {
+        return NativeRenderData.getComponentType();
     }
     
     /**
@@ -885,6 +890,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
 
 class NativeRenderData {
     static native long ctor();
+
+    static native long getComponentType();
 
     static native void setMesh(long renderData, long mesh);
 

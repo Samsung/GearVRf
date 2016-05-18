@@ -14,6 +14,9 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTextureCapturer_ctor(JNIEnv * env,
         jobject obj, jlong shaderManagerPtr);
 
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTextureCapturer_getComponentType(JNIEnv * env, jobject obj);
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeTextureCapturer_setCapturerObject(JNIEnv * env, jobject obj,
         jlong ptr, jobject capturerObject);
@@ -40,6 +43,11 @@ Java_org_gearvrf_NativeTextureCapturer_ctor(JNIEnv * env,
 
     return reinterpret_cast<jlong>(new TextureCapturer(
             reinterpret_cast<ShaderManager*>(shaderManagerPtr)));
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTextureCapturer_getComponentType(JNIEnv * env, jobject obj) {
+    return TextureCapturer::getComponentType();
 }
 
 JNIEXPORT void JNICALL

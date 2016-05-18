@@ -30,9 +30,13 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv * env,
         jobject obj);
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeCameraRig_getComponentType(JNIEnv * env, jobject obj);
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeCameraRig_getCameraRigType(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
+jobject obj);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCameraRig_setCameraRigType(JNIEnv * env,
@@ -125,6 +129,11 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv * env,
         jobject obj) {
     return reinterpret_cast<jlong>(new CameraRig());
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeCameraRig_getComponentType(JNIEnv * env, jobject obj) {
+    return CameraRig::getComponentType();
 }
 
 JNIEXPORT jint JNICALL

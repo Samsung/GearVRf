@@ -49,11 +49,16 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     private final Set<GVRPostEffect> mPostEffects = new HashSet<GVRPostEffect>();
 
     protected GVRCamera(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr, GVRCamera.class);
+        super(gvrContext, ptr);
     }
 
     protected GVRCamera(GVRContext gvrContext, long ptr, GVRSceneObject owner) {
-        super(gvrContext, ptr, GVRCamera.class, owner);
+        super(gvrContext, ptr, owner);
+    }
+    
+
+    static public long getComponentType() {
+        return NativeCamera.getComponentType();
     }
     
     /** Get the background color as an Android {@link Color} */
@@ -337,6 +342,8 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 class NativeCamera {
     static native float getBackgroundColorR(long camera);
 
+    static native long getComponentType();
+    
     static native void setBackgroundColorR(long camera, float r);
 
     static native float getBackgroundColorG(long camera);

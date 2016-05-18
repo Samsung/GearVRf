@@ -27,8 +27,12 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * Constructor.
      */
     public GVRBone(GVRContext gvrContext) {
-        super(gvrContext, NativeBone.ctor(), GVRBone.class);
+        super(gvrContext, NativeBone.ctor());
         mBoneWeights = new ArrayList<GVRBoneWeight>();
+    }
+
+    static public long getComponentType() {
+        return NativeBone.getComponentType();
     }
 
     /**
@@ -210,6 +214,7 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
 
 class NativeBone {
     static native long ctor();
+    static native long getComponentType();
     static native void setName(long object, String mName);
     static native void setBoneWeights(long object, long[] nativePtrArray);
     static native void setOffsetMatrix(long object, float[] offsetMatrix);

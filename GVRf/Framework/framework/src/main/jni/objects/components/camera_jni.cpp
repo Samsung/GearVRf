@@ -24,6 +24,9 @@
 
 namespace gvr {
 extern "C" {
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeCamera_getComponentType(JNIEnv * env, jobject obj);
+
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCamera_getBackgroundColorR(JNIEnv * env,
         jobject obj, jlong jcamera);
@@ -69,6 +72,12 @@ Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data);
 }
 ;
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeCamera_getComponentType(JNIEnv * env, jobject obj) {
+    return Camera::getComponentType();
+}
+
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeCamera_getBackgroundColorR(JNIEnv * env,
