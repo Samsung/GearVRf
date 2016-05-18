@@ -30,10 +30,11 @@ class SceneObject;
 class Component: public HybridObject {
 public:
     Component() :
-            HybridObject(), owner_object_() {
+            HybridObject(), type_(0), owner_object_() {
     }
 
     Component(SceneObject* owner_object) :
+            type_(0),
             owner_object_(owner_object) {
     }
 
@@ -52,6 +53,14 @@ public:
         owner_object_ = NULL;
     }
 
+    long long getType() const {
+        return type_;
+    }
+
+    virtual void setType(long long type) {
+        type_ = type;
+    }
+
 private:
     Component(const Component& component);
     Component(Component&& component);
@@ -60,6 +69,7 @@ private:
 
 private:
     SceneObject* owner_object_;
+    long long    type_;
 };
 
 }

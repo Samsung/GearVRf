@@ -42,6 +42,48 @@ SceneObject::~SceneObject() {
     delete queries_;
 }
 
+bool SceneObject::attachComponent(Component* component) {
+    for (auto it = components_.begin(); it != components_.end(); ++it) {
+        if ((*it)->getType() == component->getType())
+            return false;
+    }
+    component->set_owner_object(this);
+    components_.push_back(component);
+    dirtyHierarchicalBoundingVolume();
+    return true;
+}
+
+bool SceneObject::detachComponent(Component* component) {
+    auto it = std::find(components_.begin(), components_.end(), component);
+    if (it == components_.end())
+        return false;
+    (*it)->set_owner_object(NULL);
+    components_.erase(it);
+    dirtyHierarchicalBoundingVolume();
+    return true;
+}
+
+Component* SceneObject::detachComponent(long long type) {
+    for (auto it = components_.begin(); it != components_.end(); ++it) {
+        if ((*it)->getType() == type) {
+            Component* component = *it;
+            component->set_owner_object(NULL);
+            components_.erase(it);
+            dirtyHierarchicalBoundingVolume();
+            return component;
+        }
+    }
+    return (Component*) NULL;
+}
+
+Component* SceneObject::getComponent(long long type) const {
+    for (auto it = components_.begin(); it != components_.end(); ++it) {
+        if ((*it)->getType() == type)
+            return *it;
+    }
+    return (Component*) NULL;
+}
+
 void SceneObject::attachTransform(SceneObject* self, Transform* transform) {
     if (transform_) {
         detachTransform();

@@ -28,13 +28,13 @@
 
 #include "objects/components/component.h"
 #include "objects/render_pass.h"
-#include "objects/components/texture_capturer.h"
 #include "objects/material.h"
 
 namespace gvr {
 class Mesh;
 class Material;
 class Light;
+class TextureCapturer;
 
 class RenderData: public Component {
 public:
@@ -251,6 +251,16 @@ public:
         return texture_capturer;
     }
 
+    static long long getComponentType() {
+        return componentType_;
+    }
+
+    virtual void setType(long long type) {
+        Component::setType(type);
+        if (componentType_ == 0)
+            componentType_ = type;
+    }
+
 private:
     RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -258,6 +268,7 @@ private:
     RenderData& operator=(RenderData&& render_data);
 
 private:
+    static long long componentType_;
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
     Mesh* mesh_;

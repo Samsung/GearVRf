@@ -27,7 +27,7 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * Constructor.
      */
     public GVRBone(GVRContext gvrContext) {
-        super(gvrContext, NativeBone.ctor());
+        super(gvrContext, NativeBone.ctor(), GVRBone.class);
         mBoneWeights = new ArrayList<GVRBoneWeight>();
     }
 

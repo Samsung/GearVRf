@@ -24,7 +24,11 @@
 #include <mutex>
 
 #include "objects/hybrid_object.h"
+#include "objects/components/render_data.h"
 #include "objects/components/transform.h"
+#include "objects/components/camera.h"
+#include "objects/components/camera_rig.h"
+#include "objects/components/eye_pointee_holder.h"
 #include "objects/bounding_volume.h"
 #include "util/gvr_gl.h"
 
@@ -32,7 +36,6 @@ namespace gvr {
 class Camera;
 class CameraRig;
 class EyePointeeHolder;
-class RenderData;
 
 class SceneObject: public HybridObject {
 public:
@@ -68,32 +71,41 @@ public:
         return query_currently_issued_;
     }
 
+    bool attachComponent(Component* component);
+    bool detachComponent(Component* component);
+    Component* detachComponent(long long type);
+    Component* getComponent(long long type) const;
+
     void attachTransform(SceneObject* self, Transform* transform);
     void detachTransform();
 
     Transform* transform() const {
-        return transform_;
+        return (Transform*) getComponent(Transform::getComponentType());
+//        return transform_;
     }
 
     void attachRenderData(SceneObject* self, RenderData* render_data);
     void detachRenderData();
 
     RenderData* render_data() const {
-        return render_data_;
+         return (RenderData*) getComponent(RenderData::getComponentType());
+//        return render_data_;
     }
 
     void attachCamera(SceneObject* self, Camera* camera);
     void detachCamera();
 
     Camera* camera() const {
-        return camera_;
+        return (Camera*) getComponent(Camera::getComponentType());
+//        return camera_;
     }
 
     void attachCameraRig(SceneObject* self, CameraRig* camera_rig);
     void detachCameraRig();
 
     CameraRig* camera_rig() const {
-        return camera_rig_;
+        return (CameraRig*) getComponent(CameraRig::getComponentType());
+        //return camera_rig_;
     }
 
     void attachEyePointeeHolder(SceneObject* self,
@@ -101,7 +113,8 @@ public:
     void detachEyePointeeHolder();
 
     EyePointeeHolder* eye_pointee_holder() const {
-        return eye_pointee_holder_;
+        return (EyePointeeHolder*) getComponent(EyePointeeHolder::getComponentType());
+ //       return eye_pointee_holder_;
     }
 
     SceneObject* parent() const {
@@ -156,6 +169,7 @@ public:
 
 private:
     std::string name_;
+    std::vector<Component*> components_;
     Transform* transform_ = nullptr;
     RenderData* render_data_ = nullptr;
     Camera* camera_ = nullptr;

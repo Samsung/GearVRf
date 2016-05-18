@@ -36,6 +36,10 @@ public:
     Transform();
     virtual ~Transform();
 
+    static long long getComponentType() {
+        return componentType_;
+    }
+
     const glm::vec3& position() const {
         return position_;
     }
@@ -183,6 +187,7 @@ public:
     void rotateWithPivot(float w, float x, float y, float z, float pivot_x,
             float pivot_y, float pivot_z);
     void setModelMatrix(glm::mat4 mat);
+    virtual void setType(long long type);
 
 private:
     Transform(const Transform& transform);
@@ -191,6 +196,7 @@ private:
     Transform& operator=(Transform&& transform);
 
 private:
+    static long long componentType_;
     glm::vec3 position_;
     glm::quat rotation_;
     glm::vec3 scale_;

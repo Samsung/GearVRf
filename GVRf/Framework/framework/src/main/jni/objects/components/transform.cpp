@@ -24,6 +24,8 @@
 #include "objects/scene_object.h"
 #include <math.h>
 namespace gvr {
+long long Transform::componentType_ = 0;
+
 Transform::Transform() :
         Component(), position_(glm::vec3(0.0f, 0.0f, 0.0f)), rotation_(
                 glm::quat(1.0f, 0.0f, 0.0f, 0.0f)), scale_(
@@ -32,6 +34,12 @@ Transform::Transform() :
 }
 
 Transform::~Transform() {
+}
+
+void Transform::setType(long long type) {
+    Component::setType(type);
+    if (componentType_ == 0)
+        componentType_ = type;
 }
 
 void Transform::invalidate(bool rotationUpdated) {

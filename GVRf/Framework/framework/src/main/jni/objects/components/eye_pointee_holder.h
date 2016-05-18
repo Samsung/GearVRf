@@ -54,6 +54,16 @@ public:
         hit_ = hit;
     }
 
+    static long long getComponentType() {
+        return componentType_;
+    }
+
+    virtual void setType(long long type) {
+        Component::setType(type);
+        if (componentType_ == 0)
+            componentType_ = type;
+    }
+
     void addPointee(EyePointee* pointee);
     void removePointee(EyePointee* pointee);
     EyePointData isPointed(const glm::mat4& view_matrix);
@@ -70,6 +80,7 @@ private:
     bool enable_;
     glm::vec3 hit_;
     std::vector<EyePointee*> pointees_;
+    static long long componentType_;
 };
 
 }

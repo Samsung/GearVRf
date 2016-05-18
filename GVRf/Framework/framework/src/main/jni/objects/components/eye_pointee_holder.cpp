@@ -24,6 +24,8 @@
 #include "objects/eye_pointee.h"
 
 namespace gvr {
+long long EyePointeeHolder::componentType_ = 0;
+
 EyePointeeHolder::EyePointeeHolder() :
         Component(), enable_(true), pointees_() {
 }

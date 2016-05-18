@@ -35,6 +35,18 @@ extern "C" {
     Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
             jobject obj, jlong jscene_object, jstring name);
 
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachComponent(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jcomponent);
+
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong type);
+
+    JNIEXPORT long JNICALL
+    Java_org_gearvrf_NativeSceneObject_findComponent(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong type);
+
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeSceneObject_attachTransform(JNIEnv * env,
             jobject obj, jlong jscene_object, jlong jtransform);
@@ -140,6 +152,31 @@ Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
     const char* native_name = env->GetStringUTFChars(name, 0);
     scene_object->set_name(std::string(native_name));
     env->ReleaseStringUTFChars(name, native_name);
+}
+
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_attachComponent(JNIEnv * env,
+        jobject obj, jlong jscene_object, jlong jcomponent) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    return scene_object->attachComponent(component);
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env,
+        jobject obj, jlong jscene_object, jlong type) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    return scene_object->detachComponent(type) != NULL;
+}
+
+
+JNIEXPORT long JNICALL
+Java_org_gearvrf_NativeSceneObject_findComponent(JNIEnv * env,
+        jobject obj, jlong jscene_object, jlong type) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    Component* component = scene_object->getComponent(type);
+    return (long) component;
 }
 
 JNIEXPORT void JNICALL

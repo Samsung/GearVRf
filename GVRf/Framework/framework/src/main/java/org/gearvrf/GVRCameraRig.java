@@ -61,17 +61,17 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
 
     /** Constructs a camera rig without cameras attached. */
     public GVRCameraRig(GVRContext gvrContext) {
-        super(gvrContext, NativeCameraRig.ctor());
+        super(gvrContext, NativeCameraRig.ctor(), GVRCameraRig.class);
         init(gvrContext);
     }
 
     private GVRCameraRig(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
+        super(gvrContext, ptr, GVRCameraRig.class);
         init(gvrContext);
     }
 
     public GVRCameraRig(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeCameraRig.ctor(), owner);
+        super(gvrContext, NativeCameraRig.ctor(), GVRCameraRig.class, owner);
         init(gvrContext);
     }
     

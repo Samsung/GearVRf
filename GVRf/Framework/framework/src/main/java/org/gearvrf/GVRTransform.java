@@ -29,16 +29,16 @@ import org.joml.Matrix4f;
  */
 public class GVRTransform extends GVRComponent {
     GVRTransform(GVRContext gvrContext) {
-        super(gvrContext, NativeTransform.ctor());
+        super(gvrContext, NativeTransform.ctor(), GVRTransform.class);
     }
 
     GVRTransform(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeTransform.ctor(), owner);
+        super(gvrContext, NativeTransform.ctor(), GVRTransform.class, owner);
         NativeSceneObject.attachTransform(owner.getNative(), getNative());
     }
     
     private GVRTransform(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
+        super(gvrContext, ptr, GVRTransform.class);
     }
 
     /**

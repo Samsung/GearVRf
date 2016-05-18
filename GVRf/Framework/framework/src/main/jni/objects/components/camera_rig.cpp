@@ -28,6 +28,7 @@
 #include "util/gvr_time.h"
 
 namespace gvr {
+long long CameraRig::componentType_ = 0;
 
 float CameraRig::default_camera_separation_distance_ = 0.062f;
 

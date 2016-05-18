@@ -49,11 +49,11 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     private final Set<GVRPostEffect> mPostEffects = new HashSet<GVRPostEffect>();
 
     protected GVRCamera(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
+        super(gvrContext, ptr, GVRCamera.class);
     }
 
     protected GVRCamera(GVRContext gvrContext, long ptr, GVRSceneObject owner) {
-        super(gvrContext, ptr, owner);
+        super(gvrContext, ptr, GVRCamera.class, owner);
     }
     
     /** Get the background color as an Android {@link Color} */

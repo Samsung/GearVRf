@@ -26,7 +26,6 @@
 #include "objects/components/texture_capturer.h"
 
 namespace gvr {
-
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
