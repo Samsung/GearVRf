@@ -38,13 +38,17 @@ public class GVRComponent extends GVRHybridObject {
      * @param nativePointer
      *            The native pointer, returned by the native constructor
      */
-    protected GVRComponent(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
+    protected GVRComponent(GVRContext gvrContext, long nativeConstructor, Class<? extends GVRComponent> type) {
+        super(gvrContext, nativeConstructor);
+        long nativeType = GVRComponent.typeFromClass(type);
+        NativeComponent.setType(getNative(), nativeType);
         isEnabled = true;
     }
 
-    public GVRComponent(GVRContext gvrContext, long nativeConstructor, GVRSceneObject owner) {
+    public GVRComponent(GVRContext gvrContext, long nativeConstructor, Class<? extends GVRComponent> type, GVRSceneObject owner) {
         super(gvrContext, nativeConstructor);
+        long nativeType = GVRComponent.typeFromClass(type);
+        NativeComponent.setType(getNative(), nativeType);
         setOwnerObject(owner);
         isEnabled = true;
     }
@@ -71,9 +75,11 @@ public class GVRComponent extends GVRHybridObject {
      *            concatenated lists - see {@link GVREyePointeeHolder} for an
      *            example.
      */
-    protected GVRComponent(GVRContext gvrContext, long nativePointer,
+    protected GVRComponent(GVRContext gvrContext, long nativePointer, Class<? extends GVRComponent> type,
             List<NativeCleanupHandler> cleanupHandlers) {
         super(gvrContext, nativePointer, cleanupHandlers);
+        long nativeType = GVRComponent.typeFromClass(type);
+        NativeComponent.setType(getNative(), nativeType);
     }
 
     protected GVRSceneObject owner;
@@ -104,30 +110,34 @@ public class GVRComponent extends GVRHybridObject {
         return owner != null;
     }
     /**
-     * Enable the interface so it will be active in the scene.
+     * Enable the component so it will be active in the scene.
      */
     public void enable() {
         isEnabled = true;
     }
 
     /**
-     * Disable the interface so it will not be active in the scene.
+     * Disable the component so it will not be active in the scene.
      */
     public void disable() {
         isEnabled = false;
     }
     
     /**
-     * Get the enable/disable status for the interface.
+     * Get the enable/disable status for the component.
      * 
-     * @return true if interface is enabled, false if interface is disabled.
+     * @return true if interface is enabled, false if component is disabled.
      */
     public boolean isEnabled() {
         return isEnabled;
     }
     
+    public long getType() {
+        return NativeComponent.getType(getNative());
+    }
+    
     /**
-     * Get the transform of the scene object this interface is attached to.
+     * Get the transform of the scene object this component is attached to.
      * 
      * @return GVRTransform of scene object
      */
@@ -136,13 +146,31 @@ public class GVRComponent extends GVRHybridObject {
     }
     
     /**
-     * Get the interface of the specified class attached to the scene object.
+     * Get the component of the specified class attached to the scene object.
      * 
-     * If the scene object that owns this interface also has an interface
+     * If the scene object that owns this component also has an interface
      * of the given class, it will be returned.
-     * @return GVRInterface of specified class or null if none exists.
+     * @return GVRComponent of specified class or null if none exists.
      */
-    public GVRComponent getInterface(Class<? extends GVRComponent> interfaceClass) {
-        return getOwnerObject().getComponent(interfaceClass);
+    public GVRComponent getComponent(Class<? extends GVRComponent> componentClass) {
+        return getOwnerObject().getComponent(componentClass);
     }
+    
+    static public long typeFromClass(Class<? extends GVRComponent> jclass) {
+        String s = jclass.getSimpleName();
+        long h = 98764321261L; 
+        int l = s.length();
+        char[] chars = s.toCharArray();
+        
+        for (int i = 0; i < l; i++) {
+          h = 31 * h + chars[i];
+        }
+        return h;
+    }
+
+}
+
+class NativeComponent {
+    static native long getType(long component);
+    static native void setType(long component, long type);
 }

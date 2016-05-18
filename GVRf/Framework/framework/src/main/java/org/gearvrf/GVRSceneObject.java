@@ -56,12 +56,6 @@ import org.joml.Vector3f;
  */
 public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     private Map<Long, GVRComponent> mComponents = new HashMap<Long, GVRComponent>();
-    private GVRTransform mTransform;
-    private GVRRenderData mRenderData;
-    private GVRCamera mCamera;
-    private GVRCameraRig mCameraRig;
-    private GVREyePointeeHolder mEyePointeeHolder;
-    private GVRLightBase mLight;
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
@@ -383,9 +377,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     void attachTransform(GVRTransform transform) {
         attachComponent(transform);
-//        mTransform = transform;
-//        transform.setOwnerObject(this);
-//        NativeSceneObject.attachTransform(getNative(), transform.getNative());
     }
 
     /**
@@ -394,11 +385,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     void detachTransform() {
         detachComponent(GVRTransform.class);
-//        if (mTransform != null) {
-//            NativeSceneObject.detachTransform(getNative());
-//            mTransform.setOwnerObject(null);
-//            mTransform = null;
-//        }
     }
 
     /**
@@ -413,7 +399,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRTransform getTransform() {
         return (GVRTransform) getComponent(GVRTransform.class);
-//        return mTransform;
     }
 
     /**
@@ -428,9 +413,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void attachRenderData(GVRRenderData renderData) {
         attachComponent(renderData);
-//        mRenderData = renderData;
-//        renderData.setOwnerObject(this);
-//        NativeSceneObject.attachRenderData(getNative(), renderData.getNative());
     }
 
     /**
@@ -440,11 +422,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void detachRenderData() {
         detachComponent(GVRRenderData.class);
-//        if (mRenderData != null) {
-//            NativeSceneObject.detachRenderData(getNative());
-//            mRenderData.setOwnerObject(null);
-//            mRenderData = null;
-//        }
     }
 
     /**
@@ -455,7 +432,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRRenderData getRenderData() {
         return (GVRRenderData) getComponent(GVRRenderData.class);
-//        return mRenderData;
     }
 
     /**
@@ -480,9 +456,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void attachCamera(GVRCamera camera) {
         attachComponent(camera);
-//        mCamera = camera;
-//        camera.setOwnerObject(this);
-//        NativeSceneObject.attachCamera(getNative(), camera.getNative());
     }
 
     /**
@@ -490,11 +463,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void detachCamera() {
         detachComponent(GVRCamera.class);
-//        if (mCamera != null) {
-//            NativeSceneObject.detachCamera(getNative());
-//            mCamera.setOwnerObject(null);
-//            mCamera = null;
-//        }
     }
 
     /**
@@ -505,7 +473,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRCamera getCamera() {
         return (GVRCamera) getComponent(GVRCamera.class);
- //       return mCamera;
     }
 
     /**
@@ -519,9 +486,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void attachCameraRig(GVRCameraRig cameraRig) {
         attachComponent(cameraRig);
-//        mCameraRig = cameraRig;
-//        cameraRig.setOwnerObject(this);
-//        NativeSceneObject.attachCameraRig(getNative(), cameraRig.getNative());
     }
 
     /**
@@ -529,11 +493,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void detachCameraRig() {
         detachComponent(GVRCameraRig.class);
-//        if (mCameraRig != null) {
-//            NativeSceneObject.detachCameraRig(getNative());
-//            mCameraRig.setOwnerObject(null);
-//            mCameraRig = null;
-//        }
     }
 
     /**
@@ -544,7 +503,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRCameraRig getCameraRig() {
         return (GVRCameraRig) getComponent(GVRCameraRig.class);
-//        return mCameraRig;
     }
 
     /**
@@ -555,7 +513,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRLightBase getLight() {
         return (GVRLightBase) getComponent(GVRLightBase.class);
-//        return mLight;
     }
     
     /**
@@ -569,8 +526,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void attachLight(GVRLightBase light) {
         attachComponent(light);
-//        mLight = light;
-//        light.setOwnerObject(this);
     }
     
     /**
@@ -578,10 +533,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void detachLight() {
         detachComponent(GVRLightBase.class);
-//        if (mLight != null) {
-//            mLight.setOwnerObject(null);
-//            mLight = null;
-//        }
     }
     
     
@@ -615,16 +566,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void attachEyePointeeHolder(GVREyePointeeHolder eyePointeeHolder) {
         attachComponent(eyePointeeHolder);
-        // see GVRPicker.findObjects
-//        GVRPicker.sFindObjectsLock.lock();
-//        try {
-//            mEyePointeeHolder = eyePointeeHolder;
-//            eyePointeeHolder.setOwnerObject(this);
-//            NativeSceneObject.attachEyePointeeHolder(getNative(),
-//                eyePointeeHolder.getNative());
-//        } finally {
-//            GVRPicker.sFindObjectsLock.unlock();
-//        }
     }
 
     /**
@@ -667,18 +608,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public void detachEyePointeeHolder() {
         detachComponent(GVREyePointeeHolder.class);
     }
-        // see GVRPicker.findObjects
-//        GVRPicker.sFindObjectsLock.lock();
-//        try {
-//            if (mEyePointeeHolder != null) {
-//                mEyePointeeHolder.setOwnerObject(null);
-//            }
-//            mEyePointeeHolder = null;
-//            NativeSceneObject.detachEyePointeeHolder(getNative());
-//        } finally {
-//            GVRPicker.sFindObjectsLock.unlock();
-//        }
-//    }
 
     /**
      * Get the attached {@link GVREyePointeeHolder}
@@ -689,7 +618,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVREyePointeeHolder getEyePointeeHolder() {
         return (GVREyePointeeHolder) getComponent(GVREyePointeeHolder.class);
-//        return mEyePointeeHolder;
     }
 
     /**
@@ -725,7 +653,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @since 2.0.2
      */
     public boolean getPickingEnabled() {
-        return mEyePointeeHolder != null;
+        return getComponent(GVREyePointeeHolder.class) != null;
     }
 
     /**
@@ -1203,27 +1131,6 @@ class NativeSceneObject {
     
     static native long findComponent(long sceneObject, long type);
     
-    static native void attachTransform(long sceneObject, long transform);
-
-    static native void detachTransform(long sceneObject);
-
-    static native void attachRenderData(long sceneObject, long renderData);
-
-    static native void detachRenderData(long sceneObject);
-
-    static native void attachCamera(long sceneObject, long camera);
-
-    static native void detachCamera(long sceneObject);
-
-    static native void attachCameraRig(long sceneObject, long cameraRig);
-
-    static native void detachCameraRig(long sceneObject);
-
-    static native void attachEyePointeeHolder(long sceneObject,
-            long eyePointeeHolder);
-
-    static native void detachEyePointeeHolder(long sceneObject);
-
     static native long setParent(long sceneObject, long parent);
 
     static native void addChildObject(long sceneObject, long child);

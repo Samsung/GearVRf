@@ -73,7 +73,7 @@ public class GVREyePointeeHolder extends GVRComponent {
     }
     
     private GVREyePointeeHolder(GVRContext gvrContext, long nativePointer) {
-        super(gvrContext, nativePointer, sCleanup);
+        super(gvrContext, nativePointer, GVREyePointeeHolder.class, sCleanup);
         registerNativePointer(nativePointer);
     }
         
@@ -99,7 +99,7 @@ public class GVREyePointeeHolder extends GVRComponent {
      */
     protected GVREyePointeeHolder(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> descendantsCleanupHandlerList) {
-        super(gvrContext, nativePointer, sConcatenations
+        super(gvrContext, nativePointer, GVREyePointeeHolder.class, sConcatenations
                 .getUniqueConcatenation(descendantsCleanupHandlerList));
         registerNativePointer(nativePointer);
     }
@@ -128,6 +128,15 @@ public class GVREyePointeeHolder extends GVRComponent {
         return super.getOwnerObject();
     }
 
+    public void setOwnerObject(GVRSceneObject owner) {
+        GVRPicker.sFindObjectsLock.lock();
+        try {
+            super.setOwnerObject(owner);
+        } finally {
+            GVRPicker.sFindObjectsLock.unlock();
+        }
+    }
+    
     /**
      * Is this holder enabled?
      * 

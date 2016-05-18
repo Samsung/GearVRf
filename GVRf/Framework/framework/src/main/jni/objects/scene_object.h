@@ -76,41 +76,25 @@ public:
     Component* detachComponent(long long type);
     Component* getComponent(long long type) const;
 
-    void attachTransform(SceneObject* self, Transform* transform);
-    void detachTransform();
-
     Transform* transform() const {
         return (Transform*) getComponent(Transform::getComponentType());
 //        return transform_;
     }
-
-    void attachRenderData(SceneObject* self, RenderData* render_data);
-    void detachRenderData();
 
     RenderData* render_data() const {
          return (RenderData*) getComponent(RenderData::getComponentType());
 //        return render_data_;
     }
 
-    void attachCamera(SceneObject* self, Camera* camera);
-    void detachCamera();
-
     Camera* camera() const {
         return (Camera*) getComponent(Camera::getComponentType());
 //        return camera_;
     }
 
-    void attachCameraRig(SceneObject* self, CameraRig* camera_rig);
-    void detachCameraRig();
-
     CameraRig* camera_rig() const {
         return (CameraRig*) getComponent(CameraRig::getComponentType());
         //return camera_rig_;
     }
-
-    void attachEyePointeeHolder(SceneObject* self,
-            EyePointeeHolder* eye_pointee_holder);
-    void detachEyePointeeHolder();
 
     EyePointeeHolder* eye_pointee_holder() const {
         return (EyePointeeHolder*) getComponent(EyePointeeHolder::getComponentType());
@@ -170,11 +154,6 @@ public:
 private:
     std::string name_;
     std::vector<Component*> components_;
-    Transform* transform_ = nullptr;
-    RenderData* render_data_ = nullptr;
-    Camera* camera_ = nullptr;
-    CameraRig* camera_rig_ = nullptr;
-    EyePointeeHolder* eye_pointee_holder_ = nullptr;
     SceneObject* parent_ = nullptr;
     std::vector<SceneObject*> children_;
     float lod_min_range_;

@@ -84,106 +84,6 @@ Component* SceneObject::getComponent(long long type) const {
     return (Component*) NULL;
 }
 
-void SceneObject::attachTransform(SceneObject* self, Transform* transform) {
-    if (transform_) {
-        detachTransform();
-    }
-    SceneObject* owner_object(transform->owner_object());
-    if (owner_object) {
-        owner_object->detachRenderData();
-    }
-    transform_ = transform;
-    transform_->set_owner_object(self);
-    dirtyHierarchicalBoundingVolume();
-}
-
-void SceneObject::detachTransform() {
-    if (transform_) {
-        transform_->removeOwnerObject();
-        transform_ = NULL;
-    }
-    dirtyHierarchicalBoundingVolume();
-}
-
-void SceneObject::attachRenderData(SceneObject* self, RenderData* render_data) {
-    if (render_data_) {
-        detachRenderData();
-    }
-    SceneObject* owner_object(render_data->owner_object());
-    if (owner_object) {
-        owner_object->detachRenderData();
-    }
-    render_data_ = render_data;
-    render_data->set_owner_object(self);
-    dirtyHierarchicalBoundingVolume();
-}
-
-void SceneObject::detachRenderData() {
-    if (render_data_) {
-        render_data_->removeOwnerObject();
-        render_data_ = NULL;
-    }
-    dirtyHierarchicalBoundingVolume();
-}
-
-void SceneObject::attachCamera(SceneObject* self, Camera* camera) {
-    if (camera_) {
-        detachCamera();
-    }
-    SceneObject* owner_object(camera->owner_object());
-    if (owner_object) {
-        owner_object->detachCamera();
-    }
-    camera_ = camera;
-    camera_->set_owner_object(self);
-}
-
-void SceneObject::detachCamera() {
-    if (camera_) {
-        camera_->removeOwnerObject();
-        camera_ = NULL;
-    }
-}
-
-void SceneObject::attachCameraRig(SceneObject* self, CameraRig* camera_rig) {
-    if (camera_rig_) {
-        detachCameraRig();
-    }
-    SceneObject* owner_object(camera_rig->owner_object());
-    if (owner_object) {
-        owner_object->detachCameraRig();
-    }
-    camera_rig_ = camera_rig;
-    camera_rig_->set_owner_object(self);
-}
-
-void SceneObject::detachCameraRig() {
-    if (camera_rig_) {
-        camera_rig_->removeOwnerObject();
-        camera_rig_ = NULL;
-    }
-}
-
-void SceneObject::attachEyePointeeHolder(SceneObject* self,
-        EyePointeeHolder* eye_pointee_holder) {
-    if (eye_pointee_holder_) {
-        detachEyePointeeHolder();
-    }
-    SceneObject* owner_object(eye_pointee_holder->owner_object());
-    if (owner_object) {
-        owner_object->detachEyePointeeHolder();
-    }
-    eye_pointee_holder_ = eye_pointee_holder;
-    eye_pointee_holder_->set_owner_object(self);
-}
-
-void SceneObject::detachEyePointeeHolder() {
-    if (eye_pointee_holder_) {
-        eye_pointee_holder_->removeOwnerObject();
-        eye_pointee_holder_ = NULL;
-    }
-}
-
 void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     for (SceneObject* parent = parent_; parent; parent = parent->parent_) {
         if (child == parent) {
@@ -368,17 +268,17 @@ BoundingVolume& SceneObject::getBoundingVolume() {
     if (!bounding_volume_dirty_) {
         return transformed_bounding_volume_;
     }
-
+    RenderData* rdata = render_data();
     // Calculate the new bounding volume from itself and all its children
     // 1. Start from its own mesh's bounding volume if there is any
-    if (render_data_ != NULL && render_data_->mesh() != NULL) {
+    if (rdata != NULL && rdata->mesh() != NULL) {
         // Future optimization:
         // If the mesh and transform are still valid, don't need to recompute the mesh_bounding_volume
         // if (!render_data_->mesh()->hasBoundingVolume()
         // || !transform_->isModelMatrixValid()) {
         mesh_bounding_volume.transform(
-                render_data_->mesh()->getBoundingVolume(),
-                transform_->getModelMatrix());
+                rdata->mesh()->getBoundingVolume(),
+                transform()->getModelMatrix());
         //	}
         transformed_bounding_volume_ = mesh_bounding_volume;
     }
@@ -467,7 +367,8 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
     }
 
     // 2. Skip the empty objects with no render data
-    if (render_data_ == NULL || render_data_->pass(0)->material() == NULL) {
+    RenderData* rdata = render_data();
+    if (rdata == NULL || rdata->pass(0)->material() == NULL) {
         if (DEBUG_RENDERER) {
             LOGD("FRUSTUM: no render data skip %s\n", name_.c_str());
         }
@@ -486,7 +387,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
     float distance = glm::dot(difference, difference);
 
     // this distance will be used when sorting transparent objects
-    render_data_->set_camera_distance(distance);
+    render_data()->set_camera_distance(distance);
 
     // if the object is not in the correct LOD level, cull out itself and all its children
     if (!inLODRange(distance)) {
