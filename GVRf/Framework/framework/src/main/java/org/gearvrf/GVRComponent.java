@@ -20,30 +20,29 @@ import java.util.List;
 import org.gearvrf.utility.Exceptions;
 
 /**
- * Base class for defining interfaces to extend the scene object.
+ * Base class for defining components to extend the scene object.
  *
- * A GVRSceneObject can have any number of interfaces but only
- * one instance of each class. 
+ * Components are used to add behaviours to scene objects.
+ * A GVRSceneObject can have any number of components but only
+ * one component of each type. Usually the component type loosely
+ * corresponds to the base class of the component. For example,
+ * GVRCamera and GVRCameraRig have different component types.
+ * GVROrthographicCamera and GVRPerspectiveCamera both have the
+ * same type. All of the light classes have the same type as well.
  * 
- * {@link GVRSceneObject.addInterface }
+ * @see GVRSceneObject.attachComponent
+ * @see GVRSceneObject.getComponent
  */
 public class GVRComponent extends GVRHybridObject {
     // private static final String TAG = Log.tag(GVRComponent.class);
 
     /**
-     * Normal constructor
+     * Constructor for a component that is not attached to a scene object.
      *
-     * @param gvrContext
-     *            The current GVRF context
-     * @param nativePointer
-     *            The native pointer, returned by the native constructor
+     * @param gvrContext    The current GVRF context
+     * @param nativePointer Pointer to the native object, returned by the native constructor
      */
     protected GVRComponent(GVRContext gvrContext, long nativeConstructor) {
-        super(gvrContext, nativeConstructor);
-        isEnabled = true;
-    }
-
-    public GVRComponent(GVRContext gvrContext, long nativeConstructor, GVRSceneObject owner) {
         super(gvrContext, nativeConstructor);
         isEnabled = true;
     }
@@ -59,16 +58,14 @@ public class GVRComponent extends GVRHybridObject {
      * @param cleanupHandlers
      *            Cleanup handler(s).
      * 
-     *            <p>
-     *            Normally, this will be a {@code private static} class
-     *            constant, so that there is only one {@code List} per class.
-     *            Descendants that supply a {@code List} and <em>also</em> have
-     *            descendants that supply a {@code List} should use
-     *            {@link CleanupHandlerListManager} to maintain a
-     *            {@code Map<List<NativeCleanupHandler>, List<NativeCleanupHandler>>}
-     *            whose keys are descendant lists and whose values are unique
-     *            concatenated lists - see {@link GVREyePointeeHolder} for an
-     *            example.
+     * Normally, this will be a {@code private static} class
+     * constant, so that there is only one {@code List} per class.
+     * Descendants that supply a {@code List} and <em>also</em> have
+     * descendants that supply a {@code List} should use
+     * {@link CleanupHandlerListManager} to maintain a
+     * {@code Map<List<NativeCleanupHandler>, List<NativeCleanupHandler>>}
+     * whose keys are descendant lists and whose values are unique
+     * concatenated lists - see {@link GVREyePointeeHolder} for an example.
      */
     protected GVRComponent(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> cleanupHandlers) {
@@ -79,7 +76,7 @@ public class GVRComponent extends GVRHybridObject {
     protected boolean isEnabled;
 
     /**
-     * @return The {@link GVRSceneObject} this object is currently attached to.
+     * @return The {@link GVRSceneObject} this object is currently attached to, or null if not attached.
      */
     public GVRSceneObject getOwnerObject() {
         if (owner != null) {
@@ -90,18 +87,27 @@ public class GVRComponent extends GVRHybridObject {
                 .getSimpleName());
     }
 
+    /***
+     * Attach this component to a scene object.
+     * @param owner scene object to become new owner.
+     */
     public void setOwnerObject(GVRSceneObject owner) {
         this.owner = owner;
+        if (owner != null)
+            NativeComponent.setOwnerObject(getNative(), owner.getNative());
+        else
+            NativeComponent.setOwnerObject(getNative(), 0L);
     }
 
     /**
      * Checks if the {@link GVRComponent} is attached to a {@link GVRSceneObject}.
      *
-     * @return true if a {@link GVRSceneObject} is attached.
+     * @return true if a {@link GVRSceneObject} is attached, else false.
      */
     public boolean hasOwnerObject() {
         return owner != null;
     }
+    
     /**
      * Enable the component so it will be active in the scene.
      */
@@ -143,11 +149,11 @@ public class GVRComponent extends GVRHybridObject {
     }
     
     /**
-     * Get the component of the specified class attached to the scene object.
+     * Get the component of the specified class attached to the owner scene object.
      * 
-     * If the scene object that owns this component also has an interface
-     * of the given class, it will be returned.
-     * @return GVRComponent of specified class or null if none exists.
+     * If the scene object that owns this component also has a component
+     * of the given type, it will be returned.
+     * @return GVRComponent of requested type or null if none exists.
      */
     public GVRComponent getComponent(long type) {
         return getOwnerObject().getComponent(type);
@@ -156,4 +162,5 @@ public class GVRComponent extends GVRHybridObject {
 
 class NativeComponent {
     static native long getType(long component);
+    static native void setOwnerObject(long component, long owner);
 }

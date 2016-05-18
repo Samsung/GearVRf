@@ -120,8 +120,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     }
 
     public GVRRenderData(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeRenderData.ctor(), owner);
-        
+        super(gvrContext, NativeRenderData.ctor());
+        setOwnerObject(owner);
         GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
         addPass(basePass);

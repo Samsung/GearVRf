@@ -33,7 +33,8 @@ public class GVRTransform extends GVRComponent {
     }
 
     GVRTransform(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeTransform.ctor(), owner);
+        super(gvrContext, NativeTransform.ctor());
+        setOwnerObject(owner);
     }
     
     private GVRTransform(GVRContext gvrContext, long ptr) {

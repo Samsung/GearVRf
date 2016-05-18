@@ -62,11 +62,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
-        super(gvrContext, NativeLight.ctor(), parent);
-        if (parent != null)
-        {
-            NativeLight.setParent(getNative(), parent.getNative());
-        }
+        super(gvrContext, NativeLight.ctor());
+        setOwnerObject(parent);
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         vertexDescriptor = null;
         setFloat("enabled", 1.0f);
@@ -149,23 +146,15 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     public void setOwnerObject(GVRSceneObject newOwner)
     {
-        if (owner == newOwner) { return; }
+        if (owner == newOwner)
+            return;
         if (newOwner != null)
         {
             if (owner == null)
-            {
                 getGVRContext().registerDrawFrameListener(this);
-            }
-            NativeLight.setParent(getNative(), newOwner.getNative());
         }
-        else
-        {
-            if (owner != null)
-            {
-                getGVRContext().unregisterDrawFrameListener(this);
-            }
-            NativeLight.setParent(getNative(), 0);
-        }
+        else if (owner != null)
+            getGVRContext().unregisterDrawFrameListener(this);
         super.setOwnerObject(newOwner);
     }
 
@@ -525,8 +514,6 @@ class NativeLight
     static native float[] getVec4(long light, String key);
 
     static native void setVec4(long light, String key, float x, float y, float z, float w);
-
-    static native void setParent(long light, long sceneobj);
 
     static native String getLightID(long light);
 

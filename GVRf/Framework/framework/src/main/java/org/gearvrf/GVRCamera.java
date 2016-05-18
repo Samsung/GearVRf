@@ -53,7 +53,8 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     }
 
     protected GVRCamera(GVRContext gvrContext, long ptr, GVRSceneObject owner) {
-        super(gvrContext, ptr, owner);
+        super(gvrContext, ptr);
+        setOwnerObject(owner);
     }
     
 

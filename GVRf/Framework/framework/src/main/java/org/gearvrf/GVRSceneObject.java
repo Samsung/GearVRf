@@ -30,7 +30,7 @@ import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
 /**
- * One of the key GVRF classes: a scene object.
+ * Describes a 3D object in the scene with a position and orientation.
  * 
  * Every scene object has a {@linkplain #getTransform() location}, and can have
  * {@linkplain #children() children}. An invisible scene object can be used to
@@ -43,7 +43,11 @@ import org.joml.Vector3f;
  * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attached.} Each
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
- *
+ * <p>
+ * Components can be attached to a scene object to extend its functionality.
+ * For example, you can attach a light component to make the scene object illuminate
+ * other objects. Only one component of a particular type can be attached.
+ * Components are retrieved based on their type.
  * <p>
  * {@link GVRSceneObject} receives events defined in {@link ISceneObjectEvents}. To add a listener
  * to these events, use the following code:
@@ -312,11 +316,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Attach the given component to this scene object.
+     * Attach a component to this scene object.
      * 
      * Each scene object has a list of components that may
      * be attached to it. Only one component of a particular type
-     * can be attached. Components can be retrieved based on their type.
+     * can be attached. Components are retrieved based on their type.
      * 
      * @return true if component is attached, false if a component of that class is already attached.
      * @param component

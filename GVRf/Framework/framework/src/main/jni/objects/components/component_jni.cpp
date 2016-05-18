@@ -25,6 +25,10 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
         jobject obj, jlong jcomponent);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeComponent_setOwnerObject(JNIEnv * env,
+        jobject obj, jlong jcomponent, jlong jowner);
+
 }
 
 JNIEXPORT jlong JNICALL
@@ -33,6 +37,14 @@ Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
     Component* component = reinterpret_cast<Component*>(jcomponent);
     long long type = component->getType();
     return type;
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeComponent_setOwnerObject(JNIEnv * env,
+        jobject obj, jlong jcomponent, jlong jowner) {
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    SceneObject* owner = reinterpret_cast<SceneObject*>(jowner);
+    component->set_owner_object(owner);
 }
 
 }
