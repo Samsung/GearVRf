@@ -145,27 +145,24 @@ class VrapiActivityHandler implements ActivityHandler {
 
         final DisplayMetrics metrics = new DisplayMetrics();
         mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        final VrAppSettings appSettings = mActivity.getAppSettings();
         final int screenWidthPixels = Math.max(metrics.widthPixels, metrics.heightPixels);
         final int screenHeightPixels = Math.min(metrics.widthPixels, metrics.heightPixels);
-
+        final int frameBufferWidth = appSettings.getFramebufferPixelsWide();
+        final int frameBufferHeight = appSettings.getFramebufferPixelsHigh();
         final SurfaceHolder holder = mSurfaceView.getHolder();
         holder.setFormat(PixelFormat.TRANSLUCENT);
 
-        final VrAppSettings appSettings = mActivity.getAppSettings();
-        mScreenDimensions = new Vector2f(appSettings.getFramebufferPixelsHigh(), appSettings.getFramebufferPixelsWide());
-        if ((-1 != mScreenDimensions.y) && (-1 != mScreenDimensions.x)) {
-            if ((screenWidthPixels != mScreenDimensions.x) && (screenHeightPixels != mScreenDimensions.x)) {
+        mScreenDimensions = new Vector2f(screenWidthPixels, screenHeightPixels);
+        if ((-1 != frameBufferHeight) && (-1 != frameBufferWidth)) {
+            if ((screenWidthPixels != frameBufferWidth) && (screenHeightPixels != frameBufferHeight)) {
                 Log.v(TAG, "--- window configuration ---");
-                Log.v(TAG, "--- width: %d", mScreenDimensions.x);
-                Log.v(TAG, "--- height: %d", mScreenDimensions.y);
+                Log.v(TAG, "--- width: %d", frameBufferWidth);
+                Log.v(TAG, "--- height: %d", frameBufferHeight);
                 //a different resolution of the native window requested
-                holder.setFixedSize((int) mScreenDimensions.x, (int) mScreenDimensions.y);
+                holder.setFixedSize((int) frameBufferWidth, (int) frameBufferHeight);
                 Log.v(TAG, "----------------------------");
             }
-        }
-        else {
-            mScreenDimensions.x = screenWidthPixels;
-            mScreenDimensions.y = screenHeightPixels;
         }
     }
 

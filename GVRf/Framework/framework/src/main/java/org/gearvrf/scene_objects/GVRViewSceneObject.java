@@ -96,10 +96,6 @@ public class GVRViewSceneObject extends GVRSceneObject {
         });
     }
 
-    public void setParent(GVRView parentView) {
-
-    }
-
     public GVRView getView() {
         return mView;
     }
