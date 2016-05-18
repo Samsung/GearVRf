@@ -441,7 +441,10 @@ public class GVRShaderTemplate
         HashMap<String, Integer> defines = new HashMap<String, Integer>();
         int castShadow = 0;
         if (!rdata.isLightEnabled())
+        {
             defines.put("LIGHTSOURCES", 0);
+            return defines;
+        }
         if (lights == null)
             return defines;
         for (GVRLightBase light : lights)
