@@ -25,6 +25,7 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRTexture;
+import org.joml.Vector3f;
 
 public class GVRCubeSceneObject extends GVRSceneObject {
 
@@ -197,7 +198,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     public GVRCubeSceneObject(GVRContext gvrContext) {
         super(gvrContext);
 
-        createSimpleCube(gvrContext, true, new GVRMaterial(gvrContext));
+        createSimpleCube(gvrContext, true, new GVRMaterial(gvrContext), null);
     }
 
     /**
@@ -216,7 +217,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut) {
         super(gvrContext);
 
-        createSimpleCube(gvrContext, facingOut, new GVRMaterial(gvrContext));
+        createSimpleCube(gvrContext, facingOut, new GVRMaterial(gvrContext), null);
     }
 
     /**
@@ -243,7 +244,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
 
         GVRMaterial material = new GVRMaterial(gvrContext);
         material.setMainTexture(futureTexture);
-        createSimpleCube(gvrContext, facingOut, material);
+        createSimpleCube(gvrContext, facingOut, material, null);
     }
 
     /**
@@ -273,9 +274,42 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             GVRMaterial material) {
         super(gvrContext);
 
-        createSimpleCube(gvrContext, facingOut, material);
+        createSimpleCube(gvrContext, facingOut, material, null);
     }
 
+    /**
+     * Constructs a box scene object with given dimensions.
+     * 
+     * The triangles and normals are facing either in or out and the material
+     * is applied to the cube.
+     *
+     * To use the same texture on the six faces, use a material with the shader type
+     * {@code GVRMaterial.GVRShaderType.Texture} and a {@code GVRTexture}.
+     *
+     * To use different textures on different faces, use a material
+     * with the shader type {@code GVRMaterial.GVRShaderType.Cubemap}, and a
+     * cubemap texture loaded by {@code GVRContext.loadFutureCubemapTexture}.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * 
+     * @param material
+     *            the material for six faces.
+     *            
+     * @param dimensions
+     *            Vector3f containing X, Y, Z dimensions
+     */
+    public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut,
+            GVRMaterial material, Vector3f dimensions) {
+        super(gvrContext);
+
+        createSimpleCube(gvrContext, facingOut, material, dimensions);
+    }
+    
     /**
      * Constructs a cube scene object with each side of length 1.
      * 
@@ -346,17 +380,25 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     }
 
     private void createSimpleCube(GVRContext gvrContext, boolean facingOut,
-            GVRMaterial material) {
+            GVRMaterial material, Vector3f dimensions) {
 
         GVRMesh mesh = new GVRMesh(gvrContext);
-
+        float[] vertices = SIMPLE_VERTICES;
+        if (dimensions != null) {
+            vertices = new float[SIMPLE_VERTICES.length];
+            for (int i = 0; i < SIMPLE_VERTICES.length; i += 3) {
+               vertices[i] = SIMPLE_VERTICES[i] * dimensions.x;
+               vertices[i + 1] = SIMPLE_VERTICES[i + 1] * dimensions.y;
+               vertices[i + 2] = SIMPLE_VERTICES[i + 2] * dimensions.z;
+            }
+         }
         if (facingOut) {
-            mesh.setVertices(SIMPLE_VERTICES);
+            mesh.setVertices(vertices);
             mesh.setNormals(SIMPLE_OUTWARD_NORMALS);
             mesh.setTexCoords(SIMPLE_OUTWARD_TEXCOORDS);
             mesh.setTriangles(SIMPLE_OUTWARD_INDICES);
         } else {
-            mesh.setVertices(SIMPLE_VERTICES);
+            mesh.setVertices(vertices);
             mesh.setNormals(SIMPLE_INWARD_NORMALS);
             mesh.setTexCoords(SIMPLE_INWARD_TEXCOORDS);
             mesh.setTriangles(SIMPLE_INWARD_INDICES);
