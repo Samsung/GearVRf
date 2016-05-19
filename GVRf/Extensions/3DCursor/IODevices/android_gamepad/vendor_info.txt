@@ -1,0 +1,26 @@
+Devices:
+
+1) vendorName "Samsung"
+   vendorId="1256"
+   productId="40960"
+   deviceId="samsung_gamepad"
+   name="Samsung Gamepad"
+
+2) vendorName="Sony"
+   vendorId="1356"
+   productId="616"
+   deviceId="dualshock_3_controller"
+   name="PS3 Controller USB"
+
+3) vendorName="Sony"
+   vendorId="1356"
+   productId="1476"
+   deviceId="dualshock_4_controller"
+   name="PS4 Controller USB"
+
+4) vendorName="Steel Series"
+   vendorId="273"
+   productId="5145"
+   deviceId="steel_series_controller"
+   name="Steel Series Controller"
+
