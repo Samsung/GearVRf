@@ -25,7 +25,8 @@ import android.util.SparseIntArray;
 class EricssonTextureCompression2 extends GVRCompressedTextureLoader {
 
     private static final int PKM_SIGNATURE = 0x204d4b50; // "PKM "
-    private static final int VERSION_SIGNATURE = 0x00003032; // "20\u0000\u0000"
+    private static final int VERSION2_SIGNATURE = 0x00003032; // "20\u0000\u0000"
+    private static final int VERSION1_SIGNATURE = 0x00003031; // "10\u0000\u0000"
 
     @Override
     public int headerLength() {
@@ -39,7 +40,10 @@ class EricssonTextureCompression2 extends GVRCompressedTextureLoader {
             return false;
         }
         int secondWord = reader.read(3); // last byte varies
-        return secondWord == VERSION_SIGNATURE;
+        boolean isETC2 = (secondWord == VERSION2_SIGNATURE);
+        boolean isETC1 = (secondWord == VERSION1_SIGNATURE);
+        boolean matched = (isETC1 || isETC2);
+        return matched;
     }
 
     @Override
