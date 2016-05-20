@@ -89,6 +89,8 @@ final class GVRImporter implements IEventReceiver {
         
         public void onModelLoaded(GVRContext context, GVRSceneObject model, String modelFile) {
             mModel = model;
+            if (mNumTextures == 0)
+                generateLoadEvent(context);
         }
         
         /**
@@ -101,13 +103,7 @@ final class GVRImporter implements IEventReceiver {
             {
                 --mNumTextures;
                 if (mNumTextures == 0)
-                {
-                    context.getEventManager().sendEvent(mImporter,
-                            IAssetEvents.class,
-                            "onAssetLoaded", new Object[] { context, mModel, mFileName, mErrors });
-                    if (mUserHandler != null)
-                        mImporter.getEventReceiver().removeListener(mUserHandler);
-                }
+                    generateLoadEvent(context);
             }           
         }
         
@@ -119,11 +115,8 @@ final class GVRImporter implements IEventReceiver {
         {
             Log.e(TAG, "ERROR: model did not load: %s", error);
             mErrors += "Model " + modelFile + " did not load " + error + "\n";
-            context.getEventManager().sendEvent(mImporter,
-                    IAssetEvents.class,
-                    "onAssetLoaded", new Object[] { context, null, mFileName, mErrors });
-            if (mUserHandler != null)
-                mImporter.getEventReceiver().removeListener(mUserHandler);
+            mModel = null;
+            generateLoadEvent(context);
         }
         
         /**
@@ -138,11 +131,7 @@ final class GVRImporter implements IEventReceiver {
                 --mNumTextures;
                 if (mNumTextures == 0)
                 {
-                    context.getEventManager().sendEvent(mImporter,
-                            IAssetEvents.class,
-                            "onAssetLoaded", new Object[] { context, mModel, mFileName, mErrors });
-                    if (mUserHandler != null)
-                        mImporter.getEventReceiver().removeListener(mUserHandler);
+                    generateLoadEvent(context);
                 }
             }                       
         }
@@ -152,6 +141,16 @@ final class GVRImporter implements IEventReceiver {
         {
             mImporter.getEventReceiver().removeListener(this);
         }
+        
+        private void generateLoadEvent(GVRContext context)
+        {
+            context.getEventManager().sendEvent(mImporter,
+                    IAssetEvents.class,
+                    "onAssetLoaded", new Object[] { context, mModel, mFileName, mErrors });
+            if (mUserHandler != null)
+                mImporter.getEventReceiver().removeListener(mUserHandler);
+        }
+
      }
     
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);

@@ -524,9 +524,23 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.getAssimpModel(this, assetRelativeFilename, settings);
+        return getAssimpModel(assetRelativeFilename, settings, null);
     }
 
+    public GVRSceneObject getAssimpModel(String assetRelativeFilename,
+            EnumSet<GVRImportSettings> settings, IAssetEvents handler) throws IOException {
+        GVRSceneObject model = mImporter.getAssimpModel(this, assetRelativeFilename, settings);
+        if (model != null) {
+            handler.onModelLoaded(this, model, assetRelativeFilename);
+            handler.onAssetLoaded(this, model, assetRelativeFilename, "");
+        }
+        else {
+            handler.onModelError(this, "Cannot load model", assetRelativeFilename);
+            handler.onAssetLoaded(this, null, assetRelativeFilename, "Cannot load model");            
+        }
+        return model;
+    }
+    
     /**
      * @deprecated Replaced by {@link #loadModelFromSD}
      */
@@ -697,6 +711,7 @@ public abstract class GVRContext {
                 GVRResourceVolume.VolumeType.NETWORK,
                 GVRImportSettings.getRecommendedSettings(), cacheEnabled, handler);
     }
+    
     /**
      * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
      * a 3D model from a URL.
