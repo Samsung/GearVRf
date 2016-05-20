@@ -80,7 +80,7 @@ public enum GVRImportSettings {
      */
     OPTIMIZE_GRAPH(0x400000),
     
-        /**
+    /**
      * Flip UV mapping in y direction.
      */
     FLIP_UV(0x800000);
