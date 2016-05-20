@@ -28,7 +28,18 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
 
 public class GVRCylinderSceneObject extends GVRSceneObject {
-
+    public static class CylinderParams {
+        public float       Height = 1.0f;
+        public float       TopRadius = 0.5f;
+        public float       BottomRadius = 0.5f;
+        public int         StackNumber = 10;
+        public int         SliceNumber = 36;
+        public boolean     FacingOut = true;
+        public boolean     HasTopCap = true;
+        public boolean     HasBottomCap = true;
+        public GVRMaterial Material = null;
+    };
+    
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRCylinderSceneObject.class);
 
@@ -48,6 +59,27 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     private int triangleCount = 0;
 
     /**
+     * Constructs a cylinder scene object based on a set of parameters.
+     *  Height          height of cylinder (default 1).
+     *  TopRadius       radius of cylinder top (default 0.5).
+     *  BottomRadius    radius of cylinder bottom (default 0.5).
+     *  StackNumber     number of stacks in cylinder body (default 10).
+     *  SliceNumber     number of slices in cylinder caps (default 36).
+     *  FacingOut       true for normals facing out, false for normals facing in (default true).
+     *  HasTopCap       true to include top cap, false to omit it (default true).
+     *  HasBottomCap    true to include bottom cap, false to omit it (default true).
+     *  Material        GVRMaterial to apply to cylinder (default null).
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param params    CylinderParams object with cylinder construction parameters.
+     */
+    public GVRCylinderSceneObject(GVRContext gvrContext, CylinderParams params) {
+        super(gvrContext);
+        generateCylinderObject(gvrContext, params);
+    }
+    
+    /**
      * Constructs a cylinder scene object with a height of 1, radius of 0.5, 10
      * stacks, and 36 slices.
      * 
@@ -59,9 +91,9 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      */
     public GVRCylinderSceneObject(GVRContext gvrContext) {
         super(gvrContext);
-
-        generateCylinderObject(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT,
-                STACK_NUMBER, SLICE_NUMBER, true, new GVRMaterial(gvrContext));
+        CylinderParams params = new CylinderParams();
+        params.Material = new GVRMaterial(gvrContext);
+        generateCylinderObject(gvrContext, params);
     }
 
     /**
@@ -80,9 +112,10 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, boolean facingOut) {
         super(gvrContext);
-
-        generateCylinderObject(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT,
-                STACK_NUMBER, SLICE_NUMBER, facingOut, new GVRMaterial(gvrContext));
+        CylinderParams params = new CylinderParams();
+        params.Material = new GVRMaterial(gvrContext);
+        params.FacingOut = facingOut;
+        generateCylinderObject(gvrContext, params);
     }
 
     /**
@@ -106,11 +139,12 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     public GVRCylinderSceneObject(GVRContext gvrContext, boolean facingOut,
             Future<GVRTexture> futureTexture) {
         super(gvrContext);
-
+        CylinderParams params = new CylinderParams();
         GVRMaterial material = new GVRMaterial(gvrContext);
         material.setMainTexture(futureTexture);
-        generateCylinderObject(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT,
-                STACK_NUMBER, SLICE_NUMBER, facingOut, material);
+        params.Material = material;
+        params.FacingOut = facingOut;
+        generateCylinderObject(gvrContext, params);
     }
 
     /**
@@ -133,9 +167,10 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     public GVRCylinderSceneObject(GVRContext gvrContext, boolean facingOut,
             GVRMaterial material) {
         super(gvrContext);
-
-        generateCylinderObject(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT,
-                STACK_NUMBER, SLICE_NUMBER, facingOut, material);
+        CylinderParams params = new CylinderParams();
+        params.Material = material;
+        params.FacingOut = facingOut;
+        generateCylinderObject(gvrContext, params);
     }
 
     /**
@@ -158,15 +193,15 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     public GVRCylinderSceneObject(GVRContext gvrContext, boolean facingOut,
             ArrayList<Future<GVRTexture>> futureTextureList) {
         super(gvrContext);
-        
+        CylinderParams params = new CylinderParams();
+      
         // assert length of futureTextureList is 3
         if (futureTextureList.size() != 3) {
             throw new IllegalArgumentException(
                     "The length of futureTextureList is not 3.");
         }
 
-        generateCylinderObjectThreeMeshes(gvrContext, BASE_RADIUS, TOP_RADIUS, HEIGHT,
-                STACK_NUMBER, SLICE_NUMBER, facingOut, futureTextureList);
+        generateCylinderObjectThreeMeshes(gvrContext, params, futureTextureList);
     }
 
     /**
@@ -205,16 +240,21 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                             + height + ", numStacks=" + stackNumber
                             + ", numSlices=" + sliceNumber);
         }
-
         // assert numCaps > 0
         if (bottomRadius <= 0 && topRadius <= 0) {
             throw new IllegalArgumentException(
                     "bottomRadius and topRadius must be >= 0 and at least one of bottomRadius or topRadius must be > 0.  Values passed were: bottomRadius="
                             + bottomRadius + ", topRadius=" + topRadius);
         }
-
-        generateCylinderObject(gvrContext, bottomRadius, topRadius, height,
-                stackNumber, sliceNumber, facingOut, new GVRMaterial(gvrContext));
+        CylinderParams params = new CylinderParams();
+        params.BottomRadius = bottomRadius;
+        params.TopRadius = topRadius;
+        params.Height = height;
+        params.SliceNumber = sliceNumber;
+        params.StackNumber = stackNumber;
+        params.FacingOut = facingOut;
+        params.Material = new GVRMaterial(gvrContext);
+        generateCylinderObject(gvrContext, params);
     }
 
     /**
@@ -263,9 +303,15 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                     "bottomRadius and topRadius must be >= 0 and at least one of bottomRadius or topRadius must be > 0.  Values passed were: bottomRadius="
                             + bottomRadius + ", topRadius=" + topRadius);
         }
-
-        generateCylinderObject(gvrContext, bottomRadius, topRadius, height,
-                stackNumber, sliceNumber, facingOut, material);
+        CylinderParams params = new CylinderParams();
+        params.BottomRadius = bottomRadius;
+        params.TopRadius = topRadius;
+        params.Height = height;
+        params.SliceNumber = sliceNumber;
+        params.StackNumber = stackNumber;
+        params.FacingOut = facingOut;
+        params.Material = material;
+        generateCylinderObject(gvrContext, params);
     }
 
     /**
@@ -314,6 +360,13 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                     "bottomRadius and topRadius must be >= 0 and at least one of bottomRadius or topRadius must be > 0.  Values passed were: bottomRadius="
                             + bottomRadius + ", topRadius=" + topRadius);
         }
+        CylinderParams params = new CylinderParams();
+        params.BottomRadius = bottomRadius;
+        params.TopRadius = topRadius;
+        params.Height = height;
+        params.SliceNumber = sliceNumber;
+        params.StackNumber = stackNumber;
+        params.FacingOut = facingOut;
 
         // assert length of futureTextureList is 3
         if (futureTextureList.size() != 3) {
@@ -321,8 +374,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                     "The length of futureTextureList is not 3.");
         }
 
-        generateCylinderObjectThreeMeshes(gvrContext, bottomRadius, topRadius, height,
-                stackNumber, sliceNumber, facingOut, futureTextureList);
+        generateCylinderObjectThreeMeshes(gvrContext, params, futureTextureList);
     }
 
     /**
@@ -402,9 +454,14 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             throw new IllegalArgumentException(
                     "sliceNumber should be divisible by sliceSegmentNumber.");
         }
-        
-        generateComplexCylinderObject(gvrContext, bottomRadius, topRadius, height,
-                stackNumber, sliceNumber, facingOut, futureTextureList, stackSegmentNumber, sliceSegmentNumber);
+        CylinderParams params = new CylinderParams();
+        params.BottomRadius = bottomRadius;
+        params.TopRadius = topRadius;
+        params.Height = height;
+        params.SliceNumber = sliceNumber;
+        params.StackNumber = stackNumber;
+        params.FacingOut = facingOut;
+        generateComplexCylinderObject(gvrContext, params, futureTextureList, stackSegmentNumber, sliceSegmentNumber);
     }
 
     /**
@@ -476,18 +533,25 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             throw new IllegalArgumentException(
                     "sliceNumber should be divisible by sliceSegmentNumber.");
         }
+        CylinderParams params = new CylinderParams();
+        params.BottomRadius = bottomRadius;
+        params.TopRadius = topRadius;
+        params.Height = height;
+        params.SliceNumber = sliceNumber;
+        params.StackNumber = stackNumber;
+        params.FacingOut = facingOut;
         
-        generateComplexCylinderObject(gvrContext, bottomRadius, topRadius, height,
-                stackNumber, sliceNumber, facingOut, material, stackSegmentNumber, sliceSegmentNumber);
+        generateComplexCylinderObject(gvrContext, params, stackSegmentNumber, sliceSegmentNumber);
     }
 
-    private void generateCylinderObject(GVRContext gvrContext,
-            float bottomRadius, float topRadius, float height, int stackNumber,
-            int sliceNumber, boolean facingOut, GVRMaterial material) {
-        generateCylinder(bottomRadius, topRadius, height, stackNumber,
-                sliceNumber, facingOut);
+    private void generateCylinderObject(GVRContext gvrContext, CylinderParams params) {
+        generateCylinder(params);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
+        GVRMaterial material = params.Material;
+        
+        if (material == null)
+            material = new GVRMaterial(gvrContext);
         mesh.setVertices(vertices);
         mesh.setNormals(normals);
         mesh.setTexCoords(texCoords);
@@ -500,24 +564,23 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     }
 
     private void generateCylinderObjectThreeMeshes(GVRContext gvrContext,
-            float bottomRadius, float topRadius, float height, int stackNumber,
-            int sliceNumber, boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList) {
-        float halfHeight = height / 2.0f;
+            CylinderParams params,
+            ArrayList<Future<GVRTexture>> futureTextureList) {
+        float halfHeight = params.Height / 2.0f;
 
         // top cap
-        if (topRadius > 0) {
-            createCapMesh(gvrContext, topRadius, halfHeight, sliceNumber,
-                    1.0f, facingOut, futureTextureList.get(0));       
+        if (params.TopRadius > 0) {
+            createCapMesh(gvrContext, params.TopRadius, halfHeight, params.SliceNumber,
+                    1.0f, params.FacingOut, futureTextureList.get(0));       
         }
         
         // cylinder body
-        createBodyMesh(gvrContext, bottomRadius, topRadius, height, stackNumber, sliceNumber,
-                facingOut, futureTextureList.get(1));
+        createBodyMesh(gvrContext, params, futureTextureList.get(1));
         
         // bottom cap
-        if (bottomRadius > 0) {
-            createCapMesh(gvrContext, bottomRadius, -halfHeight, sliceNumber,
-                    -1.0f, facingOut, futureTextureList.get(2));       
+        if (params.BottomRadius > 0) {
+            createCapMesh(gvrContext, params.BottomRadius, -halfHeight, params.SliceNumber,
+                    -1.0f, params.FacingOut, futureTextureList.get(2));       
         }
 
         // attached an empty renderData for parent object, so that we can set some common properties
@@ -525,24 +588,23 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         attachRenderData(renderData);
     }
 
-    private void generateCylinder(float bottomRadius, float topRadius,
-            float height, int stackNumber, int sliceNumber, boolean facingOut) {
+    private void generateCylinder(CylinderParams params) {
 
         int capNumber = 2;
-        if (bottomRadius == 0) {
+        if (params.BottomRadius == 0) {
             capNumber--;
         }
 
-        if (topRadius == 0) {
+        if (params.TopRadius == 0) {
             capNumber--;
         }
 
-        int capVertexNumber = 3 * sliceNumber;
-        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
+        int capVertexNumber = 3 * params.SliceNumber;
+        int bodyVertexNumber = 4 * params.SliceNumber * params.StackNumber;
         int vertexNumber = (capNumber * capVertexNumber) + bodyVertexNumber;
         int triangleNumber = (capNumber * capVertexNumber)
-                + (6 * sliceNumber * stackNumber);
-        float halfHeight = height / 2.0f;
+                + (6 * params.SliceNumber * params.StackNumber);
+        float halfHeight = params.Height / 2.0f;
 
         vertices = new float[3 * vertexNumber];
         normals = new float[3 * vertexNumber];
@@ -551,19 +613,18 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
 
         // top cap
         // 3 * numSlices
-        if (topRadius > 0) {
-            createCap(topRadius, halfHeight, sliceNumber, 1.0f, facingOut);
+        if (params.HasTopCap && (params.TopRadius > 0)) {
+            createCap(params.TopRadius, halfHeight, params.SliceNumber, 1.0f, params.FacingOut);
         }
 
         // cylinder body
         // 4 * numSlices * numStacks
-        createBody(bottomRadius, topRadius, height, stackNumber, sliceNumber,
-                facingOut);
+        createBody(params);
 
         // bottom cap
         // 3 * numSlices
-        if (bottomRadius > 0) {
-            createCap(bottomRadius, -halfHeight, sliceNumber, -1.0f, facingOut);
+        if (params.BottomRadius > 0) {
+            createCap(params.BottomRadius, -halfHeight, params.SliceNumber, -1.0f, params.FacingOut);
         }
     }
     
@@ -639,28 +700,27 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         }
     }
 
-    private void createBody(float bottomRadius, float topRadius, float height,
-            int stackNumber, int sliceNumber, boolean facingOut) {
-        float difference = bottomRadius - topRadius;
-        float length = (float) Math.sqrt(difference*difference + height*height);
-        float ratio = height / length;
-        float halfHeight = height / 2.0f;
+    private void createBody(CylinderParams params) {
+        float difference = params.BottomRadius - params.TopRadius;
+        float length = (float) Math.sqrt(difference*difference + params.Height * params.Height);
+        float ratio = params.Height / length;
+        float halfHeight = params.Height / 2.0f;
 
-        for (int stack = 0; stack < stackNumber; stack++) {
+        for (int stack = 0; stack < params.StackNumber; stack++) {
 
-            float stackPercentage0 = ((float) (stack) / stackNumber);
-            float stackPercentage1 = ((float) (stack + 1) / stackNumber);
-            float radius0 = (bottomRadius - (difference * stackPercentage0));
-            float radius1 = (bottomRadius - (difference * stackPercentage1));
+            float stackPercentage0 = ((float) (stack) / params.StackNumber);
+            float stackPercentage1 = ((float) (stack + 1) / params.StackNumber);
+            float radius0 = (params.BottomRadius - (difference * stackPercentage0));
+            float radius1 = (params.BottomRadius - (difference * stackPercentage1));
 
             float t0 = 1.0f - stackPercentage0;
             float t1 = 1.0f - stackPercentage1;
-            float y0 = -halfHeight + (stackPercentage0 * height);
-            float y1 = -halfHeight + (stackPercentage1 * height);
+            float y0 = -halfHeight + (stackPercentage0 * params.Height);
+            float y1 = -halfHeight + (stackPercentage1 * params.Height);
 
-            for (int slice = 0; slice < sliceNumber; slice++) {
-                float slicePercentage0 = ((float) (slice) / sliceNumber);
-                float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+            for (int slice = 0; slice < params.SliceNumber; slice++) {
+                float slicePercentage0 = ((float) (slice) / params.SliceNumber);
+                float slicePercentage1 = ((float) (slice + 1) / params.SliceNumber);
                 double theta0 = slicePercentage0 * 2.0 * Math.PI;
                 double theta1 = slicePercentage1 * 2.0 * Math.PI;
                 double cosTheta0 = Math.cos(theta0);
@@ -679,7 +739,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 float z3 = (float) (-radius1 * sinTheta1);
 
                 float s0, s1;
-                if (facingOut) {
+                if (params.FacingOut) {
                     s0 = slicePercentage0;
                     s1 = slicePercentage1;
                 } else {
@@ -753,7 +813,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 //
                 // Note that tex_coord t increase from top to bottom because the
                 // texture image is loaded upside down.
-                if (facingOut) {
+                if (params.FacingOut) {
                     indices[indexCount + 0] = (char) (triangleCount + 0); // 0
                     indices[indexCount + 1] = (char) (triangleCount + 1); // 1
                     indices[indexCount + 2] = (char) (triangleCount + 2); // 2
@@ -806,10 +866,9 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         addChildObject(child);        
    }
 
-    private void createBodyMesh(GVRContext gvrContext, float bottomRadius, float topRadius, float height,
-            int stackNumber, int sliceNumber, boolean facingOut, Future<GVRTexture> futureTexture) {
-        int bodyVertexNumber = 4 * sliceNumber * stackNumber;
-        int triangleNumber = 6 * sliceNumber * stackNumber;
+    private void createBodyMesh(GVRContext gvrContext, CylinderParams params, Future<GVRTexture> futureTexture) {
+        int bodyVertexNumber = 4 * params.SliceNumber * params.StackNumber;
+        int triangleNumber = 6 * params.SliceNumber * params.StackNumber;
         
         vertices = new float[3 * bodyVertexNumber];
         normals = new float[3 * bodyVertexNumber];
@@ -821,8 +880,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         indexCount = 0;
         triangleCount = 0;
 
-        createBody(bottomRadius, topRadius, height, stackNumber, sliceNumber,
-                facingOut);
+        createBody(params);
 
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
@@ -837,31 +895,30 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     }
 
     private void generateComplexCylinderObject(GVRContext gvrContext,
-            float bottomRadius, float topRadius, float height, int stackNumber,
-            int sliceNumber, boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList, int stackSegmentNumber, int sliceSegmentNumber) {
-        float halfHeight = height / 2.0f;
+            CylinderParams params,
+            ArrayList<Future<GVRTexture>> futureTextureList, int stackSegmentNumber, int sliceSegmentNumber) {
+        float halfHeight = params.Height / 2.0f;
 
         GVRMaterial material;
         // top cap
-        if (topRadius > 0) {
+        if (params.HasTopCap && (params.TopRadius > 0)) {
             material = new GVRMaterial(gvrContext);
             material.setMainTexture(futureTextureList.get(0));
-            createComplexCap(gvrContext, topRadius, halfHeight, sliceNumber,
-                    1.0f, facingOut, material, sliceNumber);       
+            createComplexCap(gvrContext, params.TopRadius, halfHeight, params.SliceNumber,
+                    1.0f, params.FacingOut, material, params.SliceNumber);       
         }
         
         // cylinder body
         material = new GVRMaterial(gvrContext);
         material.setMainTexture(futureTextureList.get(1));
-        createComplexBody(gvrContext, bottomRadius, topRadius, height, stackNumber, sliceNumber,
-                facingOut, material, stackSegmentNumber, sliceSegmentNumber);
+        createComplexBody(gvrContext, params, stackSegmentNumber, sliceSegmentNumber);
         
         // bottom cap
-        if (bottomRadius > 0) {
+        if (params.HasBottomCap && (params.BottomRadius > 0)) {
             material = new GVRMaterial(gvrContext);
             material.setMainTexture(futureTextureList.get(2));
-            createComplexCap(gvrContext, bottomRadius, -halfHeight, sliceNumber,
-                    -1.0f, facingOut, material, sliceNumber);       
+            createComplexCap(gvrContext, params.BottomRadius, -halfHeight, params.SliceNumber,
+                    -1.0f, params.FacingOut, material, params.SliceNumber);       
         }
 
         // attached an empty renderData for parent object, so that we can set some common properties
@@ -870,24 +927,23 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
     }
 
     private void generateComplexCylinderObject(GVRContext gvrContext,
-            float bottomRadius, float topRadius, float height, int stackNumber,
-            int sliceNumber, boolean facingOut, GVRMaterial material, int stackSegmentNumber, int sliceSegmentNumber) {
-        float halfHeight = height / 2.0f;
+            CylinderParams params,
+            int stackSegmentNumber, int sliceSegmentNumber) {
+        float halfHeight = params.Height / 2.0f;
 
         // top cap
-        if (topRadius > 0) {
-            createComplexCap(gvrContext, topRadius, halfHeight, sliceNumber,
-                    1.0f, facingOut, material, sliceNumber);       
+        if (params.HasTopCap && (params.TopRadius > 0)) {
+            createComplexCap(gvrContext, params.TopRadius, halfHeight, params.SliceNumber,
+                    1.0f, params.FacingOut, params.Material, params.SliceNumber);       
         }
         
         // cylinder body
-        createComplexBody(gvrContext, bottomRadius, topRadius, height, stackNumber, sliceNumber,
-                facingOut, material, stackSegmentNumber, sliceSegmentNumber);
+        createComplexBody(gvrContext, params, stackSegmentNumber, sliceSegmentNumber);
         
         // bottom cap
-        if (bottomRadius > 0) {
-            createComplexCap(gvrContext, bottomRadius, -halfHeight, sliceNumber,
-                    -1.0f, facingOut, material, sliceNumber);       
+        if (params.HasBottomCap && (params.BottomRadius > 0)) {
+            createComplexCap(gvrContext, params.BottomRadius, -halfHeight, params.SliceNumber,
+                    -1.0f, params.FacingOut, params.Material, params.SliceNumber);       
         }
 
         // attached an empty renderData for parent object, so that we can set some common properties
@@ -1002,15 +1058,14 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         }
     }
 
-    private void createComplexBody(GVRContext gvrContext, float bottomRadius, float topRadius, float height,
-            int stackNumber, int sliceNumber, boolean facingOut, GVRMaterial material, int stackSegmentNumber, int sliceSegmentNumber) {
-        float difference = bottomRadius - topRadius;
-        float length = (float) Math.sqrt(difference*difference + height*height);
-        float ratio = height / length;
-        float halfHeight = height / 2.0f;
+    private void createComplexBody(GVRContext gvrContext, CylinderParams params, int stackSegmentNumber, int sliceSegmentNumber) {
+        float difference = params.BottomRadius - params.TopRadius;
+        float length = (float) Math.sqrt(difference*difference + params.Height * params.Height);
+        float ratio = params.Height / length;
+        float halfHeight = params.Height / 2.0f;
 
-        int stackPerSegment = stackNumber / stackSegmentNumber;
-        int slicePerSegment = sliceNumber / sliceSegmentNumber;
+        int stackPerSegment = params.StackNumber / stackSegmentNumber;
+        int slicePerSegment = params.SliceNumber / sliceSegmentNumber;
         
         int vertexNumber = 4 * stackPerSegment * slicePerSegment;
         int triangleNumber = 6 * stackPerSegment * slicePerSegment;
@@ -1027,17 +1082,17 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         for (int stackSegment = 0; stackSegment < stackSegmentNumber; stackSegment++) {
             for (int sliceSegment = 0; sliceSegment < sliceSegmentNumber; sliceSegment++) {
                 for (int stack = stackSegment * stackPerSegment; stack < (stackSegment+1) * stackPerSegment; stack++) {
-                    float stackPercentage0 = ((float) (stack) / stackNumber);
-                    float stackPercentage1 = ((float) (stack + 1) / stackNumber);
+                    float stackPercentage0 = ((float) (stack) / params.StackNumber);
+                    float stackPercentage1 = ((float) (stack + 1) / params.StackNumber);
         
                     float t0 = 1.0f - stackPercentage0;
                     float t1 = 1.0f - stackPercentage1;
-                    float y0 = -halfHeight + (stackPercentage0 * height);
-                    float y1 = -halfHeight + (stackPercentage1 * height);
+                    float y0 = -halfHeight + (stackPercentage0 * params.Height);
+                    float y1 = -halfHeight + (stackPercentage1 * params.Height);
     
                     for (int slice = sliceSegment * slicePerSegment; slice < (sliceSegment+1) * slicePerSegment; slice++) {
-                        float slicePercentage0 = ((float) (slice) / sliceNumber);
-                        float slicePercentage1 = ((float) (slice + 1) / sliceNumber);
+                        float slicePercentage0 = ((float) (slice) / params.SliceNumber);
+                        float slicePercentage1 = ((float) (slice + 1) / params.SliceNumber);
                         double theta0 = slicePercentage0 * 2.0 * Math.PI;
                         double theta1 = slicePercentage1 * 2.0 * Math.PI;
                         double cosTheta0 = Math.cos(theta0);
@@ -1045,20 +1100,20 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                         double cosTheta1 = Math.cos(theta1);
                         double sinTheta1 = Math.sin(theta1);
         
-                        float radius = (bottomRadius - (difference * stackPercentage0));
+                        float radius = (params.BottomRadius - (difference * stackPercentage0));
                         float x0 = (float) (radius * cosTheta0);
                         float z0 = (float) (-radius * sinTheta0);
                         float x1 = (float) (radius * cosTheta1);
                         float z1 = (float) (-radius * sinTheta1);
         
-                        radius = (bottomRadius - (difference * stackPercentage1));
+                        radius = (params.BottomRadius - (difference * stackPercentage1));
                         float x2 = (float) (radius * cosTheta0);
                         float z2 = (float) (-radius * sinTheta0);
                         float x3 = (float) (radius * cosTheta1);
                         float z3 = (float) (-radius * sinTheta1);
         
                         float s0, s1;
-                        if (facingOut) {
+                        if (params.FacingOut) {
                             s0 = slicePercentage0;
                             s1 = slicePercentage1;
                         } else {
@@ -1132,7 +1187,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                         //
                         // Note that tex_coord t increase from top to bottom because the
                         // texture image is loaded upside down.
-                        if (facingOut) {
+                        if (params.FacingOut) {
                             indices[indexCount + 0] = (char) (triangleCount + 0); // 0
                             indices[indexCount + 1] = (char) (triangleCount + 1); // 1
                             indices[indexCount + 2] = (char) (triangleCount + 2); // 2
@@ -1164,7 +1219,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 mesh.setTriangles(indices);
                 GVRSceneObject childObject = new GVRSceneObject(gvrContext,
                         mesh);
-                childObject.getRenderData().setMaterial(material);
+                childObject.getRenderData().setMaterial(params.Material);
                 addChildObject(childObject);
 
                 vertexCount = 0;
