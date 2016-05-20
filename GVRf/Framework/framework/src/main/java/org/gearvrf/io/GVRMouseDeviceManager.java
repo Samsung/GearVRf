@@ -17,7 +17,10 @@ package org.gearvrf.io;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.Log;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -80,16 +83,22 @@ class GVRMouseDeviceManager {
                 KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
         private static final KeyEvent BUTTON_1_UP = new KeyEvent(
                 KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_1);
+        private static final Vector3f FORWARD =  new Vector3f(0.0f, 0.0f, -1.0f);
 
         private EventHandlerThread thread;
         private GVRContext context;
-        private float x = 0.0f, y = 0.0f, z = -1.0f;
+        private final Vector3f position;
+        private final Quaternionf rotation;
+        private GVRSceneObject internalObject;
 
         GVRMouseController(GVRContext context, GVRControllerType controllerType, String name, int
                 vendorId, int productId, EventHandlerThread thread) {
             super(controllerType, name, vendorId, productId);
             this.context = context;
             this.thread = thread;
+            internalObject = new GVRSceneObject(context);
+            position = new Vector3f(0.0f, 0.0f, -1.0f);
+            rotation = new Quaternionf();
         }
 
         @Override
@@ -119,7 +128,7 @@ class GVRMouseDeviceManager {
                                           MotionEvent event) {
             GVRScene scene = context.getMainScene();
             if (scene != null) {
-                float depth = this.z;
+                float depth = position.z;
                 if (((depth + z) <= getNearDepth())
                         && ((depth + z) >= getFarDepth())) {
                     float frustumWidth, frustumHeight;
@@ -136,9 +145,9 @@ class GVRMouseDeviceManager {
                     frustumHeight = frustumHeightMultiplier * depth;
                     frustumWidth = frustumHeight * aspectRatio;
 
-                    this.x = frustumWidth * -x;
-                    this.y = frustumHeight * -y;
-                    this.z = depth;
+                    position.x = (frustumWidth * -x)/2.0f;
+                    position.y = (frustumHeight * -y)/2.0f;
+                    position.z = depth;
                 }
 
                 /*
@@ -152,7 +161,12 @@ class GVRMouseDeviceManager {
                     setKeyEvent(BUTTON_1_UP);
                 }
                 setMotionEvent(event);
-                super.setPosition(this.x, this.y, this.z);
+                internalObject.getTransform().setPosition(position.x, position.y, position.z);
+                internalObject.getTransform().rotateWithPivot(rotation.w,
+                        rotation.x, rotation.y, rotation.z, 0.0f, 0.0f, 0.0f);
+                super.setPosition(internalObject.getTransform().getPositionX(),
+                        internalObject.getTransform().getPositionY(), internalObject
+                                .getTransform().getPositionZ());
                 return true;
             }
             return false;
@@ -160,10 +174,39 @@ class GVRMouseDeviceManager {
 
         @Override
         public void setPosition(float x, float y, float z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            position.set(x,y,z);
+            setRotation(FORWARD, position);
+            position.z = position.length() * -1.0f;
             super.setPosition(x, y, z);
+        }
+
+        /**
+         * formulae for quaternion rotation taken from
+         * http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
+         **/
+        private void setRotation(Vector3f start, Vector3f end) {
+            float norm_u_norm_v = (float) Math.sqrt(start.dot(start)
+                    * end.dot(end));
+            float real_part = norm_u_norm_v + start.dot(end);
+            Vector3f w = new Vector3f();
+
+            if (real_part < 1.e-6f * norm_u_norm_v) {
+                /**
+                 * If u and v are exactly opposite, rotate 180 degrees around an
+                 * arbitrary orthogonal axis. Axis normalisation can happen
+                 * later, when we normalise the quaternion.
+                 */
+                real_part = 0.0f;
+                if (Math.abs(start.x) > Math.abs(start.z)) {
+                    w = new Vector3f(-start.y, start.x, 0.f);
+                } else {
+                    w = new Vector3f(0.f, -start.z, start.y);
+                }
+            } else {
+                /** Otherwise, build quaternion the standard way. */
+                start.cross(end, w);
+            }
+            rotation.set(w.x, w.y, w.z, real_part).normalize();
         }
     }
 

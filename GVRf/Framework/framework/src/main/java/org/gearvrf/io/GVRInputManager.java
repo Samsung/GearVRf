@@ -15,23 +15,21 @@
 
 package org.gearvrf.io;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRScript;
-import org.gearvrf.utility.Log;
-
 import android.content.Context;
 import android.hardware.input.InputManager;
 import android.hardware.input.InputManager.InputDeviceListener;
-
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVRScript;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An instance of this class is obtained using the
@@ -60,9 +58,9 @@ public abstract class GVRInputManager {
     // maintain one instance of the gazeCursorController
     private GVRGazeCursorController gazeCursorController;
 
-    private static final long GAZE_CACHED_KEY = GVRDeviceConstants
-            .OCULUS_GEARVR_TOUCHPAD_VENDOR_ID << 32
-            | GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID;
+    private static final int GAZE_CACHED_KEY = (GVRDeviceConstants
+            .OCULUS_GEARVR_TOUCHPAD_VENDOR_ID * 31 + GVRDeviceConstants
+            .OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) * 31 + GVRControllerType.GAZE.hashCode();
 
     /*
      * This class encapsulates the {@link InputManager} to detect all relevant
@@ -80,7 +78,7 @@ public abstract class GVRInputManager {
 
     // maintains the ids already distributed to a given device.
     // We make use of the vendor and product id to identify a device.
-    private final LongSparseArray<GVRBaseController> cache;
+    private final SparseArray<GVRBaseController> cache;
 
     protected GVRInputManager(GVRContext context,
                               boolean useGazeCursorController) {
@@ -91,7 +89,7 @@ public abstract class GVRInputManager {
         this.useGazeCursorController = useGazeCursorController;
         inputManager.registerInputDeviceListener(inputDeviceListener, null);
         controllerIds = new SparseArray<GVRBaseController>();
-        cache = new LongSparseArray<GVRBaseController>();
+        cache = new SparseArray<GVRBaseController>();
         mouseDeviceManager = new GVRMouseDeviceManager();
         gamepadDeviceManager = new GVRGamepadDeviceManager();
         for (int deviceId : inputManager.getInputDeviceIds()) {
@@ -116,7 +114,7 @@ public abstract class GVRInputManager {
     public List<GVRCursorController> getCursorControllers() {
         List<GVRCursorController> result = new ArrayList<GVRCursorController>();
         for (int index = 0, size = cache.size(); index < size; index++) {
-            long key = cache.keyAt(index);
+            int key = cache.keyAt(index);
             GVRBaseController controller = cache.get(key);
             result.add(controller);
         }
@@ -149,8 +147,7 @@ public abstract class GVRInputManager {
         }
         int sources = device.getSources();
 
-        if ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
-                || (sources & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
+        if ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             return GVRControllerType.CONTROLLER;
         }
 
@@ -182,15 +179,16 @@ public abstract class GVRInputManager {
     }
 
     // Return the key if there is one else return -1
-    private long getCacheKey(InputDevice device, GVRControllerType controllerType) {
+    private int getCacheKey(InputDevice device, GVRControllerType controllerType) {
         if (controllerType != GVRControllerType.UNKNOWN
                 && controllerType != GVRControllerType.EXTERNAL) {
             // Sometimes a device shows up using two device ids
             // here we try to show both devices as one using the
             // product and vendor id
 
-            long key = device.getVendorId() << 32;
-            key = key | device.getProductId();
+            int key = device.getVendorId();
+            key = 31 * key + device.getProductId();
+            key = 31 * key + controllerType.hashCode();
 
             return key;
         }
@@ -206,7 +204,7 @@ public abstract class GVRInputManager {
             return null;
         }
 
-        long key;
+        int key;
         if (controllerType == GVRControllerType.GAZE) {
             // create the controller if there isn't one. 
             if (gazeCursorController == null) {
@@ -258,7 +256,7 @@ public abstract class GVRInputManager {
         if (controller != null) {
             // Do a reverse lookup and remove the controller
             for (int index = 0; index < cache.size(); index++) {
-                long key = cache.keyAt(index);
+                int key = cache.keyAt(index);
                 GVRBaseController cachedController = cache.get(key);
                 if (cachedController == controller) {
                     cache.remove(key);
