@@ -98,6 +98,7 @@ void OESVerticalStereoShader::render(RenderState* rstate,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, mono_rendering || rstate->uniforms.u_right ? 1 : 0);
+    glBindVertexArray(mesh->getVAOId());
 
     glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0);
