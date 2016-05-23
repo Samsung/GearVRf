@@ -15,22 +15,22 @@
 
 package org.gearvrf;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.util.TypedValue;
 
 import org.gearvrf.asynchronous.CompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.MarkingFileInputStream;
 
-import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.util.TypedValue;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 /**
  * A class to minimize overload fan-out.
@@ -53,7 +53,7 @@ public class GVRAndroidResource {
     }
 
     private enum ResourceType {
-        ANDROID_ASSETS, ANDROID_RESOURCE, LINUX_FILESYSTEM, NETWORK
+        ANDROID_ASSETS, ANDROID_RESOURCE, LINUX_FILESYSTEM, NETWORK, INPUT_STREAM
     }
 
     /*
@@ -74,6 +74,7 @@ public class GVRAndroidResource {
     
     private Context context = null;
     private ResourceType resourceType;
+    private String inputStreamName;
 
     /**
      * Open any file you have permission to read.
@@ -196,6 +197,28 @@ public class GVRAndroidResource {
      */
     public GVRAndroidResource(GVRContext context, URL url) throws IOException {
         this(context, url, false);
+    }
+
+    /**
+     * Create a resource from an {@link InputStream}.
+     *
+     * Note that this constructor is package private and is only used by the {@link ZipLoader}
+     * (for now).
+     *
+     * @param name        a String for uniquely identifying this resource
+     * @param inputStream an already open {@link InputStream} for this resource
+     */
+    GVRAndroidResource(String name, InputStream inputStream) {
+        inputStreamName = name;
+        stream = inputStream;
+        streamState = StreamStates.NEW;
+
+        filePath = null;
+        resourceId = 0; // No R.whatever field will ever be 0
+        assetPath = null;
+        resourceFilePath = null;
+        url = null;
+        resourceType = ResourceType.INPUT_STREAM;
     }
 
     /*
@@ -341,6 +364,11 @@ public class GVRAndroidResource {
                     streamState = StreamStates.OPEN;
                 }
                 break;
+
+            case INPUT_STREAM:
+                //input stream is already open
+                streamState = StreamStates.OPEN;
+                break;
             default:
                 stream = null;
             }
@@ -423,6 +451,9 @@ public class GVRAndroidResource {
         case NETWORK:
             return url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
 
+        case INPUT_STREAM:
+            return inputStreamName;
+
         default:
             return null;
         }
@@ -445,6 +476,8 @@ public class GVRAndroidResource {
                 + ((filePath == null) ? 0 : filePath.hashCode());
         result = prime * result
                 + ((url == null) ? 0 : url.hashCode());
+        result = prime * result
+                + ((inputStreamName == null) ? 0 : inputStreamName.hashCode());
         result = prime * result + resourceId;
         return result;
     }
@@ -475,6 +508,9 @@ public class GVRAndroidResource {
         case NETWORK:
             return url.equals(other.url);
 
+        case INPUT_STREAM:
+            return inputStreamName.equals(other.inputStreamName);
+
         default:
             return false;
         }
@@ -490,8 +526,9 @@ public class GVRAndroidResource {
      */
     @Override
     public String toString() {
-        return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s, url=%s}",
-                streamState, filePath, resourceId, assetPath, url);
+        return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s, url=%s, " +
+                "inputStreamName=%s}",streamState, filePath, resourceId, assetPath, url,
+                inputStreamName);
     }
 
     /*
@@ -617,7 +654,10 @@ public class GVRAndroidResource {
                     e.printStackTrace();
                 } finally {
                     reset();
-                    closeStream();
+                    //don't close for this type
+                    if (resourceType != ResourceType.INPUT_STREAM) {
+                        closeStream();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
