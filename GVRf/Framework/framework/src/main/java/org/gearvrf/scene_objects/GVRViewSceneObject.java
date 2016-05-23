@@ -17,6 +17,7 @@ package org.gearvrf.scene_objects;
 
 import java.lang.ref.WeakReference;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
@@ -29,7 +30,9 @@ import org.gearvrf.scene_objects.view.GVRView;
 
 import android.graphics.Canvas;
 import android.graphics.SurfaceTexture;
+import android.view.View;
 import android.view.Surface;
+import android.graphics.Rect;
 
 /**
  * This class represents a {@linkplain GVRSceneObject Scene object} that shows a {@link View}
@@ -83,7 +86,10 @@ public class GVRViewSceneObject extends GVRSceneObject {
                         // are ready. They are needed for GVRView.draw().
                         gvrContext.registerDrawFrameListener(new GVRDrawFrameListenerImpl(gvrContext, mSurfaceTexture));
                         gvrView.setSceneObject(GVRViewSceneObject.this);
-                        gvrView.getView().postInvalidate();
+                        gvrView.getView().invalidate();
+                        View surfView = gvrContext.getActivity().getFullScreenView();
+                        if (surfView != null)
+                            surfView.invalidate();
                     }
                 });
             }
