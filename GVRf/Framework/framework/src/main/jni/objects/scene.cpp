@@ -43,6 +43,7 @@ void Scene::removeSceneObject(SceneObject* scene_object) {
 
 void Scene::removeAllSceneObjects() {
     scene_objects_.clear();
+    lightList.clear();
 }
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
