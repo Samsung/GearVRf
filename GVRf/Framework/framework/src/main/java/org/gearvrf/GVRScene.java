@@ -15,16 +15,16 @@
 
 package org.gearvrf;
 
+import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
+import org.gearvrf.debug.GVRConsole;
+import org.gearvrf.script.IScriptable;
+import org.gearvrf.utility.Log;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
-import org.gearvrf.debug.GVRConsole;
-import org.gearvrf.script.IScriptable;
-import org.gearvrf.utility.Log;
 
 /**
  * The scene graph.
@@ -410,7 +410,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see GVRScene.addSceneObject
      */
     protected void bindShaders(GVRSceneObject root) {
-        ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.class);
+        ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.getComponentType());
         int added = 0;
         for (GVRLightBase light : lights) {
             if (addLight(light))
@@ -424,7 +424,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         else
         {
-            ArrayList<GVRRenderData> renderers = root.getAllComponents(GVRRenderData.class);
+            ArrayList<GVRRenderData> renderers = root.getAllComponents(GVRRenderData
+                    .getComponentType());
             for (GVRRenderData rdata : renderers) {
                 rdata.bindShader(this);
             }           
