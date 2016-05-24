@@ -150,7 +150,6 @@ public abstract class GVRContext {
     // Debug server
     protected DebugServer mDebugServer;
 
-    protected GVRImporter mImporter = new GVRImporter();
     /*
      * Methods
      */
@@ -241,7 +240,8 @@ public abstract class GVRContext {
             EnumSet<GVRImportSettings> settings) {
         GVRMesh mesh = meshCache.get(androidResource);
         if (mesh == null) {
-            GVRAssimpImporter assimpImporter = mImporter.readFileFromResources(this, androidResource, settings);
+            GVRAssimpImporter assimpImporter = GVRImporter
+                    .readFileFromResources(this, androidResource, settings);
             mesh = assimpImporter.getMesh(0);
             meshCache.put(androidResource, mesh);
         }
@@ -524,7 +524,7 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.getAssimpModel(this, assetRelativeFilename, settings);
+        return GVRImporter.getAssimpModel(this, assetRelativeFilename, settings);
     }
 
     /**
@@ -589,7 +589,7 @@ public abstract class GVRContext {
      *             File does not exist or cannot be read
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.loadJassimpModel(this, externalFile,
+        return GVRImporter.loadJassimpModel(this, externalFile,
                 GVRResourceVolume.VolumeType.ANDROID_SDCARD, settings);
     }
 
@@ -625,10 +625,7 @@ public abstract class GVRContext {
      *
      * @param settings
      *            Additional import {@link GVRImportSettings settings}
-     *            
-     * @param handler
-     *            If present, this handler will receive asset load events (model, texture and entire asset)
-     *            
+     *
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
      *
@@ -636,12 +633,8 @@ public abstract class GVRContext {
      *             File does not exist or cannot be read
      *
      */
-    public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings, IAssetEvents handler) throws IOException {
-        return mImporter.loadJassimpModel(this, assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings, handler);
-    }
-    
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.loadJassimpModel(this, assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings, null);
+        return GVRImporter.loadJassimpModel(this, assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings);
     }
 
     /**
@@ -676,9 +669,6 @@ public abstract class GVRContext {
      *                  load from the cache in future uses;
      *           false: Don't keep local copy and only do online streaming for loading everytime
      *           
-     * @param handler
-     *            If present, this handler will receive asset load events (model, texture and entire asset)
-     *            
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
      *
@@ -687,16 +677,11 @@ public abstract class GVRContext {
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled) throws IOException {
-        return mImporter.loadJassimpModel(this, urlString,
+        return GVRImporter.loadJassimpModel(this, urlString,
                 GVRResourceVolume.VolumeType.NETWORK,
-                GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+                GVRImportSettings.getRecommendedSettings(), cacheEnabled);
     }
 
-    public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled, IAssetEvents handler) throws IOException {
-        return mImporter.loadJassimpModel(this, urlString,
-                GVRResourceVolume.VolumeType.NETWORK,
-                GVRImportSettings.getRecommendedSettings(), cacheEnabled, handler);
-    }
     /**
      * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
      * a 3D model from a URL.
@@ -715,7 +700,7 @@ public abstract class GVRContext {
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.loadJassimpModel(this, urlString,
+        return GVRImporter.loadJassimpModel(this, urlString,
                 GVRResourceVolume.VolumeType.NETWORK, settings);
     }
 

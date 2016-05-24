@@ -22,10 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
+import java.util.Vector;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -56,114 +58,10 @@ import org.gearvrf.jassimp.AiColor;
  * {@code assets} and {@code res/raw}) and from directories on the device's SD
  * card that the application has permission to read.
  */
-final class GVRImporter implements IEventReceiver {
-    /**
-     * Listens for texture load events and raises the "onAssetLoaded"
-     * event after all textures have been loaded.
-     */
-    static public class AssetEventListener implements IAssetEvents
-    {
-        protected GVRImporter       mImporter;    
-        protected int               mNumTextures;
-        protected GVRSceneObject    mModel = null;
-        protected String            mFileName;
-        protected IAssetEvents      mUserHandler;
-        protected String            mErrors;
-        
-        public AssetEventListener(GVRImporter importer) {
-            mImporter = importer;
-            mNumTextures = 0;
-        }
-        public void beginLoadTexture()
-        {
-            ++mNumTextures;
-        }
-        
-        public void beginLoadAsset(String filePath, IAssetEvents userHandler)
-        {
-            mImporter.getEventReceiver().addListener(userHandler);
-            mFileName = filePath;
-            mNumTextures = 0;
-            mErrors = "";
-        }
-        
-        public void onModelLoaded(GVRContext context, GVRSceneObject model, String modelFile) {
-            mModel = model;
-        }
-        
-        /**
-         * Called when a texture is successfully loaded.
-         * @param texture texture that was loaded.
-         */
-        public void onTextureLoaded(GVRContext context, GVRTexture texture, String texFile)
-        {
-            if (mNumTextures > 0)
-            {
-                --mNumTextures;
-                if (mNumTextures == 0)
-                {
-                    context.getEventManager().sendEvent(mImporter,
-                            IAssetEvents.class,
-                            "onAssetLoaded", new Object[] { context, mModel, mFileName, mErrors });
-                    if (mUserHandler != null)
-                        mImporter.getEventReceiver().removeListener(mUserHandler);
-                }
-            }           
-        }
-        
-        /**
-         * Called when a model cannot be loaded.
-         * @param error error message
-         */
-        public void onModelError(GVRContext context, String error, String modelFile)
-        {
-            Log.e(TAG, "ERROR: model did not load: %s", error);
-            mErrors += "Model " + modelFile + " did not load " + error + "\n";
-            context.getEventManager().sendEvent(mImporter,
-                    IAssetEvents.class,
-                    "onAssetLoaded", new Object[] { context, null, mFileName, mErrors });
-            if (mUserHandler != null)
-                mImporter.getEventReceiver().removeListener(mUserHandler);
-        }
-        
-        /**
-         * Called when a texture cannot be loaded.
-         * @param error error message
-         */
-        public void onTextureError(GVRContext context, String error, String texFile)
-        {
-            Log.e(TAG, "ERROR: cannot load texture %s %s", texFile, error);
-            mErrors += "Texture " + texFile + " did not load " + error + "\n";
-            if (mNumTextures > 0) {
-                --mNumTextures;
-                if (mNumTextures == 0)
-                {
-                    context.getEventManager().sendEvent(mImporter,
-                            IAssetEvents.class,
-                            "onAssetLoaded", new Object[] { context, mModel, mFileName, mErrors });
-                    if (mUserHandler != null)
-                        mImporter.getEventReceiver().removeListener(mUserHandler);
-                }
-            }                       
-        }
-
-        @Override
-        public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, String errors)
-        {
-            mImporter.getEventReceiver().removeListener(this);
-        }
-     }
-    
-    private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
-    GVRImporter() {
+final class GVRImporter {
+    private GVRImporter() {
     }
 
-    @Override
-    public GVREventReceiver getEventReceiver()
-    {
-        return mEventReceiver;
-    }
-    
     /**
      * Imports a 3D model from the specified file in the application's
      * {@code asset} directory.
@@ -175,7 +73,7 @@ final class GVRImporter implements IEventReceiver {
      * @return An instance of {@link GVRAssimpImporter} or {@code null} if the
      *         file does not exist (or cannot be read)
      */
-    GVRAssimpImporter readFileFromAssets(GVRContext gvrContext,
+    static GVRAssimpImporter readFileFromAssets(GVRContext gvrContext,
             String filename, EnumSet<GVRImportSettings> settings) { 
         long nativeValue = NativeImporter.readFileFromAssets(gvrContext
                 .getContext().getAssets(), filename, GVRImportSettings.getAssimpImportFlags(settings));
@@ -183,14 +81,14 @@ final class GVRImporter implements IEventReceiver {
                 nativeValue);
     }
 
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
+    static GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
             int resourceId, EnumSet<GVRImportSettings> settings) {
         return readFileFromResources(gvrContext, new GVRAndroidResource(
                 gvrContext, resourceId), settings);
     }
 
     /** @since 1.6.2 */
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
+    static GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
             GVRAndroidResource resource, EnumSet<GVRImportSettings> settings) {
         try {
             byte[] bytes;
@@ -227,34 +125,26 @@ final class GVRImporter implements IEventReceiver {
      *            Name of the file to import.
      * @return An instance of {@link GVRAssimpImporter}.
      */
-    GVRAssimpImporter readFileFromSDCard(GVRContext gvrContext,
+    static GVRAssimpImporter readFileFromSDCard(GVRContext gvrContext,
             String filename, EnumSet<GVRImportSettings> settings) {
         long nativeValue = NativeImporter.readFileFromSDCard(filename, GVRImportSettings.getAssimpImportFlags(settings));
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
-    GVRModelSceneObject loadJassimpModel(final GVRContext context,
+    static GVRModelSceneObject loadJassimpModel(final GVRContext context,
             String filePath, GVRResourceVolume.VolumeType volumeType,
             EnumSet<GVRImportSettings> settings) throws IOException {
-        return loadJassimpModel(context, filePath, volumeType, settings, false, null);
+        return loadJassimpModel(context, filePath, volumeType, settings, false);
     }
 
-    GVRModelSceneObject loadJassimpModel(final GVRContext context,
+    static GVRModelSceneObject loadJassimpModel(final GVRContext context,
             String filePath, GVRResourceVolume.VolumeType volumeType,
-            EnumSet<GVRImportSettings> settings,
-            IAssetEvents eventHandler) throws IOException {
-        return loadJassimpModel(context, filePath, volumeType, settings, false, null);
-    }
-    
-    GVRModelSceneObject loadJassimpModel(final GVRContext context,
-            String filePath, GVRResourceVolume.VolumeType volumeType,
-            EnumSet<GVRImportSettings> settings, boolean cacheEnabled, IAssetEvents handler)
+            EnumSet<GVRImportSettings> settings, boolean cacheEnabled)
                     throws IOException {
-        AssetEventListener eventHandler = new AssetEventListener(this);
+
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
-        getEventReceiver().addListener(eventHandler);
-        eventHandler.beginLoadAsset(filePath, handler);
+
         switch (volumeType) {
         case ANDROID_ASSETS:
             assimpScene = Jassimp.importAssetFile(filePath,
@@ -285,30 +175,23 @@ final class GVRImporter implements IEventReceiver {
         }
 
         if (assimpScene == null) {
-            String errmsg = "Cannot load model from path " + filePath + " from " + volumeType;
-            context.getEventManager().sendEvent(this,
-                    IAssetEvents.class,
-                    "onModelError", new Object[] { context, errmsg, filePath });
-            throw new IOException(errmsg);
+            throw new IOException("Cannot load a model from path " + filePath +
+                    " from " + volumeType);
         }
         
         Log.d(TAG, "start creating jassimp model %s", filePath);
 
         List<AiLight> lights = assimpScene.getLights();
-        Hashtable<String, GVRLightBase> lightlist = new Hashtable<String, GVRLightBase>();
+        Hashtable<String, GVRLightBase> lightlist= new Hashtable<String, GVRLightBase>();
         importLights(lights, lightlist, context);
 
-        GVRJassimpSceneObject sceneOb = new GVRJassimpSceneObject(context, assimpScene,
+        GVRJassimpSceneObject sceneOb= new GVRJassimpSceneObject(context, assimpScene,
                 new GVRResourceVolume(context, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
                         cacheEnabled), lightlist);
-        context.getEventManager().sendEvent(this,
-                IAssetEvents.class,
-                "onModelLoaded", new Object[] { context, (GVRSceneObject) sceneOb, filePath });
         return sceneOb;
     }
-    
-    protected void importLights(List<AiLight> lights,Hashtable<String, GVRLightBase> lightlist, final GVRContext context){
+    static void importLights(List<AiLight> lights,Hashtable<String, GVRLightBase> lightlist,final GVRContext context){
         for(AiLight light: lights){            
             AiLightType type = light.getType();
                 if(type == AiLightType.DIRECTIONAL){               
@@ -337,15 +220,13 @@ final class GVRImporter implements IEventReceiver {
         }
          
     }
-
-    protected void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+    static void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
         gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
         gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
         gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
 
     }
-
-    protected void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+    static void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
         org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);       
@@ -354,8 +235,7 @@ final class GVRImporter implements IEventReceiver {
         gvrLight.setVec4("specular_intensity", specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
 
     }
-
-    public static File downloadFile(Context context, String urlString) {
+    static File downloadFile(Context context, String urlString) {
         URL url = null;
         try {
             url = new URL(urlString);
@@ -414,10 +294,10 @@ final class GVRImporter implements IEventReceiver {
         return new File(outputFilename);
     }
 
-    protected GVRSceneObject getAssimpModel(final GVRContext context, String assetRelativeFilename,
+    static GVRSceneObject getAssimpModel(final GVRContext context, String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
 
-        GVRAssimpImporter assimpImporter = readFileFromResources(
+        GVRAssimpImporter assimpImporter = GVRImporter.readFileFromResources(
                 context, new GVRAndroidResource(context, assetRelativeFilename),
                 settings);
 
@@ -431,6 +311,7 @@ final class GVRImporter implements IEventReceiver {
         // Scene Object
         recurseAssimpNodes(context, assimpImporter, assetRelativeFilename, wholeSceneObject,
                 rootNode, sWrapperProvider);
+
         return wholeSceneObject;
     }
 
@@ -451,7 +332,7 @@ final class GVRImporter implements IEventReceiver {
      *            properties.
      */
     @SuppressWarnings("resource")
-    private void recurseAssimpNodes(
+    private static void recurseAssimpNodes(
             final GVRContext context,
             GVRAssimpImporter assimpImporter,
             String assetRelativeFilename,
@@ -515,7 +396,7 @@ final class GVRImporter implements IEventReceiver {
      *         {@link index} for the node {@link node}
      * @throws IOException File does not exist or cannot be read
      */
-    private GVRSceneObject createSceneObject(
+    private static GVRSceneObject createSceneObject(
             final GVRContext context,
             GVRAssimpImporter assimpImporter,
             String assetRelativeFilename,
@@ -573,16 +454,12 @@ final class GVRImporter implements IEventReceiver {
                 @Override
                 public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
                     meshMaterial.setMainTexture(texture);
-                    context.getEventManager().sendEvent(this,
-                            IAssetEvents.class,
-                            "onTextureLoaded", new Object[] { context, texture, texDiffuseFileName });
                 }
 
                 @Override
                 public void failed(Throwable t, GVRAndroidResource androidResource) {
-                    context.getEventManager().sendEvent(this,
-                            IAssetEvents.class,
-                            "onTextureError", new Object[] { context, t.getMessage(), texDiffuseFileName });
+                    Log.e(TAG, "Error loading diffuse texture %s; exception: %s",
+                            texDiffuseFileName, t.getMessage());
                 }
 
                 @Override
@@ -609,7 +486,7 @@ final class GVRImporter implements IEventReceiver {
      * 
      * @return The material, encapsulated as a {@link AiMaterial}.
      */
-    private AiMaterial getMeshMaterial(GVRAssimpImporter assimpImporter,
+    static AiMaterial getMeshMaterial(GVRAssimpImporter assimpImporter,
             String nodeName, int meshIndex) {
         return assimpImporter.getMeshMaterial(nodeName, meshIndex);
     }
@@ -620,7 +497,6 @@ final class GVRImporter implements IEventReceiver {
     private final static GVROldWrapperProvider sWrapperProvider = new GVROldWrapperProvider();
 
     private final static String TAG = "GVRImporter";
-
 }
 
 class NativeImporter {
