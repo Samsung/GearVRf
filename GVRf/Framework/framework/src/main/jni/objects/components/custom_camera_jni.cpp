@@ -39,7 +39,7 @@ Java_org_gearvrf_NativeCustomCamera_setProjectionMatrix(
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCustomCamera_ctor(JNIEnv * env,
-        jobject obje) {
+        jobject obj) {
     return reinterpret_cast<jlong>(new CustomCamera());
 }
 

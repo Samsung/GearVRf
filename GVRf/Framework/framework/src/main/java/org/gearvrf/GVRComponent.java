@@ -125,7 +125,7 @@ public class GVRComponent extends GVRHybridObject {
     /**
      * Get the enable/disable status for the component.
      * 
-     * @return true if interface is enabled, false if component is disabled.
+     * @return true if component is enabled, false if component is disabled.
      */
     public boolean isEnabled() {
         return isEnabled;

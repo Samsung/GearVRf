@@ -78,27 +78,22 @@ public:
 
     Transform* transform() const {
         return (Transform*) getComponent(Transform::getComponentType());
-//        return transform_;
     }
 
     RenderData* render_data() const {
          return (RenderData*) getComponent(RenderData::getComponentType());
-//        return render_data_;
     }
 
     Camera* camera() const {
         return (Camera*) getComponent(Camera::getComponentType());
-//        return camera_;
     }
 
     CameraRig* camera_rig() const {
         return (CameraRig*) getComponent(CameraRig::getComponentType());
-        //return camera_rig_;
     }
 
     EyePointeeHolder* eye_pointee_holder() const {
         return (EyePointeeHolder*) getComponent(EyePointeeHolder::getComponentType());
- //       return eye_pointee_holder_;
     }
 
     SceneObject* parent() const {
