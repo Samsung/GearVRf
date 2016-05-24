@@ -24,7 +24,7 @@ void Java_org_gearvrf_NativeTextureCapturer_callbackFromNative(
 }
 
 TextureCapturer::TextureCapturer(ShaderManager *shaderManager)
-        : Component()
+        : Component(TextureCapturer::getComponentType())
         , mShaderManager(shaderManager)
         , mRenderTexture(0)
         , mPendingCapture(false)

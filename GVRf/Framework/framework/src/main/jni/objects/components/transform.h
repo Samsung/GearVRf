@@ -36,6 +36,10 @@ public:
     Transform();
     virtual ~Transform();
 
+    static long long getComponentType() {
+        return (long long) &getComponentType;
+    }
+
     const glm::vec3& position() const {
         return position_;
     }

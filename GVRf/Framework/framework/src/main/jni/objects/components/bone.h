@@ -45,6 +45,10 @@ public:
         return *finalTransformMatrixPtr_;
     }
 
+    static long long getComponentType() {
+        return (long long) & getComponentType;
+    }
+
 private:
     Bone(const Bone& bone);
     Bone(Bone&& bone);

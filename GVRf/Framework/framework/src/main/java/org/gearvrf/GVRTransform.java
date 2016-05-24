@@ -33,14 +33,18 @@ public class GVRTransform extends GVRComponent {
     }
 
     GVRTransform(GVRContext gvrContext, GVRSceneObject owner) {
-        super(gvrContext, NativeTransform.ctor(), owner);
-        NativeSceneObject.attachTransform(owner.getNative(), getNative());
+        super(gvrContext, NativeTransform.ctor());
+        setOwnerObject(owner);
     }
     
     private GVRTransform(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
 
+    static public long getComponentType() {
+        return NativeTransform.getComponentType();
+    }
+    
     /**
      * Get the X component of the transform's position.
      * 
@@ -502,6 +506,8 @@ public class GVRTransform extends GVRComponent {
 
 class NativeTransform {
     static native long ctor();
+
+    static native long getComponentType();
 
     static native float getPositionX(long transform);
 

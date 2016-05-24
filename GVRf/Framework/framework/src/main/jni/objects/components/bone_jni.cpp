@@ -14,6 +14,9 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBone_ctor(JNIEnv * env, jobject obj);
 
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeBone_getComponentType(JNIEnv * env, jobject clz);
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeBone_setName(JNIEnv * env, jobject clz, jlong ptr,
         jstring name);
@@ -42,6 +45,11 @@ Java_org_gearvrf_NativeBone_getFinalTransformMatrix(JNIEnv * env, jobject clz, j
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBone_ctor(JNIEnv * env, jobject clz) {
     return reinterpret_cast<jlong>(new Bone());
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeBone_getComponentType(JNIEnv * env, jobject clz) {
+    return Bone::getComponentType();
 }
 
 JNIEXPORT void JNICALL

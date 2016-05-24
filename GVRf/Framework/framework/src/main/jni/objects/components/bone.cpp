@@ -13,7 +13,7 @@
 
 namespace gvr {
 Bone::Bone()
-  : Component()
+  : Component(Bone::getComponentType())
   , name_()
   , boneWeights_()
   , offsetMatrix_()

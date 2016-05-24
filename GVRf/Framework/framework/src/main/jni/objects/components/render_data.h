@@ -28,13 +28,13 @@
 
 #include "objects/components/component.h"
 #include "objects/render_pass.h"
-#include "objects/components/texture_capturer.h"
 #include "objects/material.h"
 
 namespace gvr {
 class Mesh;
 class Material;
 class Light;
+class TextureCapturer;
 
 class RenderData: public Component {
 public:
@@ -51,7 +51,7 @@ public:
     };
 
     RenderData() :
-            Component(), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),
+            Component(RenderData::getComponentType()), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),
                     render_mask_(DEFAULT_RENDER_MASK), rendering_order_(
                     DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
@@ -249,6 +249,10 @@ public:
 
     TextureCapturer *get_texture_capturer() {
         return texture_capturer;
+    }
+
+    static long long getComponentType() {
+        return (long long) &getComponentType;
     }
 
 private:

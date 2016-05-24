@@ -26,11 +26,13 @@
 #include "objects/components/texture_capturer.h"
 
 namespace gvr {
-
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
         jobject obj);
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
@@ -153,6 +155,11 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
     jobject obj) {
 return reinterpret_cast<jlong>(new RenderData());
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj) {
+    return RenderData::getComponentType();
 }
 
 JNIEXPORT void JNICALL

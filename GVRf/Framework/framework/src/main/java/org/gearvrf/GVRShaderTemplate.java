@@ -16,7 +16,6 @@ package org.gearvrf;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -443,6 +442,8 @@ public class GVRShaderTemplate
         int castShadow = 0;
         if (!rdata.isLightEnabled())
             defines.put("LIGHTSOURCES", 0);
+        if (lights == null)
+            return defines;
         for (GVRLightBase light : lights)
             if (light.getCastShadow())
                 castShadow = 1;
@@ -610,6 +611,8 @@ public class GVRShaderTemplate
     {
         Map<String, LightClass> lightClasses = new HashMap<String, LightClass>();
 
+        if (lightlist == null)
+            return lightClasses;
         for (GVRLightBase light : lightlist)
         {
             String lightClassName = light.getClass().getSimpleName();

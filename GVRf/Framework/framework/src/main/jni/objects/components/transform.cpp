@@ -24,8 +24,9 @@
 #include "objects/scene_object.h"
 #include <math.h>
 namespace gvr {
+
 Transform::Transform() :
-        Component(), position_(glm::vec3(0.0f, 0.0f, 0.0f)), rotation_(
+        Component(Transform::getComponentType()), position_(glm::vec3(0.0f, 0.0f, 0.0f)), rotation_(
                 glm::quat(1.0f, 0.0f, 0.0f, 0.0f)), scale_(
                 glm::vec3(1.0f, 1.0f, 1.0f)), model_matrix_(
                 Lazy<glm::mat4>(glm::mat4())) {

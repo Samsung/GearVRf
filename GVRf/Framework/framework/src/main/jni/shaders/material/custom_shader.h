@@ -35,6 +35,7 @@
 #include "objects/eye_type.h"
 #include "objects/hybrid_object.h"
 #include "objects/light.h"
+#include "objects/mesh.h"
 
 namespace gvr {
 

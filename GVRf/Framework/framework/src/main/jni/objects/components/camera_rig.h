@@ -137,6 +137,10 @@ public:
         vec4s_[key] = vector;
     }
 
+    static long long getComponentType() {
+        return (long long) getComponentType;
+    }
+
     void attachLeftCamera(Camera* const left_camera);
     void attachRightCamera(Camera* const right_camera);
     void attachCenterCamera(PerspectiveCamera* const center_camera);

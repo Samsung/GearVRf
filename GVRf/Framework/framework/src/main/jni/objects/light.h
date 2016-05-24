@@ -45,7 +45,8 @@ public:
     static const int SHADOW_MAP_SIZE;
 
     explicit Light()
-    :   enabled_(true),
+    :   Component(Light::getComponentType()),
+        enabled_(true),
         parent_(nullptr),
         shadowMaterial_(nullptr),
  		fboId_(-1),
@@ -53,6 +54,10 @@ public:
     }
 
     ~Light() {
+    }
+
+    static long long getComponentType() {
+        return (long long) &getComponentType;
     }
 
     bool enabled() {

@@ -54,6 +54,10 @@ public:
         hit_ = hit;
     }
 
+    static long long getComponentType() {
+        return (long long) &getComponentType;
+    }
+
     void addPointee(EyePointee* pointee);
     void removePointee(EyePointee* pointee);
     EyePointData isPointed(const glm::mat4& view_matrix);
