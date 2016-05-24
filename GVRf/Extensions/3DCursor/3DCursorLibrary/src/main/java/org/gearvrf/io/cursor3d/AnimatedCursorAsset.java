@@ -24,14 +24,13 @@ import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.ZipLoader;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.utility.Log;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -53,18 +52,19 @@ class AnimatedCursorAsset extends MeshCursorAsset {
     private final static int LOOP_REPEAT = -1;
     private SparseArray<GVRImageFrameAnimation> animations;
     private final GVRAnimationEngine animationEngine;
-    private String[] files;
 
-    AnimatedCursorAsset(GVRContext context, CursorType type, Action action, String[] files) {
-        this(context, type, action, files, null);
-    }
+    private String zipFileName;
 
-    AnimatedCursorAsset(GVRContext context, CursorType type, Action action, String[] files,
+    AnimatedCursorAsset(GVRContext context, CursorType type, Action action, String zipFileName,
                         String mesh) {
-        super(context, type, action, mesh, files[0]);
-        this.files = files;
+        super(context, type, action, mesh, null);
+        this.zipFileName = zipFileName;
         animations = new SparseArray<GVRImageFrameAnimation>();
         animationEngine = context.getAnimationEngine();
+    }
+
+    AnimatedCursorAsset(GVRContext context, CursorType type, Action action, String zipFileName) {
+        this(context, type, action, zipFileName, null);
     }
 
     @Override
@@ -119,9 +119,18 @@ class AnimatedCursorAsset extends MeshCursorAsset {
     @Override
     void load(CursorSceneObject sceneObject) {
         super.load(sceneObject);
-
+        if (loaderTextures != null) {
+            return;
+        }
         try {
-            loaderTextures = getFutureTextureFromAssets(context);
+            loaderTextures = ZipLoader.load(context, zipFileName, new ZipLoader
+                    .ZipEntryProcessor<Future<GVRTexture>>() {
+
+                @Override
+                public Future<GVRTexture> getItem(GVRContext context, GVRAndroidResource resource) {
+                    return context.loadFutureTexture(resource);
+                }
+            });
         } catch (IOException e) {
             Log.e(TAG, "Error loading textures", e);
         }
@@ -135,26 +144,8 @@ class AnimatedCursorAsset extends MeshCursorAsset {
         // check if there are cursors still using the textures
         if (renderDataArray.size() == 0) {
             loaderTextures.clear();
+            loaderTextures = null;
         }
-    }
-
-    private List<Future<GVRTexture>> getFutureTextureFromAssets(final GVRContext gvrContext)
-            throws IOException {
-        int numFiles = files.length;
-        List<Future<GVRTexture>> listTextures = new ArrayList<Future<GVRTexture>>(
-                numFiles);
-        for (int fileIdx = 0; fileIdx < numFiles; fileIdx++) {
-            Future<GVRTexture> gvrBitmapTexture;
-            try {
-                gvrBitmapTexture = gvrContext.loadFutureTexture(
-                        new GVRAndroidResource(gvrContext, files[fileIdx]));
-                listTextures.add(fileIdx, gvrBitmapTexture);
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, "File " + files[fileIdx] + " not found ", e);
-            }
-        }
-
-        return listTextures;
     }
 
     void setAnimationDuration(float duration) {

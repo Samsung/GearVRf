@@ -49,6 +49,7 @@ class CursorAssetFactory {
     private static final String JPG_EXTENSION = ".jpg";
     private static final String JPEG_EXTENSION = ".jpeg";
     private static final String PNG_EXTENSION = ".png";
+    private static final String ZIP_EXTENSION = ".zip";
 
     static CursorAsset readAsset(XmlPullParser parser, GVRContext context, CursorType type) throws
             XmlPullParserException, IOException {
@@ -140,13 +141,13 @@ class CursorAssetFactory {
             return new MeshCursorAsset(context, type, action, meshAssets.get(0), textureAssets
                     .get(0));
         } else {
-            if (meshAssets.size() != 1 || textureAssets.size() < 2) {
+            if (meshAssets.size() != 1 || textureAssets.size() != 1) {
                 throw new IllegalArgumentException("Invalid attribute value for asset's src, " +
-                        "animated asset folder should have 1 .obj file and multiple .png/jpg/jpeg" +
-                        " files");
+                        "animated asset folder should have 1 .obj file and zip file containing " +
+                        "multiple .png/jpg/jpeg files");
             }
             return new AnimatedCursorAsset(context, type, action, textureAssets
-                    .toArray(new String[0]), meshAssets.get(0));
+                    .get(0), meshAssets.get(0));
         }
     }
 
@@ -187,16 +188,14 @@ class CursorAssetFactory {
                                                                  CursorType type, Action action,
                                                                  XmlPullParser parser)
             throws XmlPullParserException {
-        List<String> meshAssets = new ArrayList<String>(1);
-        List<String> textureAssets = new ArrayList<String>();
-        getFilesFromAssets(src, context.getContext(), meshAssets, textureAssets);
-        if (textureAssets.size() < 2) {
-            throw new IllegalArgumentException("src value for animated asset should contain " +
-                    "multiple .png/jpeg/jpg files");
-        }
 
-        AnimatedCursorAsset asset = new AnimatedCursorAsset(context, type, action, textureAssets
-                .toArray(new String[0]));
+        AnimatedCursorAsset asset;
+        if (src.endsWith(ZIP_EXTENSION)) {
+            asset = new AnimatedCursorAsset(context, type, action, src);
+        } else {
+            throw new IllegalArgumentException("src value for animated asset should contain " +
+                    "a zip file with multiple .png/jpeg/jpg files");
+        }
         String duration = parser.getAttributeValue(XMLUtils.DEFAULT_XML_NAMESPACE, DURATION);
         if (duration == null) {
             throw new XmlPullParserException("Duration needs to be specified for animated " +
@@ -286,10 +285,11 @@ class CursorAssetFactory {
         for (String fileName : files) {
             if (fileName.endsWith(OBJ_EXTENSION)) {
                 meshAssets.add(src + File.separator + fileName);
-            } else if (isTextureFile(fileName)) {
+            } else if (fileName.endsWith(ZIP_EXTENSION) || isTextureFile(fileName)) {
                 textures.add(src + File.separator + fileName);
             }
         }
         Collections.sort(textures);
     }
+
 }

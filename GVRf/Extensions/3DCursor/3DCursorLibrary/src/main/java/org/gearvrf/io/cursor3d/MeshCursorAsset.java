@@ -61,13 +61,14 @@ class MeshCursorAsset extends CursorAsset {
                 throw new IllegalArgumentException("Error loading mesh");
             }
         }
-
-        try {
-            context.getContext().getAssets().open(texture).close();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Error loading Texture");
+        if(texture != null) {
+            try {
+                context.getContext().getAssets().open(texture).close();
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Error loading Texture");
+            }
+            this.texture = texture;
         }
-        this.texture = texture;
     }
 
     /**
@@ -89,7 +90,7 @@ class MeshCursorAsset extends CursorAsset {
     @Override
     void load(CursorSceneObject sceneObject) {
         // try to get a cached copy from GVRf
-        if (futureTexture == null) {
+        if (futureTexture == null && texture != null) {
             try {
                 GVRAndroidResource gvrAndroidResource = new GVRAndroidResource(context, texture);
                 futureTexture = context.loadFutureTexture(gvrAndroidResource);

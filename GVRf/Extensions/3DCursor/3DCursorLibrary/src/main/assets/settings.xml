@@ -42,7 +42,7 @@
                animated="yes"
                duration="1.0"
                soundEnabled="no"
-               src="cursor_loading"
+               src="cursor_loading.zip"
                type="2D"
                x="0.1"
                y="0.1"/>
@@ -50,7 +50,7 @@
                animated="yes"
                duration="1.0"
                soundEnabled="no"
-               src="cursor_hover"
+               src="cursor_hover.zip"
                type="2D"
                x="0.1"
                y="0.1"/>
@@ -76,7 +76,7 @@
                animated="yes"
                duration="1.5"
                soundEnabled="no"
-               src="preset_2_cursor_loading"
+               src="preset_2_cursor_loading.zip"
                type="2D"
                x="0.1"
                y="0.1"/>
@@ -84,7 +84,7 @@
                animated="yes"
                duration="1.5"
                soundEnabled="no"
-               src="preset_2_cursor_hover"
+               src="preset_2_cursor_hover.zip"
                type="2D"
                x="0.1"
                y="0.1"/>
@@ -109,7 +109,7 @@
                animated="yes"
                duration="1.5"
                soundEnabled="no"
-               src="preset_3_cursor_loading"
+               src="preset_3_cursor_loading.zip"
                type="2D"
                x="0.1"
                y="0.1"/>
@@ -117,7 +117,7 @@
                animated="yes"
                duration="1.5"
                soundEnabled="no"
-               src="preset_3_cursor_hover"
+               src="preset_3_cursor_hover.zip"
                type="2D"
                x="0.1"
                y="0.1"/>
