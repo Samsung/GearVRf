@@ -33,7 +33,7 @@
 #endif
 
 #include "glm/glm.hpp"
-
+#include "batch.h"
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
@@ -82,6 +82,8 @@ private:
     Renderer();
 
 public:
+    static void renderBatches(RenderState& rstate) ;
+    static void renderRenderDataVector(RenderState &rstate);
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,

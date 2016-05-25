@@ -593,8 +593,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             }
         }
 
-        private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
-            getGVRContext().getEventManager().sendEvent(
+        private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {           
+            if(!sceneObject.isCulled())
+                getGVRContext().getEventManager().sendEvent(
                     sceneObject, ISceneObjectEvents.class, eventName);
 
             for (GVRSceneObject child : sceneObject.getChildren()) {
