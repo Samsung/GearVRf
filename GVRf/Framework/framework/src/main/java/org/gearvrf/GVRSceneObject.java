@@ -266,6 +266,20 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         this(gvrContext, width, height, texture, STANDARD_SHADER);
     }
 
+    protected void finalize() throws Throwable
+    {
+        detachAllComponents();
+    }
+    
+    protected void detachAllComponents()
+    {
+        for (GVRComponent component : mComponents.values())
+        {
+            component.setOwnerObject(null);
+        }
+        mComponents.clear();
+    }
+    
     /**
      * Get the (optional) name of the object.
      * 
@@ -330,7 +344,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     boolean attachComponent(GVRComponent component) {
         boolean added = NativeSceneObject.attachComponent(getNative(), component.getNative());
-        if (added) {
+        if (added) synchronized (mComponents) {
             long type = component.getType();
             mComponents.put(type, component);
             component.setOwnerObject(this);
@@ -353,9 +367,9 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     GVRComponent detachComponent(long type) {
          boolean removed = NativeSceneObject.detachComponent(getNative(), type);
-        if (removed) {
+        if (removed) synchronized (mComponents) {
             GVRComponent component = mComponents.remove(type);
-            component.setOwnerObject(this);
+            component.setOwnerObject(null);
         }
         return null;
     }
@@ -372,8 +386,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.detachComponent
      */
     GVRComponent getComponent(long type) {
-        GVRComponent component =  mComponents.get(type);
-        return component;
+        return  mComponents.get(type);
     }
     
     /**
@@ -983,35 +996,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
     }
 
-    /**
-     * Add {@code childComponent} as a child of this object (owner object of the
-     * component is added as child). Adding a component will increase the
-     * {@link getChildrenCount() getChildrenCount()} for this scene object.
-     * 
-     * @param childComponent
-     *            {@link GVRComponent Component} to add as a child of this
-     *            object.
-     */
-    public void addChildObject(GVRComponent childComponent) {
-        if (childComponent.getOwnerObject() != null) {
-            addChildObject(childComponent.getOwnerObject());
-        }
-    }
-
-    /**
-     * Remove {@code childComponent} as a child of this object (owner object of
-     * the component is removed as child). Removing a component will decrease
-     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
-     * 
-     * @param childComponent
-     *            {@link GVRComponent Component} to remove as a child of this
-     *            object.
-     */
-    public void removeChildObject(GVRComponent childComponent) {
-        if (childComponent.getOwnerObject() != null) {
-            removeChildObject(childComponent.getOwnerObject());
-        }
-    }
 
     /**
      * Generate debug dump of the tree from the scene object.
