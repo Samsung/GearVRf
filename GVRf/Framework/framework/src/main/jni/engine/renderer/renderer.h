@@ -49,7 +49,7 @@ class RenderData;
 class RenderTexture;
 class ShaderManager;
 class Light;
-
+class Batch;
 /*
  * These uniforms are commonly used in shaders.
  * They are calculated by the GearVRF renderer.
@@ -82,7 +82,7 @@ private:
     Renderer();
 
 public:
-    static void renderBatches(RenderState& rstate) ;
+    static void renderBatches(RenderState& rstate,std::map<Material*, std::vector<Batch*>>& material_map);
     static void renderRenderDataVector(RenderState &rstate);
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,

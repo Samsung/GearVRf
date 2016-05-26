@@ -48,6 +48,7 @@ void Batch::add(RenderData *render_data, Material *material) {
 	 material_ = material;
 	 Mesh *render_mesh = render_data->mesh();
 	 render_data_set_.insert(render_data);   // store all the renderdata which are in batch
+	 render_mesh->setMeshModified(false);    // mark mesh clean
 
 	 // store the light
 	 if(render_data->light_enabled()){
@@ -118,6 +119,17 @@ void Batch::update(){
 	}
 
 }
+/*
+ *  Check if any of the meshes in batch are modified
+ */
+bool Batch::isBatchDirty(){
+	for(auto it= render_data_set_.begin();it!=render_data_set_.end();it++){
+		if((*it)->mesh()->isMeshModified())
+			return true;
+	}
+	return false;
+}
+
 /*
  * Set batch in render data to null. can be use to mark dirty.
  */

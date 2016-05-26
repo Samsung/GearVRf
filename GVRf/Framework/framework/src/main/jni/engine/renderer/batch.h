@@ -55,6 +55,7 @@ class Batch {
          Material *get_material() {
             return material_;
         }
+        bool isBatchDirty();
     private:
         std::map<RenderData*,int>matrix_index_map;
         std::set<RenderData*>render_data_set_;  // use it later if we want to modify meshes

@@ -190,12 +190,12 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
 /*
  * store the batches with same material together
  */
-static std::map<Material*, std::vector<Batch*>> material_map;
-
+static std::map<Material*, std::vector<Batch*>> static_batch_map;
+static std::map<Material*, std::vector<Batch*>> dynamic_batch_map;
 /*
  * Iterate through material_map and render all the batches
  */
-void Renderer::renderBatches(RenderState& rstate) {
+void Renderer::renderBatches(RenderState& rstate,std::map<Material*, std::vector<Batch*>>& material_map ) {
     glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj *rstate.uniforms.u_view);
 
     for(auto it=material_map.begin();it!=material_map.end();++it){
@@ -216,7 +216,6 @@ void Renderer::renderBatches(RenderState& rstate) {
 }
 
 bool do_batching = true;
-std::set<Material*>mat_set;
 
 void Renderer::renderRenderDataVector(RenderState &rstate) {
 
@@ -233,7 +232,8 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
          * clear the material map before each rendering, if one of the batch is not in the scene
          * don't render that batch
          */
-        material_map.clear();
+        static_batch_map.clear();
+        dynamic_batch_map.clear();
 
         for(int i=0; i<size; i++) {
 
@@ -261,29 +261,53 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
             Batch* renderdata_batch = render_data_vector[i]->getBatch();
             Material *material = render_data_vector[i]->pass(0)->material();
 
+            bool is_dynamic = render_data_vector[i]->mesh()->isDynamic();
+        	std::map<Material*, std::vector<Batch*>>* batch_map;
+        	if(is_dynamic){
+        		batch_map = &dynamic_batch_map;
+        	}
+        	else{
+        		batch_map = &static_batch_map;
+        	}
+
             // check if render data is newly introduces and does not have batch
             if(renderdata_batch == nullptr){
+
             	// find out existing material in the map, if exists update the existing batch
             	// if material does not exists, create new batch and add it into map
-            	std::map<Material*, std::vector<Batch*>>::iterator it=material_map.find(material);
+            	std::map<Material*, std::vector<Batch*>>::iterator it=(*batch_map).find(material);
 
-                if(it!=material_map.end()){
+                if(it!=(*batch_map).end()){
                 	std::vector<Batch*> batch_vector = it->second;
                 	Batch* batch = batch_vector.back();
 
                 	// existing batch is not full
                 	if(batch->getNumberOfMeshes() < BATCH_SIZE){
+                		// mesh is dynamic and of the mesh in batch is moodified so we need to discard old batch
+                		if(is_dynamic && batch->isBatchDirty()){
+                			batch->setMeshesDirty();
+                			batch_vector.erase(batch_vector.end()-1);
+                			Batch *new_batch = new Batch();
+                			new_batch->add(render_data_vector[i], material);
+                			render_data_vector[i]->setBatch(new_batch);
+                			std::vector<Batch*>batch_vector = (*batch_map)[material];
+        					batch_vector.push_back(new_batch);
+        					(*batch_map)[material] = batch_vector;
 
-            			render_data_vector[i]->setBatch(batch);
-            			batch->add(render_data_vector[i], material);
+                		}
+                		else {
+                			render_data_vector[i]->setBatch(batch);
+                			batch->add(render_data_vector[i], material);
+                		}
+
                 	}
-                	else{
+                	else{ // batch is full, create new batch
     					Batch *new_batch = new Batch();
     					new_batch->add(render_data_vector[i], material);
     					render_data_vector[i]->setBatch(new_batch);
-    					std::vector<Batch*>batch_vector = material_map[material];
+    					std::vector<Batch*>batch_vector = (*batch_map)[material];
     					batch_vector.push_back(new_batch);
-    					material_map[material] = batch_vector;
+    					(*batch_map)[material] = batch_vector;
                 	}
                 }
                 else { // material is newly ecnountered, create new batch
@@ -293,7 +317,7 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
 					render_data_vector[i]->setBatch(new_batch);
 					std::vector<Batch*>batch_vector;
 					batch_vector.push_back(new_batch);
-					material_map[material] = batch_vector;
+					(*batch_map)[material] = batch_vector;
 
                 }
             }
@@ -304,34 +328,67 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
             			renderdata_batch->UpdateModelMatrix(render_data_vector[i], render_data_vector[i]->owner_object()->transform()->getModelMatrix());
             		}
 
-                	std::map<Material*, std::vector<Batch*>>::iterator it=material_map.find(material);
+                	std::map<Material*, std::vector<Batch*>>::iterator it=(*batch_map).find(material);
                 	// check whether the material is stored in map if not add it
-                    if(it!=material_map.end()){
+                    if(it!=(*batch_map).end()){
                     	std::vector<Batch*> batch_vector = it->second;
                     	bool batch_found = false;
-                    	for(int i=0;i<batch_vector.size();i++){
+                    	int i = 0;
+                    	for(i=0;i<batch_vector.size();i++){
                     		if(renderdata_batch == batch_vector[i]){
 								batch_found = true;
 								break;
                     		}
                     	}
-                    	if(!batch_found){
-                    		batch_vector.push_back(renderdata_batch);
-                    		material_map[material] = batch_vector;
+                    	if(!batch_found && !is_dynamic){
+         					 // mesh is not modified
+        						batch_vector.push_back(renderdata_batch);
+        						(*batch_map)[material] = batch_vector;
                     	}
+                   		// check whether the mesh is modified if it is, discard the old batch
+        				if(is_dynamic &&
+        				(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
+        					renderdata_batch->setMeshesDirty();
+        					if(batch_found)
+        						batch_vector.erase(batch_vector.begin()+i);
+        					Batch *new_batch = new Batch();
+        					new_batch->add(render_data_vector[i], material);
+        					render_data_vector[i]->setBatch(new_batch);
+        					std::vector<Batch*>batch_vector = (*batch_map)[material];
+        					batch_vector.push_back(new_batch);
+        					(*batch_map)[material] = batch_vector;
+
+        				}
+
 
                     }
-                    else{
-                    	std::vector<Batch*> batch_vector;
-                		batch_vector.push_back(renderdata_batch);
-                		material_map[material] = batch_vector;
+                    else{ // material does not exists in map but renderdata has a batch, just add it into map
+
+                    	//check if one of the mesh in batch is modified if it is, discard the old batch
+                    	if(is_dynamic &&
+    					(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
+    						renderdata_batch->setMeshesDirty();
+    						Batch *new_batch = new Batch();
+    						new_batch->add(render_data_vector[i], material);
+    						render_data_vector[i]->setBatch(new_batch);
+    						std::vector<Batch*>batch_vector;
+    						batch_vector.push_back(new_batch);
+    						(*batch_map)[material] = batch_vector;
+
+    					}
+    					else {
+    						std::vector<Batch*> batch_vector;
+                    		batch_vector.push_back(renderdata_batch);
+                    		(*batch_map)[material] = batch_vector;
+    					}
 
                     }
 
             	}
             }
 
-        renderBatches(rstate);
+        renderBatches(rstate, static_batch_map);
+        renderBatches(rstate, dynamic_batch_map);
 
         // render the objects with high rendering order to keep them front
         for(int i=0;i<unbatched_indices.size();i++){
