@@ -718,7 +718,38 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
+    /**
+     * Add the owner of {@code childComponent} as a child of this object. (owner object of the
+     * Adding a child will increase the
+     * {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * If the component is not attached to a scene object this function does nothing.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} whose owner is added as a child of this
+     *            object.
+     */
+    public void addChildObject(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            addChildObject(childComponent.getOwnerObject());
+        }
+    }
 
+    /**
+     * Remove the owner of {@code childComponent} as a child of this object.
+     * Removing a child will decrease
+     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * If the component is not attached to a scene object this function does nothing.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} whose owner is removeed as a child of this
+     *            object.
+     */
+    public void removeChildObject(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            removeChildObject(childComponent.getOwnerObject());
+        }
+    }
+    
     /**
      * Performs case-sensitive search
      * 
