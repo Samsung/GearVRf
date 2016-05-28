@@ -33,6 +33,9 @@
 #include "shaders/post_effect_shader_manager.h"
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
+
+#include <unordered_map>
+#include <list>
 #define BATCH_SIZE 60
 
 namespace gvr {
@@ -190,31 +193,91 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
 /*
  * store the batches with same material together
  */
-static std::map<Material*, std::vector<Batch*>> static_batch_map;
-static std::map<Material*, std::vector<Batch*>> dynamic_batch_map;
-/*
- * Iterate through material_map and render all the batches
- */
-void Renderer::renderBatches(RenderState& rstate,std::map<Material*, std::vector<Batch*>>& material_map ) {
-    glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj *rstate.uniforms.u_view);
 
-    for(auto it=material_map.begin();it!=material_map.end();++it){
-       std::vector<Batch*> batch_vector = it->second;
+RenderDataMap static_batch_map;
+RenderDataMap dynamic_batch_map;
+void setStates(RenderData* render_data){
 
-       for(int i=0;i<batch_vector.size();i++){
-
-    	   Batch* batch = batch_vector[i];
-    	   batch->update();
-    	   RenderData* renderdata= batch->get_renderdata();
-           std::vector<glm::mat4> matrices=batch->get_matrices();
-           rstate.material_override = batch->get_material();
-           rstate.shader_manager->getTextureShader()->render_batch(
-        		  matrices,renderdata, rstate);
-
-       }
+	if (render_data->offset()) {
+        GL(glEnable (GL_POLYGON_OFFSET_FILL));
+        GL(glPolygonOffset(render_data->offset_factor(),
+                    render_data->offset_units()));
+    }
+    if (!render_data->depth_test()) {
+        GL(glDisable (GL_DEPTH_TEST));
+    }
+    if (!render_data->alpha_blend()) {
+        GL(glDisable (GL_BLEND));
+    }
+    if( render_data->alpha_to_coverage()) {
+        GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+        GL(glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask()));
     }
 }
 
+void RestoreStates(RenderData* render_data){
+    if (render_data->cull_face() != RenderData::CullBack) {
+        GL(glEnable (GL_CULL_FACE));
+        GL(glCullFace (GL_BACK));
+    }
+
+    if (render_data->offset()) {
+        GL(glDisable (GL_POLYGON_OFFSET_FILL));
+    }
+    if (!render_data->depth_test()) {
+        GL(glEnable (GL_DEPTH_TEST));
+    }
+    if (!render_data->alpha_blend()) {
+        GL(glEnable (GL_BLEND));
+    }
+    if (render_data->alpha_to_coverage()) {
+        GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+    }
+}
+/*
+ * Iterate through material_map and render all the batches
+ */
+void Renderer::renderBatches(RenderState& rstate,RenderDataMap& material_map ) {
+    glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj *rstate.uniforms.u_view);
+
+    //LOGE("begin batching");
+    // iterate through renderdata map
+    for(auto it=material_map.begin();it!=material_map.end();++it){
+    	auto & mat_map = it->second;
+    	// iterate through material map
+    	for(auto it1 = mat_map.begin();it1!=mat_map.end();++it1){
+    		auto& render_data_map = it1->second;
+    		for(auto it2 = render_data_map.begin(); it2!= render_data_map.end(); ++it2){
+				auto& batch_set = it2->second;
+				// iterate through vector
+				for(int i = 0;i<batch_set.size(); ++i){
+					Batch* batch = batch_set[i];
+					rstate.material_override = batch->get_material();
+					int currentShaderType = rstate.material_override->shader_type();
+
+					// render in normal way if not texture shader
+					if(currentShaderType != Material::ShaderType::TEXTURE_SHADER) {
+						 std::set<RenderData*>render_data_set = batch->getRenderDataSet();
+						 for(auto it3 = render_data_set.begin();it3!=render_data_set.end();++it3){
+							 GL(renderRenderData(rstate,(*it3)));
+						 }
+
+						 continue;
+					}
+
+					batch->update();
+					RenderData* renderdata= batch->get_renderdata();
+					std::vector<glm::mat4> matrices=batch->get_matrices();
+					numberDrawCalls++;
+					setStates(renderdata);
+					rstate.shader_manager->getTextureShader()->render_batch(matrices,renderdata, rstate);
+					RestoreStates(renderdata);
+				}
+    		}
+    	}
+    }
+    //LOGE("end");
+}
 bool do_batching = true;
 
 void Renderer::renderRenderDataVector(RenderState &rstate) {
@@ -226,8 +289,7 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
     } else {
 
         int size = render_data_vector.size();
-        std::vector<int>unbatched_indices;
-        unbatched_indices.reserve(100);
+
         /*
          * clear the material map before each rendering, if one of the batch is not in the scene
          * don't render that batch
@@ -237,14 +299,6 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
 
         for(int i=0; i<size; i++) {
 
-        	/* Store all the indices of renderdata for which batching is disabled, this might be becuase these
-        	 * objects are intended to be rendered last
-        	*/
-        	if(!render_data_vector[i]->batching()){
-        		unbatched_indices.push_back(i);
-        		continue;
-        	}
-
             int pass_count = render_data_vector[i]->pass_count();
             if(size == 1 || pass_count > 1) {
             	 GL(renderRenderData(rstate,render_data_vector[i]));
@@ -252,17 +306,14 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
             }
             int currentShaderType = render_data_vector[i]->pass(0)->material()->shader_type();
 
-            // render in normal way if not texture shader
-            if(currentShaderType != Material::ShaderType::TEXTURE_SHADER) {
-            	 GL(renderRenderData(rstate,render_data_vector[i]));
-            	 continue;
-            }
-
             Batch* renderdata_batch = render_data_vector[i]->getBatch();
             Material *material = render_data_vector[i]->pass(0)->material();
 
+            Long renderdata_hash = render_data_vector[i]->getHashCode();
+            int rendering_order = render_data_vector[i]->rendering_order();
             bool is_dynamic = render_data_vector[i]->mesh()->isDynamic();
-        	std::map<Material*, std::vector<Batch*>>* batch_map;
+
+            RenderDataMap* batch_map;
         	if(is_dynamic){
         		batch_map = &dynamic_batch_map;
         	}
@@ -273,53 +324,85 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
             // check if render data is newly introduces and does not have batch
             if(renderdata_batch == nullptr){
 
+                itRenderDataMap render_data_it = (*batch_map).find(rendering_order);
             	// find out existing material in the map, if exists update the existing batch
             	// if material does not exists, create new batch and add it into map
-            	std::map<Material*, std::vector<Batch*>>::iterator it=(*batch_map).find(material);
 
-                if(it!=(*batch_map).end()){
-                	std::vector<Batch*> batch_vector = it->second;
-                	Batch* batch = batch_vector.back();
+            	if(render_data_it!=(*batch_map).end()){
+            		auto& material_map = render_data_it->second;
 
-                	// existing batch is not full
-                	if(batch->getNumberOfMeshes() < BATCH_SIZE){
-                		// mesh is dynamic and of the mesh in batch is moodified so we need to discard old batch
-                		if(is_dynamic && batch->isBatchDirty()){
-                			batch->setMeshesDirty();
-                			batch_vector.erase(batch_vector.end()-1);
-                			Batch *new_batch = new Batch();
-                			new_batch->add(render_data_vector[i], material);
-                			render_data_vector[i]->setBatch(new_batch);
-                			std::vector<Batch*>batch_vector = (*batch_map)[material];
-        					batch_vector.push_back(new_batch);
-        					(*batch_map)[material] = batch_vector;
+            		itMaterialMap it=material_map.find(material);
 
-                		}
-                		else {
-                			render_data_vector[i]->setBatch(batch);
-                			batch->add(render_data_vector[i], material);
-                		}
+            		if(it!=material_map.end()){
 
-                	}
-                	else{ // batch is full, create new batch
-    					Batch *new_batch = new Batch();
-    					new_batch->add(render_data_vector[i], material);
-    					render_data_vector[i]->setBatch(new_batch);
-    					std::vector<Batch*>batch_vector = (*batch_map)[material];
-    					batch_vector.push_back(new_batch);
-    					(*batch_map)[material] = batch_vector;
-                	}
-                }
-                else { // material is newly ecnountered, create new batch
+            			auto& renderdata_property_map = it->second;
+            			itRenderPropertyMap it2 = renderdata_property_map.find(renderdata_hash);
+
+            			if(it2!=renderdata_property_map.end()){
+            				auto& batch_vector = it2->second;
+							Batch* batch = batch_vector.back();
+
+							// existing batch is not full
+							if(batch->getNumberOfMeshes() < BATCH_SIZE){
+								// mesh is dynamic and of the mesh in batch is moodified so we need to discard old batch
+								if(is_dynamic && batch->isBatchDirty()){
+									batch->setMeshesDirty();
+									// delete old batch
+									batch_vector.erase(batch_vector.end()-1);
+									Batch *new_batch = new Batch();
+									new_batch->add(render_data_vector[i], material);
+									render_data_vector[i]->setBatch(new_batch);
+									batch_vector.push_back(new_batch);
+
+								}
+								else {
+									render_data_vector[i]->setBatch(batch);
+									batch->add(render_data_vector[i], material);
+								}
+
+							}
+							else { // batch is full, create new batch
+								Batch *new_batch = new Batch();
+								new_batch->add(render_data_vector[i], material);
+								render_data_vector[i]->setBatch(new_batch);
+								batch_vector.push_back(new_batch);
+							}
+            			}
+            			else { // renderdata_property  is newly ecnountered, create new batch
+							Batch *new_batch = new Batch();
+							new_batch->add(render_data_vector[i], material);
+							render_data_vector[i]->setBatch(new_batch);
+							std::vector<Batch*>batch_vector;
+							batch_vector.push_back(new_batch);
+							renderdata_property_map[renderdata_hash] = batch_vector;
+            			}
+            		}
+            		else { // material_map entry missing, add it
+						Batch *new_batch = new Batch();
+						new_batch->add(render_data_vector[i], material);
+						render_data_vector[i]->setBatch(new_batch);
+						std::vector<Batch*>batch_vector;
+						batch_vector.push_back(new_batch);
+						RenderPropertyMap new_renderdata_property_map;
+						new_renderdata_property_map[renderdata_hash] = batch_vector;
+						material_map[material] = new_renderdata_property_map;
+            		}
+            	}
+            	// rendering order is not present, add new one
+            	else{
 
 					Batch *new_batch = new Batch();
 					new_batch->add(render_data_vector[i], material);
 					render_data_vector[i]->setBatch(new_batch);
 					std::vector<Batch*>batch_vector;
 					batch_vector.push_back(new_batch);
-					(*batch_map)[material] = batch_vector;
+					RenderPropertyMap new_renderdata_property_map;
+					new_renderdata_property_map[renderdata_hash] = batch_vector;
+					MaterialMap new_material_map;
+					new_material_map[material] = new_renderdata_property_map;
+					(*batch_map)[rendering_order]= new_material_map;
 
-                }
+            	}
             }
             else { // renderdata already has the batch
 
@@ -327,76 +410,134 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
             			// object transform is modified
             			renderdata_batch->UpdateModelMatrix(render_data_vector[i], render_data_vector[i]->owner_object()->transform()->getModelMatrix());
             		}
+                	itRenderDataMap render_data_it = (*batch_map).find(rendering_order);
+                	// find out existing material in the map, if exists update the existing batch
+                	// if material does not exists, create new batch and add it into map
 
-                	std::map<Material*, std::vector<Batch*>>::iterator it=(*batch_map).find(material);
-                	// check whether the material is stored in map if not add it
-                    if(it!=(*batch_map).end()){
-                    	std::vector<Batch*> batch_vector = it->second;
-                    	bool batch_found = false;
-                    	int i = 0;
-                    	for(i=0;i<batch_vector.size();i++){
-                    		if(renderdata_batch == batch_vector[i]){
-								batch_found = true;
-								break;
+
+                	if(render_data_it!=(*batch_map).end()){
+                		auto& material_map = render_data_it->second;
+
+                		itMaterialMap it=material_map.find(material);
+
+                		if(it!=material_map.end()){
+                			auto& renderdata_property_map = it->second;
+                			itRenderPropertyMap it2 = renderdata_property_map.find(renderdata_hash);
+
+                    		if(it2!=renderdata_property_map.end()){
+                    			auto& batch_vector = it2->second;
+								bool batch_found = false;
+								int i = 0;
+								for(i=0;i<batch_vector.size();i++){
+									if(renderdata_batch == batch_vector[i]){
+										batch_found = true;
+										break;
+									}
+								}
+								if(!batch_found && !is_dynamic){
+									 // mesh is not modified
+										batch_vector.push_back(renderdata_batch);
+								}
+								// check whether the mesh is modified if it is, discard the old batch
+								if(is_dynamic &&
+								(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
+									renderdata_batch->setMeshesDirty();
+									if(batch_found)
+										batch_vector.erase(batch_vector.begin()+i);
+									Batch *new_batch = new Batch();
+									new_batch->add(render_data_vector[i], material);
+									render_data_vector[i]->setBatch(new_batch);
+									batch_vector.push_back(new_batch);
+								}
                     		}
-                    	}
-                    	if(!batch_found && !is_dynamic){
-         					 // mesh is not modified
-        						batch_vector.push_back(renderdata_batch);
-        						(*batch_map)[material] = batch_vector;
-                    	}
-                   		// check whether the mesh is modified if it is, discard the old batch
+                    		else{ // render_data_property does not exists, add one
+
+                    			// check whether the mesh is modified if it is, discard the old batch
+								if(is_dynamic &&
+								(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
+									renderdata_batch->setMeshesDirty();
+									Batch *new_batch = new Batch();
+									new_batch->add(render_data_vector[i], material);
+									std::vector<Batch*>new_batch_vector;
+									render_data_vector[i]->setBatch(new_batch);
+									new_batch_vector.push_back(new_batch);
+									renderdata_property_map[renderdata_hash] = new_batch_vector;
+								}
+								else{
+									std::vector<Batch*>batch_vector;
+									batch_vector.push_back(renderdata_batch);
+									renderdata_property_map[renderdata_hash] = batch_vector;
+								}
+                    		}
+                		}
+                		else{ // material does not exists in map but renderdata has a batch, just add it into map
+
+							//check if one of the mesh in batch is modified if it is, discard the old batch
+							if(is_dynamic &&
+							(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
+								renderdata_batch->setMeshesDirty();
+								// delete renderdata_batch
+								Batch *new_batch = new Batch();
+								new_batch->add(render_data_vector[i], material);
+								render_data_vector[i]->setBatch(new_batch);
+								std::vector<Batch*>new_batch_vector;
+								new_batch_vector.push_back(new_batch);
+								RenderPropertyMap renderdata_property_map;
+								renderdata_property_map[renderdata_hash] = new_batch_vector;
+								material_map[material] = renderdata_property_map;
+
+							}
+							else {
+								std::vector<Batch*>new_batch_vector;
+								new_batch_vector.push_back(renderdata_batch);
+								RenderPropertyMap renderdata_property_map;
+								renderdata_property_map[renderdata_hash] = new_batch_vector;
+								material_map[material] = renderdata_property_map;
+							}
+
+                		}
+                	}
+
+                	else{ // rendering order is not stored, add it into render_data_map
+
+                		// if dynamic mesh
         				if(is_dynamic &&
         				(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
         					renderdata_batch->setMeshesDirty();
-        					if(batch_found)
-        						batch_vector.erase(batch_vector.begin()+i);
         					Batch *new_batch = new Batch();
         					new_batch->add(render_data_vector[i], material);
         					render_data_vector[i]->setBatch(new_batch);
-        					std::vector<Batch*>batch_vector = (*batch_map)[material];
-        					batch_vector.push_back(new_batch);
-        					(*batch_map)[material] = batch_vector;
+        					std::vector<Batch*>new_batch_vector;
+        					new_batch_vector.push_back(new_batch);
+							RenderPropertyMap renderdata_property_map;
+							renderdata_property_map[renderdata_hash] = new_batch_vector;
+							MaterialMap new_material_map;
+							new_material_map[material] = renderdata_property_map;
+							(*batch_map)[rendering_order] = new_material_map;
+        				}
+        				// static mesh
+        				else{
+    						std::vector<Batch*> new_batch_vector;
+    						new_batch_vector.push_back(renderdata_batch);
+							RenderPropertyMap renderdata_property_map;
+							renderdata_property_map[renderdata_hash] = new_batch_vector;
+							MaterialMap new_material_map;
+							new_material_map[material] = renderdata_property_map;
+							(*batch_map)[rendering_order] = new_material_map;
 
         				}
 
-
-                    }
-                    else{ // material does not exists in map but renderdata has a batch, just add it into map
-
-                    	//check if one of the mesh in batch is modified if it is, discard the old batch
-                    	if(is_dynamic &&
-    					(render_data_vector[i]->mesh()->isMeshModified() || renderdata_batch->isBatchDirty())){
-    						renderdata_batch->setMeshesDirty();
-    						Batch *new_batch = new Batch();
-    						new_batch->add(render_data_vector[i], material);
-    						render_data_vector[i]->setBatch(new_batch);
-    						std::vector<Batch*>batch_vector;
-    						batch_vector.push_back(new_batch);
-    						(*batch_map)[material] = batch_vector;
-
-    					}
-    					else {
-    						std::vector<Batch*> batch_vector;
-                    		batch_vector.push_back(renderdata_batch);
-                    		(*batch_map)[material] = batch_vector;
-    					}
-
-                    }
-
-            	}
+                	}
             }
-
-        renderBatches(rstate, static_batch_map);
-        renderBatches(rstate, dynamic_batch_map);
-
-        // render the objects with high rendering order to keep them front
-        for(int i=0;i<unbatched_indices.size();i++){
-        	rstate.material_override = render_data_vector[unbatched_indices[i]]->pass(0)->material();
-        	GL(renderRenderData(rstate,render_data_vector[unbatched_indices[i]]));
         }
 
+
+       renderBatches(rstate, dynamic_batch_map);
+       renderBatches(rstate, static_batch_map);
+
     }
+
+	//LOGE("number of draw calls %d", numberDrawCalls);
 }
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
@@ -844,7 +985,7 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
         GL(glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask()));
     }
     if (render_data->mesh() != 0) {
-        GL(renderMesh(rstate, render_data));
+        	GL(renderMesh(rstate, render_data));
     }
 
     // Restoring to Default.

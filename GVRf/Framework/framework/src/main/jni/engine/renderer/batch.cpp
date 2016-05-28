@@ -26,7 +26,6 @@ Batch::Batch(): mesh_count(0), draw_count(0), vertex_count_(0), vao_dirty(true),
     indices_.clear();
     matrices_.clear();
     matrix_indices.clear();
-    renderdata = new RenderData();
     mesh = new Mesh(); // should perhaps have a pool of meshes of a certain size
 }
 
@@ -50,10 +49,10 @@ void Batch::add(RenderData *render_data, Material *material) {
 	 render_data_set_.insert(render_data);   // store all the renderdata which are in batch
 	 render_mesh->setMeshModified(false);    // mark mesh clean
 
-	 // store the light
-	 if(render_data->light_enabled()){
-		 renderdata->enable_light();
-		 renderdata->set_light(render_data->light());
+	 // Copy all renderData properties
+	 if(!renderdata){
+		 renderdata = new RenderData(*render_data);
+		 renderdata->set_batching(true);
 	 }
 
 	 // mark transforms clean

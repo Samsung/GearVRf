@@ -51,7 +51,14 @@ class Batch {
          RenderData* get_renderdata() {
             return renderdata;
         }
-
+         RenderData* getRenderData(){
+        	 auto it = render_data_set_.begin();
+        	 if(it!=render_data_set_.end())
+        		 return (*it);
+         }
+         std::set<RenderData*>& getRenderDataSet(){
+        	 return render_data_set_;
+         }
          Material *get_material() {
             return material_;
         }

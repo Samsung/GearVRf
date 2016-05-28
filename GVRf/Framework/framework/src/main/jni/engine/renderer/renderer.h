@@ -38,7 +38,8 @@
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
-
+#include <unordered_map>
+typedef unsigned long Long;
 namespace gvr {
 class Camera;
 class Scene;
@@ -76,13 +77,21 @@ struct RenderState {
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
 };
+typedef std::map<int, std::unordered_map<Material*,std::unordered_map<Long,std::vector<Batch*>>>> RenderDataMap;
+typedef RenderDataMap::iterator itRenderDataMap;
+
+typedef std::unordered_map<Material*,std::unordered_map<Long,std::vector<Batch*>>> MaterialMap;
+typedef MaterialMap::iterator itMaterialMap;
+
+typedef std::unordered_map<Long,std::vector<Batch*>> RenderPropertyMap;
+typedef RenderPropertyMap::iterator itRenderPropertyMap;
 
 class Renderer {
 private:
     Renderer();
 
 public:
-    static void renderBatches(RenderState& rstate,std::map<Material*, std::vector<Batch*>>& material_map);
+    static void renderBatches(RenderState& rstate,RenderDataMap& material_map);
     static void renderRenderDataVector(RenderState &rstate);
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
