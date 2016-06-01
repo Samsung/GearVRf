@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "renderer.h"
-
+#include "gl/gl_program.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
 #include "eglextension/tiledrendering/tiled_rendering_enhancer.h"
@@ -696,7 +696,10 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
 	rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
 	rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
-	try {
+    Mesh* mesh = render_data->mesh();
+
+    mesh->generateVAO();
+    try {
          //TODO: Improve this logic to avoid a big "switch case"
         ShaderBase* shader = NULL;
         if (rstate.material_override != nullptr)
@@ -748,7 +751,17 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
              shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
              return;
          }
-        shader->render(&rstate, render_data, curr_material);
+         if (render_data->draw_mode() == GL_LINE_STRIP) {
+             if (curr_material->hasUniform("line_width")) {
+                 float lineWidth = curr_material->getFloat("line_width");
+                 glLineWidth(lineWidth);
+                 shader->render(&rstate, render_data, curr_material);
+                 glLineWidth(1.0f);
+             }
+         }
+         else {
+             shader->render(&rstate, render_data, curr_material);
+         }
     } catch (const std::string &error) {
         LOGE(
                 "Error detected in Renderer::renderRenderData; name : %s, error : %s",
@@ -756,6 +769,16 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 error.c_str());
         shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
     }
+    glBindVertexArray(mesh->getVAOId());
+    if (mesh->indices().size() > 0) {
+        glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
+    }
+    else {
+        glDrawArrays(render_data->draw_mode(), 0, mesh->vertices().size());
+    }
+    glBindVertexArray(0);
+    checkGlError("renderMesh::renderMaterialShader");
+
 }
 
 bool Renderer::checkTextureReady(Material* material) {

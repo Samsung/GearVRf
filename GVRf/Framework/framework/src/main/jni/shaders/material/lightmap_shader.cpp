@@ -74,13 +74,10 @@ LightMapShader::~LightMapShader() {
 void LightMapShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
 
-    Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     Texture* lightmap_texture = material->getTexture("lightmap_texture");
     glm::vec2 lightmap_offset = material->getVec2("lightmap_offset");
     glm::vec2 lightmap_scale = material->getVec2("lightmap_scale");
-
-    mesh->generateVAO();
 
     glUseProgram(program_->id());
 
@@ -96,11 +93,6 @@ void LightMapShader::render(RenderState* rstate,
 
     glUniform2f(u_lightmap_offset_, lightmap_offset.x, lightmap_offset.y);
     glUniform2f(u_lightmap_scale_, lightmap_scale.x, lightmap_scale.y);
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
-    glBindVertexArray(0);
-
     checkGlError("LightMapShader::render");
 }
 

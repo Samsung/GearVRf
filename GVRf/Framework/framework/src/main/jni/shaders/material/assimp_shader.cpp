@@ -200,7 +200,6 @@ AssimpShader::~AssimpShader() {
 
 void AssimpShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
-    Mesh* mesh = render_data->mesh();
     Texture* texture;
     int feature_set = material->get_shader_feature_set();
 
@@ -228,8 +227,6 @@ void AssimpShader::render(RenderState* rstate,
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
 
-    mesh->generateVAO();
-
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
 
@@ -254,7 +251,7 @@ void AssimpShader::render(RenderState* rstate,
         if (u_bone_matrices_ == -1) {
             LOGD("Warning! Unable to get the location of uniform u_bone_matrix[0]\n");
         }
-
+        Mesh* mesh = render_data->mesh();
         mesh->setBoneLoc(a_bone_indices_, a_bone_weights_);
         mesh->generateBoneArrayBuffers();
 
@@ -268,12 +265,6 @@ void AssimpShader::render(RenderState* rstate,
 
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0);
-    glBindVertexArray(0);
-
     checkGlError("AssimpShader::render");
 }
 

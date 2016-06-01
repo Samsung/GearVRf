@@ -51,25 +51,14 @@ ErrorShader::~ErrorShader() {
 }
 
 void ErrorShader::render(RenderState* rstate, RenderData* render_data, Material* mtl_unused) {
-    Mesh* mesh = render_data->mesh();
     float r = 0.0f;
     float g = 1.0f;
     float b = 0.0f;
     float a = 1.0f;
 
-    Material* material = render_data->pass(0)->material();
-    mesh->generateVAO();
-
     glUseProgram(program_->id());
-
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glUniform4f(u_color_, r, g, b, a);
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0);
-    glBindVertexArray(0);
-
     checkGlError("ErrorShader::render");
 }
 
