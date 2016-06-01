@@ -25,7 +25,6 @@ import org.gearvrf.GVRMaterialShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRTexture;
 
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
@@ -48,7 +47,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
     /**
      * Play a video on a {@linkplain GVRSceneObject scene object} with an
      * arbitrarily complex geometry, using the Android {@link MediaPlayer}
-     *
+     * 
      * @param gvrContext
      *            current {@link GVRContext}
      * @param mesh
