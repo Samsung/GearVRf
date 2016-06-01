@@ -25,6 +25,7 @@ import org.gearvrf.GVRMaterialShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRTexture;
 
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
@@ -47,6 +48,63 @@ public class GVRVideoSceneObject extends GVRSceneObject {
     /**
      * Play a video on a {@linkplain GVRSceneObject scene object} with an
      * arbitrarily complex geometry, using the Android {@link MediaPlayer}
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param mesh
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}
+     * @param mediaPlayer
+     *            an Android {@link MediaPlayer}
+     * @param texture
+     *            a {@link GVRExternalTexture} to link with {@link MediaPlayer}
+     * @param videoType
+     *            One of the {@linkplain GVRVideoType video type constants}
+     * @throws IllegalArgumentException
+     *             on an invalid {@code videoType} parameter
+     */
+    public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
+                               final MediaPlayer mediaPlayer, final GVRExternalTexture texture,
+                               int videoType) {
+        super(gvrContext, mesh);
+        GVRMaterialShaderId materialType;
+
+        switch (videoType) {
+            case GVRVideoType.MONO:
+                materialType = GVRShaderType.OES.ID;
+                break;
+            case GVRVideoType.HORIZONTAL_STEREO:
+                materialType = GVRShaderType.OESHorizontalStereo.ID;
+                break;
+            case GVRVideoType.VERTICAL_STEREO:
+                materialType = GVRShaderType.OESVerticalStereo.ID;
+                break;
+            default:
+                try {
+                    texture.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                throw new IllegalArgumentException();
+        }
+        GVRMaterial material = new GVRMaterial(gvrContext, materialType);
+        material.setMainTexture(texture);
+        getRenderData().setMaterial(material);
+
+        gvrContext.runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                // Because texture.getId() is called, this needs to run in GL thread
+                mVideo = new GVRVideo(mediaPlayer, texture);
+                gvrContext.registerDrawFrameListener(mVideo);
+            }
+        });
+    }
+
+    /**
+     * Play a video on a {@linkplain GVRSceneObject scene object} with an
+     * arbitrarily complex geometry, using the Android {@link MediaPlayer}
      * 
      * @param gvrContext
      *            current {@link GVRContext}
@@ -63,40 +121,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
             final MediaPlayer mediaPlayer, int videoType) {
-        super(gvrContext, mesh);
-        final GVRExternalTexture texture = new GVRExternalTexture(gvrContext);
-
-        GVRMaterialShaderId materialType;
-        switch (videoType) {
-        case GVRVideoType.MONO:
-            materialType = GVRShaderType.OES.ID;
-            break;
-        case GVRVideoType.HORIZONTAL_STEREO:
-            materialType = GVRShaderType.OESHorizontalStereo.ID;
-            break;
-        case GVRVideoType.VERTICAL_STEREO:
-            materialType = GVRShaderType.OESVerticalStereo.ID;
-            break;
-        default:
-            try {
-                texture.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            throw new IllegalArgumentException();
-        }
-        GVRMaterial material = new GVRMaterial(gvrContext, materialType);
-        material.setMainTexture(texture);
-        getRenderData().setMaterial(material);
-
-        gvrContext.runOnGlThread(new Runnable() {
-            @Override
-            public void run() {
-                // Because texture.getId() is called, this needs to run in GL thread
-                mVideo = new GVRVideo(mediaPlayer, texture);
-                gvrContext.registerDrawFrameListener(mVideo);
-            }
-        });
+        this(gvrContext, mesh, mediaPlayer, new GVRExternalTexture(gvrContext), videoType);
     }
 
     /**
