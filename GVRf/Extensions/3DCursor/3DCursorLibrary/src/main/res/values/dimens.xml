@@ -47,7 +47,7 @@
     <dimen name="iodevice_element_margin">3dp</dimen>
     <dimen name="cursor_list_io_dev_min_width">100dp</dimen>
     <dimen name="cursor_list_text_box_padding">6dp</dimen>
-    <dimen name="toggle_button_width">68dp</dimen>
+    <dimen name="toggle_button_width">77dp</dimen>
     <dimen name="cursor_list_indicator_width">25dp</dimen>
     <dimen name="cursor_type_text_view_width">80dp</dimen>
 </resources>
