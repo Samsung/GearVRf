@@ -25,17 +25,30 @@
 
 #include "gl/gl_program.h"
 #include "glm/glm.hpp"
-
+#include "objects/mesh.h"
 #include "objects/components/component.h"
 #include "objects/render_pass.h"
 #include "objects/material.h"
-
+#include<sstream>
+typedef unsigned long Long;
 namespace gvr {
 class Mesh;
 class Material;
 class Light;
+class Batch;
 class TextureCapturer;
+template <typename T>
+std::string to_string(T value)
+{
+  //create an output string stream
+  std::ostringstream os ;
 
+  //throw the value into the string stream
+  os << value ;
+
+  //convert the string stream into a string and return
+  return os.str() ;
+}
 class RenderData: public Component {
 public:
     enum Queue {
@@ -51,13 +64,35 @@ public:
     };
 
     RenderData() :
-            Component(RenderData::getComponentType()), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),
-                    render_mask_(DEFAULT_RENDER_MASK), rendering_order_(
-                    DEFAULT_RENDERING_ORDER), offset_(false), offset_factor_(
+            Component(RenderData::getComponentType()),hash_code(0), mesh_(0), light_(0), use_light_(false), use_lightmap_(false),batching_(false),
+                    render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),rendering_order_(
+                    DEFAULT_RENDERING_ORDER), hash_code_dirty_(true), offset_(false), offset_factor_(
                     0.0f), offset_units_(0.0f), depth_test_(true), alpha_blend_(
                     true), alpha_to_coverage_(false), sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES), texture_capturer(0) {
     }
-
+    RenderData(const RenderData& rdata){
+    	Component(rdata.getComponentType());
+    	hash_code = rdata.hash_code;
+    	mesh_ = rdata.mesh_;
+    	light_ = rdata.light_;
+    	use_light_ = rdata.use_light_;
+    	use_lightmap_ = rdata.use_lightmap_;
+    	batching_ = rdata.batching_;
+    	render_mask_ = rdata.render_mask_;
+    	batch_ = rdata.batch_;
+    	rendering_order_ = rdata.rendering_order_;
+    	hash_code_dirty_ = rdata.hash_code_dirty_;
+    	offset_ = rdata.offset_;
+    	offset_factor_ = rdata.offset_factor_;
+    	offset_units_ = rdata.offset_units_;
+    	depth_test_ = rdata.depth_test_;
+    	alpha_blend_ = rdata.alpha_blend_;
+    	alpha_to_coverage_ = rdata.alpha_to_coverage_;
+    	sample_coverage_ = rdata.sample_coverage_;
+    	invert_coverage_mask_ = rdata.invert_coverage_mask_;
+    	draw_mode_ = rdata.draw_mode_;
+    	texture_capturer = rdata.texture_capturer;
+    }
     ~RenderData() {
         render_pass_list_.clear();
     }
@@ -111,10 +146,12 @@ public:
 
     void enable_light() {
         use_light_ = true;
+        hash_code_dirty_ = true;
     }
 
     void disable_light() {
         use_light_ = false;
+        hash_code_dirty_ = true;
     }
 
     bool light_enabled() {
@@ -123,10 +160,12 @@ public:
 
     void enable_lightmap() {
         use_lightmap_ = true;
+        hash_code_dirty_ = true;
     }
 
     void disable_lightmap() {
         use_lightmap_ = false;
+        hash_code_dirty_ = true;
     }
 
     bool lightmap_enabled() {
@@ -139,6 +178,7 @@ public:
 
     void set_render_mask(int render_mask) {
         render_mask_ = render_mask;
+        hash_code_dirty_ = true;
     }
 
     int rendering_order() const {
@@ -148,7 +188,21 @@ public:
     void set_rendering_order(int rendering_order) {
         rendering_order_ = rendering_order;
     }
-
+    Batch* getBatch(){
+    	return batch_;
+    }
+    void set_batching(bool status){
+    	batching_ = status;
+    }
+    bool batching(){
+    	return batching_;
+    }
+    void setBatch(Batch* batch){
+    	this->batch_ = batch;
+    }
+    void setBatchNull(){
+    	batch_ = nullptr;
+    }
     bool cull_face(int pass = 0) const {
         if (pass >= 0 && pass < render_pass_list_.size()) {
             return render_pass_list_[pass]->cull_face();
@@ -169,6 +223,7 @@ public:
 
     void set_offset(bool offset) {
         offset_ = offset;
+        hash_code_dirty_ = true;
     }
 
     float offset_factor() const {
@@ -177,6 +232,7 @@ public:
 
     void set_offset_factor(float offset_factor) {
         offset_factor_ = offset_factor;
+        hash_code_dirty_ = true;
     }
 
     float offset_units() const {
@@ -185,6 +241,7 @@ public:
 
     void set_offset_units(float offset_units) {
         offset_units_ = offset_units;
+        hash_code_dirty_ = true;
     }
 
     bool depth_test() const {
@@ -193,6 +250,7 @@ public:
 
     void set_depth_test(bool depth_test) {
         depth_test_ = depth_test;
+        hash_code_dirty_ = true;
     }
 
     bool alpha_blend() const {
@@ -201,6 +259,7 @@ public:
 
     void set_alpha_blend(bool alpha_blend) {
         alpha_blend_ = alpha_blend;
+        hash_code_dirty_ = true;
     }
 
     bool alpha_to_coverage() const {
@@ -209,10 +268,12 @@ public:
 
     void set_alpha_to_coverage(bool alpha_to_coverage) {
     	alpha_to_coverage_ = alpha_to_coverage;
+    	hash_code_dirty_ = true;
     }
 
     void set_sample_coverage(float sample_coverage) {
     	sample_coverage_ = sample_coverage;
+    	hash_code_dirty_ = true;
     }
    
     float sample_coverage() const {
@@ -221,6 +282,7 @@ public:
 
     void set_invert_coverage_mask(GLboolean invert_coverage_mask){
     	invert_coverage_mask_ = invert_coverage_mask;
+    	hash_code_dirty_ = true;
     }
 
     GLboolean invert_coverage_mask() const {
@@ -241,12 +303,13 @@ public:
 
     void set_draw_mode(GLenum draw_mode) {
         draw_mode_ = draw_mode;
+        hash_code_dirty_ = true;
     }
 
     void set_texture_capturer(TextureCapturer *capturer) {
         texture_capturer = capturer;
     }
-
+    // TODO: need to consider texture_capturer in hash_code ?
     TextureCapturer *get_texture_capturer() {
         return texture_capturer;
     }
@@ -254,9 +317,41 @@ public:
     static long long getComponentType() {
         return (long long) &getComponentType;
     }
+    Long getHashCode(){
+    	if(hash_code_dirty_){
+    		std::string render_data_string;
 
+    		render_data_string.append(to_string(use_light_));
+    		render_data_string.append(to_string(light_));
+    		render_data_string.append(to_string(getComponentType()));
+    		render_data_string.append(to_string(use_lightmap_));
+    		render_data_string.append(to_string(render_mask_));
+    		render_data_string.append(to_string(offset_));
+    		render_data_string.append(to_string(offset_factor_));
+    		render_data_string.append(to_string(offset_units_));
+    		render_data_string.append(to_string(depth_test_));
+    		render_data_string.append(to_string(alpha_blend_));
+    		render_data_string.append(to_string(alpha_to_coverage_));
+    		render_data_string.append(to_string(sample_coverage_));
+    		render_data_string.append(to_string(invert_coverage_mask_));
+    		render_data_string.append(to_string(draw_mode_));
+
+    		const char* str = render_data_string.c_str();
+    		unsigned long hash = 5381;
+    		int c;
+    		// source : http://www.cse.yorku.ca/~oz/hash.html
+    		while (c = *str++)
+    			hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    		hash_code = hash;
+    		hash_code_dirty_ = false;
+
+    	}
+    	return hash_code;
+
+    }
 private:
-    RenderData(const RenderData& render_data);
+  //  RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
     RenderData& operator=(const RenderData& render_data);
     RenderData& operator=(RenderData&& render_data);
@@ -265,9 +360,13 @@ private:
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
     Mesh* mesh_;
+    Batch* batch_;
+    bool hash_code_dirty_;
+    Long hash_code;
     std::vector<RenderPass*> render_pass_list_;
     Light* light_;
     bool use_light_;
+    bool batching_;
     bool use_lightmap_;
     int render_mask_;
     int rendering_order_;
@@ -332,7 +431,7 @@ static inline bool compareRenderDataByOrderDistance(RenderData* i, RenderData* j
 
     return i->rendering_order() < j->rendering_order();
 }
-
+/*
 static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
         RenderData* j) {
     //1. rendering order needs to be sorted first to guarantee specified correct order
@@ -354,6 +453,39 @@ static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
 
     return i->rendering_order() < j->rendering_order();
 }
+*/
 
+static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
+        RenderData* j) {
+    //1. rendering order needs to be sorted first to guarantee specified correct order
+    if (i->rendering_order() == j->rendering_order()) {
+
+        if (i->material(0)->shader_type() == j->material(0)->shader_type()) {
+
+        	if(i->material(0) == j->material(0)) {
+
+        		if(i->getHashCode() == j->getHashCode()){
+
+        			if(i->mesh()->isDynamic() == j->mesh()->isDynamic()) {
+						// if it is a transparent object, sort by camera distance from back to front
+						if (i->rendering_order() >= RenderData::Transparent
+								&& i->rendering_order() < RenderData::Overlay) {
+							return i->camera_distance() > j->camera_distance();
+						}
+						// otherwise sort from front to back
+						return i->camera_distance() < j->camera_distance();
+        			}
+        			return 1;
+
+        		}
+        		return i->getHashCode() < j->getHashCode() ;
+        }
+
+        	return i->material(0) <  j->material(0);
+    }
+        return i->material(0)->shader_type() < j->material(0)->shader_type();
+   }
+   return i->rendering_order() < j->rendering_order();
+}
 }
 #endif

@@ -835,6 +835,14 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         }
         NativeRenderData.setDrawMode(getNative(), drawMode);
     }
+    /**
+     * Set the batch status for renderData. Default is enabled.
+     * 
+     * @param batching
+     */
+    public void setBatching(boolean batching){
+        NativeRenderData.setBatching(getNative(), batching);
+    }
 
     /**
      * Set the capturer for this texture. If capturer is null, the existing capturer
@@ -952,4 +960,6 @@ class NativeRenderData {
     public static native void setDrawMode(long renderData, int draw_mode);
 
     public static native void setTextureCapturer(long renderData, long texture_capturer);
+    
+    public static native void setBatching(long renderData, boolean batching);
 }

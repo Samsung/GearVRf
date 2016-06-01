@@ -1140,6 +1140,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public final BoundingVolume expandBoundingVolume(final Vector3f center, final float radius) {
         return expandBoundingVolume(center.x, center.y, center.z, radius);
     }
+    
+    /*
+     * Check if the object is culled in the frame or not
+     */
+    public boolean isCulled(){
+        return NativeSceneObject.isCulled(getNative());
+    }
 }
 
 class NativeSceneObject {
@@ -1177,4 +1184,6 @@ class NativeSceneObject {
 
     static native float[] expandBoundingVolumeByCenterAndRadius(
             long sceneObject, float centerX, float centerY, float centerZ, float radius);
+
+    static native boolean isCulled(long sceneObject);
 }

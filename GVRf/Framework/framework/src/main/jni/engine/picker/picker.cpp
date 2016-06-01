@@ -47,7 +47,7 @@ std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
     std::vector<EyePointeeHolder*> eye_pointee_holders;
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
         EyePointeeHolder* eye_pointee_holder = (*it)->eye_pointee_holder();
-        if (eye_pointee_holder != 0 && eye_pointee_holder->enable()) {
+        if (eye_pointee_holder != 0 && eye_pointee_holder->enable() && !(*it)->toBeCulled()) {
             eye_pointee_holders.push_back(eye_pointee_holder);
         }
     }
