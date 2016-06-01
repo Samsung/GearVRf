@@ -265,9 +265,9 @@ void createBatch(int start, int end){
 
 				}
 				else {
-					if(batch_map.find(existing_batch)==batch_map.end()){
-						batch_set.push_back(existing_batch);
-						batch_map[existing_batch] = batch_set.size() - 1;
+					if(batch_map.find(current_batch)==batch_map.end()){
+						batch_set.push_back(current_batch);
+						batch_map[current_batch] = batch_set.size() - 1;
 					}
 				}
 			}
