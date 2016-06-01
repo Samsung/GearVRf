@@ -221,7 +221,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glBlendEquation (GL_FUNC_ADD));
     GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
     GL(glDisable (GL_POLYGON_OFFSET_FILL));
-
+    GL(glLineWidth(1.0f));
     if (post_effects.size() == 0) {
         GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
         GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
@@ -756,12 +756,12 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                  float lineWidth = curr_material->getFloat("line_width");
                  glLineWidth(lineWidth);
                  shader->render(&rstate, render_data, curr_material);
-                 glLineWidth(1.0f);
              }
          }
          else {
-             shader->render(&rstate, render_data, curr_material);
-         }
+             glLineWidth(1.0f);
+        }
+         shader->render(&rstate, render_data, curr_material);
     } catch (const std::string &error) {
         LOGE(
                 "Error detected in Renderer::renderRenderData; name : %s, error : %s",
