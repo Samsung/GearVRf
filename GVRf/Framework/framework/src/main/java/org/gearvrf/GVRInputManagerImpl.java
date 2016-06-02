@@ -41,7 +41,7 @@ class GVRInputManagerImpl extends GVRInputManager {
     GVRInputManagerImpl(GVRContext gvrContext,
             boolean useGazeCursorController) {
         super(gvrContext, useGazeCursorController);
-        sensorManager = new SensorManager();
+        sensorManager = SensorManager.getInstance();
 
         controllers = new ArrayList<GVRCursorController>();
         listeners = new ArrayList<CursorControllerListener>();
@@ -49,8 +49,7 @@ class GVRInputManagerImpl extends GVRInputManager {
         for (GVRCursorController controller : super.getCursorControllers()) {
             addCursorController(controller);
         }
-        gvrContext.registerDrawFrameListener(drawFrameListener);
-    }
+     }
 
     @Override
     public void addCursorControllerListener(CursorControllerListener listener) {
@@ -70,6 +69,7 @@ class GVRInputManagerImpl extends GVRInputManager {
     @Override
     public void addCursorController(GVRCursorController controller) {
         controllers.add(controller);
+        controller.setScene(scene);
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
                 listener.onCursorControllerAdded(controller);
@@ -80,6 +80,7 @@ class GVRInputManagerImpl extends GVRInputManager {
     @Override
     public void removeCursorController(GVRCursorController controller) {
         controllers.remove(controller);
+        controller.setScene(null);
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
                 listener.onCursorControllerRemoved(controller);
@@ -96,6 +97,7 @@ class GVRInputManagerImpl extends GVRInputManager {
     void setScene(GVRScene scene) {
         this.scene = scene;
         for (GVRCursorController controller : controllers) {
+            controller.setScene(scene);
             sensorManager.processPick(scene, controller);
         }
     }
@@ -106,15 +108,6 @@ class GVRInputManagerImpl extends GVRInputManager {
         controllers.clear();
         sensorManager.clear();
     }
-
-    private GVRDrawFrameListener drawFrameListener = new GVRDrawFrameListener() {
-        @Override
-        public void onDrawFrame(float frameTime) {
-            for (GVRCursorController controller : controllers) {
-                controller.update(sensorManager, scene);
-            }
-        }
-    };
 
     void addSensor(GVRBaseSensor sensor) {
         sensorManager.addSensor(sensor);

@@ -140,30 +140,24 @@ public abstract class Cursor {
             throw new IllegalArgumentException("Cursor Theme does not match the cursor type");
         }
 
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (currentCursorAsset != null) {
-                    currentCursorAsset.reset(cursorSceneObject);
-                }
+        if (currentCursorAsset != null) {
+            currentCursorAsset.reset(cursorSceneObject);
+        }
 
-                if (cursorTheme != null) {
-                    cursorTheme.unload(cursorSceneObject);
-                }
+        if (cursorTheme != null) {
+            cursorTheme.unload(cursorSceneObject);
+        }
 
-                cursorTheme = theme;
-                audioManager.loadTheme(cursorTheme);
-                theme.load(cursorSceneObject);
-                if (currentCursorAsset != null) {
-                    currentCursorAsset = cursorTheme.getAsset(currentCursorAsset.getAction());
-                    if (currentCursorAsset == null) {
-                        currentCursorAsset = cursorTheme.getAsset(Action.DEFAULT);
-                    }
-                    currentCursorAsset.set(cursorSceneObject);
-                }
+        cursorTheme = theme;
+        audioManager.loadTheme(cursorTheme);
+        theme.load(cursorSceneObject);
+        if (currentCursorAsset != null) {
+            currentCursorAsset = cursorTheme.getAsset(currentCursorAsset.getAction());
+            if (currentCursorAsset == null) {
+                currentCursorAsset = cursorTheme.getAsset(Action.DEFAULT);
             }
-        };
-        runOnGlThread(runnable);
+            currentCursorAsset.set(cursorSceneObject);
+        }
     }
 
     /**
@@ -297,22 +291,16 @@ public abstract class Cursor {
     }
 
     private void setAsset(final CursorAsset asset) {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (asset == null) {
-                    return;
-                }
+        if (asset == null) {
+            return;
+        }
 
-                if (currentCursorAsset != null) {
-                    currentCursorAsset.reset(cursorSceneObject);
-                }
-                // load new asset
-                currentCursorAsset = asset;
-                currentCursorAsset.set(cursorSceneObject);
-            }
-        };
-        runOnGlThread(runnable);
+        if (currentCursorAsset != null) {
+            currentCursorAsset.reset(cursorSceneObject);
+        }
+        // load new asset
+        currentCursorAsset = asset;
+        currentCursorAsset.set(cursorSceneObject);
     }
 
     void setSavedIoDevice(IoDevice savedIoDevice) {
@@ -538,6 +526,10 @@ public abstract class Cursor {
 
         @Override
         public void onEvent(GVRCursorController gvrCursorController) {
+            if(scene == null){
+                return;
+            }
+
             float[] lookAt = scene.getMainCameraRig().getLookAt();
             float lookAtX = lookAt[0];
             float lookAtZ = lookAt[2];
@@ -592,10 +584,7 @@ public abstract class Cursor {
     }
 
     boolean isColliding(GVRSceneObject sceneObject) {
-        if (cursorSceneObject.hasMesh()) {
-            return cursorSceneObject.isColliding(sceneObject);
-        }
-        return false;
+        return cursorSceneObject.isColliding(sceneObject);
     }
 
     /**
@@ -701,14 +690,6 @@ public abstract class Cursor {
             }
         }
         return false;
-    }
-
-    private void runOnGlThread(Runnable runnable) {
-        if (context.isCurrentThreadGLThread()) {
-            runnable.run();
-        } else {
-            context.runOnGlThread(runnable);
-        }
     }
 
     /**

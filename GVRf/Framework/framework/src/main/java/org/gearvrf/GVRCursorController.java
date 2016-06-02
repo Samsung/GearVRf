@@ -15,8 +15,8 @@
 
 package org.gearvrf;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
@@ -24,8 +24,9 @@ import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
-import android.view.KeyEvent;
-import android.view.MotionEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Define a class of type {@link GVRCursorController} to register a new cursor
@@ -53,7 +54,6 @@ public abstract class GVRCursorController {
     private final GVRControllerType controllerType;
     private boolean previousActive;
     private ActiveState activeState = ActiveState.NONE;
-    private boolean invalidate = false;
     private boolean active;
     private float nearDepth, farDepth = -Float.MAX_VALUE;
     private final Vector3f position, ray;
@@ -66,8 +66,11 @@ public abstract class GVRCursorController {
     private Object sceneObjectLock = new Object();
     private Object eventLock = new Object();
     private List<ControllerEventListener> controllerEventListeners;
+
     private String name;
     private int vendorId, productId;
+    private final SensorManager sensorManager;
+    private GVRScene scene;
 
     /**
      * Create an instance of {@link GVRCursorController} only using the
@@ -118,7 +121,8 @@ public abstract class GVRCursorController {
         processedKeyEvent = new ArrayList<KeyEvent>();
         motionEvent = new ArrayList<MotionEvent>();
         processedMotionEvent = new ArrayList<MotionEvent>();
-        controllerEventListeners = new ArrayList<ControllerEventListener>();
+        controllerEventListeners = new CopyOnWriteArrayList<ControllerEventListener>();
+        sensorManager = SensorManager.getInstance();
     }
 
     /**
@@ -157,7 +161,7 @@ public abstract class GVRCursorController {
         }
 
         this.active = active;
-        invalidate = true;
+        update();
     }
 
     /**
@@ -218,7 +222,7 @@ public abstract class GVRCursorController {
      * {@link GVRBaseSensor}s.
      */
     public void invalidate() {
-        invalidate = true;
+        update();
     }
 
     /**
@@ -416,7 +420,7 @@ public abstract class GVRCursorController {
                 sceneObject.getTransform().setPosition(x, y, z);
             }
         }
-        invalidate = true;
+        update();
     }
 
     /**
@@ -479,7 +483,7 @@ public abstract class GVRCursorController {
                 keyEvent.clear();
                 motionEvent.clear();
             }
-            invalidate = true;
+            update();
         }
     }
 
@@ -569,47 +573,48 @@ public abstract class GVRCursorController {
         return name;
     }
 
+    void setScene(GVRScene scene){
+        this.scene = scene;
+    }
+
     /**
-     * Process the input data
+     * Process the input data.
      */
-    void update(SensorManager sensorManager, GVRScene scene) {
-        if (invalidate) {
+    private void update() {
 
-            // set the newly received key and motion events.
-            synchronized (eventLock) {
-                processedKeyEvent.addAll(keyEvent);
-                keyEvent.clear();
-                processedMotionEvent.addAll(motionEvent);
-                motionEvent.clear();
+        // set the newly received key and motion events.
+        synchronized (eventLock) {
+            processedKeyEvent.addAll(keyEvent);
+            keyEvent.clear();
+            processedMotionEvent.addAll(motionEvent);
+            motionEvent.clear();
+        }
+
+        if (previousActive == false && active) {
+            activeState = ActiveState.ACTIVE_PRESSED;
+        } else if (previousActive == true && active == false) {
+            activeState = ActiveState.ACTIVE_RELEASED;
+        } else {
+            activeState = ActiveState.NONE;
+        }
+
+        previousActive = active;
+        position.normalize(ray);
+
+        for (ControllerEventListener listener : controllerEventListeners) {
+            listener.onEvent(this);
+        }
+
+        sensorManager.processPick(scene, this);
+
+        // reset the set key and motion events.
+        synchronized (eventLock) {
+            processedKeyEvent.clear();
+            // done processing, recycle
+            for (MotionEvent event : processedMotionEvent) {
+                event.recycle();
             }
-
-            if (previousActive == false && active) {
-                activeState = ActiveState.ACTIVE_PRESSED;
-            } else if (previousActive == true && active == false) {
-                activeState = ActiveState.ACTIVE_RELEASED;
-            } else {
-                activeState = ActiveState.NONE;
-            }
-
-            previousActive = active;
-            position.normalize(ray);
-            invalidate = false;
-
-            for (ControllerEventListener listener : controllerEventListeners) {
-                listener.onEvent(this);
-            }
-
-            sensorManager.processPick(scene, this);
-
-            // reset the set key and motion events.
-            synchronized (eventLock) {
-                processedKeyEvent.clear();
-                // done processing, recycle
-                for (MotionEvent event : processedMotionEvent) {
-                    event.recycle();
-                }
-                processedMotionEvent.clear();
-            }
+            processedMotionEvent.clear();
         }
     }
 
