@@ -40,6 +40,7 @@ import java.util.Set;
  */
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
+    
     private static final String TAG = Log.tag(GVRScene.class);
     public static final int MAX_LIGHTS = 16;
     private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
@@ -457,7 +458,29 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return false;
     }
+   
+    /**
+     * Adding scene object into eyepointee objects
+     * @param sceneobject
+     */
+    public void addEyePointeeSceneObject(GVRSceneObject sceneobject){
+        NativeScene.addEyePointeeSceneObject(getNative(),sceneobject.getNative());
+    }
+  
+    /**
+     * Removing scene object from eyepointee-objects list
+     * @param sceneobject
+     */
+    public void removeEyePointeeSceneObject(GVRSceneObject sceneobject){
+        NativeScene.removeEyePointeeSceneObject(getNative(),sceneobject.getNative());
+    }
     
+    /**
+     * Clear the list of eyepointee scene objects
+     */
+    public void clearEyePointeeSceneObjects(){
+        NativeScene.clearEyePointeeSceneObjects(getNative());
+    }
     /**
      * Get the list of lights used by this scene.
      * 
@@ -631,4 +654,11 @@ class NativeScene {
     public static native void exportToFile(long scene, String file_path);
 
     static native void addLight(long scene, long light);
+    
+    public static native void addEyePointeeSceneObject(long scene, long sceneobject);
+    
+    public static native void removeEyePointeeSceneObject(long scene, long sceneobject);
+    
+    public static native void clearEyePointeeSceneObjects(long scene);
+    
 }
