@@ -751,7 +751,9 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
              shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
              return;
          }
-         if (render_data->draw_mode() == GL_LINE_STRIP) {
+         if ((render_data->draw_mode() == GL_LINE_STRIP) ||
+             (render_data->draw_mode() == GL_LINES) ||
+             (render_data->draw_mode() == GL_LINE_LOOP)) {
              if (curr_material->hasUniform("line_width")) {
                  float lineWidth = curr_material->getFloat("line_width");
                  glLineWidth(lineWidth);
