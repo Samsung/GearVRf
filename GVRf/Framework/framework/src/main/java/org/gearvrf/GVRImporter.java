@@ -43,11 +43,11 @@ import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.Log;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Environment;
 import org.gearvrf.jassimp.AiColor;
+
 /**
  * {@link GVRImporter} provides methods for importing 3D models and making them
  * available through instances of {@link GVRAssimpImporter}.
@@ -56,21 +56,23 @@ import org.gearvrf.jassimp.AiColor;
  * {@code assets} and {@code res/raw}) and from directories on the device's SD
  * card that the application has permission to read.
  */
-final class GVRImporter implements IEventReceiver {
+public final class GVRImporter implements IEventReceiver {
     /**
      * Listens for texture load events and raises the "onAssetLoaded"
      * event after all textures have been loaded.
      */
     static public class AssetEventListener implements IAssetEvents
     {
-        protected GVRImporter       mImporter;    
-        protected int               mNumTextures;
+        protected GVRImporter       mImporter = null;
+        protected int               mNumTextures = 0;
+        protected GVRScene          mScene = null;
         protected GVRSceneObject    mModel = null;
+        protected IAssetEvents      mUserHandler = null;
         protected String            mFileName;
-        protected IAssetEvents      mUserHandler;
         protected String            mErrors;
         
-        public AssetEventListener(GVRImporter importer) {
+        public AssetEventListener(GVRImporter importer, GVRScene scene) {
+            mScene = scene;
             mImporter = importer;
             mNumTextures = 0;
         }
@@ -90,7 +92,9 @@ final class GVRImporter implements IEventReceiver {
         public void onModelLoaded(GVRContext context, GVRSceneObject model, String modelFile) {
             mModel = model;
             if (mNumTextures == 0)
+            {
                 generateLoadEvent(context);
+            }
         }
         
         /**
@@ -103,7 +107,9 @@ final class GVRImporter implements IEventReceiver {
             {
                 --mNumTextures;
                 if (mNumTextures == 0)
+                {
                     generateLoadEvent(context);
+                }
             }           
         }
         
@@ -144,19 +150,24 @@ final class GVRImporter implements IEventReceiver {
         
         private void generateLoadEvent(GVRContext context)
         {
+            if ((mScene != null) && (mModel != null))
+            {
+                mScene.addSceneObject(mModel);
+            }
             context.getEventManager().sendEvent(mImporter,
                     IAssetEvents.class,
                     "onAssetLoaded", new Object[] { context, mModel, mFileName, mErrors });
             if (mUserHandler != null)
                 mImporter.getEventReceiver().removeListener(mUserHandler);
         }
-
      }
+    protected GVRContext mContext;
+    protected GVREventReceiver mEventReceiver = new GVREventReceiver(this);
     
-    private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
-    GVRImporter() {
+    public GVRImporter(GVRContext context) {
+        mContext = context;
     }
-
+    
     @Override
     public GVREventReceiver getEventReceiver()
     {
@@ -232,62 +243,147 @@ final class GVRImporter implements IEventReceiver {
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
-    GVRModelSceneObject loadJassimpModel(final GVRContext context,
-            String filePath, GVRResourceVolume.VolumeType volumeType,
-            EnumSet<GVRImportSettings> settings) throws IOException {
-        return loadJassimpModel(context, filePath, volumeType, settings, false, null);
-    }
-
-    GVRModelSceneObject loadJassimpModel(final GVRContext context,
-            String filePath, GVRResourceVolume.VolumeType volumeType,
-            EnumSet<GVRImportSettings> settings,
-            IAssetEvents eventHandler) throws IOException {
-        return loadJassimpModel(context, filePath, volumeType, settings, false, null);
+    /**
+     * Loads a scene object {@link GVRModelSceneObject} from
+     * a 3D model and adds it to the scene.
+     *
+     * @param assetFile
+     *            A filename, relative to the root of the volume.
+     *
+     * @param volumeType
+     *            Where the asset is located (SD card, assets directory or network)
+     *            
+     * @param scene
+     *            If present, this asset loader will wait until all of the textures have been
+     *            loaded and then adds the model to the scene.
+     *            
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException 
+     *
+     */
+    public GVRModelSceneObject loadModel(String filePath, GVRResourceVolume.VolumeType volumeType,
+            GVRScene scene) throws IOException
+    {
+        if (scene != null)
+        {
+            AssetEventListener assetListener = new AssetEventListener(this, scene);
+            getEventReceiver().addListener(assetListener);
+            assetListener.beginLoadAsset(filePath, null);
+        }
+        return loadJassimpModel(filePath, volumeType, GVRImportSettings.getRecommendedSettings(), false);
     }
     
-    GVRModelSceneObject loadJassimpModel(final GVRContext context,
-            String filePath, GVRResourceVolume.VolumeType volumeType,
-            EnumSet<GVRImportSettings> settings, boolean cacheEnabled, IAssetEvents handler)
-                    throws IOException {
-        AssetEventListener eventHandler = new AssetEventListener(this);
+    /**
+     * Loads a scene object {@link GVRModelSceneObject} from
+     * a 3D model and adds it to the scene.
+     *
+     * @param assetFile
+     *            A filename, relative to the root of the volume.
+     *
+     * @param volumeType
+     *            Where the asset is located (SD card, assets directory or network)
+     *            
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @param cacheEnabled
+     *            If true, add the loaded model to the in-memory cache.
+     *
+     * @param scene
+     *            If present, this asset loader will wait until all of the textures have been
+     *            loaded and then adds the model to the scene.
+     *            
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException 
+     *
+     */
+    public GVRModelSceneObject loadModel(String filePath, GVRResourceVolume.VolumeType volumeType,
+            EnumSet<GVRImportSettings> settings,
+            boolean cacheEnabled,
+            GVRScene scene) throws IOException
+    {
+        if (scene != null)
+        {
+            AssetEventListener assetListener = new AssetEventListener(this, scene);
+            getEventReceiver().addListener(assetListener);
+            assetListener.beginLoadAsset(filePath, null);
+        }
+        return loadJassimpModel(filePath, volumeType, settings, cacheEnabled);
+    }
+
+    /**
+     * Loads a scene object {@link GVRModelSceneObject} from a 3D model.
+     *
+     * @param assetFile
+     *            A filename, relative to the root of the volume.
+     *
+     * @param volumeType
+     *            Where the asset is located (SD card, assets directory or network)
+     *            
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @param cacheEnabled
+     *            If true, add the loaded model to the in-memory cache.
+     *            
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException 
+     *
+     */
+    private GVRModelSceneObject loadJassimpModel(String filePath, GVRResourceVolume.VolumeType volumeType,
+            EnumSet<GVRImportSettings> settings, boolean cacheEnabled) throws IOException
+    {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
-        getEventReceiver().addListener(eventHandler);
-        eventHandler.beginLoadAsset(filePath, handler);
-        switch (volumeType) {
-        case ANDROID_ASSETS:
-            assimpScene = Jassimp.importAssetFile(filePath,
-                    GVRJassimpAdapter.get().toJassimpSettings(settings),
-                    context.getContext().getAssets());
-            break;
-
-        case ANDROID_SDCARD:
-            String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-            assimpScene = Jassimp.importFile(sdPath + File.separator + filePath,
-                    GVRJassimpAdapter.get().toJassimpSettings(settings));
-            break;
-
-        case LINUX_FILESYSTEM:
-            assimpScene = Jassimp.importFile(filePath,
-                    GVRJassimpAdapter.get().toJassimpSettings(settings));
-            break;
-
-        case NETWORK:
-            // filePath is a URL in this case
-            File tmpFile = downloadFile(context.getActivity(), filePath);
-            if (tmpFile != null) {
-                assimpScene = Jassimp.importFile(tmpFile.getAbsolutePath(),
+        try
+        {
+            switch (volumeType)
+            {
+                case ANDROID_ASSETS:
+                assimpScene = Jassimp.importAssetFile(filePath,
+                        GVRJassimpAdapter.get().toJassimpSettings(settings),
+                        mContext.getContext().getAssets());
+                break;
+    
+                case ANDROID_SDCARD:
+                String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+                assimpScene = Jassimp.importFile(sdPath + File.separator + filePath,
                         GVRJassimpAdapter.get().toJassimpSettings(settings));
-                tmpFile.delete();
+                break;
+    
+                case LINUX_FILESYSTEM:
+                assimpScene = Jassimp.importFile(filePath,
+                        GVRJassimpAdapter.get().toJassimpSettings(settings));
+                break;
+    
+                case NETWORK:
+                // filePath is a URL in this case
+                File tmpFile = downloadFile(mContext.getActivity(), filePath);
+                if (tmpFile != null) {
+                    assimpScene = Jassimp.importFile(tmpFile.getAbsolutePath(),
+                            GVRJassimpAdapter.get().toJassimpSettings(settings));
+                    tmpFile.delete();
+                }
+                break;
             }
-            break;
         }
+        catch (IOException ex)
+        {
+            assimpScene = null;
+            mContext.getEventManager().sendEvent(this,
+                    IAssetEvents.class,
+                    "onModelError", new Object[] { mContext, ex.getMessage(), filePath });
+            throw ex;
+       }
 
         if (assimpScene == null) {
             String errmsg = "Cannot load model from path " + filePath + " from " + volumeType;
-            context.getEventManager().sendEvent(this,
+            mContext.getEventManager().sendEvent(this,
                     IAssetEvents.class,
-                    "onModelError", new Object[] { context, errmsg, filePath });
+                    "onModelError", new Object[] { mContext, errmsg, filePath });
             throw new IOException(errmsg);
         }
         
@@ -295,37 +391,37 @@ final class GVRImporter implements IEventReceiver {
 
         List<AiLight> lights = assimpScene.getLights();
         Hashtable<String, GVRLightBase> lightlist = new Hashtable<String, GVRLightBase>();
-        importLights(lights, lightlist, context);
+        importLights(lights, lightlist);
 
-        GVRJassimpSceneObject sceneOb = new GVRJassimpSceneObject(context, assimpScene,
-                new GVRResourceVolume(context, volumeType,
+        GVRJassimpSceneObject sceneOb = new GVRJassimpSceneObject(mContext, assimpScene,
+                new GVRResourceVolume(mContext, volumeType,
                         FileNameUtils.getParentDirectory(filePath),
                         cacheEnabled), lightlist);
-        context.getEventManager().sendEvent(this,
+        mContext.getEventManager().sendEvent(this,
                 IAssetEvents.class,
-                "onModelLoaded", new Object[] { context, (GVRSceneObject) sceneOb, filePath });
+                "onModelLoaded", new Object[] { mContext, (GVRSceneObject) sceneOb, filePath });
         return sceneOb;
     }
     
-    protected void importLights(List<AiLight> lights,Hashtable<String, GVRLightBase> lightlist, final GVRContext context){
+    protected void importLights(List<AiLight> lights,Hashtable<String, GVRLightBase> lightlist){
         for(AiLight light: lights){            
             AiLightType type = light.getType();
                 if(type == AiLightType.DIRECTIONAL){               
-                GVRDirectLight gvrLight = new GVRDirectLight(context);  
+                GVRDirectLight gvrLight = new GVRDirectLight(mContext);  
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 String name = light.getName();          
                 lightlist.put(name, gvrLight);               
             }
             if(type == AiLightType.POINT){
-                GVRPointLight gvrLight = new GVRPointLight(context);
+                GVRPointLight gvrLight = new GVRPointLight(mContext);
                 setPhongLightProp(gvrLight,light);   
                 setLightProp(gvrLight, light);
                 String name = light.getName();              
                 lightlist.put(name, gvrLight);
             }
             if(type == AiLightType.SPOT){
-                GVRSpotLight gvrLight = new GVRSpotLight(context);
+                GVRSpotLight gvrLight = new GVRSpotLight(mContext);
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
