@@ -35,118 +35,115 @@ static const char NOT_USE_LIGHT[] = "#undef USE_LIGHT\n";
 static const char USE_BATCHING[] = "#define USE_BATCHING\n";
 static const char NOT_USE_BATCHING[] ="#undef USE_BATCHING\n";
 static const char VERTEX_SHADER[] =
-        		    "attribute vec3 a_position;\n"
-                "attribute vec2 a_tex_coord;\n"
-				        "attribute vec3 a_normal;\n"
-                "#ifndef USE_BATCHING\n"
-                "uniform mat4 u_mvp;\n"
-                "#endif\n"
-                "varying vec2 v_tex_coord;\n"
-                "#ifdef USE_LIGHT\n"
+        "attribute vec3 a_position;\n"
+        "attribute vec2 a_tex_coord;\n"
+        "attribute vec3 a_normal;\n"
+        "#ifndef USE_BATCHING\n"
+        "uniform mat4 u_mvp;\n"
+        "#endif\n"
+        "varying vec2 v_tex_coord;\n"
+        "#ifdef USE_LIGHT\n"
 
-                "#ifndef USE_BATCHING\n"
-                "uniform mat4 u_mv;\n"
-                "uniform mat4 u_mv_it;\n"
-                "#endif\n"
-                "uniform vec3 u_light_pos;\n"
-                "varying vec3 v_viewspace_normal;\n"
-                "varying vec3 v_viewspace_light_direction;\n"
+        "#ifndef USE_BATCHING\n"
+        "uniform mat4 u_mv;\n"
+        "uniform mat4 u_mv_it;\n"
+        "#endif\n"
+        "uniform vec3 u_light_pos;\n"
+        "varying vec3 v_viewspace_normal;\n"
+        "varying vec3 v_viewspace_light_direction;\n"
+        "#else \n"
+        "#ifndef USE_BATCHING\n"
+        "uniform mat4 u_mv;\n"
+        "uniform mat4 u_mv_it;\n"
+        "#endif\n"
 
-        		"#else \n"
-        		"#ifndef USE_BATCHING\n"
-        		"uniform mat4 u_mv;\n"
-        		"uniform mat4 u_mv_it;\n"
-        		"#endif\n"
-        
-        		"#endif\n"
-                "#ifdef USE_BATCHING\n"
-                "attribute float a_matrix_index;\n"
-                "uniform mat4 u_vp;\n"
-                "uniform mat4 u_matrices[60];\n"
-                "uniform mat4 u_view;\n"
-                "#endif\n"
-                "\n"
-                "void main() {\n"
-                "mat4 mv;\n"
-                "mat4 mv_it;\n"
-                "mat4 mvp;\n"
-                "#ifdef USE_BATCHING\n"
-                "mv = u_view * u_matrices[int(a_matrix_index)];\n"
-                "mv_it = inverse(transpose(mv));\n"
-                "mvp = u_vp * u_matrices[int(a_matrix_index)];\n"
-                "#else\n"
-                "mv = u_mv;\n"
-                "mv_it = u_mv_it;\n"
-                "mvp = u_mvp;\n"
-                "#endif\n"
-                "#ifdef USE_LIGHT\n"
-                "  vec4 v_viewspace_position_vec4 = mv * vec4(a_position,1.0);\n"
-                "  vec3 v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
-                "  v_viewspace_light_direction = u_light_pos - v_viewspace_position;\n"
-                "  v_viewspace_normal = (mv_it * vec4(a_normal, 1.0)).xyz;\n"
-                "#endif\n"
-                "  v_tex_coord = a_tex_coord.xy;\n"
-                "  gl_Position = mvp * vec4(a_position,1.0);\n"
-                "}\n";
+        "#endif\n"
+        "#ifdef USE_BATCHING\n"
+        "attribute float a_matrix_index;\n"
+        "uniform mat4 u_vp;\n"
+        "uniform mat4 u_matrices[60];\n"
+        "uniform mat4 u_view;\n"
+        "#endif\n"
+        "\n"
+        "void main() {\n"
+        "mat4 mv;\n"
+        "mat4 mv_it;\n"
+        "mat4 mvp;\n"
+        "#ifdef USE_BATCHING\n"
+        "mv = u_view * u_matrices[int(a_matrix_index)];\n"
+        "mv_it = inverse(transpose(mv));\n"
+        "mvp = u_vp * u_matrices[int(a_matrix_index)];\n"
+        "#else\n"
+        "mv = u_mv;\n"
+        "mv_it = u_mv_it;\n"
+        "mvp = u_mvp;\n"
+        "#endif\n"
+        "#ifdef USE_LIGHT\n"
+        "  vec4 v_viewspace_position_vec4 = mv * vec4(a_position,1.0);\n"
+        "  vec3 v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
+        "  v_viewspace_light_direction = u_light_pos - v_viewspace_position;\n"
+        "  v_viewspace_normal = (mv_it * vec4(a_normal, 1.0)).xyz;\n"
+        "#endif\n"
+        "  v_tex_coord = a_tex_coord.xy;\n"
+        "  gl_Position = mvp * vec4(a_position,1.0);\n"
+        "}\n";
 
 static const char FRAGMENT_SHADER[] =
-                "precision highp float;\n"
-                "uniform sampler2D u_texture;\n"
-                "uniform vec3 u_color;\n"
-                "uniform float u_opacity;\n"
-                "varying vec2 v_tex_coord;\n"
-                "#ifdef USE_LIGHT\n"
-                "uniform vec4 materialAmbientColor;\n"
-                "uniform vec4 materialDiffuseColor;\n"
-                "uniform vec4 materialSpecularColor;\n"
-                "uniform float materialSpecularExponent;\n"
-                "uniform vec4 lightAmbientIntensity;\n"
-                "uniform vec4 lightDiffuseIntensity;\n"
-                "uniform vec4 lightSpecularIntensity;\n"
-                "varying vec3 v_viewspace_normal;\n"
-                "varying vec3 v_viewspace_light_direction;\n"
-                "#endif\n"
-                "\n"
-                "void main()\n"
-                "{\n"
-                "  vec4 color;\n"
-                "#ifdef USE_LIGHT\n"
-                "  // Dot product gives us diffuse intensity\n"
-                "  float diffuse = max(0.0, dot(normalize(v_viewspace_normal), normalize(v_viewspace_light_direction)));\n"
-                "\n"
-                "  // Multiply intensity by diffuse color, force alpha to 1.0\n"
-                "  color = diffuse * materialDiffuseColor * lightDiffuseIntensity;\n"
-                "\n"
-                "  // Add in ambient light\n"
-                "  color += materialAmbientColor * lightAmbientIntensity;\n"
-                "\n"
-                "  // Modulate in the texture\n"
-                "  color *= texture2D(u_texture, v_tex_coord);\n"
-                "\n"
-                "  // Specular Light\n"
-                "  vec3 reflection = normalize(reflect(-normalize(v_viewspace_light_direction), normalize(v_viewspace_normal)));\n"
-                "  float specular = max(0.0, dot(normalize(v_viewspace_normal), reflection));\n"
-                "  if(diffuse != 0.0) {\n"
-                "    color += pow(specular, materialSpecularExponent) * materialSpecularColor * lightSpecularIntensity;\n"
-                "  }\n"
-                "#else\n"
-                "  color = texture2D(u_texture, v_tex_coord);\n"
-                "#endif\n"
-                "\n"
-                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
-				"}\n";
+        "precision highp float;\n"
+        "uniform sampler2D u_texture;\n"
+        "uniform vec3 u_color;\n"
+        "uniform float u_opacity;\n"
+        "varying vec2 v_tex_coord;\n"
+        "#ifdef USE_LIGHT\n"
+        "uniform vec4 materialAmbientColor;\n"
+        "uniform vec4 materialDiffuseColor;\n"
+        "uniform vec4 materialSpecularColor;\n"
+        "uniform float materialSpecularExponent;\n"
+        "uniform vec4 lightAmbientIntensity;\n"
+        "uniform vec4 lightDiffuseIntensity;\n"
+        "uniform vec4 lightSpecularIntensity;\n"
+        "varying vec3 v_viewspace_normal;\n"
+        "varying vec3 v_viewspace_light_direction;\n"
+        "#endif\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "  vec4 color;\n"
+        "#ifdef USE_LIGHT\n"
+        "  // Dot product gives us diffuse intensity\n"
+        "  float diffuse = max(0.0, dot(normalize(v_viewspace_normal), normalize(v_viewspace_light_direction)));\n"
+        "\n"
+        "  // Multiply intensity by diffuse color, force alpha to 1.0\n"
+        "  color = diffuse * materialDiffuseColor * lightDiffuseIntensity;\n"
+        "\n"
+        "  // Add in ambient light\n"
+        "  color += materialAmbientColor * lightAmbientIntensity;\n"
+        "\n"
+        "  // Modulate in the texture\n"
+        "  color *= texture2D(u_texture, v_tex_coord);\n"
+        "\n"
+        "  // Specular Light\n"
+        "  vec3 reflection = normalize(reflect(-normalize(v_viewspace_light_direction), normalize(v_viewspace_normal)));\n"
+        "  float specular = max(0.0, dot(normalize(v_viewspace_normal), reflection));\n"
+        "  if(diffuse != 0.0) {\n"
+        "    color += pow(specular, materialSpecularExponent) * materialSpecularColor * lightSpecularIntensity;\n"
+        "  }\n"
+        "#else\n"
+        "  color = texture2D(u_texture, v_tex_coord);\n"
+        "#endif\n"
+        "\n"
+        "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+        "}\n";
 
 TextureShader::TextureShader() :
-        program_light_(0), program_no_light_(0),u_mv_(0), u_mv_it_(0), u_mvp_(0), u_light_pos_(
-                0), u_texture_(0), u_color_(0), u_opacity_(0), u_material_ambient_color_(
-                0), u_material_diffuse_color_(0), u_material_specular_color_(0), u_material_specular_exponent_(
-                0), u_light_ambient_intensity_(0), u_light_diffuse_intensity_(
-                0), u_light_specular_intensity_(0),  u_texture_no_light_batching(0), u_opacity_no_light_batching_(0),
-				u_color_no_light_batching_(0), u_texture_light_batching(0), u_opacity_light_batching_(0),
-				u_color_light_batching_(0), u_light_pos_batching_(0), u_material_ambient_color_batching_(0),
-				u_material_diffuse_color_batching_(0), u_material_specular_color_batching_(0),
-				u_light_ambient_intensity_batching_(0), u_light_diffuse_intensity_batching_(0),
-				u_light_specular_intensity_batching_(0){
+                program_light_(0), program_no_light_(0),u_mv_(0), u_mv_it_(0), u_mvp_(0), u_light_pos_(0), u_texture_(0), u_color_(0), u_opacity_(0),
+                u_material_ambient_color_(0), u_material_diffuse_color_(0), u_material_specular_color_(0), u_material_specular_exponent_(0),
+                u_light_ambient_intensity_(0), u_light_diffuse_intensity_(0), u_light_specular_intensity_(0),
+                u_texture_no_light_batching(0), u_opacity_no_light_batching_(0),u_color_no_light_batching_(0), u_texture_light_batching(0), u_opacity_light_batching_(0),
+                u_color_light_batching_(0), u_light_pos_batching_(0), u_material_ambient_color_batching_(0),
+                u_material_diffuse_color_batching_(0), u_material_specular_color_batching_(0),
+                u_light_ambient_intensity_batching_(0), u_light_diffuse_intensity_batching_(0),
+                u_light_specular_intensity_batching_(0){
     const char* vertex_shader_light_strings[3] = { NOT_USE_BATCHING, USE_LIGHT, VERTEX_SHADER };
     GLint vertex_shader_light_string_lengths[3] = { (GLint) strlen(NOT_USE_BATCHING), (GLint) strlen(USE_LIGHT),
             (GLint) strlen(VERTEX_SHADER) };
@@ -154,7 +151,7 @@ TextureShader::TextureShader() :
             VERTEX_SHADER };
     GLint vertex_shader_no_light_string_lengths[3] = { (GLint) strlen(NOT_USE_BATCHING), (GLint) strlen(NOT_USE_LIGHT), (GLint) strlen(VERTEX_SHADER) };
     const char* fragment_shader_light_strings[3] =
-            { NOT_USE_BATCHING, USE_LIGHT, FRAGMENT_SHADER };
+    { NOT_USE_BATCHING, USE_LIGHT, FRAGMENT_SHADER };
     GLint fragment_shader_light_string_lengths[3] = {(GLint) strlen(NOT_USE_BATCHING), (GLint) strlen(USE_LIGHT),
             (GLint) strlen(FRAGMENT_SHADER) };
     const char* fragment_shader_no_light_strings[3] = { USE_BATCHING, NOT_USE_LIGHT,
@@ -190,7 +187,7 @@ TextureShader::TextureShader() :
     u_vp_no_light_batching = glGetUniformLocation(program_no_light_batching_->id(), "u_vp");
     u_matrices_no_light_batching = glGetUniformLocation(program_no_light_batching_->id(), "u_matrices[0]");
     u_texture_no_light_batching= glGetUniformLocation(program_no_light_batching_->id(),
-                "u_texture");
+            "u_texture");
     u_color_no_light_batching_ = glGetUniformLocation(program_no_light_batching_->id(), "u_color");
     u_opacity_no_light_batching_ = glGetUniformLocation(program_no_light_batching_->id(), "u_opacity");
     u_view_no_light_batching = glGetUniformLocation(program_no_light_batching_->id(), "u_view");
@@ -199,13 +196,9 @@ TextureShader::TextureShader() :
     u_matrices_light_batching = glGetUniformLocation(program_light_batching_->id(), "u_matrices[0]");
     u_view_light_batching = glGetUniformLocation(program_light_batching_->id(), "u_view");
     u_texture_light_batching= glGetUniformLocation(program_light_batching_->id(),
-                "u_texture");
+            "u_texture");
     u_color_light_batching_ = glGetUniformLocation(program_light_batching_->id(), "u_color");
     u_opacity_light_batching_ = glGetUniformLocation(program_light_batching_->id(), "u_opacity");
-
-
-
-
     u_mvp_no_light_ = glGetUniformLocation(program_no_light_->id(), "u_mvp");
     u_texture_no_light_ = glGetUniformLocation(program_no_light_->id(),
             "u_texture");
@@ -289,7 +282,7 @@ void TextureShader::render(RenderState* rstate,
         }
     }
 
-   int program_id;
+    int program_id;
 
     if (use_light) {
         GL(glUseProgram(program_light_->id()));
@@ -359,7 +352,7 @@ void TextureShader::render(RenderState* rstate,
     checkGlError("TextureShader::render");
 }
 void TextureShader::render_batch(std::vector<glm::mat4>& model_matrix,
-          RenderData* render_data,  RenderState& rstate)
+        RenderData* render_data,  RenderState& rstate)
 {
     Mesh* mesh = render_data->mesh();
     Texture* texture = rstate.material_override->getTexture("main_texture");
@@ -389,11 +382,11 @@ void TextureShader::render_batch(std::vector<glm::mat4>& model_matrix,
         GL(glUseProgram(program_light_batching_->id()));
         program_id = program_light_batching_->id();
     } else {
-    	GL(glUseProgram(program_no_light_batching_->id()));
-    	program_id = program_no_light_batching_->id();
+        GL(glUseProgram(program_no_light_batching_->id()));
+        program_id = program_no_light_batching_->id();
     }
 
-	mesh->bindVertexAttributes(program_id);
+    mesh->bindVertexAttributes(program_id);
     mesh->generateVAO();
 
     GL(glActiveTexture (GL_TEXTURE0));
@@ -406,11 +399,11 @@ void TextureShader::render_batch(std::vector<glm::mat4>& model_matrix,
         glm::vec4 light_specular_intensity = light->getVec4(
                 "specular_intensity");
 
-    	for(int i=0;i<model_matrix.size(); i++){
-			glUniformMatrix4fv(u_matrices_light_batching + i, 1, GL_FALSE,
-					glm::value_ptr(model_matrix[i]));
+        for(int i=0;i<model_matrix.size(); i++){
+            glUniformMatrix4fv(u_matrices_light_batching + i, 1, GL_FALSE,
+                    glm::value_ptr(model_matrix[i]));
 
-    	}
+        }
 
         glUniformMatrix4fv(u_view_light_batching, 1, GL_FALSE, glm::value_ptr(rstate.uniforms.u_view));
         glUniformMatrix4fv(u_vp_light_batching, 1, GL_FALSE, glm::value_ptr(vp_matrix));
@@ -445,25 +438,23 @@ void TextureShader::render_batch(std::vector<glm::mat4>& model_matrix,
     }
     else {
 
-    	for(int i=0;i<model_matrix.size(); i++){
-			glUniformMatrix4fv(u_matrices_no_light_batching + i, 1, GL_FALSE,
-					glm::value_ptr(model_matrix[i]));
-    	}
-		glUniformMatrix4fv(u_view_no_light_batching , 1, GL_FALSE,
-				glm::value_ptr(rstate.uniforms.u_view));
-		glUniformMatrix4fv(u_vp_no_light_batching , 1, GL_FALSE,
-				glm::value_ptr(vp_matrix));
+        for(int i=0;i<model_matrix.size(); i++){
+            glUniformMatrix4fv(u_matrices_no_light_batching + i, 1, GL_FALSE,
+                    glm::value_ptr(model_matrix[i]));
+        }
+        glUniformMatrix4fv(u_view_no_light_batching , 1, GL_FALSE,
+                glm::value_ptr(rstate.uniforms.u_view));
+        glUniformMatrix4fv(u_vp_no_light_batching , 1, GL_FALSE,
+                glm::value_ptr(vp_matrix));
         glUniform1i(u_texture_no_light_batching, 0);
         glUniform3f(u_color_no_light_batching_, color.r, color.g, color.b);
         glUniform1f(u_opacity_no_light_batching_, opacity);
         glBindVertexArray(mesh->getVAOId());
     }
 
-
     GL(glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
             0));
     GL(glBindVertexArray(0));
-
     checkGlError("TextureShader::render_batch");
 
 }

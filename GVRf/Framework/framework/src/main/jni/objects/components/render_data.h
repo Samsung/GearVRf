@@ -428,32 +428,8 @@ static inline bool compareRenderDataByOrderDistance(RenderData* i, RenderData* j
             && i->rendering_order() < RenderData::Overlay) {
         return i->camera_distance() > j->camera_distance();
     }
-
     return i->rendering_order() < j->rendering_order();
 }
-/*
-static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
-        RenderData* j) {
-    //1. rendering order needs to be sorted first to guarantee specified correct order
-    if (i->rendering_order() == j->rendering_order()) {
-        // 2. group with the same shader together to minimize the switching cost
-        // Note multi-pass render data are treated as single pass ones for now, so right now only the shader 0 is used
-        if (i->material(0)->shader_type() == j->material(0)->shader_type()) {
-            // if it is a transparent object, sort by camera distance from back to front
-            if (i->rendering_order() >= RenderData::Transparent
-                    && i->rendering_order() < RenderData::Overlay) {
-                return i->camera_distance() > j->camera_distance();
-            }
-            // otherwise sort from front to back
-            return i->camera_distance() < j->camera_distance();
-        }
-
-        return i->material(0)->shader_type() < j->material(0)->shader_type();
-    }
-
-    return i->rendering_order() < j->rendering_order();
-}
-*/
 
 static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
         RenderData* j) {
@@ -476,13 +452,11 @@ static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
 						return i->camera_distance() < j->camera_distance();
         			}
         			return 1;
-
         		}
         		return i->getHashCode() < j->getHashCode() ;
-        }
-
+        	}
         	return i->material(0) <  j->material(0);
-    }
+        }
         return i->material(0)->shader_type() < j->material(0)->shader_type();
    }
    return i->rendering_order() < j->rendering_order();

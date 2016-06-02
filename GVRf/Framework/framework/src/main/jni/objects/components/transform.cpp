@@ -36,7 +36,7 @@ Transform::~Transform() {
 }
 
 void Transform::invalidate(bool rotationUpdated) {
-  	owner_object()->setTransformDirty();
+    owner_object()->setTransformDirty();
     if (model_matrix_.isValid()) {
         model_matrix_.invalidate();
         std::vector<SceneObject*> childrenCopy = owner_object()->children();

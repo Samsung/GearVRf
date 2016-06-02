@@ -43,10 +43,7 @@ Picker::~Picker() {
 
 std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
         float oy, float oz, float dx, float dy, float dz) {
-   // std::vector<SceneObject*> scene_objects = scene->getWholeSceneObjects();
-
-	std::list<SceneObject*>& scene_objects = scene->getEyePointeeSceneObjects();
-	//LOGE("size is %d", scene_objects.size());
+    std::list<SceneObject*>& scene_objects = scene->getEyePointeeSceneObjects();
     std::vector<EyePointeeHolder*> eye_pointee_holders;
     for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
         EyePointeeHolder* eye_pointee_holder = (*it)->eye_pointee_holder();
@@ -55,12 +52,10 @@ std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
         }
     }
 
-    //LOGE("eye holder list size %d", eye_pointee_holders.size());
     std::vector<EyePointeeHolder*> picked_holders;
     Transform* const t = scene->main_camera_rig()->getHeadTransform();
     if (nullptr != t) {
         glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
-
         std::vector<EyePointeeHolderData> picked_holder_data;
         for (auto it = eye_pointee_holders.begin(); it != eye_pointee_holders.end(); ++it) {
             EyePointData data = (*it)->isPointed(view_matrix, ox, oy, oz, dx, dy, dz);
@@ -69,14 +64,12 @@ std::vector<EyePointeeHolder*> Picker::pickScene(Scene* scene, float ox,
                 picked_holder_data.push_back(EyePointeeHolderData(*it, data.distance()));
             }
         }
-
         std::sort(picked_holder_data.begin(), picked_holder_data.end(), compareEyePointeeHolderData);
         for (auto it = picked_holder_data.begin(); it != picked_holder_data.end(); ++it) {
             EyePointeeHolder* holder = it->eye_pointee_holder();
             picked_holders.push_back(holder);
         }
     }
-
     return picked_holders;
 }
 

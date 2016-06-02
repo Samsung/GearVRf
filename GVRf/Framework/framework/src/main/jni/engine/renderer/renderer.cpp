@@ -78,12 +78,12 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
 
         cullVal = object->frustumCull(camera_position, frustum, planeMask);
         if (cullVal == 0) {
-        	  object->setCullStatus(true);
+            object->setCullStatus(true);
             return;
         }
 
         if (cullVal >= 2) {
-        	  object->setCullStatus(false);
+        	object->setCullStatus(false);
             scene_objects.push_back(object);
         }
 
@@ -92,7 +92,7 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
             need_cull = false;
         }
     } else {
-    	  object->setCullStatus(false);
+        object->setCullStatus(false);
         scene_objects.push_back(object);
     }
 
@@ -126,7 +126,6 @@ void Renderer::state_sort() {
         }
     }
 }
-
 struct comparator{
 	Long renderdata_properties;
 	Material* mat;
@@ -156,7 +155,6 @@ void createBatch(int start, int end){
 				size = render_data_vector[i]->getBatch()->getNumberOfMeshes();
 				existing_batch = render_data_vector[i]->getBatch();
 			}
-
 		}
 	}
 
@@ -165,7 +163,6 @@ void createBatch(int start, int end){
 		Batch* current_batch = render_data->getBatch();
 		if(!current_batch){
 			if(!render_data->mesh()->isDynamic()){ // mesh is static
-
 				// existing batch is not full
 				if(existing_batch && existing_batch->getNumberOfMeshes() < BATCH_SIZE){
 					existing_batch->add(render_data, render_data->pass(0)->material());
@@ -175,7 +172,6 @@ void createBatch(int start, int end){
 						batch_set.push_back(existing_batch);
 						batch_map[existing_batch] = batch_set.size() - 1;
 					}
-
 					render_data->setBatch(existing_batch);
 				}
 				else  { // existing batch is full or does not exists
@@ -186,8 +182,6 @@ void createBatch(int start, int end){
 					batch_map[new_batch] = batch_set.size() - 1;
 					existing_batch = new_batch;
 				}
-
-
 			}
 			else { // mesh is dynamic
 
@@ -199,16 +193,14 @@ void createBatch(int start, int end){
 					if(it!=batch_map.end()){
 						int index = it->second;
 						batch_set.erase(batch_set.begin()+index);
-
 					}
-
+					delete existing_batch;
 					Batch* new_batch = new Batch();
 					new_batch->add(render_data,render_data->pass(0)->material() );
 					render_data->setBatch(new_batch);
 					batch_set.push_back(new_batch);
 					batch_map[new_batch] = batch_set.size() - 1;
 					existing_batch = new_batch;
-
 				}
 				// existing batch is not full
 				else if(existing_batch && existing_batch->getNumberOfMeshes() < BATCH_SIZE){
@@ -219,7 +211,6 @@ void createBatch(int start, int end){
 						batch_set.push_back(existing_batch);
 						batch_map[existing_batch] = batch_set.size() - 1;
 					}
-
 				}
 				else { //existing batch is full or not exists
 					Batch* new_batch = new Batch();
@@ -228,12 +219,10 @@ void createBatch(int start, int end){
 					batch_set.push_back(new_batch);
 					batch_map[new_batch] = batch_set.size() - 1;
 					existing_batch = new_batch;
-
 				}
 			}
 		}
 		else { // batch is not null
-
 
 			// update the transform
     		if(render_data->owner_object()->isTransformDirty() && render_data->owner_object()->transform()){
@@ -255,28 +244,23 @@ void createBatch(int start, int end){
 						int index = it->second;
 						batch_set.erase(batch_set.begin() + index);
 					}
-
+					delete existing_batch;
 					Batch* new_batch = new Batch();
 					render_data->setBatch(new_batch);
 					new_batch->add(render_data,render_data->pass(0)->material() );
 					batch_set.push_back(new_batch);
 					batch_map[new_batch] = batch_set.size() - 1;
 					existing_batch = new_batch;
-
 				}
 				else {
-					if(batch_map.find(current_batch)==batch_map.end()){
+				    if(batch_map.find(current_batch)==batch_map.end()){
 						batch_set.push_back(current_batch);
 						batch_map[current_batch] = batch_set.size() - 1;
 					}
 				}
 			}
-
 		}
-
 	}
-
-
 }
 
 /*
@@ -322,7 +306,6 @@ void Renderer::BatchSetup(){
     for(int i=1;i<batch_indices.size();i++){
     	createBatch(batch_indices[i-1],batch_indices[i]-1);
     }
-
 
 }
 void Renderer::cull(Scene *scene, Camera *camera,
@@ -438,8 +421,7 @@ void Renderer::renderbatches(RenderState& rstate){
 
 	for(auto it = batch_set.begin();it!=batch_set.end();++it){
 
-		Batch* batch = *it;
-
+	    Batch* batch = *it;
 		rstate.material_override = batch->get_material();
 		int currentShaderType = rstate.material_override->shader_type();
 
@@ -902,7 +884,7 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
 	setRenderStates(render_data, rstate);
 
     if (render_data->mesh() != 0) {
-        	GL(renderMesh(rstate, render_data));
+        GL(renderMesh(rstate, render_data));
     }
 
     // Restoring to Default.
