@@ -40,6 +40,7 @@ class CursorSceneObject {
     private GVRSceneObject meshSceneObject;
     private GVRSceneObject mainObject;
     private int id;
+    private Object lock = new Object();
 
     CursorSceneObject(GVRContext context, int id) {
         mainObject = new GVRSceneObject(context);
@@ -47,7 +48,6 @@ class CursorSceneObject {
         externalSceneObject = new GVRSceneObject(context);
         mainObject.addChildObject(externalSceneObject);
         mainObject.addChildObject(cursor);
-
         meshSceneObject = cursor;
         this.id = id;
     }
@@ -94,23 +94,34 @@ class CursorSceneObject {
     }
 
     boolean isColliding(GVRSceneObject sceneObject) {
-        if (sceneObject.hasMesh() == false) {
-            return false;
-        }
 
-        if (meshSceneObject == null || meshSceneObject.hasMesh() == false) {
-            return false;
-        }
+        // make sure that the render data does not change when
+        // a collision test is in progress.
+        synchronized (lock) {
+            if (sceneObject.hasMesh() == false) {
+                return false;
+            }
 
-        return meshSceneObject.isColliding(sceneObject);
+            if (meshSceneObject == null || meshSceneObject.hasMesh() == false) {
+                return false;
+            }
+
+            return meshSceneObject.isColliding(sceneObject);
+        }
     }
 
     void attachRenderData(GVRRenderData renderData) {
-        meshSceneObject.attachRenderData(renderData);
+        // wait for completion of the collision test
+        synchronized (lock) {
+            meshSceneObject.attachRenderData(renderData);
+        }
     }
 
     void detachRenderData() {
-        meshSceneObject.detachRenderData();
+        // wait for completion of the collision test
+        synchronized (lock) {
+            meshSceneObject.detachRenderData();
+        }
     }
 
     void addExternalChildObject(GVRSceneObject sceneObject) {

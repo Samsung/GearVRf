@@ -134,14 +134,22 @@ class MeshCursorAsset extends CursorAsset {
         }
     }
 
-    void set(CursorSceneObject sceneObject) {
+    void set(final CursorSceneObject sceneObject) {
         super.set(sceneObject);
-        GVRRenderData renderData = renderDataArray.get(sceneObject.getId());
+        final GVRRenderData renderData = renderDataArray.get(sceneObject.getId());
         if (renderData == null) {
             Log.e(TAG, "Render data not found, should not happen");
             return;
         }
-        sceneObject.attachRenderData(renderData);
+
+        // this call can only be made on the GL Thread
+        context.runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                sceneObject.attachRenderData(renderData);
+            }
+        });
+
     }
 
     /**
@@ -150,9 +158,17 @@ class MeshCursorAsset extends CursorAsset {
      * @param sceneObject the {@link GVRSceneObject}  for the behavior to be removed
      */
 
-    void reset(CursorSceneObject sceneObject) {
+    void reset(final CursorSceneObject sceneObject) {
         super.reset(sceneObject);
-        sceneObject.detachRenderData();
+        
+        // this call can only be made on the GL Thread
+        context.runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                sceneObject.detachRenderData();
+            }
+        });
+
     }
 
     float getX() {
