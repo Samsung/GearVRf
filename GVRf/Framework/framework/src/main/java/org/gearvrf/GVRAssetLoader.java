@@ -668,14 +668,14 @@ public final class GVRAssetLoader implements IEventReceiver {
                 @Override
                 public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
                     meshMaterial.setMainTexture(texture);
-                    context.getEventManager().sendEvent(this,
+                    context.getEventManager().sendEvent(GVRAssetLoader.this,
                             IAssetEvents.class,
                             "onTextureLoaded", new Object[] { context, texture, texDiffuseFileName });
                 }
 
                 @Override
                 public void failed(Throwable t, GVRAndroidResource androidResource) {
-                    context.getEventManager().sendEvent(this,
+                    context.getEventManager().sendEvent(GVRAssetLoader.this,
                             IAssetEvents.class,
                             "onTextureError", new Object[] { context, t.getMessage(), texDiffuseFileName });
                 }
