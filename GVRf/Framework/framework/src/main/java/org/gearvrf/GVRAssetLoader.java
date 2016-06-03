@@ -49,21 +49,21 @@ import android.os.Environment;
 import org.gearvrf.jassimp.AiColor;
 
 /**
- * {@link GVRImporter} provides methods for importing 3D models and making them
+ * {@link GVRAssetLoader} provides methods for importing 3D models and making them
  * available through instances of {@link GVRAssimpImporter}.
  * <p>
  * Supports importing models from an application's resources (both
  * {@code assets} and {@code res/raw}) and from directories on the device's SD
  * card that the application has permission to read.
  */
-public final class GVRImporter implements IEventReceiver {
+public final class GVRAssetLoader implements IEventReceiver {
     /**
      * Listens for texture load events and raises the "onAssetLoaded"
      * event after all textures have been loaded.
      */
     static public class AssetEventListener implements IAssetEvents
     {
-        protected GVRImporter       mImporter = null;
+        protected GVRAssetLoader       mImporter = null;
         protected int               mNumTextures = 0;
         protected GVRScene          mScene = null;
         protected GVRSceneObject    mModel = null;
@@ -71,7 +71,7 @@ public final class GVRImporter implements IEventReceiver {
         protected String            mFileName;
         protected String            mErrors;
         
-        public AssetEventListener(GVRImporter importer, GVRScene scene) {
+        public AssetEventListener(GVRAssetLoader importer, GVRScene scene) {
             mScene = scene;
             mImporter = importer;
             mNumTextures = 0;
@@ -164,7 +164,7 @@ public final class GVRImporter implements IEventReceiver {
     protected GVRContext mContext;
     protected GVREventReceiver mEventReceiver = new GVREventReceiver(this);
     
-    public GVRImporter(GVRContext context) {
+    public GVRAssetLoader(GVRContext context) {
         mContext = context;
     }
     
@@ -714,7 +714,7 @@ public final class GVRImporter implements IEventReceiver {
      */
     private final static GVROldWrapperProvider sWrapperProvider = new GVROldWrapperProvider();
 
-    private final static String TAG = "GVRImporter";
+    private final static String TAG = "GVRAssetLoader";
 
 }
 

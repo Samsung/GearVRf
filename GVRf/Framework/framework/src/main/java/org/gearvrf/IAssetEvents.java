@@ -30,14 +30,14 @@ public interface IAssetEvents extends IEvents
      * @param context   GVRContext used to load the model
      * @param model     GVRSceneObject root of the model scene graph, null if model did not load.
      * @param filePath  File path or URL of the model.
-     * @param errors    String with loading errors or null if successful
+     * @param errors    String with loading errors or null if successful.
      */
     public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, String errors);
     
     /**
      * Called when a model is successfully loaded.
-     * This event will not be raised until the model and all of
-     * its textures are loaded.
+     * This event is raised when the model file is loaded.
+     * Texture files may still be loading in the background.
      * @param context   GVRContext used to load the model
      * @param model root of the scene graph representing the model.
      * @param filePath  File path or URL of the model.

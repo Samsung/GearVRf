@@ -150,7 +150,7 @@ public abstract class GVRContext {
     // Debug server
     protected DebugServer mDebugServer;
 
-    protected GVRImporter mImporter = new GVRImporter(this);
+    protected GVRAssetLoader mImporter = new GVRAssetLoader(this);
     /*
      * Methods
      */
@@ -194,15 +194,15 @@ public abstract class GVRContext {
     }
 
     /**
-     * Get the {@link GVRImporter} to use for loading assets.
+     * Get the {@link GVRAssetLoader} to use for loading assets.
      * 
-     * A {@code GVRImporter} loads models asynchronously from your applications's
+     * A {@code GVRAssetLoader} loads models asynchronously from your application's
      * local storage or the network.
      * 
      * 
      * @return The asset loader associated with this context.
      */
-    public GVRImporter getAssetLoader() {
+    public GVRAssetLoader getAssetLoader() {
         return mImporter;
     }
     
@@ -537,21 +537,7 @@ public abstract class GVRContext {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
-        return getAssimpModel(assetRelativeFilename, settings, null);
-    }
-
-    public GVRSceneObject getAssimpModel(String assetRelativeFilename,
-            EnumSet<GVRImportSettings> settings, IAssetEvents handler) throws IOException {
-        GVRSceneObject model = mImporter.getAssimpModel(this, assetRelativeFilename, settings);
-        if (model != null) {
-            handler.onModelLoaded(this, model, assetRelativeFilename);
-            handler.onAssetLoaded(this, model, assetRelativeFilename, "");
-        }
-        else {
-            handler.onModelError(this, "Cannot load model", assetRelativeFilename);
-            handler.onAssetLoaded(this, null, assetRelativeFilename, "Cannot load model");            
-        }
-        return model;
+        return mImporter.getAssimpModel(this, assetRelativeFilename, settings);
     }
     
     /**
@@ -722,9 +708,6 @@ public abstract class GVRContext {
      *                  load from the cache in future uses;
      *           false: Don't keep local copy and only do online streaming for loading everytime
      *           
-     * @param handler
-     *            If present, this handler will receive asset load events (model, texture and entire asset)
-     *            
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
      *
