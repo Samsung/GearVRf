@@ -99,6 +99,10 @@ class ObjectCursor extends Cursor {
     private ControllerEventListener listener = new ControllerEventListener() {
         @Override
         public void onEvent(GVRCursorController controller) {
+            if(scene == null){
+                return;
+            }
+
             lookAt();
 
             KeyEvent keyEvent = controller.getKeyEvent();
