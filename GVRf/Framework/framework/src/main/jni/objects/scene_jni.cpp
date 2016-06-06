@@ -71,6 +71,19 @@ Java_org_gearvrf_NativeScene_addLight(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
         jobject obj, jlong jscene);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_addEyePointeeSceneObject(JNIEnv * env,
+        jobject obj, jlong jscene, jlong sceneobject );
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_removeEyePointeeSceneObject(JNIEnv * env,
+        jobject obj, jlong jscene, jlong sceneobject);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_clearEyePointeeSceneObjects(JNIEnv * env,
+        jobject obj, jlong jscene);
+
 };
 
 JNIEXPORT jlong JNICALL
@@ -174,6 +187,29 @@ Java_org_gearvrf_NativeScene_addLight(JNIEnv * env,
     } else {
         scene->addLight(0);
     }
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_addEyePointeeSceneObject(JNIEnv * env,
+        jobject obj, jlong jscene, jlong sceneobject ){
+	Scene* scene = reinterpret_cast<Scene*>(jscene);
+	SceneObject* object = reinterpret_cast<SceneObject*>(sceneobject);
+	scene->addEyepointeeSceneObject(object);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_removeEyePointeeSceneObject(JNIEnv * env,
+        jobject obj, jlong jscene, jlong sceneobject){
+	Scene* scene = reinterpret_cast<Scene*>(jscene);
+	SceneObject* object = reinterpret_cast<SceneObject*>(sceneobject);
+	scene->remoteEyePointeeSceneObject(object);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_clearEyePointeeSceneObjects(JNIEnv * env,
+        jobject obj, jlong jscene){
+	Scene* scene = reinterpret_cast<Scene*>(jscene);
+	scene->clearEyePointeeSceneObjects();
 }
 
 }

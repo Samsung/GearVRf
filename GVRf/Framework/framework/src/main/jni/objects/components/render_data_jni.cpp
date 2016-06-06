@@ -148,6 +148,11 @@ Java_org_gearvrf_NativeRenderData_setDrawMode(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
         jlong jrender_data, jlong jtexture_capturer);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setBatching(
+        JNIEnv * env, jobject obj, jlong jrender_data, jboolean batching);
+
 }
 ;
 
@@ -374,6 +379,13 @@ Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     render_data->set_texture_capturer(
             reinterpret_cast<TextureCapturer*>(jtexture_capturer));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setBatching(
+        JNIEnv * env, jobject obj, jlong jrender_data, jboolean batching){
+	RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+	render_data->set_batching(static_cast<bool>(batching));
 }
 
 }

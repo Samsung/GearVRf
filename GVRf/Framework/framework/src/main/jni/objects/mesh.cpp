@@ -32,73 +32,81 @@
 
 namespace gvr {
 Mesh* Mesh::createBoundingBox() {
+    if(bounding_box_mesh_ == nullptr || !have_bounding_volume_)
+    {
+        if(!bounding_box_mesh_)
+            bounding_box_mesh_ = new Mesh();
 
-    Mesh* mesh = new Mesh();
+        bounding_box_mesh_->vertices_.clear();
+        bounding_box_mesh_->vertices_.reserve(1024);
 
-    getBoundingVolume(); // Make sure bounding_volume is valid
+        bounding_box_mesh_->indices_.clear();
+        bounding_box_mesh_->indices_.reserve(1024);
 
-    glm::vec3 min_corner = bounding_volume.min_corner();
-    glm::vec3 max_corner = bounding_volume.max_corner();
+        getBoundingVolume(); // Make sure bounding_volume is valid
 
-    float min_x = min_corner[0];
-    float min_y = min_corner[1];
-    float min_z = min_corner[2];
-    float max_x = max_corner[0];
-    float max_y = max_corner[1];
-    float max_z = max_corner[2];
+        glm::vec3 min_corner = bounding_volume.min_corner();
+        glm::vec3 max_corner = bounding_volume.max_corner();
 
-    mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, max_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, max_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, min_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, min_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, max_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, max_y, max_z));
+        float min_x = min_corner[0];
+        float min_y = min_corner[1];
+        float min_z = min_corner[2];
+        float max_x = max_corner[0];
+        float max_y = max_corner[1];
+        float max_z = max_corner[2];
 
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(3);
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, max_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, max_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, min_y, max_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, min_y, max_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, max_y, max_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, max_y, max_z));
 
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(3);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(3);
 
-    mesh->indices_.push_back(4);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(3);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(5);
 
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(4);
-    mesh->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(4);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(6);
 
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(4);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(4);
+        bounding_box_mesh_->indices_.push_back(6);
 
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(3);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(4);
 
-    return mesh;
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(3);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(7);
+    }
+    return bounding_box_mesh_;
 }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values

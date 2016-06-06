@@ -39,7 +39,8 @@ MeshEyePointee::~MeshEyePointee() {
 EyePointData MeshEyePointee::isPointed(const glm::mat4& mv_matrix, float ox,
         float oy, float oz, float dx, float dy, float dz) {
     if (nullptr != mesh_) {
-        return isPointed(*mesh_, mv_matrix, ox, oy, oz, dx, dy, dz);
+    	Mesh* mesh = mesh_->createBoundingBox();
+        return isPointed(*mesh, mv_matrix, ox, oy, oz, dx, dy, dz);
     } else {
         return EyePointData();
     }

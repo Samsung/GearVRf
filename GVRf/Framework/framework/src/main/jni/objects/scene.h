@@ -23,7 +23,7 @@
 
 #include <memory>
 #include <vector>
-
+#include <list>
 
 #include "objects/hybrid_object.h"
 #include "components/camera_rig.h"
@@ -90,6 +90,18 @@ public:
     	return is_shadowmap_invalid;
 
     }
+    std::list<SceneObject*>& getEyePointeeSceneObjects(){
+    	return eye_pointee_objects_;
+    }
+    void clearEyePointeeSceneObjects(){
+    	eye_pointee_objects_.clear();
+    }
+    void remoteEyePointeeSceneObject(SceneObject* sceneobject){
+    	eye_pointee_objects_.remove(sceneobject);
+    }
+    void addEyepointeeSceneObject(SceneObject* sceneobject){
+    	eye_pointee_objects_.push_back(sceneobject);
+    }
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -98,6 +110,7 @@ private:
 
 private:
     std::vector<SceneObject*> scene_objects_;
+    std::list<SceneObject*> eye_pointee_objects_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;
     bool frustum_flag_;

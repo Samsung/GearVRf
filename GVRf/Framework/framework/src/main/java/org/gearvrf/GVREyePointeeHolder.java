@@ -136,6 +136,12 @@ public class GVREyePointeeHolder extends GVRComponent {
     public void setOwnerObject(GVRSceneObject owner) {
         GVRPicker.sFindObjectsLock.lock();
         try {
+            GVRSceneObject object = getOwnerObject();
+            if(owner != null)
+                getGVRContext().getNextMainScene().addEyePointeeSceneObject(owner);
+            else
+                getGVRContext().getNextMainScene().removeEyePointeeSceneObject(object);
+            
             super.setOwnerObject(owner);
         } finally {
             GVRPicker.sFindObjectsLock.unlock();

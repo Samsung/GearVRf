@@ -24,8 +24,9 @@
 #include <mutex>
 
 #include "objects/hybrid_object.h"
-#include "objects/components/render_data.h"
+
 #include "objects/components/transform.h"
+#include "objects/components/render_data.h"
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
 #include "objects/components/eye_pointee_holder.h"
@@ -33,10 +34,10 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-class Camera;
-class CameraRig;
-class EyePointeeHolder;
-
+//class Camera;
+//class CameraRig;
+//class EyePointeeHolder;
+//class RenderData;
 class SceneObject: public HybridObject {
 public:
     SceneObject();
@@ -99,7 +100,22 @@ public:
     SceneObject* parent() const {
         return parent_;
     }
+    void setTransformUnDirty(){
+    	transform_dirty_ = false;
+    }
+    void setTransformDirty(){
+    	transform_dirty_ = true;
 
+    }
+    bool isTransformDirty(){
+    	return transform_dirty_;
+    }
+    void setCullStatus(bool cull){
+    	cull_status_ = cull;
+    }
+    bool toBeCulled(){
+    	return cull_status_;
+    }
     std::vector<SceneObject*> children() {
         std::lock_guard < std::mutex > lock(children_mutex_);
         return std::vector<SceneObject*>(children_);
@@ -154,7 +170,8 @@ private:
     float lod_min_range_;
     float lod_max_range_;
     bool using_lod_;
-
+    bool cull_status_;
+    bool transform_dirty_;
     BoundingVolume transformed_bounding_volume_;
     bool bounding_volume_dirty_;
     BoundingVolume mesh_bounding_volume;

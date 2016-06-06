@@ -87,6 +87,12 @@ extern "C" {
     JNIEXPORT jfloatArray JNICALL
     Java_org_gearvrf_NativeSceneObject_expandBoundingVolumeByCenterAndRadius(JNIEnv * env,
             jobject obj, jlong jSceneObject, jfloat centerX, jfloat centerY, jfloat centerZ, jfloat radius);
+
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_isCulled(
+            JNIEnv * env, jobject obj, jlong jscene_object);
+
+
 } // extern "C"
 
 JNIEXPORT jlong JNICALL
@@ -239,5 +245,10 @@ Java_org_gearvrf_NativeSceneObject_expandBoundingVolumeByCenterAndRadius(JNIEnv 
 
     return boundingVolumeToArray(env, bvol);
 }
-
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_isCulled(
+        JNIEnv * env, jobject obj, jlong jSceneObject){
+	SceneObject* sceneObject = reinterpret_cast<SceneObject*>(jSceneObject);
+	return sceneObject->toBeCulled();
+}
 } // namespace gvr
