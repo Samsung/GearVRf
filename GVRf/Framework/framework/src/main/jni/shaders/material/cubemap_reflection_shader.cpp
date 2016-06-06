@@ -113,7 +113,6 @@ CubemapReflectionShader::~CubemapReflectionShader() {
 }
 
 void CubemapReflectionShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
-    Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -124,10 +123,7 @@ void CubemapReflectionShader::render(RenderState* rstate, RenderData* render_dat
         throw error;
     }
 
-    mesh->generateVAO();
-
     glUseProgram(program_->id());
-
     glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
     glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
@@ -138,12 +134,6 @@ void CubemapReflectionShader::render(RenderState* rstate, RenderData* render_dat
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0);
-    glBindVertexArray(0);
-
     checkGlError("CubemapReflectionShader::render");
 }
 
