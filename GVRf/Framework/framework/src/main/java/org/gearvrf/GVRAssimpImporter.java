@@ -24,7 +24,7 @@ import org.gearvrf.jassimp.AiScene;
 
 /**
  * Provides access to the {@link GVRMesh meshes} contained in 3D models that
- * have been imported with {@link GVRImporter}.
+ * have been imported with {@link GVRAssetLoader}.
  */
 class GVRAssimpImporter extends GVRHybridObject {
 

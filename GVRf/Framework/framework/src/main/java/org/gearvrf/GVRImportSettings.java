@@ -17,7 +17,7 @@ package org.gearvrf;
 import java.util.EnumSet;
 
 /**
- * Encapsulates Assimp import settings to be passed in to GVRImporter.
+ * Encapsulates Assimp import settings to be passed in to GVRAssetLoader.
  * Do not change these values since they must match values defined in Assimp's postprocess.h
  * 
  */
@@ -80,7 +80,7 @@ public enum GVRImportSettings {
      */
     OPTIMIZE_GRAPH(0x400000),
     
-        /**
+    /**
      * Flip UV mapping in y direction.
      */
     FLIP_UV(0x800000);
