@@ -15,16 +15,16 @@
 
 package org.gearvrf;
 
+import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
+import org.gearvrf.debug.GVRConsole;
+import org.gearvrf.script.IScriptable;
+import org.gearvrf.utility.Log;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
-import org.gearvrf.debug.GVRConsole;
-import org.gearvrf.script.IScriptable;
-import org.gearvrf.utility.Log;
 
 /**
  * The scene graph.
@@ -94,6 +94,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     public void addSceneObject(GVRSceneObject sceneObject) {
         mSceneObjects.add(sceneObject);
         NativeScene.addSceneObject(getNative(), sceneObject.getNative());
+        bindShaders(sceneObject);
     }
 
     /**
@@ -114,7 +115,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         getMainCameraRig().removeAllChildren();
         mSceneObjects.clear();
         NativeScene.removeAllSceneObjects(getNative());
-
+        mLightList.clear();
         addSceneObject(getMainCameraRig().getOwnerObject());
     }
 
@@ -181,6 +182,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             list.add(child);
             addChildren(list, child);
         }
+        bindShaders();
     }
 
     /**
@@ -381,16 +383,52 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public void bindShaders() {
         for (GVRSceneObject child : mSceneObjects) {
-            ArrayList<GVRLightBase> lights = child.getAllComponents(GVRLightBase.class);
+            ArrayList<GVRLightBase> lights = child.getAllComponents(GVRLightBase.getComponentType());
             for (GVRLightBase light : lights) {
                 addLight(light);
             }
         }
         for (GVRSceneObject child : mSceneObjects) {
-            ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.class);
+            ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.getComponentType());
             for (GVRRenderData rdata : renderers) {
                 rdata.bindShader(this);
             }
+        }
+    }
+
+    /**
+     * Bind the correct vertex and fragment shaders on the given hierarchy.
+     * This function sets the shader template for all the GVRRenderData components
+     * in the input hierarchy (but does not construct vertex and fragment shaders.)
+     *
+     * If new assets are loaded that add lights to the scene after initialization,
+     * bindShaders may need to be called again to regenerate the correct shaders
+     * for the new lighting conditions. This function is called whenever a scene
+     * object is added at the root of the scene.
+     * @see GVRRenderData.bindShader
+     * @see GVRShaderTemplate
+     * @see GVRScene.addSceneObject
+     */
+    protected void bindShaders(GVRSceneObject root) {
+        ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.getComponentType());
+        int added = 0;
+        for (GVRLightBase light : lights) {
+            if (addLight(light))
+            {
+                ++added;
+            }
+        }
+        if (added > 0)
+        {
+            bindShaders();
+        }
+        else
+        {
+            ArrayList<GVRRenderData> renderers = root.getAllComponents(GVRRenderData
+                    .getComponentType());
+            for (GVRRenderData rdata : renderers) {
+                rdata.bindShader(this);
+            }           
         }
     }
         
@@ -399,12 +437,12 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @param light light to add
      * @see GVRScene.getLightList
      */
-    protected void addLight(GVRLightBase light) {
+    protected boolean addLight(GVRLightBase light) {
         if (light != null) {
             int classIndex = 0;
             for (GVRLightBase l : mLightList) {
                 if (l == light) {
-                    return;
+                    return false;
                 }
                 if (l.getClass().equals(light.getClass())) {
                     ++classIndex;
@@ -415,7 +453,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             mLightList.add(light);
             NativeLight.setLightID(light.getNative(), name);
             NativeScene.addLight(getNative(), light.getNative());
+            return true;
         }
+        return false;
     }
     
     /**

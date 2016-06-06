@@ -17,8 +17,10 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -28,7 +30,7 @@ import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
 /**
- * One of the key GVRF classes: a scene object.
+ * Describes a 3D object in the scene with a position and orientation.
  * 
  * Every scene object has a {@linkplain #getTransform() location}, and can have
  * {@linkplain #children() children}. An invisible scene object can be used to
@@ -41,7 +43,11 @@ import org.joml.Vector3f;
  * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attached.} Each
  * {@link GVRRenderData} has a {@link GVRMesh GL mesh} that defines its
  * geometry, and a {@link GVRMaterial} that defines its surface.
- *
+ * <p>
+ * Components can be attached to a scene object to extend its functionality.
+ * For example, you can attach a light component to make the scene object illuminate
+ * other objects. Only one component of a particular type can be attached.
+ * Components are retrieved based on their type.
  * <p>
  * {@link GVRSceneObject} receives events defined in {@link ISceneObjectEvents}. To add a listener
  * to these events, use the following code:
@@ -53,13 +59,7 @@ import org.joml.Vector3f;
  * </pre>
  */
 public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
-
-    private GVRTransform mTransform;
-    private GVRRenderData mRenderData;
-    private GVRCamera mCamera;
-    private GVRCameraRig mCameraRig;
-    private GVREyePointeeHolder mEyePointeeHolder;
-    private GVRLightBase mLight;
+    private Map<Long, GVRComponent> mComponents = new HashMap<Long, GVRComponent>();
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
@@ -128,11 +128,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
             GVRTexture texture, GVRMaterialShaderId shaderId) {
         super(gvrContext, NativeSceneObject.ctor());
 
-        attachTransform(new GVRTransform(getGVRContext()));
+        attachComponent(new GVRTransform(getGVRContext()));
 
         if (mesh != null) {
             GVRRenderData renderData = new GVRRenderData(gvrContext);
-            attachRenderData(renderData);
+            attachComponent(renderData);
             renderData.setMesh(mesh);
         }
 
@@ -203,7 +203,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         renderData.setMaterial(material);
 
         // Attach the render data
-        attachRenderData(renderData);
+        attachComponent(renderData);
     }
 
     /**
@@ -266,6 +266,20 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         this(gvrContext, width, height, texture, STANDARD_SHADER);
     }
 
+    protected void finalize() throws Throwable
+    {
+        detachAllComponents();
+    }
+    
+    protected void detachAllComponents()
+    {
+        for (GVRComponent component : mComponents.values())
+        {
+            component.setOwnerObject(null);
+        }
+        mComponents.clear();
+    }
+    
     /**
      * Get the (optional) name of the object.
      * 
@@ -316,15 +330,73 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
+     * Attach a component to this scene object.
+     * 
+     * Each scene object has a list of components that may
+     * be attached to it. Only one component of a particular type
+     * can be attached. Components are retrieved based on their type.
+     * 
+     * @return true if component is attached, false if a component of that class is already attached.
+     * @param component
+     * @see GVRSceneObject.detachComponent
+     * @see GVRSceneObject.findComponent
+     * @see GVRComponent.getComponentType
+     */
+    boolean attachComponent(GVRComponent component) {
+        boolean added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+        if (added) synchronized (mComponents) {
+            long type = component.getType();
+            mComponents.put(type, component);
+            component.setOwnerObject(this);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Detach the component of the specified type from this scene object.
+     * 
+     * Each scene object has a list of components. Only one component
+     * of a particular type can be attached. Components are detached based on their type.
+     * 
+     * @return GVRComponent detached or null if component not found
+     * @param type  type of component to detach
+     * @see GVRSceneObject.attachComponent
+     * @see GVRSceneObject.findComponent
+     * @see GVRComponent.getComponentType
+     */
+    GVRComponent detachComponent(long type) {
+         boolean removed = NativeSceneObject.detachComponent(getNative(), type);
+        if (removed) synchronized (mComponents) {
+            GVRComponent component = mComponents.remove(type);
+            component.setOwnerObject(null);
+        }
+        return null;
+    }
+
+    /**
+     * Find the component of the specified class from this scene object.
+     * 
+     * Each scene object has a list of components. Only one component
+     * of a particular type can be attached.
+     * 
+     * @return GVRComponent null if component of the given type not found
+     * @param type type of component to find
+     * @see GVRSceneObject.attachComponent
+     * @see GVRSceneObject.detachComponent
+     */
+    GVRComponent getComponent(long type) {
+        return  mComponents.get(type);
+    }
+    
+    /**
      * Replace the current {@link GVRTransform transform}
      * 
      * @param transform
      *            New transform.
      */
     void attachTransform(GVRTransform transform) {
-        mTransform = transform;
-        transform.setOwnerObject(this);
-        NativeSceneObject.attachTransform(getNative(), transform.getNative());
+        attachComponent(transform);
     }
 
     /**
@@ -332,11 +404,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * object will have no transformations associated with it.
      */
     void detachTransform() {
-        if (mTransform != null) {
-            NativeSceneObject.detachTransform(getNative());
-            mTransform.setOwnerObject(null);
-            mTransform = null;
-        }
+        detachComponent(GVRTransform.getComponentType());
     }
 
     /**
@@ -350,7 +418,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         currently attached to the object, returns {@code null}.
      */
     public GVRTransform getTransform() {
-        return mTransform;
+        return (GVRTransform) getComponent(GVRTransform.getComponentType());
     }
 
     /**
@@ -364,9 +432,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New rendering data.
      */
     public void attachRenderData(GVRRenderData renderData) {
-        mRenderData = renderData;
-        renderData.setOwnerObject(this);
-        NativeSceneObject.attachRenderData(getNative(), renderData.getNative());
+        attachComponent(renderData);
     }
 
     /**
@@ -375,11 +441,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * An object with no {@link GVRRenderData} is not visible.
      */
     public void detachRenderData() {
-        if (mRenderData != null) {
-            NativeSceneObject.detachRenderData(getNative());
-            mRenderData.setOwnerObject(null);
-            mRenderData = null;
-        }
+        detachComponent(GVRRenderData.getComponentType());
     }
 
     /**
@@ -389,7 +451,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         data is currently attached to the object, returns {@code null}.
      */
     public GVRRenderData getRenderData() {
-        return mRenderData;
+        return (GVRRenderData) getComponent(GVRRenderData.getComponentType());
     }
 
     /**
@@ -400,7 +462,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @return true if this {@link GVRSceneObject} contains mesh itself.
      */
     public boolean hasMesh() {
-        return getRenderData() != null && getRenderData().getMesh() != null;
+        GVRRenderData rdata = getRenderData();
+        return rdata != null && rdata.getMesh() != null;
     }
 
     /**
@@ -412,20 +475,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New camera.
      */
     public void attachCamera(GVRCamera camera) {
-        mCamera = camera;
-        camera.setOwnerObject(this);
-        NativeSceneObject.attachCamera(getNative(), camera.getNative());
+        attachComponent(camera);
     }
 
     /**
      * Detach the object's current {@link GVRCamera camera}.
      */
     public void detachCamera() {
-        if (mCamera != null) {
-            NativeSceneObject.detachCamera(getNative());
-            mCamera.setOwnerObject(null);
-            mCamera = null;
-        }
+        detachComponent(GVRCamera.getComponentType());
     }
 
     /**
@@ -435,7 +492,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         is currently attached, returns {@code null}.
      */
     public GVRCamera getCamera() {
-        return mCamera;
+        return (GVRCamera) getComponent(GVRCamera.getComponentType());
     }
 
     /**
@@ -448,20 +505,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New camera rig.
      */
     public void attachCameraRig(GVRCameraRig cameraRig) {
-        mCameraRig = cameraRig;
-        cameraRig.setOwnerObject(this);
-        NativeSceneObject.attachCameraRig(getNative(), cameraRig.getNative());
+        attachComponent(cameraRig);
     }
 
     /**
      * Detach the object's current {@link GVRCameraRig camera rig}.
      */
     public void detachCameraRig() {
-        if (mCameraRig != null) {
-            NativeSceneObject.detachCameraRig(getNative());
-            mCameraRig.setOwnerObject(null);
-            mCameraRig = null;
-        }
+        detachComponent(GVRCameraRig.getComponentType());
     }
 
     /**
@@ -471,7 +522,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         camera rig is currently attached, returns {@code null}.
      */
     public GVRCameraRig getCameraRig() {
-        return mCameraRig;
+        return (GVRCameraRig) getComponent(GVRCameraRig.getComponentType());
     }
 
     /**
@@ -481,7 +532,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @return The light attached to the object. If no light is currently attached, returns null.
      */
     public GVRLightBase getLight() {
-        return mLight;
+        return (GVRLightBase) getComponent(GVRLightBase.getComponentType());
     }
     
     /**
@@ -494,48 +545,16 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param light New light to attach.
      */
     public void attachLight(GVRLightBase light) {
-        mLight = light;
-        light.setOwnerObject(this);
+        attachComponent(light);
     }
     
     /**
      * Detach the object's current {@link GVRLightTemplate}.
      */
     public void detachLight() {
-        if (mLight != null) {
-            mLight.setOwnerObject(null);
-            mLight = null;
-        }
+        detachComponent(GVRLightBase.getComponentType());
     }
     
-    /**
-     * Get a component of a specific class from this scene object.
-     * @param compClass class derived from GVRComponent
-     *                  (like GVRTransform, GVRRenderData, GVRLightTemplate, ...)
-     * @return component of specified class or null if none.
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends GVRComponent> T getComponent(Class<? extends GVRComponent> compClass) {
-        if (GVRTransform.class.isAssignableFrom(compClass)) {
-            return (T) mTransform;
-        }
-        if (GVRRenderData.class.isAssignableFrom(compClass)) {
-            return (T) mRenderData;
-        }
-        if (GVRLightBase.class.isAssignableFrom(compClass)) {
-            return (T) mLight;
-        }
-        if (GVRCamera.class.isAssignableFrom(compClass)) {
-            return (T) mCamera;
-        }
-        if (GVRCameraRig.class.isAssignableFrom(compClass)) {
-            return (T) mCameraRig;
-        }
-        if (GVREyePointeeHolder.class.isAssignableFrom(compClass)) {
-            return (T) mEyePointeeHolder;
-        }
-        return null;
-    }
     
     /**
      * Get all components of a specific class from this scene object and its descendants.
@@ -543,13 +562,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *                  (like GVRTransform, GVRRenderData, GVRLightTemplate, ...)
      * @return ArrayList of components with the specified class.
      */
-    public <T extends GVRComponent> ArrayList<T> getAllComponents(Class<? extends GVRComponent> compClass) {
+    @SuppressWarnings("unchecked")
+    public <T extends GVRComponent> ArrayList<T> getAllComponents(long type) {
         ArrayList<T> list = new ArrayList<T>();
-        T component = getComponent(compClass);
+        GVRComponent component = getComponent(type);
         if (component != null)
-            list.add(component);
+            list.add((T) component);
         for (GVRSceneObject child : mChildren) {
-            ArrayList<T> temp = child.getAllComponents(compClass);
+            ArrayList<T> temp = child.getAllComponents(type);
             list.addAll(temp);
         }
         return list;
@@ -565,16 +585,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            New {@link GVREyePointeeHolder}.
      */
     public void attachEyePointeeHolder(GVREyePointeeHolder eyePointeeHolder) {
-        // see GVRPicker.findObjects
-        GVRPicker.sFindObjectsLock.lock();
-        try {
-            mEyePointeeHolder = eyePointeeHolder;
-            eyePointeeHolder.setOwnerObject(this);
-            NativeSceneObject.attachEyePointeeHolder(getNative(),
-                eyePointeeHolder.getNative());
-        } finally {
-            GVRPicker.sFindObjectsLock.unlock();
-        }
+        attachComponent(eyePointeeHolder);
     }
 
     /**
@@ -615,17 +626,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Detach the object's current {@link GVREyePointeeHolder}.
      */
     public void detachEyePointeeHolder() {
-        // see GVRPicker.findObjects
-        GVRPicker.sFindObjectsLock.lock();
-        try {
-            if (mEyePointeeHolder != null) {
-                mEyePointeeHolder.setOwnerObject(null);
-            }
-            mEyePointeeHolder = null;
-            NativeSceneObject.detachEyePointeeHolder(getNative());
-        } finally {
-            GVRPicker.sFindObjectsLock.unlock();
-        }
+        detachComponent(GVREyePointeeHolder.getComponentType());
     }
 
     /**
@@ -636,7 +637,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         {@code null}.
      */
     public GVREyePointeeHolder getEyePointeeHolder() {
-        return mEyePointeeHolder;
+        return (GVREyePointeeHolder) getComponent(GVREyePointeeHolder.getComponentType());
     }
 
     /**
@@ -672,7 +673,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @since 2.0.2
      */
     public boolean getPickingEnabled() {
-        return mEyePointeeHolder != null;
+        return getComponent(GVREyePointeeHolder.getComponentType()) != null;
     }
 
     /**
@@ -717,7 +718,38 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
+    /**
+     * Add the owner of {@code childComponent} as a child of this object. (owner object of the
+     * Adding a child will increase the
+     * {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * If the component is not attached to a scene object this function does nothing.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} whose owner is added as a child of this
+     *            object.
+     */
+    public void addChildObject(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            addChildObject(childComponent.getOwnerObject());
+        }
+    }
 
+    /**
+     * Remove the owner of {@code childComponent} as a child of this object.
+     * Removing a child will decrease
+     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * If the component is not attached to a scene object this function does nothing.
+     * 
+     * @param childComponent
+     *            {@link GVRComponent Component} whose owner is removeed as a child of this
+     *            object.
+     */
+    public void removeChildObject(GVRComponent childComponent) {
+        if (childComponent.getOwnerObject() != null) {
+            removeChildObject(childComponent.getOwnerObject());
+        }
+    }
+    
     /**
      * Performs case-sensitive search
      * 
@@ -995,35 +1027,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
     }
 
-    /**
-     * Add {@code childComponent} as a child of this object (owner object of the
-     * component is added as child). Adding a component will increase the
-     * {@link getChildrenCount() getChildrenCount()} for this scene object.
-     * 
-     * @param childComponent
-     *            {@link GVRComponent Component} to add as a child of this
-     *            object.
-     */
-    public void addChildObject(GVRComponent childComponent) {
-        if (childComponent.getOwnerObject() != null) {
-            addChildObject(childComponent.getOwnerObject());
-        }
-    }
-
-    /**
-     * Remove {@code childComponent} as a child of this object (owner object of
-     * the component is removed as child). Removing a component will decrease
-     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
-     * 
-     * @param childComponent
-     *            {@link GVRComponent Component} to remove as a child of this
-     *            object.
-     */
-    public void removeChildObject(GVRComponent childComponent) {
-        if (childComponent.getOwnerObject() != null) {
-            removeChildObject(childComponent.getOwnerObject());
-        }
-    }
 
     /**
      * Generate debug dump of the tree from the scene object.
@@ -1039,16 +1042,18 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         sb.append(this.getName());
         sb.append("]");
         sb.append(System.lineSeparator());
-
-        if (mRenderData == null) {
+        GVRRenderData rdata = getRenderData();
+        GVRTransform trans = getTransform();
+        
+        if (rdata == null) {
             sb.append(Log.getSpaces(indent + 2));
             sb.append("RenderData: null");
             sb.append(System.lineSeparator());
         } else {
-            mRenderData.prettyPrint(sb, indent + 2);
+            rdata.prettyPrint(sb, indent + 2);
         }
         sb.append(Log.getSpaces(indent + 2));
-        sb.append("Transform: "); sb.append(mTransform);
+        sb.append("Transform: "); sb.append(trans);
         sb.append(System.lineSeparator());
 
         // dump its children
@@ -1144,27 +1149,12 @@ class NativeSceneObject {
 
     static native void setName(long sceneObject, String name);
 
-    static native void attachTransform(long sceneObject, long transform);
-
-    static native void detachTransform(long sceneObject);
-
-    static native void attachRenderData(long sceneObject, long renderData);
-
-    static native void detachRenderData(long sceneObject);
-
-    static native void attachCamera(long sceneObject, long camera);
-
-    static native void detachCamera(long sceneObject);
-
-    static native void attachCameraRig(long sceneObject, long cameraRig);
-
-    static native void detachCameraRig(long sceneObject);
-
-    static native void attachEyePointeeHolder(long sceneObject,
-            long eyePointeeHolder);
-
-    static native void detachEyePointeeHolder(long sceneObject);
-
+    static native boolean attachComponent(long sceneObject, long component);
+    
+    static native boolean detachComponent(long sceneObject, long type);
+    
+    static native long findComponent(long sceneObject, long type);
+    
     static native long setParent(long sceneObject, long parent);
 
     static native void addChildObject(long sceneObject, long child);

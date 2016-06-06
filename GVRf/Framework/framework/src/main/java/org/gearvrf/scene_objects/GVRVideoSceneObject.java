@@ -56,34 +56,36 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
+     * @param texture
+     *            a {@link GVRExternalTexture} to link with {@link MediaPlayer}
      * @param videoType
      *            One of the {@linkplain GVRVideoType video type constants}
      * @throws IllegalArgumentException
      *             on an invalid {@code videoType} parameter
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
-            final MediaPlayer mediaPlayer, int videoType) {
+                               final MediaPlayer mediaPlayer, final GVRExternalTexture texture,
+                               int videoType) {
         super(gvrContext, mesh);
-        final GVRExternalTexture texture = new GVRExternalTexture(gvrContext);
-
         GVRMaterialShaderId materialType;
+
         switch (videoType) {
-        case GVRVideoType.MONO:
-            materialType = GVRShaderType.OES.ID;
-            break;
-        case GVRVideoType.HORIZONTAL_STEREO:
-            materialType = GVRShaderType.OESHorizontalStereo.ID;
-            break;
-        case GVRVideoType.VERTICAL_STEREO:
-            materialType = GVRShaderType.OESVerticalStereo.ID;
-            break;
-        default:
-            try {
-                texture.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            throw new IllegalArgumentException();
+            case GVRVideoType.MONO:
+                materialType = GVRShaderType.OES.ID;
+                break;
+            case GVRVideoType.HORIZONTAL_STEREO:
+                materialType = GVRShaderType.OESHorizontalStereo.ID;
+                break;
+            case GVRVideoType.VERTICAL_STEREO:
+                materialType = GVRShaderType.OESVerticalStereo.ID;
+                break;
+            default:
+                try {
+                    texture.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                throw new IllegalArgumentException();
         }
         GVRMaterial material = new GVRMaterial(gvrContext, materialType);
         material.setMainTexture(texture);
@@ -97,6 +99,28 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                 gvrContext.registerDrawFrameListener(mVideo);
             }
         });
+    }
+
+    /**
+     * Play a video on a {@linkplain GVRSceneObject scene object} with an
+     * arbitrarily complex geometry, using the Android {@link MediaPlayer}
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param mesh
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}
+     * @param mediaPlayer
+     *            an Android {@link MediaPlayer}
+     * @param videoType
+     *            One of the {@linkplain GVRVideoType video type constants}
+     * @throws IllegalArgumentException
+     *             on an invalid {@code videoType} parameter
+     */
+    public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
+            final MediaPlayer mediaPlayer, int videoType) {
+        this(gvrContext, mesh, mediaPlayer, new GVRExternalTexture(gvrContext), videoType);
     }
 
     /**

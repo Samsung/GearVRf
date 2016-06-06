@@ -1,0 +1,46 @@
+<!--
+  ~ Copyright 2016 Samsung Electronics Co., LTD
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+    <string name="app_name">IOSupportLibrary</string>
+    <string name="settingsTitle">I/O Settings</string>
+    <string name="backButton">X</string>
+    <string name="titleLaser">Laser</string>
+    <string name="titleObject">Object</string>
+    <string name="soundOff">Off</string>
+    <string name="soundOn">On</string>
+    <string name="soundsTitle">Sounds</string>
+    <string name="cursorsTitle">Cursors</string>
+    <string name="devicesTitle">Devices</string>
+    <string name="cursorEnable">Enable</string>
+    <string name="cursorDisable">Disable</string>
+    <string name="cursorListTitle">Cursor Settings</string>
+    <string name="deviceListTitle">Device List</string>
+    <string name="no_io_device">NA</string>
+    <string name="cursor_type_laser">LASER</string>
+    <string name="cursor_type_object">OBJECT</string>
+    <string name="cursor_enabled">enabled</string>
+    <string name="cursor_disabled">disabled</string>
+    <string name="done">Done</string>
+    <string name="cursor_type">Cursor Type: </string>
+    <string name="select_cursor_theme">Select Cursor Theme</string>
+    <string name="select_io_device">Select I/O Device</string>
+    <string name="cursor_sounds">Sound</string>
+    <string name="close_window">X</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="io_device_change">This will change the Input Device you are currently using!</string>
+</resources>

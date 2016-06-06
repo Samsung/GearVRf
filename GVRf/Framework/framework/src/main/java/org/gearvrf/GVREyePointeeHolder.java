@@ -104,6 +104,11 @@ public class GVREyePointeeHolder extends GVRComponent {
         registerNativePointer(nativePointer);
     }
 
+
+    static public long getComponentType() {
+        return NativeEyePointeeHolder.getComponentType();
+    }
+    
     private void registerNativePointer(long nativePointer) {
         sEyePointeeHolders.put(nativePointer,
                 new WeakReference<GVREyePointeeHolder>(this));
@@ -128,6 +133,15 @@ public class GVREyePointeeHolder extends GVRComponent {
         return super.getOwnerObject();
     }
 
+    public void setOwnerObject(GVRSceneObject owner) {
+        GVRPicker.sFindObjectsLock.lock();
+        try {
+            super.setOwnerObject(owner);
+        } finally {
+            GVRPicker.sFindObjectsLock.unlock();
+        }
+    }
+    
     /**
      * Is this holder enabled?
      * 
@@ -224,6 +238,8 @@ public class GVREyePointeeHolder extends GVRComponent {
 
 class NativeEyePointeeHolder {
     static native long ctor();
+
+    static native long getComponentType();
 
     static native boolean getEnable(long eyePointeeHolder);
 

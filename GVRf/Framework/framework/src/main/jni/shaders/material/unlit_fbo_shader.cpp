@@ -21,6 +21,7 @@
 #include "objects/components/render_data.h"
 #include "objects/textures/texture.h"
 #include "util/gvr_gl.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"

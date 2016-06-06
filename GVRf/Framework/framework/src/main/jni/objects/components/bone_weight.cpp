@@ -10,7 +10,7 @@
 
 namespace gvr {
 BoneWeight::BoneWeight()
-: Component()
+: Component(BoneWeight::getComponentType())
 , vertexId_(0)
 , weight_(0)
 {

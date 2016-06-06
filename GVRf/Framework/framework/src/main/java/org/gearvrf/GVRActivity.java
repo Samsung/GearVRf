@@ -26,8 +26,10 @@ import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
+import org.joml.Vector2f;
 
 import android.app.Activity;
+import android.transition.Scene;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -65,6 +67,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     private GVRScript mGVRScript;
     private GVRMain mGVRMain;
     private VrAppSettings mAppSettings;
+    private static View mFullScreenView = null;
 
     // Group of views that are going to be drawn
     // by some GVRViewSceneObject to the scene.
@@ -252,6 +255,20 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             throw new IllegalArgumentException(
                     "You can not set orientation to portrait for GVRF apps.");
         }
+    }
+
+    public View getFullScreenView() {
+        if (mFullScreenView != null)
+            return mFullScreenView;
+        VrapiActivityHandler handler = (VrapiActivityHandler) mActivityHandler;
+        if (handler != null) {
+            Vector2f dim = handler.getScreenDimensions();
+            ViewGroup.LayoutParams layout = new ViewGroup.LayoutParams((int) dim.x, (int) dim.y);
+            mFullScreenView = new View(this);
+            mFullScreenView.setLayoutParams(layout);
+            mRenderableViewGroup.addView(mFullScreenView);
+        }
+        return mFullScreenView;
     }
 
     /**
@@ -457,7 +474,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 otherwise just the children's bounds may be refreshed. */
                 mRenderableViewGroup.setClipChildren(false);
 
-                mRenderableViewGroup.addView(view);;
+                mRenderableViewGroup.addView(view);
             }
         });
     }

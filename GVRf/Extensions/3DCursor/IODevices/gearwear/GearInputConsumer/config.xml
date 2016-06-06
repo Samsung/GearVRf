@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016. Samsung Electronics Co., LTD
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License..
+  -->
+<widget
+    xmlns:tizen="http://tizen.org/ns/widgets"
+    xmlns="http://www.w3.org/ns/widgets"
+    id="http://com.samsung.mpl/GearInputConsumer"
+    version="1.0.5"
+    viewmodes="maximized">
+    <tizen:app-control>
+        <tizen:src name="index.html" />
+        <tizen:operation
+            name="http://tizen.org/appcontrol/operation/remote_settings" />
+    </tizen:app-control>
+    <tizen:application
+        id="9Cn8PII7rk.GearInputConsumer"
+        package="9Cn8PII7rk"
+        required_version="1.0" />
+    <content src="index.html" />
+    <feature name="http://tizen.org/feature/screen.size.all" />
+    <icon src="icon.png" />
+    <tizen:metadata
+        key="AccessoryServicesLocation"
+        value="res/xml/accessoryservices.xml" />
+    <name>GearInputConsumer</name>
+    <tizen:privilege
+        name="http://developer.samsung.com/privilege/accessoryprotocol" />
+    <tizen:profile name="wearable" />
+</widget>

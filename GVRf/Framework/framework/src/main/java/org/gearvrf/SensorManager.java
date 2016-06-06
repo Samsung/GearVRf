@@ -31,9 +31,17 @@ class SensorManager {
 
     // Create a HashMap to keep reference counts
     private final Map<GVRBaseSensor, Integer> sensors;
+    private static SensorManager instance;
 
-    SensorManager() {
+    private SensorManager() {
         sensors = new HashMap<GVRBaseSensor, Integer>();
+    }
+
+    static SensorManager getInstance(){
+        if(instance == null){
+            instance = new SensorManager();
+        }
+        return instance;
     }
 
     /**
@@ -65,7 +73,7 @@ class SensorManager {
         }
     }
 
-    void recurseSceneObject(GVRCursorController controller,
+    private void recurseSceneObject(GVRCursorController controller,
             GVRSceneObject object, GVRBaseSensor sensor,
             boolean markActiveNodes) {
         GVRBaseSensor objectSensor = object.getSensor();

@@ -29,6 +29,8 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTransform_ctor(JNIEnv * env,
         jobject obj);
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTransform_getComponentType(JNIEnv * env, jobject obj);
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_NativeTransform_getPositionX(JNIEnv * env,
         jobject obj, jlong jtransform);
@@ -153,6 +155,11 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTransform_ctor(JNIEnv * env,
         jobject obj) {
     return reinterpret_cast<jlong>(new Transform());
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTransform_getComponentType(JNIEnv * env, jobject obj) {
+    return Transform::getComponentType();
 }
 
 JNIEXPORT jfloat JNICALL

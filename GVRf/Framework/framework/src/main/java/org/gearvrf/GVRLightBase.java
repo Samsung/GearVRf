@@ -62,11 +62,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
-        super(gvrContext, NativeLight.ctor(), parent);
-        if (parent != null)
-        {
-            NativeLight.setParent(getNative(), parent.getNative());
-        }
+        super(gvrContext, NativeLight.ctor());
+        setOwnerObject(parent);
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         vertexDescriptor = null;
         setFloat("enabled", 1.0f);
@@ -94,6 +91,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
+
+    static public long getComponentType() {
+        return NativeLight.getComponentType();
+    }
 
     /**
      * Enable or disable shadow casting by this light.
@@ -145,23 +146,15 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     public void setOwnerObject(GVRSceneObject newOwner)
     {
-        if (owner == newOwner) { return; }
+        if (owner == newOwner)
+            return;
         if (newOwner != null)
         {
             if (owner == null)
-            {
                 getGVRContext().registerDrawFrameListener(this);
-            }
-            NativeLight.setParent(getNative(), newOwner.getNative());
         }
-        else
-        {
-            if (owner != null)
-            {
-                getGVRContext().unregisterDrawFrameListener(this);
-            }
-            NativeLight.setParent(getNative(), 0);
-        }
+        else if (owner != null)
+            getGVRContext().unregisterDrawFrameListener(this);
         super.setOwnerObject(newOwner);
     }
 
@@ -458,8 +451,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     
     public void onDrawFrame(float frameTime)
-    {
-      
+    {     
         if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
@@ -505,6 +497,8 @@ class NativeLight
 {
     static native long ctor();
 
+    static native long getComponentType();
+
     static native void enable(long light);
 
     static native void disable(long light);
@@ -520,8 +514,6 @@ class NativeLight
     static native float[] getVec4(long light, String key);
 
     static native void setVec4(long light, String key, float x, float y, float z, float w);
-
-    static native void setParent(long light, long sceneobj);
 
     static native String getLightID(long light);
 

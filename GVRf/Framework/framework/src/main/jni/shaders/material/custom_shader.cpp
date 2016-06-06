@@ -242,8 +242,10 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
             Texture* texture = material->getTextureNoError(it->key);
-            if (texture == NULL)
+            if (texture == NULL) {
             	LOGE(" texture is null for %s", render_data->owner_object()->name().c_str());
+            	return;
+            }
             // If any texture is not ready, do not render the material at all
             if (!texture->isReady()) {
             	LOGE(" texture is not ready for %s", render_data->owner_object()->name().c_str());

@@ -26,8 +26,9 @@
 #include "util/gvr_log.h"
 
 namespace gvr {
+
 Camera::Camera() :
-        Component(), background_color_r_(0.0f), background_color_g_(0.0f), background_color_b_(
+        Component(Camera::getComponentType()), background_color_r_(0.0f), background_color_g_(0.0f), background_color_b_(
                 0.0f), background_color_a_(1.0f), post_effect_data_() {
 }
 

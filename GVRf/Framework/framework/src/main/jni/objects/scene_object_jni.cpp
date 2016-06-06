@@ -35,46 +35,17 @@ extern "C" {
     Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
             jobject obj, jlong jscene_object, jstring name);
 
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_attachTransform(JNIEnv * env,
-            jobject obj, jlong jscene_object, jlong jtransform);
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_attachComponent(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jcomponent);
 
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_detachTransform(JNIEnv * env,
-            jobject obj, jlong jscene_object);
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong type);
 
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_attachRenderData(
-            JNIEnv * env, jobject obj, jlong jscene_object, jlong jrender_data);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_detachRenderData(
-            JNIEnv * env, jobject obj, jlong jscene_object);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_attachCamera(JNIEnv * env,
-            jobject obj, jlong jscene_object, jlong jcamera);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_detachCamera(JNIEnv * env,
-            jobject obj, jlong jscene_object);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_attachCameraRig(JNIEnv * env,
-            jobject obj, jlong jscene_object, jlong jcamera_rig);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_detachCameraRig(JNIEnv * env,
-            jobject obj, jlong jscene_object);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_attachEyePointeeHolder(
-            JNIEnv * env, jobject obj, jlong jscene_object,
-            jlong jeye_pointee_holder);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_detachEyePointeeHolder(
-            JNIEnv * env, jobject obj, jlong jscene_object);
+    JNIEXPORT long JNICALL
+    Java_org_gearvrf_NativeSceneObject_findComponent(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong type);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeSceneObject_addChildObject(JNIEnv * env,
@@ -142,82 +113,31 @@ Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
     env->ReleaseStringUTFChars(name, native_name);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachTransform(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jtransform) {
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_attachComponent(JNIEnv * env,
+        jobject obj, jlong jscene_object, jlong jcomponent) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    Transform* transform = reinterpret_cast<Transform*>(jtransform);
-    scene_object->attachTransform(scene_object, transform);
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    return scene_object->attachComponent(component);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachTransform(JNIEnv * env,
-        jobject obj, jlong jscene_object) {
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env,
+        jobject obj, jlong jscene_object, jlong type) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->detachTransform();
+    return scene_object->detachComponent(type) != NULL;
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachRenderData(
-        JNIEnv * env, jobject obj, jlong jscene_object, jlong jrender_data) {
+
+JNIEXPORT long JNICALL
+Java_org_gearvrf_NativeSceneObject_findComponent(JNIEnv * env,
+        jobject obj, jlong jscene_object, jlong type) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    scene_object->attachRenderData(scene_object, render_data);
+    Component* component = scene_object->getComponent(type);
+    return (long) component;
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachRenderData(
-        JNIEnv * env, jobject obj, jlong jscene_object) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->detachRenderData();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachCamera(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jcamera) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    Camera* camera = reinterpret_cast<Camera*>(jcamera);
-    scene_object->attachCamera(scene_object, camera);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachCamera(JNIEnv * env,
-        jobject obj, jlong jscene_object) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->detachCamera();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachCameraRig(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jcamera_rig) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
-    scene_object->attachCameraRig(scene_object, camera_rig);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachCameraRig(JNIEnv * env,
-        jobject obj, jlong jscene_object) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->detachCameraRig();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_attachEyePointeeHolder(
-        JNIEnv * env, jobject obj, jlong jscene_object,
-        jlong jeye_pointee_holder) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    EyePointeeHolder* eye_pointee_holder =
-            reinterpret_cast<EyePointeeHolder*>(jeye_pointee_holder);
-    scene_object->attachEyePointeeHolder(scene_object, eye_pointee_holder);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_detachEyePointeeHolder(
-        JNIEnv * env, jobject obj, jlong jscene_object) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->detachEyePointeeHolder();
-}
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeSceneObject_addChildObject(JNIEnv * env,
