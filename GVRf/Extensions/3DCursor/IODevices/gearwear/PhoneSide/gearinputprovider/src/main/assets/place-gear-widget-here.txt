@@ -1,0 +1,2 @@
+Be sure to place the gear, consumer-side widget file here. This widget will automatically be
+installed on the gear by Gear Manager.

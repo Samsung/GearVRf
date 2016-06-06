@@ -1,0 +1,66 @@
+<!--
+  ~ Copyright (c) 2016. Samsung Electronics Co., LTD
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License..
+  -->
+
+<!DOCTYPE resources [
+    <!ELEMENT resources (application)>
+    <!ELEMENT application (serviceProfile)+>
+    <!ATTLIST application name CDATA #REQUIRED>
+    <!ELEMENT serviceProfile (supportedTransports, serviceChannel+) >
+    <!ATTLIST application xmlns:android CDATA #IMPLIED>
+    <!ATTLIST serviceProfile xmlns:android CDATA #IMPLIED>
+    <!ATTLIST serviceProfile serviceImpl CDATA #REQUIRED>
+    <!ATTLIST serviceProfile role (provider | consumer) #REQUIRED>
+    <!ATTLIST serviceProfile name CDATA #REQUIRED>
+    <!ATTLIST serviceProfile id CDATA #REQUIRED>
+    <!ATTLIST serviceProfile version CDATA #REQUIRED>
+    <!ATTLIST serviceProfile serviceLimit (ANY | ONE_ACCESSORY | ONE_PEERAGENT)  "ANY">
+    <!ATTLIST serviceProfile serviceTimeout CDATA "10">
+    <!ELEMENT supportedTransports (transport)+>
+    <!ATTLIST supportedTransports xmlns:android CDATA #IMPLIED>
+    <!ELEMENT transport EMPTY>
+    <!ATTLIST transport xmlns:android CDATA #IMPLIED>
+    <!ATTLIST transport type (TRANSPORT_WIFI|TRANSPORT_BT|TRANSPORT_BLE|TRANSPORT_USB) #REQUIRED>
+    <!ELEMENT serviceChannel EMPTY>
+    <!ATTLIST serviceChannel xmlns:android CDATA #IMPLIED>
+    <!ATTLIST serviceChannel id CDATA #REQUIRED>
+    <!ATTLIST serviceChannel dataRate (Low | High | low | high) #REQUIRED>
+    <!ATTLIST serviceChannel priority (Low | Medium | High | low | medium | high) #REQUIRED>
+    <!ATTLIST serviceChannel reliability (enable | disable | ENABLE | DISABLE ) #REQUIRED>
+    ]>
+
+<resources>
+
+    <application name="GearInputProvider">
+        <serviceProfile
+            name="input"
+            id="/system/input"
+            role="provider"
+            serviceImpl="com.samsung.mpl.gearinputprovider.backend.InputProviderService"
+            serviceLimit="ANY"
+            serviceTimeout="10"
+            version="1.0">
+            <supportedTransports>
+                <transport type="TRANSPORT_BT"/>
+            </supportedTransports>
+
+            <serviceChannel
+                dataRate="low"
+                id="104"
+                priority="low"
+                reliability="enable"/>
+        </serviceProfile>
+    </application>
+
+</resources>
