@@ -688,11 +688,11 @@ Objects:  {
 	Video: 326462837152, "Video::file2", "Clip" {
 		Type: "Clip"
 		Properties70:  {
-			P: "Path", "KString", "XRefUrl", "", "cursor_sphere_diffuse_01.png"
+			P: "Path", "KString", "XRefUrl", "", "cursor_sphere_diffuse_01.pkm"
 		}
 		UseMipMap: 0
-		Filename: "cursor_sphere_diffuse_01.png"
-		RelativeFilename: "cursor_sphere_diffuse_01.png"
+		Filename: "cursor_sphere_diffuse_01.pkm"
+		RelativeFilename: "cursor_sphere_diffuse_01.pkm"
 	}
 	Texture: 328393150336, "Texture::file2", "" {
 		Type: "TextureVideoClip"
@@ -704,8 +704,8 @@ Objects:  {
 			P: "UseMaterial", "bool", "", "",1
 		}
 		Media: "Video::file2"
-		FileName: "cursor_sphere_diffuse_01.png"
-		RelativeFilename: "cursor_sphere_diffuse_01.png"
+		FileName: "cursor_sphere_diffuse_01.pkm"
+		RelativeFilename: "cursor_sphere_diffuse_01.pkm"
 		ModelUVTranslation: 0,0
 		ModelUVScaling: 1,1
 		Texture_Alpha_Source: "None"
