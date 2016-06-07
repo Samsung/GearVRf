@@ -757,12 +757,11 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
              if (curr_material->hasUniform("line_width")) {
                  float lineWidth = curr_material->getFloat("line_width");
                  glLineWidth(lineWidth);
-                 shader->render(&rstate, render_data, curr_material);
+             }
+             else {
+                 glLineWidth(1.0f);
              }
          }
-         else {
-             glLineWidth(1.0f);
-        }
          shader->render(&rstate, render_data, curr_material);
     } catch (const std::string &error) {
         LOGE(

@@ -633,6 +633,28 @@ public class GVRMaterial extends GVRHybridObject implements
         }
     }
 
+    /**
+     * Gets the line width for line drawing.
+     * 
+     * @see GVRRenderData.setDrawMode
+     */
+    public float getLineWidth() {
+        return NativeMaterial.getFloat(getNative(), "line_width");
+    }
+    
+    /**
+     * Sets the line width for line drawing.
+     * 
+     * By default, the line width is 1. It is applied when the
+     * draw mode is GL_LINES, GL_LINE_STRIP or GL_LINE_LOOP.
+     * 
+     * @param lineWidth new line width.
+     * @see GVRRenderData.setDrawMode
+     */
+    public void setLineWidth(float lineWidth) {
+        NativeMaterial.setFloat(getNative(), "line_width", lineWidth);
+    }
+    
     public float getFloat(String key) {
         return NativeMaterial.getFloat(getNative(), key);
     }
