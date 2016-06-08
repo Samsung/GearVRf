@@ -175,6 +175,10 @@ public:
         }
     }
 
+    bool hasTexture() const {
+        return (main_texture != NULL) || (textures_.size() > 0);
+    }
+
     bool hasUniform(const std::string& key) const {
         if (vec3s_.find(key) != vec3s_.end()) {
             return true;

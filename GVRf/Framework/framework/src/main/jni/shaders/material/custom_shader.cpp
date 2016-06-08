@@ -278,14 +278,10 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         }
         checkGlError("CustomShader after bones");
     }
-    /*
-     * Update vertex information
-     */
     mesh->bindVertexAttributes(program_->id());
-    mesh->generateVAO();  // setup VAO
-
-    ///////////// uniform /////////
-
+    /*
+     * Update values of uniform variables
+     */
     {
         std::lock_guard<std::mutex> lock(uniformVariablesLock_);
         for (auto it = uniformVariables_.begin(); it != uniformVariables_.end(); ++it) {
@@ -316,7 +312,9 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     if (u_right_ != 0) {
         glUniform1i(u_right_, rstate->uniforms.u_right ? 1 : 0);
     }
-
+    /*
+     * Bind textures
+     */
     int texture_index = 0;
     {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
@@ -326,7 +324,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             texture_index++;
         }
     }
-
     /*
      * Update the uniforms for the lights
      */
@@ -345,11 +342,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     if (castShadow){
     	Light::bindShadowMap(program_->id(), texture_index);
     }
-
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
-    glBindVertexArray(0);
     checkGlError("CustomShader::render");
 }
 
