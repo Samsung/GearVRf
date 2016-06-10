@@ -342,8 +342,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.findComponent
      * @see GVRComponent.getComponentType
      */
-    boolean attachComponent(GVRComponent component) {
-        boolean added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+    public boolean attachComponent(GVRComponent component) {
+        boolean added = true;
+        if (component.getNative() != 0) {
+            added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+        }
         if (added) synchronized (mComponents) {
             long type = component.getType();
             mComponents.put(type, component);
@@ -365,8 +368,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.findComponent
      * @see GVRComponent.getComponentType
      */
-    GVRComponent detachComponent(long type) {
-         boolean removed = NativeSceneObject.detachComponent(getNative(), type);
+    public GVRComponent detachComponent(long type) {
+        boolean removed = NativeSceneObject.detachComponent(getNative(), type);
         if (removed) synchronized (mComponents) {
             GVRComponent component = mComponents.remove(type);
             component.setOwnerObject(null);
@@ -385,7 +388,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.attachComponent
      * @see GVRSceneObject.detachComponent
      */
-    GVRComponent getComponent(long type) {
+    public GVRComponent getComponent(long type) {
         return  mComponents.get(type);
     }
     
@@ -395,7 +398,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param transform
      *            New transform.
      */
-    void attachTransform(GVRTransform transform) {
+    public void attachTransform(GVRTransform transform) {
         attachComponent(transform);
     }
 
@@ -403,7 +406,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Remove the object's {@link GVRTransform transform}. After this call, the
      * object will have no transformations associated with it.
      */
-    void detachTransform() {
+    public void detachTransform() {
         detachComponent(GVRTransform.getComponentType());
     }
 

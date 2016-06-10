@@ -36,7 +36,7 @@ public class GVRSwitch extends GVRBehavior
     protected int mSwitchIndex = -1;
     protected GVRSceneObject mSelected = null;
 
-    protected GVRSwitch(GVRContext gvrContext)
+    public GVRSwitch(GVRContext gvrContext)
     {
         this(gvrContext, 0);
         mType = TYPE_SWITCH;
@@ -115,7 +115,9 @@ public class GVRSwitch extends GVRBehavior
     }
 
     /**
-     * Called each frame before rendering the scene.
+     * Selects the child object to be displayed based
+     * on the switch index. If the switch index does
+     * not reference a valid child, nothing is displayed.
      * It is not called if this behavior is not attached
      * to a {@link GVRSceneObject}.
      */
@@ -130,7 +132,7 @@ public class GVRSwitch extends GVRBehavior
         {
             return;
         }
-        if ((owner.getChildrenCount() == 0) || (mSwitchIndex >= children.size()))
+        if ((owner.getChildrenCount() == 0) || (mSwitchIndex >= owner.getChildrenCount()))
         {
             return;
         }
