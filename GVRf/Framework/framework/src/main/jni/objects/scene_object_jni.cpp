@@ -60,6 +60,14 @@ extern "C" {
             JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 
     JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_isVisible(
+            JNIEnv * env, jobject obj, jlong jscene_object);
+
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_setVisible(
+            JNIEnv * env, jobject obj, jlong jscene_object, bool flag);
+
+    JNIEXPORT bool JNICALL
     Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
             jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
             jfloat rdx, jfloat rdy, jfloat rdz);
@@ -161,6 +169,21 @@ Java_org_gearvrf_NativeSceneObject_isColliding(
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     SceneObject* other_object = reinterpret_cast<SceneObject*>(jother_object);
     return scene_object->isColliding(other_object);
+}
+
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_isVisible(
+        JNIEnv * env, jobject obj, jlong jscene_object) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    return scene_object->visible();
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_setVisible(
+        JNIEnv * env, jobject obj, jlong jscene_object, bool flag) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    scene_object->set_visible(flag);
 }
 
 JNIEXPORT bool JNICALL

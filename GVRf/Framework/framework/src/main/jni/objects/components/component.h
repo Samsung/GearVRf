@@ -30,31 +30,34 @@ class SceneObject;
 class Component: public HybridObject {
 public:
     Component() :
-            HybridObject(), type_(0), owner_object_() {
+            HybridObject(), type_(0), owner_object_(NULL), enabled_(true) {
     }
 
     Component(long long type) :
-            HybridObject(), type_(type), owner_object_() {
+            HybridObject(), type_(type), owner_object_(NULL), enabled_(true) {
     }
 
     Component(SceneObject* owner_object) :
             type_(0),
+            enabled_(true),
             owner_object_(owner_object) {
     }
 
     Component(long long type, SceneObject* owner_object) :
             type_(type),
+            enabled_(true),
             owner_object_(owner_object) {
     }
 
     virtual ~Component() {
+        set_owner_object(NULL);
     }
 
     SceneObject* owner_object() const {
         return owner_object_;
     }
 
-    void set_owner_object(SceneObject* owner_object) {
+    virtual void set_owner_object(SceneObject* owner_object) {
         owner_object_ = owner_object;
     }
 
@@ -66,16 +69,26 @@ public:
         return type_;
     }
 
+    bool enabled() const {
+        return enabled_;
+    }
+
+    virtual void set_enable(bool enable) {
+        enabled_ = enable;
+    }
+
 private:
     Component(const Component& component);
     Component(Component&& component);
     Component& operator=(const Component& component);
     Component& operator=(Component&& component);
 
-private:
+protected:
     SceneObject* owner_object_;
     long long    type_;
+    bool         enabled_;
 };
 
 }
 #endif
+
