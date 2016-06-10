@@ -358,7 +358,7 @@ public class GVRAndroidResource {
                 } else {
                     Log.d(TAG,
                             "Allow local caching, download the resource to local cache");
-                    File file = GVRImporter.downloadFile(context,
+                    File file = GVRAssetLoader.downloadFile(context,
                             url.toString());
                     stream = new MarkingFileInputStream(file);
                     streamState = StreamStates.OPEN;
