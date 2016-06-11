@@ -53,18 +53,8 @@ BoundingBoxShader::~BoundingBoxShader() {
 
 void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
         RenderData* render_data, Material* material) {
-    Mesh* mesh = render_data->mesh();
-
-    mesh->generateVAO();
-
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0);
-    glBindVertexArray(0);
-
     checkGlError("BoundingBoxShader::render");
 }
 

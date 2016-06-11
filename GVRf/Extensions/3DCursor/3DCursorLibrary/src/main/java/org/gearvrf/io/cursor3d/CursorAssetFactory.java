@@ -49,6 +49,7 @@ class CursorAssetFactory {
     private static final String JPG_EXTENSION = ".jpg";
     private static final String JPEG_EXTENSION = ".jpeg";
     private static final String PNG_EXTENSION = ".png";
+    private static final String PKM_EXTENSION = ".pkm";
     private static final String ZIP_EXTENSION = ".zip";
 
     static CursorAsset readAsset(XmlPullParser parser, GVRContext context, CursorType type) throws
@@ -152,8 +153,8 @@ class CursorAssetFactory {
     }
 
     private static boolean isTextureFile(String fileName) {
-        return (fileName.endsWith(PNG_EXTENSION) || fileName.endsWith
-                (JPG_EXTENSION) || fileName.endsWith(JPEG_EXTENSION));
+        return (fileName.endsWith(PNG_EXTENSION) || fileName.endsWith(JPG_EXTENSION) ||
+                fileName.endsWith(PKM_EXTENSION) || fileName.endsWith(JPEG_EXTENSION));
     }
 
     private static MeshCursorAsset getNew2DMeshAsset(GVRContext context, String src, CursorType

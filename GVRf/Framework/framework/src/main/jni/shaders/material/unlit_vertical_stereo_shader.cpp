@@ -68,7 +68,6 @@ UnlitVerticalStereoShader::~UnlitVerticalStereoShader() {
 
 void UnlitVerticalStereoShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
-    Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -86,9 +85,7 @@ void UnlitVerticalStereoShader::render(RenderState* rstate,
         mono_rendering = false;
     }
 
-    mesh->generateVAO();
-
-    glUseProgram(program_->id());
+   glUseProgram(program_->id());
 
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glActiveTexture (GL_TEXTURE0);
@@ -97,12 +94,6 @@ void UnlitVerticalStereoShader::render(RenderState* rstate,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, mono_rendering || rstate->uniforms.u_right ? 1 : 0);
-
-    glBindVertexArray(mesh->getVAOId());
-    glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0);
-    glBindVertexArray(0);
-
     checkGlError("UnlitShader::render");
 }
 

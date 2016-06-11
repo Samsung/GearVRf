@@ -173,7 +173,6 @@ TextureShader::~TextureShader() {
 
 void TextureShader::render(RenderState* rstate,
         RenderData* render_data, Material* material) {
-    Mesh* mesh = render_data->mesh();
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -195,8 +194,6 @@ void TextureShader::render(RenderState* rstate,
             use_light = true;
         }
     }
-
-    mesh->generateVAO();
 
     if (use_light) {
         GL(glUseProgram(program_light_->id()));
@@ -243,8 +240,6 @@ void TextureShader::render(RenderState* rstate,
         glUniform4f(u_light_specular_intensity_, light_specular_intensity.r,
                 light_specular_intensity.g, light_specular_intensity.b,
                 light_specular_intensity.a);
-
-        glBindVertexArray(mesh->getVAOId());
     } else {
         glUniformMatrix4fv(u_mvp_no_light_, 1, GL_FALSE,
                 glm::value_ptr(rstate->uniforms.u_mvp));
@@ -252,14 +247,8 @@ void TextureShader::render(RenderState* rstate,
         glUniform1i(u_texture_no_light_, 0);
         glUniform3f(u_color_no_light_, color.r, color.g, color.b);
         glUniform1f(u_opacity_no_light_, opacity);
-        glBindVertexArray(mesh->getVAOId());
     }
-
-    GL(glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT,
-            0));
-    GL(glBindVertexArray(0));
-
-    checkGlError("TextureShader::render");
+   checkGlError("TextureShader::render");
 }
 
 }

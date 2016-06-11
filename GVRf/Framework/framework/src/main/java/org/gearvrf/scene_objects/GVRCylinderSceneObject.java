@@ -540,6 +540,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         params.SliceNumber = sliceNumber;
         params.StackNumber = stackNumber;
         params.FacingOut = facingOut;
+        params.Material = new GVRMaterial(gvrContext);
         
         generateComplexCylinderObject(gvrContext, params, stackSegmentNumber, sliceSegmentNumber);
     }
