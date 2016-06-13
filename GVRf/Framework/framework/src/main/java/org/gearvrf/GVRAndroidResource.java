@@ -548,7 +548,7 @@ public class GVRAndroidResource {
      * each include the {@link GVRAndroidResource} that you are loading. This
      * lets you use the same callback implementation with multiple resources.
      */
-    public interface Callback<T extends GVRHybridObject> {
+    public interface Callback<T extends GVRObject> {
         /**
          * Resource load succeeded.
          * 
@@ -583,7 +583,7 @@ public class GVRAndroidResource {
      * system gets to it. The {@link #stillWanted(GVRAndroidResource)} method
      * lets you cancel unneeded loads.
      */
-    public interface CancelableCallback<T extends GVRHybridObject> extends
+    public interface CancelableCallback<T extends GVRObject> extends
             Callback<T> {
         /**
          * Do you still want this resource?

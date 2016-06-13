@@ -40,13 +40,17 @@ import org.gearvrf.jassimp2.AiLightType;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.GVRJassimpSceneObject;
 import org.gearvrf.jassimp2.Jassimp;
+import org.gearvrf.jassimp2.JassimpFileIO;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
+import org.gearvrf.utility.GVRByteArray;
 import org.gearvrf.utility.Log;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Environment;
 import org.gearvrf.jassimp.AiColor;
+import org.gearvrf.utility.ResourceCache;
+import org.gearvrf.utility.ResourceReader;
 
 /**
  * {@link GVRAssetLoader} provides methods for importing 3D models and making them
@@ -240,6 +244,61 @@ public final class GVRAssetLoader {
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
+    // IO Handler for Jassimp
+    static class ResourceVolumeIO implements JassimpFileIO {
+        private GVRResourceVolume volume;
+
+        ResourceVolumeIO(GVRResourceVolume volume) {
+            this.volume = volume;
+        }
+
+        @Override
+        public byte[] read(String path) {
+            GVRAndroidResource resource = null;
+            try {
+                resource = volume.openResource(path);
+                byte data[] = ResourceReader.readStream(resource.getStream());
+                return data;
+            } catch (IOException e) {
+                return null;
+            } finally {
+                if (resource != null) {
+                    resource.closeStream();
+                }
+            }
+        }
+
+        protected GVRResourceVolume getResourceVolume() {
+            return volume;
+        }
+    };
+
+    static class CachedVolumeIO implements JassimpFileIO {
+        protected ResourceVolumeIO uncachedIO;
+        protected ResourceCache<GVRByteArray> cache;
+
+        public CachedVolumeIO(ResourceVolumeIO uncachedIO) {
+            this.uncachedIO = uncachedIO;
+            cache = new ResourceCache<GVRByteArray>();
+        }
+
+        @Override
+        public byte[] read(String path) {
+            try {
+                GVRAndroidResource resource = uncachedIO.getResourceVolume().openResource(path);
+                GVRByteArray byteArray = cache.get(resource);
+                if (byteArray == null) {
+                    resource.closeStream(); // needed to avoid hanging
+                    byteArray = GVRByteArray.wrap(uncachedIO.read(path));
+                    cache.put(resource, byteArray);
+                }
+                return byteArray.getByteArray();
+            } catch (IOException e) {
+                return null;
+            }
+        }
+    }
+
     /**
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene.
@@ -335,37 +394,29 @@ public final class GVRAssetLoader {
     {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
+        GVRResourceVolume volume = null;
+
         try
         {
             switch (volumeType)
             {
                 case ANDROID_ASSETS:
-                assimpScene = Jassimp.importAssetFile(filePath,
-                        GVRJassimpAdapter.get().toJassimpSettings(settings),
-                        mContext.getContext().getAssets());
+                case LINUX_FILESYSTEM:
+                case NETWORK:
+                    volume = new GVRResourceVolume(mContext, volumeType,
+                            FileNameUtils.getParentDirectory(filePath));
                 break;
     
                 case ANDROID_SDCARD:
-                String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-                assimpScene = Jassimp.importFile(sdPath + File.separator + filePath,
-                        GVRJassimpAdapter.get().toJassimpSettings(settings));
-                break;
-    
-                case LINUX_FILESYSTEM:
-                assimpScene = Jassimp.importFile(filePath,
-                        GVRJassimpAdapter.get().toJassimpSettings(settings));
-                break;
-    
-                case NETWORK:
-                // filePath is a URL in this case
-                File tmpFile = downloadFile(mContext.getActivity(), filePath);
-                if (tmpFile != null) {
-                    assimpScene = Jassimp.importFile(tmpFile.getAbsolutePath(),
-                            GVRJassimpAdapter.get().toJassimpSettings(settings));
-                    tmpFile.delete();
-                }
+                    String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+                    volume = new GVRResourceVolume(mContext, volumeType,
+                            FileNameUtils.getParentDirectory(sdPath + File.separator + filePath));
                 break;
             }
+
+            assimpScene = Jassimp.importFileEx(FileNameUtils.getFilename(filePath),
+                    GVRJassimpAdapter.get().toJassimpSettings(settings),
+                    new CachedVolumeIO(new ResourceVolumeIO(volume)));
         }
         catch (IOException ex)
         {
@@ -391,9 +442,7 @@ public final class GVRAssetLoader {
         importLights(lights, lightlist);
 
         GVRJassimpSceneObject sceneOb = new GVRJassimpSceneObject(mContext, assimpScene,
-                new GVRResourceVolume(mContext, volumeType,
-                        FileNameUtils.getParentDirectory(filePath),
-                        cacheEnabled), lightlist);
+                volume, lightlist);
         mContext.getEventManager().sendEvent(this,
                 IAssetEvents.class,
                 "onModelLoaded", new Object[] { mContext, (GVRSceneObject) sceneOb, filePath });

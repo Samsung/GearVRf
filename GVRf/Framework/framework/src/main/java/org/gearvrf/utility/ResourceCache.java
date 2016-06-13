@@ -25,6 +25,7 @@ import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRAndroidResource.Callback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
+import org.gearvrf.GVRObject;
 import org.gearvrf.GVRTexture;
 
 /**
@@ -39,7 +40,7 @@ import org.gearvrf.GVRTexture;
  * 
  * @since 2.0.2
  */
-public class ResourceCache<T extends GVRHybridObject> {
+public class ResourceCache<T extends GVRObject> {
     private static final String TAG = Log.tag(ResourceCache.class);
 
     private final Map<GVRAndroidResource, WeakReference<T>> cache //
@@ -110,7 +111,7 @@ public class ResourceCache<T extends GVRHybridObject> {
         return new BitmapTextureCallbackWrapper(cache, callback);
     }
 
-    private static class CallbackWrapper<T extends GVRHybridObject> implements
+    private static class CallbackWrapper<T extends GVRObject> implements
             Callback<T> {
 
         protected final ResourceCache<T> cache;
@@ -136,7 +137,7 @@ public class ResourceCache<T extends GVRHybridObject> {
         }
     }
 
-    private static class CancelableCallbackWrapper<T extends GVRHybridObject>
+    private static class CancelableCallbackWrapper<T extends GVRObject>
             extends CallbackWrapper<T> implements CancelableCallback<T> {
 
         private CancelableCallbackWrapper(ResourceCache<T> cache,

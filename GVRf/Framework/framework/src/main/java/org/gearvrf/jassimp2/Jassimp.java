@@ -101,6 +101,35 @@ public final class Jassimp {
      * Imports a file via assimp without post processing.
      *
      * @param filename the file to import
+     * @param fileIO the fileIO handler
+     * @return the loaded scene
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFileEx(String filename, JassimpFileIO fileIO) throws IOException {
+        return importFileEx(filename, EnumSet.noneOf(AiPostProcessSteps.class), fileIO);
+    }
+
+    /**
+     * Imports a file via assimp.
+     *
+     * @param filename the file to import
+     * @param postProcessing post processing flags
+     * @param fileIO the fileIO handler
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFileEx(String filename,
+                                       Set<AiPostProcessSteps> postProcessing,
+                                       JassimpFileIO fileIO) throws IOException {
+
+        return aiImportFileEx(filename, AiPostProcessSteps.toRawValue(
+                postProcessing), fileIO);
+    }
+
+    /**
+     * Imports a file via assimp without post processing.
+     *
+     * @param filename the file to import
      * @return the loaded scene
      * @throws IOException if an error occurs
      */
@@ -304,6 +333,19 @@ public final class Jassimp {
      */
     private static native AiScene aiImportFile(String filename, 
             long postProcessing) throws IOException;
+
+    /**
+     * The native interface.
+     *
+     * @param filename the file to load
+     * @param postProcessing post processing flags
+     * @param fileIO the fileIO handler
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    private static native AiScene aiImportFileEx(String filename,
+                                                 long postProcessing,
+                                                 JassimpFileIO fileIO) throws IOException;
 
     /**
      * The native interface.

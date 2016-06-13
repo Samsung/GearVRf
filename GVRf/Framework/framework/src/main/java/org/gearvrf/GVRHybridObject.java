@@ -30,7 +30,7 @@ import java.util.Map;
  * Descendant classes all have native (JNI) implementations; this base class
  * manages the native lifecycles.
  */
-public abstract class GVRHybridObject {
+public abstract class GVRHybridObject extends GVRObject {
 
     private static final String TAG = Log.tag(GVRHybridObject.class);
 
