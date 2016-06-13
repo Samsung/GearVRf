@@ -17,6 +17,10 @@ package org.gearvrf;
 
 /** A {@link GVRCamera camera} with a perspective projection. */
 public class GVRPerspectiveCamera extends GVRCamera implements GVRCameraClippingDistanceInterface {
+
+    final static float TO_DEGREES = (float) (180.0f/Math.PI);
+    final static float TO_RADIANS = 1/TO_DEGREES;
+
     /**
      * Constructor.
      * 
@@ -31,7 +35,7 @@ public class GVRPerspectiveCamera extends GVRCamera implements GVRCameraClipping
      * @return The global default 'y' field of view, in degrees.
      */
     public static float getDefaultFovY() {
-        return NativePerspectiveCamera.getDefaultFovY();
+        return NativePerspectiveCamera.getDefaultFovY() * TO_DEGREES;
     }
 
     /**
@@ -41,7 +45,7 @@ public class GVRPerspectiveCamera extends GVRCamera implements GVRCameraClipping
      *            The default 'y' field of view, in degrees.
      */
     public static void setDefaultFovY(float fovY) {
-        NativePerspectiveCamera.setDefaultFovY(fovY);
+        NativePerspectiveCamera.setDefaultFovY(fovY * TO_RADIANS);
     }
 
     /**
@@ -107,7 +111,7 @@ public class GVRPerspectiveCamera extends GVRCamera implements GVRCameraClipping
      * @return The 'y' field of view, in degrees, for this camera.
      */
     public float getFovY() {
-        return NativePerspectiveCamera.getFovY(getNative());
+        return NativePerspectiveCamera.getFovY(getNative()) * TO_DEGREES;
     }
 
     /**
@@ -117,7 +121,7 @@ public class GVRPerspectiveCamera extends GVRCamera implements GVRCameraClipping
      *            The 'y' field of view, in degrees.
      */
     public void setFovY(float fovY) {
-        NativePerspectiveCamera.setFovY(getNative(), fovY);
+        NativePerspectiveCamera.setFovY(getNative(), fovY * TO_RADIANS);
     }
 
     /**
