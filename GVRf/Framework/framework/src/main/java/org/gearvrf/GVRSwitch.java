@@ -33,8 +33,7 @@ import java.util.List;
 public class GVRSwitch extends GVRBehavior
 {
     static private long TYPE_SWITCH = (System.currentTimeMillis() & 0xfffffff);
-    protected int mSwitchIndex = -1;
-    protected GVRSceneObject mSelected = null;
+    protected int mSwitchIndex = 0;
 
     public GVRSwitch(GVRContext gvrContext)
     {
@@ -105,7 +104,7 @@ public class GVRSwitch extends GVRBehavior
         }
         for (GVRSceneObject child : owner.children())
         {
-            if (child.getName() == childName)
+            if (child.getName().equals(childName))
             {
                 mSwitchIndex = i;
                 return;
