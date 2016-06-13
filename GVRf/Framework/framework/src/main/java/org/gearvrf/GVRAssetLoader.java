@@ -398,22 +398,8 @@ public final class GVRAssetLoader {
 
         try
         {
-            switch (volumeType)
-            {
-                case ANDROID_ASSETS:
-                case LINUX_FILESYSTEM:
-                case NETWORK:
-                    volume = new GVRResourceVolume(mContext, volumeType,
-                            FileNameUtils.getParentDirectory(filePath));
-                break;
-    
-                case ANDROID_SDCARD:
-                    String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-                    volume = new GVRResourceVolume(mContext, volumeType,
-                            FileNameUtils.getParentDirectory(sdPath + File.separator + filePath));
-                break;
-            }
-
+            volume = new GVRResourceVolume(mContext, volumeType,
+                    FileNameUtils.getParentDirectory(filePath));
             assimpScene = Jassimp.importFileEx(FileNameUtils.getFilename(filePath),
                     GVRJassimpAdapter.get().toJassimpSettings(settings),
                     new CachedVolumeIO(new ResourceVolumeIO(volume)));
