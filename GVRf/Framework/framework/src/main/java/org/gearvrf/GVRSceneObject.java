@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -63,7 +64,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
-    private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
+    private final List<GVRSceneObject> mChildren = new CopyOnWriteArrayList<GVRSceneObject>();
     private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
     /**
@@ -700,9 +701,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void addChildObject(GVRSceneObject child) {
-        synchronized (mChildren) {
-            mChildren.add(child);
-        }
+        mChildren.add(child);
         child.mParent = this;
         NativeSceneObject.addChildObject(getNative(), child.getNative());
     }
@@ -715,9 +714,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void removeChildObject(GVRSceneObject child) {
-        synchronized (mChildren) {
-            mChildren.remove(child);
-        }
+        mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
@@ -914,9 +911,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         this object.
      */
     public int getChildrenCount() {
-        synchronized (mChildren) {
-            return mChildren.size();
-        }
+        return mChildren.size();
     }
 
     /**
@@ -930,9 +925,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         at that position.
      */
     public GVRSceneObject getChildByIndex(int index) {
-        synchronized (mChildren) {
-            return mChildren.get(index);
-        }
+        return mChildren.get(index);
     }
 
     /**
@@ -1011,10 +1004,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @since 2.0.0
      */
     public List<GVRSceneObject> getChildren() {
-        synchronized (mChildren) {
-            return Collections.unmodifiableList(
-                    new ArrayList<GVRSceneObject>(mChildren));
-        }
+        return Collections.unmodifiableList(mChildren);
     }
 
     /** The internal list - do not make any changes! */

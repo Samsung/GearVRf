@@ -83,7 +83,7 @@ private:
     Component& operator=(const Component& component);
     Component& operator=(Component&& component);
 
-protected:
+private:
     SceneObject* owner_object_;
     long long    type_;
     bool         enabled_;
