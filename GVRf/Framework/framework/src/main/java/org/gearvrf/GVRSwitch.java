@@ -131,12 +131,9 @@ public class GVRSwitch extends GVRBehavior
         {
             return;
         }
-        if ((owner.getChildrenCount() == 0) || (mSwitchIndex >= owner.getChildrenCount()))
-        {
-            return;
-        }
         int i = 0;
-        for (GVRSceneObject child : owner.children())
+        List<GVRSceneObject> children = owner.rawGetChildren();
+        for (GVRSceneObject child : children)
         {
             child.setEnable(i++ == mSwitchIndex);
         }
