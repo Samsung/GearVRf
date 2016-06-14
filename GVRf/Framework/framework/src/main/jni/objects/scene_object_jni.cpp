@@ -60,11 +60,11 @@ extern "C" {
             JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 
     JNIEXPORT bool JNICALL
-    Java_org_gearvrf_NativeSceneObject_isVisible(
+    Java_org_gearvrf_NativeSceneObject_isEnabled(
             JNIEnv * env, jobject obj, jlong jscene_object);
 
     JNIEXPORT bool JNICALL
-    Java_org_gearvrf_NativeSceneObject_setVisible(
+    Java_org_gearvrf_NativeSceneObject_setEnable(
             JNIEnv * env, jobject obj, jlong jscene_object, bool flag);
 
     JNIEXPORT bool JNICALL
@@ -173,17 +173,17 @@ Java_org_gearvrf_NativeSceneObject_isColliding(
 
 
 JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeSceneObject_isVisible(
+Java_org_gearvrf_NativeSceneObject_isEnabled(
         JNIEnv * env, jobject obj, jlong jscene_object) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    return scene_object->visible();
+    return scene_object->enabled();
 }
 
 JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeSceneObject_setVisible(
+Java_org_gearvrf_NativeSceneObject_setEnable(
         JNIEnv * env, jobject obj, jlong jscene_object, bool flag) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->set_visible(flag);
+    scene_object->set_enable(flag);
 }
 
 JNIEXPORT bool JNICALL

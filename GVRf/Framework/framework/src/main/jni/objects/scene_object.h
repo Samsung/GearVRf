@@ -50,6 +50,14 @@ public:
         name_ = name;
     }
 
+    bool enabled() const {
+        return enabled_;
+    }
+
+    void set_enable(bool enable) {
+        enabled_ = enable;
+    }
+
     void set_in_frustum(bool in_frustum = true) {
         in_frustum_ = in_frustum;
     }
@@ -164,6 +172,7 @@ private:
     const int check_frames_ = 12;
     int vis_count_;
     bool visible_;
+    bool enabled_;
     bool in_frustum_;
     bool query_currently_issued_;
     GLuint *queries_ = nullptr;

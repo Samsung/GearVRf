@@ -806,27 +806,27 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Designates whether the scene object should be visible or not.
+     * Designates whether the scene object should be displayed or not.
      * If a scene object is marked as not visible, none of its children
      * will be displayed either. This function only controls whether
      * your application wants to display the object and its children.
      * It does not tell you if GearVRf culled the object.
      * 
-     * @return true if scene object is visible, else false.
+     * @return true if scene object should be displayed, else false.
      */
-    public boolean isVisible() {
-        return NativeSceneObject.isVisible(getNative());
+    public boolean isEnabled() {
+        return NativeSceneObject.isEnabled(getNative());
     }
  
     /**
-     * Designates whether the scene object should be visible or not.
-     * If a scene object is marked as not visible, none of its children
+     * Designates whether the scene object should be displayed or not.
+     * If a scene object is not enabled, none of its children
      * will be displayed either.
      * 
      * @param visible if true the object will be displayed, if false it will not be.
      */
-    public void setVisible(boolean visible) {
-        NativeSceneObject.setVisible(getNative(), visible);
+    public void setEnable(boolean enable) {
+        NativeSceneObject.setEnable(getNative(), enable);
     }
     
     /**
@@ -1190,9 +1190,9 @@ class NativeSceneObject {
 
     static native boolean isColliding(long sceneObject, long otherObject);
 
-    static native boolean isVisible(long sceneObject);
+    static native boolean isEnabled(long sceneObject);
 
-    static native void setVisible(long sceneObject, boolean flag);
+    static native void setEnable(long sceneObject, boolean flag);
     
     static native boolean intersectsBoundingVolume(long sceneObject, float rox,
             float roy, float roz, float rdx, float rdy, float rdz);

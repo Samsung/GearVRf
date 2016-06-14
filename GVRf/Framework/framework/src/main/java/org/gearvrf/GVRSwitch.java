@@ -138,7 +138,7 @@ public class GVRSwitch extends GVRBehavior
         int i = 0;
         for (GVRSceneObject child : owner.children())
         {
-            child.setVisible(i++ == mSwitchIndex);
+            child.setEnable(i++ == mSwitchIndex);
         }
     }
     
