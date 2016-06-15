@@ -16,6 +16,7 @@
 package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBaseSensor;
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMesh;
@@ -64,6 +65,7 @@ public class CursorManager {
     // Result of XML parsing in a package of all settings that need displaying.
     private static final String TAG = CursorManager.class.getSimpleName();
     static String SETTINGS_SOURCE = "settings.xml";
+
     private GVRContext context;
     private GVRScene scene;
     private CursorInputManager inputManager;
@@ -86,6 +88,8 @@ public class CursorManager {
     private final GlobalSettings globalSettings;
     //Create a laser cursor to use on the settings menu
     private LaserCursor settingsCursor;
+    private CursorActivationListener activationListener;
+    private List<SelectableBehavior> selectableBehaviors;
 
     /**
      * Create a {@link CursorManager}.
@@ -150,6 +154,7 @@ public class CursorManager {
         unusedCursors = new LinkedList<Cursor>();
         usedIoDevices = new ArrayList<IoDevice>();
         unusedIoDevices = new ArrayList<IoDevice>();
+        selectableBehaviors = new ArrayList<SelectableBehavior>();
         cursorSensor = new CursorSensor(context);
 
         try {
@@ -550,7 +555,8 @@ public class CursorManager {
      * <p/>
      *
      * The listener notifies the application whenever a Cursor is added/removed from the
-     * manager.
+     * manager. The {@link CursorActivationListener#onActivated(Cursor)} method is automatically
+     * called for all active {@link Cursor}s when a new {@link CursorActivationListener} is added.
      *
      * @param listener the {@link CursorActivationListener} to be added.<code>null</code>
      *                 objects are ignored.
@@ -560,6 +566,9 @@ public class CursorManager {
         if (null == listener) {
             // ignore null input
             return;
+        }
+        for (Cursor cursor : cursors) {
+            listener.onActivated(cursor);
         }
         activationListeners.add(listener);
     }
@@ -678,6 +687,7 @@ public class CursorManager {
         if (null == object) {
             throw new IllegalArgumentException("GVRSceneObject cannot be null");
         }
+        addSelectableBehavior(object);
 
         float scale = getDistance(object);
         if (scale > cursorScale) {
@@ -690,6 +700,27 @@ public class CursorManager {
         object.setSensor(cursorSensor);
         object.getEventReceiver().addListener(cursorSensor);
         return true;
+    }
+
+    private void addSelectableBehavior(GVRSceneObject object) {
+        SelectableBehavior selectableBehavior = (SelectableBehavior) object.getComponent(
+                SelectableBehavior.getComponentType());
+        if(selectableBehavior == null) {
+            selectableBehavior = (SelectableBehavior) object.getComponent(MovableBehavior.
+                    getComponentType());
+        }
+        if(selectableBehavior != null) {
+            Log.d(TAG,"Adding a Selectable Object");
+            selectableBehaviors.add(selectableBehavior);
+            if(activationListener == null) {
+                createLocalActivationListener();
+            }
+            for(Cursor cursor: cursors) {
+                selectableBehavior.onCursorActivated(cursor);
+            }
+        } else {
+            Log.d(TAG,"Scene Object is not selectable");
+        }
     }
 
     private float getDistance(GVRSceneObject object) {
@@ -881,5 +912,59 @@ public class CursorManager {
         } catch (IOException e) {
             Log.d(TAG, "Could not save settings to file", e);
         }
+    }
+
+    private void createLocalActivationListener() {
+        activationListener = new CursorActivationListener() {
+
+            @Override
+            public void onDeactivated(Cursor cursor) {
+                Log.d(TAG, "Cursor DeActivated:" + cursor.getName());
+                cursor.removeCursorEventListener(cursorEventListener);
+                for (SelectableBehavior selectableBehavior : selectableBehaviors) {
+                    selectableBehavior.onCursorDeactivated(cursor);
+                }
+            }
+
+            @Override
+            public void onActivated(Cursor cursor) {
+                Log.d(TAG, "On CursorActivated");
+                for (SelectableBehavior selectableBehavior : selectableBehaviors) {
+                    selectableBehavior.onCursorActivated(cursor);
+                }
+                cursor.addCursorEventListener(cursorEventListener);
+            }
+        };
+        addCursorActivationListener(activationListener);
+    }
+
+    private CursorEventListener cursorEventListener = new CursorEventListener() {
+
+        @Override
+        public void onEvent(CursorEvent event) {
+            GVRSceneObject sceneObject = event.getObject();
+            if(!callEventHandler(sceneObject,event)) {
+                callEventHandler(sceneObject.getParent(),event);
+            }
+        }
+    };
+
+    private boolean callEventHandler(GVRSceneObject sceneObject, CursorEvent event) {
+        SelectableBehavior selectableBehavior = (SelectableBehavior) sceneObject.getComponent
+                (SelectableBehavior.getComponentType());
+        if(selectableBehavior == null) {
+            selectableBehavior = (SelectableBehavior) sceneObject.getComponent(MovableBehavior
+                    .getComponentType());
+        }
+        if(selectableBehavior != null) {
+            selectableBehavior.handleCursorEvent(event);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    GVRContext getGvrContext() {
+        return context;
     }
 }
