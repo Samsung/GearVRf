@@ -407,7 +407,7 @@ public final class GVRAssetLoader {
         catch (IOException ex)
         {
             assimpScene = null;
-            mContext.getEventManager().sendEvent(this,
+            mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onModelError", new Object[] { mContext, ex.getMessage(), filePath });
             throw ex;
@@ -415,7 +415,7 @@ public final class GVRAssetLoader {
 
         if (assimpScene == null) {
             String errmsg = "Cannot load model from path " + filePath + " from " + volumeType;
-            mContext.getEventManager().sendEvent(this,
+            mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onModelError", new Object[] { mContext, errmsg, filePath });
             throw new IOException(errmsg);
@@ -429,7 +429,7 @@ public final class GVRAssetLoader {
 
         GVRJassimpSceneObject sceneOb = new GVRJassimpSceneObject(mContext, assimpScene,
                 volume, lightlist);
-        mContext.getEventManager().sendEvent(this,
+        mContext.getEventManager().sendEvent(mContext,
                 IAssetEvents.class,
                 "onModelLoaded", new Object[] { mContext, (GVRSceneObject) sceneOb, filePath });
         return sceneOb;
@@ -700,14 +700,14 @@ public final class GVRAssetLoader {
                 @Override
                 public void loaded(GVRTexture texture, GVRAndroidResource ignored) {
                     meshMaterial.setMainTexture(texture);
-                    context.getEventManager().sendEvent(GVRAssetLoader.this,
+                    context.getEventManager().sendEvent(mContext,
                             IAssetEvents.class,
                             "onTextureLoaded", new Object[] { context, texture, texDiffuseFileName });
                 }
 
                 @Override
                 public void failed(Throwable t, GVRAndroidResource androidResource) {
-                    context.getEventManager().sendEvent(GVRAssetLoader.this,
+                    context.getEventManager().sendEvent(mContext,
                             IAssetEvents.class,
                             "onTextureError", new Object[] { context, t.getMessage(), texDiffuseFileName });
                 }
