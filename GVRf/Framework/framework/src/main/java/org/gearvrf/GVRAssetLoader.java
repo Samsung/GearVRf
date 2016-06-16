@@ -258,7 +258,11 @@ public final class GVRAssetLoader {
             GVRAndroidResource resource = null;
             try {
                 resource = volume.openResource(path);
-                byte data[] = ResourceReader.readStream(resource.getStream());
+                InputStream stream = resource.getStream();
+                if (stream == null) {
+                    return null;
+                }
+                byte data[] = ResourceReader.readStream(stream);
                 return data;
             } catch (IOException e) {
                 return null;
