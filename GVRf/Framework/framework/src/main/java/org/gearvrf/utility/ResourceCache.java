@@ -25,7 +25,6 @@ import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRAndroidResource.Callback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
-import org.gearvrf.GVRObject;
 import org.gearvrf.GVRTexture;
 
 /**
@@ -40,7 +39,7 @@ import org.gearvrf.GVRTexture;
  * 
  * @since 2.0.2
  */
-public class ResourceCache<T extends GVRObject> {
+public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase {
     private static final String TAG = Log.tag(ResourceCache.class);
 
     private final Map<GVRAndroidResource, WeakReference<T>> cache //
@@ -50,27 +49,12 @@ public class ResourceCache<T extends GVRObject> {
     public void put(GVRAndroidResource androidResource, T resource) {
         Log.d(TAG, "put resource %s to cache", androidResource);
 
-        cache.put(androidResource, new WeakReference<T>(resource));
+        super.put(androidResource, resource);
     }
 
     /** Get the cached resource, or {@code null} */
     public T get(GVRAndroidResource androidResource) {
-        WeakReference<T> reference = cache.get(androidResource);
-        if (reference == null) {
-            // Not in map
-            // Log.d(TAG, "get(%s) returning %s", androidResource, null);
-            return null;
-        }
-        T cached = reference.get();
-        if (cached == null) {
-            // In map, but not in memory
-            cache.remove(androidResource);
-        } else {
-            // No one will ever read this stream
-            androidResource.closeStream();
-        }
-        // Log.d(TAG, "get(%s) returning %s", androidResource, cached);
-        return cached;
+        return (T) super.get(androidResource);
     }
 
     /**
@@ -111,7 +95,7 @@ public class ResourceCache<T extends GVRObject> {
         return new BitmapTextureCallbackWrapper(cache, callback);
     }
 
-    private static class CallbackWrapper<T extends GVRObject> implements
+    private static class CallbackWrapper<T extends GVRHybridObject> implements
             Callback<T> {
 
         protected final ResourceCache<T> cache;
@@ -137,7 +121,7 @@ public class ResourceCache<T extends GVRObject> {
         }
     }
 
-    private static class CancelableCallbackWrapper<T extends GVRObject>
+    private static class CancelableCallbackWrapper<T extends GVRHybridObject>
             extends CallbackWrapper<T> implements CancelableCallback<T> {
 
         private CancelableCallbackWrapper(ResourceCache<T> cache,

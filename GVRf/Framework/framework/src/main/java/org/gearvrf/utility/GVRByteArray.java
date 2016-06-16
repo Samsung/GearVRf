@@ -15,9 +15,7 @@
 
 package org.gearvrf.utility;
 
-import org.gearvrf.GVRObject;
-
-public class GVRByteArray extends GVRObject {
+public class GVRByteArray {
     protected byte[] byteArray;
 
     private GVRByteArray(byte[] byteArray) {

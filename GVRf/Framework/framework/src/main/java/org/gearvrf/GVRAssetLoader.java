@@ -50,6 +50,7 @@ import android.content.res.AssetManager;
 import android.os.Environment;
 import org.gearvrf.jassimp.AiColor;
 import org.gearvrf.utility.ResourceCache;
+import org.gearvrf.utility.ResourceCacheBase;
 import org.gearvrf.utility.ResourceReader;
 
 /**
@@ -275,11 +276,11 @@ public final class GVRAssetLoader {
 
     static class CachedVolumeIO implements JassimpFileIO {
         protected ResourceVolumeIO uncachedIO;
-        protected ResourceCache<GVRByteArray> cache;
+        protected ResourceCacheBase<GVRByteArray> cache;
 
         public CachedVolumeIO(ResourceVolumeIO uncachedIO) {
             this.uncachedIO = uncachedIO;
-            cache = new ResourceCache<GVRByteArray>();
+            cache = new ResourceCacheBase<GVRByteArray>();
         }
 
         @Override
