@@ -146,6 +146,7 @@ void Transform::translate(float x, float y, float z) {
     invalidate(false);
 }
 
+// angle in radians
 void Transform::setRotationByAxis(float angle, float x, float y, float z) {
     rotation_ = glm::angleAxis(angle, glm::vec3(x, y, z));
     invalidate(true);
@@ -156,11 +157,13 @@ void Transform::rotate(float w, float x, float y, float z) {
     invalidate(true);
 }
 
+// angle in radians
 void Transform::rotateByAxis(float angle, float x, float y, float z) {
     rotation_ = glm::angleAxis(angle, glm::vec3(x, y, z)) * rotation_;
     invalidate(true);
 }
 
+// angle in radians
 void Transform::rotateByAxisWithPivot(float angle, float axis_x, float axis_y,
         float axis_z, float pivot_x, float pivot_y, float pivot_z) {
     glm::quat axis_rotation = glm::angleAxis(angle,

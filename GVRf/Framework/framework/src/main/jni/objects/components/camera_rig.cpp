@@ -100,7 +100,7 @@ void CameraRig::attachCenterCamera(PerspectiveCamera* const center_camera) {
     }
 
     float half_ipd = camera_separation_distance_ * 0.5f;
-    float theta = (center_camera->fov_y() * 0.5f) * (M_PI/180.0f);
+    float theta = (center_camera->fov_y() * 0.5f);
     float tan_theta = tan(theta);
     float z = half_ipd * (1.0f/tan_theta);
     t->set_position(0.0f, 0.0f, z);
@@ -114,7 +114,7 @@ void CameraRig::reset() {
 void CameraRig::resetYaw() {
     glm::vec3 look_at = glm::rotate(rotation_sensor_data_.quaternion(),
             glm::vec3(0.0f, 0.0f, -1.0f));
-    float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
+    float yaw = atan2f(-look_at.x, -look_at.z);
     complementary_rotation_ = glm::angleAxis(-yaw, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
@@ -122,9 +122,8 @@ void CameraRig::resetYawPitch() {
     glm::vec3 look_at = glm::rotate(rotation_sensor_data_.quaternion(),
             glm::vec3(0.0f, 0.0f, -1.0f));
     float pitch = atan2f(look_at.y,
-            sqrtf(look_at.x * look_at.x + look_at.z * look_at.z)) * 180.0f
-            / M_PI;
-    float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
+            sqrtf(look_at.x * look_at.x + look_at.z * look_at.z));
+    float yaw = atan2f(-look_at.x, -look_at.z);
     glm::quat quat = glm::angleAxis(pitch, glm::vec3(1.0f, 0.0f, 0.0f));
     quat = glm::angleAxis(yaw, glm::vec3(0.0f, 1.0f, 0.0f)) * quat;
     complementary_rotation_ = glm::inverse(quat);
@@ -165,16 +164,15 @@ void CameraRig::setRotation(const glm::quat& transform_rotation) {
     } else if (camera_rig_type_ == YAW_ONLY) {
         glm::vec3 look_at = glm::rotate(transform_rotation,
                 glm::vec3(0.0f, 0.0f, -1.0f));
-        float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
+        float yaw = atan2f(-look_at.x, -look_at.z);
         transform->set_rotation(
                 glm::angleAxis(yaw, glm::vec3(0.0f, 1.0f, 0.0f)));
     } else if (camera_rig_type_ == ROLL_FREEZE) {
         glm::vec3 look_at = glm::rotate(transform_rotation,
                 glm::vec3(0.0f, 0.0f, -1.0f));
         float pitch = atan2f(look_at.y,
-                sqrtf(look_at.x * look_at.x + look_at.z * look_at.z)) * 180.0f
-                / M_PI;
-        float yaw = atan2f(-look_at.x, -look_at.z) * 180.0f / M_PI;
+                sqrtf(look_at.x * look_at.x + look_at.z * look_at.z));
+        float yaw = atan2f(-look_at.x, -look_at.z);
         transform->set_rotation(
                 glm::angleAxis(pitch, glm::vec3(1.0f, 0.0f, 0.0f)));
         transform->rotateByAxis(yaw, 0.0f, 1.0f, 0.0f);
