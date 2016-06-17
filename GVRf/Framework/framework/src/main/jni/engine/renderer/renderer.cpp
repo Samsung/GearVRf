@@ -403,8 +403,8 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
  */
 void Renderer::setRenderStates(RenderData* render_data, RenderState& rstate){
 
-    if (!rstate.render_mask || !render_data->render_mask())
-        return;
+    if(!(rstate.render_mask & render_data->render_mask()))
+    	return;
 
     if (render_data->offset()) {
         GL(glEnable (GL_POLYGON_OFFSET_FILL));
