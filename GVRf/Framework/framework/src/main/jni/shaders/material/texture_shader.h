@@ -21,7 +21,7 @@
 #define TEXTURE_SHADER_H_
 
 #include "shaderbase.h"
-
+#include <vector>
 namespace gvr {
 class GLProgram;
 
@@ -31,6 +31,8 @@ public:
     virtual ~TextureShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
+    void render_batch(std::vector<glm::mat4>& model_matrix,
+              RenderData* render_data,  RenderState& rstate, unsigned int, int);
 
 private:
     TextureShader(const TextureShader& texture_shader);
@@ -41,6 +43,8 @@ private:
 private:
     GLProgram* program_light_;
     GLProgram* program_no_light_;
+    GLProgram* program_light_batching_;
+    GLProgram* program_no_light_batching_;
 
     GLuint u_mvp_no_light_;
     GLuint u_texture_no_light_;
@@ -61,6 +65,29 @@ private:
     GLuint u_light_ambient_intensity_;
     GLuint u_light_diffuse_intensity_;
     GLuint u_light_specular_intensity_;
+
+    GLuint u_vp_no_light_batching;
+    GLuint u_matrices_no_light_batching;
+    GLuint u_texture_no_light_batching;
+    GLuint u_opacity_no_light_batching_;
+    GLuint u_color_no_light_batching_;
+
+    GLuint u_view_no_light_batching;
+    GLuint u_vp_light_batching;
+    GLuint u_matrices_light_batching;
+    GLuint u_view_light_batching;
+    GLuint u_texture_light_batching;
+    GLuint u_opacity_light_batching_;
+    GLuint u_color_light_batching_;
+
+    GLuint u_light_pos_batching_;
+    GLuint u_material_ambient_color_batching_;
+    GLuint u_material_diffuse_color_batching_;
+    GLuint u_material_specular_color_batching_;
+    GLuint u_material_specular_exponent_batching_;
+    GLuint u_light_ambient_intensity_batching_;
+    GLuint u_light_diffuse_intensity_batching_;
+    GLuint u_light_specular_intensity_batching_;
 };
 
 }

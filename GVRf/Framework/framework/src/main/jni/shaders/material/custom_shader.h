@@ -62,7 +62,6 @@ public:
     void addUniformVec4Key(const std::string& variable_name, const std::string& key);
     void addUniformMat4Key(const std::string& variable_name, const std::string& key);
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
-    static int getGLTexture(int n);
     GLuint getProgramId();
 private:
     CustomShader(const CustomShader& custom_shader);

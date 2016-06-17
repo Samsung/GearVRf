@@ -32,73 +32,81 @@
 
 namespace gvr {
 Mesh* Mesh::createBoundingBox() {
+    if(bounding_box_mesh_ == nullptr || !have_bounding_volume_)
+    {
+        if(!bounding_box_mesh_)
+            bounding_box_mesh_ = new Mesh();
 
-    Mesh* mesh = new Mesh();
+        bounding_box_mesh_->vertices_.clear();
+        bounding_box_mesh_->vertices_.reserve(1024);
 
-    getBoundingVolume(); // Make sure bounding_volume is valid
+        bounding_box_mesh_->indices_.clear();
+        bounding_box_mesh_->indices_.reserve(1024);
 
-    glm::vec3 min_corner = bounding_volume.min_corner();
-    glm::vec3 max_corner = bounding_volume.max_corner();
+        getBoundingVolume(); // Make sure bounding_volume is valid
 
-    float min_x = min_corner[0];
-    float min_y = min_corner[1];
-    float min_z = min_corner[2];
-    float max_x = max_corner[0];
-    float max_y = max_corner[1];
-    float max_z = max_corner[2];
+        glm::vec3 min_corner = bounding_volume.min_corner();
+        glm::vec3 max_corner = bounding_volume.max_corner();
 
-    mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, max_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, max_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, min_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, min_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, max_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, max_y, max_z));
+        float min_x = min_corner[0];
+        float min_y = min_corner[1];
+        float min_z = min_corner[2];
+        float max_x = max_corner[0];
+        float max_y = max_corner[1];
+        float max_z = max_corner[2];
 
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(3);
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, max_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, max_y, min_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, min_y, max_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, min_y, max_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(min_x, max_y, max_z));
+        bounding_box_mesh_->vertices_.push_back(glm::vec3(max_x, max_y, max_z));
 
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(3);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(3);
 
-    mesh->indices_.push_back(4);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(3);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(5);
 
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(4);
-    mesh->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(4);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(6);
 
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(4);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(4);
+        bounding_box_mesh_->indices_.push_back(6);
 
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(3);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(1);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(0);
+        bounding_box_mesh_->indices_.push_back(5);
+        bounding_box_mesh_->indices_.push_back(4);
 
-    return mesh;
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(7);
+        bounding_box_mesh_->indices_.push_back(3);
+        bounding_box_mesh_->indices_.push_back(2);
+        bounding_box_mesh_->indices_.push_back(6);
+        bounding_box_mesh_->indices_.push_back(7);
+    }
+    return bounding_box_mesh_;
 }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
@@ -207,7 +215,86 @@ void Mesh::bindVertexAttributes(GLuint programID)
     }
     unSetVaoDirty();
 }
+void Mesh::updateVBOs(unsigned int vtx_count, unsigned int idx_start, unsigned int indices_count, std::vector<float>& matrix_indices,
+		const std::vector<glm::vec3>& vertices, std::vector<unsigned short>& indices, const std::vector<glm::vec2>& texcords,
+		const std::vector<glm::vec3>& normals){
 
+	if(vert_vboID_ == GVR_INVALID || norm_vboID_ == GVR_INVALID
+            || tex_vboID_ == GVR_INVALID || triangle_vboID_ ==GVR_INVALID){
+        std::string error = "VAO is not created ";
+        throw error;
+        return;
+    }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
+    // map the buffer
+    unsigned short *mapped =
+        reinterpret_cast<unsigned short*>(
+            glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*idx_start,sizeof(unsigned short) * (indices_count - idx_start),
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT));
+
+    // copy data into the mapped memory
+    std::copy(indices.begin() + idx_start,indices.begin() + indices_count, mapped);
+    // unmap the buffer
+    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+
+
+    /// vertices
+    glBindBuffer(GL_ARRAY_BUFFER, vert_vboID_);
+
+    // map the buffer
+    glm::vec3 *vtx_mapped =
+        reinterpret_cast<glm::vec3*>(
+            glMapBufferRange(GL_ARRAY_BUFFER, vtx_count *sizeof(glm::vec3) ,sizeof(glm::vec3) * vertices.size(),
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT ));
+
+    // copy data into the mapped memory
+    std::copy(vertices.begin(), vertices.end(), vtx_mapped);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
+
+    // Texcords
+    glBindBuffer(GL_ARRAY_BUFFER, tex_vboID_);
+
+    // map the buffer
+    glm::vec2 *texcords_mapped =
+        reinterpret_cast<glm::vec2*>(
+            glMapBufferRange(GL_ARRAY_BUFFER, vtx_count *sizeof(glm::vec2),sizeof(glm::vec2) * texcords.size(),
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT ));
+
+
+    // copy data into the mapped memory
+    std::copy(texcords.begin(),texcords.end(), texcords_mapped);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
+    // Normals
+    glBindBuffer(GL_ARRAY_BUFFER, norm_vboID_);
+
+    // map the buffer
+    glm::vec3 *normals_mapped =
+        reinterpret_cast<glm::vec3*>(
+            glMapBufferRange(GL_ARRAY_BUFFER, vtx_count *sizeof(glm::vec3),sizeof(glm::vec3) * vertices.size(),
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT ));
+
+    // copy data into the mapped memory
+    std::copy(normals.begin(),normals.end(), normals_mapped);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
+
+    GLuint vboid = float_vboids["a_matrix_index"];
+    glBindBuffer(GL_ARRAY_BUFFER, vboid);
+
+    // map the buffer
+   float *matrixidx_mapped =
+        reinterpret_cast<float*>(
+            glMapBufferRange(GL_ARRAY_BUFFER, vtx_count *sizeof(float),sizeof(float) * vertices.size(),
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT ));
+
+    // copy data into the mapped memory
+    std::copy(matrix_indices.begin()+vtx_count, matrix_indices.begin()+ vtx_count + vertices.size(), matrixidx_mapped);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
+}
 // generate vertex array object
 void Mesh::generateVAO() {
     GLuint tmpID;
@@ -227,7 +314,6 @@ void Mesh::generateVAO() {
 
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
-
     glGenBuffers(1, &triangle_vboID_);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -267,12 +353,13 @@ void Mesh::generateVAO() {
 
     for (auto it = attribute_float_keys_.begin();
             it != attribute_float_keys_.end(); ++it) {
-        glGenBuffers(1, &tmpID);
+       	glGenBuffers(1, &tmpID);
         glBindBuffer(GL_ARRAY_BUFFER, tmpID);
         glBufferData(GL_ARRAY_BUFFER,
                 sizeof(GLfloat) * getFloatVector(it->second).size(),
                 getFloatVector(it->second).data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(it->first);
+        float_vboids[it->second] = tmpID;
         glVertexAttribPointer(it->first, 1, GL_FLOAT, 0, 0, 0);
     }
 
