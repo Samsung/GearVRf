@@ -41,5 +41,39 @@ static void checkGlError(const char* op) {
     }
 }
 
+static void dumpActiveAttribues(GLuint program)
+{
+    GLint numActiveAtributes;
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numActiveAtributes);
+    GLchar attrName[512];
+    LOGI("Attribute dump for Prog %d attr count -- %d", program, numActiveAtributes);
+    for (int i = 0; i < numActiveAtributes; i++)
+    {
+        GLsizei length;
+        GLint size;
+        GLenum type;
+        glGetActiveAttrib(program, i, 512, &length, &size, &type, attrName);
+        LOGI(" Attr (%d) %s type %d size %d", i, attrName, (int) type, (int) size);
+    }
+}
+
+
+static void dumpBufferData(GLfloat* buf, int stride, int length)
+{
+    if (length > 10)
+        length = 3;
+    char buffer[1024];
+    int offset = 0;
+    for (int i = 0; i < length; i++)
+    {
+        offset = 0;
+        for (int j = 0; j < stride; j++)
+        {
+            offset += sprintf(buffer + offset, "(%d) %f ",i* stride + j, buf[i* stride + j]);
+        }
+        LOGI("%s", buffer);
+    }
+}
+
 }
 #endif

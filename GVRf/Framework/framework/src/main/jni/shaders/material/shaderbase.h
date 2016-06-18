@@ -26,6 +26,7 @@
 #include <GLES2/gl2ext.h>
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "gl/gl_program.h"
 
 #include "objects/hybrid_object.h"
 
@@ -40,6 +41,17 @@ public:
     ShaderBase() : program_(nullptr) { };
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material)=0;
+    GLuint getProgramId()
+    {
+        if (program_)
+        {
+            return program_->id();
+        }
+        else
+        {
+            return -1;
+        }
+    }
 
 protected:
     GLProgram* program_;
