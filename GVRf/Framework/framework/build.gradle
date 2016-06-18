@@ -33,7 +33,7 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
 
-        def ndkbuild
+        def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
             ndkbuild = rootProject.property("ANDROID_NDK_HOME")
             ndkbuild += '/'
@@ -52,7 +52,7 @@ android {
     }
 
     task cleanNative(type: Exec) {
-        def ndkbuild
+        def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
             ndkbuild = rootProject.property("ANDROID_NDK_HOME")
             ndkbuild += '/'
