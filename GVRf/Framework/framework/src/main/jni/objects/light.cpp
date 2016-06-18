@@ -51,7 +51,7 @@ public:
         glm::mat4& proj = (glm::mat4&) mProj;
         if (mLight->getMat4(std::string("projMatrix"), proj))
             return proj;
-        return glm::perspective(100.0f, 1.0f, 0.1f, 1000.0f);
+        return glm::perspective(glm::radians(100.0f), 1.0f, 0.1f, 1000.0f);
     }
 };
 

@@ -103,14 +103,17 @@ public:
         return rotation_.z;
     }
 
+    // in radians
     float rotation_yaw() const {
         return glm::yaw(rotation_);
     }
 
+    // in radians
     float rotation_pitch() const {
         return glm::pitch(rotation_);
     }
 
+    // in radians
     float rotation_roll() const {
         return glm::roll(rotation_);
     }
