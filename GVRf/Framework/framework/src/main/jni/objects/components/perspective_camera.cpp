@@ -23,7 +23,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace gvr {
-float PerspectiveCamera::default_fov_y_ = 95.0f;
+float PerspectiveCamera::default_fov_y_ = glm::radians(95.0f);
 float PerspectiveCamera::default_aspect_ratio_ = 1.0f;
 
 glm::mat4 PerspectiveCamera::getProjectionMatrix() const {

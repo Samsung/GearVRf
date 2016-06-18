@@ -159,7 +159,7 @@ void TextureCapturer::render(RenderState* rstate, RenderData* render_data) {
 
 glm::mat4 TextureCapturer::getModelViewMatrix() {
     // Apply rotation
-    glm::quat rot_quat = glm::angleAxis(180.f, glm::vec3(1.f, 0.f, 0.f));
+    glm::quat rot_quat = glm::angleAxis(glm::radians(180.f), glm::vec3(1.f, 0.f, 0.f));
     glm::mat4 mv = glm::mat4_cast(rot_quat);
     return mv;
 }
