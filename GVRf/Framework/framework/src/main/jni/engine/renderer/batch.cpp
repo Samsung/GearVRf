@@ -56,7 +56,7 @@ Batch::Batch(int no_vertices, int no_indices): draw_count(0), vertex_count_(0), 
         normals_.push_back(init_vec3);
         indices_.push_back(0);
     }
-    for(int i=0;i<60;i++)
+    for(int i=0;i<BATCH_SIZE;i++)
         matrices_.push_back(identity);
 }
 
@@ -82,6 +82,7 @@ bool Batch::add(RenderData *render_data, Material *material) {
 	 // if it is not texture shader, dont add into batch, render in normal way
      if(material->shader_type() != Material::ShaderType::TEXTURE_SHADER){
     	 render_data_set_.insert(render_data);
+    	 render_mesh->setMeshModified(false);    // mark mesh clean
     	 return true;
      }
 
@@ -93,6 +94,7 @@ bool Batch::add(RenderData *render_data, Material *material) {
     	 else {
     		 render_data_set_.insert(render_data);
         	 not_batched_ = true;
+        	 render_mesh->setMeshModified(false);    // mark mesh clean
         	 return true;
     	 }
      }

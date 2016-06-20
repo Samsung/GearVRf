@@ -25,7 +25,6 @@
 #include "util/gvr_jni.h"
 #include "util/gvr_log.h"
 #include "util/jni_utils.h"
-
 namespace gvr {
 class CompressedTexture: public Texture {
 public:
@@ -94,7 +93,7 @@ public:
                     imageSize_, data + dataOffset_);
 
             // create mipmaps if it is not external texture
-            if(target!=GL_TEXTURE_EXTERNAL_OES){
+            if(target==GL_TEXTURE_2D){
 				glGenerateMipmap (target);
 				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
             }

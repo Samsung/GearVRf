@@ -36,7 +36,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
-#include <list>
+
 #define BATCH_SIZE 60
 
 namespace gvr {
@@ -141,12 +141,11 @@ struct comparator{
  */
 std::vector<Batch*>batch_set;
 std::unordered_map<Batch*,int>batch_map;
-
+#define MAX_INDICES 400
 /*
  * batch indices stores the indices in render_vector where batches are split
  */
 std::vector<int> batch_indices;
-static int count =0;
 void createBatch(int start, int end){
 	Batch* existing_batch = nullptr;
 
@@ -170,7 +169,7 @@ void createBatch(int start, int end){
 				if(existing_batch && existing_batch->getNumberOfMeshes() < BATCH_SIZE){
 					// add failed because mesh is large try with next batch
 					if(!existing_batch->add(render_data, render_data->pass(0)->material())){
-						Batch* new_batch = new Batch(400,400);
+						Batch* new_batch = new Batch(MAX_INDICES,MAX_INDICES);
 						new_batch->add(render_data,render_data->pass(0)->material() );
 						render_data->setBatch(new_batch);
 						batch_set.push_back(new_batch);
@@ -188,7 +187,7 @@ void createBatch(int start, int end){
 				}
 				else  { // existing batch is full or does not exists
 
-					Batch* new_batch = new Batch(400,400);
+					Batch* new_batch = new Batch(MAX_INDICES,MAX_INDICES);
 					new_batch->add(render_data,render_data->pass(0)->material() );
 					render_data->setBatch(new_batch);
 					batch_set.push_back(new_batch);
@@ -209,7 +208,7 @@ void createBatch(int start, int end){
 					}
 					delete existing_batch;
 
-					Batch* new_batch = new Batch(400,400);
+					Batch* new_batch = new Batch(MAX_INDICES,MAX_INDICES);
 					new_batch->add(render_data,render_data->pass(0)->material() );
 					render_data->setBatch(new_batch);
 					batch_set.push_back(new_batch);
@@ -220,7 +219,7 @@ void createBatch(int start, int end){
 				else if(existing_batch && existing_batch->getNumberOfMeshes() < BATCH_SIZE){
 
 					if(!existing_batch->add(render_data, render_data->pass(0)->material())){
-						Batch* new_batch = new Batch(400,400);
+						Batch* new_batch = new Batch(MAX_INDICES,MAX_INDICES);
 						new_batch->add(render_data,render_data->pass(0)->material() );
 						render_data->setBatch(new_batch);
 						batch_set.push_back(new_batch);
@@ -236,7 +235,7 @@ void createBatch(int start, int end){
 					}
 				}
 				else { //existing batch is full or not exists
-					Batch* new_batch = new Batch(400,400);
+					Batch* new_batch = new Batch(MAX_INDICES,MAX_INDICES);
 					new_batch->add(render_data,render_data->pass(0)->material() );
 					render_data->setBatch(new_batch);
 					batch_set.push_back(new_batch);
@@ -269,7 +268,7 @@ void createBatch(int start, int end){
 					}
 
 					delete current_batch;
-					Batch* new_batch = new Batch(400,400);
+					Batch* new_batch = new Batch(MAX_INDICES,MAX_INDICES);
 					render_data->setBatch(current_batch);
 					current_batch->add(render_data,render_data->pass(0)->material() );
 					batch_set.push_back(new_batch);
