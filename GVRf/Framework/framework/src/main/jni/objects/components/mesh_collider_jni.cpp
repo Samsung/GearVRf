@@ -18,35 +18,43 @@
  * JNI
  ***************************************************************************/
 
-#include "mesh_eye_pointee.h"
+#include "mesh_collider.h"
 
 #include "util/gvr_jni.h"
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMeshEyePointee_ctor(JNIEnv * env,
-        jobject obj, jlong jmesh);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMeshCollider_ctorMesh(JNIEnv * env,
+            jobject obj, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMeshEyePointee_setMesh(JNIEnv * env,
-        jobject obj, jlong jmesh_eye_pointee, jlong jmesh);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMeshCollider_ctor(JNIEnv * env,
+            jobject obj, jboolean useBounds);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeMeshCollider_setMesh(JNIEnv * env,
+            jobject obj, jlong jmesh_eye_pointee, jlong jmesh);
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMeshEyePointee_ctor(JNIEnv * env,
+Java_org_gearvrf_NativeMeshCollider_ctorMesh(JNIEnv * env,
         jobject obj, jlong jmesh) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-    return reinterpret_cast<jlong>(new MeshEyePointee(mesh));
+    return reinterpret_cast<jlong>(new MeshCollider(mesh));
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeMeshEyePointee_setMesh(JNIEnv * env,
+Java_org_gearvrf_NativeMeshCollider_setMesh(JNIEnv * env,
         jobject obj, jlong jmesh_eye_pointee, jlong jmesh) {
-    MeshEyePointee* mesh_eye_pointee =
-            reinterpret_cast<MeshEyePointee*>(jmesh_eye_pointee);
+    MeshCollider* meshcollider = reinterpret_cast<MeshCollider*>(jmesh_eye_pointee);
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-    mesh_eye_pointee->set_mesh(mesh);
+    meshcollider->set_mesh(mesh);
 }
 
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeMeshCollider_ctor(JNIEnv * env,
+        jobject obj, jboolean useBounds) {
+    return reinterpret_cast<jlong>(new MeshCollider(useBounds));
+}
 }

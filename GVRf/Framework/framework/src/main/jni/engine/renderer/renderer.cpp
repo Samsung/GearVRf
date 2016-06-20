@@ -329,7 +329,7 @@ void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint frame
 }
 
 void addRenderData(RenderData *render_data) {
-    if (render_data == 0 || render_data->material(0) == 0) {
+    if (render_data == 0 || render_data->material(0) == 0 || !render_data->enabled()) {
         return;
     }
 
@@ -606,10 +606,8 @@ bool Renderer::isDefaultPosition3d(const Material* curr_material) {
 }
 
 void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
-
-    if (!rstate.render_mask || !render_data->render_mask())
+    if (!(rstate.render_mask & render_data->render_mask()))
         return;
-
     if (render_data->offset()) {
         GL(glEnable (GL_POLYGON_OFFSET_FILL));
         GL(glPolygonOffset(render_data->offset_factor(),

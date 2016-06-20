@@ -23,11 +23,12 @@
 
 #include <vector>
 #include <memory>
+#include "objects/components/collider.h"
 #include "glm/glm.hpp"
 
 namespace gvr {
 class Scene;
-class EyePointeeHolder;
+class Collider;
 class SceneObject;
 class CameraRig;
 
@@ -37,8 +38,8 @@ private:
     ~Picker();
 
 public:
-    static std::vector<EyePointeeHolder*> pickScene(Scene* scene);
-    static std::vector<EyePointeeHolder*> pickScene(
+    static std::vector<ColliderData> pickScene(Scene* scene);
+    static std::vector<ColliderData> pickScene(
             Scene* scene, float ox, float oy, float oz,
             float dx, float dy, float dz);
     static float pickSceneObject(

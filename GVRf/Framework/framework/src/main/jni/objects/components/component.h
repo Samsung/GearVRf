@@ -30,11 +30,11 @@ class SceneObject;
 class Component: public HybridObject {
 public:
     Component() :
-            HybridObject(), type_(0), owner_object_(NULL), enabled_(true) {
+            HybridObject(), type_(0), owner_object_(0), enabled_(true) {
     }
 
     Component(long long type) :
-            HybridObject(), type_(type), owner_object_(NULL), enabled_(true) {
+            HybridObject(), type_(type), owner_object_(0), enabled_(true) {
     }
 
     Component(SceneObject* owner_object) :
@@ -83,7 +83,7 @@ private:
     Component& operator=(const Component& component);
     Component& operator=(Component&& component);
 
-private:
+protected:
     SceneObject* owner_object_;
     long long    type_;
     bool         enabled_;

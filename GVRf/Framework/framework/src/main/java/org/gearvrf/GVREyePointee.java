@@ -27,9 +27,11 @@ package org.gearvrf;
  * This bizarre little class only contains a constructor and was intended as a
  * sort of interface. The only actual {@link GVREyePointee} is
  * {@link GVRMeshEyePointee}.
+ * 
+ * @deprecated use GVRCollider
  */
 
-public class GVREyePointee extends GVRHybridObject {
+public class GVREyePointee extends GVRCollider {
     GVREyePointee(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }

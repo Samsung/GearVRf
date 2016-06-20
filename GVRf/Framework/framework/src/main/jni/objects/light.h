@@ -46,8 +46,6 @@ public:
 
     explicit Light()
     :   Component(Light::getComponentType()),
-        enabled_(true),
-        parent_(nullptr),
         shadowMaterial_(nullptr),
  		fboId_(-1),
 		shadowMapIndex_(-1) {
@@ -60,16 +58,8 @@ public:
         return (long long) &getComponentType;
     }
 
-    bool enabled() {
-        return enabled_;
-    }
-
-    void enable() {
-        enabled_ = true;
-        setDirty();
-    }
-
-    void disable() {
+    virtual void set_enable(bool enable) {
+        enabled_ = enable;
         setDirty();
     }
 
@@ -236,12 +226,10 @@ private:
     }
 
 private:
-    bool enabled_;
     int size_;
     int shadowMapIndex_;
     GLuint fboId_;
     std::string lightID_;
-    SceneObject* parent_;
     Material* shadowMaterial_;
     std::map<int, bool> dirty_;
     glm::mat4 shadow_matrix_;

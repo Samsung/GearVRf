@@ -28,14 +28,13 @@
 #include "objects/components/transform.h"
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
-#include "objects/components/eye_pointee_holder.h"
+#include "objects/components/collider.h"
 #include "objects/bounding_volume.h"
 #include "util/gvr_gl.h"
 
 namespace gvr {
 class Camera;
 class CameraRig;
-class EyePointeeHolder;
 
 class SceneObject: public HybridObject {
 public:
@@ -100,8 +99,8 @@ public:
         return (CameraRig*) getComponent(CameraRig::getComponentType());
     }
 
-    EyePointeeHolder* eye_pointee_holder() const {
-        return (EyePointeeHolder*) getComponent(EyePointeeHolder::getComponentType());
+    Collider* collider() const {
+        return (Collider*) getComponent(Collider::getComponentType());
     }
 
     SceneObject* parent() const {

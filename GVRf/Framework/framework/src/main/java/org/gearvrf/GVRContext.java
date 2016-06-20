@@ -2319,7 +2319,7 @@ public abstract class GVRContext implements IEventReceiver {
     public GVRScene getNextMainScene() {
         return getNextMainScene(null);
     }
-
+    
     /**
      * Start a debug server on the default TCP/IP port for the default number
      * of clients.
