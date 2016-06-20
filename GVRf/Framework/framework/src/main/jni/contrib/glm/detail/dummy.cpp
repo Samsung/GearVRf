@@ -33,7 +33,7 @@
 /// dummy.cpp exist only a wordaround for CMake file.
 ///////////////////////////////////////////////////////////////////////////////////
 
-#define GLM_MESSAGES
+//#define GLM_MESSAGES
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <limits>

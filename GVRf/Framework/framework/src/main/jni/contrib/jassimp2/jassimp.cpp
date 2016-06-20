@@ -1,5 +1,7 @@
 #include "../jassimp2/jassimp.h"
+#include "memory_file.h"
 
+#include <assimp/cfileio.h>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 
@@ -23,6 +25,7 @@ private:
 public:
     DeleteLocalRef(JNIEnv* env, jobject& object) : mEnv(env), mObject(object) {};
     DeleteLocalRef(JNIEnv* env, jclass& clazz) : mEnv(env), mObject((jobject&) clazz) {};
+    DeleteLocalRef(JNIEnv* env, jbyteArray& barray) : mEnv(env), mObject((jobject&) barray) {};
     DeleteLocalRef(JNIEnv* env, jfloatArray& farray) : mEnv(env), mObject((jobject&) farray) {};
     DeleteLocalRef(JNIEnv* env, jintArray& iarray) : mEnv(env), mObject((jobject&) iarray) {};
     DeleteLocalRef(JNIEnv* env, jstring& str) : mEnv(env), mObject((jobject&) str) {};
@@ -266,6 +269,30 @@ static bool callv(JNIEnv *env, jobject object, const char* typeName,
 	return true;
 }
 
+static jobject callj(JNIEnv *env, jobject object, const char* typeName, const char* methodName,
+    const char* signature,/* const*/ jvalue* params)
+{
+    jclass clazz = env->FindClass(typeName);
+    DeleteLocalRef clazzRef(env, clazz);
+
+    if (NULL == clazz)
+    {
+        lprintf("could not find class %s\n", typeName);
+        return NULL;
+    }
+
+    jmethodID mid = env->GetMethodID(clazz, methodName, signature);
+
+    if (NULL == mid)
+    {
+        lprintf("could not find method %s with signature %s in type %s\n", methodName, signature, typeName);
+        return NULL;
+    }
+
+    jobject jReturnValue = env->CallObjectMethodA(object, mid, params);
+
+    return jReturnValue;
+}
 
 static bool callStaticObject(JNIEnv *env, const char* typeName, const char* methodName, 
 	const char* signature,/* const*/ jvalue* params, jobject& returnValue)
@@ -1507,39 +1534,106 @@ static char *extractAsset(AAssetManager* mgr, const char *name, int *pBufferSize
 	return pBuffer;
 }
 
-static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject assetManager)
+// Memory File IO
+
+struct FileOpsData {
+    jobject jFileIO;
+    JNIEnv *env;
+};
+
+static aiFile* aiFileOpen(C_STRUCT aiFileIO* fio, const char* name, const char* mode) {
+    FileOpsData &opsData(*reinterpret_cast<FileOpsData*>(fio->UserData));
+    JNIEnv *env = opsData.env;
+
+    jstring jNameString = env->NewStringUTF(name);
+    DeleteLocalRef refNameString(env, jNameString);
+
+    jvalue readParams[1];
+    readParams[0].l = jNameString;
+
+    jbyteArray jByteArray = static_cast<jbyteArray>(callj(opsData.env, opsData.jFileIO, "org/gearvrf/jassimp2/JassimpFileIO", "read",
+            "(Ljava/lang/String;)[B", readParams));
+    DeleteLocalRef refByteArray(env, jByteArray);
+
+    if (!jByteArray) {
+        lprintf("JassimpFileIO.read returns null");
+        return nullptr;
+    }
+
+    int len = env->GetArrayLength(jByteArray);
+    unsigned char* buf = (unsigned char*)malloc(len);
+    env->GetByteArrayRegion(jByteArray, 0, len, reinterpret_cast<jbyte*>(buf));
+
+    // Wrap data as a memory-backed file
+    aiFile *file = (aiFile *)calloc(1, sizeof(aiFile));
+    MemoryFileData *fileData = (MemoryFileData *)calloc(1, sizeof(MemoryFileData));
+    fileData->buf = buf;
+    fileData->size = len;
+
+    lprintf("ASSIMP before memcpy");
+    memcpy(file, &memoryFilePrototype, sizeof(memoryFilePrototype));
+    file->UserData = reinterpret_cast<char*>(fileData);
+    lprintf("ASSIMP after memcpy");
+
+    return file;
+}
+
+static void aiFileClose(C_STRUCT aiFileIO* fio, C_STRUCT aiFile* file) {
+    MemoryFileData *fileData(reinterpret_cast<MemoryFileData *>(file->UserData));
+    free(fileData->buf);
+    free(file->UserData);
+    free(file);
+}
+
+static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess,
+                            jobject assetManager, jobject jFileIO)
 {
 	jobject jScene = NULL;
 
 	/* convert params */
 	const char* cFilename = env->GetStringUTFChars(jFilename, NULL);
 
-	lprintf("opening file: %s%s\n", cFilename, assetManager ? " from android assets" : "");
+	lprintf("opening file: %s%s\n", cFilename,
+	        assetManager ? " from android assets"
+	                     : (jFileIO ? " from custom fileIO" : ""));
 
 	/* do import */
 	const aiScene *cScene;
 	if (assetManager) {
-		AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
+	    AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
 
-		int assetSize;
-		char *pBuffer = extractAsset(mgr, cFilename, &assetSize);
-		if (!pBuffer)
-			return NULL;
+	    int assetSize;
+	    char *pBuffer = extractAsset(mgr, cFilename, &assetSize);
+	    if (!pBuffer)
+	        return NULL;
 
-		char* extension = 0;
-		if (cFilename != 0) {
-			extension = strrchr(cFilename, '.');
-			if (extension && extension != cFilename) {
-				extension++;
-			}
-		}
+	    char* extension = 0;
+	    if (cFilename != 0) {
+	        extension = strrchr(cFilename, '.');
+	        if (extension && extension != cFilename) {
+	            extension++;
+	        }
+	    }
 
-		cScene = aiImportFileFromMemory(pBuffer, assetSize, (unsigned int) postProcess,
-				extension);
+	    cScene = aiImportFileFromMemory(pBuffer, assetSize, (unsigned int) postProcess,
+	            extension);
 
-		delete pBuffer;
+	    delete pBuffer;
+	} else if (jFileIO) {
+	    FileOpsData fileOpsData {
+	        .jFileIO = jFileIO,
+	        .env = env
+	    };
+
+	    aiFileIO fileIO = {
+	            .OpenProc = aiFileOpen,
+	            .CloseProc = aiFileClose,
+	            .UserData = reinterpret_cast<char*>(&fileOpsData)
+	    };
+
+	    cScene = aiImportFileEx(cFilename, (unsigned int) postProcess, &fileIO);
 	} else {
-		cScene = aiImportFile(cFilename, (unsigned int) postProcess);
+	    cScene = aiImportFile(cFilename, (unsigned int) postProcess);
 	}
 
 	lprintf("jassimp aiImportFile done");
@@ -1629,11 +1723,17 @@ end:
 JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportAssetFile
   (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject assetManager)
 {
-	return importHelper(env, jClazz, jFilename, postProcess, assetManager);
+	return importHelper(env, jClazz, jFilename, postProcess, assetManager, NULL);
 }
 
 JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportFile
   (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess)
 {
-	return importHelper(env, jClazz, jFilename, postProcess, NULL);
+	return importHelper(env, jClazz, jFilename, postProcess, NULL, NULL);
+}
+
+JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportFileEx
+  (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject jFileIO)
+{
+    return importHelper(env, jClazz, jFilename, postProcess, NULL, jFileIO);
 }

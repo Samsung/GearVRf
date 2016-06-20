@@ -129,12 +129,18 @@ public class GVRResourceVolume {
         }
 
         filePath = adaptFilePath(filePath);
+        String path;
 
         GVRAndroidResource resourceKey;
         switch (volumeType) {
         case ANDROID_ASSETS:
-            resourceKey = new GVRAndroidResource(gvrContext,
-                    getFullPath(defaultPath, filePath));
+            // Resolve '..' and '.'
+            path = getFullPath(defaultPath, filePath);
+            path = new File(path).getCanonicalPath();
+            if (path.startsWith(File.separator)) {
+                path = path.substring(1);
+            }
+            resourceKey = new GVRAndroidResource(gvrContext, path);
             break;
 
         case LINUX_FILESYSTEM:
