@@ -101,7 +101,7 @@ void CustomShader::addTextureKey(const std::string& variable_name, const std::st
     };
 
     d.variableType.f_bind = [key] (int& textureIndex, const Material& material, GLuint location) {
-        glActiveTexture(getGLTexture(textureIndex));
+        glActiveTexture(GL_TEXTURE0 + textureIndex);
         Texture* texture = material.getTextureNoError(key);
         if (nullptr != texture) {
             glBindTexture(texture->getTarget(), texture->getId());
@@ -279,9 +279,9 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         checkGlError("CustomShader after bones");
     }
     mesh->bindVertexAttributes(program_->id());
-    /*
-     * Update values of uniform variables
-     */
+
+    ///////////// uniform /////////
+
     {
         std::lock_guard<std::mutex> lock(uniformVariablesLock_);
         for (auto it = uniformVariables_.begin(); it != uniformVariables_.end(); ++it) {
@@ -342,36 +342,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     if (castShadow){
     	Light::bindShadowMap(program_->id(), texture_index);
     }
+
     checkGlError("CustomShader::render");
 }
-
-int CustomShader::getGLTexture(int n) {
-    switch (n) {
-    case 0:
-        return GL_TEXTURE0;
-    case 1:
-        return GL_TEXTURE1;
-    case 2:
-        return GL_TEXTURE2;
-    case 3:
-        return GL_TEXTURE3;
-    case 4:
-        return GL_TEXTURE4;
-    case 5:
-        return GL_TEXTURE5;
-    case 6:
-        return GL_TEXTURE6;
-    case 7:
-        return GL_TEXTURE7;
-    case 8:
-        return GL_TEXTURE8;
-    case 9:
-        return GL_TEXTURE9;
-    case 10:
-        return GL_TEXTURE10;
-    default:
-        return GL_TEXTURE0;
-    }
-}
-
 } /* namespace gvr */

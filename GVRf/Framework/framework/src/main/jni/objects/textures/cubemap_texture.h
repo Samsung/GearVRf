@@ -115,6 +115,8 @@ public:
             );
 
             glBindTexture(TARGET, gl_texture_->id());
+			glGenerateMipmap (TARGET);
+			glTexParameteri(TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 
             for (int i = 0; i < 6; i++) {
                 jobject bitmap = bitmapRef_[i];
@@ -138,7 +140,7 @@ public:
                             "AndroidBitmap_lockPixels () failed! error = " + ret;
                     throw error;
                 }
-
+                LOGE("cubemap ????");
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA,
                         info.width, info.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                         pixels);
@@ -160,6 +162,8 @@ public:
             );
 
             glBindTexture(TARGET, gl_texture_->id());
+			glGenerateMipmap (TARGET);
+			glTexParameteri(TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 
             for (int i = 0; i < 6; i++) {
                 jbyteArray byteArray = static_cast<jbyteArray>(textureRef_[i]);

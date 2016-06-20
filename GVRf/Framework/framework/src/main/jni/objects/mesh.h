@@ -47,9 +47,9 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
-                    have_bounding_volume_(false), vao_dirty_(true),
+                    have_bounding_volume_(false), vao_dirty_(true),bounding_box_mesh_(nullptr),
                     vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
-                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID),
+                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID), is_dynamic_(false), mesh_modified_(true),
                     boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
     {
     }
@@ -102,6 +102,7 @@ public:
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
@@ -109,6 +110,7 @@ public:
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     const std::vector<glm::vec3>& normals() const {
@@ -118,6 +120,7 @@ public:
     void set_normals(const std::vector<glm::vec3>& normals) {
         normals_ = normals;
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     void set_normals(std::vector<glm::vec3>&& normals) {
@@ -132,11 +135,13 @@ public:
     void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
         tex_coords_ = tex_coords;
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
         tex_coords_ = std::move(tex_coords);
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     const std::vector<unsigned short>& triangles() const {
@@ -146,11 +151,13 @@ public:
     void set_triangles(const std::vector<unsigned short>& triangles) {
         indices_ = triangles;
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     void set_triangles(std::vector<unsigned short>&& triangles) {
         indices_ = std::move(triangles);
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     const std::vector<unsigned short>& indices() const {
@@ -160,11 +167,13 @@ public:
     void set_indices(const std::vector<unsigned short>& indices) {
         indices_ = indices;
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     void set_indices(std::vector<unsigned short>&& indices) {
         indices_ = std::move(indices);
         vao_dirty_ = true;
+        mesh_modified_ = true;
     }
 
     bool hasAttribute(std::string key) const {
@@ -243,7 +252,9 @@ public:
         vec4_vectors_[key] = vector;
         vao_dirty_ = true;
     }
-
+    void updateVBOs(unsigned int vtx_count, unsigned int idx_start, unsigned int indices_count, std::vector<float>& matrix_indices,
+    		const std::vector<glm::vec3>& vertices, std::vector<unsigned short>& indices, const std::vector<glm::vec2>& texcords,
+    		const std::vector<glm::vec3>& normals);
     Mesh* createBoundingBox();
     void getTransformedBoundingBoxInfo(glm::mat4 *M,
             float *transformed_bounding_box); //Get Bounding box info transformed by matrix
@@ -317,7 +328,18 @@ public:
         vertexBoneData_.setBones(std::move(bones));
         bone_data_dirty_ = true;
     }
-
+    void setDynamic(bool status){
+    	is_dynamic_ = status;
+    }
+    bool isDynamic(){
+    	return is_dynamic_;
+    }
+    bool isMeshModified(){
+    	return mesh_modified_;
+    }
+    void setMeshModified(bool modify){
+    	mesh_modified_ = modify;
+    }
     VertexBoneData &getVertexBoneData() {
         return vertexBoneData_;
     }
@@ -385,7 +407,7 @@ private:
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;
     std::map<std::string, std::vector<glm::vec4>> vec4_vectors_;
     std::vector<unsigned short> indices_;
-
+    Mesh* bounding_box_mesh_;
     // add location slot map
     std::map<int, std::string> attribute_float_keys_;
     std::map<int, std::string> attribute_vec2_keys_;
@@ -411,10 +433,11 @@ private:
     VertexBoneData vertexBoneData_;
     GLuint boneIndicesLoc_;
     GLuint boneWeightsLoc_;
-
+    std::map<std::string, GLuint>float_vboids;
     GLuint boneVboID_;
     bool bone_data_dirty_;
-
+    bool is_dynamic_;
+    bool mesh_modified_;
     GlDelete* deleter_ = nullptr;
 };
 }

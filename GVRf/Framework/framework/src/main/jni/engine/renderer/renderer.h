@@ -33,12 +33,13 @@
 #endif
 
 #include "glm/glm.hpp"
-
+#include "batch.h"
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
-
+#include <unordered_map>
+typedef unsigned long Long;
 namespace gvr {
 class Camera;
 class Scene;
@@ -49,7 +50,7 @@ class RenderData;
 class RenderTexture;
 class ShaderManager;
 class Light;
-
+class Batch;
 /*
  * These uniforms are commonly used in shaders.
  * They are calculated by the GearVRF renderer.
@@ -82,6 +83,11 @@ private:
     Renderer();
 
 public:
+    static void restoreRenderStates(RenderData* render_data);
+    static void setRenderStates(RenderData* render_data, RenderState& rstate);
+    static void BatchSetup();
+    static void renderbatches(RenderState& rstate);
+    static void renderRenderDataVector(RenderState &rstate);
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
