@@ -15,10 +15,6 @@
 
 package org.gearvrf.utility;
 
-import java.lang.ref.WeakReference;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
@@ -39,37 +35,19 @@ import org.gearvrf.GVRTexture;
  * 
  * @since 2.0.2
  */
-public class ResourceCache<T extends GVRHybridObject> {
+public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase {
     private static final String TAG = Log.tag(ResourceCache.class);
-
-    private final Map<GVRAndroidResource, WeakReference<T>> cache //
-    = new ConcurrentHashMap<GVRAndroidResource, WeakReference<T>>();
 
     /** Save a weak reference to the resource */
     public void put(GVRAndroidResource androidResource, T resource) {
         Log.d(TAG, "put resource %s to cache", androidResource);
 
-        cache.put(androidResource, new WeakReference<T>(resource));
+        super.put(androidResource, resource);
     }
 
     /** Get the cached resource, or {@code null} */
     public T get(GVRAndroidResource androidResource) {
-        WeakReference<T> reference = cache.get(androidResource);
-        if (reference == null) {
-            // Not in map
-            // Log.d(TAG, "get(%s) returning %s", androidResource, null);
-            return null;
-        }
-        T cached = reference.get();
-        if (cached == null) {
-            // In map, but not in memory
-            cache.remove(androidResource);
-        } else {
-            // No one will ever read this stream
-            androidResource.closeStream();
-        }
-        // Log.d(TAG, "get(%s) returning %s", androidResource, cached);
-        return cached;
+        return (T) super.get(androidResource);
     }
 
     /**
