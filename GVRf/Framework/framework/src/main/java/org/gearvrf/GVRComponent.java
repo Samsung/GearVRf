@@ -34,8 +34,9 @@ import org.gearvrf.utility.Exceptions;
  * @see GVRSceneObject.getComponent
  */
 public class GVRComponent extends GVRHybridObject {
-    // private static final String TAG = Log.tag(GVRComponent.class);
-
+    protected boolean mIsEnabled;
+    protected long mType = 0;
+    
     /**
      * Constructor for a component that is not attached to a scene object.
      *
@@ -44,7 +45,7 @@ public class GVRComponent extends GVRHybridObject {
      */
     protected GVRComponent(GVRContext gvrContext, long nativeConstructor) {
         super(gvrContext, nativeConstructor);
-        isEnabled = true;
+        mIsEnabled = true;
     }
     
     /**
@@ -73,7 +74,6 @@ public class GVRComponent extends GVRHybridObject {
     }
 
     protected GVRSceneObject owner;
-    protected boolean isEnabled;
 
     /**
      * @return The {@link GVRSceneObject} this object is currently attached to, or null if not attached.
@@ -92,11 +92,23 @@ public class GVRComponent extends GVRHybridObject {
      * @param owner scene object to become new owner.
      */
     public void setOwnerObject(GVRSceneObject owner) {
-        this.owner = owner;
         if (owner != null)
-            NativeComponent.setOwnerObject(getNative(), owner.getNative());
+        {
+            if (getNative() != 0)
+            {
+                NativeComponent.setOwnerObject(getNative(), owner.getNative());
+            }
+            onAttach(owner);
+        }
         else
-            NativeComponent.setOwnerObject(getNative(), 0L);
+        {
+            onDetach(getOwnerObject());
+            if (getNative() != 0)
+            {
+                NativeComponent.setOwnerObject(getNative(), 0L);
+            }
+        }
+        this.owner = owner;
     }
 
     /**
@@ -109,17 +121,40 @@ public class GVRComponent extends GVRHybridObject {
     }
     
     /**
+     * Enable or disable this component.
+     * @param flag true to enable, false to disable.
+     * @see enable
+     * @see disable
+     * @see isEnabled
+     */
+    public void setEnable(boolean flag) {
+        mIsEnabled = flag;
+        if (getNative() != 0)
+        {
+            NativeComponent.setEnabled(getNative(), flag);
+        }
+        if (flag)
+        {
+            onEnable();
+        }
+        else
+        {
+            onDisable();
+        }
+    }
+    
+    /**
      * Enable the component so it will be active in the scene.
      */
     public void enable() {
-        isEnabled = true;
+        setEnable(true);
     }
 
     /**
      * Disable the component so it will not be active in the scene.
      */
     public void disable() {
-        isEnabled = false;
+        setEnable(false);
     }
     
     /**
@@ -128,7 +163,7 @@ public class GVRComponent extends GVRHybridObject {
      * @return true if component is enabled, false if component is disabled.
      */
     public boolean isEnabled() {
-        return isEnabled;
+        return mIsEnabled;
     }
     
     /**
@@ -136,7 +171,10 @@ public class GVRComponent extends GVRHybridObject {
      * @return component type
      */
     public long getType() {
-        return NativeComponent.getType(getNative());
+        if (getNative()!= 0) {
+            return NativeComponent.getType(getNative());
+        }
+        return mType;
     }
     
     /**
@@ -158,9 +196,36 @@ public class GVRComponent extends GVRHybridObject {
     public GVRComponent getComponent(long type) {
         return getOwnerObject().getComponent(type);
     }
+    
+    /**
+     * Called when a component is attached to a scene object.
+     * 
+     * @param newOwner  GVRSceneObject the component is attached to.
+     */
+    public void onAttach(GVRSceneObject newOwner) { }
+
+    /**
+     * Called when a component is detached from a scene object.
+     * 
+     * @param oldOwner  GVRSceneObject the component was detached from.
+     */
+    public void onDetach(GVRSceneObject oldOwner) { }
+    
+    /**
+     * Called when a component is enabled.
+     */
+    public void onEnable() { }
+    
+    /**
+     * Called when a component is disabled.
+     */
+    public void onDisable() { }
 }
 
 class NativeComponent {
     static native long getType(long component);
     static native void setOwnerObject(long component, long owner);
+    static native boolean isEnabled(long component);
+    static native void setEnabled(long component, boolean flag);
 }
+

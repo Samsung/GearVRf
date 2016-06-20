@@ -69,6 +69,10 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
     // 2 when the HBV of the object is intersecting the frustum and the mesh BV of the object are intersecting (inside) the frustum: render itself and continue culling test with its children
     // 3 when the HBV of the object is completely inside the frustum: render itself and all its children without further culling test
     int cullVal;
+
+    if (!object->enabled()) {
+        return;
+    }
     if (need_cull) {
 
         cullVal = object->frustumCull(camera_position, frustum, planeMask);
@@ -149,37 +153,26 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
 
-    // 1. Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
-    if (scene->get_frustum_culling()) {
+    // Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
+    // 1. Build the view frustum
+    float frustum[6][4];
+    build_frustum(frustum, (const float*) glm::value_ptr(vp_matrix));
+
+    // 2. Iteratively execute frustum culling for each root object (as well as its children objects recursively)
+    const std::vector<SceneObject*>& root_objects = scene->scene_objects();
+    for (auto it = root_objects.begin(); it != root_objects.end(); ++it) {
+        SceneObject *object = *it;
         if (DEBUG_RENDERER) {
-           LOGD("FRUSTUM: start frustum culling\n");
-       }
-
-        // 1. Build the view frustum
-        float frustum[6][4];
-        build_frustum(frustum, (const float*) glm::value_ptr(vp_matrix));
-
-        // 2. Iteratively execute frustum culling for each root object (as well as its children objects recursively)
-        std::vector<SceneObject*> root_objects = scene->scene_objects();
-        for (auto it = root_objects.begin(); it != root_objects.end(); ++it) {
-            SceneObject *object = *it;
-            if (DEBUG_RENDERER) {
-                LOGD("FRUSTUM: start frustum culling for root %s\n",
-                        object->name().c_str());
-            }
-            frustum_cull(camera->owner_object()->transform()->position(), object, frustum, scene_objects, true, 0);
-            if (DEBUG_RENDERER) {
-                LOGD("FRUSTUM: end frustum culling for root %s\n",
-                        object->name().c_str());
-            }
+            LOGD("FRUSTUM: start frustum culling for root %s\n",
+                    object->name().c_str());
         }
+        frustum_cull(camera->owner_object()->transform()->position(), object, frustum, scene_objects, scene->get_frustum_culling(), 0);
         if (DEBUG_RENDERER) {
-            LOGD("FRUSTUM: end frustum culling\n");
+            LOGD("FRUSTUM: end frustum culling for root %s\n",
+                    object->name().c_str());
         }
     }
-    else
-        scene_objects = scene->getWholeSceneObjects();
-    // 2. do occlusion culling, if enabled
+    // 3. do occlusion culling, if enabled
     occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
 }
 
