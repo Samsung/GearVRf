@@ -352,6 +352,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mActivityNative.setCameraRig(cameraRig);
     }
 
+    void setViewport(int x, int y, int width, int height) {
+        mActivityNative.setViewport(x, y, width, height);
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         boolean handled = mViewManager.dispatchKeyEvent(event);

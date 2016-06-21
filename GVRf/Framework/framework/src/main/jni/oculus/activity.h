@@ -35,6 +35,7 @@ public:
 
     bool updateSensoredScene();
     void setCameraRig(jlong cameraRig);
+    void setViewport(int x_, int y_, int width_, int height_);
 
     GVRViewManager viewManager_;
 
@@ -73,6 +74,8 @@ private:
     ovrTextureFormat mDepthTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
 
     int32_t mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
+
+    int x, y, width, height;                // viewport
 
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
     void beginRenderingEye(const int eye);
