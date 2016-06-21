@@ -41,6 +41,7 @@ Surface @ShaderName()
 #ifdef HAS_opacityTexture
 	diffuse.w *= texture(opacityTexture, diffuse_coord.xy).a;
 #endif
+diffuse.xyz *= diffuse.w;
 #ifdef HAS_specularTexture
 	specular *= texture(specularTexture, diffuse_coord.xy);
 #endif
