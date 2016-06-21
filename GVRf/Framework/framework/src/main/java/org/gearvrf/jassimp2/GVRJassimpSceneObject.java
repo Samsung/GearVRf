@@ -142,10 +142,11 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
         final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.BeingGenerated.ID);
 
-        /* Diffuse color */
-        AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
+        /* Diffuse color & Opacity */
+        AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);        /* Opacity */
+        float opacity = material.getOpacity();
         meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
-                diffuseColor.getGreen(), diffuseColor.getBlue(),diffuseColor.getAlpha());
+                diffuseColor.getGreen(), diffuseColor.getBlue(), opacity * diffuseColor.getAlpha());
 
         /* Specular color */
         AiColor specularColor = material.getSpecularColor(GVRJassimpAdapter.sWrapperProvider);
@@ -168,9 +169,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 emissiveColor.getAlpha());
 
         
-        /* Opacity */
-        float opacity = material.getOpacity();
-        meshMaterial.setOpacity(opacity);
         /* Specular Exponent */
         float specularExponent = material.getShininess();        
         meshMaterial.setSpecularExponent(specularExponent);

@@ -29,7 +29,8 @@ import java.util.UUID;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-//import org.gearvrf.jassimp.AiColor;
+import org.gearvrf.GVRImportSettings;
+
 import org.gearvrf.jassimp.AiMaterial;
 import org.gearvrf.jassimp.AiNode;
 import org.gearvrf.jassimp.AiScene;
@@ -310,10 +311,10 @@ public final class GVRAssetLoader {
      *
      * @param assetFile
      *            A filename, relative to the root of the volume.
+     *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
+     *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
+     *            Otherwise the file is assumed to be relative to the "assets" directory.
      *
-     * @param volumeType
-     *            Where the asset is located (SD card, assets directory or network)
-     *            
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
      *            loaded and then adds the model to the scene.
@@ -323,8 +324,7 @@ public final class GVRAssetLoader {
      * @throws IOException 
      *
      */
-    public GVRModelSceneObject loadModel(String filePath, GVRResourceVolume.VolumeType volumeType,
-            GVRScene scene) throws IOException
+    public GVRModelSceneObject loadModel(String filePath, GVRScene scene) throws IOException
     {
         if (scene != null)
         {
@@ -332,7 +332,33 @@ public final class GVRAssetLoader {
             mContext.getEventReceiver().addListener(assetListener);
             assetListener.beginLoadAsset(filePath, null);
         }
-        return loadJassimpModel(filePath, volumeType, GVRImportSettings.getRecommendedSettings(), false);
+        return loadJassimpModel(filePath, GVRImportSettings.getRecommendedSettings(), false);
+    }
+
+    /**
+     * Loads a scene object {@link GVRModelSceneObject} from
+     * a 3D model and raises asset events to a handler.
+     *
+     * @param assetFile
+     *            A filename, relative to the root of the volume.
+     *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
+     *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
+     *            Otherwise the file is assumed to be relative to the "assets" directory.
+     *
+     * @param handler
+     *            IAssetEvents handler to process asset loading events
+     *            
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException 
+     *
+     */
+    public GVRModelSceneObject loadModel(String filePath, IAssetEvents handler) throws IOException
+    {
+        AssetEventListener assetListener = new AssetEventListener(mContext, null);
+        mContext.getEventReceiver().addListener(assetListener);
+        assetListener.beginLoadAsset(filePath, handler);
+        return loadJassimpModel(filePath, GVRImportSettings.getRecommendedSettings(), false);
     }
     
     /**
@@ -341,10 +367,10 @@ public final class GVRAssetLoader {
      *
      * @param assetFile
      *            A filename, relative to the root of the volume.
+     *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
+     *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
+     *            Otherwise the file is assumed to be relative to the "assets" directory.
      *
-     * @param volumeType
-     *            Where the asset is located (SD card, assets directory or network)
-     *            
      * @param settings
      *            Additional import {@link GVRImportSettings settings}
      *
@@ -360,7 +386,7 @@ public final class GVRAssetLoader {
      * @throws IOException 
      *
      */
-    public GVRModelSceneObject loadModel(String filePath, GVRResourceVolume.VolumeType volumeType,
+    public GVRModelSceneObject loadModel(String filePath,
             EnumSet<GVRImportSettings> settings,
             boolean cacheEnabled,
             GVRScene scene) throws IOException
@@ -371,7 +397,7 @@ public final class GVRAssetLoader {
             mContext.getEventReceiver().addListener(assetListener);
             assetListener.beginLoadAsset(filePath, null);
         }
-        return loadJassimpModel(filePath, volumeType, settings, cacheEnabled);
+        return loadJassimpModel(filePath, settings, cacheEnabled);
     }
 
     /**
@@ -394,15 +420,23 @@ public final class GVRAssetLoader {
      * @throws IOException 
      *
      */
-    private GVRModelSceneObject loadJassimpModel(String filePath, GVRResourceVolume.VolumeType volumeType,
+    private GVRModelSceneObject loadJassimpModel(String filePath,
             EnumSet<GVRImportSettings> settings, boolean cacheEnabled) throws IOException
     {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
         GVRResourceVolume volume = null;
-
+        GVRResourceVolume.VolumeType volumeType = GVRResourceVolume.VolumeType.ANDROID_ASSETS;
         try
         {
+            String fname = filePath.toLowerCase();
+            if (fname.startsWith("sd:")) {
+                volumeType = GVRResourceVolume.VolumeType.ANDROID_SDCARD;
+                filePath = filePath.substring(3);
+            }
+            else if (fname.startsWith("http:") || fname.startsWith("https:")) {
+                volumeType = GVRResourceVolume.VolumeType.NETWORK;
+            }
             volume = new GVRResourceVolume(mContext, volumeType,
                     FileNameUtils.getParentDirectory(filePath));
             assimpScene = Jassimp.importFileEx(FileNameUtils.getFilename(filePath),
