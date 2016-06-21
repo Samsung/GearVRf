@@ -208,6 +208,15 @@ void Mesh::bindVertexAttributes(GLuint programID)
     unSetVaoDirty();
 }
 
+static void generateAndBindVBOId(GLuint& id)
+{
+    if (id == GVR_INVALID)
+    {
+        glGenBuffers(1, &id);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, id);
+}
+
 // generate vertex array object
 void Mesh::generateVAO() {
     GLuint tmpID;
@@ -215,54 +224,104 @@ void Mesh::generateVAO() {
     if (!vao_dirty_) {
          return;
     }
-    obtainDeleter();
-    deleteVaos();
 
-    if (vertices_.size() == 0 && normals_.size() == 0
-            && tex_coords_.size() == 0) {
+    obtainDeleter();
+    int attribSize = vertices_.size();
+
+    // We need vertices as attributes to pass to Vertex Shader.
+    if (attribSize == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
         throw error;
         return;
     }
 
-    glGenVertexArrays(1, &vaoID_);
+    if (vao_dirty_ || vaoID_ == GVR_INVALID)
+    {
+        glGenVertexArrays(1, &vaoID_);
+    }
     glBindVertexArray(vaoID_);
 
-    glGenBuffers(1, &triangle_vboID_);
+    if (triangle_vboID_ == GVR_INVALID)
+    {
+        glGenBuffers(1, &triangle_vboID_);
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
             sizeof(unsigned short) * indices_.size(), &indices_[0],
             GL_STATIC_DRAW);
     numTriangles_ = indices_.size() / 3;
 
-    if (vertices_.size()) {
-        glGenBuffers(1, &vert_vboID_);
-        glBindBuffer(GL_ARRAY_BUFFER, vert_vboID_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices_.size(),
-                &vertices_[0], GL_STATIC_DRAW);
+    bool haveNorm = false;
+    bool haveTexCoords = false;
+    // Attribute order is vertex, normals and tex_coords
+
+    int attribStride = 3;
+    int vertexAttribOffset = 0;
+    int normalsAttribOffset = 3;
+    int texCoordsAttribOffset = 3;
+
+    if (normals_.size() == attribSize)
+    {
+        haveNorm = true;
+        attribStride += 3;
+        texCoordsAttribOffset += 3;
+
+    }
+    if (tex_coords_.size() == attribSize)
+    {
+        haveTexCoords = true;
+        attribStride += 2;
+    }
+    if (haveNorm || haveTexCoords)
+    {
+        std::vector<GLfloat> attribData;
+        for (int i = 0; i < attribSize; i++)
+        {
+            attribData.push_back(vertices_[i].x);
+            attribData.push_back(vertices_[i].y);
+            attribData.push_back(vertices_[i].z);
+            if (haveNorm)
+            {
+                attribData.push_back(normals_[i].x);
+                attribData.push_back(normals_[i].y);
+                attribData.push_back(normals_[i].z);
+            }
+            if (haveTexCoords)
+            {
+                attribData.push_back(tex_coords_[i].x);
+                attribData.push_back(tex_coords_[i].y);
+            }
+        }
+        generateAndBindVBOId(inter_vboID_);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * attribData.size(),
+                &attribData[0], GL_STATIC_DRAW);
         GLuint vertexLoc = GLProgram::POSITION_ATTRIBUTE_LOCATION;
         glEnableVertexAttribArray(vertexLoc);
-        glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
+        glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, attribStride * sizeof(GLfloat), (GLvoid*) (vertexAttribOffset * sizeof(GLfloat)));
+        if (haveNorm)
+        {
+            GLuint normalLoc = GLProgram::NORMAL_ATTRIBUTE_LOCATION;
+            glEnableVertexAttribArray(normalLoc);
+            glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, attribStride * sizeof(GLfloat), (GLvoid*) (normalsAttribOffset * sizeof(GLfloat)));
+        }
+        if (haveTexCoords)
+        {
+            GLuint texCoordLoc = GLProgram::TEXCOORD_ATTRIBUT_LOCATION;
+            glEnableVertexAttribArray(texCoordLoc);
+            glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, attribStride * sizeof(GLfloat), (GLvoid*) (texCoordsAttribOffset * sizeof(GLfloat)));
+        }
     }
+    else
+    {
+        if (vertices_.size()) {
+            generateAndBindVBOId(vert_vboID_);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices_.size(),
+                    &vertices_[0], GL_STATIC_DRAW);
+            GLuint vertexLoc = GLProgram::POSITION_ATTRIBUTE_LOCATION;
+            glEnableVertexAttribArray(vertexLoc);
+            glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
+        }
 
-    if (normals_.size()) {
-        glGenBuffers(1, &norm_vboID_);
-        glBindBuffer(GL_ARRAY_BUFFER, norm_vboID_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals_.size(),
-                &normals_[0], GL_STATIC_DRAW);
-        GLuint normalLoc = GLProgram::NORMAL_ATTRIBUTE_LOCATION;
-        glEnableVertexAttribArray(normalLoc);
-        glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, 0, 0);
-    }
-
-    if (tex_coords_.size()) {
-        glGenBuffers(1, &tex_vboID_);
-        glBindBuffer(GL_ARRAY_BUFFER, tex_vboID_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * tex_coords_.size(),
-                &tex_coords_[0], GL_STATIC_DRAW);
-        GLuint texCoordLoc = GLProgram::TEXCOORD_ATTRIBUT_LOCATION;
-        glEnableVertexAttribArray(texCoordLoc);
-        glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, 0, 0);
     }
 
     for (auto it = attribute_float_keys_.begin();
@@ -316,6 +375,11 @@ void Mesh::generateVAO() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     vao_dirty_ = false;
+    int glError = glGetError();
+    if (glError != 0) {
+        LOGW(" Error in creating VAO %d\n", glError);
+    }
+
 }
 
 void Mesh::generateBoneArrayBuffers() {
