@@ -146,7 +146,6 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::mat4& model_view, 
             glm::vec3 distVec = rayStart - glm::vec3(p);
 
             distance = distVec.length();
-            LOGD("Picker: hit mesh %f\n", distance);
             if (distance < data.Distance)
             {
                 glm::vec4 p = glm::vec4(hitPos, 1);
