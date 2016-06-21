@@ -47,20 +47,21 @@ Java_org_gearvrf_NativePicker_pickScene(JNIEnv * env,
         jobject obj, jlong jscene, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
         jfloat dy, jfloat dz) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
-    std::vector<ColliderData> colliders =
-            Picker::pickScene(scene, ox, oy, oz, dx, dy, dz);
+    std::vector<ColliderData> colliders;
+    Picker::pickScene(scene, colliders, ox, oy, oz, dx, dy, dz);
     std::vector<jlong> long_colliders;
     for (auto it = colliders.begin(); it != colliders.end(); ++it) {
         const ColliderData& data = *it;
         jlong collider = reinterpret_cast<jlong>(data.ColliderHit);
         long_colliders.push_back(collider);
     }
-    jlongArray jeye_pointee_holders = env->NewLongArray(
+    jlongArray jcolliders = env->NewLongArray(
             long_colliders.size());
-    env->SetLongArrayRegion(jeye_pointee_holders, 0,
+    env->SetLongArrayRegion(jcolliders, 0,
             long_colliders.size(),
             reinterpret_cast<jlong*>(long_colliders.data()));
-    return jeye_pointee_holders;
+    colliders.clear();
+    return jcolliders;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -72,7 +73,9 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
     jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
-    std::vector<ColliderData> colliders = Picker::pickScene(scene, ox, oy, oz, dx, dy, dz);
+    std::vector<ColliderData> colliders;
+
+    Picker::pickScene(scene, colliders, ox, oy, oz, dx, dy, dz);
 
     int i = 0;
     int size = colliders.size();

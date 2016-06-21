@@ -45,11 +45,10 @@ Picker::~Picker() {
  * This function is not thread-safe because it relies on a static
  * array of colliders which could be updated by a different thread.
  */
-std::vector<ColliderData> Picker::pickScene(Scene* scene, float ox,
+void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float ox,
         float oy, float oz, float dx, float dy, float dz) {
     std::vector<Collider*>& colliders = Collider::getAllColliders();
     Transform* const t = scene->main_camera_rig()->getHeadTransform();
-    std::vector<ColliderData> picklist;
 
     if (nullptr != t) {
         glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
@@ -65,11 +64,10 @@ std::vector<ColliderData> Picker::pickScene(Scene* scene, float ox,
         }
         std::sort(picklist.begin(), picklist.end(), compareColliderData);
     }
-    return picklist;
-}
+ }
 
-std::vector<ColliderData> Picker::pickScene(Scene* scene) {
-    return Picker::pickScene(scene, 0, 0, 0, 0, 0, -1.0f);
+void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
+    pickScene(scene, pickList, 0, 0, 0, 0, 0, -1.0f);
 }
 
 float Picker::pickSceneObject(const SceneObject* scene_object,

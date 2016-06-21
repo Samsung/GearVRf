@@ -38,9 +38,10 @@ private:
     ~Picker();
 
 public:
-    static std::vector<ColliderData> pickScene(Scene* scene);
-    static std::vector<ColliderData> pickScene(
-            Scene* scene, float ox, float oy, float oz,
+    static void pickScene(Scene* scene, std::vector<ColliderData>& pickList);
+    static void pickScene(
+            Scene* scene, std::vector<ColliderData>& pickList,
+            float ox, float oy, float oz,
             float dx, float dy, float dz);
     static float pickSceneObject(
             const SceneObject* scene_object,
