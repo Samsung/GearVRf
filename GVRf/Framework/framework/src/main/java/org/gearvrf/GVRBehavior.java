@@ -33,7 +33,6 @@ import java.lang.reflect.Method;
  * @see GVRSceneObject.attachComponent
  * @see GVRSceneObject.detachComponent
  */
-
 public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
 {
     protected boolean mIsListening;
