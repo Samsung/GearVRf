@@ -344,15 +344,16 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRComponent.getComponentType
      */
     public boolean attachComponent(GVRComponent component) {
-        boolean added = true;
         if (component.getNative() != 0) {
-            added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+            NativeSceneObject.attachComponent(getNative(), component.getNative());
         }
-        if (added) synchronized (mComponents) {
+        synchronized (mComponents) {
             long type = component.getType();
-            mComponents.put(type, component);
-            component.setOwnerObject(this);
-            return true;
+            if (!mComponents.containsKey(type)) {
+                mComponents.put(type, component);
+                component.setOwnerObject(this);
+                return true;
+            }
         }
         return false;
     }
