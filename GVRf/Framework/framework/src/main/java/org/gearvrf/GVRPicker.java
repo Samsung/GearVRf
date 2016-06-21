@@ -17,7 +17,6 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -208,7 +207,7 @@ public class GVRPicker extends GVRBehavior {
             {
                 continue;
             }
-            GVRCollider collider = collision.HitCollider;
+            GVRCollider collider = collision.hitCollider;
             if (!hasCollider(mPicked, collider))
             {
                 getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);                   
@@ -232,7 +231,7 @@ public class GVRPicker extends GVRBehavior {
                 {
                     continue;
                 }
-                GVRCollider collider = collision.HitCollider;
+                GVRCollider collider = collision.hitCollider;
                 if (!hasCollider(picked, collider))
                 {
                     getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());                   
@@ -264,7 +263,7 @@ public class GVRPicker extends GVRBehavior {
         }
         for (GVRPickedObject hit : pickList)
         {
-            if ((hit != null) && (hit.HitCollider == findme))
+            if ((hit != null) && (hit.hitCollider == findme))
             {
                 return true;
             }
@@ -544,10 +543,10 @@ public class GVRPicker extends GVRBehavior {
      * @see GVRPicker.pickObjects
      */
     public static final class GVRPickedObject {
-        public final GVRSceneObject HitObject;
-        public final GVRCollider    HitCollider;
-        public final float[]        HitLocation;
-        public final float          HitDistance;
+        public final GVRSceneObject hitObject;
+        public final GVRCollider hitCollider;
+        public final float[] hitLocation;
+        public final float hitDistance;
 
         /**
          * Creates a new instance of {@link GVRPickedObject}.
@@ -564,11 +563,10 @@ public class GVRPicker extends GVRBehavior {
          * @see GVRCollider
          */
         public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance) {
-            Float dist = hitDistance;
-            HitObject = hitCollider.getOwnerObject();
-            HitDistance = hitDistance;
-            HitCollider = hitCollider;
-            HitLocation = hitLocation;
+            hitObject = hitCollider.getOwnerObject();
+            this.hitDistance = hitDistance;
+            this.hitCollider = hitCollider;
+            this.hitLocation = hitLocation;
         }
 
         /**
@@ -580,7 +578,7 @@ public class GVRPicker extends GVRBehavior {
          * @see GVRComponent.getOwnerObject
          */
         public GVRSceneObject getHitObject() {
-            return HitObject;
+            return hitObject;
         }
 
         /**
@@ -589,7 +587,7 @@ public class GVRPicker extends GVRBehavior {
          * @return collider hit
          */
         public GVRCollider getHitCollider() {
-            return HitCollider;
+            return hitCollider;
         }
         
         /**
@@ -600,29 +598,29 @@ public class GVRPicker extends GVRBehavior {
          *         {@link GVRPickedObject picked object's} hit data.
          */
         public float[] getHitLocation() {
-            return Arrays.copyOf(HitLocation, HitLocation.length);
+            return Arrays.copyOf(hitLocation, hitLocation.length);
         }
         
         /**
          * The distance from the origin of the pick ray
          */
         public float getHitDistance() {
-            return HitDistance;
+            return hitDistance;
         }
 
         /** The x coordinate of the hit location */
         public float getHitX() {
-            return HitLocation[0];
+            return hitLocation[0];
         }
 
         /** The y coordinate of the hit location */
         public float getHitY() {
-            return HitLocation[1];
+            return hitLocation[1];
         }
 
         /** The z coordinate of the hit location */
         public float getHitZ() {
-            return HitLocation[2];
+            return hitLocation[2];
         }
     }
 

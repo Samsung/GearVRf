@@ -291,9 +291,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
             if (mMesh != null) {
                 // Wrap an eye pointee around the mesh,
                 // return a non-blocking wrapper
-                GVRMeshEyePointee eyePointee = new GVRMeshEyePointee(mMesh,
+                GVRCollider eyePointee = new GVRMeshEyePointee(mMesh,
                         useBoundingBox);
-                return new FutureWrapper<GVREyePointee>(eyePointee);
+                return new FutureWrapper<GVREyePointee>((GVREyePointee) eyePointee);
             } else if (mFutureMesh != null) {
                 // Return a true (blocking) Future, tied to the Future<GVRMesh>
                 return new FutureMeshEyePointee(mFutureMesh, useBoundingBox);
@@ -321,18 +321,20 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         }
 
         @Override
-        public GVRMeshEyePointee get() throws InterruptedException,
+        public GVREyePointee get() throws InterruptedException,
                 ExecutionException {
             GVRMesh mesh = mFutureMesh.get();
-            return new GVRMeshEyePointee(mesh, mUseBoundingBox);
+            GVRCollider eyePointee = new GVRMeshEyePointee(mesh, mUseBoundingBox);
+            return (GVREyePointee) eyePointee;
         }
 
         @Override
-        public GVRMeshEyePointee get(long timeout, TimeUnit unit)
+        public GVREyePointee get(long timeout, TimeUnit unit)
                 throws InterruptedException, ExecutionException,
                 TimeoutException {
             GVRMesh mesh = mFutureMesh.get(timeout, unit);
-            return new GVRMeshEyePointee(mesh, mUseBoundingBox);
+            GVRCollider eyePointee = new GVRMeshEyePointee(mesh, mUseBoundingBox);
+            return (GVREyePointee) eyePointee ;
         }
 
         @Override
