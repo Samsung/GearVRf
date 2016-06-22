@@ -649,8 +649,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         GVRRenderData rdata = getRenderData();
         if (rdata != null) {
             GVRMesh mesh = rdata.getMesh();
-            GVRCollider pointee = new GVRMeshEyePointee(mesh, false);
-            holder.addCollider(pointee);
+            GVREyePointee pointee = new GVRMeshEyePointee(mesh, false);
+            holder.addPointee(pointee);
             attachComponent(holder);
             return true;
         }
