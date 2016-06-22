@@ -25,39 +25,6 @@
 
 namespace gvr {
 
-std::vector<Collider*> Collider::allColliders_;
-
-void Collider::set_owner_object(SceneObject* owner)
-{
-    if (owner != NULL)
-    {
-        addCollider();
-    }
-    else
-    {
-        removeCollider();
-    }
-    Component::set_owner_object(owner);
-}
-
-bool Collider::addCollider() {
-    auto it = std::find(allColliders_.begin(), allColliders_.end(), this);
-    if (it != allColliders_.end()) {
-        return false;
-    }
-    allColliders_.push_back(this);
-    return false;
-}
-
-bool Collider::removeCollider() {
-    auto it = std::find(allColliders_.begin(), allColliders_.end(), this);
-    if (it != allColliders_.end()) {
-        allColliders_.erase(it);
-         return true;
-    }
-    return false;
-}
-
 void Collider::transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::vec3& rayDir)
 {
     glm::mat4 mv_inverse = glm::affineInverse(matrix);

@@ -90,6 +90,13 @@ public:
     	return is_shadowmap_invalid;
 
     }
+
+    void clearColliders();
+    void addCollider(Collider*);
+    const std::vector<Collider*> getColliders() {
+        return allColliders;
+    }
+
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
@@ -104,6 +111,7 @@ private:
     bool occlusion_flag_;
     bool statsInitialized = false;
     std::vector<Light*> lightList;
+    std::vector<Collider*> allColliders;
     bool is_shadowmap_invalid;
 };
 

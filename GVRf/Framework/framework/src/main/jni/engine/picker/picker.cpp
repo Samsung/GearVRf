@@ -47,7 +47,7 @@ Picker::~Picker() {
  */
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float ox,
         float oy, float oz, float dx, float dy, float dz) {
-    std::vector<Collider*>& colliders = Collider::getAllColliders();
+    const std::vector<Collider*>& colliders = scene->getColliders();
     Transform* const t = scene->main_camera_rig()->getHeadTransform();
 
     if (nullptr != t) {
@@ -57,6 +57,9 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float 
             Collider* collider = *it;
             if (collider->enabled() && collider->owner_object()->enabled()) {
                 ColliderData data = collider->isHit(view_matrix, glm::vec3(ox, oy, oz), glm::vec3(dx, dy, dz));
+                if ((collider->pick_distance() > 0) && (collider->pick_distance() < data.Distance)) {
+                    data.IsHit = false;
+                }
                  if (data.IsHit) {
                     picklist.push_back(data);
                 }

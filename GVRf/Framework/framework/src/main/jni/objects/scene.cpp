@@ -44,8 +44,19 @@ void Scene::removeSceneObject(SceneObject* scene_object) {
 void Scene::removeAllSceneObjects() {
     scene_objects_.clear();
     lightList.clear();
-    Collider::clearColliders();
+    allColliders.clear();
 }
+
+void Scene::clearColliders() {
+    allColliders.clear();
+}
+
+void Scene::addCollider(Collider* collider) {
+    auto it = std::find(allColliders.begin(), allColliders.end(), collider);
+    if (it == allColliders.end()) {
+        allColliders.push_back(collider);
+    }
+ }
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     std::vector<SceneObject*> scene_objects(scene_objects_);

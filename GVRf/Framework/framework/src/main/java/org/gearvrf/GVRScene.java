@@ -386,11 +386,16 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             for (GVRLightBase light : lights) {
                 addLight(light);
             }
-        }
-        for (GVRSceneObject child : mSceneObjects) {
+       }
+       NativeScene.clearColliders(getNative());
+       for (GVRSceneObject child : mSceneObjects) {
             ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.getComponentType());
+            ArrayList<GVRCollider> colliders = child.getAllComponents(GVRCollider.getComponentType());
             for (GVRRenderData rdata : renderers) {
                 rdata.bindShader(this);
+            }
+            for (GVRCollider collider : colliders) {
+                NativeScene.addCollider(getNative(), collider.getNative());
             }
         }
     }
@@ -429,6 +434,10 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
                 renderData.bindShader(this);
             }           
         }
+        ArrayList<GVRCollider> colliders = root.getAllComponents(GVRCollider.getComponentType());
+        for (GVRCollider collider : colliders) {
+            NativeScene.addCollider(getNative(), collider.getNative());
+        }
     }
         
     /**
@@ -456,7 +465,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return false;
     }
-    
+        
     /**
      * Get the list of lights used by this scene.
      * 
@@ -630,4 +639,8 @@ class NativeScene {
     public static native void exportToFile(long scene, String file_path);
 
     static native void addLight(long scene, long light);
+    
+    static native void addCollider(long scene, long collider);
+    
+    static native void clearColliders(long scene);
 }
