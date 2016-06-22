@@ -182,7 +182,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             list.add(child);
             addChildren(list, child);
         }
-        bindShaders();
     }
 
     /**
