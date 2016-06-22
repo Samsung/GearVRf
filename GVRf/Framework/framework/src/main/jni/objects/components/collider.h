@@ -95,6 +95,10 @@ public:
         return allColliders_;
     }
 
+    static void clearColliders() {
+        allColliders_.clear();
+    }
+
     virtual void set_owner_object(SceneObject* owner);
 
     void set_pick_distance(float dist) {
