@@ -90,8 +90,11 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);
+            env->DeleteLocalRef(hitObject);
         }
     }
+    env->DeleteLocalRef(pickerClass);
+    env->DeleteLocalRef(hitClass);
     return pickList;
 }
 

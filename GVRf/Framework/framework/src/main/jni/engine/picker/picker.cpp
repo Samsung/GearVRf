@@ -55,7 +55,7 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float 
 
         for (auto it = colliders.begin(); it != colliders.end(); ++it) {
             Collider* collider = *it;
-            if (collider->enabled()) {
+            if (collider->enabled() && collider->owner_object()->enabled()) {
                 ColliderData data = collider->isHit(view_matrix, glm::vec3(ox, oy, oz), glm::vec3(dx, dy, dz));
                  if (data.IsHit) {
                     picklist.push_back(data);
