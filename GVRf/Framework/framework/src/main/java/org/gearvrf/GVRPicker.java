@@ -211,7 +211,6 @@ public class GVRPicker extends GVRBehavior {
             if (!hasCollider(mPicked, collider))
             {
                 getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);                   
-                Log.d("Picker", "onEnter %s %d", collider.getClass().getSimpleName(), collider.hashCode());
                 selectionChanged = true;
             }
             else
@@ -236,7 +235,6 @@ public class GVRPicker extends GVRBehavior {
                 {
                     getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());                   
                     selectionChanged = true;
-                    Log.d("Picker", "onExit %s %d", collider.getClass().getSimpleName(), collider.hashCode());
                 }
             }
         }
