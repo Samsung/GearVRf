@@ -363,19 +363,21 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          */
         public void release() {
             if (mMediaPlayerRef != null) {
-                if (mMediaPlayerRef.get() != null) {
-                    mMediaPlayerRef.get().release();
+                MediaPlayer mediaPlayer = mMediaPlayerRef.get();
+                if (mediaPlayer != null) {
+                    mediaPlayer.release();
                 }
             }
         }
 
         @Override
         public void onDrawFrame(float drawTime) {
-            if (mMediaPlayerRef.get() != null && mActive) {
+            MediaPlayer mediaPlayer = mMediaPlayerRef.get();
+            if (mediaPlayer != null && mActive) {
                 mSurfaceTexture.updateTexImage();
             }
 
-            if (mMediaPlayerRef.get() == null) {
+            if (mediaPlayer == null) {
                 mContext.unregisterDrawFrameListener(this);
             }
         }
