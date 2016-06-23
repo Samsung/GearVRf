@@ -497,7 +497,7 @@ public class GVRPicker extends GVRBehavior {
     /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
-    public static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz)
+    static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz)
     {
        GVRCollider collider = GVRCollider.lookup(colliderPointer);
        if (collider == null)
