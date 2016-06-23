@@ -699,17 +699,20 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param child
      *            {@link GVRSceneObject Object} to add as a child of this
      *            object.
+     * @return true if child was added, else false
      */
-    public void addChildObject(GVRSceneObject child) {
+    public boolean addChildObject(GVRSceneObject child) {
         if (child.mParent == this) {
-            return;
+            return false;
         }
         if (child.mParent != null) {
-            throw new UnsupportedOperationException("Cannot add child, it has another parent");
+            Log.e("gvrf", "Cannot add child - it has another parent");
+            return false;
         }
         mChildren.add(child);
         child.mParent = this;
         NativeSceneObject.addChildObject(getNative(), child.getNative());
+        return true;
     }
 
     /**
