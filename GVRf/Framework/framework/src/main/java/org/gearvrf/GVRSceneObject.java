@@ -795,24 +795,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         return null;
     }
 
-
-    public interface SceneVisitor {
-        void visit(GVRSceneObject sceneObject);
-    }
-    
-    public void forAllChildren(SceneVisitor visitor) {
-        for (GVRSceneObject child : mChildren) {
-            visitor.visit(child);
-        }
-    }
-    
-    public void forAllDescendants(SceneVisitor visitor) {
-        visitor.visit(this);
-        for (GVRSceneObject child : mChildren) {
-            child.forAllDescendants(visitor);
-        }
-    }
-    
     protected void getSceneObjectsByName(final String name, List<GVRSceneObject> list) {
         if (name.equals(getName())) {
             list.add(this);
