@@ -643,6 +643,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         <em>and</em> you have called either
      *         {@link GVRRenderData#setMesh(GVRMesh)} or
      *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
+     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))       
      */
     public boolean attachEyePointeeHolder() {
         GVREyePointeeHolder holder = new GVREyePointeeHolder(getGVRContext());
@@ -667,6 +668,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     /**
      * Get the attached {@link GVREyePointeeHolder}
+     * This function is deprecated in favor of getCollider which can
+     * return any type of collider, not just a GVREyePointeeHolder.
      * 
      * @return The {@link GVREyePointeeHolder} attached to the object. If no
      *         {@link GVREyePointeeHolder} is currently attached, returns
@@ -689,11 +692,17 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * API} gives you a lot of control over eye picking, but it does involve an
      * awful lot of details. This method
      * (and {@link #getPickingEnabled()}) provides a simple boolean property.
+     * It attaches a GVRSphereCollider to the scene object. If you want more
+     * accurate picking, you can use {@link attachComponent} to attach a
+     * mesh collider instead. The mesh collider is more accurate but also
+     * costs more to compute.
      * 
      * @param enabled
      *            Should eye picking 'see' this scene object?
      * 
      * @since 2.0.2
+     * @see GVRSphereCollider
+     * @see GVRMeshCollider
      */
     public void setPickingEnabled(boolean enabled) {
         if (enabled != getPickingEnabled()) {

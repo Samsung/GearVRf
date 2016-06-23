@@ -311,7 +311,7 @@ public class GVRPicker extends GVRBehavior {
      *         penetrated by the ray, sorted by distance from the camera rig.
      *         Use {@link GVRCollider#getOwnerObject()} to get the
      *         corresponding scene objects.
-     * 
+     * @deprecated use pickObjects instead
      */
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene, float ox, float oy, float oz, float dx,
             float dy, float dz) {
@@ -348,6 +348,7 @@ public class GVRPicker extends GVRBehavior {
      * @return the {@link GVREyePointeeHolders which are penetrated by the
      *         picking ray. They are sorted by distance from the camera.
      * 
+     * @deprecated use pickObjects instead
      */
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene) {
         return pickScene(scene, 0, 0, 0, 0, 0, -1.0f);
