@@ -28,6 +28,9 @@ import org.joml.Matrix4f;
  * components or as Euler angles.
  */
 public class GVRTransform extends GVRComponent {
+    final float TO_DEGREES = (float) (180.0/Math.PI);
+    final float TO_RADIANS = 1/TO_DEGREES;
+
     GVRTransform(GVRContext gvrContext) {
         super(gvrContext, NativeTransform.ctor());
     }
@@ -170,7 +173,7 @@ public class GVRTransform extends GVRComponent {
      * @return The transform's current rotation around the 'Y' axis, in degrees.
      */
     public float getRotationYaw() {
-        return NativeTransform.getRotationYaw(getNative());
+        return NativeTransform.getRotationYaw(getNative()) * TO_DEGREES;
     }
 
     /**
@@ -179,7 +182,7 @@ public class GVRTransform extends GVRComponent {
      * @return The transform's rotation around the 'X' axis, in degrees.
      */
     public float getRotationPitch() {
-        return NativeTransform.getRotationPitch(getNative());
+        return NativeTransform.getRotationPitch(getNative()) * TO_DEGREES;
     }
 
     /**
@@ -188,7 +191,7 @@ public class GVRTransform extends GVRComponent {
      * @return The transform's rotation around the 'Z' axis, in degrees.
      */
     public float getRotationRoll() {
-        return NativeTransform.getRotationRoll(getNative());
+        return NativeTransform.getRotationRoll(getNative()) * TO_DEGREES;
     }
 
     /**
@@ -394,7 +397,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the axis.
      */
     public void setRotationByAxis(float angle, float x, float y, float z) {
-        NativeTransform.setRotationByAxis(getNative(), angle, x, y, z);
+        NativeTransform.setRotationByAxis(getNative(), angle * TO_RADIANS, x, y, z);
     }
 
     /**
@@ -426,7 +429,7 @@ public class GVRTransform extends GVRComponent {
      *            'Z' component of the axis.
      */
     public void rotateByAxis(float angle, float x, float y, float z) {
-        NativeTransform.rotateByAxis(getNative(), angle, x, y, z);
+        NativeTransform.rotateByAxis(getNative(), angle * TO_RADIANS, x, y, z);
     }
 
     /**
@@ -450,7 +453,7 @@ public class GVRTransform extends GVRComponent {
      */
     public void rotateByAxisWithPivot(float angle, float axisX, float axisY,
             float axisZ, float pivotX, float pivotY, float pivotZ) {
-        NativeTransform.rotateByAxisWithPivot(getNative(), angle, axisX, axisY,
+        NativeTransform.rotateByAxisWithPivot(getNative(), angle * TO_RADIANS, axisX, axisY,
                 axisZ, pivotX, pivotY, pivotZ);
     }
 

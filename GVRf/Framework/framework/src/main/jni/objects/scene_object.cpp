@@ -28,8 +28,8 @@
 
 namespace gvr {
 SceneObject::SceneObject() :
-        HybridObject(), name_(""), children_(), visible_(true), in_frustum_(
-                false), query_currently_issued_(false), vis_count_(0), lod_min_range_(
+        HybridObject(), name_(""), children_(), visible_(true), in_frustum_(false),
+                enabled_(true), query_currently_issued_(false), vis_count_(0), lod_min_range_(
                 0), lod_max_range_(MAXFLOAT), using_lod_(false), bounding_volume_dirty_(
                 true) {
 
@@ -329,7 +329,7 @@ enum AABB_STATE {
 // 3 when the HBV of the object is completely inside the frustum: render itself and all its children without further culling test
 int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4],
         int& planeMask) {
-    if (!visible_) {
+    if (!enabled_ || !visible_) {
         if (DEBUG_RENDERER) {
             LOGD("FRUSTUM: not visible, cull out %s and all its children\n",
                     name_.c_str());

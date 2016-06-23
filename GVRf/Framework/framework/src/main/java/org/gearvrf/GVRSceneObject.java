@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -63,7 +64,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     private GVRSceneObject mParent;
     private GVRBaseSensor mSensor;
     private Object mTag;
-    private final List<GVRSceneObject> mChildren = new ArrayList<GVRSceneObject>();
+    private final List<GVRSceneObject> mChildren = new CopyOnWriteArrayList<GVRSceneObject>();
     private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
 
     /**
@@ -342,8 +343,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.findComponent
      * @see GVRComponent.getComponentType
      */
-    boolean attachComponent(GVRComponent component) {
-        boolean added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+    public boolean attachComponent(GVRComponent component) {
+        boolean added = true;
+        if (component.getNative() != 0) {
+            added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+        }
         if (added) synchronized (mComponents) {
             long type = component.getType();
             mComponents.put(type, component);
@@ -365,8 +369,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.findComponent
      * @see GVRComponent.getComponentType
      */
-    GVRComponent detachComponent(long type) {
-         boolean removed = NativeSceneObject.detachComponent(getNative(), type);
+    public GVRComponent detachComponent(long type) {
+        boolean removed = NativeSceneObject.detachComponent(getNative(), type);
         if (removed) synchronized (mComponents) {
             GVRComponent component = mComponents.remove(type);
             component.setOwnerObject(null);
@@ -385,7 +389,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject.attachComponent
      * @see GVRSceneObject.detachComponent
      */
-    GVRComponent getComponent(long type) {
+    public GVRComponent getComponent(long type) {
         return  mComponents.get(type);
     }
     
@@ -395,7 +399,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param transform
      *            New transform.
      */
-    void attachTransform(GVRTransform transform) {
+    public void attachTransform(GVRTransform transform) {
         attachComponent(transform);
     }
 
@@ -403,7 +407,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Remove the object's {@link GVRTransform transform}. After this call, the
      * object will have no transformations associated with it.
      */
-    void detachTransform() {
+    public void detachTransform() {
         detachComponent(GVRTransform.getComponentType());
     }
 
@@ -697,9 +701,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void addChildObject(GVRSceneObject child) {
-        synchronized (mChildren) {
-            mChildren.add(child);
-        }
+        mChildren.add(child);
         child.mParent = this;
         NativeSceneObject.addChildObject(getNative(), child.getNative());
     }
@@ -712,9 +714,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void removeChildObject(GVRSceneObject child) {
-        synchronized (mChildren) {
-            mChildren.remove(child);
-        }
+        mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
@@ -803,6 +803,30 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
+     * Designates whether the scene object should be displayed or not.
+     * If a scene object is marked as not visible, none of its children
+     * will be displayed either. This function only controls whether
+     * your application wants to display the object and its children.
+     * It does not tell you if GearVRf culled the object.
+     * 
+     * @return true if scene object should be displayed, else false.
+     */
+    public boolean isEnabled() {
+        return NativeSceneObject.isEnabled(getNative());
+    }
+ 
+    /**
+     * Designates whether the scene object should be displayed or not.
+     * If a scene object is not enabled, none of its children
+     * will be displayed either.
+     * 
+     * @param visible if true the object will be displayed, if false it will not be.
+     */
+    public void setEnable(boolean enable) {
+        NativeSceneObject.setEnable(getNative(), enable);
+    }
+    
+    /**
      * Tests the {@link GVRSceneObject}s hierarchical bounding volume against
      * the specified ray.
      * 
@@ -887,9 +911,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         this object.
      */
     public int getChildrenCount() {
-        synchronized (mChildren) {
-            return mChildren.size();
-        }
+        return mChildren.size();
     }
 
     /**
@@ -903,9 +925,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         at that position.
      */
     public GVRSceneObject getChildByIndex(int index) {
-        synchronized (mChildren) {
-            return mChildren.get(index);
-        }
+        return mChildren.get(index);
     }
 
     /**
@@ -984,10 +1004,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @since 2.0.0
      */
     public List<GVRSceneObject> getChildren() {
-        synchronized (mChildren) {
-            return Collections.unmodifiableList(
-                    new ArrayList<GVRSceneObject>(mChildren));
-        }
+        return Collections.unmodifiableList(mChildren);
     }
 
     /** The internal list - do not make any changes! */
@@ -1163,6 +1180,10 @@ class NativeSceneObject {
 
     static native boolean isColliding(long sceneObject, long otherObject);
 
+    static native boolean isEnabled(long sceneObject);
+
+    static native void setEnable(long sceneObject, boolean flag);
+    
     static native boolean intersectsBoundingVolume(long sceneObject, float rox,
             float roy, float roz, float rdx, float rdy, float rdz);
 

@@ -44,10 +44,12 @@ public:
         default_aspect_ratio_ = aspect_ratio;
     }
 
+    // in radians
     static float default_fov_y() {
         return default_fov_y_;
     }
 
+    // in radians
     static void set_default_fov_y(float fov_y) {
         default_fov_y_ = fov_y;
     }
@@ -76,10 +78,12 @@ public:
         far_clipping_distance_ = far_clipping_distance;
     }
 
+    // in radians
     float fov_y() const {
         return fov_y_;
     }
 
+    // in radians
     void set_fov_y(float fov_y) {
         fov_y_ = fov_y;
     }
@@ -93,11 +97,11 @@ private:
     PerspectiveCamera& operator=(PerspectiveCamera&& camera);
 
 private:
-    static float default_fov_y_;
+    static float default_fov_y_; // in radians
     static float default_aspect_ratio_;
     float near_clipping_distance_;
     float far_clipping_distance_;
-    float fov_y_;
+    float fov_y_; // in radians
     float aspect_ratio_;
 };
 }

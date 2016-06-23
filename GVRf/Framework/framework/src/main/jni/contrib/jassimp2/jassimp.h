@@ -48,6 +48,14 @@ JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportFile
 JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportAssetFile
   (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject assetManager);
 
+/*
+ * Class:     jassimp_Jassimp
+ * Method:    aiImportFileEx
+ * Signature: (Ljava/lang/String;J)Ljassimp/AiScene;Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp2_Jassimp_aiImportFileEx
+  (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject jFileIO);
+
 #ifdef __cplusplus
 }
 #endif

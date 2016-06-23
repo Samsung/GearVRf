@@ -29,11 +29,18 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeComponent_setOwnerObject(JNIEnv * env,
         jobject obj, jlong jcomponent, jlong jowner);
 
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeComponent_isEnabled(JNIEnv * env, jobject obj, jlong jcomponent);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jlight, jboolean flag);
+
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
-        jobject obj, jlong jcomponent) {
+        jobject obj, jlong jcomponent)
+{
     Component* component = reinterpret_cast<Component*>(jcomponent);
     long long type = component->getType();
     return type;
@@ -41,10 +48,26 @@ Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeComponent_setOwnerObject(JNIEnv * env,
-        jobject obj, jlong jcomponent, jlong jowner) {
+        jobject obj, jlong jcomponent, jlong jowner)
+{
     Component* component = reinterpret_cast<Component*>(jcomponent);
     SceneObject* owner = reinterpret_cast<SceneObject*>(jowner);
     component->set_owner_object(owner);
 }
 
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeComponent_isEnabled(JNIEnv * env, jobject obj, jlong jcomponent)
+{
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    return component->enabled();
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jcomponent, jboolean flag)
+{
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    component->set_enable(flag);
+}
+
+}
+

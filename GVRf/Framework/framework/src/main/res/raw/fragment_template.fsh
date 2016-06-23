@@ -32,13 +32,11 @@ struct Radiance
 
 void main()
 {
-	vec3 color = vec3(0, 0, 0);
 	Surface s = @ShaderName();
 #if defined(HAS_LIGHTSOURCES)
-	color = LightPixel(s);
-	color = clamp(color, vec3(0), vec3(1));
+	vec4 color = LightPixel(s);
+	fragColor = clamp(color, vec4(0), vec4(1));
 #else
-	color = s.diffuse.xyz;
+	fragColor = s.diffuse;
 #endif
-	fragColor = vec4(color.x, color.y, color.z, 1.0);
 }
