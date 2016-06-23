@@ -82,6 +82,7 @@ public:
     bool detachComponent(Component* component);
     Component* detachComponent(long long type);
     Component* getComponent(long long type) const;
+    void getAllComponents(std::vector<Component*>& components, long long type);
 
     Transform* transform() const {
         return (Transform*) getComponent(Transform::getComponentType());

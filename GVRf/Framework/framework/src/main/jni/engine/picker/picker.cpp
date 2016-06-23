@@ -47,14 +47,14 @@ Picker::~Picker() {
  */
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float ox,
         float oy, float oz, float dx, float dy, float dz) {
-    const std::vector<Collider*>& colliders = scene->getColliders();
+    const std::vector<Component*>& colliders = scene->getColliders();
     Transform* const t = scene->main_camera_rig()->getHeadTransform();
 
     if (nullptr != t) {
         glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
 
         for (auto it = colliders.begin(); it != colliders.end(); ++it) {
-            Collider* collider = *it;
+            Collider* collider = reinterpret_cast<Collider*>(*it);
             if (collider->enabled() && collider->owner_object()->enabled()) {
                 ColliderData data = collider->isHit(view_matrix, glm::vec3(ox, oy, oz), glm::vec3(dx, dy, dz));
                 if ((collider->pick_distance() > 0) && (collider->pick_distance() < data.Distance)) {

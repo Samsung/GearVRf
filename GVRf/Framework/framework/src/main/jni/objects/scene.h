@@ -90,20 +90,29 @@ public:
     	return is_shadowmap_invalid;
 
     }
+    void addCollider(Collider* collider);
+    void removeCollider(Collider* collider);
 
-    void clearColliders();
-    void addCollider(Collider*);
-    const std::vector<Collider*> getColliders() {
+    const std::vector<Component*> getColliders() {
         return allColliders;
     }
+
+    static Scene* main_scene() {
+        return main_scene_;
+    }
+
+    static void set_main_scene(Scene* scene);
 
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
     Scene& operator=(const Scene& scene);
     Scene& operator=(Scene&& scene);
+    void clearColliders();
+    void gatherColliders();
 
 private:
+    static Scene* main_scene_;
     std::vector<SceneObject*> scene_objects_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;
@@ -111,7 +120,7 @@ private:
     bool occlusion_flag_;
     bool statsInitialized = false;
     std::vector<Light*> lightList;
-    std::vector<Collider*> allColliders;
+    std::vector<Component*> allColliders;
     bool is_shadowmap_invalid;
 };
 

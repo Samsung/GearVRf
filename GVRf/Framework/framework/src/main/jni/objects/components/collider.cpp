@@ -20,7 +20,7 @@
 #include "collider.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
-
+#include "objects/scene.h"
 #include "objects/scene_object.h"
 
 namespace gvr {
@@ -33,5 +33,21 @@ void Collider::transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::v
     dir = mv_inverse * dir;
     rayDir = glm::vec3(glm::normalize(dir));
     rayStart = glm::vec3(start);
+}
+
+void Collider::set_owner_object(SceneObject* obj) {
+    if (obj == owner_object())
+    {
+        return;
+    }
+    if (obj)
+    {
+        Scene::main_scene()->addCollider(this);
+    }
+    else
+    {
+        Scene::main_scene()->removeCollider(this);
+    }
+    Component::set_owner_object(obj);
 }
 }

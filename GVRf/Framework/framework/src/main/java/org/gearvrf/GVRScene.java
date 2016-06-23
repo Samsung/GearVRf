@@ -387,15 +387,10 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
                 addLight(light);
             }
        }
-       NativeScene.clearColliders(getNative());
        for (GVRSceneObject child : mSceneObjects) {
             ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.getComponentType());
-            ArrayList<GVRCollider> colliders = child.getAllComponents(GVRCollider.getComponentType());
             for (GVRRenderData rdata : renderers) {
                 rdata.bindShader(this);
-            }
-            for (GVRCollider collider : colliders) {
-                NativeScene.addCollider(getNative(), collider.getNative());
             }
         }
     }
@@ -433,10 +428,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             for (GVRRenderData renderData : renderDataList) {
                 renderData.bindShader(this);
             }           
-        }
-        ArrayList<GVRCollider> colliders = root.getAllComponents(GVRCollider.getComponentType());
-        for (GVRCollider collider : colliders) {
-            NativeScene.addCollider(getNative(), collider.getNative());
         }
     }
         
@@ -519,7 +510,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     public void applyLightMapTexture(GVRTexture texture) {
         applyTextureAtlas("lightmap", texture, GVRMaterial.GVRShaderType.LightMap.ID);
     }
-
+    
     /**
      * Apply the texture atlas to the scene.
      *
@@ -640,7 +631,5 @@ class NativeScene {
 
     static native void addLight(long scene, long light);
     
-    static native void addCollider(long scene, long collider);
-    
-    static native void clearColliders(long scene);
+    static native void setMainScene(long scene);
 }

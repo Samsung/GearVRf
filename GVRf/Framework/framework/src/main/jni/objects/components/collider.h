@@ -87,6 +87,8 @@ public:
      */
     virtual ColliderData isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir) = 0;
 
+    virtual void set_owner_object(SceneObject*);
+
     static long long getComponentType() {
         return (long long) getComponentType;
     }

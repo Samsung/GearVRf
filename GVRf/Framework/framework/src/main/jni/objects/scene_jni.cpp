@@ -76,9 +76,8 @@ extern "C" {
     Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
             jobject obj, jlong jscene, jlong jcollider);
 
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeScene_clearColliders(JNIEnv * env,
-            jobject obj, jlong jscene);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene);
 };
 
 JNIEXPORT jlong JNICALL
@@ -192,10 +191,9 @@ Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
     scene->addCollider(collider);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_clearColliders(JNIEnv * env,
-        jobject obj, jlong jscene) {
-    Scene* scene = reinterpret_cast<Scene*>(jscene);
-    scene->clearColliders();
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene) {
+    Scene::set_main_scene(reinterpret_cast<Scene*>(jscene));
 }
+
 }

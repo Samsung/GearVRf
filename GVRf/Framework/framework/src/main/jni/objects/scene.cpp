@@ -23,9 +23,15 @@
 #include "objects/scene_object.h"
 
 namespace gvr {
+
+Scene* Scene::main_scene_ = NULL;
+
 Scene::Scene() :
         HybridObject(), scene_objects_(), main_camera_rig_(), frustum_flag_(
                 false), dirtyFlag_(0), occlusion_flag_(false), is_shadowmap_invalid(true) {
+    if (main_scene() == NULL) {
+        set_main_scene(this);
+    }
 }
 
 Scene::~Scene() {
@@ -51,12 +57,33 @@ void Scene::clearColliders() {
     allColliders.clear();
 }
 
+void Scene::gatherColliders() {
+    allColliders.clear();
+    for (auto it = scene_objects_.begin(); it != scene_objects_.end(); ++it) {
+        SceneObject* obj = *it;
+        obj->getAllComponents(allColliders, Collider::getComponentType());
+    }
+}
+
 void Scene::addCollider(Collider* collider) {
     auto it = std::find(allColliders.begin(), allColliders.end(), collider);
     if (it == allColliders.end()) {
         allColliders.push_back(collider);
     }
- }
+}
+
+void Scene::removeCollider(Collider* collider) {
+    auto it = std::find(allColliders.begin(), allColliders.end(), collider);
+    if (it != allColliders.end()) {
+        allColliders.erase(it);
+    }
+}
+
+void Scene::set_main_scene(Scene* scene) {
+    main_scene_ = scene;
+    scene->gatherColliders();
+}
+
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     std::vector<SceneObject*> scene_objects(scene_objects_);
