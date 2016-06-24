@@ -519,8 +519,11 @@ public class GVRShaderTemplate
      */
     protected String generateLightFragmentShader(GVRLightBase[] lightlist, Map<String, LightClass> lightClasses)
     {
-        String lightFunction = "vec3 LightPixel(Surface s) {\n"
-                + "   vec3 color = vec3(0.0, 0.0, 0.0);\n   float enable;\n   Radiance r;\n";
+        String lightFunction = "vec4 LightPixel(Surface s) {\n"
+                + "   vec4 color = vec4(0.0, 0.0, 0.0, 0.0);\n"
+                + "   vec4 c;\n"
+                + "   float enable;\n"
+                + "   Radiance r;\n";
         String lightDefs = "\n";
         String lightSources = "\n";
         Integer index = 0;
@@ -545,7 +548,9 @@ public class GVRShaderTemplate
                 else
                     lightFunction += "   r = " + lightClassName + "(s, " + uniformId + ");\n";
                 lightFunction += "   enable = " + uniformId + ".enabled;\n";
-                lightFunction += "   color += vec3(enable, enable, enable) * AddLight(s, r);\n";
+                lightFunction += "   c = vec4(enable, enable, enable, enable) * AddLight(s, r);\n";
+                lightFunction += "   color.xyz += c.xyz;\n";
+                lightFunction += "   color.w = c.w;\n";
                 lightSources += "\nuniform Uniform" + lightClassName + " " + uniformId + ";\n";
             }
             ++index;
