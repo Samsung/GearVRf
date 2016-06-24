@@ -689,7 +689,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return mImporter.loadModel(assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings, true, null);
-    }
+     }
 
     /**
      * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
