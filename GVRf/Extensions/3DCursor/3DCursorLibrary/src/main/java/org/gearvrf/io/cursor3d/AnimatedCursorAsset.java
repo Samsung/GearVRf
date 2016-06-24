@@ -23,6 +23,7 @@ import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.ZipLoader;
 import org.gearvrf.animation.GVRAnimation;
@@ -74,12 +75,12 @@ class AnimatedCursorAsset extends MeshCursorAsset {
         int key = sceneObject.getId();
         GVRImageFrameAnimation animation = animations.get(key);
         if (animation == null) {
-            GVRRenderData renderData = renderDataArray.get(key);
-            if (renderData == null) {
+            GVRSceneObject assetSceneObject = sceneObjectArray.get(key);
+            if (assetSceneObject == null) {
                 Log.e(TAG, "Render data not found, should not happen");
                 return;
             }
-
+            GVRRenderData renderData = assetSceneObject.getRenderData();
             GVRMaterial loadingMaterial = renderData.getMaterial();
             loadingMaterial.setMainTexture(loaderTextures.get(0));
             animation = new GVRImageFrameAnimation(loadingMaterial,
@@ -142,7 +143,7 @@ class AnimatedCursorAsset extends MeshCursorAsset {
         animations.remove(sceneObject.getId());
 
         // check if there are cursors still using the textures
-        if (renderDataArray.size() == 0) {
+        if (sceneObjectArray.size() == 0) {
             loaderTextures.clear();
             loaderTextures = null;
         }
