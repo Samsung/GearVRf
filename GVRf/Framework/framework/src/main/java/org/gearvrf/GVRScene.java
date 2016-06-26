@@ -242,6 +242,20 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return null;
     }
+    
+    /**
+     * Enable / disable picking of visible objects.
+     * Picking only visible objects is enabled by default.
+     * Only objects that can be seen will be pickable by GVRPicker.
+     * Disable this feature if you want to be able to pick
+     * stuff the viewer cannot see.
+     * @param flag true to enable pick only visible, false to enable pick all colliders
+     * @see GVRPicker
+     */
+    public void setPickVisible(boolean flag) {
+        NativeScene.setPickVisible(getNative(), flag);
+    }
+    
     public void inValidateShadowMap(){
         NativeScene.invalidateShadowMap(getNative());
     }
@@ -632,4 +646,6 @@ class NativeScene {
     static native void addLight(long scene, long light);
     
     static native void setMainScene(long scene);
+    
+    static native void setPickVisible(long scene, boolean flag);
 }

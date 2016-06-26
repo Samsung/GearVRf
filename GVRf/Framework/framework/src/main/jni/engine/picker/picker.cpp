@@ -47,7 +47,7 @@ Picker::~Picker() {
  */
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float ox,
         float oy, float oz, float dx, float dy, float dz) {
-    const std::vector<Component*>& colliders = scene->getColliders();
+    const std::vector<Component*>& colliders = scene->lockColliders();
     Transform* const t = scene->main_camera_rig()->getHeadTransform();
 
     if (nullptr != t) {
@@ -67,6 +67,7 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float 
         }
         std::sort(picklist.begin(), picklist.end(), compareColliderData);
     }
+    scene->unlockColliders();
  }
 
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {

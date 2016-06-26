@@ -174,7 +174,10 @@ public class GVRPicker extends GVRBehavior {
         }
         if (mHasChanged)
         {
-            doPick();
+            if (isEnabled())
+            {
+                doPick();
+            }
             mHasChanged = false;
         }        
     }
@@ -198,6 +201,26 @@ public class GVRPicker extends GVRBehavior {
                 mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
                 mRayDirection.x, mRayDirection.y, mRayDirection.z);
         /*
+         * Send "onExit" events for colliders that were picked but
+         * are not picked anymore.
+         */
+        if (mPicked != null)
+        {
+            for (GVRPickedObject collision : mPicked)
+            {
+                if (collision == null)
+                {
+                    continue;
+                }
+                GVRCollider collider = collision.hitCollider;
+                if (!hasCollider(picked, collider))
+                {
+                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());                   
+                    selectionChanged = true;
+                }
+            }
+        }
+        /*
          * Send "onEnter" events for colliders that were picked for the first time.
          * Send "onInside" events for colliders that were already picked.
          */
@@ -218,31 +241,11 @@ public class GVRPicker extends GVRBehavior {
                 getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);                   
             }
         }
-        /*
-         * Send "onExit" events for colliders that were picked but
-         * are not picked anymore.
-         */
-        if (mPicked != null)
-        {
-            for (GVRPickedObject collision : mPicked)
-            {
-                if (collision == null)
-                {
-                    continue;
-                }
-                GVRCollider collider = collision.hitCollider;
-                if (!hasCollider(picked, collider))
-                {
-                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());                   
-                    selectionChanged = true;
-                }
-            }
-        }
-        mPicked = picked;
         if (selectionChanged)
         {
-            if (mPicked.length > 0)
+            if ((picked != null) && (picked.length > 0))
             {
+                mPicked = picked;
                 getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onPick", this);
             }
             else

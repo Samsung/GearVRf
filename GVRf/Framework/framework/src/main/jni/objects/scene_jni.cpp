@@ -45,6 +45,9 @@ extern "C" {
     Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
             jobject obj, jlong jscene, jboolean flag);
     JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_setPickVisible(JNIEnv * env,
+            jobject obj, jlong jscene, jboolean flag);
+    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
             jobject obj, jlong jscene, jboolean flag);
 
@@ -127,6 +130,13 @@ Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
         jobject obj, jlong jscene, jboolean flag) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     scene->set_frustum_culling(static_cast<bool>(flag));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setPickVisible(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->setPickVisible(static_cast<bool>(flag));
 }
 
 JNIEXPORT void JNICALL
