@@ -15,14 +15,11 @@
 
 package org.gearvrf;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Threads;
-
-import android.util.LongSparseArray;
 
 /**
  * Holds any number of {@linkplain GVREyePointee 'eye pointees,'} which are
@@ -42,19 +39,14 @@ import android.util.LongSparseArray;
  * pickScene() overloads}, you get an array of {@linkplain GVREyePointeeHolder
  * eye pointee holders}. You can then call {@link #getOwnerObject()} to get the
  * scene object that a holder is attached to.
+ *
+ * @deprecated use GVRMeshCollider or GVRSphereCollider
  */
-public class GVREyePointeeHolder extends GVRComponent {
+public class GVREyePointeeHolder extends GVRCollider {
+    private final List<GVRCollider> pointees = new ArrayList<GVRCollider>();
 
-    // private static final String TAG = Log.tag(GVREyePointeeHolder.class);
-
-    private static final LongSparseArray<WeakReference<GVREyePointeeHolder>> sEyePointeeHolders = new LongSparseArray<WeakReference<GVREyePointeeHolder>>();
-
-    private final List<GVREyePointee> pointees = new ArrayList<GVREyePointee>();
-
-    static GVREyePointeeHolder lookup(GVRContext gvrContext, long nativePointer) {
-        WeakReference<GVREyePointeeHolder> weakReference = sEyePointeeHolders
-                .get(nativePointer);
-        return weakReference == null ? null : weakReference.get();
+    static GVRCollider lookup(GVRContext gvrContext, long nativePointer) {
+        return GVRCollider.lookup(nativePointer);
     }
 
     /**
@@ -64,117 +56,42 @@ public class GVREyePointeeHolder extends GVRComponent {
      *            Current {@link GVRContext}
      */
     public GVREyePointeeHolder(GVRContext gvrContext) {
-        this(gvrContext, NativeEyePointeeHolder.ctor());
+        this(gvrContext, NativeColliderGroup.ctor());
     }
 
     public GVREyePointeeHolder(GVRContext gvrContext, GVRSceneObject owner) {
-        this(gvrContext, NativeEyePointeeHolder.ctor(), sCleanup);
+        this(gvrContext, NativeColliderGroup.ctor());
         setOwnerObject(owner);
     }
     
     private GVREyePointeeHolder(GVRContext gvrContext, long nativePointer) {
-        super(gvrContext, nativePointer, sCleanup);
-        registerNativePointer(nativePointer);
-    }
+        super(gvrContext, nativePointer);
+    }        
         
-    /**
-     * Special constructor, for descendants that need to 'unregister' instances.
-     * 
-     * @param gvrContext
-     *            The current GVRF context
-     * @param nativePointer
-     *            The native pointer, returned by the native constructor
-     * @param cleanupHandlers
-     *            Cleanup handler(s).
-     * 
-     *            <p>
-     *            {@link GVREyePointeeHolder} uses a
-     *            {@link GVRHybridObject.CleanupHandlerListManager} to manage
-     *            the cleanup lists: if this parameter is a
-     *            {@code private static} class constant, there will be only one
-     *            {@code List} per class. Descendants that supply a {@code List}
-     *            and <em>also</em> have descendants that supply a {@code List}
-     *            should use a {@link CleanupHandlerListManager} of their own,
-     *            in the same way that this class does.
-     */
-    protected GVREyePointeeHolder(GVRContext gvrContext, long nativePointer,
-            List<NativeCleanupHandler> descendantsCleanupHandlerList) {
-        super(gvrContext, nativePointer, sConcatenations
-                .getUniqueConcatenation(descendantsCleanupHandlerList));
-        registerNativePointer(nativePointer);
-    }
-
-
-    static public long getComponentType() {
-        return NativeEyePointeeHolder.getComponentType();
-    }
-    
-    private void registerNativePointer(long nativePointer) {
-        sEyePointeeHolders.put(nativePointer,
-                new WeakReference<GVREyePointeeHolder>(this));
-    }
-
-    private final static List<NativeCleanupHandler> sCleanup;
-    private final static CleanupHandlerListManager sConcatenations;
-    static {
-        sCleanup = new ArrayList<NativeCleanupHandler>(1);
-        sCleanup.add(new NativeCleanupHandler() {
-
-            @Override
-            public void nativeCleanup(long nativePointer) {
-                sEyePointeeHolders.remove(nativePointer);
-            }
-        });
-
-        sConcatenations = new CleanupHandlerListManager(sCleanup);
-    }
-
-    public GVRSceneObject getOwnerObject() {
-        return super.getOwnerObject();
-    }
-
-    public void setOwnerObject(GVRSceneObject owner) {
-        GVRPicker.sFindObjectsLock.lock();
-        try {
-            super.setOwnerObject(owner);
-        } finally {
-            GVRPicker.sFindObjectsLock.unlock();
-        }
-    }
     
     /**
      * Is this holder enabled?
      * 
      * If this holder is disabled, then picking will <b>not</b> occur against
      * its {@link GVREyePointee}s.
-     * 
      * @return true if enabled, false otherwise.
+     * @deprecated use GVRComponent.isEnabled()
      */
     public boolean getEnable() {
-        return NativeEyePointeeHolder.getEnable(getNative());
+        return super.isEnabled();
     }
 
-    /**
-     * Enable or disable this holder.
-     * 
-     * If this holder is disabled, then picking will <b>not</b> occur against
-     * its {@link GVREyePointee}s.
-     * 
-     * @param enable
-     *            whether this holder should be enabled.
-     */
-    public void setEnable(boolean enable) {
-        NativeEyePointeeHolder.setEnable(getNative(), enable);
-    }
 
     /**
-     * Get the x, y, z of the point of where the hit occurred in model space
+     * Add a {@link GVREyePointee} to this holder
      * 
-     * @return Three floats representing the x, y, z hit point.
-     * 
+     * @param eyePointee
+     *            The {@link GVREyePointee} to add
+     * @deprecated use addCollider
      */
-    public float[] getHit() {
-        return NativeEyePointeeHolder.getHit(getNative());
+    public void addPointee(GVREyePointee eyePointee) {
+        pointees.add(eyePointee);
+        NativeColliderGroup.addCollider(getNative(), eyePointee.getNative());
     }
 
     /**
@@ -184,11 +101,11 @@ public class GVREyePointeeHolder extends GVRComponent {
      *            The {@link GVREyePointee} to add
      * 
      */
-    public void addPointee(GVREyePointee eyePointee) {
+    public void addCollider(GVRCollider eyePointee) {
         pointees.add(eyePointee);
-        NativeEyePointeeHolder.addPointee(getNative(), eyePointee.getNative());
+        NativeColliderGroup.addCollider(getNative(), eyePointee.getNative());
     }
-
+    
     /**
      * Add a Future {@link GVREyePointee} to this holder
      * 
@@ -231,23 +148,43 @@ public class GVREyePointeeHolder extends GVRComponent {
      */
     public void removePointee(GVREyePointee eyePointee) {
         pointees.remove(eyePointee);
-        NativeEyePointeeHolder.removePointee(getNative(),
+        NativeColliderGroup.removeCollider(getNative(),
+                eyePointee.getNative());
+    }
+
+    /**
+     * Get the x, y, z of the point of where the hit occurred in model space
+     * 
+     * @return Three floats representing the x, y, z hit point.
+     * @see getHitDistance
+     */
+    public float[] getHit()
+    {
+        return NativeColliderGroup.getHit(getNative());
+    }
+    
+    /**
+     * Remove a {@link GVRCollider} from this holder.
+     * 
+     * No exception is thrown if the collider is not held by this holder.
+     * 
+     * @param eyePointee
+     *            The {@link GVRCollider} to remove
+     * 
+     */
+    public void removeCollider(GVRCollider eyePointee) {
+        pointees.remove(eyePointee);
+        NativeColliderGroup.removeCollider(getNative(),
                 eyePointee.getNative());
     }
 }
 
-class NativeEyePointeeHolder {
+class NativeColliderGroup {
     static native long ctor();
 
-    static native long getComponentType();
-
-    static native boolean getEnable(long eyePointeeHolder);
-
-    static native void setEnable(long eyePointeeHolder, boolean enable);
-
     static native float[] getHit(long eyePointeeHolder);
+    
+    static native void addCollider(long eyePointeeHolder, long eyePointee);
 
-    static native void addPointee(long eyePointeeHolder, long eyePointee);
-
-    static native void removePointee(long eyePointeeHolder, long eyePointee);
+    static native void removeCollider(long eyePointeeHolder, long eyePointee);
 }

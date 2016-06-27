@@ -15,23 +15,24 @@
 
 
 /***************************************************************************
- * Eye pointee made by a mesh.
+ * Collider made by a mesh.
  ***************************************************************************/
 
-#ifndef MESH_EYE_POINTEE_H_
-#define MESH_EYE_POINTEE_H_
+#ifndef MESH_COLLIDER_H_
+#define MESH_COLLIDER_H_
 
 #include <memory>
 
-#include "objects/eye_pointee.h"
+#include "collider.h"
 
 namespace gvr {
 class Mesh;
 
-class MeshEyePointee: public EyePointee {
+class MeshCollider: public Collider {
 public:
-    MeshEyePointee(Mesh* mesh);
-    ~MeshEyePointee();
+    MeshCollider(Mesh* mesh = NULL);
+    MeshCollider(bool useMeshBounds);
+    ~MeshCollider();
 
     Mesh* mesh() const {
         return mesh_;
@@ -41,19 +42,20 @@ public:
         mesh_ = mesh;
     }
 
-    EyePointData isPointed(const glm::mat4& mv_matrix);
-    EyePointData isPointed(const glm::mat4& mv_matrix, float ox, float oy,
-            float oz, float dx, float dy, float dz);
-    static EyePointData isPointed(const Mesh& mesh, const glm::mat4& mv_matrix, float ox,
-            float oy, float oz, float dx, float dy, float dz);
+    ColliderData isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir);
+    static ColliderData isHit(const Mesh& mesh, const glm::mat4& model_view, const glm::vec3& rayStart, const glm::vec3& rayDir);
+    static float rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
+                                      const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3);
+
 
 private:
-    MeshEyePointee(const MeshEyePointee& mesh_eye_pointee);
-    MeshEyePointee(MeshEyePointee&& mesh_eye_pointee);
-    MeshEyePointee& operator=(const MeshEyePointee& mesh_eye_pointee);
-    MeshEyePointee& operator=(MeshEyePointee&& mesh_eye_pointee);
+    MeshCollider(const MeshCollider& mesh_collider);
+    MeshCollider(MeshCollider&& mesh_collider);
+    MeshCollider& operator=(const MeshCollider& mesh_collider);
+    MeshCollider& operator=(MeshCollider&& mesh_collider);
 
 private:
+    bool useMeshBounds_;
     Mesh* mesh_;
 };
 }

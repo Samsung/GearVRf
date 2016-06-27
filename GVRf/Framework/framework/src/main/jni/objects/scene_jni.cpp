@@ -23,54 +23,64 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeScene_ctor(JNIEnv * env, jobject obj);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeScene_ctor(JNIEnv * env, jobject obj);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
-        jobject obj, jlong jscene, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
+            jobject obj, jlong jscene, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_removeSceneObject(JNIEnv * env,
-        jobject obj, jlong jscene, jlong jscene_object);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_removeSceneObject(JNIEnv * env,
+            jobject obj, jlong jscene, jlong jscene_object);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_removeAllSceneObjects(JNIEnv * env,
-        jobject obj, jlong jscene);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_removeAllSceneObjects(JNIEnv * env,
+            jobject obj, jlong jscene);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_setMainCameraRig(JNIEnv * env,
-        jobject obj, jlong jscene, jlong jcamera_rig);
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
-        jobject obj, jlong jscene, jboolean flag);
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
-        jobject obj, jlong jscene, jboolean flag);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_setMainCameraRig(JNIEnv * env,
+            jobject obj, jlong jscene, jlong jcamera_rig);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
+            jobject obj, jlong jscene, jboolean flag);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_setPickVisible(JNIEnv * env,
+            jobject obj, jlong jscene, jboolean flag);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_setOcclusionQuery(JNIEnv * env,
+            jobject obj, jlong jscene, jboolean flag);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_resetStats(JNIEnv * env,
-        jobject obj, jlong jscene);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_resetStats(JNIEnv * env,
+            jobject obj, jlong jscene);
 
-JNIEXPORT int JNICALL
-Java_org_gearvrf_NativeScene_getNumberDrawCalls(JNIEnv * env,
-        jobject obj, jlong jscene);
+    JNIEXPORT int JNICALL
+    Java_org_gearvrf_NativeScene_getNumberDrawCalls(JNIEnv * env,
+            jobject obj, jlong jscene);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
-        jobject obj, jlong jscene, jstring file_path);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_exportToFile(JNIEnv * env,
+            jobject obj, jlong jscene, jstring file_path);
 
-JNIEXPORT int JNICALL
-Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
-        jobject obj, jlong jscene);
+    JNIEXPORT int JNICALL
+    Java_org_gearvrf_NativeScene_getNumberTriangles(JNIEnv * env,
+            jobject obj, jlong jscene);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_addLight(
-        JNIEnv * env, jobject obj, jlong jscene, jlong light);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_addLight(
+            JNIEnv * env, jobject obj, jlong jscene, jlong light);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
-        jobject obj, jlong jscene);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
+            jobject obj, jlong jscene);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
+            jobject obj, jlong jscene, jlong jcollider);
+
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene);
 };
 
 JNIEXPORT jlong JNICALL
@@ -120,6 +130,13 @@ Java_org_gearvrf_NativeScene_setFrustumCulling(JNIEnv * env,
         jobject obj, jlong jscene, jboolean flag) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     scene->set_frustum_culling(static_cast<bool>(flag));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_setPickVisible(JNIEnv * env,
+        jobject obj, jlong jscene, jboolean flag) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->setPickVisible(static_cast<bool>(flag));
 }
 
 JNIEXPORT void JNICALL
@@ -174,6 +191,19 @@ Java_org_gearvrf_NativeScene_addLight(JNIEnv * env,
     } else {
         scene->addLight(0);
     }
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
+        jobject obj, jlong jscene, jlong jcollider) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    Collider* collider = reinterpret_cast<Collider*>(jcollider);
+    scene->addCollider(collider);
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene) {
+    Scene::set_main_scene(reinterpret_cast<Scene*>(jscene));
 }
 
 }
