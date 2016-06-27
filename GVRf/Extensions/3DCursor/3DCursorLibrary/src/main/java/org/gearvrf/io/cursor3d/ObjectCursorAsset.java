@@ -19,6 +19,7 @@ package org.gearvrf.io.cursor3d;
 import android.util.SparseArray;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRRepeatMode;
@@ -53,8 +54,9 @@ class ObjectCursorAsset extends CursorAsset {
             Log.e(TAG, "Model not found, should not happen");
             return;
         }
+        sceneObject.set(modelSceneObject);
+        modelSceneObject.setEnable(true);
 
-        sceneObject.addChildObject(modelSceneObject);
         for (GVRAnimation animation : modelSceneObject.getAnimations()) {
             animation.setRepeatMode(GVRRepeatMode.REPEATED);
             animation.setRepeatCount(LOOP_REPEAT_COUNT);
@@ -76,8 +78,11 @@ class ObjectCursorAsset extends CursorAsset {
     @Override
     void reset(CursorSceneObject sceneObject) {
         super.reset(sceneObject);
+
         GVRModelSceneObject modelSceneObject = objects.get(sceneObject.getId());
-        sceneObject.removeChildObject(modelSceneObject);
+
+        sceneObject.reset();
+        modelSceneObject.setEnable(false);
         for (GVRAnimation animation : modelSceneObject.getAnimations()) {
             if (animation.isFinished() == false) {
                 animation.setRepeatMode(GVRRepeatMode.ONCE);
@@ -91,14 +96,19 @@ class ObjectCursorAsset extends CursorAsset {
     void load(CursorSceneObject sceneObject) {
         int key = sceneObject.getId();
         GVRModelSceneObject modelSceneObject = objects.get(key);
+
         if (modelSceneObject == null) {
             modelSceneObject = loadModelSceneObject();
             objects.put(key, modelSceneObject);
         }
+        sceneObject.addChildObject(modelSceneObject);
+        modelSceneObject.setEnable(false);
     }
 
     @Override
     void unload(CursorSceneObject sceneObject) {
+        GVRSceneObject assetSceneObject = objects.get(sceneObject.getId());
+        sceneObject.removeChildObject(assetSceneObject);
         objects.remove(sceneObject.getId());
     }
 }

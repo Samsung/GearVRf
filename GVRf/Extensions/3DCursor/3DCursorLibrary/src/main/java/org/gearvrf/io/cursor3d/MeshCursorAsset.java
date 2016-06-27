@@ -43,7 +43,7 @@ class MeshCursorAsset extends CursorAsset {
     private String texture;
     private float x;
     private float y;
-    protected SparseArray<GVRRenderData> renderDataArray;
+    protected SparseArray<GVRSceneObject> sceneObjectArray;
 
     MeshCursorAsset(GVRContext context, CursorType type, Action action, String texture) {
         this(context, type, action, null, texture);
@@ -52,7 +52,7 @@ class MeshCursorAsset extends CursorAsset {
     MeshCursorAsset(GVRContext context, CursorType type, Action action, String mesh, String
             texture) {
         super(context, type, action);
-        renderDataArray = new SparseArray<GVRRenderData>();
+        sceneObjectArray = new SparseArray<GVRSceneObject>();
 
         if (mesh != null) {
             try {
@@ -61,7 +61,7 @@ class MeshCursorAsset extends CursorAsset {
                 throw new IllegalArgumentException("Error loading mesh");
             }
         }
-        if(texture != null) {
+        if (texture != null) {
             try {
                 context.getContext().getAssets().open(texture).close();
             } catch (IOException e) {
@@ -99,19 +99,21 @@ class MeshCursorAsset extends CursorAsset {
             }
         }
         int key = sceneObject.getId();
-        GVRRenderData renderData = renderDataArray.get(key);
+        GVRSceneObject assetSceneObject = sceneObjectArray.get(key);
 
-        if (renderData == null) {
-            renderData = new GVRRenderData(context);
+        if (assetSceneObject == null) {
+            assetSceneObject = new GVRSceneObject(context);
+            GVRRenderData renderData = new GVRRenderData(context);
             renderData.setMaterial(new GVRMaterial(context, Texture.ID));
 
             if (cursorType == CursorType.LASER) {
                 renderData.setDepthTest(false);
                 renderData.setRenderingOrder(OVERLAY_RENDER_ORDER);
             }
-            renderDataArray.append(key, renderData);
+            assetSceneObject.attachRenderData(renderData);
+            sceneObjectArray.append(key, assetSceneObject);
         }
-
+        GVRRenderData renderData = assetSceneObject.getRenderData();
         if (mesh != null) {
             renderData.setMesh(mesh);
         } else if (futureMesh != null) {
@@ -121,35 +123,33 @@ class MeshCursorAsset extends CursorAsset {
         if (futureTexture != null) {
             renderData.getMaterial().setMainTexture(futureTexture);
         }
+        assetSceneObject.setEnable(false);
+        sceneObject.addChildObject(assetSceneObject);
     }
 
     @Override
     void unload(CursorSceneObject sceneObject) {
+        int key = sceneObject.getId();
         //clear the reference to the texture
-        renderDataArray.remove(sceneObject.getId());
 
+        GVRSceneObject assetSceneObject = sceneObjectArray.get(key);
+        sceneObject.removeChildObject(assetSceneObject);
+        sceneObjectArray.remove(key);
         //check if there are cursors still using the texture
-        if (renderDataArray.size() == 0) {
+        if (sceneObjectArray.size() == 0) {
             futureTexture = null;
         }
     }
 
-    void set(final CursorSceneObject sceneObject) {
+    void set(CursorSceneObject sceneObject) {
         super.set(sceneObject);
-        final GVRRenderData renderData = renderDataArray.get(sceneObject.getId());
-        if (renderData == null) {
+        final GVRSceneObject assetSceneObject = sceneObjectArray.get(sceneObject.getId());
+        if (assetSceneObject == null) {
             Log.e(TAG, "Render data not found, should not happen");
             return;
         }
-
-        // this call can only be made on the GL Thread
-        context.runOnGlThread(new Runnable() {
-            @Override
-            public void run() {
-                sceneObject.attachRenderData(renderData);
-            }
-        });
-
+        sceneObject.set(assetSceneObject);
+        assetSceneObject.setEnable(true);
     }
 
     /**
@@ -158,17 +158,11 @@ class MeshCursorAsset extends CursorAsset {
      * @param sceneObject the {@link GVRSceneObject}  for the behavior to be removed
      */
 
-    void reset(final CursorSceneObject sceneObject) {
+    void reset(CursorSceneObject sceneObject) {
         super.reset(sceneObject);
-        
-        // this call can only be made on the GL Thread
-        context.runOnGlThread(new Runnable() {
-            @Override
-            public void run() {
-                sceneObject.detachRenderData();
-            }
-        });
-
+        GVRSceneObject assetSceneObject = sceneObjectArray.get(sceneObject.getId());
+        sceneObject.reset();
+        assetSceneObject.setEnable(false);
     }
 
     float getX() {
