@@ -26,9 +26,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The scene graph.
- *
- * It receives events defined in {@link ISceneEvents}. To add a listener to these events, use the
+ * Contains a the hierarchy of visible objects, a camera and processes events.
+ * 
+ * The scene receives events defined in {@link ISceneEvents} and {@link IPickEvents}.
+ * To add a listener to these events, use the
  * following code:
  * <pre>
  *     ISceneEvents mySceneEventListener = new ISceneEvents() {
@@ -36,6 +37,17 @@ import java.util.Set;
  *     };
  *     getEventReceiver().addListener(mySceneEventListener);
  * </pre>
+ * 
+ * The scene graph is a hierarchy with all the objects to display.
+ * It has a single root and one main camera rig.
+ * Each visible object, or node, in the scene graph is a {@link GVRSceneObject}
+ * with a {@link GVRTransform} component that places and orients it in space
+ * with respect to it's parent node. A node can have multiple children,
+ * and a child inherits the concatenation of all of it's ancestors transformations.
+ * @see GVRSceneObject
+ * @see GVRTransform
+ * @see IEventReceiver
+ * @see ISceneEvents
  */
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
@@ -89,7 +101,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     }
 
     /**
-     * Add an {@linkplain GVRSceneObject scene object}
+     * Add a {@linkplain GVRSceneObject scene object} as
+     * a child of the scene root.
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to add.
@@ -100,7 +113,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     }
 
     /**
-     * Remove a {@linkplain GVRSceneObject scene object}
+     * Remove a {@linkplain GVRSceneObject scene object} from
+     * the scene root.
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to remove.
@@ -122,8 +136,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     }
 
     /**
-     * Clears the scene and resets it to initial state. Currently, it only
-     * removes all scene objects.
+     * Clears the scene and resets the scene to initial state.
+     * Currently, it only removes all scene objects.
      */
     public void clear() {
         removeAllSceneObjects();
@@ -131,19 +145,25 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
 
     /**
      * Get the root of the scene hierarchy.
+     * This node is a common ancestor to all the objects
+     * in the scene.
      * @return top level scene object.
+     * @see addSceneObject
+     * @see removeSceneObject
      */
     public GVRSceneObject getRoot() {
         return mSceneRoot;
     }
     
     /**
-     * The top-level scene objects.
+     * The top-level scene objects (children of the root node).
      * 
-     * @return A read-only list containing all the 'root' scene objects (those
-     *         that were added directly to the scene).
-     * 
+     * @return A read-only list containing all direct children of the root node.
+     *
      * @since 2.0.0
+     * @see getRoot
+     * @see addSceneObject
+     * @see removeSceneObject
      */
     public List<GVRSceneObject> getSceneObjects() {
         return mSceneRoot.getChildren();
@@ -178,7 +198,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @return The flattened hierarchy of {@link GVRSceneObject objects} as an
      *         array.
      * This function is inefficient if your hierarchy is large and should
-     * not be called per frame (in onStep)
+     * not be called per frame (in onStep).
      */
     public GVRSceneObject[] getWholeSceneObjects() {
         List<GVRSceneObject> list = new ArrayList<GVRSceneObject>();

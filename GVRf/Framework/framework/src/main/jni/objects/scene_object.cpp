@@ -144,6 +144,7 @@ SceneObject* SceneObject::getChildByIndex(int index) {
 }
 
 void SceneObject::getDescendants(std::vector<SceneObject*>& descendants) {
+    std::lock_guard < std::mutex > lock(children_mutex_);
     for (auto it = children_.begin(); it != children_.end(); ++it) {
         SceneObject* obj = *it;
         descendants.push_back(obj);

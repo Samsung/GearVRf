@@ -706,8 +706,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
             return false;
         }
         if (child.mParent != null) {
-            Log.e("gvrf", "Cannot add child - it has another parent");
-            return false;
+            throw new UnsupportedOperationException("GVRSceneObject cannot have multiple parents");
         }
         mChildren.add(child);
         child.mParent = this;
