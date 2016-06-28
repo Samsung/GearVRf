@@ -27,9 +27,11 @@ import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 import org.gearvrf.GVRImportSettings;
 
 import org.gearvrf.jassimp.AiMaterial;
@@ -47,6 +49,9 @@ import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.GVRByteArray;
 import org.gearvrf.utility.Log;
+import org.gearvrf.x3d.ShaderSettings;
+import org.gearvrf.x3d.X3Dobject;
+import org.gearvrf.x3d.X3DparseLights;
 import android.content.Context;
 import android.content.res.AssetManager;
 import org.gearvrf.jassimp.AiColor;
@@ -141,8 +146,8 @@ public final class GVRAssetLoader {
         public GVRResourceVolume getVolume() { return mVolume; }
         
         /**
-         * Load a texture asynchronously and optionally bind it to a model.
-         * @param request TextureRequest indicating which texture to load
+         * Load a texture asynchronously with a callback.
+         * @param request callback that indicates which texture to load
          */
         public void loadTexture(TextureRequest request)
         {
@@ -161,6 +166,31 @@ public final class GVRAssetLoader {
                 onTextureError(mContext, ex1.getMessage(), request.TextureFile);
             }
         }
+
+        /**
+         * Load a future texture asynchronously with a callback.
+         * @param request callback that indicates which texture to load
+         */
+        public Future<GVRTexture> loadFutureTexture(TextureRequest request)
+        {
+            ++mNumTextures;
+            try
+            {
+                GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
+                FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(resource);
+                mContext.loadTexture(request, resource);
+                return result;
+            }
+            catch (FileNotFoundException ex2)
+            {
+                onTextureError(mContext, ex2.getMessage(), request.TextureFile);                
+            }
+            catch (IOException ex1)
+            {
+                onTextureError(mContext, ex1.getMessage(), request.TextureFile);
+            }
+            return null;
+         }
         
         /**
          * Called when a model is successfully loaded.
@@ -259,41 +289,21 @@ public final class GVRAssetLoader {
      }
 
     /**
-     * Texture load callback that binds the texture to the material.
+     * Texture load callback the generates asset events.
      */
     public static class TextureRequest implements TextureCallback
     {
-        public final GVRMaterial Material;
-        public final String TextureName;
         public final String TextureFile;
-        private final GVRContext mContext;
+        protected final GVRContext mContext;
        
         public TextureRequest(GVRContext context, String texFile)
         {
             mContext = context;
-            Material = null;
-            TextureName = null;
             TextureFile = texFile;
         }
-        
-        public TextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName)
-        {
-            mContext = context;
-            Material = material;
-            TextureName = textureName;
-            TextureFile = texFile;
-            if (Material != null)
-            {
-                Material.setTexture(textureName, (GVRTexture) null);
-            }
-        }
-        
+                
         public void loaded(GVRTexture texture, GVRAndroidResource ignored)
         {
-            if (Material != null)
-            {
-                Material.setTexture(TextureName, texture);
-            }
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
@@ -313,38 +323,48 @@ public final class GVRAssetLoader {
             return true;
         }
     }
-    
+
+    /**
+     * Texture load callback that binds the texture to the material.
+     */
+    public static class MaterialTextureRequest extends TextureRequest
+    {
+        public final GVRMaterial Material;
+        public final String TextureName;
+       
+        public MaterialTextureRequest(GVRContext context, String texFile)
+        {
+        	super(context, texFile);
+            Material = null;
+            TextureName = null;
+        }
+        
+        public MaterialTextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName)
+        {
+        	super(context, texFile);
+            Material = material;
+            TextureName = textureName;
+            if (Material != null)
+            {
+                Material.setTexture(textureName, (GVRTexture) null);
+            }
+        }
+        
+        public void loaded(GVRTexture texture, GVRAndroidResource ignored)
+        {
+            if (Material != null)
+            {
+                Material.setTexture(TextureName, texture);
+            }
+            super.loaded(texture,  ignored);
+        }
+    }
+
     protected GVRContext mContext;
     public GVRAssetLoader(GVRContext context) {
         mContext = context;
     }
-    
-    
-    /**
-     * Imports a 3D model from the specified file in the application's
-     * {@code asset} directory.
-     * 
-     * @param gvrContext
-     *            Context to import file from.
-     * @param filename
-     *            Name of the file to import.
-     * @return An instance of {@link GVRAssimpImporter} or {@code null} if the
-     *         file does not exist (or cannot be read)
-     */
-    GVRAssimpImporter readFileFromAssets(GVRContext gvrContext,
-            String filename, EnumSet<GVRImportSettings> settings) { 
-        long nativeValue = NativeImporter.readFileFromAssets(gvrContext
-                .getContext().getAssets(), filename, GVRImportSettings.getAssimpImportFlags(settings));
-        return nativeValue == 0 ? null : new GVRAssimpImporter(gvrContext,
-                nativeValue);
-    }
-
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
-            int resourceId, EnumSet<GVRImportSettings> settings) {
-        return readFileFromResources(gvrContext, new GVRAndroidResource(
-                gvrContext, resourceId), settings);
-    }
-
+       
     /** @since 1.6.2 */
     GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
             GVRAndroidResource resource, EnumSet<GVRImportSettings> settings) {
@@ -388,6 +408,7 @@ public final class GVRAssetLoader {
         long nativeValue = NativeImporter.readFileFromSDCard(filename, GVRImportSettings.getAssimpImportFlags(settings));
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
+
 
     // IO Handler for Jassimp
     static class ResourceVolumeIO implements JassimpFileIO {
@@ -470,7 +491,11 @@ public final class GVRAssetLoader {
     public GVRModelSceneObject loadModel(String filePath, GVRScene scene) throws IOException
     {
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, scene);
-        return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+        String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+		if (ext.equals("x3d"))
+		    return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+		else
+		    return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
     }
 
     /**
@@ -494,7 +519,11 @@ public final class GVRAssetLoader {
     public GVRModelSceneObject loadModel(String filePath, IAssetEvents handler) throws IOException
     {
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, handler);
-        return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+        String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+		if (ext.equals("x3d"))
+		    return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+		else
+		    return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
     }
     
     /**
@@ -528,8 +557,13 @@ public final class GVRAssetLoader {
             GVRScene scene) throws IOException
     {
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, scene);
-        return loadJassimpModel(assetRequest, settings, cacheEnabled);
+        String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+		if (ext.equals("x3d"))
+		    return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+		else
+		    return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
     }
+
 
     /**
      * Loads a scene object {@link GVRModelSceneObject} from a 3D model.
@@ -591,6 +625,7 @@ public final class GVRAssetLoader {
          return sceneObj;
     }
     
+
     protected void importLights(List<AiLight> lights,Hashtable<String, GVRLightBase> lightlist){
         for(AiLight light: lights){            
             AiLightType type = light.getType();
@@ -854,7 +889,7 @@ public final class GVRAssetLoader {
         final String texDiffuseFileName = material.getTextureFile(
                 AiTextureType.DIFFUSE, 0);
         if (texDiffuseFileName != null && !texDiffuseFileName.isEmpty()) {
-            assetRequest.loadTexture(new TextureRequest(mContext, texDiffuseFileName, meshMaterial, "diffuseTexture"));
+            assetRequest.loadTexture(new MaterialTextureRequest(mContext, texDiffuseFileName, meshMaterial, "diffuseTexture"));
         }
 
         /* Apply feature set to the material */
@@ -869,6 +904,51 @@ public final class GVRAssetLoader {
         return sceneObject;
     }
 
+    GVRModelSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
+            EnumSet<GVRImportSettings> settings, boolean cacheEnabled)
+                    throws IOException {
+    	String fileName = assetRequest.getFileName();
+        GVRModelSceneObject root = new GVRModelSceneObject(mContext);
+        GVRResourceVolume volume = assetRequest.getVolume();
+        InputStream inputStream = null;
+        GVRAndroidResource resource = volume.openResource(fileName);
+
+        org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);
+        try {
+	         ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
+	         if (!X3Dobject.UNIVERSAL_LIGHTS) {
+	            X3DparseLights x3dParseLights = new X3DparseLights(mContext, root);
+	            inputStream = resource.getStream();
+	            Log.d(TAG, "Parse: " + fileName);
+	            x3dParseLights.Parse(inputStream, shaderSettings);
+	            inputStream.close();
+	          }
+	          inputStream = resource.getStream();
+	          x3dObject.Parse(inputStream, shaderSettings);
+	          inputStream.close();
+	          mContext.getEventManager().sendEvent(mContext,
+	                                               IAssetEvents.class,
+	                                               "onModelLoaded", new Object[] { mContext, (GVRSceneObject) root, fileName });
+        }
+        catch (FileNotFoundException e) {
+          mContext.getEventManager().sendEvent(mContext,
+                                               IAssetEvents.class,
+                                               "onModelError", new Object[] { mContext, e.getMessage(), fileName });
+        }
+        catch (IOException e1) {
+          mContext.getEventManager().sendEvent(mContext,
+                                               IAssetEvents.class,
+                                               "onModelError", new Object[] { mContext, e1.getMessage(), fileName });
+        }
+        catch (Exception e2) {
+          mContext.getEventManager().sendEvent(mContext,
+                                               IAssetEvents.class,
+                                               "onModelError", new Object[] { mContext, e2.getMessage(), fileName });
+          e2.printStackTrace();
+        }
+        return root;
+    }
+    
     /**
      * Retrieves the material for the mesh of the given node..
      * 
