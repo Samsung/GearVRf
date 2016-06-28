@@ -18,20 +18,18 @@ package org.gearvrf;
 /**
  * An actual eye pointee.
  * 
- * A {@link GVREyePointee} is something that is being pointed at by a picking
- * ray. {@linkplain GVREyePointee Eye pointees} are held by
- * {@linkplain GVREyePointeeHolder eye pointee holders,} which are attached to
+ * A {@link GVRCollider} is something that is being pointed at by a picking
+ * ray. {@linkplain GVRColliders Colliders} are attached to
  * {@link GVRSceneObject scene objects.} The {@link GVRPicker} will return a
- * {@code GVREyePointeeHolder[]}: you use
- * {@link GVREyePointeeHolder#getOwnerObject()} to retrieve the scene object.
+ * {@code GVRCollider[]}: you use
+ * {@link GVRCollider#getOwnerObject()} to retrieve the scene object.
  * 
  * <p>
- * A MeshEyePointee holds the {@link GVRMesh} that the picking ray will be
+ * A MeshCollider holds the {@link GVRMesh} that the picking ray will be
  * tested against.
+ * @deprecated use GVRMeshCollider
  */
-public class GVRMeshEyePointee extends GVREyePointee {
-    private GVRMesh mMesh;
-
+public class GVRMeshEyePointee extends GVRMeshCollider {
     /**
      * Base constructor.
      * 
@@ -45,8 +43,7 @@ public class GVRMeshEyePointee extends GVREyePointee {
      *            The {@link GVRMesh} that the picking ray will test against.
      */
     public GVRMeshEyePointee(GVRContext gvrContext, GVRMesh mesh) {
-        super(gvrContext, NativeMeshEyePointee.ctor(mesh.getNative()));
-        mMesh = mesh;
+        super(gvrContext, mesh);
     }
 
     /**
@@ -85,32 +82,4 @@ public class GVRMeshEyePointee extends GVREyePointee {
         this(mesh.getGVRContext(), useBoundingBox ? mesh.getBoundingBox()
                 : mesh);
     }
-
-    /**
-     * Retrieve the mesh that is held by this GVRMeshEyePointee
-     * 
-     * @return the {@link GVRMesh}
-     * 
-     */
-    public GVRMesh getMesh() {
-        return mMesh;
-    }
-
-    /**
-     * Set the mesh to be tested against.
-     * 
-     * @param mesh
-     *            The {@link GVRMesh} that the picking ray will test against.
-     * 
-     */
-    public void setMesh(GVRMesh mesh) {
-        mMesh = mesh;
-        NativeMeshEyePointee.setMesh(getNative(), mesh.getNative());
-    }
-}
-
-class NativeMeshEyePointee {
-    static native long ctor(long mesh);
-
-    static native void setMesh(long meshEyePointee, long mesh);
 }

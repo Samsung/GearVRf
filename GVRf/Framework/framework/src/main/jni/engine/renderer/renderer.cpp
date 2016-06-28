@@ -329,7 +329,7 @@ void Renderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint frame
 }
 
 void addRenderData(RenderData *render_data) {
-    if (render_data == 0 || render_data->material(0) == 0) {
+    if (render_data == 0 || render_data->material(0) == 0 || !render_data->enabled()) {
         return;
     }
 
@@ -348,14 +348,17 @@ void addRenderData(RenderData *render_data) {
 void Renderer::occlusion_cull(Scene* scene,
         std::vector<SceneObject*>& scene_objects, ShaderManager *shader_manager,
         glm::mat4 vp_matrix) {
-
+    scene->lockColliders();
+    scene->clearVisibleColliders();
     bool do_culling = scene->get_occlusion_culling();
     if (!do_culling) {
         for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
             SceneObject *scene_object = (*it);
             RenderData* render_data = scene_object->render_data();
             addRenderData(render_data);
+            scene->pick(scene_object);
         }
+        scene->unlockColliders();
         return;
     }
 
@@ -427,8 +430,10 @@ void Renderer::occlusion_cull(Scene* scene,
             (*it)->set_visible(visibility);
             (*it)->set_query_issued(false);
             addRenderData((*it)->render_data());
+            scene->pick(scene_object);
         }
     }
+    scene->unlockColliders();
 }
 
 void Renderer::build_frustum(float frustum[6][4], const float *vp_matrix) {
@@ -606,10 +611,8 @@ bool Renderer::isDefaultPosition3d(const Material* curr_material) {
 }
 
 void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
-
-    if (!rstate.render_mask || !render_data->render_mask())
+    if (!(rstate.render_mask & render_data->render_mask()))
         return;
-
     if (render_data->offset()) {
         GL(glEnable (GL_POLYGON_OFFSET_FILL));
         GL(glPolygonOffset(render_data->offset_factor(),

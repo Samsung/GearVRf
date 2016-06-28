@@ -344,15 +344,16 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRComponent.getComponentType
      */
     public boolean attachComponent(GVRComponent component) {
-        boolean added = true;
         if (component.getNative() != 0) {
-            added = NativeSceneObject.attachComponent(getNative(), component.getNative());
+            NativeSceneObject.attachComponent(getNative(), component.getNative());
         }
-        if (added) synchronized (mComponents) {
+        synchronized (mComponents) {
             long type = component.getType();
-            mComponents.put(type, component);
-            component.setOwnerObject(this);
-            return true;
+            if (!mComponents.containsKey(type)) {
+                mComponents.put(type, component);
+                component.setOwnerObject(this);
+                return true;
+            }
         }
         return false;
     }
@@ -370,12 +371,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRComponent.getComponentType
      */
     public GVRComponent detachComponent(long type) {
-        boolean removed = NativeSceneObject.detachComponent(getNative(), type);
-        if (removed) synchronized (mComponents) {
+        NativeSceneObject.detachComponent(getNative(), type);
+        synchronized (mComponents) {
             GVRComponent component = mComponents.remove(type);
-            component.setOwnerObject(null);
+            if (component != null) {
+                component.setOwnerObject(null);
+            }
+            return component;
         }
-        return null;
     }
 
     /**
@@ -580,18 +583,51 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
     
     /**
-     * Attach a new {@link GVREyePointeeHolder} to the object.
+     * Attach a new {@link GVRCollider} to the object.
      * 
-     * If another {@link GVREyePointeeHolder} is currently attached, it is
+     * If another {@link GVRCollider} is currently attached, it is
      * replaced with the new one.
      * 
-     * @param eyePointeeHolder
-     *            New {@link GVREyePointeeHolder}.
+     * @param collider
+     *            New {@link GVRCollider}.
+     *            
+     * @deprecated use attachCollider
      */
-    public void attachEyePointeeHolder(GVREyePointeeHolder eyePointeeHolder) {
-        attachComponent(eyePointeeHolder);
+    public void attachEyePointeeHolder(GVREyePointeeHolder collider) {
+        attachComponent(collider);
     }
 
+    /**
+     * Attach a new {@link GVRCollider} to the object.
+     * 
+     * If another {@link GVRCollider} is currently attached, it is
+     * replaced with the new one.
+     * 
+     * @param collider
+     *            New {@link GVRCollider}.
+     */
+    public void attachCollider(GVRCollider collider) {
+        attachComponent(collider);
+    }
+
+    /**
+     * Get the attached {@link GVRCollider}
+     * 
+     * @return The {@link GVRCollider} attached to the object. If no
+     *         {@link GVRCollider} is currently attached, returns
+     *         {@code null}.
+     */
+    public GVRCollider getCollider() {
+        return (GVRCollider) getComponent(GVRCollider.getComponentType());
+    }
+    
+    /**
+     * Detach the object's current {@link GVRCollider}.
+     */
+    public void detachCollider() {
+        detachComponent(GVRCollider.getComponentType());
+    }
+    
     /**
      * Attach a default {@link GVREyePointeeHolder} to the object.
      * 
@@ -607,64 +643,73 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         <em>and</em> you have called either
      *         {@link GVRRenderData#setMesh(GVRMesh)} or
      *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
+     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))       
      */
     public boolean attachEyePointeeHolder() {
-        GVRRenderData renderData = getRenderData();
-        if (renderData == null) {
-            return false;
+        GVREyePointeeHolder holder = new GVREyePointeeHolder(getGVRContext());
+        GVRRenderData rdata = getRenderData();
+        if (rdata != null) {
+            GVRMesh mesh = rdata.getMesh();
+            GVREyePointee pointee = new GVRMeshEyePointee(mesh, false);
+            holder.addPointee(pointee);
+            attachComponent(holder);
+            return true;
         }
-
-        Future<GVREyePointee> eyePointee = renderData.getMeshEyePointee();
-        if (eyePointee == null) {
-            return false;
-        }
-
-        GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
-                getGVRContext());
-        eyePointeeHolder.addPointee(eyePointee);
-        attachEyePointeeHolder(eyePointeeHolder);
-        return true;
+        return false;
     }
 
     /**
      * Detach the object's current {@link GVREyePointeeHolder}.
+     * @deprecated use detachCollider or detachComponent(GVRCollider.getComponentType())
      */
     public void detachEyePointeeHolder() {
-        detachComponent(GVREyePointeeHolder.getComponentType());
+        detachComponent(GVRCollider.getComponentType());
     }
 
     /**
      * Get the attached {@link GVREyePointeeHolder}
+     * This function is deprecated in favor of getCollider which can
+     * return any type of collider, not just a GVREyePointeeHolder.
      * 
      * @return The {@link GVREyePointeeHolder} attached to the object. If no
      *         {@link GVREyePointeeHolder} is currently attached, returns
      *         {@code null}.
+     * @deprecated use getCollider or getComponent(GVRCollider.getComponenType())
      */
     public GVREyePointeeHolder getEyePointeeHolder() {
-        return (GVREyePointeeHolder) getComponent(GVREyePointeeHolder.getComponentType());
+        GVRCollider collider = getCollider();
+        if ((collider != null) && GVREyePointeeHolder.class.isAssignableFrom(collider.getClass())) {
+            return (GVREyePointeeHolder) collider;
+        }
+        return null;
     }
 
     /**
      * Simple, high-level API to enable or disable eye picking for this scene
      * object.
      * 
-     * The {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder) low-level
+     * The {@linkplain #attachCollider low-level
      * API} gives you a lot of control over eye picking, but it does involve an
-     * awful lot of details. Since most apps are just going to use the
-     * {@linkplain #attachEyePointeeHolder() simple API} anyhow, this method
+     * awful lot of details. This method
      * (and {@link #getPickingEnabled()}) provides a simple boolean property.
+     * It attaches a GVRSphereCollider to the scene object. If you want more
+     * accurate picking, you can use {@link attachComponent} to attach a
+     * mesh collider instead. The mesh collider is more accurate but also
+     * costs more to compute.
      * 
      * @param enabled
      *            Should eye picking 'see' this scene object?
      * 
      * @since 2.0.2
+     * @see GVRSphereCollider
+     * @see GVRMeshCollider
      */
     public void setPickingEnabled(boolean enabled) {
         if (enabled != getPickingEnabled()) {
             if (enabled) {
-                attachEyePointeeHolder();
+                attachComponent(new GVRSphereCollider(getGVRContext()));
             } else {
-                detachEyePointeeHolder();
+                detachComponent(GVRCollider.getComponentType());
             }
         }
     }
@@ -677,7 +722,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @since 2.0.2
      */
     public boolean getPickingEnabled() {
-        return getComponent(GVREyePointeeHolder.getComponentType()) != null;
+        return getComponent(GVRCollider.getComponentType()) != null;
     }
 
     /**
