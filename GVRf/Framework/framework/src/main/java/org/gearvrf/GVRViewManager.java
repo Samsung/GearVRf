@@ -948,6 +948,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
     @Override
     public synchronized void setMainScene(GVRScene scene) {
         mMainScene = scene;
+        NativeScene.setMainScene(mMainScene.getNative());
+
         if (mNextMainScene == scene) {
             mNextMainScene = null;
             if (mOnSwitchMainScene != null) {
@@ -966,6 +968,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         if (mNextMainScene == null) {
             mNextMainScene = new GVRScene(this);
         }
+        NativeScene.setMainScene(mNextMainScene.getNative());
         mOnSwitchMainScene = onSwitchMainScene;
         return mNextMainScene;
     }

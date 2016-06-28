@@ -15,36 +15,46 @@
 
 
 /***************************************************************************
- * Can be picked by the picker.
+ * Can hold a set of colliders attached to a scene object.
  ***************************************************************************/
 
-#ifndef EYE_POINTEE_H_
-#define EYE_POINTEE_H_
+#ifndef COLLIDE_GROUP_H_
+#define COLLIDE_GROUP_H_
+
+#include <algorithm>
+#include <memory>
+#include <vector>
 
 #include "glm/glm.hpp"
 
-#include "engine/picker/eye_point_data.h"
-#include "objects/hybrid_object.h"
+#include "collider.h"
 
 namespace gvr {
 
-class EyePointee: public HybridObject {
+class ColliderGroup: public Collider {
 public:
-    EyePointee() {
-    }
+    ColliderGroup();
+    ~ColliderGroup();
 
-    virtual ~EyePointee() {
-    }
+    void addCollider(Collider* pointee);
+    void removeCollider(Collider* pointee);
+    ColliderData isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir);
 
-    virtual EyePointData isPointed(const glm::mat4& mv_matrix) = 0;
-    virtual EyePointData isPointed(const glm::mat4& mv_matrix, float ox,
-            float oy, float oz, float dx, float dy, float dz) = 0;
+    const glm::vec3& hit() const {
+        return hit_;
+    }
 
 private:
-    EyePointee(const EyePointee& eye_pointee);
-    EyePointee(EyePointee&& eye_pointee);
-    EyePointee& operator=(const EyePointee& eye_pointee);
-    EyePointee& operator=(EyePointee&& eye_pointee);
+    ColliderGroup(const ColliderGroup& eye_pointee_holder);
+    ColliderGroup(ColliderGroup&& eye_pointee_holder);
+    ColliderGroup& operator=(const ColliderGroup& eye_pointee_holder);
+    ColliderGroup& operator=(ColliderGroup&& eye_pointee_holder);
+
+private:
+    glm::vec3 hit_;
+    std::vector<Collider*> colliders_;
 };
+
 }
+
 #endif

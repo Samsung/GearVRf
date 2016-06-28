@@ -125,7 +125,11 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
 
     if (nullptr == oculusMobile_) {
         ovrModeParms parms = vrapi_DefaultModeParms(&oculusJavaGlThread_);
-        configurationHelper_.getModeConfiguration(env, parms.AllowPowerSave, parms.ResetWindowFullscreen);
+    	bool AllowPowerSave, ResetWindowFullscreen;
+        configurationHelper_.getModeConfiguration(env, AllowPowerSave, ResetWindowFullscreen);
+        parms.Flags |=AllowPowerSave;
+        parms.Flags |=ResetWindowFullscreen;
+
         oculusMobile_ = vrapi_EnterVrMode(&parms);
 
         oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
