@@ -161,19 +161,21 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Enable the light.
      */
+    @Override
     public void enable()
     {
         setFloat("enabled", 1.0f);
-        NativeLight.enable(getNative());
+        super.enable();
     }
 
     /**
      * Disable the light.
      */
+    @Override
     public void disable()
     {
         setFloat("enabled", 0.0f);
-        NativeLight.disable(getNative());
+        super.disable();
     }
     
     /**

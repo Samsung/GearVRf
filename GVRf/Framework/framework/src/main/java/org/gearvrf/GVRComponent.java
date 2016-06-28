@@ -79,12 +79,7 @@ public class GVRComponent extends GVRHybridObject {
      * @return The {@link GVRSceneObject} this object is currently attached to, or null if not attached.
      */
     public GVRSceneObject getOwnerObject() {
-        if (owner != null) {
-            return owner;
-        }
-
-        throw Exceptions.RuntimeAssertion("No Java owner: %s", getClass()
-                .getSimpleName());
+        return owner;
     }
 
     /***

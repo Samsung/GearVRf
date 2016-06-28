@@ -99,14 +99,14 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_enable(JNIEnv * env,
     jobject obj, jlong jlight) {
     Light* light = reinterpret_cast<Light*>(jlight);
-    light->enable();
+    light->set_enable(true);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_disable(JNIEnv * env,
     jobject obj, jlong jlight) {
     Light* light = reinterpret_cast<Light*>(jlight);
-    light->disable();
+    light->set_enable(false);
 }
 
 JNIEXPORT jfloat JNICALL

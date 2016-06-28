@@ -23,9 +23,21 @@
 #include "objects/scene_object.h"
 
 namespace gvr {
+
+Scene* Scene::main_scene_ = NULL;
+
 Scene::Scene() :
-        HybridObject(), scene_objects_(), main_camera_rig_(), frustum_flag_(
-                false), dirtyFlag_(0), occlusion_flag_(false), is_shadowmap_invalid(true) {
+        HybridObject(),
+        scene_objects_(),
+        main_camera_rig_(),
+        frustum_flag_(false),
+        dirtyFlag_(0),
+        occlusion_flag_(false),
+        pick_visible_(true),
+        is_shadowmap_invalid(true) {
+    if (main_scene() == NULL) {
+        set_main_scene(this);
+    }
 }
 
 Scene::~Scene() {
@@ -44,7 +56,59 @@ void Scene::removeSceneObject(SceneObject* scene_object) {
 void Scene::removeAllSceneObjects() {
     scene_objects_.clear();
     lightList.clear();
+    clearAllColliders();
 }
+
+void Scene::clearAllColliders() {
+    lockColliders();
+    allColliders.clear();
+    visibleColliders.clear();
+    unlockColliders();
+}
+
+void Scene::gatherColliders() {
+    lockColliders();
+    allColliders.clear();
+    visibleColliders.clear();
+    for (auto it = scene_objects_.begin(); it != scene_objects_.end(); ++it) {
+        SceneObject* obj = *it;
+        obj->getAllComponents(allColliders, Collider::getComponentType());
+    }
+    unlockColliders();
+}
+
+void Scene::pick(SceneObject* sceneobj) {
+    if (pick_visible_) {
+         Collider* collider = reinterpret_cast<Collider*>(sceneobj->getComponent(Collider::getComponentType()));
+        if (collider) {
+            visibleColliders.push_back(collider);
+        }
+     }
+}
+
+void Scene::addCollider(Collider* collider) {
+    auto it = std::find(allColliders.begin(), allColliders.end(), collider);
+    if (it == allColliders.end()) {
+        lockColliders();
+        allColliders.push_back(collider);
+        unlockColliders();
+    }
+}
+
+void Scene::removeCollider(Collider* collider) {
+    auto it = std::find(allColliders.begin(), allColliders.end(), collider);
+    if (it != allColliders.end()) {
+        lockColliders();
+        allColliders.erase(it);
+        unlockColliders();
+    }
+}
+
+void Scene::set_main_scene(Scene* scene) {
+    main_scene_ = scene;
+    scene->gatherColliders();
+}
+
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     std::vector<SceneObject*> scene_objects(scene_objects_);

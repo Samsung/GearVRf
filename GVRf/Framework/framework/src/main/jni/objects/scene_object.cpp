@@ -21,7 +21,7 @@
 
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
-#include "objects/components/eye_pointee_holder.h"
+#include "objects/components/collider_group.h"
 #include "objects/components/render_data.h"
 #include "util/gvr_log.h"
 #include "mesh.h"
@@ -82,6 +82,24 @@ Component* SceneObject::getComponent(long long type) const {
             return *it;
     }
     return (Component*) NULL;
+}
+
+void SceneObject::getAllComponents(std::vector<Component*>& components, long long componentType) {
+    if (componentType) {
+        Component* c = getComponent(componentType);
+        if (c) {
+            components.push_back(c);
+        }
+    }
+    else {
+        for (auto it = components_.begin(); it != components_.end(); ++it) {
+            components.push_back(*it);
+        }
+    }
+    for (auto it2 = children_.begin(); it2 != children_.end(); ++it2) {
+        SceneObject* obj = *it2;
+        obj->getAllComponents(components, componentType);
+    }
 }
 
 void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
