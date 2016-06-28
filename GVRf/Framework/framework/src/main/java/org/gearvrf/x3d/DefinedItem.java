@@ -15,6 +15,8 @@
 
 package org.gearvrf.x3d;
 
+import java.util.concurrent.Future;
+
 import org.gearvrf.GVRMaterial;
 
 /*
@@ -33,7 +35,7 @@ public class DefinedItem {
   private String name = "";
   private GVRMesh gvrMesh = null;
   private GVRSceneObject gvrSceneObject = null;
-  private GVRTexture gvrTexture = null;
+  private Future<GVRTexture> gvrTexture = null;
   private GVRRenderData gvrRenderData = null;
 
   // Only have ShaderSetting set until parsing the end Shape </Shape> node
@@ -64,11 +66,11 @@ public class DefinedItem {
 	  return this.gvrRenderData;
   }
   
-  public void setGVRTexture (GVRTexture gvrTexture) {
+  public void setGVRTexture (Future<GVRTexture> gvrTexture) {
 	  this.gvrTexture = gvrTexture;
   }
 
-  public GVRTexture getGVRTexture() {
+  public Future<GVRTexture> getGVRTexture() {
 	  return this.gvrTexture;
   }
 

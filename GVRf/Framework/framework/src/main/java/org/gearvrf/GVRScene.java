@@ -182,7 +182,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             list.add(child);
             addChildren(list, child);
         }
-        bindShaders();
     }
 
     /**
@@ -243,6 +242,20 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return null;
     }
+    
+    /**
+     * Enable / disable picking of visible objects.
+     * Picking only visible objects is enabled by default.
+     * Only objects that can be seen will be pickable by GVRPicker.
+     * Disable this feature if you want to be able to pick
+     * stuff the viewer cannot see.
+     * @param flag true to enable pick only visible, false to enable pick all colliders
+     * @see GVRPicker
+     */
+    public void setPickVisible(boolean flag) {
+        NativeScene.setPickVisible(getNative(), flag);
+    }
+    
     public void inValidateShadowMap(){
         NativeScene.invalidateShadowMap(getNative());
     }
@@ -387,8 +400,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             for (GVRLightBase light : lights) {
                 addLight(light);
             }
-        }
-        for (GVRSceneObject child : mSceneObjects) {
+       }
+       for (GVRSceneObject child : mSceneObjects) {
             ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.getComponentType());
             for (GVRRenderData rdata : renderers) {
                 rdata.bindShader(this);
@@ -457,7 +470,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return false;
     }
-    
+        
     /**
      * Get the list of lights used by this scene.
      * 
@@ -511,7 +524,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     public void applyLightMapTexture(GVRTexture texture) {
         applyTextureAtlas("lightmap", texture, GVRMaterial.GVRShaderType.LightMap.ID);
     }
-
+    
     /**
      * Apply the texture atlas to the scene.
      *
@@ -631,4 +644,8 @@ class NativeScene {
     public static native void exportToFile(long scene, String file_path);
 
     static native void addLight(long scene, long light);
+    
+    static native void setMainScene(long scene);
+    
+    static native void setPickVisible(long scene, boolean flag);
 }

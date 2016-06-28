@@ -25,17 +25,21 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlongArray JNICALL
-Java_org_gearvrf_NativePicker_pickScene(JNIEnv * env,
-        jobject obj, jlong jscene, jfloat ox, jfloat oy, jfloat z, jfloat dx,
-        jfloat dy, jfloat dz);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jcamera_rig);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativePicker_pickSceneObjectAgainstBoundingBox(JNIEnv * env,
-        jobject obj, jlong jscene_object, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
-        jfloat dy, jfloat dz);
+    JNIEXPORT jlongArray JNICALL
+    Java_org_gearvrf_NativePicker_pickScene(JNIEnv * env,
+            jobject obj, jlong jscene, jfloat ox, jfloat oy, jfloat z, jfloat dx,
+            jfloat dy, jfloat dz);
+    JNIEXPORT jobjectArray JNICALL
+    Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
+            jobject obj, jlong jscene, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
+            jfloat dy, jfloat dz);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
+            jobject obj, jlong jscene_object, jlong jcamera_rig);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativePicker_pickSceneObjectAgainstBoundingBox(JNIEnv * env,
+            jobject obj, jlong jscene_object, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
+            jfloat dy, jfloat dz);
 }
 
 JNIEXPORT jlongArray JNICALL
@@ -43,20 +47,53 @@ Java_org_gearvrf_NativePicker_pickScene(JNIEnv * env,
         jobject obj, jlong jscene, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
         jfloat dy, jfloat dz) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
-    std::vector<EyePointeeHolder*> eye_pointee_holders =
-            Picker::pickScene(scene, ox, oy, oz, dx, dy, dz);
-    std::vector<jlong> long_eye_pointee_holders;
-    for (auto it = eye_pointee_holders.begin(); it != eye_pointee_holders.end();
-            ++it) {
-        jlong eye_pointee_holder = reinterpret_cast<jlong>(*it);
-        long_eye_pointee_holders.push_back(eye_pointee_holder);
+    std::vector<ColliderData> colliders;
+
+    Picker::pickScene(scene, colliders, ox, oy, oz, dx, dy, dz);
+    jlongArray jcolliders = env->NewLongArray(colliders.size());
+    jlong* ptrArray = env->GetLongArrayElements(jcolliders, 0);
+    jlong* ptrs = ptrArray;
+    for (auto it = colliders.begin(); it != colliders.end(); ++it) {
+        const ColliderData& data = *it;
+        jlong collider = reinterpret_cast<jlong>(data.ColliderHit);
+        *ptrs++ = collider;
     }
-    jlongArray jeye_pointee_holders = env->NewLongArray(
-            long_eye_pointee_holders.size());
-    env->SetLongArrayRegion(jeye_pointee_holders, 0,
-            long_eye_pointee_holders.size(),
-            reinterpret_cast<jlong*>(long_eye_pointee_holders.data()));
-    return jeye_pointee_holders;
+    env->ReleaseLongArrayElements(jcolliders, ptrArray, 0);
+    return jcolliders;
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
+        jobject obj, jlong jscene, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
+        jfloat dy, jfloat dz)
+{
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
+    jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    std::vector<ColliderData> colliders;
+
+    Picker::pickScene(scene, colliders, ox, oy, oz, dx, dy, dz);
+
+    int i = 0;
+    int size = colliders.size();
+    jobjectArray pickList = env->NewObjectArray(size, hitClass, NULL);
+
+    for (auto it = colliders.begin(); it != colliders.end(); ++it)
+    {
+        const ColliderData& data = *it;
+        jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
+        jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
+                              data.HitPosition.x, data.HitPosition.y, data.HitPosition.z);
+        if (hitObject != 0)
+        {
+            env->SetObjectArrayElement(pickList, i++, hitObject);
+            env->DeleteLocalRef(hitObject);
+        }
+    }
+    env->DeleteLocalRef(pickerClass);
+    env->DeleteLocalRef(hitClass);
+    return pickList;
 }
 
 JNIEXPORT jfloat JNICALL
