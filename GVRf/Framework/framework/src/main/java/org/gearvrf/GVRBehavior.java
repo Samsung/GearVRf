@@ -36,7 +36,6 @@ import java.lang.reflect.Method;
 public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
 {
     protected boolean mIsListening;
-    protected long mType;    
     private boolean mHasFrameCallback;
     static private long TYPE_BEHAVIOR = (System.currentTimeMillis() & 0xfffffff);
     

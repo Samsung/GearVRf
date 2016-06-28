@@ -269,6 +269,19 @@ public class IoDevice {
         }
     }
 
+    /**
+     * Use this method to turn on and off the visibility of the {@link Cursor}
+     *
+     * @param visible <code>true</code> makes the {@link Cursor} visible and
+     *              <code>false</code> turns off its visibility.
+     */
+    protected void setVisible(boolean visible) {
+        GVRSceneObject sceneObject = gvrCursorController.getSceneObject();
+        if (sceneObject != null && sceneObject.isEnabled() != visible) {
+            sceneObject.setEnable(visible);
+        }
+    }
+
     void setSceneObject(GVRSceneObject cursor) {
         gvrCursorController.setSceneObject(cursor);
     }

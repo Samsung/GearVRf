@@ -110,40 +110,20 @@ class CursorSceneObject {
         }
     }
 
-    void attachRenderData(GVRRenderData renderData) {
-        // wait for completion of the collision test
-        synchronized (lock) {
-            meshSceneObject.attachRenderData(renderData);
-        }
-    }
-
-    void detachRenderData() {
-        // wait for completion of the collision test
-        synchronized (lock) {
-            meshSceneObject.detachRenderData();
-        }
-    }
-
-    void addExternalChildObject(GVRSceneObject sceneObject) {
-        externalSceneObject.addChildObject(sceneObject);
-    }
-
     void addChildObject(GVRSceneObject sceneObject) {
-        meshSceneObject = getMeshObject(sceneObject);
         cursor.addChildObject(sceneObject);
     }
 
-    void removeExternalChildObject(GVRSceneObject sceneObject) {
-        externalSceneObject.removeChildObject(sceneObject);
+    void set(GVRSceneObject sceneObject){
+        meshSceneObject = getMeshObject(sceneObject);
+    }
+
+    void reset(){
+        meshSceneObject = null;
     }
 
     void removeChildObject(GVRSceneObject sceneObject) {
-        meshSceneObject = cursor;
         cursor.removeChildObject(sceneObject);
-    }
-
-    boolean hasMesh() {
-        return meshSceneObject.hasMesh();
     }
 
     void setScale(float scale) {

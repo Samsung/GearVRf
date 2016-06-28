@@ -405,11 +405,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * bindShaders may need to be called again to regenerate the correct shaders
      * for the new lighting conditions. This function is called whenever a scene
      * object is added at the root of the scene.
-     * @see GVRRenderData.bindShader
+     * @see GVRRenderData#bindShader(GVRScene)
      * @see GVRShaderTemplate
-     * @see GVRScene.addSceneObject
+     * @see GVRScene#addSceneObject(GVRSceneObject)
      */
-    protected void bindShaders(GVRSceneObject root) {
+    public void bindShaders(GVRSceneObject root) {
         ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.getComponentType());
         int added = 0;
         for (GVRLightBase light : lights) {
@@ -424,10 +424,10 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         else
         {
-            ArrayList<GVRRenderData> renderers = root.getAllComponents(GVRRenderData
+            ArrayList<GVRRenderData> renderDataList = root.getAllComponents(GVRRenderData
                     .getComponentType());
-            for (GVRRenderData rdata : renderers) {
-                rdata.bindShader(this);
+            for (GVRRenderData renderData : renderDataList) {
+                renderData.bindShader(this);
             }           
         }
     }
