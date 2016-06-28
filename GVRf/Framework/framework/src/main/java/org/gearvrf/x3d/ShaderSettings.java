@@ -191,8 +191,10 @@ public class ShaderSettings
     return this.transparency;
   }
 
+  public void setTexture(Future<GVRTexture> texture)
   {
     this.texture = texture;
+    this.material.setTexture("diffuseTexture", texture);
   }
 
   public void setTextureCenter(float[] textureCenter)
