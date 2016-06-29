@@ -223,38 +223,57 @@ public class X3Dobject
   private LODmanager lodManager = null;
   private GVRCameraRig cameraRigAtRoot = null;
 
+  
+  /*********************************************/
+  /********** X3Dobject Constructor ************/
+  /*********************************************/
   public X3Dobject(GVRAssetLoader.AssetRequest assetRequest, GVRModelSceneObject root)
   {
-	this.assetRequest = assetRequest;
-    this.gvrContext = assetRequest.getContext();
-    this.activityContext = gvrContext.getContext();
-    this.root = root;
-    // this will need to be referenced in the X3DparserScript
-    this.root.setName(X3D_ROOT_NODE);
+    try {
+      this.assetRequest = assetRequest;
+      this.gvrContext = assetRequest.getContext();
+      this.activityContext = gvrContext.getContext();
+      this.root = root;
+      // this will need to be referenced in the X3DparserScript
+      this.root.setName(X3D_ROOT_NODE);
+  
+      // Camera rig setup code based on GVRScene::init()
+      GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
+      leftCamera.setRenderMask(GVRRenderMaskBit.Left);
+  
+      GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
+      rightCamera.setRenderMask(GVRRenderMaskBit.Right);
+  
+      GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
+      centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
+  
+      cameraRigAtRoot = new GVRCameraRig(gvrContext, root);
+      cameraRigAtRoot.attachLeftCamera(leftCamera);
+      cameraRigAtRoot.attachRightCamera(rightCamera);
+      cameraRigAtRoot.attachCenterCamera(centerCamera);
+  
+      cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
+      cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
+      // attach the camera rig to the root instead of the GVRscene
+      root.attachComponent(cameraRigAtRoot);
+  
+      this.mAnimations = root.getAnimations();
+      lodManager = new LODmanager();
+    }
+    //com.sun.jdi.InvocationException
+    //catch (jdi.InvocationException e) {
+    //  Log.e(TAG, "X3Dobject constructor error: " + e);
+    //}
+    catch (Exception e) {
+      Log.e(TAG, "X3Dobject constructor error: " + e);
+    }
+  }  //  end Constructor
 
-    // Camera rig setup code based on GVRScene::init()
-    GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
-    leftCamera.setRenderMask(GVRRenderMaskBit.Left);
-
-    GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
-    rightCamera.setRenderMask(GVRRenderMaskBit.Right);
-
-    GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
-    centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
-
-    cameraRigAtRoot = new GVRCameraRig(gvrContext, root);
-    cameraRigAtRoot.attachLeftCamera(leftCamera);
-    cameraRigAtRoot.attachRightCamera(rightCamera);
-    cameraRigAtRoot.attachCenterCamera(centerCamera);
-
-    cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
-    cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
-    // attach the camera rig to the root instead of the GVRscene
-    root.attachComponent(cameraRigAtRoot);
-
-    this.mAnimations = root.getAnimations();
-    lodManager = new LODmanager();
-  }
+  
+  /*********************************************/
+  /********** Utility Functions to *************/
+  /************* Assist Parsing ****************/
+  /*********************************************/
 
   public void AddKeys(float key)
   {
@@ -663,15 +682,16 @@ public class X3Dobject
       Quaternionf q = new Quaternionf();
       if ((d.x == 0) && (d.z == 0))
       {
-        // exception condition
+        // exception condition if direction is (0,y,0):
+        //    straight up, straight down or all zero's.
         if (d.y > 0)
-        {
+        {  // direction straight up
           AxisAngle4f angleAxis = new AxisAngle4f(-(float) Math.PI / 2, 1, 0,
               0);
           q.set(angleAxis);
         }
         else if (d.y < 0)
-        {
+        {  // direction straight down
           AxisAngle4f angleAxis = new AxisAngle4f((float) Math.PI / 2, 1, 0, 0);
           q.set(angleAxis);
         }
@@ -695,7 +715,7 @@ public class X3Dobject
         q.setFromNormalized(matrix);
       }
       return q;
-    }
+    }  //  end ConvertDirectionalVectorToQuaternion
     
     private void ReplicateGVRSceneObjStructure(String attributeValue) {
       // Transform or Group node to be shared / re-used
@@ -770,9 +790,12 @@ public class X3Dobject
       else
         currentSceneObject.addChildObject(newObject);
       return newObject;
-    }
+    }  //  end AddGVRSceneObject
 
+    
+    /*********************************************/
     /*********** Parse the X3D File **************/
+    /*********************************************/
     @Override
     public void startElement(String uri, String localName, String qName,
         Attributes attributes) throws SAXException
