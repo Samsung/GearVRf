@@ -32,18 +32,22 @@
 namespace gvr {
 CustomShader::CustomShader(const std::string& vertex_shader, const std::string& fragment_shader)
     : vertexShader_(vertex_shader), fragmentShader_(fragment_shader) {
-    program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
-    vertexShader_.clear();
-    fragmentShader_.clear();
-    u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
-    u_view_ = glGetUniformLocation(program_->id(), "u_view");
-    u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
-    u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
-    u_right_ = glGetUniformLocation(program_->id(), "u_right");
-    u_model_ = glGetUniformLocation(program_->id(), "u_model");
 }
 
+
 void CustomShader::initializeOnDemand() {
+    if (nullptr == program_)
+    {
+        program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
+        vertexShader_.clear();
+        fragmentShader_.clear();
+        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+        u_view_ = glGetUniformLocation(program_->id(), "u_view");
+        u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
+        u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
+        u_right_ = glGetUniformLocation(program_->id(), "u_right");
+        u_model_ = glGetUniformLocation(program_->id(), "u_model");
+    }
    if (textureVariablesDirty_) {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
@@ -148,7 +152,6 @@ void CustomShader::addAttributeKey(const std::string& variable_name,
 
 void CustomShader::addAttributeVec3Key(const std::string& variable_name,
         const std::string& key) {
-    LOGE("Adding vec3 key in custom shader");
     AttributeVariableBind f =
             [key] (Mesh& mesh, GLuint location) {
                 mesh.setVertexAttribLocV3(location, key);
@@ -277,7 +280,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         }
         checkGlError("CustomShader after bones");
     }
-    //mesh->bindVertexAttributes(program_->id());
     /*
      * Update values of uniform variables
      */

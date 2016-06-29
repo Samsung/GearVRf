@@ -214,7 +214,6 @@ void Mesh::bindVertexAttributes(GLuint programID)
 void Mesh::createAttributeMapping(int programId,
         int& totalStride, int& attrLen)
 {
-    dumpActiveAttribues(programId);
     totalStride = attrLen = 0;
     if (programId == -1)
     {
@@ -340,7 +339,7 @@ void Mesh::createBuffer(std::vector<GLfloat>& buffer, int attrLength)
 {
     for (int i = 0; i < attrLength; i++)
     {
-        for (std::vector<GLAttributeMapping>::const_iterator it = attrMapping.begin(); it != attrMapping.end(); ++it)
+        for (auto it = attrMapping.begin(); it != attrMapping.end(); ++it)
         {
             GLAttributeMapping currAttr = *it;
             const float* ptr = (float*) currAttr.data;
