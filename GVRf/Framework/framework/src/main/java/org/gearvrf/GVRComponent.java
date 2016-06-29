@@ -126,7 +126,7 @@ public class GVRComponent extends GVRHybridObject {
         mIsEnabled = flag;
         if (getNative() != 0)
         {
-            NativeComponent.setEnabled(getNative(), flag);
+            NativeComponent.setEnable(getNative(), flag);
         }
         if (flag)
         {
@@ -221,6 +221,6 @@ class NativeComponent {
     static native long getType(long component);
     static native void setOwnerObject(long component, long owner);
     static native boolean isEnabled(long component);
-    static native void setEnabled(long component, boolean flag);
+    static native void setEnable(long component, boolean flag);
 }
 
