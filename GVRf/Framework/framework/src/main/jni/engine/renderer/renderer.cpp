@@ -694,7 +694,6 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
     Mesh* mesh = render_data->mesh();
 
-    mesh->generateVAO();
     try {
          //TODO: Improve this logic to avoid a big "switch case"
         ShaderBase* shader = NULL;
@@ -757,6 +756,11 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
              else {
                  glLineWidth(1.0f);
              }
+         }
+         if (shader->getProgramId() != -1)
+         {
+             mesh->bindVertexAttributes(shader->getProgramId());
+             mesh->generateVAO(shader->getProgramId());
          }
          shader->render(&rstate, render_data, curr_material);
     } catch (const std::string &error) {

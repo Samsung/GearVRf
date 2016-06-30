@@ -49,7 +49,7 @@ public:
             vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
                     have_bounding_volume_(false), vao_dirty_(true),
                     vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
-                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID),
+                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID), static_vboID_(GVR_INVALID),
                     boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
     {
     }
@@ -78,6 +78,9 @@ public:
         if (triangle_vboID_ != GVR_INVALID) {
             deleter_->queueBuffer(triangle_vboID_);
         }
+        if (static_vboID_ != GVR_INVALID) {
+            deleter_->queueBuffer(static_vboID_);
+        }
         if (vert_vboID_ != GVR_INVALID) {
             deleter_->queueBuffer(vert_vboID_);
         }
@@ -89,7 +92,7 @@ public:
         }
         have_bounding_volume_ = false;
         vao_dirty_ = true;
-        vaoID_ = triangle_vboID_ = vert_vboID_ = norm_vboID_ = tex_vboID_ = GVR_INVALID;
+        vaoID_ = triangle_vboID_ = vert_vboID_ = norm_vboID_ = tex_vboID_ = static_vboID_ = GVR_INVALID;
         bone_data_dirty_ = true;
     }
 
@@ -293,7 +296,7 @@ public:
     }
 
     // generate VAO
-    void generateVAO();
+    void generateVAO(int programId = -1);
 
     const GLuint getVAOId() const {
         return vaoID_;
@@ -376,6 +379,7 @@ private:
     Mesh(Mesh&& mesh);
     Mesh& operator=(const Mesh& mesh);
 
+
 private:
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
@@ -400,6 +404,21 @@ private:
     GLuint norm_vboID_;
     GLuint tex_vboID_;
 
+    GLuint static_vboID_;
+    //GLuint dynamic_vboID_; // Currently handled by boneVboID_
+
+    struct GLAttributeMapping {
+        GLuint          index;
+        GLuint          size;
+        GLenum          type;
+        GLuint          offset;
+        const void*     data;
+    };
+    std::vector<GLAttributeMapping> attrMapping;
+
+    void createAttributeMapping(int programId, int& totalStride, int& attrLength);
+    void createBuffer(std::vector<GLfloat>& buffer, int attrLength);
+
     // triangle information
     GLuint numTriangles_;
     bool vao_dirty_;
@@ -416,6 +435,7 @@ private:
     bool bone_data_dirty_;
 
     GlDelete* deleter_ = nullptr;
+    static std::vector<std::string> dynamicAttribute_Names_;
 };
 }
 #endif
