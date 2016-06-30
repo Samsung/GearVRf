@@ -139,19 +139,6 @@ void CameraRig::predict(float time) {
 }
 
 void CameraRig::predict(float time, const RotationSensorData& rotationSensorData) {
-    long long clock_time = getCurrentTime();
-    float time_diff = (clock_time - rotationSensorData.time_stamp())
-            / 1000000000.0f;
-
-    glm::vec3 axis = rotationSensorData.gyro();
-    //the magnitude of the gyro vector should be the angular velocity, rad/sec
-    float angle = glm::length(axis);
-
-    //normalize the axis
-    if (angle != 0.0f) {
-        axis /= angle;
-    }
-
     setRotation(complementary_rotation_*rotationSensorData.quaternion());
 }
 
