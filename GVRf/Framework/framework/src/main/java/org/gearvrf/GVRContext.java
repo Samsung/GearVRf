@@ -617,8 +617,7 @@ public abstract class GVRContext implements IEventReceiver {
      *             File does not exist or cannot be read
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.loadModel(externalFile,
-                GVRResourceVolume.VolumeType.ANDROID_SDCARD, settings, true, null);
+        return mImporter.loadModel("sd:" + externalFile, settings, true, null);
     }
 
     /**
@@ -665,7 +664,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      */
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings, GVRScene scene) throws IOException {
-        return mImporter.loadModel(assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings, true, scene);
+        return mImporter.loadModel(assetFile, settings, true, scene);
     }
 
     /**
@@ -688,7 +687,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      */
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.loadModel(assetFile, GVRResourceVolume.VolumeType.ANDROID_ASSETS, settings, true, null);
+        return mImporter.loadModel(assetFile, settings, true, null);
     }
 
     /**
@@ -731,9 +730,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled) throws IOException {
-        return mImporter.loadModel(urlString,
-                GVRResourceVolume.VolumeType.NETWORK,
-                GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        return mImporter.loadModel(urlString, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
     }
 
     
@@ -755,8 +752,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.loadModel(urlString,
-                GVRResourceVolume.VolumeType.NETWORK, settings, true, null);
+        return mImporter.loadModel(urlString, settings, true, null);
     }
 
     /**
