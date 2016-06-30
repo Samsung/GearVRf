@@ -1,14 +1,12 @@
 package org.gearvrf.jassimp2;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
 import org.gearvrf.FutureWrapper;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRAndroidResource.TextureCallback;
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRMaterial;
@@ -18,10 +16,8 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
-import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 
 public class GVRJassimpSceneObject extends GVRModelSceneObject {
@@ -29,23 +25,23 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     protected AiScene scene;
     protected GVRResourceVolume volume;
 
-  public GVRJassimpSceneObject(GVRContext gvrContext, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRLightBase> lightlist) {
-        super(gvrContext);
+  public GVRJassimpSceneObject(GVRAssetLoader.AssetRequest request, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRLightBase> lightlist) {
+        super(request.getContext());
         this.volume = volume;
 
         if (scene != null) {
             this.scene = scene;
-            recurseAssimpNodes(this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), lightlist);
+            recurseAssimpNodes(request, this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), lightlist);
 
             // Animations
             for (AiAnimation aiAnim : scene.getAnimations()) {
                 mAnimations.add(GVRJassimpAdapter.get().createAnimation(aiAnim, this));
             }
-        }
-    
+        }    
     } 
     
     private void recurseAssimpNodes(
+            GVRAssetLoader.AssetRequest request,
             GVRSceneObject parentSceneObject,
             AiNode node,Hashtable<String, GVRLightBase> lightlist) {
         try {
@@ -55,13 +51,13 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 parentSceneObject.addChildObject(sceneObject);
             } else if (node.getNumMeshes() == 1) {
                 // add the scene object to the scene graph
-                sceneObject = createSubSceneObject(node, 0);
+                sceneObject = createSubSceneObject(request, node, 0);
                 parentSceneObject.addChildObject(sceneObject);
             } else {
                 sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
                 parentSceneObject.addChildObject(sceneObject);
                 for (int i = 0; i < node.getNumMeshes(); i++) {
-                    GVRSceneObject childSceneObject = createSubSceneObject(node, i);
+                    GVRSceneObject childSceneObject = createSubSceneObject(request, node, i);
                     sceneObject.addChildObject(childSceneObject);
                 }
             }
@@ -72,7 +68,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }
             attachLights(lightlist, sceneObject);
             for (AiNode child : node.getChildren()) {
-               recurseAssimpNodes(sceneObject, child, lightlist);
+               recurseAssimpNodes(request, sceneObject, child, lightlist);
             }
 
             getGVRContext().runOnTheFrameworkThread(new Runnable() {
@@ -132,6 +128,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
      *             File does not exist or cannot be read
      */
     private GVRSceneObject createSubSceneObject(
+            GVRAssetLoader.AssetRequest assetRequest,
             AiNode node,
            int index)
             throws IOException {
@@ -142,10 +139,14 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
         final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.BeingGenerated.ID);
 
-        /* Diffuse color */
-        AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);
+        /* Diffuse color & Opacity */
+        AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);        /* Opacity */
+        float opacity = diffuseColor.getAlpha();
+        if (material.getOpacity() > 0) {
+            opacity *= material.getOpacity();
+        }
         meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
-                diffuseColor.getGreen(), diffuseColor.getBlue(),diffuseColor.getAlpha());
+                diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
 
         /* Specular color */
         AiColor specularColor = material.getSpecularColor(GVRJassimpAdapter.sWrapperProvider);
@@ -168,15 +169,12 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 emissiveColor.getAlpha());
 
         
-        /* Opacity */
-        float opacity = material.getOpacity();
-        meshMaterial.setOpacity(opacity);
         /* Specular Exponent */
         float specularExponent = material.getShininess();        
         meshMaterial.setSpecularExponent(specularExponent);
         
         /* Diffuse Texture */
-        loadTextures( material, meshMaterial,  getGVRContext());
+        loadTextures(assetRequest, material, meshMaterial,  getGVRContext());
 
  
         GVRSceneObject sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
@@ -201,54 +199,19 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         textureMap.put(AiTextureType.LIGHTMAP,"lightmapTexture");
         textureMap.put(AiTextureType.OPACITY,"opacityTexture");
     }
-    private void loadTextures(AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
-        for (final AiTextureType texType : AiTextureType.values()) {
-            if(texType != AiTextureType.UNKNOWN ){
-            final String texFileName = material.getTextureFile(
-                    texType, 0);
-            
-            if (texFileName != null && !texFileName.isEmpty()) {
-                meshMaterial.setTexture(textureMap.get(texType),(GVRTexture)null);
-                try {
-                    if (volume != null) {
-                        GVRAndroidResource resource = volume
-                                .openResource(texFileName);
-
-                        TextureCallback callback = new TextureCallback() {
-                            @Override
-                            public void loaded(GVRTexture texture,
-                                    GVRAndroidResource ignored) {                           
-                                meshMaterial.setTexture(textureMap.get(texType),texture);
-                                Log.i(TAG,
-                                         texType + "texture %s loaded and set to material",
-                                        texFileName);
-                            }
-
-                            @Override
-                            public void failed(Throwable t,
-                                    GVRAndroidResource androidResource) {
-                                Log.e(TAG,
-                                        "Error loading " +texType + " texture %s; exception: %s",
-                                        texFileName, t.getMessage());
-                            }
-
-                            @Override
-                            public boolean stillWanted(
-                                    GVRAndroidResource androidResource) {
-                                return true;
-                            }
-                        };
-
-                        getGVRContext().loadTexture(callback, resource);
-                    }
-                } catch (FileNotFoundException file) {
-                    Log.e(TAG, "Couldn't find texture: %s", texFileName);
-                } catch (IOException e) {
-                    Log.e(TAG, "Error in loading texture: %s", texFileName);
+    
+    private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
+        for (final AiTextureType texType : AiTextureType.values())
+        {
+            if(texType != AiTextureType.UNKNOWN)
+            {
+                final String texFileName = material.getTextureFile(texType, 0);
+                if ((texFileName != null) && (texFileName != ""))
+                {
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureMap.get(texType));
+                    assetRequest.loadTexture(texRequest);
                 }
-            }      
             }
-       }
+        }
     }
-
 }

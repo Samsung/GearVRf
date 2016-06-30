@@ -21,6 +21,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.gearvrf.utility.FileNameUtils;
+
 import android.os.Environment;
 
 /**
@@ -78,6 +80,35 @@ public class GVRResourceVolume {
         this(gvrContext, volume, null);
     }
 
+    /**
+     * Constructor. Creates a {@link GVRResourceVolume} object based on a filename.
+     * @param filename A filename, relative to the root of the volume.
+     *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
+     *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
+     *            Otherwise the file is assumed to be relative to the "assets" directory.
+     * @param context The GVR Context.
+     */
+    public GVRResourceVolume(GVRContext context, String filename)
+    {
+        String fname = filename.toLowerCase();
+        gvrContext = context;
+        volumeType = GVRResourceVolume.VolumeType.ANDROID_ASSETS;
+        if (fname.startsWith("sd:"))
+        {
+            String s = FileNameUtils.getParentDirectory(filename);
+            if (s != null)
+            {
+                defaultPath = s.substring(3);
+            }
+            volumeType = GVRResourceVolume.VolumeType.ANDROID_SDCARD;
+        }
+        else if (fname.startsWith("http:") || fname.startsWith("https:"))
+        {
+            volumeType = GVRResourceVolume.VolumeType.NETWORK;
+            defaultPath = FileNameUtils.getURLParentDirectory(filename);
+        }
+    }
+    
     /**
      * Constructor. Creates a {@link GVRResourceVolume} object based on a volume type,
      * and a default path.
