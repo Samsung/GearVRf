@@ -208,7 +208,7 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 final String texFileName = material.getTextureFile(texType, 0);
                 if ((texFileName != null) && (texFileName != ""))
                 {
-                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.TextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureMap.get(texType));
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureMap.get(texType));
                     assetRequest.loadTexture(texRequest);
                 }
             }
