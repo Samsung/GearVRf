@@ -62,6 +62,10 @@ public:
         render_pass_list_.clear();
     }
 
+    static long long getComponentType() {
+        return (long long) &getComponentType;
+    }
+
     Mesh* mesh() const {
         return mesh_;
     }
@@ -249,10 +253,6 @@ public:
 
     TextureCapturer *get_texture_capturer() {
         return texture_capturer;
-    }
-
-    static long long getComponentType() {
-        return (long long) &getComponentType;
     }
 
 private:

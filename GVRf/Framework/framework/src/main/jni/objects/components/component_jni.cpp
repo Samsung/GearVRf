@@ -15,26 +15,24 @@
 
 
 #include "component.h"
-
 #include "util/gvr_jni.h"
 #include "util/gvr_log.h"
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
-        jobject obj, jlong jcomponent);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeComponent_getType(JNIEnv * env,
+            jobject obj, jlong jcomponent);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeComponent_setOwnerObject(JNIEnv * env,
-        jobject obj, jlong jcomponent, jlong jowner);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeComponent_setOwnerObject(JNIEnv * env,
+            jobject obj, jlong jcomponent, jlong jowner);
 
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeComponent_isEnabled(JNIEnv * env, jobject obj, jlong jcomponent);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeComponent_isEnabled(JNIEnv * env, jobject obj, jlong jcomponent);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jlight, jboolean flag);
-
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jlight, jboolean flag);
 }
 
 JNIEXPORT jlong JNICALL
@@ -66,7 +64,7 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jcomponent, jboolean flag)
 {
     Component* component = reinterpret_cast<Component*>(jcomponent);
-    component->set_enable(flag);
+    component->set_enable((bool) flag);
 }
 
 }

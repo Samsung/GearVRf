@@ -23,7 +23,7 @@
 
 #include <memory>
 #include <vector>
-
+#include <mutex>
 
 #include "objects/hybrid_object.h"
 #include "components/camera_rig.h"
@@ -59,6 +59,7 @@ public:
 
     void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
     bool get_occlusion_culling(){ return occlusion_flag_; }
+
     void addLight(Light* light);
 
     void resetStats() {
@@ -90,20 +91,95 @@ public:
     	return is_shadowmap_invalid;
 
     }
+    /*
+     * If set to true only visible objects will be pickable.
+     * Otherwise, all objects are pickable.
+     * Enabling this feature incurs a small amount of overhead
+     * during culling to gather the visible colliders.
+     */
+    void setPickVisible(bool pickflag) { pick_visible_ = pickflag; }
+
+    /*
+     * Returns true if only visible objects are picked.
+     */
+    bool getPickVisible() const { return pick_visible_; }
+
+    /*
+     * Add a collider to the internal collider list.
+     * This list is used to optimize picking by only
+     * searching the pickable objects.
+     * Colliders are added to this list when attached
+     * to a scene object.
+     */
+    void addCollider(Collider* collider);
+
+    /*
+     * Remove a collider from the internal collider list.
+     * Colliders are removed from the list when detached
+     * from a scene object.
+     */
+    void removeCollider(Collider* collider);
+
+    /*
+     * Clear the visible collider list.
+     * This list is constructed every frame during culling
+     * to contain only the pickable objects that are visible.
+     * This function does not lock the collider list!
+     */
+    void clearVisibleColliders() { visibleColliders.clear(); }
+
+    /*
+     * Called during culling to add a scene object's
+     * collider to the visible collider list.
+     */
+    void pick(SceneObject* sceneobj);
+
+    /*
+     * Get the current collider list and lock it.
+     * If set_pick_visible is set the visible collider list
+     * is returned. Otherwise the list of all colliders is returned.
+     * You should call unlockColliders after you are done with the list.
+     */
+    const std::vector<Component*> lockColliders() {
+        collider_mutex_.lock();
+        return pick_visible_ ? visibleColliders : allColliders;
+    }
+
+    /*
+     * Unlock the collider list.
+     * Don't call this unless you have called lockColliders first.
+     */
+    void unlockColliders() {
+        collider_mutex_.unlock();
+    }
+
+    static Scene* main_scene() {
+        return main_scene_;
+    }
+
+    static void set_main_scene(Scene* scene);
+
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);
     Scene& operator=(const Scene& scene);
     Scene& operator=(Scene&& scene);
+    void gatherColliders();
+    void clearAllColliders();
 
 private:
+    static Scene* main_scene_;
     std::vector<SceneObject*> scene_objects_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;
     bool frustum_flag_;
     bool occlusion_flag_;
+    bool pick_visible_;
+    std::mutex collider_mutex_;
     bool statsInitialized = false;
     std::vector<Light*> lightList;
+    std::vector<Component*> allColliders;
+    std::vector<Component*> visibleColliders;
     bool is_shadowmap_invalid;
 };
 
