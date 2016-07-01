@@ -37,12 +37,10 @@ class Scene: public HybridObject {
 public:
     Scene();
     virtual ~Scene();
+    SceneObject* getRoot() { return &scene_root_; }
     void addSceneObject(SceneObject* scene_object);
     void removeSceneObject(SceneObject* scene_object);
     void removeAllSceneObjects();
-    const std::vector<SceneObject*>& scene_objects() {
-        return scene_objects_;
-    }
     const CameraRig* main_camera_rig() {
         return main_camera_rig_;
     }
@@ -169,7 +167,7 @@ private:
 
 private:
     static Scene* main_scene_;
-    std::vector<SceneObject*> scene_objects_;
+    SceneObject scene_root_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;
     bool frustum_flag_;
