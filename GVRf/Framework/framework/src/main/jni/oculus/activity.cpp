@@ -154,6 +154,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         y = 0;
         width = mWidthConfiguration;
         height = mHeightConfiguration;
+        configurationHelper_.getSceneViewport(env, x, y, width, height);
 
         projectionMatrix_ = ovrMatrix4f_CreateProjectionFov(
                 vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_X),

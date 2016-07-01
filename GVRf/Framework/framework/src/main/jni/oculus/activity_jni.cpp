@@ -54,12 +54,6 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRActivityNative_onUndock(JNIEnv * jni,
     activity->headRotationProvider_.onUndock();
 }
 
-JNIEXPORT void JNICALL Java_org_gearvrf_GVRActivityNative_setViewport(JNIEnv * jni, jclass clazz, jlong appPtr,
-    jint x, jint y, jint width, jint height) {
-    GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->setViewport(x, y, width, height);
-}
-
 // -------------------- //
 // VrapiActivityHandler //
 // -------------------- //

@@ -33,6 +33,7 @@ public:
     void getModeConfiguration(JNIEnv& env, bool& allowPowerSaveOut, bool& resetWindowFullscreenOut);
     void getPerformanceConfiguration(JNIEnv& env, ovrPerformanceParms& parmsOut);
     void getHeadModelConfiguration(JNIEnv& env, ovrHeadModelParms& parmsOut);
+    void getSceneViewport(JNIEnv& env, int& viewport_x, int& viewport_y, int& viewport_width, int& viewport_height);
 
 private:
     JNIEnv& env_;

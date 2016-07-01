@@ -48,10 +48,6 @@ final class GVRActivityNative {
         setCameraRig(mPtr, cameraRig.getNative());
     }
 
-    void setViewport(int x, int y, int width, int height) {
-        setViewport(mPtr, x, y, width, height);
-    }
-
     void onUndock() {
         onUndock(mPtr);
     }
@@ -67,8 +63,6 @@ final class GVRActivityNative {
     private static native void setCamera(long appPtr, long camera);
 
     private static native void setCameraRig(long appPtr, long cameraRig);
-
-    private static native void setViewport(long appPtr, int x, int y, int width, int height);
 
     private static native void onDock(long appPtr);
 

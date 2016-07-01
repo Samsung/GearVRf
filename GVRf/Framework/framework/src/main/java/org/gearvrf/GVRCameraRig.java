@@ -590,22 +590,6 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     }
 
     /**
-     * Sets the viewport. Default is 0, 0, framebufferPixelsWide, framebufferPixelsHigh
-     *
-     * @param x
-     *            Specify the lower left x corner of the viewport rectangle, in pixels.
-     * @param y
-     *            Specify the lower left y corner of the viewport rectangle, in pixels.
-     * @param width
-     *            Specify the width of the viewport.
-     * @param height
-     *            Specify the height of the viewport.
-     */
-    public void setViewport(int x, int y, int width, int height) {
-        getGVRContext().getActivity().setViewport(x, y, width, height);
-    }
-
-    /**
      * Prints the {@link GVRCameraRig} object with indentation.
      *
      * @param sb
