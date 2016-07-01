@@ -289,26 +289,27 @@ BoundingVolume& SceneObject::getBoundingVolume() {
     RenderData* rdata = render_data();
     // Calculate the new bounding volume from itself and all its children
     // 1. Start from its own mesh's bounding volume if there is any
+    transformed_bounding_volume_.reset();
     if (rdata != NULL && rdata->mesh() != NULL) {
         // Future optimization:
         // If the mesh and transform are still valid, don't need to recompute the mesh_bounding_volume
         // if (!render_data_->mesh()->hasBoundingVolume()
         // || !transform_->isModelMatrixValid()) {
-        mesh_bounding_volume.transform(
-                rdata->mesh()->getBoundingVolume(),
-                transform()->getModelMatrix());
-        //	}
-        transformed_bounding_volume_ = mesh_bounding_volume;
+        mesh_bounding_volume = rdata->mesh()->getBoundingVolume();
+        if (mesh_bounding_volume.radius() > 0) {
+            mesh_bounding_volume.transform(rdata->mesh()->getBoundingVolume(), transform()->getModelMatrix());
+            transformed_bounding_volume_ = mesh_bounding_volume;
+        }
     }
-
     // 2. Aggregate with all its children's bounding volumes
     std::vector<SceneObject*> childrenCopy = children();
     for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
-        transformed_bounding_volume_.expand((*it)->getBoundingVolume());
+        mesh_bounding_volume = (*it)->getBoundingVolume();
+        if (mesh_bounding_volume.radius() > 0) {
+            transformed_bounding_volume_.expand(mesh_bounding_volume);
+        }
     }
-
     bounding_volume_dirty_ = false;
-
     return transformed_bounding_volume_;
 }
 
