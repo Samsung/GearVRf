@@ -50,6 +50,12 @@ void Scene::removeSceneObject(SceneObject* scene_object) {
     scene_root_.removeChildObject(scene_object);
 }
 
+void Scene::removeAllSceneObjects() {
+    scene_root_.clear();
+    lightList.clear();
+    clearAllColliders();
+}
+
 void Scene::clearAllColliders() {
     lockColliders();
     allColliders.clear();
