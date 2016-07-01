@@ -21,15 +21,15 @@ import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * The scene graph.
- *
- * It receives events defined in {@link ISceneEvents}. To add a listener to these events, use the
+ * Contains a the hierarchy of visible objects, a camera and processes events.
+ * 
+ * The scene receives events defined in {@link ISceneEvents} and {@link IPickEvents}.
+ * To add a listener to these events, use the
  * following code:
  * <pre>
  *     ISceneEvents mySceneEventListener = new ISceneEvents() {
@@ -37,18 +37,30 @@ import java.util.Set;
  *     };
  *     getEventReceiver().addListener(mySceneEventListener);
  * </pre>
+ * 
+ * The scene graph is a hierarchy with all the objects to display.
+ * It has a single root and one main camera rig.
+ * Each visible object, or node, in the scene graph is a {@link GVRSceneObject}
+ * with a {@link GVRTransform} component that places and orients it in space
+ * with respect to it's parent node. A node can have multiple children,
+ * and a child inherits the concatenation of all of it's ancestors transformations.
+ * @see GVRSceneObject
+ * @see GVRTransform
+ * @see IEventReceiver
+ * @see ISceneEvents
  */
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
     public static final int MAX_LIGHTS = 16;
-    private final List<GVRSceneObject> mSceneObjects = new ArrayList<GVRSceneObject>();
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
     private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
     private GVRMaterial mShadowMaterial = null;
     private boolean mShadowMapDirty = true;
+    private GVRSceneObject mSceneRoot;
+    
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -57,7 +69,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public GVRScene(GVRContext gvrContext) {
         super(gvrContext, NativeScene.ctor());
-
+        mSceneRoot = new GVRSceneObject(gvrContext);
+        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
 
@@ -82,30 +95,32 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
 
     private GVRScene(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        mSceneRoot = new GVRSceneObject(gvrContext);
+        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         setFrustumCulling(true);
     }
 
     /**
-     * Add an {@linkplain GVRSceneObject scene object}
+     * Add a {@linkplain GVRSceneObject scene object} as
+     * a child of the scene root.
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to add.
      */
     public void addSceneObject(GVRSceneObject sceneObject) {
-        mSceneObjects.add(sceneObject);
-        NativeScene.addSceneObject(getNative(), sceneObject.getNative());
+        mSceneRoot.addChildObject(sceneObject);
         bindShaders(sceneObject);
     }
 
     /**
-     * Remove a {@linkplain GVRSceneObject scene object}
+     * Remove a {@linkplain GVRSceneObject scene object} from
+     * the scene root.
      * 
      * @param sceneObject
      *            The {@linkplain GVRSceneObject scene object} to remove.
      */
     public void removeSceneObject(GVRSceneObject sceneObject) {
-        mSceneObjects.remove(sceneObject);
-        NativeScene.removeSceneObject(getNative(), sceneObject.getNative());
+        mSceneRoot.removeChildObject(sceneObject);
     }
 
     /**
@@ -113,30 +128,45 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public void removeAllSceneObjects() {
         getMainCameraRig().removeAllChildren();
-        mSceneObjects.clear();
         NativeScene.removeAllSceneObjects(getNative());
         mLightList.clear();
+        mSceneRoot = new GVRSceneObject(getGVRContext());
+        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         addSceneObject(getMainCameraRig().getOwnerObject());
     }
 
     /**
-     * Clears the scene and resets it to initial state. Currently, it only
-     * removes all scene objects.
+     * Clears the scene and resets the scene to initial state.
+     * Currently, it only removes all scene objects.
      */
     public void clear() {
         removeAllSceneObjects();
     }
 
     /**
-     * The top-level scene objects.
+     * Get the root of the scene hierarchy.
+     * This node is a common ancestor to all the objects
+     * in the scene.
+     * @return top level scene object.
+     * @see addSceneObject
+     * @see removeSceneObject
+     */
+    public GVRSceneObject getRoot() {
+        return mSceneRoot;
+    }
+    
+    /**
+     * The top-level scene objects (children of the root node).
      * 
-     * @return A read-only list containing all the 'root' scene objects (those
-     *         that were added directly to the scene).
-     * 
+     * @return A read-only list containing all direct children of the root node.
+     *
      * @since 2.0.0
+     * @see getRoot
+     * @see addSceneObject
+     * @see removeSceneObject
      */
     public List<GVRSceneObject> getSceneObjects() {
-        return Collections.unmodifiableList(mSceneObjects);
+        return mSceneRoot.getChildren();
     }
 
     /**
@@ -167,17 +197,17 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     /**
      * @return The flattened hierarchy of {@link GVRSceneObject objects} as an
      *         array.
+     * This function is inefficient if your hierarchy is large and should
+     * not be called per frame (in onStep).
      */
     public GVRSceneObject[] getWholeSceneObjects() {
-        List<GVRSceneObject> list = new ArrayList<GVRSceneObject>(mSceneObjects);
-        for (GVRSceneObject child : mSceneObjects) {
-            addChildren(list, child);
-        }
+        List<GVRSceneObject> list = new ArrayList<GVRSceneObject>();
+        
+        addChildren(list, mSceneRoot);
         return list.toArray(new GVRSceneObject[list.size()]);
     }
 
-    private void addChildren(List<GVRSceneObject> list,
-            GVRSceneObject sceneObject) {
+    private void addChildren(List<GVRSceneObject> list, GVRSceneObject sceneObject) {
         for (GVRSceneObject child : sceneObject.rawGetChildren()) {
             list.add(child);
             addChildren(list, child);
@@ -194,23 +224,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         if (null == name || name.isEmpty()) {
             return null;
         }
-
-        final List<GVRSceneObject> matches = new ArrayList<GVRSceneObject>();
-        GVRScene.getSceneObjectsByName(matches, mSceneObjects, name);
-
-        return 0 != matches.size() ? matches.toArray(new GVRSceneObject[matches.size()]) : null;
-    }
-
-    static void getSceneObjectsByName(final List<GVRSceneObject> matches,
-            final List<GVRSceneObject> children, final String name) {
-        synchronized (children) {
-            for (final GVRSceneObject child : children) {
-                if (name.equals(child.getName())) {
-                    matches.add(child);
-                }
-                getSceneObjectsByName(matches, child.rawGetChildren(), name);
-            }
-        }
+        return mSceneRoot.getSceneObjectsByName(name);
     }
 
     /**
@@ -224,25 +238,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         if (null == name || name.isEmpty()) {
             return null;
         }
-
-        return GVRScene.getSceneObjectByName(mSceneObjects, name);
+        return mSceneRoot.getSceneObjectByName(name);
     }
 
-    static GVRSceneObject getSceneObjectByName(final List<GVRSceneObject> children, final String name) {
-        synchronized (children) {
-            for (final GVRSceneObject child : children) {
-                final GVRSceneObject scene = getSceneObjectByName(child.rawGetChildren(), name);
-                if (null != scene) {
-                    return scene;
-                }
-                if (name.equals(child.getName())) {
-                    return child;
-                }
-            }
-        }
-        return null;
-    }
-    
     /**
      * Enable / disable picking of visible objects.
      * Picking only visible objects is enabled by default.
@@ -395,17 +393,13 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * {@link GVRRenderData.bindShader GVRShaderTemplate }
      */
     public void bindShaders() {
-        for (GVRSceneObject child : mSceneObjects) {
-            ArrayList<GVRLightBase> lights = child.getAllComponents(GVRLightBase.getComponentType());
-            for (GVRLightBase light : lights) {
-                addLight(light);
-            }
-       }
-       for (GVRSceneObject child : mSceneObjects) {
-            ArrayList<GVRRenderData> renderers = child.getAllComponents(GVRRenderData.getComponentType());
-            for (GVRRenderData rdata : renderers) {
-                rdata.bindShader(this);
-            }
+        ArrayList<GVRLightBase> lights = mSceneRoot.getAllComponents(GVRLightBase.getComponentType());
+        for (GVRLightBase light : lights) {
+            addLight(light);
+        }
+        ArrayList<GVRRenderData> renderers = mSceneRoot.getAllComponents(GVRRenderData.getComponentType());
+        for (GVRRenderData rdata : renderers) {
+            rdata.bindShader(this);
         }
     }
 
@@ -418,9 +412,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * bindShaders may need to be called again to regenerate the correct shaders
      * for the new lighting conditions. This function is called whenever a scene
      * object is added at the root of the scene.
-     * @see GVRRenderData#bindShader(GVRScene)
+     * @see GVRRenderData.bindShader
      * @see GVRShaderTemplate
-     * @see GVRScene#addSceneObject(GVRSceneObject)
+     * @see GVRScene.addSceneObject
      */
     public void bindShaders(GVRSceneObject root) {
         ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.getComponentType());
@@ -452,15 +446,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     protected boolean addLight(GVRLightBase light) {
         if (light != null) {
-            int classIndex = 0;
-            for (GVRLightBase l : mLightList) {
-                if (l == light) {
-                    return false;
-                }
-                if (l.getClass().equals(light.getClass())) {
-                    ++classIndex;
-                }
-            }
             Integer lightIndex = mLightList.size();
             String name = "light" + lightIndex.toString();
             mLightList.add(light);
@@ -470,7 +455,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
         return false;
     }
-        
+    
     /**
      * Get the list of lights used by this scene.
      * 
@@ -511,9 +496,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
 
         // Show all scene objects
-        for (GVRSceneObject child : mSceneObjects) {
-            child.prettyPrint(sb, indent + 2);
-        }
+        mSceneRoot.prettyPrint(sb, indent + 2);
     }
 
     /**
@@ -524,7 +507,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     public void applyLightMapTexture(GVRTexture texture) {
         applyTextureAtlas("lightmap", texture, GVRMaterial.GVRShaderType.LightMap.ID);
     }
-    
+
     /**
      * Apply the texture atlas to the scene.
      *
@@ -577,9 +560,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private ISceneEvents mSceneEventListener = new ISceneEvents() {
         @Override
         public void onInit(GVRContext gvrContext, GVRScene scene) {
-            for (GVRSceneObject child : mSceneObjects) {
-                recursivelySendOnInit(child);
-            }
+            recursivelySendOnInit(mSceneRoot);
         }
         private void recursivelySendOnInit(GVRSceneObject sceneObject) {
             getGVRContext().getEventManager().sendEvent(
@@ -593,18 +574,14 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         @Override
         public void onAfterInit() {
             bindShaders();
-            for (GVRSceneObject child : mSceneObjects) {
-                recursivelySendSimpleEvent(child, "onAfterInit");
-            }
+            recursivelySendSimpleEvent(mSceneRoot, "onAfterInit");
         }
 
         @Override
         public void onStep() {
             // Send "onStep" to all scene objects and their children
-            for (GVRSceneObject child : mSceneObjects) {
-                recursivelySendSimpleEvent(child, "onStep");
-            }
-        }
+            recursivelySendSimpleEvent(mSceneRoot, "onStep");
+         }
 
         private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
             getGVRContext().getEventManager().sendEvent(

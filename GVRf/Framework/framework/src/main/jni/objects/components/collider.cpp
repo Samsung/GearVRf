@@ -35,6 +35,7 @@ void Collider::transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::v
     rayStart = glm::vec3(start);
 }
 
+
 void Collider::set_owner_object(SceneObject* obj) {
     if (obj == owner_object())
     {
@@ -50,4 +51,5 @@ void Collider::set_owner_object(SceneObject* obj) {
     }
     Component::set_owner_object(obj);
 }
+
 }
