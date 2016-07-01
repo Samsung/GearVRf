@@ -144,6 +144,19 @@ public final class GVRAssetLoader {
         public GVRContext getContext()       { return mContext; }
         public String getFileName()          { return mFileName; }
         public GVRResourceVolume getVolume() { return mVolume; }
+        public String getBaseName()
+        {
+            int i = mFileName.lastIndexOf("/");
+            if (i > 0)
+            {
+                return  mFileName.substring(i + 1);
+            }
+            if (mFileName.startsWith("sd:"))
+            {
+                return mFileName.substring(3);
+            }
+            return mFileName;
+        }
         
         /**
          * Load a texture asynchronously with a callback.
@@ -526,6 +539,7 @@ public final class GVRAssetLoader {
             return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
     }
     
+    
     /**
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene.
@@ -571,9 +585,6 @@ public final class GVRAssetLoader {
      * @param assetFile
      *            A filename, relative to the root of the volume.
      *
-     * @param volumeType
-     *            Where the asset is located (SD card, assets directory or network)
-     *            
      * @param settings
      *            Additional import {@link GVRImportSettings settings}
      *
@@ -590,7 +601,7 @@ public final class GVRAssetLoader {
     {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
-        String filePath = request.getFileName();
+        String filePath = request.getBaseName();
         GVRResourceVolume volume = request.getVolume();
         try
         {
