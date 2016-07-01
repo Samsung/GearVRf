@@ -32,7 +32,8 @@ import java.util.List;
  */
 public class GVRSwitch extends GVRBehavior
 {
-    static private long TYPE_SWITCH = (System.currentTimeMillis() & 0xfffffff);
+    static private long TYPE_SWITCH = ((long)GVRSwitch.class.hashCode() << 32) & (System
+            .currentTimeMillis() & 0xffffffff);
     protected int mSwitchIndex = 0;
 
     public GVRSwitch(GVRContext gvrContext)

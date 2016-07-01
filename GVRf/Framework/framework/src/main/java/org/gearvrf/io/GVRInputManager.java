@@ -154,15 +154,6 @@ public abstract class GVRInputManager {
         int vendorId = device.getVendorId();
         int productId = device.getProductId();
 
-        if ((sources & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) {
-            // We do not want to add the Oculus touchpad as a mouse device.
-            if (vendorId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID
-                    && productId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) {
-                return GVRControllerType.GAZE;
-            }
-            return GVRControllerType.MOUSE;
-        }
-
         if ((sources & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD ||
                 (sources & InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
             // Allow gpio keyboard to be a gaze controller if enabled, also allow
@@ -173,6 +164,15 @@ public abstract class GVRInputManager {
                     || (vendorId == 0 && productId == 0)) {
                 return GVRControllerType.GAZE;
             }
+        }
+
+        if ((sources & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) {
+            // We do not want to add the Oculus touchpad as a mouse device.
+            if (vendorId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID
+                    && productId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) {
+                return GVRControllerType.GAZE;
+            }
+            return GVRControllerType.MOUSE;
         }
 
         return GVRControllerType.UNKNOWN;
