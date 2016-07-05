@@ -225,6 +225,21 @@ class GVRXMLParser {
                                                 .parseFloat(xpp
                                                         .getAttributeValue(i)));
                             }
+                        } else if (tagName.equals("scene-parms")
+                                || "scene-params".equals(tagName)) {
+                            if (attributeName.equals("viewportX")) {
+                                settings.sceneParms.viewportX =
+                                        Integer.parseInt(xpp.getAttributeValue(i));
+                            } else if (attributeName.equals("viewportY")) {
+                                settings.sceneParms.viewportY =
+                                        Integer.parseInt(xpp.getAttributeValue(i));
+                            } else if (attributeName.equals("viewportWidth")) {
+                                settings.sceneParms.viewportWidth =
+                                        Integer.parseInt(xpp.getAttributeValue(i));
+                            } else if (attributeName.equals("viewportHeight")) {
+                                settings.sceneParms.viewportHeight =
+                                        Integer.parseInt(xpp.getAttributeValue(i));
+                            }
                         }
                     }
                 } else if (eventType == XmlPullParser.END_TAG) {

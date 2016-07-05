@@ -146,6 +146,13 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
                     mDepthTextureFormatConfiguration);
         }
 
+        // default viewport same as window size
+        x = 0;
+        y = 0;
+        width = mWidthConfiguration;
+        height = mHeightConfiguration;
+        configurationHelper_.getSceneViewport(env, x, y, width, height);
+
         projectionMatrix_ = ovrMatrix4f_CreateProjectionFov(
                 vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_X),
                 vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_, VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_Y), 0.0f, 0.0f, 1.0f,
@@ -203,7 +210,7 @@ static const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, 
 void GVRActivity::beginRenderingEye(const int eye) {
     frameBuffer_[eye].bind();
 
-    GL(glViewport(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
+    GL(glViewport(x, y, width, height));
     GL(glScissor(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
 
     GL(glDepthMask(GL_TRUE));
