@@ -94,10 +94,6 @@ public:
         return (long long) getComponentType;
     }
 
-    static std::vector<Collider*>& getAllColliders() {
-        return allColliders_;
-    }
-
     void set_pick_distance(float dist) {
         pick_distance_ = dist;
     }
@@ -108,10 +104,6 @@ public:
     static void transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::vec3& rayDir);
 
 protected:
-    bool addCollider();
-    bool removeCollider();
-
-    static std::vector<Collider*> allColliders_;
     float pick_distance_;
 
     Collider(const Collider& collider);
