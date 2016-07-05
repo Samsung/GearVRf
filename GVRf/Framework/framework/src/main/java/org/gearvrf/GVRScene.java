@@ -81,7 +81,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
         centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
 
-        GVRCameraRig cameraRig = new GVRCameraRig(gvrContext);
+        GVRCameraRig cameraRig = GVRCameraRig.makeInstance(gvrContext);
         cameraRig.attachLeftCamera(leftCamera);
         cameraRig.attachRightCamera(rightCamera);
         cameraRig.attachCenterCamera(centerCamera);

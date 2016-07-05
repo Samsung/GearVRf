@@ -511,7 +511,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param cameraRig
      *            New camera rig.
      */
-    public void attachCameraRig(GVRCameraRig cameraRig) {
+    public void attachCameraRig(GVRCameraRigBase cameraRig) {
         attachComponent(cameraRig);
     }
 
