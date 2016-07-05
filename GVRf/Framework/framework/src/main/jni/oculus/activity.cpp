@@ -105,13 +105,6 @@ void GVRActivity::setCameraRig(jlong cameraRig) {
     sensoredSceneUpdated_ = false;
 }
 
-void GVRActivity::setViewport(int x_, int y_, int width_, int height_) {
-    x = x_;
-    y = y_;
-    width = width_;
-    height = height_;
-}
-
 void GVRActivity::onSurfaceCreated(JNIEnv& env) {
     LOGV("GVRActivity::onSurfaceCreated");
     initializeOculusJava(env, oculusJavaGlThread_);

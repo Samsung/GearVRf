@@ -35,7 +35,6 @@ public:
 
     bool updateSensoredScene();
     void setCameraRig(jlong cameraRig);
-    void setViewport(int x_, int y_, int width_, int height_);
 
     GVRViewManager viewManager_;
 
