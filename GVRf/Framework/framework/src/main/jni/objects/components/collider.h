@@ -89,6 +89,7 @@ public:
 
     virtual void set_owner_object(SceneObject*);
 
+
     static long long getComponentType() {
         return (long long) getComponentType;
     }

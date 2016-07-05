@@ -744,11 +744,19 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param child
      *            {@link GVRSceneObject Object} to add as a child of this
      *            object.
+     * @return true if child was added, else false
      */
-    public void addChildObject(GVRSceneObject child) {
+    public boolean addChildObject(GVRSceneObject child) {
+        if (child.mParent == this) {
+            return false;
+        }
+        if (child.mParent != null) {
+            throw new UnsupportedOperationException("GVRSceneObject cannot have multiple parents");
+        }
         mChildren.add(child);
         child.mParent = this;
         NativeSceneObject.addChildObject(getNative(), child.getNative());
+        return true;
     }
 
     /**
@@ -807,11 +815,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
 
         final List<GVRSceneObject> matches = new ArrayList<GVRSceneObject>();
-        if (name.equals(getName())) {
-            matches.add(this);
-        }
-        GVRScene.getSceneObjectsByName(matches, mChildren, name);
-
+        getSceneObjectsByName(name, matches);
         return 0 != matches.size() ? matches.toArray(new GVRSceneObject[matches.size()]) : null;
     }
 
@@ -826,12 +830,25 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (null == name || name.isEmpty()) {
             return null;
         }
-
-        GVRSceneObject scene = GVRScene.getSceneObjectByName(mChildren, name);
-        if (null == scene && name.equals(getName())) {
-            scene = this;
+        if (getName().equals(name)) {
+            return this;
         }
-        return scene;
+        for (GVRSceneObject child : mChildren) {
+            GVRSceneObject found = child.getSceneObjectByName(name);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    protected void getSceneObjectsByName(final String name, List<GVRSceneObject> list) {
+        if (name.equals(getName())) {
+            list.add(this);
+        }
+        for (GVRSceneObject child : mChildren) {
+            child.getSceneObjectsByName(name, list);
+        }
     }
 
     /**
