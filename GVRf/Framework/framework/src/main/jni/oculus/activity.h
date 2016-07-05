@@ -74,6 +74,8 @@ private:
 
     int32_t mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
 
+    int x, y, width, height;                // viewport
+
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
     void beginRenderingEye(const int eye);
     void endRenderingEye(const int eye);
