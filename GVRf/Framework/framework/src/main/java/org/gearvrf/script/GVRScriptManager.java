@@ -209,6 +209,7 @@ public class GVRScriptManager {
      */
     public GVRScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException, GVRScriptException {
         if (getEngine(language) == null) {
+            mGvrContext.logError("Script language " + language + " unsupported", this);
             throw new GVRScriptException(String.format("The language is unknown: %s", language));
         }
 
@@ -276,9 +277,9 @@ public class GVRScriptManager {
                     try {
                         bindScriptBundleToScene(scriptBundle, mainScene);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        mGvrContext.logError(e.getMessage(), this);
                     } catch (GVRScriptException e) {
-                        e.printStackTrace();
+                        mGvrContext.logError(e.getMessage(), this);
                     } finally {
                         // Remove the listener itself
                         gvrScript.getEventReceiver().removeListener(this);
