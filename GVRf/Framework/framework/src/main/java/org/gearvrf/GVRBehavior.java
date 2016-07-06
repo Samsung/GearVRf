@@ -38,7 +38,7 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
     protected boolean mIsListening;
     protected boolean mHasFrameCallback;
     static private long TYPE_BEHAVIOR = newComponentType(GVRBehavior.class);
-    
+
     /**
      * Constructor for a behavior.
      *

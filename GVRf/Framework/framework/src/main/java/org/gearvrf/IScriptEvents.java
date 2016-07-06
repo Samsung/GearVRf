@@ -24,13 +24,30 @@ import org.gearvrf.script.IScriptable;
 public interface IScriptEvents extends IEvents {
     void onEarlyInit(GVRContext gvrContext);
 
+    /**
+     * Called after GVRMain.onInit returns for scripts which
+     * have been added during onInit.
+     * @param gvrContext
+     * @throws Throwable
+     */
     void onInit(GVRContext gvrContext) throws Throwable;
 
     void onAfterInit();
-    
+
+    /**
+     * Called when a script is attached to a target.
+     * @param target object script is attached to
+     */
     void onAttach(IScriptable target);
-    
+
+    /**
+     * Called when a script is detached from a target.
+     * @param target object script is detached from.
+     */
     void onDetach(IScriptable target);
 
+    /**
+     * Called once every frame.
+     */
     void onStep();
 }
