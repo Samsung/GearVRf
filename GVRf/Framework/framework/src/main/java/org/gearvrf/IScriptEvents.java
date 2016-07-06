@@ -25,6 +25,10 @@ public interface IScriptEvents extends IEvents {
     void onInit(GVRContext gvrContext) throws Throwable;
 
     void onAfterInit();
+    
+    void onAttach(Object target);
+    
+    void onDetach(Object target);
 
     void onStep();
 }

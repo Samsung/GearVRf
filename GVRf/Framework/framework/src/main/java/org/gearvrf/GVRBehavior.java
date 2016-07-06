@@ -36,7 +36,7 @@ import java.lang.reflect.Method;
 public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
 {
     protected boolean mIsListening;
-    private boolean mHasFrameCallback;
+    protected boolean mHasFrameCallback;
     static private long TYPE_BEHAVIOR = (System.currentTimeMillis() & 0xfffffff);
     
     /**
@@ -69,12 +69,14 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
         return TYPE_BEHAVIOR;
     }
     
-    public void enable()
+    @Override
+    public void onEnable()
     {
         startListening();
     }
 
-    public void disable()
+    @Override
+    public void onDisable()
     {
         stopListening();
     }
@@ -107,7 +109,6 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
         stopListening();
     }
     
-
     /**
      * Called each frame before rendering the scene.
      * It is not called if this behavior is not attached
