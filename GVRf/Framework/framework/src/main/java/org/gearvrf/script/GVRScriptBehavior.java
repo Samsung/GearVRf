@@ -9,6 +9,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.IErrorEvents;
 import org.gearvrf.IPickEvents;
 import org.gearvrf.ISceneEvents;
 import org.gearvrf.utility.FileNameUtils;
@@ -197,7 +198,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
 
     public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject hit)
     {
-         if (!invokeFunction("onPickEnter", new Object[] { sceneObj, hit }))
+         if ((sceneObj == getOwnerObject()) && !invokeFunction("onPickEnter", new Object[] { sceneObj, hit }))
          {
              mPickEvents &= ~1;
              if (mPickEvents == 0)
@@ -205,12 +206,11 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
                  stopPicking();
              }
          }
-        org.gearvrf.utility.Log.d("GVRScriptBehavior", "onPickEnter " + sceneObj.getName());
     }
 
     public void onExit(GVRSceneObject sceneObj)
     {
-        if (!invokeFunction("onPickExit", new Object[] { sceneObj }))
+        if ((sceneObj == getOwnerObject()) && !invokeFunction("onPickExit", new Object[] { sceneObj }))
         {
             mPickEvents &= ~2;
             if (mPickEvents == 0)
@@ -218,7 +218,6 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
                 stopPicking();
             }
         }
-        org.gearvrf.utility.Log.d("GVRScriptBehavior", "onPickExit " + sceneObj.getName());
     }
 
     public void onPick(GVRPicker picker)
@@ -268,6 +267,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
                 mHasFrameCallback = true;
                 startListening();
             }
+            startPicking();
         }
     }
 
@@ -327,9 +327,9 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
             }
         }
         mLastError = mScriptFile.getLastError();
-        if (mLastError != null)
+        if ((mLastError != null) && !mLastError.contains("is not defined"))
         {
-            org.gearvrf.utility.Log.e("GVRScriptBehavior", "ScriptError: " + mLastError);
+            getGVRContext().logError(mLastError, this);
         }
         return false;
     }
