@@ -17,6 +17,7 @@ package org.gearvrf.debug;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -27,6 +28,8 @@ import java.util.concurrent.Executors;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.debug.cli.Shell;
+
+import android.util.Log;
 
 /**
  * Debug server provides a command line interface (CLI) for GVRf
@@ -53,6 +56,7 @@ public class DebugServer implements Runnable {
     // Need a way to stop the program...
     private boolean shuttingDown;
     private ServerSocket serverSocket;
+    private DebugConnection debugConnection;
 
     private GVRContext gvrContext;
     int port;
@@ -60,7 +64,8 @@ public class DebugServer implements Runnable {
 
     class DebugConnection implements Callable<Object> {
         private Socket socket;
-
+        private PrintStream errorLog = null;
+        
         public DebugConnection(Socket socket) {
             this.socket = socket;
         }
@@ -78,6 +83,7 @@ public class DebugServer implements Runnable {
             } else {
                 // Simple console
                 PrintStream out = new PrintStream(socket.getOutputStream());
+                errorLog = out;
                 shell = GVRConsoleFactory.createConsoleShell(PROMPT, APP_NAME,
                         new ShellCommandHandler(gvrContext),
                         new BufferedReader(new InputStreamReader(socket.getInputStream())),
@@ -85,8 +91,30 @@ public class DebugServer implements Runnable {
             }
 
             shell.commandLoop();
+            errorLog = null;
             socket.close();
+            this.socket = null;
             return null;
+        }
+        
+        public void logError(String message)
+        {
+            try
+            {
+                if ((errorLog == null) && (this.socket != null))
+                {
+                    errorLog = new PrintStream(socket.getOutputStream());
+                }                
+            }
+            catch (IOException ex)
+            {
+                ex.printStackTrace();
+            }
+            if (errorLog != null)
+            {
+                errorLog.print(message);
+            }
+            Log.e("SCRIPT", "ERROR: " + message);
         }
     }
 
@@ -129,6 +157,7 @@ public class DebugServer implements Runnable {
      * Shuts down the server. Active connections are not affected.
      */
     public void shutdown() {
+        debugConnection = null;
         shuttingDown = true;
         try {
             if (serverSocket != null) {
@@ -150,19 +179,30 @@ public class DebugServer implements Runnable {
             while (!shuttingDown) {
                 try {
                     Socket socket = serverSocket.accept();
-                    executorService.submit(new DebugConnection(socket));
+                    debugConnection = new DebugConnection(socket);
+                    executorService.submit(debugConnection);
                 } catch (SocketException e) {
                     // closed
+                    debugConnection = null;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
+                debugConnection = null;
                 serverSocket.close();
             } catch (Exception e) {
             }
             executorService.shutdownNow();
+        }
+    }
+    
+    public void logError(String message)
+    {
+        if (debugConnection != null)
+        {
+            debugConnection.logError(message);
         }
     }
 }
