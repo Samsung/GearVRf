@@ -48,6 +48,12 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     private String mLastError;
     private GVRScene mScene = null;
     
+    private final int ON_ENTER = 1;
+    private final int ON_EXIT = 2;
+    private final int ON_PICK = 4;
+    private final int ON_NOPICK = 8;
+    private final int PICK_EVENTS = (ON_ENTER | ON_EXIT | ON_PICK | ON_NOPICK);
+    
     /**
      * Constructor for a script behavior component.
      * @param gvrContext    The current GVRF context
@@ -202,7 +208,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     {
          if ((sceneObj == getOwnerObject()) && !invokeFunction("onPickEnter", new Object[] { sceneObj, hit }))
          {
-             mPickEvents &= ~1;
+             mPickEvents &= ~ON_ENTER;
              if (mPickEvents == 0)
              {
                  stopPicking();
@@ -214,7 +220,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     {
         if ((sceneObj == getOwnerObject()) && !invokeFunction("onPickExit", new Object[] { sceneObj }))
         {
-            mPickEvents &= ~2;
+            mPickEvents &= ~ON_EXIT;
             if (mPickEvents == 0)
             {
                 stopPicking();
@@ -226,7 +232,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     {
         if (!invokeFunction("onPick", new Object[] { picker }))
         {
-            mPickEvents &= ~4;
+            mPickEvents &= ~ON_PICK;
             if (mPickEvents == 0)
             {
                 stopPicking();
@@ -238,7 +244,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     {
        if (!invokeFunction("onNoPick", new Object[] { picker }))
        {
-           mPickEvents &= ~8;
+           mPickEvents &= ~ON_NOPICK;
            if (mPickEvents == 0)
            {
                stopPicking();
@@ -276,7 +282,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     protected void startPicking()
     {
         GVRScene scene = mScene;
-        mPickEvents = 0xF;
+        mPickEvents = PICK_EVENTS;
         if (mScene == null)
         {
             scene = getGVRContext().getMainScene();
