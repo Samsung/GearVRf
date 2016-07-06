@@ -39,7 +39,7 @@ import org.gearvrf.debug.cli.util.MultiMap;
  * This class contains factory methods for creating consoles of different
  * capabilities.
  */
-class ConsoleFactory {
+public class GVRConsoleFactory {
     /**
      * Facade method for operating the Shell allowing specification of auxiliary
      * handlers (i.e. handlers that are to be passed to all subshells).
@@ -58,8 +58,9 @@ class ConsoleFactory {
      *
      * @return Shell that can be either further customized or run directly by calling commandLoop().
      */
-    static Shell createConsoleShell(String prompt, String appName, Object mainHandler,
-            BufferedReader in, PrintStream out, PrintStream err, ConsoleIO.PromptListener promptListener) {
+    public static Shell createConsoleShell(String prompt, String appName, Object mainHandler,
+                                           BufferedReader in, PrintStream out, PrintStream err,
+                                           ConsoleIO.PromptListener promptListener) {
         ConsoleIO io = new ConsoleIO(in, out, err);
         if (promptListener != null) {
             io.setPromptListener(promptListener);
