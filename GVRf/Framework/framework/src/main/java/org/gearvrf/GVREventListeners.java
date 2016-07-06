@@ -41,6 +41,12 @@ public class GVREventListeners {
         @Override
         public void onStep() {
         }
+        
+        @Override
+        public void onAttach(Object target) { }
+        
+        @Override
+        public void onDetach(Object target) { }
     }
 
     /**

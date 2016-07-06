@@ -176,6 +176,7 @@ public class GVRScriptManager {
      */
     public void attachScriptFile(IScriptable target, GVRScriptFile scriptFile) {
         mScriptMap.put(target, scriptFile);
+        scriptFile.invokeFunction("onAttach", new Object[] { target });
     }
 
     /**
@@ -184,7 +185,10 @@ public class GVRScriptManager {
      * @param target The scriptable target.
      */
     public void detachScriptFile(IScriptable target) {
-        mScriptMap.remove(target);
+        GVRScriptFile scriptFile = mScriptMap.remove(target);
+        if (scriptFile != null) {
+            scriptFile.invokeFunction("onDetach", new Object[] { target });
+        }
     }
 
     /**
@@ -367,7 +371,9 @@ public class GVRScriptManager {
                     GVRSceneObject[] sceneObjects = rootSceneObject.getSceneObjectsByName(targetName);
                     if (sceneObjects != null) {
                         for (GVRSceneObject sceneObject : sceneObjects) {
-                            attachScriptFile(sceneObject, scriptFile);
+                            GVRScriptBehavior b = new GVRScriptBehavior(sceneObject.getGVRContext());
+                            b.setScriptFile(scriptFile);
+                            sceneObject.attachComponent(b);
                         }
                     }
                 }
