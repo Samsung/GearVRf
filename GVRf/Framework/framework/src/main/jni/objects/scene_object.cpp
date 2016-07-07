@@ -139,6 +139,15 @@ void SceneObject::removeChildObject(SceneObject* child) {
     dirtyHierarchicalBoundingVolume();
 }
 
+void SceneObject::clear() {
+    std::lock_guard < std::mutex > lock(children_mutex_);
+    for (auto it = children_.begin(); it != children_.end(); ++it) {
+        SceneObject* child = *it;
+        child->parent_ = NULL;
+    }
+    children_.clear();
+}
+
 int SceneObject::getChildrenCount() const {
     return children_.size();
 }
@@ -149,6 +158,15 @@ SceneObject* SceneObject::getChildByIndex(int index) {
     } else {
         std::string error = "SceneObject::getChildByIndex() : Out of index.";
         throw error;
+    }
+}
+
+void SceneObject::getDescendants(std::vector<SceneObject*>& descendants) {
+    std::lock_guard < std::mutex > lock(children_mutex_);
+    for (auto it = children_.begin(); it != children_.end(); ++it) {
+        SceneObject* obj = *it;
+        descendants.push_back(obj);
+        obj->getDescendants(descendants);
     }
 }
 

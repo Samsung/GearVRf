@@ -204,4 +204,28 @@ void ConfigurationHelper::getHeadModelConfiguration(JNIEnv& env, ovrHeadModelPar
     LOGV("ConfigurationHelper: --------------------------------");
 }
 
+void ConfigurationHelper::getSceneViewport(JNIEnv& env, int& viewport_x, int& viewport_y, int& viewport_width, int& viewport_height) {
+
+    LOGV("ConfigurationHelper: --- viewport configuration ---");
+    int x, y, width, height;
+
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "sceneParms", "Lorg/gearvrf/utility/VrAppSettings$SceneParms;");
+    jobject parms = env.GetObjectField(vrAppSettings_, fid);
+    jclass parmsClass = env.GetObjectClass(parms);
+
+    x = env.GetIntField(parms, env.GetFieldID(parmsClass, "viewportX", "I"));
+    y = env.GetIntField(parms, env.GetFieldID(parmsClass, "viewportY", "I"));
+    width = env.GetIntField(parms, env.GetFieldID(parmsClass, "viewportWidth", "I"));
+    height = env.GetIntField(parms, env.GetFieldID(parmsClass, "viewportHeight", "I"));
+
+    if (width != 0 && height != 0) {
+
+        // otherwise default viewport
+        viewport_x = x;
+        viewport_y = y;
+        viewport_width = width;
+        viewport_height = height;
+    }
+}
+
 }
