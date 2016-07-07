@@ -33,8 +33,8 @@ namespace gvr {
 static const char USE_LIGHT[] = "#define USE_LIGHT\n";
 static const char NOT_USE_LIGHT[] = "#undef USE_LIGHT\n";
 static const char VERTEX_SHADER[] =
-        "attribute vec4 a_position;\n"
-                "attribute vec4 a_tex_coord;\n"
+        "attribute vec3 a_position;\n"
+                "attribute vec2 a_tex_coord;\n"
                 "uniform mat4 u_mvp;\n"
                 "varying vec2 v_tex_coord;\n"
                 "#ifdef USE_LIGHT\n"
@@ -47,14 +47,15 @@ static const char VERTEX_SHADER[] =
                 "#endif\n"
                 "\n"
                 "void main() {\n"
+                "vec4 new_pos = vec4(a_position.x, a_position.y, a_position.z, 1.0);\n"
                 "#ifdef USE_LIGHT\n"
-                "  vec4 v_viewspace_position_vec4 = u_mv * a_position;\n"
+                "  vec4 v_viewspace_position_vec4 = u_mv * new_pos;\n"
                 "  vec3 v_viewspace_position = v_viewspace_position_vec4.xyz / v_viewspace_position_vec4.w;\n"
                 "  v_viewspace_light_direction = u_light_pos - v_viewspace_position;\n"
                 "  v_viewspace_normal = (u_mv_it * vec4(a_normal, 1.0)).xyz;\n"
                 "#endif\n"
                 "  v_tex_coord = a_tex_coord.xy;\n"
-                "  gl_Position = u_mvp * a_position;\n"
+                "  gl_Position = u_mvp * new_pos;\n"
                 "}\n";
 
 static const char FRAGMENT_SHADER[] =
@@ -195,12 +196,15 @@ void TextureShader::render(RenderState* rstate,
         }
     }
 
+    GLuint programId;
     if (use_light) {
-        GL(glUseProgram(program_light_->id()));
+        programId = program_light_->id();
     } else {
-        GL(glUseProgram(program_no_light_->id()));
+        programId = program_no_light_->id();
     }
-
+    render_data->mesh()->bindVertexAttributes(programId);
+    render_data->mesh()->generateVAO(programId);
+    GL(glUseProgram(programId));
     GL(glActiveTexture (GL_TEXTURE0));
     GL(glBindTexture(texture->getTarget(), texture->getId()));
 
