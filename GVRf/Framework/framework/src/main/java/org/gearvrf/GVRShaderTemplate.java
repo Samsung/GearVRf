@@ -259,7 +259,7 @@ public class GVRShaderTemplate
             useLights = false;
         if (useLights)
         {
-            if (type == "Vertex")
+            if (type.equals("Vertex"))
                 lightShaderSource = generateLightVertexShader(lightlist, lightClasses);
             else
                 lightShaderSource = generateLightFragmentShader(lightlist, lightClasses);

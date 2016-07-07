@@ -284,7 +284,7 @@ public final class GVRAssetLoader {
         
         private void generateLoadEvent()
         {
-            if ((mScene != null) && (mModel != null) && (mErrors == ""))
+            if ((mScene != null) && (mModel != null) && (mErrors.equals("")))
             {
                 Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
                 mScene.addSceneObject(mModel);
