@@ -142,20 +142,25 @@ public final class GVRAssetLoader {
         }
 
         public GVRContext getContext()       { return mContext; }
-        public String getFileName()          { return mFileName; }
         public GVRResourceVolume getVolume() { return mVolume; }
         public String getBaseName()
         {
-            int i = mFileName.lastIndexOf("/");
+        	String fname = getFileName();
+            int i = fname.lastIndexOf("/");
             if (i > 0)
             {
-                return  mFileName.substring(i + 1);
+                return  fname.substring(i + 1);
             }
+            return fname;
+        }
+        
+        public String getFileName()
+        {
             if (mFileName.startsWith("sd:"))
             {
                 return mFileName.substring(3);
             }
-            return mFileName;
+        	return mFileName;
         }
         
         /**
