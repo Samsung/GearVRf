@@ -44,22 +44,21 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRDirectLight;
-import org.gearvrf.GVREyePointeeHolder;
 import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMaterialShaderManager;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRMeshEyePointee;
+
 import org.gearvrf.GVRPerspectiveCamera;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.GVRSphereCollider;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
@@ -81,6 +80,7 @@ import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
 import org.gearvrf.x3d.x3dTandLShaderTest;
 import org.gearvrf.scene_objects.GVRConeSceneObject;
+
 //import org.gearvrf.sample.R;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
@@ -92,12 +92,36 @@ import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 //import com.utilities.Box;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 public class X3Dobject
 {
+    static class X3DTextureRequest extends GVRAssetLoader.TextureRequest
+    {
+    	private GVRTextureParameters mTexParams;
+     	
+        public X3DTextureRequest(GVRContext context, String texFile, final GVRTextureParameters texParams)
+        {
+        	super(context, texFile);
+        	mTexParams = texParams;
+        }
+        
+        public void loaded(GVRTexture texture, GVRAndroidResource ignored)
+        {
+        	final GVRTexture t = texture;
+            mContext.runOnGlThread(new Runnable()
+        	{
+            	public void run()
+            	{
+            		t.updateTextureParameters(mTexParams);
+            	}
+            });
+        	super.loaded(texture,  ignored);
+        }
+    }
 
   public final static boolean UNIVERSAL_LIGHTS = true;
   public static final String X3D_ROOT_NODE = "x3d_root_node_";
@@ -135,7 +159,7 @@ public class X3Dobject
   private static final float CUBE_WIDTH = 20.0f; // used for cube maps, based on
                                                  // gvrcubemap [GearVRf-Demos
                                                  // master]
-
+  private GVRAssetLoader.AssetRequest assetRequest = null;
   private GVRContext gvrContext = null;
   private Context activityContext = null;
   // private AssetManager assetManager = null;
@@ -176,7 +200,7 @@ public class X3Dobject
 
   private x3dTandLShaderTest mX3DTandLShaderTest = null;
   private GVRTextureParameters gvrTextureParameters = null;
-  private GVRTexture gvrTexture = null;
+  private Future<GVRTexture> gvrTexture = null;
 
   private Vector<Vertex> vertices = new Vector<Vertex>(); // vertices
   private Vector<VertexNormal> vertexNormal = new Vector<VertexNormal>();
@@ -210,37 +234,57 @@ public class X3Dobject
   private LODmanager lodManager = null;
   private GVRCameraRig cameraRigAtRoot = null;
 
-  public X3Dobject(GVRContext gvrContext, GVRModelSceneObject root)
+  
+  /*********************************************/
+  /********** X3Dobject Constructor ************/
+  /*********************************************/
+  public X3Dobject(GVRAssetLoader.AssetRequest assetRequest, GVRModelSceneObject root)
   {
-    this.gvrContext = gvrContext;
-    this.activityContext = gvrContext.getContext();
-    this.root = root;
-    // this will need to be referenced in the X3DparserScript
-    this.root.setName(X3D_ROOT_NODE);
+    try {
+      this.assetRequest = assetRequest;
+      this.gvrContext = assetRequest.getContext();
+      this.activityContext = gvrContext.getContext();
+      this.root = root;
+      // this will need to be referenced in the X3DparserScript
+      this.root.setName(X3D_ROOT_NODE);
+  
+      // Camera rig setup code based on GVRScene::init()
+      GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
+      leftCamera.setRenderMask(GVRRenderMaskBit.Left);
+  
+      GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
+      rightCamera.setRenderMask(GVRRenderMaskBit.Right);
+  
+      GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
+      centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
+  
+      cameraRigAtRoot = new GVRCameraRig(gvrContext, root);
+      cameraRigAtRoot.attachLeftCamera(leftCamera);
+      cameraRigAtRoot.attachRightCamera(rightCamera);
+      cameraRigAtRoot.attachCenterCamera(centerCamera);
+  
+      cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
+      cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
+      // attach the camera rig to the root instead of the GVRscene
+      root.attachComponent(cameraRigAtRoot);
+  
+      this.mAnimations = root.getAnimations();
+      lodManager = new LODmanager();
+    }
+    //com.sun.jdi.InvocationException
+    //catch (jdi.InvocationException e) {
+    //  Log.e(TAG, "X3Dobject constructor error: " + e);
+    //}
+    catch (Exception e) {
+      Log.e(TAG, "X3Dobject constructor error: " + e);
+    }
+  }  //  end Constructor
 
-    // Camera rig setup code based on GVRScene::init()
-    GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
-    leftCamera.setRenderMask(GVRRenderMaskBit.Left);
-
-    GVRCamera rightCamera = new GVRPerspectiveCamera(gvrContext);
-    rightCamera.setRenderMask(GVRRenderMaskBit.Right);
-
-    GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
-    centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
-
-    cameraRigAtRoot = new GVRCameraRig(gvrContext, root);
-    cameraRigAtRoot.attachLeftCamera(leftCamera);
-    cameraRigAtRoot.attachRightCamera(rightCamera);
-    cameraRigAtRoot.attachCenterCamera(centerCamera);
-
-    cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
-    cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
-    // attach the camera rig to the root instead of the GVRscene
-    root.attachComponent(cameraRigAtRoot);
-
-    this.mAnimations = root.getAnimations();
-    lodManager = new LODmanager();
-  }
+  
+  /*********************************************/
+  /********** Utility Functions to *************/
+  /************* Assist Parsing ****************/
+  /*********************************************/
 
   public void AddKeys(float key)
   {
@@ -649,15 +693,16 @@ public class X3Dobject
       Quaternionf q = new Quaternionf();
       if ((d.x == 0) && (d.z == 0))
       {
-        // exception condition
+        // exception condition if direction is (0,y,0):
+        //    straight up, straight down or all zero's.
         if (d.y > 0)
-        {
+        {  // direction straight up
           AxisAngle4f angleAxis = new AxisAngle4f(-(float) Math.PI / 2, 1, 0,
               0);
           q.set(angleAxis);
         }
         else if (d.y < 0)
-        {
+        {  // direction straight down
           AxisAngle4f angleAxis = new AxisAngle4f((float) Math.PI / 2, 1, 0, 0);
           q.set(angleAxis);
         }
@@ -681,7 +726,7 @@ public class X3Dobject
         q.setFromNormalized(matrix);
       }
       return q;
-    }
+    }  //  end ConvertDirectionalVectorToQuaternion
     
     private void ReplicateGVRSceneObjStructure(String attributeValue) {
       // Transform or Group node to be shared / re-used
@@ -756,9 +801,12 @@ public class X3Dobject
       else
         currentSceneObject.addChildObject(newObject);
       return newObject;
-    }
+    }  //  end AddGVRSceneObject
 
+    
+    /*********************************************/
     /*********** Parse the X3D File **************/
+    /*********************************************/
     @Override
     public void startElement(String uri, String localName, String qName,
         Attributes attributes) throws SAXException
@@ -962,7 +1010,7 @@ public class X3Dobject
         gvrRenderData = new GVRRenderData(gvrContext);
         // gvrRenderData.setCullFace(GVRCullFaceEnum.None);
         gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
-        shaderSettings.initializeTextureMaterial();
+        shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext));
         if (UNIVERSAL_LIGHTS)
           gvrRenderData.setShaderTemplate(GVRPhongShader.class);
 
@@ -1170,11 +1218,8 @@ public class X3Dobject
                                                            // single quotes
             urlAttribute = urlAttribute.replace("\'", "");
             urlAttribute = urlAttribute.toLowerCase();
-            urlAttribute = urlAttribute.substring(0, urlAttribute.indexOf("."));
+//            urlAttribute = urlAttribute.substring(0, urlAttribute.indexOf("."));
             final String filename = urlAttribute;
-            int assetID = activityContext.getResources()
-                .getIdentifier(urlAttribute, "drawable",
-                               activityContext.getPackageName());
             String repeatSAttribute = attributes.getValue("repeatS");
             if (repeatSAttribute != null)
             {
@@ -1193,43 +1238,17 @@ public class X3Dobject
                     .setWrapTType(TextureWrapType.GL_CLAMP_TO_EDGE);
               }
             }
-            if (assetID != 0)
-            {
-              final String defValue = attributes.getValue("DEF");
-                gvrContext.loadTexture(new TextureCallback() {
-                    @Override
-                    public void loaded(final GVRTexture texture, GVRAndroidResource ignored) {
-                      shaderSettings.setTexture(texture);
-                      gvrContext.runOnGlThread(new Runnable() {
-                          public void run() { texture.updateTextureParameters(gvrTextureParameters); }
-                      });
-                      if (defValue != null)
-                      {
-                        DefinedItem definedItem = new DefinedItem(defValue);
-                        definedItem.setGVRTexture(gvrTexture);
-                        mDefinedItems.add(definedItem); // Array list of DEFined items
-                                                        // Clones objects with USE
-                      }
-                      gvrContext.getEventManager().sendEvent(gvrContext,
-                                IAssetEvents.class,
-                                "onTextureLoaded", new Object[] { gvrContext, texture, filename });
-                    }
-
-                    @Override
-                    public void failed(Throwable t, GVRAndroidResource androidResource) {
-                      gvrContext.getEventManager().sendEvent(gvrContext,
-                                IAssetEvents.class,
-                                "onTextureError", new Object[] { gvrContext, t.getMessage(), filename });
-                    }
-
-                    @Override
-                    public boolean stillWanted(GVRAndroidResource androidResource) {
-                        return true;
-                    }
-                }, new GVRAndroidResource(gvrContext, assetID));
-            }
+          final String defValue = attributes.getValue("DEF");
+          X3DTextureRequest request = new X3DTextureRequest(gvrContext, filename, gvrTextureParameters);
+          Future<GVRTexture> texture = assetRequest.loadFutureTexture(request);
+          shaderSettings.setTexture(texture);
+          if (defValue != null)
+          {
+        	  DefinedItem item = new DefinedItem(defValue);
+        	  item.setGVRTexture(texture);
+        	  mDefinedItems.add(item);
           }
-
+        }
         }
       } // end ImageTexture
 
@@ -2887,7 +2906,7 @@ public class X3Dobject
           // sensor object
           GVRSceneObject childObject = currentSceneObject.getChildByIndex(i);
           // childObject.attachEyePointeeHolder();
-          attachDefaultEyePointee(childObject);
+          attachCollider(childObject);
           currentSceneObject.removeChildObject(childObject);
           gvrSensorSceneObject.addChildObject(childObject);
         }
@@ -3366,7 +3385,7 @@ public class X3Dobject
         {
           if (currentSensor != null)
           {
-            attachDefaultEyePointee(currentSceneObject);
+            attachCollider(currentSceneObject);
           }
 
           if (currentSceneObject.getParent() == root)
@@ -3419,12 +3438,7 @@ public class X3Dobject
 
           if (!UNIVERSAL_LIGHTS)
           {
-            mX3DTandLShaderTest
-                .appendFragmentShaderLights(shaderSettings.fragmentShaderLights);
-            mX3DTandLShaderTest.setCustomShader();
-
-            gvrMaterial = new GVRMaterial(gvrContext,
-                mX3DTandLShaderTest.getShaderId());
+            gvrMaterial = shaderSettings.material;
             gvrMaterial.setVec2(mX3DTandLShaderTest.TEXTURECENTER_KEY,
                                 shaderSettings.textureCenter[0],
                                 shaderSettings.textureCenter[1]);
@@ -3466,6 +3480,7 @@ public class X3Dobject
             // public float transparency = 0; NOT IMPLEMENTED YET
 
             gvrRenderData.setMaterial(gvrMaterial);
+            gvrRenderData.setShaderTemplate(GVRPhongShader.class);
           } // end !UNIVERSAL_LIGHTS
           else
           {
@@ -3476,8 +3491,9 @@ public class X3Dobject
 
               if (meshAttachedSceneObject == null)
               {
-                gvrMaterial = new GVRMaterial(gvrContext);
+                gvrMaterial = shaderSettings.material;
                 gvrRenderData.setMaterial(gvrMaterial);
+                gvrRenderData.setShaderTemplate(GVRPhongShader.class);
               }
               else
               {
@@ -4124,14 +4140,11 @@ public class X3Dobject
       } // end </x3d>
     }
 
-    private void attachDefaultEyePointee(GVRSceneObject sceneObject)
+
+    private void attachCollider(GVRSceneObject sceneObject)
     {
-      GVREyePointeeHolder eyePointeeHolder = new GVREyePointeeHolder(
-          gvrContext);
-      GVRMeshEyePointee eyePointee = new GVRMeshEyePointee(gvrContext,
-          sceneObject.getRenderData().getMesh());
-      eyePointeeHolder.addPointee(eyePointee);
-      sceneObject.attachEyePointeeHolder(eyePointeeHolder);
+      GVRSphereCollider collider = new GVRSphereCollider(gvrContext);
+      sceneObject.attachComponent(collider);
     }
 
     @Override

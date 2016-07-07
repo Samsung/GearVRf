@@ -15,6 +15,10 @@
 
 package org.gearvrf.x3d;
 
+import java.util.concurrent.Future;
+
+import org.gearvrf.GVRMaterial;
+
 //import static org.gearvrf.utility.Assert.checkNotNull;
 //import static org.gearvrf.utility.Assert.checkStringNotNullOrEmpty;
 
@@ -67,12 +71,16 @@ public class ShaderSettings
 
   public float[] modelMatrix = new float[16];
 
-  public GVRTexture texture = null;
+
+  public Future<GVRTexture> texture = null;
 
   public String fragmentShaderLights = "";
+  
+  public GVRMaterial material;
 
-  public void initializeTextureMaterial()
+  public void initializeTextureMaterial(GVRMaterial m)
   {
+	material = m;
     nameAppearance = ""; // set if there is a DEF in Appearance node
     nameMaterial = ""; // set if there is a DEF in Material node
     // nameTextureTransform = ""; // set if there is a DEF in TextureTransform
@@ -111,9 +119,10 @@ public class ShaderSettings
     texture = null;
   }
 
-  public ShaderSettings()
+
+  public ShaderSettings(GVRMaterial material)
   {
-    initializeTextureMaterial();
+    initializeTextureMaterial(material);
   }
 
   public void appendFragmentShaderLights(String lightString)

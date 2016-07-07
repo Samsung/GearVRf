@@ -1000,3 +1000,4 @@ class NativeImporter {
 
     static native long readFromByteArray(byte[] bytes, String filename, int settings);
 }
+
