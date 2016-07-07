@@ -57,7 +57,12 @@ public:
 
     void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
     bool get_occlusion_culling(){ return occlusion_flag_; }
-    void addLight(Light* light);
+
+    /*
+     * Adds a new light to the scene.
+     * Return true if light was added, false if already there or too many lights.
+     */
+    bool addLight(Light* light);
 
     void resetStats() {
         if (!statsInitialized) {
