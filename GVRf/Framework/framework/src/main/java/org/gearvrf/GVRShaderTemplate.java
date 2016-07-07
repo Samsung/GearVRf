@@ -412,6 +412,8 @@ public class GVRShaderTemplate
                 GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
                 if (variant.ShaderID == null)
                 {
+                  //Log.e("gvrf", "*** Vtx Shader " + "\n" + variant.VertexShaderSource);
+                  //Log.e("gvrf", "*** Frag Shader " + "\n" + variant.FragmentShaderSource);
                     variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
                     Log.d("gvrf", "SHADER: Generated shader #" + variant.ShaderID.ID + " " + signature);
                 }

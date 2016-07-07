@@ -47,6 +47,7 @@ void CustomShader::initializeOnDemand() {
         u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
         u_right_ = glGetUniformLocation(program_->id(), "u_right");
         u_model_ = glGetUniformLocation(program_->id(), "u_model");
+        LOGE("Custom shader added program %d", program_->id());
     }
    if (textureVariablesDirty_) {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
@@ -270,7 +271,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
         (u_bone_matrices >= 0)) {
         glm::mat4 finalTransform;
         mesh->setBoneLoc(a_bone_indices, a_bone_weights);
-        mesh->generateBoneArrayBuffers();
+        mesh->generateBoneArrayBuffers(program_->id());
         int nBones = mesh->getVertexBoneData().getNumBones();
         if (nBones > MAX_BONES)
             nBones = MAX_BONES;

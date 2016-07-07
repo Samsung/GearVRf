@@ -46,22 +46,20 @@ static void dumpActiveAttribues(GLuint program)
     GLint numActiveAtributes;
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numActiveAtributes);
     GLchar attrName[512];
-    LOGI("Attribute dump for Prog %d attr count -- %d", program, numActiveAtributes);
+    LOGE("Attribute dump for Prog %d attr count -- %d", program, numActiveAtributes);
     for (int i = 0; i < numActiveAtributes; i++)
     {
         GLsizei length;
         GLint size;
         GLenum type;
         glGetActiveAttrib(program, i, 512, &length, &size, &type, attrName);
-        LOGI(" Attr (%d) %s type %d size %d", i, attrName, (int) type, (int) size);
+        LOGE(" Attr (%d) %s Location %d type %d size %d", i, attrName, glGetAttribLocation(program, attrName), (int) type, (int) size);
     }
 }
 
 
 static void dumpBufferData(GLfloat* buf, int stride, int length)
 {
-    if (length > 10)
-        length = 3;
     char buffer[1024];
     int offset = 0;
     for (int i = 0; i < length; i++)
@@ -71,7 +69,7 @@ static void dumpBufferData(GLfloat* buf, int stride, int length)
         {
             offset += sprintf(buffer + offset, "(%d) %f ",i* stride + j, buf[i* stride + j]);
         }
-        LOGI("%s", buffer);
+        LOGE("%s", buffer);
     }
 }
 

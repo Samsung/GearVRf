@@ -196,13 +196,13 @@ void TextureShader::render(RenderState* rstate,
         }
     }
 
-    GLuint programId;
     if (use_light) {
-        programId = program_light_->id();
+        program_ = program_light_;
     } else {
-        programId = program_no_light_->id();
+        program_ = program_no_light_;
     }
-    render_data->mesh()->bindVertexAttributes(programId);
+    GLuint programId = program_->id();
+    //render_data->mesh()->bindVertexAttributes(programId);
     render_data->mesh()->generateVAO(programId);
     GL(glUseProgram(programId));
     GL(glActiveTexture (GL_TEXTURE0));

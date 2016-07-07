@@ -182,32 +182,32 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
 
 void Mesh::bindVertexAttributes(GLuint programID)
 {
-    if(isVaoDirty()){
-		for (auto it = attribute_float_keys_.begin();
-				it != attribute_float_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocF(loc, s);
-		}
-		for (auto it = attribute_vec2_keys_.begin();
-				it != attribute_vec2_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocV2(loc, s);
-		}
-		for (auto it = attribute_vec3_keys_.begin();
-				it != attribute_vec3_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocV3(loc, s);
-		}
-		for (auto it = attribute_vec4_keys_.begin();
-				it != attribute_vec4_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocV4(loc, s);
-		}
-    }
+//    if(isVaoDirty()){
+//		for (auto it = attribute_float_keys_.begin();
+//				it != attribute_float_keys_.end(); ++it) {
+//			std::string s = it->second;
+//			int loc = glGetAttribLocation(programID, s.c_str());
+//			setVertexAttribLocF(loc, s);
+//		}
+//		for (auto it = attribute_vec2_keys_.begin();
+//				it != attribute_vec2_keys_.end(); ++it) {
+//			std::string s = it->second;
+//			int loc = glGetAttribLocation(programID, s.c_str());
+//			setVertexAttribLocV2(loc, s);
+//		}
+//		for (auto it = attribute_vec3_keys_.begin();
+//				it != attribute_vec3_keys_.end(); ++it) {
+//			std::string s = it->second;
+//			int loc = glGetAttribLocation(programID, s.c_str());
+//			setVertexAttribLocV3(loc, s);
+//		}
+//		for (auto it = attribute_vec4_keys_.begin();
+//				it != attribute_vec4_keys_.end(); ++it) {
+//			std::string s = it->second;
+//			int loc = glGetAttribLocation(programID, s.c_str());
+//			setVertexAttribLocV4(loc, s);
+//		}
+//    }
     unSetVaoDirty();
 }
 
@@ -239,7 +239,8 @@ void Mesh::createAttributeMapping(int programId,
         else
         {
             attrData.type = GL_FLOAT;
-            attrData.index = i;
+            int loc = glGetAttribLocation(programId, attrName);
+            attrData.index = loc;
             attrData.data = NULL;
             attrData.offset = totalStride;
             bool addData = true;
@@ -254,28 +255,28 @@ void Mesh::createAttributeMapping(int programId,
                 attrData.size = 3;
                 len = vertices_.size();
                 attrData.data = vertices_.data();
-                attrData.index = 0;
+                //attrData.index = 0;
             }
             else if (strcmp(attrName, "a_normal") == 0)
             {
                 attrData.size = 3;
                 len = normals_.size();
                 attrData.data = normals_.data();
-                attrData.index = 2;
+                //attrData.index = 1;
             }
             else if (strcmp(attrName, "a_texcoord") == 0)
             {
                 attrData.size = 2;
                 len = tex_coords_.size();
                 attrData.data = tex_coords_.data();
-                attrData.index = 1;
+                //attrData.index = 2;
             }
             else if (strcmp(attrName, "a_tex_coord") == 0)
             {
                 attrData.size = 2;
                 len = tex_coords_.size();
                 attrData.data = tex_coords_.data();
-                attrData.index = 1;
+                //attrData.index = 2;
             }
             else
             {
@@ -353,13 +354,34 @@ void Mesh::createBuffer(std::vector<GLfloat>& buffer, int attrLength)
 
 static void generateAndBindID(GLuint& id)
 {
-    if (id == GVR_INVALID)
-    {
-        glGenBuffers(1, &id);
-    }
+
+    glGenBuffers(1, &id);
     glBindBuffer(GL_ARRAY_BUFFER, id);
 }
 
+const GLuint Mesh::getVAOId(int programId) {
+    if (programId == -1)
+    {
+        LOGI("!! %p Prog Id -- %d ", this, programId);
+        return 0;
+    }
+    auto it = program_ids_.find(programId);
+    if (it != program_ids_.end())
+    {
+        GLVaoVboId id = it->second;
+        return id.vaoID;
+    }
+    vao_dirty_ = true;
+    generateVAO(programId);
+    it = program_ids_.find(programId);
+    if (it != program_ids_.end())
+    {
+        GLVaoVboId id = it->second;
+        return id.vaoID;
+    }
+    LOGI("!! %p Error in creating VAO  for Prog Id -- %d", this, programId);
+    return 0;
+}
 
 // generate vertex array object
 void Mesh::generateVAO(int programId) {
@@ -369,7 +391,11 @@ void Mesh::generateVAO(int programId) {
          return;
     }
     obtainDeleter();
-    deleteVaos();
+
+    GLuint vaoID_;
+    GLuint triangle_vboID_;
+
+    GLuint static_vboID_;
 
     if (vertices_.size() == 0 && normals_.size() == 0
             && tex_coords_.size() == 0) {
@@ -380,14 +406,15 @@ void Mesh::generateVAO(int programId) {
 
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
-
     glGenBuffers(1, &triangle_vboID_);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
             sizeof(unsigned short) * indices_.size(), &indices_[0],
             GL_STATIC_DRAW);
     numTriangles_ = indices_.size() / 3;
-
+    int maxDumpSize = vertices_.size();
+    if (maxDumpSize > 5)
+        maxDumpSize = 5;
     attrMapping.clear();
     int totalStride;
     int attrLength;
@@ -395,16 +422,16 @@ void Mesh::generateVAO(int programId) {
 
     std::vector<GLfloat> buffer;
     createBuffer(buffer, attrLength);
-
     generateAndBindID(static_vboID_);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * buffer.size(),
             &buffer[0], GL_STATIC_DRAW);
+    int localCnt = 0;
     for ( std::vector<GLAttributeMapping>::iterator it = attrMapping.begin(); it != attrMapping.end(); ++it)
     {
         GLAttributeMapping currData = *it;
-        glEnableVertexAttribArray(currData.index);
         glVertexAttribPointer(currData.index, currData.size, currData.type, 0, totalStride * sizeof(GLfloat), (GLvoid*) (currData.offset * sizeof(GLfloat)));
+        glEnableVertexAttribArray(currData.index);
     }
 
 
@@ -413,13 +440,19 @@ void Mesh::generateVAO(int programId) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    GLVaoVboId id;
+    id.vaoID = vaoID_;
+    id.static_vboID = static_vboID_;
+    id.triangle_vboID = triangle_vboID_;
+    program_ids_[programId] = id;
     vao_dirty_ = false;
 }
 
-void Mesh::generateBoneArrayBuffers() {
+void Mesh::generateBoneArrayBuffers(GLuint programId) {
     if (!bone_data_dirty_) {
         return;
     }
+
 
     // delete
     if (boneVboID_ != GVR_INVALID) {
@@ -433,7 +466,14 @@ void Mesh::generateBoneArrayBuffers() {
         return;
     }
 
-    glBindVertexArray(vaoID_);
+    auto it = program_ids_.find(programId);
+    if (it == program_ids_.end())
+    {
+        LOGV("Invalid program Id for bones");
+        return;
+    }
+    GLVaoVboId id = it->second;
+    glBindVertexArray(id.vaoID);
 
     // BoneID
     GLuint boneVboID;
