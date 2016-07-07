@@ -28,10 +28,13 @@ void OculusHeadRotation::predict(GVRActivity& gvrActivity, const ovrFrameParms& 
         tracking = vrapi_ApplyHeadModel(gvrActivity.getOculusHeadModelParms(), &tracking);
 
         const ovrQuatf& orientation = tracking.HeadPose.Pose.Orientation;
-        glm::quat quat(orientation.w, orientation.x, orientation.y, orientation.z);
-        gvrActivity.cameraRig_->setRotation(glm::conjugate(glm::inverse(quat)));
+        const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
+        const glm::quat quat = glm::conjugate(glm::inverse(tmp));
+        gvrActivity.cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
+        gvrActivity.cameraRig_->predict(0);
+
         const ovrVector3f& position = tracking.HeadPose.Pose.Position;
-        glm::vec3 pos(position.x, position.y, position.z);
+        const glm::vec3 pos(position.x, position.y, position.z);
         gvrActivity.cameraRig_->setPosition(pos);
     } else if (nullptr != gvrActivity.cameraRig_) {
         gvrActivity.cameraRig_->predict(time);
