@@ -72,13 +72,13 @@ public class DebugServer implements Runnable {
 
             if (SIMULATE_TELNET) {
                 // Supporting editing and history
-                shell = ConsoleFactory.createTelnetConsoleShell(PROMPT, APP_NAME,
+                shell = GVRConsoleFactory.createTelnetConsoleShell(PROMPT, APP_NAME,
                         new ShellCommandHandler(gvrContext),
                         socket.getInputStream(), socket.getOutputStream());
             } else {
                 // Simple console
                 PrintStream out = new PrintStream(socket.getOutputStream());
-                shell = ConsoleFactory.createConsoleShell(PROMPT, APP_NAME,
+                shell = GVRConsoleFactory.createConsoleShell(PROMPT, APP_NAME,
                         new ShellCommandHandler(gvrContext),
                         new BufferedReader(new InputStreamReader(socket.getInputStream())),
                         out, out, null);

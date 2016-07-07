@@ -730,8 +730,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled) throws IOException {
-        return mImporter.loadModel(urlString,
-                GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        return mImporter.loadModel(urlString, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
     }
 
     

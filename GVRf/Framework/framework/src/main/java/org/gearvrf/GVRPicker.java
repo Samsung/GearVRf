@@ -641,3 +641,4 @@ final class NativePicker {
     static native float[] pickSceneObjectAgainstBoundingBox(long sceneObject,
             float ox, float oy, float oz, float dx, float dy, float dz);
 }
+

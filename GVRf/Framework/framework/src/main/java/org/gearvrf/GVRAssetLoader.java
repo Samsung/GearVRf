@@ -140,7 +140,7 @@ public final class GVRAssetLoader {
             }
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
-        
+
         public GVRContext getContext()       { return mContext; }
         public String getFileName()          { return mFileName; }
         public GVRResourceVolume getVolume() { return mVolume; }
@@ -347,14 +347,14 @@ public final class GVRAssetLoader {
        
         public MaterialTextureRequest(GVRContext context, String texFile)
         {
-            super(context, texFile);
+        	super(context, texFile);
             Material = null;
             TextureName = null;
         }
         
         public MaterialTextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName)
         {
-            super(context, texFile);
+        	super(context, texFile);
             Material = material;
             TextureName = textureName;
             if (Material != null)
@@ -532,6 +532,7 @@ public final class GVRAssetLoader {
     public GVRModelSceneObject loadModel(String filePath, IAssetEvents handler) throws IOException
     {
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, handler);
+
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
         if (ext.equals("x3d"))
             return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
@@ -542,7 +543,7 @@ public final class GVRAssetLoader {
     
     /**
      * Loads a scene object {@link GVRModelSceneObject} from
-     * a 3D model and adds it to the scene.
+     * a 3D model and raises asset events to a handler.
      *
      * @param assetFile
      *            A filename, relative to the root of the volume.
@@ -572,10 +573,11 @@ public final class GVRAssetLoader {
     {
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, scene);
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
-        if (ext.equals("x3d"))
-            return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
-        else
-            return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+
+		if (ext.equals("x3d"))
+		    return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+		else
+		    return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
     }
 
 
@@ -918,10 +920,10 @@ public final class GVRAssetLoader {
     GVRModelSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
             EnumSet<GVRImportSettings> settings, boolean cacheEnabled)
                     throws IOException {
-        String fileName = assetRequest.getFileName();
         GVRModelSceneObject root = new GVRModelSceneObject(mContext);
         GVRResourceVolume volume = assetRequest.getVolume();
         InputStream inputStream = null;
+        String fileName = assetRequest.getBaseName();
         GVRAndroidResource resource = volume.openResource(fileName);
 
         org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);

@@ -159,18 +159,13 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     build_frustum(frustum, (const float*) glm::value_ptr(vp_matrix));
 
     // 2. Iteratively execute frustum culling for each root object (as well as its children objects recursively)
-    const std::vector<SceneObject*>& root_objects = scene->scene_objects();
-    for (auto it = root_objects.begin(); it != root_objects.end(); ++it) {
-        SceneObject *object = *it;
-        if (DEBUG_RENDERER) {
-            LOGD("FRUSTUM: start frustum culling for root %s\n",
-                    object->name().c_str());
-        }
-        frustum_cull(camera->owner_object()->transform()->position(), object, frustum, scene_objects, scene->get_frustum_culling(), 0);
-        if (DEBUG_RENDERER) {
-            LOGD("FRUSTUM: end frustum culling for root %s\n",
-                    object->name().c_str());
-        }
+    SceneObject *object = scene->getRoot();
+    if (DEBUG_RENDERER) {
+        LOGD("FRUSTUM: start frustum culling for root %s\n", object->name().c_str());
+    }
+    frustum_cull(camera->owner_object()->transform()->position(), object, frustum, scene_objects, scene->get_frustum_culling(), 0);
+    if (DEBUG_RENDERER) {
+        LOGD("FRUSTUM: end frustum culling for root %s\n", object->name().c_str());
     }
     // 3. do occlusion culling, if enabled
     occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);

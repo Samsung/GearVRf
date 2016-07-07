@@ -555,6 +555,23 @@ public class VrAppSettings {
         }
     }
 
+    public static class SceneParms {
+        public int viewportX;
+
+        public int viewportY;
+
+        public int viewportWidth;
+
+        public int viewportHeight;
+
+        public SceneParms() {
+            viewportX = 0;
+            viewportY = 0;
+            viewportWidth = 0;
+            viewportHeight = 0;
+        }
+    }
+
     public static int DEFAULT_FBO_RESOLUTION = 1024;
 
     // If it will show loading icon in the vr app.
@@ -588,6 +605,7 @@ public class VrAppSettings {
     public HeadModelParms headModelParms;
     public MonoScopicModeParms monoScopicModeParms;
     public PerformanceParms performanceParms;
+    public SceneParms sceneParms;
 
     /**
      * Set if current app prints information from ovrAppSettings
@@ -828,6 +846,7 @@ public class VrAppSettings {
         headModelParms = new HeadModelParms();
         monoScopicModeParms = new MonoScopicModeParms();
         performanceParms = new PerformanceParms();
+        sceneParms = new SceneParms();
     }
 
     public String toString() {

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.WeakHashMap;
 
 import org.gearvrf.script.GVRScriptFile;
 import org.gearvrf.script.IScriptable;
@@ -58,8 +59,8 @@ public class GVREventManager {
     private static final String TAG = GVREventManager.class.getSimpleName();
     private GVRContext mGvrContext;
 
-    // Cache for Java handler methods
-    private final Map<Object, Map<String, Method>> mHandlerMethodCache;
+    // Cache for Java handler methods; keys *must* be weakly referenced
+    private final WeakHashMap<Object, Map<String, Method>> mHandlerMethodCache;
 
     protected static final int SEND_MASK_OBJECT = 0x1;
     protected static final int SEND_MASK_LISTENERS = 0x2;
@@ -68,7 +69,7 @@ public class GVREventManager {
 
     GVREventManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
-        mHandlerMethodCache = new HashMap<Object, Map<String, Method>>();
+        mHandlerMethodCache = new WeakHashMap<Object, Map<String, Method>>();
     }
 
     /**

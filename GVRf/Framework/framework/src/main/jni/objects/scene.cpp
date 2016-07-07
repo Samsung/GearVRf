@@ -28,7 +28,6 @@ Scene* Scene::main_scene_ = NULL;
 
 Scene::Scene() :
         HybridObject(),
-        scene_objects_(),
         main_camera_rig_(),
         frustum_flag_(false),
         dirtyFlag_(0),
@@ -44,17 +43,15 @@ Scene::~Scene() {
 }
 
 void Scene::addSceneObject(SceneObject* scene_object) {
-    scene_objects_.push_back(scene_object);
+    scene_root_.addChildObject(&scene_root_, scene_object);
 }
 
 void Scene::removeSceneObject(SceneObject* scene_object) {
-    scene_objects_.erase(
-            std::remove(scene_objects_.begin(), scene_objects_.end(),
-                    scene_object), scene_objects_.end());
+    scene_root_.removeChildObject(scene_object);
 }
 
 void Scene::removeAllSceneObjects() {
-    scene_objects_.clear();
+    scene_root_.clear();
     lightList.clear();
     clearAllColliders();
 }
@@ -70,12 +67,10 @@ void Scene::gatherColliders() {
     lockColliders();
     allColliders.clear();
     visibleColliders.clear();
-    for (auto it = scene_objects_.begin(); it != scene_objects_.end(); ++it) {
-        SceneObject* obj = *it;
-        obj->getAllComponents(allColliders, Collider::getComponentType());
-    }
+    scene_root_.getAllComponents(allColliders, Collider::getComponentType());
     unlockColliders();
 }
+
 
 void Scene::pick(SceneObject* sceneobj) {
     if (pick_visible_) {
@@ -111,14 +106,8 @@ void Scene::set_main_scene(Scene* scene) {
 
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
-    std::vector<SceneObject*> scene_objects(scene_objects_);
-    for (int i = 0; i < scene_objects.size(); ++i) {
-        std::vector<SceneObject*> childrenCopy = scene_objects[i]->children();
-        for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
-            scene_objects.push_back(*it);
-        }
-    }
-
+    std::vector<SceneObject*> scene_objects;
+    scene_root_.getDescendants(scene_objects);
     return scene_objects;
 }
 
