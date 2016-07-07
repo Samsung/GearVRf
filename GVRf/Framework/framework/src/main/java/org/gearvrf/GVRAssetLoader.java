@@ -937,11 +937,17 @@ public final class GVRAssetLoader {
              if (!X3Dobject.UNIVERSAL_LIGHTS) {
                 X3DparseLights x3dParseLights = new X3DparseLights(mContext, root);
                 inputStream = resource.getStream();
+                if (inputStream == null) {
+                	throw new FileNotFoundException(fileName + " not found");
+                }
                 Log.d(TAG, "Parse: " + fileName);
                 x3dParseLights.Parse(inputStream, shaderSettings);
                 inputStream.close();
               }
               inputStream = resource.getStream();
+              if (inputStream == null) {
+              	throw new FileNotFoundException(fileName + " not found");
+              }
               x3dObject.Parse(inputStream, shaderSettings);
               inputStream.close();
               mContext.getEventManager().sendEvent(mContext,
