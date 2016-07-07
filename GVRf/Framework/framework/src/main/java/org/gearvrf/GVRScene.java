@@ -127,12 +127,15 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * Remove all scene objects.
      */
     public void removeAllSceneObjects() {
-        getMainCameraRig().removeAllChildren();
+    	GVRCameraRig rig = getMainCameraRig();
+        GVRSceneObject head = rig.getOwnerObject();
+        rig.removeAllChildren();
+        head.getParent().removeChildObject(head);
         NativeScene.removeAllSceneObjects(getNative());
         mLightList.clear();
         mSceneRoot = new GVRSceneObject(getGVRContext());
+        mSceneRoot.addChildObject(head);
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
-        addSceneObject(getMainCameraRig().getOwnerObject());
     }
 
     /**
@@ -445,13 +448,22 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see GVRScene.getLightList
      */
     protected boolean addLight(GVRLightBase light) {
-        if (light != null) {
-            Integer lightIndex = mLightList.size();
-            String name = "light" + lightIndex.toString();
-            mLightList.add(light);
-            NativeLight.setLightID(light.getNative(), name);
-            NativeScene.addLight(getNative(), light.getNative());
-            return true;
+        if (light == null)
+        {
+        	return false;
+        }
+        Integer lightIndex = mLightList.size();
+            
+        if (lightIndex >= MAX_LIGHTS)
+        {
+        	return false;
+        }
+        String name = "light" + lightIndex.toString();
+        if (NativeScene.addLight(getNative(), light.getNative()))
+        {
+        	mLightList.add(light);
+        	NativeLight.setLightID(light.getNative(), name);
+        	return true;
         }
         return false;
     }
@@ -620,7 +632,7 @@ class NativeScene {
 
     public static native void exportToFile(long scene, String file_path);
 
-    static native void addLight(long scene, long light);
+    static native boolean addLight(long scene, long light);
     
     static native void setMainScene(long scene);
     
