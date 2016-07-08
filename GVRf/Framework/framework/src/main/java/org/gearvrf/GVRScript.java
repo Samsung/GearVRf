@@ -107,14 +107,14 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * Called when the script is attached to a target using {@link GVRScriptManager#attachScript}.
      */
     @Override
-    public void onAttach(Object target) {
+    public void onAttach(IScriptable target) {
     }
 
     /**
      * Called when the script is detached from the target using {@link GVRScriptManager#detachScript}.
      */
     @Override
-    public void onDetach(Object target) {
+    public void onDetach(IScriptable target) {
     }
     
     /**
