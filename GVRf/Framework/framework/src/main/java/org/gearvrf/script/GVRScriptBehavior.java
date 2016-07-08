@@ -39,7 +39,7 @@ import org.gearvrf.SensorEvent;
  */
 public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISensorEvents, ISceneEvents
 {
-    static private long TYPE_SCRIPT_BEHAVIOR = (System.currentTimeMillis() & 0xfffffff);
+    static private long TYPE_SCRIPT_BEHAVIOR = newComponentType(GVRScriptBehavior.class);
     static private Object[] noargs = new Object[0];
     protected GVRScriptFile mScriptFile = null;
     protected boolean mIsAttached = false;
@@ -82,6 +82,8 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
     {
         return mScriptFile;
     }
+    
+    public static long getComponentType() { return TYPE_SCRIPT_BEHAVIOR; }
     
     /**
      * Sets the path to the script file to load and loads the script.
