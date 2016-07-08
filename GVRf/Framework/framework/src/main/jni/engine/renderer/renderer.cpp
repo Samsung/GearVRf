@@ -695,10 +695,10 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
     Mesh* mesh = render_data->mesh();
 
     GLuint programId = -1;
+    ShaderBase* shader = NULL;
 
     try {
          //TODO: Improve this logic to avoid a big "switch case"
-        ShaderBase* shader = NULL;
         if (rstate.material_override != nullptr)
             curr_material = rstate.material_override;
          switch (curr_material->shader_type()) {
@@ -759,11 +759,6 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                  glLineWidth(1.0f);
              }
          }
-         programId = shader->getProgramId();
-         if (programId != -1)
-         {
-             mesh->generateVAO(programId);
-         }
          shader->render(&rstate, render_data, curr_material);
     } catch (const std::string &error) {
         LOGE(
@@ -771,6 +766,11 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 render_data->owner_object()->name().c_str(),
                 error.c_str());
         shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
+    }
+    programId = shader->getProgramId();
+    if (programId != -1)
+    {
+        mesh->generateVAO(programId);
     }
     glBindVertexArray(mesh->getVAOId(programId));
     if (mesh->indices().size() > 0) {
