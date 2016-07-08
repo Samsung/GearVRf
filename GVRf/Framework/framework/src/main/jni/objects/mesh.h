@@ -48,8 +48,6 @@ public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
                     have_bounding_volume_(false), vao_dirty_(true),
-                    vaoID_(GVR_INVALID), triangle_vboID_(GVR_INVALID), vert_vboID_(GVR_INVALID),
-                    norm_vboID_(GVR_INVALID), tex_vboID_(GVR_INVALID),
                     boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
     {
     }
@@ -72,24 +70,16 @@ public:
     }
 
     void deleteVaos() {
-        if (vaoID_ != GVR_INVALID) {
-            deleter_->queueVertexArray(vaoID_);
+        for (auto it : program_ids_ )
+        {
+            GLVaoVboId ids = it.second;
+            deleter_->queueVertexArray(ids.vaoID);
+            deleter_->queueBuffer(ids.static_vboID);
+            deleter_->queueBuffer(ids.triangle_vboID);
         }
-        if (triangle_vboID_ != GVR_INVALID) {
-            deleter_->queueBuffer(triangle_vboID_);
-        }
-        if (vert_vboID_ != GVR_INVALID) {
-            deleter_->queueBuffer(vert_vboID_);
-        }
-        if (norm_vboID_ != GVR_INVALID) {
-            deleter_->queueBuffer(norm_vboID_);
-        }
-        if (tex_vboID_ != GVR_INVALID) {
-            deleter_->queueBuffer(tex_vboID_);
-        }
+        program_ids_.clear();
         have_bounding_volume_ = false;
         vao_dirty_ = true;
-        vaoID_ = triangle_vboID_ = vert_vboID_ = norm_vboID_ = tex_vboID_ = GVR_INVALID;
         bone_data_dirty_ = true;
     }
 
@@ -293,11 +283,9 @@ public:
     }
 
     // generate VAO
-    void generateVAO();
+    void generateVAO(int programId);
 
-    const GLuint getVAOId() const {
-        return vaoID_;
-    }
+    const GLuint getVAOId(int programId);
 
     GLuint getNumTriangles() {
         return numTriangles_;
@@ -327,13 +315,7 @@ public:
     void unSetVaoDirty() {
     	regenerate_vao_ = false;
     }
-    void generateBoneArrayBuffers();
-
-    /**
-     * Bind the vertex attributes to the shader.
-     * @param id shader ID
-     */
-    void bindVertexAttributes(GLuint id);
+    void generateBoneArrayBuffers(GLuint programId);
 
     //must be called by the thread on which the mesh cleanup should happen
     void obtainDeleter() {
@@ -376,6 +358,7 @@ private:
     Mesh(Mesh&& mesh);
     Mesh& operator=(const Mesh& mesh);
 
+
 private:
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
@@ -394,11 +377,28 @@ private:
 
     // add vertex array object and VBO
 
-    GLuint vaoID_;
-    GLuint triangle_vboID_;
-    GLuint vert_vboID_;
-    GLuint norm_vboID_;
-    GLuint tex_vboID_;
+
+    //GLuint dynamic_vboID_; // Currently handled by boneVboID_
+
+    struct GLVaoVboId {
+        GLuint vaoID;
+        GLuint static_vboID;
+        GLuint triangle_vboID;
+    };
+
+    std::map<GLuint, GLVaoVboId> program_ids_;
+
+    struct GLAttributeMapping {
+        GLuint          index;
+        GLuint          size;
+        GLenum          type;
+        GLuint          offset;
+        const void*     data;
+    };
+    std::vector<GLAttributeMapping> attrMapping;
+
+    void createAttributeMapping(int programId, int& totalStride, int& attrLength);
+    void createBuffer(std::vector<GLfloat>& buffer, int attrLength);
 
     // triangle information
     GLuint numTriangles_;
@@ -416,6 +416,7 @@ private:
     bool bone_data_dirty_;
 
     GlDelete* deleter_ = nullptr;
+    static std::vector<std::string> dynamicAttribute_Names_;
 };
 }
 #endif
