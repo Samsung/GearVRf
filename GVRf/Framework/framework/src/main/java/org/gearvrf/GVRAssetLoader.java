@@ -284,13 +284,14 @@ public final class GVRAssetLoader {
         
         private void generateLoadEvent()
         {
-            if ((mScene != null) && (mModel != null) && (mErrors == ""))
+            String errors = !"".equals(mErrors) ? mErrors : null;
+            if ((mScene != null) && (mModel != null) && (errors == null))
             {
                 Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
                 mScene.addSceneObject(mModel);
             }
             mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
-                    "onAssetLoaded", new Object[] { mContext, mModel, mFileName, (mErrors != "") ? mErrors : null });
+                    "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
             if (mUserHandler != null)
             {
                 mContext.getEventReceiver().removeListener(mUserHandler);
