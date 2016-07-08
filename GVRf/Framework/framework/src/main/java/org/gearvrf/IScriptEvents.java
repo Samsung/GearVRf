@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.gearvrf.script.IScriptable;
+
 /**
  * This interface defines life-cycle and general per-frame
  * events that are handled by an application.
@@ -26,9 +28,9 @@ public interface IScriptEvents extends IEvents {
 
     void onAfterInit();
     
-    void onAttach(Object target);
+    void onAttach(IScriptable target);
     
-    void onDetach(Object target);
+    void onDetach(IScriptable target);
 
     void onStep();
 }

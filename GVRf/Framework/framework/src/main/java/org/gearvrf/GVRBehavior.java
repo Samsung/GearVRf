@@ -37,7 +37,7 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
 {
     protected boolean mIsListening;
     protected boolean mHasFrameCallback;
-    static private long TYPE_BEHAVIOR = (System.currentTimeMillis() & 0xfffffff);
+    static private long TYPE_BEHAVIOR = newComponentType(GVRBehavior.class);
     
     /**
      * Constructor for a behavior.
@@ -48,7 +48,7 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
     protected GVRBehavior(GVRContext gvrContext)
     {
         this(gvrContext, 0);
-        mType = TYPE_BEHAVIOR;
+        mType = getComponentType();
     }
     
     /**
@@ -64,9 +64,14 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
         mHasFrameCallback = isImplemented("onDrawFrame", float.class);
     }    
 
-    static public long getComponentType()
+    static public long getComponentType() { return TYPE_BEHAVIOR; }
+    
+    static protected long newComponentType(Class<? extends GVRBehavior> clazz)
     {
-        return TYPE_BEHAVIOR;
+        long hash = (long) clazz.hashCode() << 32;
+        long t = ((long) System.currentTimeMillis() & 0xfffffff);
+        long result = hash | t;
+        return result;
     }
     
     @Override
