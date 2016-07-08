@@ -689,7 +689,8 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
     Mesh* mesh = render_data->mesh();
 
-    mesh->generateVAO();
+    GLuint programId = -1;
+
     try {
          //TODO: Improve this logic to avoid a big "switch case"
         ShaderBase* shader = NULL;
@@ -753,6 +754,11 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                  glLineWidth(1.0f);
              }
          }
+         programId = shader->getProgramId();
+         if (programId != -1)
+         {
+             mesh->generateVAO(programId);
+         }
          shader->render(&rstate, render_data, curr_material);
     } catch (const std::string &error) {
         LOGE(
@@ -761,7 +767,7 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 error.c_str());
         shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
     }
-    glBindVertexArray(mesh->getVAOId());
+    glBindVertexArray(mesh->getVAOId(programId));
     if (mesh->indices().size() > 0) {
         glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     }

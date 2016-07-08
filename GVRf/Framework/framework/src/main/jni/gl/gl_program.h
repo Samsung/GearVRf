@@ -27,6 +27,7 @@
 #include "engine/memory/gl_delete.h"
 
 #include "util/gvr_log.h"
+#include "util/gvr_gl.h"
 
 namespace gvr {
 class GLProgram {
@@ -141,20 +142,20 @@ public:
         return program;
     }
 
-    enum attributeBindLocation {
-        POSITION_ATTRIBUTE_LOCATION = 0,
-        TEXCOORD_ATTRIBUT_LOCATION = 1,
-        NORMAL_ATTRIBUTE_LOCATION = 2
-    };
+//    enum attributeBindLocation {
+//        POSITION_ATTRIBUTE_LOCATION = 0,
+//        TEXCOORD_ATTRIBUT_LOCATION = 1,
+//        NORMAL_ATTRIBUTE_LOCATION = 2
+//    };
 
 private:
     GLuint id_;
     GlDelete* deleter_;
 
     static void bindCommonAttributes(GLuint id) {
-        glBindAttribLocation(id, POSITION_ATTRIBUTE_LOCATION, "a_position");
-        glBindAttribLocation(id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
-        glBindAttribLocation(id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
+//        glBindAttribLocation(id, POSITION_ATTRIBUTE_LOCATION, "a_position");
+//        glBindAttribLocation(id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
+//        glBindAttribLocation(id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
     }
 
 };

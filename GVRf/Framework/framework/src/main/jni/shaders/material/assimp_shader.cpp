@@ -253,7 +253,7 @@ void AssimpShader::render(RenderState* rstate,
         }
         Mesh* mesh = render_data->mesh();
         mesh->setBoneLoc(a_bone_indices_, a_bone_weights_);
-        mesh->generateBoneArrayBuffers();
+        mesh->generateBoneArrayBuffers(program_->id());
 
         glm::mat4 finalTransform;
         int nBones = MIN(mesh->getVertexBoneData().getNumBones(), MAX_BONES);
