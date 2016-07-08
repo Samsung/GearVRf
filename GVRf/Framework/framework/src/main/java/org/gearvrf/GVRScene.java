@@ -447,15 +447,12 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @param light light to add
      * @see GVRScene.getLightList
      */
-    protected boolean addLight(GVRLightBase light) {
-        if (light == null)
-        {
-        	return false;
-        }
+    private boolean addLight(GVRLightBase light) {
         Integer lightIndex = mLightList.size();
             
         if (lightIndex >= MAX_LIGHTS)
         {
+            Log.e(TAG, "Exceeded maximum number of lights");
         	return false;
         }
         String name = "light" + lightIndex.toString();
