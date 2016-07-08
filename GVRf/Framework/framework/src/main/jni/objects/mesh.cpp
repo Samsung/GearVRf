@@ -31,6 +31,9 @@
 #include "../gl/gl_program.h"
 
 namespace gvr {
+
+std::vector<std::string> Mesh::dynamicAttribute_Names_ = {"a_bone_indices", "a_bone_weights"};
+
 Mesh* Mesh::createBoundingBox() {
 
     Mesh* mesh = new Mesh();
@@ -177,46 +180,191 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
     }
 }
 
-void Mesh::bindVertexAttributes(GLuint programID)
+void Mesh::createAttributeMapping(int programId,
+        int& totalStride, int& attrLen)
 {
-    if(isVaoDirty()){
-		for (auto it = attribute_float_keys_.begin();
-				it != attribute_float_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocF(loc, s);
-		}
-		for (auto it = attribute_vec2_keys_.begin();
-				it != attribute_vec2_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocV2(loc, s);
-		}
-		for (auto it = attribute_vec3_keys_.begin();
-				it != attribute_vec3_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocV3(loc, s);
-		}
-		for (auto it = attribute_vec4_keys_.begin();
-				it != attribute_vec4_keys_.end(); ++it) {
-			std::string s = it->second;
-			int loc = glGetAttribLocation(programID, s.c_str());
-			setVertexAttribLocV4(loc, s);
-		}
+    totalStride = attrLen = 0;
+    if (programId == -1)
+    {
+        // If program id has not been set, return.
+        return;
     }
-    unSetVaoDirty();
+    GLint numActiveAtributes;
+    glGetProgramiv(programId, GL_ACTIVE_ATTRIBUTES, &numActiveAtributes);
+    GLchar attrName[512];
+    GLAttributeMapping attrData;
+
+    for (int i = 0; i < numActiveAtributes; i++)
+    {
+        GLsizei length;
+        GLint size;
+        GLenum type;
+        glGetActiveAttrib(programId, i, 512, &length, &size, &type, attrName);
+        if (std::find(dynamicAttribute_Names_.begin(), dynamicAttribute_Names_.end(), attrName) != dynamicAttribute_Names_.end())
+        {
+            // Skip dynamic attributes. Currently only bones are dynamic attributes which changes each frame.
+            // They are handled seperately.
+        }
+        else
+        {
+            attrData.type = GL_FLOAT;
+            int loc = glGetAttribLocation(programId, attrName);
+            attrData.index = loc;
+            attrData.data = NULL;
+            attrData.offset = totalStride;
+            bool addData = true;
+            int len = 0;
+
+            // Two things to note --
+            // 1. The 3 builtin buffers are still seperate from the maps used for the other attributes
+            // 2. The attribute index *has* to be 0, 1 and 2 for position, tex_coords and normal. The
+            // index from querying via glGetActiveAttrib cannot be used. Needs analysis.
+            if (strcmp(attrName, "a_position") == 0)
+            {
+                attrData.size = 3;
+                len = vertices_.size();
+                attrData.data = vertices_.data();
+                //attrData.index = 0;
+            }
+            else if (strcmp(attrName, "a_normal") == 0)
+            {
+                attrData.size = 3;
+                len = normals_.size();
+                attrData.data = normals_.data();
+                //attrData.index = 1;
+            }
+            else if (strcmp(attrName, "a_texcoord") == 0)
+            {
+                attrData.size = 2;
+                len = tex_coords_.size();
+                attrData.data = tex_coords_.data();
+                //attrData.index = 2;
+            }
+            else if (strcmp(attrName, "a_tex_coord") == 0)
+            {
+                attrData.size = 2;
+                len = tex_coords_.size();
+                attrData.data = tex_coords_.data();
+                //attrData.index = 2;
+            }
+            else
+            {
+                switch (type)
+                {
+                    case GL_FLOAT:
+                        attrData.size = 1;
+                        {
+                            const std::vector<float>& curr = getFloatVector(attrName);
+                            len = curr.size();
+                            attrData.data = curr.data();
+                        }
+                        break;
+                    case GL_FLOAT_VEC2:
+                        attrData.size = 2;
+                        {
+                            const std::vector<glm::vec2>& curr = getVec2Vector(attrName);
+                            len = curr.size();
+                            attrData.data = curr.data();
+                        }
+                        break;
+                    case GL_FLOAT_VEC3:
+                        attrData.size = 3;
+                        {
+                            const std::vector<glm::vec3>& curr = getVec3Vector(attrName);
+                            len = curr.size();
+                            attrData.data = curr.data();
+                        }
+                        break;
+                    case GL_FLOAT_VEC4:
+                        attrData.size = 4;
+                        {
+                            const std::vector<glm::vec4>& curr = getVec4Vector(attrName);
+                            len = curr.size();
+                            attrData.data = curr.data();
+                        }
+                        break;
+                    default:
+                        addData = false;
+                        LOGE("Looking up %s failed ", attrName);
+                            break;
+                }
+            }
+            if (addData)
+            {
+                totalStride += attrData.size;
+                attrMapping.push_back(attrData);
+                if (attrLen == 0)
+                    attrLen = len;
+                else
+                {
+                    if (len != attrLen)
+                        LOGE(" $$$$*** Attib length does not match %d vs %d", len, attrLen);
+                }
+            }
+        }
+    }
+}
+
+void Mesh::createBuffer(std::vector<GLfloat>& buffer, int attrLength)
+{
+    for (int i = 0; i < attrLength; i++)
+    {
+        for (auto it = attrMapping.begin(); it != attrMapping.end(); ++it)
+        {
+            GLAttributeMapping currAttr = *it;
+            const float* ptr = (float*) currAttr.data;
+            for (int k = 0; k < currAttr.size; k++)
+            {
+                buffer.push_back(ptr[i * currAttr.size + k]);
+            }
+        }
+    }
+}
+
+static void generateAndBindID(GLuint& id)
+{
+
+    glGenBuffers(1, &id);
+    glBindBuffer(GL_ARRAY_BUFFER, id);
+}
+
+const GLuint Mesh::getVAOId(int programId) {
+    if (programId == -1)
+    {
+        LOGI("!! %p Prog Id -- %d ", this, programId);
+        return 0;
+    }
+    auto it = program_ids_.find(programId);
+    if (it != program_ids_.end())
+    {
+        GLVaoVboId id = it->second;
+        return id.vaoID;
+    }
+    vao_dirty_ = true;
+    generateVAO(programId);
+    it = program_ids_.find(programId);
+    if (it != program_ids_.end())
+    {
+        GLVaoVboId id = it->second;
+        return id.vaoID;
+    }
+    LOGI("!! %p Error in creating VAO  for Prog Id -- %d", this, programId);
+    return 0;
 }
 
 // generate vertex array object
-void Mesh::generateVAO() {
+void Mesh::generateVAO(int programId) {
     GLuint tmpID;
 
     if (!vao_dirty_) {
          return;
     }
     obtainDeleter();
-    deleteVaos();
+
+    GLuint vaoID_;
+    GLuint triangle_vboID_;
+
+    GLuint static_vboID_;
 
     if (vertices_.size() == 0 && normals_.size() == 0
             && tex_coords_.size() == 0) {
@@ -227,101 +375,53 @@ void Mesh::generateVAO() {
 
     glGenVertexArrays(1, &vaoID_);
     glBindVertexArray(vaoID_);
-
     glGenBuffers(1, &triangle_vboID_);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
             sizeof(unsigned short) * indices_.size(), &indices_[0],
             GL_STATIC_DRAW);
     numTriangles_ = indices_.size() / 3;
+    int maxDumpSize = vertices_.size();
+    if (maxDumpSize > 5)
+        maxDumpSize = 5;
+    attrMapping.clear();
+    int totalStride;
+    int attrLength;
+    createAttributeMapping(programId, totalStride, attrLength);
 
-    if (vertices_.size()) {
-        glGenBuffers(1, &vert_vboID_);
-        glBindBuffer(GL_ARRAY_BUFFER, vert_vboID_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices_.size(),
-                &vertices_[0], GL_STATIC_DRAW);
-        GLuint vertexLoc = GLProgram::POSITION_ATTRIBUTE_LOCATION;
-        glEnableVertexAttribArray(vertexLoc);
-        glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
+    std::vector<GLfloat> buffer;
+    createBuffer(buffer, attrLength);
+    generateAndBindID(static_vboID_);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * buffer.size(),
+            &buffer[0], GL_STATIC_DRAW);
+    int localCnt = 0;
+    for ( std::vector<GLAttributeMapping>::iterator it = attrMapping.begin(); it != attrMapping.end(); ++it)
+    {
+        GLAttributeMapping currData = *it;
+        glVertexAttribPointer(currData.index, currData.size, currData.type, 0, totalStride * sizeof(GLfloat), (GLvoid*) (currData.offset * sizeof(GLfloat)));
+        glEnableVertexAttribArray(currData.index);
     }
 
-    if (normals_.size()) {
-        glGenBuffers(1, &norm_vboID_);
-        glBindBuffer(GL_ARRAY_BUFFER, norm_vboID_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals_.size(),
-                &normals_[0], GL_STATIC_DRAW);
-        GLuint normalLoc = GLProgram::NORMAL_ATTRIBUTE_LOCATION;
-        glEnableVertexAttribArray(normalLoc);
-        glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, 0, 0);
-    }
-
-    if (tex_coords_.size()) {
-        glGenBuffers(1, &tex_vboID_);
-        glBindBuffer(GL_ARRAY_BUFFER, tex_vboID_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * tex_coords_.size(),
-                &tex_coords_[0], GL_STATIC_DRAW);
-        GLuint texCoordLoc = GLProgram::TEXCOORD_ATTRIBUT_LOCATION;
-        glEnableVertexAttribArray(texCoordLoc);
-        glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, 0, 0);
-    }
-
-    for (auto it = attribute_float_keys_.begin();
-            it != attribute_float_keys_.end(); ++it) {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
-        glBufferData(GL_ARRAY_BUFFER,
-                sizeof(GLfloat) * getFloatVector(it->second).size(),
-                getFloatVector(it->second).data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(it->first);
-        glVertexAttribPointer(it->first, 1, GL_FLOAT, 0, 0, 0);
-    }
-
-    for (auto it = attribute_vec2_keys_.begin();
-            it != attribute_vec2_keys_.end(); ++it) {
-
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
-        glBufferData(GL_ARRAY_BUFFER,
-                sizeof(glm::vec2) * getVec2Vector(it->second).size(),
-                getVec2Vector(it->second).data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(it->first);
-        glVertexAttribPointer(it->first, 2, GL_FLOAT, 0, 0, 0);
-    }
-
-    for (auto it = attribute_vec3_keys_.begin();
-            it != attribute_vec3_keys_.end(); ++it) {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
-        glBufferData(GL_ARRAY_BUFFER,
-                sizeof(glm::vec3) * getVec3Vector(it->second).size(),
-                getVec3Vector(it->second).data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(it->first);
-        glVertexAttribPointer(it->first, 3, GL_FLOAT, 0, 0, 0);
-    }
-
-    for (auto it = attribute_vec4_keys_.begin();
-            it != attribute_vec4_keys_.end(); ++it) {
-        glGenBuffers(1, &tmpID);
-        glBindBuffer(GL_ARRAY_BUFFER, tmpID);
-        glBufferData(GL_ARRAY_BUFFER,
-                sizeof(glm::vec4) * getVec4Vector(it->second).size(),
-                getVec4Vector(it->second).data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(it->first);
-        glVertexAttribPointer(it->first, 4, GL_FLOAT, 0, 0, 0);
-    }
 
     // done generation
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    GLVaoVboId id;
+    id.vaoID = vaoID_;
+    id.static_vboID = static_vboID_;
+    id.triangle_vboID = triangle_vboID_;
+    program_ids_[programId] = id;
     vao_dirty_ = false;
 }
 
-void Mesh::generateBoneArrayBuffers() {
+void Mesh::generateBoneArrayBuffers(GLuint programId) {
     if (!bone_data_dirty_) {
         return;
     }
+
 
     // delete
     if (boneVboID_ != GVR_INVALID) {
@@ -335,7 +435,14 @@ void Mesh::generateBoneArrayBuffers() {
         return;
     }
 
-    glBindVertexArray(vaoID_);
+    auto it = program_ids_.find(programId);
+    if (it == program_ids_.end())
+    {
+        LOGV("Invalid program Id for bones");
+        return;
+    }
+    GLVaoVboId id = it->second;
+    glBindVertexArray(id.vaoID);
 
     // BoneID
     GLuint boneVboID;
