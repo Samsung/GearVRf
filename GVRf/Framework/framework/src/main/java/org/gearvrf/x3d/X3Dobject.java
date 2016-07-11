@@ -3556,10 +3556,14 @@ public class X3Dobject
                                                 // of DEFined items Clones
                                                 // objects with USE
               }
-
+              if ( shaderSettings.texture != null )
+              {
+                gvrMaterial.setTexture("diffuseTexture", shaderSettings.texture);
+              }
+              /*
               if (gvrTexture != null)
                 gvrMaterial.setTexture("diffuseTexture", gvrTexture);
-
+              */
               // Appearance node thus far contains properties of GVRMaterial
               // node
               if (!shaderSettings.getAppearanceName().isEmpty())
