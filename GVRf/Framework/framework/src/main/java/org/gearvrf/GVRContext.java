@@ -29,6 +29,8 @@ import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRHybridObject.NativeCleanupHandler;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
+import org.gearvrf.animation.GVRMaterialAnimation;
+import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
@@ -36,6 +38,7 @@ import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
@@ -45,8 +48,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.view.Gravity;
 import android.view.KeyEvent;
 
 /**
@@ -2768,5 +2773,74 @@ public abstract class GVRContext implements IEventReceiver {
         } finally {
             super.finalize();
         }
+    }
+
+    /**
+     * Show a toast-like message for 3 seconds
+     *
+     * @param message
+     */
+    public void showToast(final String message) {
+        showToast(message, 3f);
+    }
+
+    /**
+     * Show a toast-like message for the specified duration
+     *
+     * @param message
+     * @param duration in seconds
+     */
+    public void showToast(final String message, float duration) {
+        final float quadWidth = 1.2f;
+        final GVRTextViewSceneObject toastSceneObject = new GVRTextViewSceneObject(this, quadWidth, quadWidth / 5,
+                message);
+
+        toastSceneObject.setTextSize(6);
+        toastSceneObject.setTextColor(Color.WHITE);
+        toastSceneObject.setGravity(Gravity.CENTER_HORIZONTAL|Gravity.TOP);
+        toastSceneObject.setBackgroundColor(Color.DKGRAY);
+        toastSceneObject.setRefreshFrequency(GVRTextViewSceneObject.IntervalFrequency.REALTIME);
+
+        final GVRTransform t = toastSceneObject.getTransform();
+        t.setPositionZ(-1.5f);
+
+        final GVRRenderData rd = toastSceneObject.getRenderData();
+        final float finalOpacity = 0.7f;
+        rd.getMaterial().setOpacity(0);
+        rd.setRenderingOrder(2 * GVRRenderData.GVRRenderingOrder.OVERLAY);
+        rd.setDepthTest(false);
+
+        final GVRCameraRig rig = getMainScene().getMainCameraRig();
+        rig.addChildObject(toastSceneObject);
+
+        final GVRMaterialAnimation fadeOut = new GVRMaterialAnimation(rd.getMaterial(), duration / 4.0f) {
+            @Override
+            protected void animate(GVRHybridObject target, float ratio) {
+                final GVRMaterial material = (GVRMaterial) target;
+                material.setOpacity(finalOpacity - ratio * finalOpacity);
+            }
+        };
+        fadeOut.setOnFinish(new GVROnFinish() {
+            @Override
+            public void finished(GVRAnimation animation) {
+                rig.removeChildObject(toastSceneObject);
+            }
+        });
+
+        final GVRMaterialAnimation fadeIn = new GVRMaterialAnimation(rd.getMaterial(), 3.0f * duration / 4.0f) {
+            @Override
+            protected void animate(GVRHybridObject target, float ratio) {
+                final GVRMaterial material = (GVRMaterial) target;
+                material.setOpacity(ratio * finalOpacity);
+            }
+        };
+        fadeIn.setOnFinish(new GVROnFinish() {
+            @Override
+            public void finished(GVRAnimation animation) {
+                getAnimationEngine().start(fadeOut);
+            }
+        });
+
+        getAnimationEngine().start(fadeIn);
     }
 }
