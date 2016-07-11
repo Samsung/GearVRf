@@ -768,10 +768,7 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
         shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
     }
     programId = shader->getProgramId();
-    if (programId != -1)
-    {
-        mesh->generateVAO(programId);
-    }
+
     glBindVertexArray(mesh->getVAOId(programId));
     if (mesh->indices().size() > 0) {
         glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
