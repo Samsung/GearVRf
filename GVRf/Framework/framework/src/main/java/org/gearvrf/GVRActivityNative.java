@@ -19,46 +19,41 @@ import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
 
-final class GVRActivityNative {
-
+class GVRActivityNative implements IActivityBaseNative {
     static {
         System.loadLibrary("gvrf");
     }
 
-    private long mPtr;
+    private final long mPtr;
 
-    static GVRActivityNative createObject(Activity act, VrAppSettings vrAppSettings,
-            ActivityHandlerRenderingCallbacks callbacks) {
-        return new GVRActivityNative(act, vrAppSettings, callbacks);
-    }
-
-    private GVRActivityNative(Activity act, VrAppSettings vrAppSettings, ActivityHandlerRenderingCallbacks callbacks) {
+    GVRActivityNative(Activity act, VrAppSettings vrAppSettings, ActivityHandlerRenderingCallbacks callbacks) {
         mPtr = onCreate(act, vrAppSettings, callbacks);
     }
 
-    void onDestroy() {
+    public void onDestroy() {
         onDestroy(mPtr);
     }
 
-    void setCamera(GVRCamera camera) {
+    public void setCamera(GVRCamera camera) {
         setCamera(mPtr, camera.getNative());
     }
 
-    void setCameraRig(GVRCameraRig cameraRig) {
+    public void setCameraRig(GVRCameraRig cameraRig) {
         setCameraRig(mPtr, cameraRig.getNative());
     }
 
-    void onUndock() {
+    public void onUndock() {
         onUndock(mPtr);
     }
 
-    void onDock() {
+    public void onDock() {
         onDock(mPtr);
     }
 
-    long getNative() {
+    public long getNative() {
         return mPtr;
     }
+
 
     private static native void setCamera(long appPtr, long camera);
 
@@ -71,5 +66,4 @@ final class GVRActivityNative {
     private static native void onDestroy(long appPtr);
 
     private static native long onCreate(Activity act, VrAppSettings vrAppSettings, ActivityHandlerRenderingCallbacks callbacks);
-
 }
