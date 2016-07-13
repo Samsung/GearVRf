@@ -33,6 +33,10 @@ public interface IScriptEvents extends IEvents {
     void onInit(GVRContext gvrContext) throws Throwable;
 
     void onAfterInit();
+    
+    void onAttach(IScriptable target);
+    
+    void onDetach(IScriptable target);
 
     /**
      * Called when a script is attached to a target.
