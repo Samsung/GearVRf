@@ -34,10 +34,6 @@ public interface IScriptEvents extends IEvents {
 
     void onAfterInit();
     
-    void onAttach(IScriptable target);
-    
-    void onDetach(IScriptable target);
-
     /**
      * Called when a script is attached to a target.
      * @param target object script is attached to
