@@ -26,6 +26,12 @@ import android.util.Log;
 
 import org.gearvrf.GVRCustomMaterialShaderId;
 
+/**
+ * 
+ * @author m1.williams
+ * implements shader for X3D developers who will eventually
+ * set their own values, which X3D allows.
+ */
 public class x3dTandLShaderTest {
 
     public final String TEXTURECENTER_KEY = "texturecenter";
@@ -53,7 +59,6 @@ public class x3dTandLShaderTest {
     public static final String MAT3_KEY = "u_mat3";
     public static final String MAT4_KEY = "u_mat4";
 
-    //private static final String VERTEX_SHADER = "" //
     private final String VERTEX_SHADER = "" //
             + "attribute vec4 a_position;\n"
             + "attribute vec3 a_normal;\n" //
@@ -129,10 +134,6 @@ public class x3dTandLShaderTest {
             + "     endColor += specularlightCalculation(pixelNormal, vectorLightToPixel) * u_specularcolor;\n"
             + "     endColor = min(endColor, 1.0);\n"
              + "  }\n"
-            //+ "  pixelColor *= lightContribution * intensity * lightColor;\n"
-            //+ "  pixelColor += specularlightCalculation(pixelNormal, vectorLightToPixel) * u_specularcolor;\n"
-            //+ "  pixelColor = min(pixelColor, 1.0);\n"
-            //+ "  return pixelColor;\n"         
             + "  return endColor;\n"         
             + "}\n";         
 
@@ -183,8 +184,6 @@ public class x3dTandLShaderTest {
 
     public String FRAGMENT_SHADER_Lights = ""; //
 
-
-
     private GVRCustomMaterialShaderId mShaderId;
     private GVRMaterialMap mCustomShader = null;
     private GVRMaterialShaderManager shaderManager = null;
@@ -193,7 +192,6 @@ public class x3dTandLShaderTest {
         shaderManager = gvrContext
                 .getMaterialShaderManager();
     }
-
 
     public void appendFragmentShaderLights(String lightString) {
     	FRAGMENT_SHADER_Lights += lightString;
@@ -218,17 +216,16 @@ public class x3dTandLShaderTest {
         		+ FRAGMENT_SHADER_Lights
                 + FRAGMENT_SHADER_DmainEnd;
         
-        /*
-        Log.e("Mitch -- Vtx", VERTEX_SHADER);
-        //Log.e("Mitch -- Frag", FRAGMENT_SHADER);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_Avars);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_BspecularlightContribution);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_Cdirectionallight);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_Cpointlight);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_Cspotlight);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_DmainBgn);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_Lights);
-        Log.e("Mitch -- Frag", FRAGMENT_SHADER_DmainEnd);
+        /*  if we want to print out the shader
+        Log.e(" -- Vtx", VERTEX_SHADER);
+        Log.e(" -- Frag", FRAGMENT_SHADER_Avars);
+        Log.e(" -- Frag", FRAGMENT_SHADER_BspecularlightContribution);
+        Log.e(" -- Frag", FRAGMENT_SHADER_Cdirectionallight);
+        Log.e(" -- Frag", FRAGMENT_SHADER_Cpointlight);
+        Log.e(" -- Frag", FRAGMENT_SHADER_Cspotlight);
+        Log.e(" -- Frag", FRAGMENT_SHADER_DmainBgn);
+        Log.e(" -- Frag", FRAGMENT_SHADER_Lights);
+        Log.e(" -- Frag", FRAGMENT_SHADER_DmainEnd);
         */
         
         mShaderId = shaderManager.addShader(VERTEX_SHADER, FRAGMENT_SHADER);

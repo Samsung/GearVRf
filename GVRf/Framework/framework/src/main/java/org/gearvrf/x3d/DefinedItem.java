@@ -30,6 +30,23 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
+/**
+ * @author m1.williams
+ * DefinedItem is an array list of each X3D node
+ * that has a DEF="some_name" between the < > brackets.
+ * The name is saved, and a reference to the GVR structure
+ *
+ * For example <IndexedFaceSet DEF="myIFS"> will create a
+ * DefinedItem setting name to "myIFS" and gvrMesh will 
+ * point to a GVRmesh object.
+ * Later, if an <IndexedFaceSet USE="myIFS">, both IndexedFaceSet
+ * will point to the same GVRmesh.
+ * 
+ * This also allows implementation of X3D's compliance
+ * with HTML5 Document Object Model (DOM)
+ * getElementByTagName() method since every DEF name will be in
+ * this array list containing DEFined values.
+ */
 public class DefinedItem {
 
   private String name = "";
@@ -38,11 +55,8 @@ public class DefinedItem {
   private Future<GVRTexture> gvrTexture = null;
   private GVRRenderData gvrRenderData = null;
 
-  // Only have ShaderSetting set until parsing the end Shape </Shape> node
-  //private ShaderSettings shaderSettingsMaterial = null;
   private GVRMaterial gvrMaterial = null;
 
-  
   public DefinedItem () {
   }
 
@@ -89,17 +103,6 @@ public class DefinedItem {
   public GVRMaterial getGVRMaterial() {
     return this.gvrMaterial;
   }
-
-  /*
-  public void setShaderSettingsMaterial(ShaderSettings shaderSettingsMaterial) {
-    this.shaderSettingsMaterial = shaderSettingsMaterial;
-  }
-
-  public ShaderSettings getShaderSettingsMaterial() {
-    return this.shaderSettingsMaterial;
-  }
-  */
-
 
   public void setGVRSceneObject (GVRSceneObject gvrSceneObject) {
     this.gvrSceneObject = gvrSceneObject;
