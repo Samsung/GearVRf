@@ -15,17 +15,43 @@ android {
         }
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+    //copy tasks duplicated since I had trouble getting the same task executed more
+    //than once; and the copying must happen for both release and debug otherwise
+    //the releaseToGitHub may delete the files; should be possible to be done much
+    //better but I left it as a future exercise
+    task copyOculusFilesDebug() << {
+        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
+            def oculusDir = rootProject.property("OVR_MOBILE_SDK")
+            copy {
+                from oculusDir+'/VrApi/Libs/Android/VrApi.jar'
+                into 'src/main/libs'
+            }
+            copy {
+                from oculusDir+'/VrApi/Libs/Android/armeabi-v7a/libvrapi.so'
+                into 'src/main/libs/armeabi-v7a'
+            }
+            copy {
+                from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
+                into 'src/main/libs'
+            }
         }
     }
-
-    sourceSets.main {
-        java.srcDirs = ['src/main/java']
-        jni.srcDirs = [] // no auto generation of Android.mk
-        jniLibs.srcDir 'src/main/libs' // pre-compiled libraries
+    task copyOculusFilesRelease() << {
+        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
+            def oculusDir = rootProject.property("OVR_MOBILE_SDK")
+            copy {
+                from oculusDir+'/VrApi/Libs/Android/VrApi.jar'
+                into 'src/main/libs'
+            }
+            copy {
+                from oculusDir+'/VrApi/Libs/Android/armeabi-v7a/libvrapi.so'
+                into 'src/main/libs/armeabi-v7a'
+            }
+            copy {
+                from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
+                into 'src/main/libs'
+            }
+        }
     }
 
     task buildNative(type: Exec) {
@@ -51,6 +77,26 @@ android {
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
     }
 
+    buildTypes {
+        debug {
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+        releaseToGitHub {
+        }
+    }
+
+    sourceSets.main {
+        java.srcDirs = ['src/main/java']
+        jni.srcDirs = [] // no auto generation of Android.mk
+        // pre-compiled libraries
+        jniLibs {
+            srcDir 'src/main/libs'
+        }
+    }
+
     task cleanNative(type: Exec) {
         def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
@@ -74,7 +120,64 @@ android {
     tasks.withType(JavaCompile) {
         compileTask -> compileTask.dependsOn buildNative
     }
+
+    task deleteOculusFiles() << {
+        delete 'src/main/libs/armeabi-v7a/libvrapi.so'
+        delete 'src/main/libs/VrApi.jar'
+        delete 'src/main/libs/SystemUtils.jar'
+    }
+
+    tasks.whenTaskAdded { task ->
+        if (task.name == 'packageReleaseToGitHubJar') {
+            task.dependsOn deleteOculusFiles
+        }
+        if (task.name == 'packageDebugJar') {
+            task.dependsOn copyOculusFilesDebug
+        }
+        if (task.name == 'packageReleaseJar') {
+            task.dependsOn copyOculusFilesRelease
+        }
+    }
+
+    task eclipsePrepare(dependsOn: assemble) {
+        deleteOculusFiles
+    }
+    task eclipseZip(type: Zip, dependsOn: eclipsePrepare) {
+        delete 'build/distributions/gvrf-eclipse.zip'
+
+        into('GearVRf/res/') {
+            from 'src/main/res/'
+        }
+        into('GearVRf/libs/') {
+            from('src/main/libs/') {
+                exclude 'libassimp.so'
+                exclude 'libjnlua.so'
+            }
+            from('build/intermediates/bundles/release/') {
+                include 'classes.jar'
+                rename('classes.jar', 'gvrf.jar')
+            }
+        }
+        into('GearVRf/') {
+            from('src/main/') {
+                include 'AndroidManifest.xml'
+                include '.project'
+                include '.classpath'
+                include 'project.properties'
+            }
+        }
+        into('GearVRf/java') {
+            from('src/main/') {
+                include 'donotdelete.txt'
+            }
+        }
+
+        baseName 'gvrf-for-eclipse'
+
+    }
+    task eclipseReleaseForGitHub(dependsOn: eclipseZip)
 }
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
