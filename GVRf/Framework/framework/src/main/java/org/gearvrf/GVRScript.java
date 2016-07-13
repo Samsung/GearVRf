@@ -31,9 +31,6 @@ import android.graphics.BitmapFactory;
  * default priority} threads compete with each other.
  */
 public abstract class GVRScript implements IScriptEvents, IScriptable, IEventReceiver {
-
-    // private static final String TAG = Log.tag(GVRScript.class);
-
     /**
      * Default minimum time for splash screen to show: returned by
      * {@link #getSplashDisplayTime()}.
@@ -50,6 +47,7 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
     private static final float DEFAULT_SPLASH_Z = -1.25f;
 
     private final GVREventReceiver mEventReceiver = new GVREventReceiver(this);
+    private volatile GVRViewManager mViewManager;
 
     /*
      * Core methods, that you must override.
@@ -135,8 +133,6 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * Splash screen support: methods to call or overload to change the default
      * splash screen behavior
      */
-
-    private GVRViewManager mViewManager;
 
     /**
      * Whether the splash screen should be displayed, and for how long.
@@ -296,20 +292,31 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
         transform.setPosition(0, 0, DEFAULT_SPLASH_Z);
     }
 
-    SplashScreen createSplashScreen(GVRViewManager viewManager) {
+    SplashScreen createSplashScreen() {
         if (getSplashMode() == SplashMode.NONE) {
             return null;
         }
 
-        this.mViewManager = viewManager;
-        SplashScreen splashScreen = new SplashScreen(viewManager, //
-                getSplashMesh(viewManager), //
-                getSplashTexture(viewManager), //
-                getSplashShader(viewManager), //
+        SplashScreen splashScreen = new SplashScreen(mViewManager, //
+                getSplashMesh(mViewManager), //
+                getSplashTexture(mViewManager), //
+                getSplashShader(mViewManager), //
                 this);
         splashScreen.getRenderData().setRenderingOrder(
                 GVRRenderData.GVRRenderingOrder.OVERLAY);
         onSplashScreenCreated(splashScreen);
         return splashScreen;
+    }
+
+    void setViewManager(final GVRViewManager viewManager) {
+        mViewManager = viewManager;
+    }
+
+    /**
+     * Convenience method to get to the GVR context this instance is associated with
+     * @return the context if initialized and ready, null otherwise
+     */
+    public final GVRContext getGVRContext() {
+        return mViewManager;
     }
 }
