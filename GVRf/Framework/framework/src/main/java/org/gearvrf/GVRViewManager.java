@@ -197,7 +197,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         mLensInfo = new GVRLensInfo(screenWidthPixels, screenHeightPixels, screenWidthMeters, screenHeightMeters,
                 vrAppSettings);
 
-        GVRPerspectiveCamera.setDefaultFovY(vrAppSettings.getEyeBufferParms().getFovY());
+        GVRPerspectiveCamera.setDefaultFovY(vrAppSettings.getEyeBufferParams().getFovY());
         // Different width/height aspect ratio makes the rendered screen warped
         // when the screen rotates
         // GVRPerspectiveCamera.setDefaultAspectRatio(mLensInfo
@@ -521,7 +521,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     mScreenshotRightCallback = null;
                 }
 
-                mActivity.setCamera(rightCamera);
+                mActivity.getActivityNative().setCamera(rightCamera);
 
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.leave();
@@ -571,7 +571,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                     mReadbackBuffer = null;
                 }
 
-                mActivity.setCamera(leftCamera);
+                mActivity.getActivityNative().setCamera(leftCamera);
 
                 if (DEBUG_STATS) {
                     mTracerDrawEyes2.leave();
@@ -589,9 +589,9 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
 
         if (mCurrentEye == 1) {
-            mActivity.setCamera(mMainScene.getMainCameraRig().getLeftCamera());
+            mActivity.getActivityNative().setCamera(mMainScene.getMainCameraRig().getLeftCamera());
         } else {
-            mActivity.setCamera(mMainScene.getMainCameraRig().getRightCamera());
+            mActivity.getActivityNative().setCamera(mMainScene.getMainCameraRig().getRightCamera());
         }
     }
 
