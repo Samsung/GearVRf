@@ -93,6 +93,7 @@ public class GVRComponent extends GVRHybridObject {
             {
                 NativeComponent.setOwnerObject(getNative(), owner.getNative());
             }
+            this.owner = owner;
             onAttach(owner);
         }
         else
@@ -102,8 +103,8 @@ public class GVRComponent extends GVRHybridObject {
             {
                 NativeComponent.setOwnerObject(getNative(), 0L);
             }
+            this.owner = null;
         }
-        this.owner = owner;
     }
 
     /**

@@ -32,8 +32,7 @@ import java.util.List;
  */
 public class GVRSwitch extends GVRBehavior
 {
-    static private long TYPE_SWITCH = ((long)GVRSwitch.class.hashCode() << 32) & (System
-            .currentTimeMillis() & 0xffffffff);
+    static private long TYPE_SWITCH = newComponentType(GVRSwitch.class);
     protected int mSwitchIndex = 0;
 
     public GVRSwitch(GVRContext gvrContext)
@@ -53,10 +52,7 @@ public class GVRSwitch extends GVRBehavior
         super(gvrContext, nativeConstructor);
     }    
 
-    static public long getComponentType()
-    {
-        return TYPE_SWITCH;
-    }   
+    static public long getComponentType() { return TYPE_SWITCH; }   
     
     /**
      * Gets the current switch index that selects what object to display.

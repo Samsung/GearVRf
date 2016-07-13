@@ -66,7 +66,7 @@ import org.joml.Vector3f;
  */
 public class GVRPicker extends GVRBehavior {
     private static final String TAG = Log.tag(GVRPicker.class);
-    static private long TYPE_PICKMANAGER = (System.currentTimeMillis() & 0xfffffff);
+    static private long TYPE_PICKMANAGER = newComponentType(GVRPicker.class);
     private Vector3f mRayOrigin = new Vector3f(0, 0, 0);
     private Vector3f mRayDirection = new Vector3f(0, 0, -1);
     private float[] mPickRay = new float[6];
@@ -84,13 +84,10 @@ public class GVRPicker extends GVRBehavior {
         super(context);
         mScene = scene;
         mHasChanged = true;
-        mType = TYPE_PICKMANAGER;
+        mType = getComponentType();
     }
 
-    static public long getComponentType()
-    {
-        return TYPE_PICKMANAGER;
-    }
+    static public long getComponentType() { return TYPE_PICKMANAGER; }
 
     /**
      * Get the current ray to use for picking.
