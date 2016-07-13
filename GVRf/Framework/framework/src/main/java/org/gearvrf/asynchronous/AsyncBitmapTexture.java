@@ -53,6 +53,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.view.Display;
 import android.view.WindowManager;
+import android.content.pm.ApplicationInfo;
 
 /**
  * Async resource loading: bitmap textures.
@@ -138,7 +139,7 @@ class AsyncBitmapTexture {
      * A multiple of the "memory class" - <i>e.g.</i> 7.5% of a 32M heap is a
      * 2.4M image; 6% is 1.92M
      */
-    private static final float MAXIMUM_IMAGE_FACTOR = 0.125f;
+    private static final float MAXIMUM_IMAGE_FACTOR = 0.625f;
 
     /**
      * When {@link #fractionalDecode(FractionalDecodeShim, Options, int, int)}
@@ -304,7 +305,12 @@ class AsyncBitmapTexture {
         private static void getMemoryClass(Context context) {
             ActivityManager activityManager = (ActivityManager) context
                     .getSystemService(Activity.ACTIVITY_SERVICE);
-            memoryClass = activityManager.getMemoryClass() * 1024 * 1024;
+            ApplicationInfo info = context.getApplicationInfo();
+            if((info.flags & ApplicationInfo.FLAG_LARGE_HEAP) == ApplicationInfo.FLAG_LARGE_HEAP) {
+                memoryClass = activityManager.getLargeMemoryClass() * 1024 * 1024;
+            } else {
+                memoryClass = activityManager.getMemoryClass() * 1024 * 1024;
+            }
             Log.d(TAG, "MemoryClass = %dM", memoryClass / (1024 * 1024));
         }
 
