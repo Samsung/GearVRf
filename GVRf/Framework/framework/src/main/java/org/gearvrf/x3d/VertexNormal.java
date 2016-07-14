@@ -17,7 +17,7 @@ package org.gearvrf.x3d;
 
 public class VertexNormal
 {
-  public float[] vector =
+  private float[] vector =
   {
       0, 0, 1
   };
@@ -36,5 +36,9 @@ public class VertexNormal
     {
       this.vector[i] = vn[i];
     }
+  }
+  
+  public float getVertexNormalCoord(int i) {
+    return vector[i];
   }
 }

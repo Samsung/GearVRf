@@ -1320,7 +1320,7 @@ public class X3Dobject
               Coordinates coordinate = indexedFaceSet.get(i);
               for (int j = 0; j < 3; j++)
               {
-                ifs[i * 3 + j] = (char) coordinate.coords[j];
+                ifs[i * 3 + j] = (char) coordinate.getCoordinate(j);
               }
             }
             gvrMesh.setIndices(ifs);
@@ -1386,7 +1386,7 @@ public class X3Dobject
               Vertex vertex = vertices.get(i);
               for (int j = 0; j < 3; j++)
               {
-                vertexList[i * 3 + j] = vertex.point[j];
+                vertexList[i * 3 + j] = vertex.getVertexCoord(j);
               }
             }
             gvrMesh.setVertices(vertexList);
@@ -1470,7 +1470,7 @@ public class X3Dobject
                 for (int j = 0; j < 3; j++)
                 {
                   indexedTextureCoordList[i * 3
-                      + j] = (char) coordinate.coords[j];
+                      + j] = (char) coordinate.getCoordinate(j);
                 }
               }
             }
@@ -1579,7 +1579,7 @@ public class X3Dobject
                 Coordinates vnIndex = GetIndexedVertexNormals(i);
                 for (int j = 0; j < 3; j++)
                 {
-                  indexedVertexNormalsList[i * 3 + j] = vnIndex.coords[j];
+                  indexedVertexNormalsList[i * 3 + j] = vnIndex.getCoordinate(j);
                 }
               }
             }
@@ -1593,7 +1593,7 @@ public class X3Dobject
                 for (int j = 0; j < 3; j++)
                 {
                   indexedVertexNormalsList[i * 3
-                      + j] = (char) coordinate.coords[j];
+                      + j] = (char) coordinate.getCoordinate(j);
                 }
               }
             }
@@ -1606,7 +1606,8 @@ public class X3Dobject
                 VertexNormal vertexNormals = vertexNormal.get(vnIndex);
                 for (int j = 0; j < 3; j++)
                 {
-                  normalVectorList[index * 3 + j] = vertexNormals.vector[j];
+                  normalVectorList[index * 3 + j] = vertexNormals.getVertexNormalCoord(j);
+
                 }
               }
             }

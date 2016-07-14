@@ -18,6 +18,7 @@ package org.gearvrf.x3d;
 public class KeyValue
 {
   public float[] keyValues = null;
+  //private float[] keyValues = null;
 
   public KeyValue(float x, float y, float z)
   {
