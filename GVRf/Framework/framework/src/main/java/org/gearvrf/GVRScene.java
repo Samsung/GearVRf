@@ -133,6 +133,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         head.getParent().removeChildObject(head);
         NativeScene.removeAllSceneObjects(getNative());
         mLightList.clear();
+        Log.d(TAG, "Light: clear");
         mSceneRoot = new GVRSceneObject(getGVRContext());
         mSceneRoot.addChildObject(head);
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
@@ -448,19 +449,23 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see GVRScene.getLightList
      */
     private boolean addLight(GVRLightBase light) {
-        Integer lightIndex = mLightList.size();
-            
-        if (lightIndex >= MAX_LIGHTS)
+        synchronized (mLightList)
         {
-            Log.e(TAG, "Exceeded maximum number of lights");
-        	return false;
-        }
-        String name = "light" + lightIndex.toString();
-        if (NativeScene.addLight(getNative(), light.getNative()))
-        {
-        	mLightList.add(light);
-        	NativeLight.setLightID(light.getNative(), name);
-        	return true;
+            Integer lightIndex = mLightList.size();
+
+            if (lightIndex >= MAX_LIGHTS)
+            {
+                Log.e(TAG, "Exceeded maximum number of lights");
+                return false;
+            }
+            String name = "light" + lightIndex.toString();
+            if (NativeScene.addLight(getNative(), light.getNative()))
+            {
+                mLightList.add(light);
+                NativeLight.setLightID(light.getNative(), name);
+                Log.d(TAG, "Light: addLight " + name);
+                return true;
+            }
         }
         return false;
     }
@@ -473,10 +478,14 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * 
      * @return array of lights
      */
-    public GVRLightBase[] getLightList() {
-        GVRLightBase[] list = new GVRLightBase[mLightList.size()];
-        mLightList.toArray(list);
-        return list;
+    public GVRLightBase[] getLightList()
+    {
+        synchronized (mLightList)
+        {
+            GVRLightBase[] list = new GVRLightBase[mLightList.size()];
+            mLightList.toArray(list);
+            return list;
+        }
     }
     
     /**
