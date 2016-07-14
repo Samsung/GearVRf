@@ -32,7 +32,7 @@ import org.gearvrf.GVRCustomMaterialShaderId;
  * implements shader for X3D developers who will eventually
  * set their own values, which X3D allows.
  */
-public class x3dTandLShaderTest {
+public class X3DTandLShader {
 
     public final String TEXTURECENTER_KEY = "texturecenter";
     public final String TEXTUREROTATION_KEY = "texturerotation";
@@ -188,7 +188,7 @@ public class x3dTandLShaderTest {
     private GVRMaterialMap mCustomShader = null;
     private GVRMaterialShaderManager shaderManager = null;
 
-    public x3dTandLShaderTest(GVRContext gvrContext) {
+    public X3DTandLShader(GVRContext gvrContext) {
         shaderManager = gvrContext
                 .getMaterialShaderManager();
     }

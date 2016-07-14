@@ -33,7 +33,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
-import org.gearvrf.x3d.x3dTandLShaderTest;
+import org.gearvrf.x3d.X3DTandLShader;
 
 /**
  * 
@@ -50,7 +50,7 @@ public class X3DparseLights
   private GVRSceneObject root = null;
   private GVRSceneObject currentSceneObject = null;
 
-  private x3dTandLShaderTest mX3DTandLShaderTest = null;
+  private X3DTandLShader mX3DTandLShaderTest = null;
 
   private ShaderSettings shaderSettings = null;
 

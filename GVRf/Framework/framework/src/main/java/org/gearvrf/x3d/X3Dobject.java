@@ -76,7 +76,7 @@ import org.gearvrf.animation.keyframe.GVRPositionKey;
 import org.gearvrf.animation.keyframe.GVRRotationKey;
 import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
-import org.gearvrf.x3d.x3dTandLShaderTest;
+import org.gearvrf.x3d.X3DTandLShader;
 import org.gearvrf.scene_objects.GVRConeSceneObject;
 
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
@@ -202,16 +202,16 @@ public class X3Dobject
                                                // gvrSceneObject for x3d
                                                // TRANSFORM and GROUP nodes
 
-  private x3dTandLShaderTest mX3DTandLShaderTest = null;
+  private X3DTandLShader mX3DTandLShaderTest = null;
   private GVRTextureParameters gvrTextureParameters = null;
   private Future<GVRTexture> gvrTexture = null;
 
   private Vector<Vertex> vertices = new Vector<Vertex>(); // vertices
   private Vector<VertexNormal> vertexNormal = new Vector<VertexNormal>();
   private Vector<TextureValues> textureCoord = new Vector<TextureValues>();
-  private Vector<coordinates> indexedFaceSet = new Vector<coordinates>();
-  private Vector<coordinates> indexedVertexNormals = new Vector<coordinates>();
-  private Vector<textureCoordinates> indexedTextureCoord = new Vector<textureCoordinates>();
+  private Vector<Coordinates> indexedFaceSet = new Vector<Coordinates>();
+  private Vector<Coordinates> indexedVertexNormals = new Vector<Coordinates>();
+  private Vector<TextureCoordinates> indexedTextureCoord = new Vector<TextureCoordinates>();
 
   private Vector<Key> keys = new Vector<Key>();
   private Vector<KeyValue> keyValues = new Vector<KeyValue>();
@@ -330,28 +330,28 @@ public class X3Dobject
 
   private void AddIndexedFaceSet(short[] coord)
   {
-    coordinates newCoordinates = new coordinates(coord);
+    Coordinates newCoordinates = new Coordinates(coord);
     indexedFaceSet.add(newCoordinates);
   }
 
   private void AddTextureCoordinateSet(short[] tc)
   {
-    textureCoordinates newCoordinates = new textureCoordinates(tc);
+    TextureCoordinates newCoordinates = new TextureCoordinates(tc);
     indexedTextureCoord.add(newCoordinates);
   }
 
-  private textureCoordinates GetTexturedCoordSet(int index)
+  private TextureCoordinates GetTexturedCoordSet(int index)
   {
     return indexedTextureCoord.get(index);
   }
 
   private void AddIndexedVertexNormals(short[] normalIndex)
   {
-    coordinates newCoordinates = new coordinates(normalIndex);
+    Coordinates newCoordinates = new Coordinates(normalIndex);
     indexedVertexNormals.add(newCoordinates);
   }
 
-  private coordinates GetIndexedVertexNormals(int index)
+  private Coordinates GetIndexedVertexNormals(int index)
   {
     return indexedVertexNormals.get(index);
   }
@@ -477,7 +477,7 @@ public class X3Dobject
       }
       catch (IOException e)
       {
-        Log.d("Parse X3D", "Boolean Error: " + e);
+        Log.e(TAG, "Boolean Error: " + e);
         e.printStackTrace();
       }
       return value;
@@ -499,14 +499,12 @@ public class X3Dobject
       {
         while ((tokenType = st.nextToken()) != StreamTokenizer.TT_EOF)
         {
-          // if ( tokenType == StreamTokenizer.TT_WORD) {
           strings.add(st.sval);
-          // }
         }
       }
       catch (IOException e)
       {
-        Log.d("Parse X3D", "String parsing Error: " + e);
+        Log.d(TAG, "String parsing Error: " + e);
         e.printStackTrace();
       }
       mfStrings = new String[strings.size()];
@@ -533,8 +531,8 @@ public class X3Dobject
         {
           if (tokenType == StreamTokenizer.TT_NUMBER)
           {
-            // first parse for short values which will be integers
-            // and have no exponents
+            // first componentType's parse for short values
+            // (integers) and will have no exponents
             if (componentType == X3Dobject.indexedFaceSetComponent)
             {
               if ((short) st.nval != -1)
@@ -574,7 +572,10 @@ public class X3Dobject
                 }
               }
             }
-            // The rest of these will be parsing floats
+            // The rest of these will be parsing floats that could
+            // have 'e' exponent value.  3DSMax will export X3D/VRML
+            // with the 'e' exponent
+            //TODO: check for 'e' exponent values.
             else if (componentType == X3Dobject.verticesComponent)
             {
               componentFloat[index] = (float) (st.nval);
@@ -645,6 +646,7 @@ public class X3Dobject
     } // parseNumbersString
 
     // Converts a Vector3f to a Quaternionf
+    // called when parsing direction value in Directional and Spot Lights
     private Quaternionf ConvertDirectionalVectorToQuaternion(float[] direction)
     {
       // Vectors3f: D = light direction; s = Side; u = up = re-crossed
@@ -782,11 +784,9 @@ public class X3Dobject
     public void startElement(String uri, String localName, String qName,
         Attributes attributes) throws SAXException
     {
-
       /********** Transform **********/
       if (qName.equalsIgnoreCase("transform"))
       {
-
         attributeValue = attributes.getValue("USE");
         if (attributeValue != null)
         {
@@ -795,7 +795,7 @@ public class X3Dobject
         else
         {
           // Not a 'Transform USE="..." node
-          // initialize default values
+          // so initialize with default values
           String name = "";
           float[] center =
           {
@@ -1035,7 +1035,7 @@ public class X3Dobject
       {
         /* This gives the X3D-only Shader */
         if (!UNIVERSAL_LIGHTS)
-          mX3DTandLShaderTest = new x3dTandLShaderTest(gvrContext);
+          mX3DTandLShaderTest = new X3DTandLShader(gvrContext);
 
         attributeValue = attributes.getValue("USE");
         if (attributeValue != null)
@@ -1317,7 +1317,7 @@ public class X3Dobject
 
             for (int i = 0; i < indexedFaceSet.size(); i++)
             {
-              coordinates coordinate = indexedFaceSet.get(i);
+              Coordinates coordinate = indexedFaceSet.get(i);
               for (int j = 0; j < 3; j++)
               {
                 ifs[i * 3 + j] = (char) coordinate.coords[j];
@@ -1453,7 +1453,7 @@ public class X3Dobject
               indexedTextureCoordList = new int[indexedTextureCoord.size() * 3];
               for (int i = 0; i < indexedTextureCoord.size(); i++)
               {
-                textureCoordinates tcIndex = GetTexturedCoordSet(i);
+                TextureCoordinates tcIndex = GetTexturedCoordSet(i);
                 for (int j = 0; j < 3; j++)
                 {
                   indexedTextureCoordList[i * 3 + j] = tcIndex.coords[j];
@@ -1466,7 +1466,7 @@ public class X3Dobject
               indexedTextureCoordList = new int[indexedFaceSet.size() * 3];
               for (int i = 0; i < indexedFaceSet.size(); i++)
               {
-                coordinates coordinate = indexedFaceSet.get(i);
+                Coordinates coordinate = indexedFaceSet.get(i);
                 for (int j = 0; j < 3; j++)
                 {
                   indexedTextureCoordList[i * 3
@@ -1576,7 +1576,7 @@ public class X3Dobject
                   * 3];
               for (int i = 0; i < indexedVertexNormals.size(); i++)
               {
-                coordinates vnIndex = GetIndexedVertexNormals(i);
+                Coordinates vnIndex = GetIndexedVertexNormals(i);
                 for (int j = 0; j < 3; j++)
                 {
                   indexedVertexNormalsList[i * 3 + j] = vnIndex.coords[j];
@@ -1589,7 +1589,7 @@ public class X3Dobject
               indexedVertexNormalsList = new int[indexedFaceSet.size() * 3];
               for (int i = 0; i < indexedFaceSet.size(); i++)
               {
-                coordinates coordinate = indexedFaceSet.get(i);
+                Coordinates coordinate = indexedFaceSet.get(i);
                 for (int j = 0; j < 3; j++)
                 {
                   indexedVertexNormalsList[i * 3
@@ -2370,7 +2370,7 @@ public class X3Dobject
         currentSceneObject.addChildObject(gvrCubeSceneObject);
         meshAttachedSceneObject = gvrCubeSceneObject;
 
-      } // end Box
+      } // end <Box> node
 
       /********** Cone **********/
       else if (qName.equalsIgnoreCase("Cone"))
@@ -2495,7 +2495,7 @@ public class X3Dobject
             gvrContext);
         currentSceneObject.addChildObject(gvrSphereSceneObject);
         meshAttachedSceneObject = gvrSphereSceneObject;
-      } // end Sphere
+      } // end <Sphere> node
 
       // Less frequent commands and thus moved to end of if-then-else.
       /********** Viewpoint **********/
@@ -2693,7 +2693,7 @@ public class X3Dobject
         // not clear how gravity and textSize will be used.
         // currently, just using a default value
         gvrTextViewSceneObject.setTextSize(size * 10);
-      } // end FonstStyle
+      } // end <FontStyle> node
 
       /********** Billboard **********/
       else if (qName.equalsIgnoreCase("Billboard"))
@@ -2715,7 +2715,7 @@ public class X3Dobject
           axisOfRotation = parseFixedLengthFloatString(attributeValue, 3, true,
                                                        false);
         }
-      } // end Billboard
+      } // end <Billboard> node
 
       /********** Inline **********/
       else if (qName.equalsIgnoreCase("Inline"))
@@ -2748,7 +2748,7 @@ public class X3Dobject
               url);
           inlineObjects.add(inlineObject);
         }
-      } // end Inline node
+      } // end <Inline> node
 
       /********** LOD **********/
       else if (qName.equalsIgnoreCase("LOD"))
@@ -2784,7 +2784,7 @@ public class X3Dobject
           keys.clear();
         }
         lodManager.set(range, center);
-      } // end Level-of-Detail
+      } // end <LOD> Level-of-Detail node
 
       /********** Anchor **********/
       else if (qName.equalsIgnoreCase("Anchor"))
@@ -2811,7 +2811,8 @@ public class X3Dobject
         attributeValue = attributes.getValue("url");
         if (attributeValue != null)
         {
-          // url = parseMFString(attributeValue); // issues with parsing
+          // url = parseMFString(attributeValue); 
+          // TODO: issues with parsing
           // multiple strings with special chars
           url = attributeValue;
         }
@@ -2825,7 +2826,7 @@ public class X3Dobject
         sensors.add(sensor);
         currentSensor = sensor;
         currentSceneObject.attachEyePointeeHolder();
-      } // end Anchor
+      } // end <Anchor> node
 
       /********** TouchSensor **********/
       else if (qName.equalsIgnoreCase("TouchSensor"))
@@ -2862,7 +2863,6 @@ public class X3Dobject
           // detach the children of the parent and re-attach them to the new
           // sensor object
           GVRSceneObject childObject = currentSceneObject.getChildByIndex(i);
-          // childObject.attachEyePointeeHolder();
           attachCollider(childObject);
           currentSceneObject.removeChildObject(childObject);
           gvrSensorSceneObject.addChildObject(childObject);
@@ -2870,13 +2870,7 @@ public class X3Dobject
         currentSceneObject.addChildObject(gvrSensorSceneObject);
         currentSceneObject = gvrSensorSceneObject;
         currentSceneObject.attachEyePointeeHolder();
-        /*
-         * currentSceneObject = AddGVRSceneObject();
-         * currentSceneObject.setName(name); Sensor sensor = new Sensor(name,
-         * Sensor.Type.TOUCH, currentSceneObject); sensors.add(sensor);
-         * currentSensor = sensor; currentSceneObject.attachEyePointeeHolder();
-         */
-      } // end TouchSensor
+      } // end <TouchSensor> node
 
       /********** ProximitySensor **********/
       else if (qName.equalsIgnoreCase("ProximitySensor"))
@@ -2896,7 +2890,7 @@ public class X3Dobject
         {
           url = parseMFString(attributeValue);
         }
-      }
+      }  //  end <ProximitySensor> node
 
       /********** ElevationGrid **********/
       else if (qName.equalsIgnoreCase("ElevationGrid"))
@@ -2952,7 +2946,6 @@ public class X3Dobject
 
         if (height != null)
         {
-
           float[][] vertices = new float[height.length][3];
 
           for (int i = 0; i < (zDimension + 1); i++)
@@ -3061,7 +3054,7 @@ public class X3Dobject
 
         }
 
-      } // end ElevationGrid
+      } // end <ElevationGrid> node
 
       /********** Navigation Info **********/
       else if (qName.equalsIgnoreCase("NavigationInfo"))
@@ -3127,7 +3120,7 @@ public class X3Dobject
 
           cameraRigAtRoot.addChildObject(headlightSceneObject);
         }
-      } // end NavigationInfo
+      } // end <NavigationInfo> node
 
       /********** Background **********/
       else if (qName.equalsIgnoreCase("Background"))
@@ -3300,12 +3293,10 @@ public class X3Dobject
           cameraRigAtRoot.getRightCamera()
               .setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
         }
-      } // end Background
+      } // end <Background> node
 
-      /*********
-       * These are once per file commands and thus moved to the end of the
-       * if-then-else statement
-       ********/
+      // These nodes are once per file commands and thus moved to the end of the
+      //  end of the parsing's if-then-else statement
       /********** X3D **********/
       else if (qName.equalsIgnoreCase("x3d"))
       {
@@ -3319,12 +3310,12 @@ public class X3Dobject
         {
           // currently, we don't do anything with the profile information
         }
-      }
+      }  //  end <X3D> node
       /********** Scene **********/
       else if (qName.equalsIgnoreCase("scene"))
       {
         ;
-      }
+      }  //  end <Sene> node
       /***** end of parsing the nodes currently parsed *****/
       else
       {

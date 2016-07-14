@@ -20,22 +20,22 @@ package org.gearvrf.x3d;
  * @author m1.williams Used for the texture coordinate values in an array list
  *         Can also construct texture coordinates for X3D via coding.
  */
-public class textureCoordinates
+public class TextureCoordinates
 {
   public short[] coords = new short[3];
 
-  public textureCoordinates()
+  public TextureCoordinates()
   {
   }
 
-  public textureCoordinates(short x, short y, short z)
+  public TextureCoordinates(short x, short y, short z)
   {
     this.coords[0] = x;
     this.coords[1] = y;
     this.coords[2] = z;
   }
 
-  public textureCoordinates(short[] tc)
+  public TextureCoordinates(short[] tc)
   {
     for (int i = 0; i < 3; i++)
     {
