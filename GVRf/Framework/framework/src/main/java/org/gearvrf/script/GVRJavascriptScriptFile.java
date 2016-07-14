@@ -40,6 +40,19 @@ public class GVRJavascriptScriptFile extends GVRScriptFile {
         load(inputStream);
     }
 
+    /**
+     * Loads a Javascript file from a text string.
+     *
+     * @param gvrContext
+     *     The GVR Context.
+     * @param scriptText
+     *     String containing a Javascript program.
+     */
+    public GVRJavascriptScriptFile(GVRContext gvrContext, String scriptText) {
+        super(gvrContext, GVRScriptManager.LANG_JAVASCRIPT);
+        setScriptText(scriptText);
+    }
+    
     protected String getInvokeStatement(String eventName, Object[] params) {
         StringBuilder sb = new StringBuilder();
 

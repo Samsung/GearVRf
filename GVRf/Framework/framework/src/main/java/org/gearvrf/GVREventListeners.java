@@ -1,5 +1,7 @@
 package org.gearvrf;
 
+import org.gearvrf.script.IScriptable;
+
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.view.MotionEvent;
@@ -41,6 +43,12 @@ public class GVREventListeners {
         @Override
         public void onStep() {
         }
+        
+        @Override
+        public void onAttach(IScriptable target) { }
+        
+        @Override
+        public void onDetach(IScriptable target) { }
     }
 
     /**
