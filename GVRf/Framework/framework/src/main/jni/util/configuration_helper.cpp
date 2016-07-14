@@ -39,7 +39,7 @@ void ConfigurationHelper::getFramebufferConfiguration(JNIEnv& env, int& fbWidthO
 {
     LOGV("ConfigurationHelper: --- framebuffer configuration ---");
 
-    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "eyeBufferParms", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms;");
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "eyeBufferParams", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParams;");
     const jobject parms = env.GetObjectField(vrAppSettings_, fid);
     const jclass parmsClass = env.GetObjectClass(parms);
 
@@ -63,7 +63,7 @@ void ConfigurationHelper::getFramebufferConfiguration(JNIEnv& env, int& fbWidthO
     multiSamplesOut = env.GetIntField(parms, fid);
     LOGV("ConfigurationHelper: --- multisamples: %d", multiSamplesOut);
 
-    fid = env.GetFieldID(parmsClass, "colorFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$ColorFormat;");
+    fid = env.GetFieldID(parmsClass, "colorFormat", "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParams$ColorFormat;");
     jobject textureFormat = env.GetObjectField(parms, fid);
     jmethodID mid = env.GetMethodID(env.GetObjectClass(textureFormat),"getValue","()I");
     int textureFormatValue = env.CallIntMethod(textureFormat, mid);
@@ -97,7 +97,7 @@ void ConfigurationHelper::getFramebufferConfiguration(JNIEnv& env, int& fbWidthO
     LOGV("ConfigurationHelper: --- resolve depth: %d", resolveDepthOut);
 
     fid = env.GetFieldID(parmsClass, "depthFormat",
-            "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParms$DepthFormat;");
+            "Lorg/gearvrf/utility/VrAppSettings$EyeBufferParams$DepthFormat;");
     jobject depthFormat = env.GetObjectField(parms, fid);
     mid = env.GetMethodID(env.GetObjectClass(depthFormat), "getValue", "()I");
     int depthFormatValue = env.CallIntMethod(depthFormat, mid);
@@ -126,7 +126,7 @@ void ConfigurationHelper::getFramebufferConfiguration(JNIEnv& env, int& fbWidthO
 void ConfigurationHelper::getModeConfiguration(JNIEnv& env, bool& allowPowerSaveOut, bool& resetWindowFullscreenOut) {
     LOGV("ConfigurationHelper: --- mode configuration ---");
 
-    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "modeParms", "Lorg/gearvrf/utility/VrAppSettings$ModeParms;");
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "modeParams", "Lorg/gearvrf/utility/VrAppSettings$ModeParams;");
     jobject modeParms = env.GetObjectField(vrAppSettings_, fid);
     jclass modeParmsClass = env.GetObjectClass(modeParms);
 
@@ -141,7 +141,7 @@ void ConfigurationHelper::getModeConfiguration(JNIEnv& env, bool& allowPowerSave
 void ConfigurationHelper::getPerformanceConfiguration(JNIEnv& env, ovrPerformanceParms& parmsOut) {
     LOGV("ConfigurationHelper: --- performance configuration ---");
 
-    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "performanceParms", "Lorg/gearvrf/utility/VrAppSettings$PerformanceParms;");
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "performanceParams", "Lorg/gearvrf/utility/VrAppSettings$PerformanceParams;");
     jobject parms = env.GetObjectField(vrAppSettings_, fid);
     jclass parmsClass = env.GetObjectClass(parms);
 
@@ -156,7 +156,7 @@ void ConfigurationHelper::getPerformanceConfiguration(JNIEnv& env, ovrPerformanc
 void ConfigurationHelper::getHeadModelConfiguration(JNIEnv& env, ovrHeadModelParms& parmsInOut) {
     LOGV("ConfigurationHelper: --- head model configuration ---");
 
-    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "headModelParms", "Lorg/gearvrf/utility/VrAppSettings$HeadModelParms;");
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "headModelParams", "Lorg/gearvrf/utility/VrAppSettings$HeadModelParams;");
     jobject parms = env.GetObjectField(vrAppSettings_, fid);
     jclass parmsClass = env.GetObjectClass(parms);
 
@@ -209,7 +209,7 @@ void ConfigurationHelper::getSceneViewport(JNIEnv& env, int& viewport_x, int& vi
     LOGV("ConfigurationHelper: --- viewport configuration ---");
     int x, y, width, height;
 
-    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "sceneParms", "Lorg/gearvrf/utility/VrAppSettings$SceneParms;");
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "sceneParams", "Lorg/gearvrf/utility/VrAppSettings$SceneParams;");
     jobject parms = env.GetObjectField(vrAppSettings_, fid);
     jclass parmsClass = env.GetObjectClass(parms);
 

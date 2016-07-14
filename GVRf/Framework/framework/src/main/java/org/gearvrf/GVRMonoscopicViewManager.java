@@ -99,12 +99,12 @@ class GVRMonoscopicViewManager extends GVRViewManager {
                 gvrActivity.getAppSettings());
 
         GVRPerspectiveCamera.setDefaultFovY(gvrActivity.getAppSettings()
-                .getEyeBufferParms().getFovY());
-        int fboWidth = gvrActivity.getAppSettings().getEyeBufferParms()
+                .getEyeBufferParams().getFovY());
+        int fboWidth = gvrActivity.getAppSettings().getEyeBufferParams()
                 .getResolutionWidth();
-        int fboHeight = gvrActivity.getAppSettings().getEyeBufferParms()
+        int fboHeight = gvrActivity.getAppSettings().getEyeBufferParams()
                 .getResolutionHeight();
-        if (gvrActivity.getAppSettings().getMonoScopicModeParms()
+        if (gvrActivity.getAppSettings().getMonoscopicModeParams()
                 .isMonoFullScreenMode()) {
             fboWidth = screenWidthPixels;
             fboHeight = screenHeightPixels;

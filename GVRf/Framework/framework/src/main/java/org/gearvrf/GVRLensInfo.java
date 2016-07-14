@@ -80,7 +80,7 @@ class GVRLensInfo {
      */
     public int getFBOWidth() {
         if (!mCustomFBOSize)
-            return mAppSettings.getEyeBufferParms().getResolutionWidth();
+            return mAppSettings.getEyeBufferParams().getResolutionWidth();
         else
             return mFBOWidth;
     }
@@ -101,7 +101,7 @@ class GVRLensInfo {
      */
     public int getFBOHeight() {
         if (!mCustomFBOSize)
-            return mAppSettings.getEyeBufferParms().getResolutionHeight();
+            return mAppSettings.getEyeBufferParams().getResolutionHeight();
         else
             return mFBOHeight;
     }
@@ -121,8 +121,8 @@ class GVRLensInfo {
      * @return current distortion MSAA value
      */
     public int getMSAA() {
-        return mAppSettings.getEyeBufferParms().getMultiSamples() < 0 ? 0
-                : mAppSettings.getEyeBufferParms().getMultiSamples();
+        return mAppSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
+                : mAppSettings.getEyeBufferParams().getMultiSamples();
     }
 
     /**

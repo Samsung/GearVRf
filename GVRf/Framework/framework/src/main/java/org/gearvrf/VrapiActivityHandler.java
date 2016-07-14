@@ -54,7 +54,6 @@ class VrapiActivityHandler implements ActivityHandler {
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
     boolean mVrApiInitialized;
-    private Vector2f mScreenDimensions = null;
 
     VrapiActivityHandler(final GVRActivity activity,
             final ActivityHandlerRenderingCallbacks callbacks) throws VrapiNotAvailableException {
@@ -153,7 +152,6 @@ class VrapiActivityHandler implements ActivityHandler {
         final SurfaceHolder holder = mSurfaceView.getHolder();
         holder.setFormat(PixelFormat.TRANSLUCENT);
 
-        mScreenDimensions = new Vector2f(screenWidthPixels, screenHeightPixels);
         if ((-1 != frameBufferHeight) && (-1 != frameBufferWidth)) {
             if ((screenWidthPixels != frameBufferWidth) && (screenHeightPixels != frameBufferHeight)) {
                 Log.v(TAG, "--- window configuration ---");
@@ -164,10 +162,6 @@ class VrapiActivityHandler implements ActivityHandler {
                 Log.v(TAG, "----------------------------");
             }
         }
-    }
-
-    public Vector2f getScreenDimensions() {
-        return mScreenDimensions;
     }
 
     private final EGLContextFactory mContextFactory = new EGLContextFactory() {
