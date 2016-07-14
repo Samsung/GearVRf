@@ -26,6 +26,7 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
+import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -112,10 +113,7 @@ class ObjectCursor extends Cursor {
 
             newHits.clear();
 
-            //TODO find better fix for concurrent modification error
-            List<GVRSceneObject> sceneObjects = new ArrayList<GVRSceneObject>(scene
-                    .getSceneObjects());
-            for (GVRSceneObject object : sceneObjects) {
+            for (GVRSceneObject object : scene.getSceneObjects()) {
                 recurseSceneObject(keyEvent, object, null);
             }
 
@@ -161,9 +159,10 @@ class ObjectCursor extends Cursor {
                     addNewHit(object);
                 }
             }
-            for (GVRSceneObject child : object.getChildren()) {
-                recurseSceneObject(keyEvent, child, objectSensor);
-            }
+        }
+
+        for (GVRSceneObject child : object.getChildren()) {
+            recurseSceneObject(keyEvent, child, objectSensor);
         }
     }
 

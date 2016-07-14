@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Represents a 3D cursor in GVRf, it encapsulates the intended behavior from a
@@ -96,7 +97,7 @@ public abstract class Cursor {
         this.type = type;
         this.cursorId = uniqueCursorId++;
         cursorSceneObject = new CursorSceneObject(context, cursorId);
-        cursorEventListeners = new ArrayList<CursorEventListener>();
+        cursorEventListeners = new CopyOnWriteArrayList<CursorEventListener>();
         audioManager = CursorAudioManager.getInstance(context.getContext());
         compatibleIoDevices = new ArrayList<PriorityIoDeviceTuple>();
         objectPosition = new Vector3f();
@@ -610,9 +611,7 @@ public abstract class Cursor {
     void dispatchCursorEvent(CursorEvent event) {
         if (enabled) {
             //TODO find better fix for concurrent modification
-            List<CursorEventListener> listeners = new ArrayList<CursorEventListener>
-                    (cursorEventListeners);
-            for (CursorEventListener listener : listeners) {
+            for (CursorEventListener listener : cursorEventListeners) {
                 listener.onEvent(event);
             }
         }

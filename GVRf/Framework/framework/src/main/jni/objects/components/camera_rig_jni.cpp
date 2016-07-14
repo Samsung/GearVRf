@@ -27,102 +27,101 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv * env,
-        jobject obj);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv * env,
+            jobject obj);
 
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCameraRig_getComponentType(JNIEnv * env, jobject obj);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeCameraRig_getComponentType(JNIEnv * env, jobject obj);
 
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeCameraRig_getCameraRigType(JNIEnv * env,
-jobject obj);
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeCameraRig_getCameraRigType(JNIEnv * env,
+    jobject obj, jlong jcamera_rig);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setCameraRigType(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jint camera_rig_type);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCameraRig_getDefaultCameraSeparationDistance(
-        JNIEnv * env, jobject obj);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setCameraRigType(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jint camera_rig_type);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeCameraRig_getDefaultCameraSeparationDistance(
+            JNIEnv * env, jobject obj);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setDefaultCameraSeparationDistance(
-        JNIEnv * env, jobject obj, jfloat distance);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCameraRig_getCameraSeparationDistance(
-        JNIEnv * env, jobject obj, jlong jcamera_rig);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setDefaultCameraSeparationDistance(
+            JNIEnv * env, jobject obj, jfloat distance);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeCameraRig_getCameraSeparationDistance(
+            JNIEnv * env, jobject obj, jlong jcamera_rig);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setCameraSeparationDistance(
-        JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat distance);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCameraRig_getFloat(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setCameraSeparationDistance(
+            JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat distance);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeCameraRig_getFloat(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setFloat(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key, jfloat value);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeCameraRig_getVec2(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setFloat(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key, jfloat value);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeCameraRig_getVec2(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setVec2(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeCameraRig_getVec3(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setVec2(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeCameraRig_getVec3(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setVec3(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y,
-        jfloat z);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setVec3(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y,
+            jfloat z);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setVec4(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y,
-        jfloat z, jfloat w);
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeCameraRig_getVec4(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jstring key);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setVec4(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key, jfloat x, jfloat y,
+            jfloat z, jfloat w);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeCameraRig_getVec4(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_attachLeftCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jlong jcamera);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_attachLeftCamera(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jlong jcamera);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_attachRightCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jlong jcamera);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_attachRightCamera(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jlong jcamera);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_attachCenterCamera(JNIEnv * env,
-        jobject obj, jlong jcamera_rig, jlong jcamera);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_attachCenterCamera(JNIEnv * env,
+            jobject obj, jlong jcamera_rig, jlong jcamera);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_reset(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_reset(JNIEnv * env,
+            jobject obj, jlong jcamera_rig);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_resetYaw(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_resetYaw(JNIEnv * env,
+            jobject obj, jlong jcamera_rig);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_resetYawPitch(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_resetYawPitch(JNIEnv * env,
+            jobject obj, jlong jcamera_rig);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_setRotationSensorData(
-        JNIEnv * env, jobject obj, jlong jcamera_rig, jlong time_stamp,
-        jfloat w, jfloat x, jfloat y, jfloat z, jfloat gyro_x, jfloat gyro_y,
-        jfloat gyro_z);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_setRotationSensorData(
+            JNIEnv * env, jobject obj, jlong jcamera_rig, jlong time_stamp,
+            jfloat w, jfloat x, jfloat y, jfloat z, jfloat gyro_x, jfloat gyro_y,
+            jfloat gyro_z);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat time);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCameraRig_predict(JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat time);
 
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
-        jobject obj, jlong jcamera_rig);
-
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
+            jobject obj, jlong jcamera_rig);
 }; // extern "C"
 
 JNIEXPORT jlong JNICALL

@@ -8,6 +8,7 @@ import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSwitch;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.utility.Log;
 
 import java.util.HashMap;
 
@@ -146,11 +147,12 @@ public class SelectableBehavior extends GVRBehavior {
      *                      in an {@link IllegalArgumentException}.
      */
     public SelectableBehavior(CursorManager cursorManager, ObjectState[] objectStates) {
-        super(cursorManager.getGvrContext());
+        super(cursorManager.getGVRContext());
         mType = getComponentType();
         this.cursorManager = cursorManager;
         states = new SparseArray<ObjectState>();
         stateIndexMap = new HashMap<ObjectState, Integer>();
+        gvrSwitch = new GVRSwitch(cursorManager.getGVRContext());
 
         boolean defaultState = false;
         for (int i = 0; i < objectStates.length; i++) {
@@ -168,7 +170,7 @@ public class SelectableBehavior extends GVRBehavior {
 
     @Override
     public void onAttach(GVRSceneObject sceneObject) {
-
+        super.onAttach(sceneObject);
         if (stateIndexMap.size() > 1 && sceneObject.getChildrenCount() != stateIndexMap.size()) {
             throw new IllegalArgumentException("Num of children in model:" + sceneObject
                     .getChildrenCount() + " does not match the states array:" + stateIndexMap
@@ -176,10 +178,19 @@ public class SelectableBehavior extends GVRBehavior {
         }
 
         if (stateIndexMap.size() > 1) {
-            gvrSwitch = new GVRSwitch(sceneObject.getGVRContext());
-            sceneObject.attachComponent(gvrSwitch);
+            if(!sceneObject.attachComponent(gvrSwitch)) {
+                throw new IllegalArgumentException("Cannot attach selectable behavior on a scene" +
+                        " object with a GVRSwitch component");
+            }
         }
         cursorManager.addSelectableObject(sceneObject);
+    }
+
+    @Override
+    public void onDetach(GVRSceneObject sceneObject) {
+        super.onDetach(sceneObject);
+        sceneObject.detachComponent(GVRSwitch.getComponentType());
+        cursorManager.removeSelectableObject(sceneObject);
     }
 
     /**
@@ -284,8 +295,8 @@ public class SelectableBehavior extends GVRBehavior {
                 if (isColliding) {
                     if (isActive && previousOver && !previousActive) {
                         if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                            setButtonPress(cursorId);
                             handleClickEvent(event);
+                            setButtonPress(cursorId);
                         }
                     } else if (!isActive) {
                         setIntersect(cursorId);
@@ -299,8 +310,8 @@ public class SelectableBehavior extends GVRBehavior {
                     if (isActive) {
                         handleDragEvent(event);
                     } else {
-                        setIntersect(cursorId);
                         handleClickReleased(event);
+                        setIntersect(cursorId);
                     }
                 } else {
                     if (isActive) {
@@ -309,8 +320,8 @@ public class SelectableBehavior extends GVRBehavior {
                         }
                         handleCursorLeave(event);
                     } else {
-                        setDefault(cursorId);
                         handleClickReleased(event);
+                        setDefault(cursorId);
                     }
                 }
                 break;
@@ -322,8 +333,8 @@ public class SelectableBehavior extends GVRBehavior {
                 if (isColliding) {
                     if (isActive) {
                         if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                            setButtonPress(cursorId);
                             handleClickEvent(event);
+                            setButtonPress(cursorId);
                         }
                     }
                 } else {
@@ -342,8 +353,8 @@ public class SelectableBehavior extends GVRBehavior {
                 if (isColliding) {
                     if (isActive) {
                         if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                            setButtonPress(cursorId);
                             handleClickEvent(event);
+                            setButtonPress(cursorId);
                         }
                     } else {
                         setIntersect(cursorId);

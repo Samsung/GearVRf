@@ -702,6 +702,16 @@ public class CursorManager {
         return true;
     }
 
+    public boolean removeSelectableObject(GVRSceneObject object) {
+        if (null == object) {
+            throw new IllegalArgumentException("GVRSceneObject cannot be null");
+        }
+        removeSelectableBehavior(object);
+        object.setSensor(null);
+        object.getEventReceiver().removeListener(cursorSensor);
+        return true;
+    }
+
     private void addSelectableBehavior(GVRSceneObject object) {
         SelectableBehavior selectableBehavior = (SelectableBehavior) object.getComponent(
                 SelectableBehavior.getComponentType());
@@ -720,6 +730,18 @@ public class CursorManager {
             }
         } else {
             Log.d(TAG,"Scene Object is not selectable");
+        }
+    }
+
+    private void removeSelectableBehavior(GVRSceneObject object) {
+        SelectableBehavior selectableBehavior = (SelectableBehavior) object.getComponent(
+                SelectableBehavior.getComponentType());
+        if(selectableBehavior == null) {
+            selectableBehavior = (SelectableBehavior) object.getComponent(MovableBehavior.
+                    getComponentType());
+        }
+        if(selectableBehavior != null) {
+            selectableBehaviors.remove(selectableBehavior);
         }
     }
 
@@ -964,7 +986,7 @@ public class CursorManager {
         }
     }
 
-    GVRContext getGvrContext() {
+    GVRContext getGVRContext() {
         return context;
     }
 }

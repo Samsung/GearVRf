@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -97,6 +98,8 @@ public class DebugWebServer {
         });
     }
 
+
+
     /**
      * Start the web server and listen on a particular port number
      * @param portnumber the port number to listen on
@@ -115,6 +118,13 @@ public class DebugWebServer {
         }
     }
 
+    public void logError(String message)
+    {
+        for (WebSocketConnection connection : webSocketConnections) {
+            connection.logError(message);
+        }
+    }
+
     private static class WebSocketConnection implements StringCallback, CompletedCallback {
 
         private WebSocket websocket;
@@ -122,6 +132,7 @@ public class DebugWebServer {
         private WebSocketOutputStream webSocketOutputStream;
         private PipedInputStream pipedInputStream;
         private List<WebSocketConnection> webSocketConnections;
+        private PrintStream errorLog = null;
 
         WebSocketConnection(WebSocket websocket, List<WebSocketConnection> webSocketConnections) {
             this.websocket = websocket;
@@ -177,9 +188,18 @@ public class DebugWebServer {
                 pipedInputStream.close();
                 pipedOutputStream.close();
                 webSocketConnections.remove(this);
+                errorLog = null;
             } catch (IOException e) {
                 Log.e(TAG, "Could not close websocket streams", e);
             }
+        }
+        public void logError(String message)
+        {
+            if ((errorLog == null) && (pipedOutputStream != null))
+            {
+                errorLog = new PrintStream(pipedOutputStream);
+            }
+            errorLog.print(message);
         }
     }
 

@@ -62,6 +62,7 @@ public abstract class GVRScriptFile {
     // Caching parameter names to reduce object creation
     private static final int sNumOfCachedParamNames = 10;
     private static String[] sCachedParamName;
+    private String mLastError = null;
 
     static {
         // Generate parameter names, arg0, arg1, ...
@@ -139,6 +140,8 @@ public abstract class GVRScriptFile {
         return mScriptText;
     }
 
+    public String getLastError() { return mLastError; }
+
     /**
      * Invokes the script.
      *
@@ -191,6 +194,7 @@ public abstract class GVRScriptFile {
         } catch (ScriptException e) {
             // The function is either undefined or throws, avoid invoking it later
             addBadFunction(funcName);
+            mLastError = e.getMessage();
             return false;
         } finally {
             removeBindings(localBindings, params);
@@ -231,6 +235,7 @@ public abstract class GVRScriptFile {
 
     protected void checkDirty() {
         synchronized (mScriptTextLock) {
+            mLastError = null;
             if (mScriptTextDirty) {
                 mScriptTextDirty = false;
 
@@ -240,6 +245,7 @@ public abstract class GVRScriptFile {
                 try {
                     mLocalEngine.eval(mScriptText);
                 } catch (ScriptException e) {
+                    mLastError = e.getMessage();
                     e.printStackTrace();
                 }
             }
