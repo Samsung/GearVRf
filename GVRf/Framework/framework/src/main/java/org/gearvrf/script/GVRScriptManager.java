@@ -176,6 +176,7 @@ public class GVRScriptManager {
      */
     public void attachScriptFile(IScriptable target, GVRScriptFile scriptFile) {
         mScriptMap.put(target, scriptFile);
+        scriptFile.invokeFunction("onAttach", new Object[] { target });
     }
 
     /**
@@ -184,7 +185,10 @@ public class GVRScriptManager {
      * @param target The scriptable target.
      */
     public void detachScriptFile(IScriptable target) {
-        mScriptMap.remove(target);
+        GVRScriptFile scriptFile = mScriptMap.remove(target);
+        if (scriptFile != null) {
+            scriptFile.invokeFunction("onDetach", new Object[] { target });
+        }
     }
 
     /**
@@ -205,6 +209,7 @@ public class GVRScriptManager {
      */
     public GVRScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException, GVRScriptException {
         if (getEngine(language) == null) {
+            mGvrContext.logError("Script language " + language + " unsupported", this);
             throw new GVRScriptException(String.format("The language is unknown: %s", language));
         }
 
@@ -272,9 +277,9 @@ public class GVRScriptManager {
                     try {
                         bindScriptBundleToScene(scriptBundle, mainScene);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        mGvrContext.logError(e.getMessage(), this);
                     } catch (GVRScriptException e) {
-                        e.printStackTrace();
+                        mGvrContext.logError(e.getMessage(), this);
                     } finally {
                         // Remove the listener itself
                         gvrScript.getEventReceiver().removeListener(this);
@@ -367,7 +372,9 @@ public class GVRScriptManager {
                     GVRSceneObject[] sceneObjects = rootSceneObject.getSceneObjectsByName(targetName);
                     if (sceneObjects != null) {
                         for (GVRSceneObject sceneObject : sceneObjects) {
-                            attachScriptFile(sceneObject, scriptFile);
+                            GVRScriptBehavior b = new GVRScriptBehavior(sceneObject.getGVRContext());
+                            b.setScriptFile(scriptFile);
+                            sceneObject.attachComponent(b);
                         }
                     }
                 }
