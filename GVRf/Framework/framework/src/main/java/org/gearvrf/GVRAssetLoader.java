@@ -661,13 +661,21 @@ public final class GVRAssetLoader {
                     GVRJassimpAdapter.get().toJassimpSettings(settings),
                     new CachedVolumeIO(new ResourceVolumeIO(volume)));
         }
-        catch (IOException ex)
+        catch (FileNotFoundException ex)
         {
             assimpScene = null;
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onModelError", new Object[] { mContext, ex.getMessage(), filePath });
             throw ex;
+        }
+        catch (IOException ex2)
+        {
+            assimpScene = null;
+            mContext.getEventManager().sendEvent(mContext,
+                    IAssetEvents.class,
+                    "onModelError", new Object[] { mContext, ex2.getMessage(), filePath });
+            throw ex2;
        }
 
         if (assimpScene == null) {
