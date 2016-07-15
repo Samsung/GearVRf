@@ -69,6 +69,19 @@ public:
         deleteVaos();
     }
 
+    void deleteVaoForProgram(int programId)
+    {
+        auto it = program_ids_.find(programId);
+        if (it != program_ids_.end())
+        {
+            GLVaoVboId ids = it->second;
+            deleter_->queueVertexArray(ids.vaoID);
+            deleter_->queueBuffer(ids.static_vboID);
+            deleter_->queueBuffer(ids.triangle_vboID);
+            program_ids_.erase(it);
+        }
+    }
+
     void deleteVaos() {
         for (auto it : program_ids_ )
         {
@@ -282,8 +295,6 @@ public:
         LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
-    // generate VAO
-    void generateVAO(int programId);
 
     const GLuint getVAOId(int programId);
 
@@ -357,6 +368,8 @@ private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
     Mesh& operator=(const Mesh& mesh);
+    // generate VAO
+    void generateVAO(int programId);
 
 
 private:

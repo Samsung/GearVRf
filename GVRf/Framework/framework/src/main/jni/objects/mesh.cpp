@@ -321,18 +321,16 @@ void Mesh::createBuffer(std::vector<GLfloat>& buffer, int attrLength)
     }
 }
 
-static void generateAndBindID(GLuint& id)
-{
-
-    glGenBuffers(1, &id);
-    glBindBuffer(GL_ARRAY_BUFFER, id);
-}
 
 const GLuint Mesh::getVAOId(int programId) {
     if (programId == -1)
     {
         LOGI("!! %p Prog Id -- %d ", this, programId);
         return 0;
+    }
+    if (vao_dirty_)
+    {
+        generateVAO(programId);
     }
     auto it = program_ids_.find(programId);
     if (it != program_ids_.end())
@@ -361,11 +359,6 @@ void Mesh::generateVAO(int programId) {
     }
     obtainDeleter();
 
-    GLuint vaoID_;
-    GLuint triangle_vboID_;
-
-    GLuint static_vboID_;
-
     if (vertices_.size() == 0 && normals_.size() == 0
             && tex_coords_.size() == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
@@ -373,17 +366,33 @@ void Mesh::generateVAO(int programId) {
         return;
     }
 
-    glGenVertexArrays(1, &vaoID_);
+    GLuint vaoID_;
+    GLuint triangle_vboID_;
+    GLuint static_vboID_;
+    auto it = program_ids_.find(programId);
+    if (it != program_ids_.end())
+    {
+
+        GLVaoVboId ids = it->second;
+        vaoID_ = ids.vaoID;
+        triangle_vboID_ = ids.triangle_vboID;
+        static_vboID_ = ids.static_vboID;
+    }
+    else
+    {
+        glGenVertexArrays(1, &vaoID_);
+        glGenBuffers(1, &triangle_vboID_);
+        glGenBuffers(1, &static_vboID_);
+    }
+
+
     glBindVertexArray(vaoID_);
-    glGenBuffers(1, &triangle_vboID_);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
             sizeof(unsigned short) * indices_.size(), &indices_[0],
             GL_STATIC_DRAW);
     numTriangles_ = indices_.size() / 3;
-    int maxDumpSize = vertices_.size();
-    if (maxDumpSize > 5)
-        maxDumpSize = 5;
+
     attrMapping.clear();
     int totalStride;
     int attrLength;
@@ -391,7 +400,7 @@ void Mesh::generateVAO(int programId) {
 
     std::vector<GLfloat> buffer;
     createBuffer(buffer, attrLength);
-    generateAndBindID(static_vboID_);
+    glBindBuffer(GL_ARRAY_BUFFER, static_vboID_);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * buffer.size(),
             &buffer[0], GL_STATIC_DRAW);
@@ -409,11 +418,14 @@ void Mesh::generateVAO(int programId) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    GLVaoVboId id;
-    id.vaoID = vaoID_;
-    id.static_vboID = static_vboID_;
-    id.triangle_vboID = triangle_vboID_;
-    program_ids_[programId] = id;
+    if (it == program_ids_.end())
+    {
+        GLVaoVboId id;
+        id.vaoID = vaoID_;
+        id.static_vboID = static_vboID_;
+        id.triangle_vboID = triangle_vboID_;
+        program_ids_[programId] = id;
+    }
     vao_dirty_ = false;
 }
 
