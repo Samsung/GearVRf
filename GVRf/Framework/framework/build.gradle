@@ -34,6 +34,8 @@ android {
                 from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
                 into 'src/main/libs'
             }
+        } else {
+            println "WARNING: not copying Oculus files; OVR_MOBILE_SDK not found"
         }
     }
     task copyOculusFilesRelease() << {
@@ -51,12 +53,16 @@ android {
                 from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
                 into 'src/main/libs'
             }
+        } else {
+            println "WARNING: not copying Oculus files; OVR_MOBILE_SDK not found"
         }
     }
 
     task buildNative(type: Exec) {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
+        } else {
+            println "WARNING: relying on hard-coded paths and environment variables; OVR_MOBILE_SDK not found"
         }
 
         def ndkbuild = ""
@@ -128,8 +134,8 @@ android {
     }
 
     tasks.whenTaskAdded { task ->
-        if (task.name == 'packageReleaseToGitHubJar') {
-            task.dependsOn deleteOculusFiles
+        if (task.name == 'bundleReleaseToGitHub') {
+            task.dependsOn eclipseAssembleReleaseToGitHub
         }
         if (task.name == 'packageDebugJar') {
             task.dependsOn copyOculusFilesDebug
@@ -139,12 +145,7 @@ android {
         }
     }
 
-    task eclipsePrepare(dependsOn: assemble) {
-        deleteOculusFiles
-    }
-    task eclipseZip(type: Zip, dependsOn: eclipsePrepare) {
-        delete 'build/distributions/gvrf-eclipse.zip'
-
+    task eclipseZip(type: Zip, dependsOn: deleteOculusFiles) {
         into('GearVRf/res/') {
             from 'src/main/res/'
         }
@@ -173,9 +174,18 @@ android {
         }
 
         baseName 'gvrf-for-eclipse'
-
     }
-    task eclipseReleaseForGitHub(dependsOn: eclipseZip)
+
+    task eclipseAssembleReleaseToGitHub(dependsOn: eclipseZip) << {
+        description "Preparing Android Library project for Eclipse"
+
+        copy {
+            from 'build/distributions/gvrf-for-eclipse.zip'
+            into 'build/outputs/aar/'
+        }
+
+        project.delete('build/distributions/gvrf-for-eclipse.zip')
+    }
 }
 
 dependencies {
