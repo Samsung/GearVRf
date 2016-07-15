@@ -34,6 +34,8 @@ const int Light::SHADOW_MAP_SIZE = 1024;
 GLTexture* Light::depth_texture_ = NULL;
 GLTexture* Light::color_texture_ = NULL;
 
+static const bool LOG_LIGHT = false;
+
 class LightCamera : public Camera
 {
     Light* mLight = NULL;
@@ -81,7 +83,8 @@ void Light::render(int program, int texIndex) {
      */
     if (floats_.find("shadow_map_index") != floats_.end()) {
         floats_["shadow_map_index"] = (float) shadowMapIndex_;
-        LOGD("LIGHT: %s set shadow map index %d\n", lightID_.c_str(), shadowMapIndex_);
+        if (LOG_LIGHT)
+            LOGD("LIGHT: %s set shadow map index %d\n", lightID_.c_str(), shadowMapIndex_);
     }
 
     for (auto it = floats_.begin(); it != floats_.end(); ++it) {
@@ -93,6 +96,7 @@ void Light::render(int program, int texIndex) {
         }
         if (offset >= 0)
             glUniform1f(offset, it->second);
+        if (LOG_LIGHT)
             LOGD("LIGHT: %s = %f\n", key.c_str(), it->second);
     }
 
@@ -107,7 +111,8 @@ void Light::render(int program, int texIndex) {
         if (offset >= 0) {
             glm::vec3 v = it->second;
             glUniform3f(offset, v.x, v.y, v.z);
-            LOGD("LIGHT: %s = %f, %f, %f\n", key.c_str(), v.x, v.y, v.z);
+            if (LOG_LIGHT)
+                LOGD("LIGHT: %s = %f, %f, %f\n", key.c_str(), v.x, v.y, v.z);
         }
     }
 
@@ -122,7 +127,8 @@ void Light::render(int program, int texIndex) {
         if (offset >= 0) {
             glm::vec4 v = it->second;
             glUniform4f(offset, v.x, v.y, v.z, v.w);
-            LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
+            if (LOG_LIGHT)
+                LOGD("LIGHT: %s = %f, %f, %f, %f\n", key.c_str(), v.x, v.y, v.z, v.w);
         }
     }
     for (auto it = mat4s_.begin();
@@ -136,7 +142,8 @@ void Light::render(int program, int texIndex) {
         if (offset >= 0) {
             glm::mat4 v = it->second;
             glUniformMatrix4fv(offset, 1, GL_FALSE, glm::value_ptr(v));
-            LOGD("LIGHT: %s\n", key.c_str());
+            if (LOG_LIGHT)
+                LOGD("LIGHT: %s\n", key.c_str());
         }
     }
 }
@@ -190,7 +197,8 @@ void Light::generateFBO() {
         }
         throw std::exception(); // "Could not create FBO: " + fboStatus
     }
-    LOGD("LIGHT: %s create shadow map framebuffer %d\n", lightID_.c_str(), shadowMapIndex_);
+    if (LOG_LIGHT)
+        LOGD("LIGHT: %s create shadow map framebuffer %d\n", lightID_.c_str(), shadowMapIndex_);
 
     ////////// Release bind for texture and FrameBuffer /////
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
