@@ -667,6 +667,21 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                 mSplashScreen = null;
             }
 
+            // execute pending runnables now so any necessary gl calls
+            // are done before onInit().  As an example the request to
+            // get the GL_MAX_TEXTURE_SIZE needs to be fulfilled.
+            synchronized (mRunnables) {
+                Runnable runnable = null;
+                while ((runnable = mRunnables.poll()) != null) {
+                    try {
+                        runnable.run();
+                    } catch (final Exception exc) {
+                        Log.e(TAG, "Runnable-on-GL %s threw %s", runnable, exc.toString());
+                        exc.printStackTrace();
+                    }
+                }
+            }
+
             runOnTheFrameworkThread(new Runnable() {
                 @Override
                 public void run() {
