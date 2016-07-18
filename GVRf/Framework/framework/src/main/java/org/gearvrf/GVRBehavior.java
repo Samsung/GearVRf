@@ -36,19 +36,18 @@ import java.lang.reflect.Method;
 public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
 {
     protected boolean mIsListening;
-    private boolean mHasFrameCallback;
-    static private long TYPE_BEHAVIOR = (System.currentTimeMillis() & 0xfffffff);
-    
+    protected boolean mHasFrameCallback;
+    static private long TYPE_BEHAVIOR = newComponentType(GVRBehavior.class);
+
     /**
      * Constructor for a behavior.
      *
      * @param gvrContext    The current GVRF context
-     * @param nativePointer Pointer to the native object, returned by the native constructor
      */
     protected GVRBehavior(GVRContext gvrContext)
     {
         this(gvrContext, 0);
-        mType = TYPE_BEHAVIOR;
+        mType = getComponentType();
     }
     
     /**
@@ -57,24 +56,31 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
      * @param gvrContext    The current GVRF context
      * @param nativePointer Pointer to the native object, returned by the native constructor
      */
-    protected GVRBehavior(GVRContext gvrContext, long nativeConstructor)
+    protected GVRBehavior(GVRContext gvrContext, long nativePointer)
     {
-        super(gvrContext, nativeConstructor);
+        super(gvrContext, nativePointer);
         mIsListening = false;
         mHasFrameCallback = isImplemented("onDrawFrame", float.class);
     }    
 
-    static public long getComponentType()
+    static public long getComponentType() { return TYPE_BEHAVIOR; }
+    
+    static protected long newComponentType(Class<? extends GVRBehavior> clazz)
     {
-        return TYPE_BEHAVIOR;
+        long hash = (long) clazz.hashCode() << 32;
+        long t = ((long) System.currentTimeMillis() & 0xfffffff);
+        long result = hash | t;
+        return result;
     }
     
-    public void enable()
+    @Override
+    public void onEnable()
     {
         startListening();
     }
 
-    public void disable()
+    @Override
+    public void onDisable()
     {
         stopListening();
     }
@@ -107,7 +113,6 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
         stopListening();
     }
     
-
     /**
      * Called each frame before rendering the scene.
      * It is not called if this behavior is not attached

@@ -172,6 +172,7 @@ public abstract class GVRHybridObject {
         if (o instanceof GVRHybridObject) {
             GVRHybridObject other = (GVRHybridObject) o;
             boolean nativeEquality = getNative() == other.getNative();
+            nativeEquality &= (getNative() != 0);
             if (nativeEquality) {
                 Log.d(TAG, "%s.equals(%s), but %s %c= %s", //
                         this, o, //

@@ -104,6 +104,20 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
     }
 
     /**
+     * Called when the script is attached to a target using {@link GVRScriptManager#attachScript}.
+     */
+    @Override
+    public void onAttach(IScriptable target) {
+    }
+
+    /**
+     * Called when the script is detached from the target using {@link GVRScriptManager#detachScript}.
+     */
+    @Override
+    public void onDetach(IScriptable target) {
+    }
+    
+    /**
      * Called every frame.
      * 
      * This is where you start animations, and where you add or change

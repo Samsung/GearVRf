@@ -55,6 +55,19 @@ public class GVRLuaScriptFile extends GVRScriptFile {
         load(inputStream);
     }
 
+    /**
+     * Loads a Lua script from a text string.
+     *
+     * @param gvrContext
+     *     The GVR Context.
+     * @param scriptText
+     *     String containing the text of a LUA program.
+     */
+    public GVRLuaScriptFile(GVRContext gvrContext, String scriptText) {
+        super(gvrContext, GVRScriptManager.LANG_LUA);
+        setScriptText(scriptText);
+    }
+    
     protected String getInvokeStatement(String eventName, Object[] params) {
         StringBuilder sb = new StringBuilder();
         sb.append("return ");

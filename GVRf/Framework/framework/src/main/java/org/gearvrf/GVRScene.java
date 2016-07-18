@@ -19,6 +19,7 @@ import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
+import org.gearvrf.script.GVRScriptBehavior;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -131,8 +132,16 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         GVRSceneObject head = rig.getOwnerObject();
         rig.removeAllChildren();
         head.getParent().removeChildObject(head);
+
+        for (GVRSceneObject child : mSceneRoot.getChildren()) {
+            child.getParent().removeChildObject(child);
+        }
+
         NativeScene.removeAllSceneObjects(getNative());
-        mLightList.clear();
+        synchronized (mLightList)
+        {
+            mLightList.clear();
+        }
         mSceneRoot = new GVRSceneObject(getGVRContext());
         mSceneRoot.addChildObject(head);
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
@@ -448,19 +457,23 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see GVRScene.getLightList
      */
     private boolean addLight(GVRLightBase light) {
-        Integer lightIndex = mLightList.size();
-            
-        if (lightIndex >= MAX_LIGHTS)
+        synchronized (mLightList)
         {
-            Log.e(TAG, "Exceeded maximum number of lights");
-        	return false;
-        }
-        String name = "light" + lightIndex.toString();
-        if (NativeScene.addLight(getNative(), light.getNative()))
-        {
-        	mLightList.add(light);
-        	NativeLight.setLightID(light.getNative(), name);
-        	return true;
+            Integer lightIndex = mLightList.size();
+
+            if (lightIndex >= MAX_LIGHTS)
+            {
+                Log.e(TAG, "Exceeded maximum number of lights");
+                return false;
+            }
+            String name = "light" + lightIndex.toString();
+            if (NativeScene.addLight(getNative(), light.getNative()))
+            {
+                mLightList.add(light);
+                NativeLight.setLightID(light.getNative(), name);
+                Log.d(TAG, "Light: addLight " + name);
+                return true;
+            }
         }
         return false;
     }
@@ -473,10 +486,14 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * 
      * @return array of lights
      */
-    public GVRLightBase[] getLightList() {
-        GVRLightBase[] list = new GVRLightBase[mLightList.size()];
-        mLightList.toArray(list);
-        return list;
+    public GVRLightBase[] getLightList()
+    {
+        synchronized (mLightList)
+        {
+            GVRLightBase[] list = new GVRLightBase[mLightList.size()];
+            mLightList.toArray(list);
+            return list;
+        }
     }
     
     /**
@@ -574,7 +591,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         private void recursivelySendOnInit(GVRSceneObject sceneObject) {
             getGVRContext().getEventManager().sendEvent(
                     sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
-
+            GVRScriptBehavior script = (GVRScriptBehavior) sceneObject.getComponent(GVRScriptBehavior.getComponentType());
+            if (script != null) {
+                getGVRContext().getEventManager().sendEvent(
+                        script, ISceneEvents.class, "onInit", getGVRContext(), GVRScene.this);
+            }
             for (GVRSceneObject child : sceneObject.rawGetChildren()) {
                 recursivelySendOnInit(child);
             }
