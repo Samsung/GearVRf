@@ -245,6 +245,7 @@ class AsyncBitmapTexture {
      */
     private static void onGlInitialization() {
         if (glUninitialized) {
+            glGetError(); // reset any previous error
             int[] size = new int[] { -1 };
             glGetIntegerv(GL_MAX_TEXTURE_SIZE, size, 0);
 
