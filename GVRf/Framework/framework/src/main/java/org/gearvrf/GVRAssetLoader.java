@@ -96,7 +96,7 @@ public final class GVRAssetLoader {
             mVolume = new GVRResourceVolume(mContext, filePath);
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
-        
+
         /**
          * Request to load an asset and add it to the scene.
          * @param context GVRContext to get asset load events.
@@ -115,7 +115,7 @@ public final class GVRAssetLoader {
             mVolume = new GVRResourceVolume(mContext, filePath);
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
-        
+
         /**
          * Request to load an asset and raise asset events.
          * @param context GVRContext to get asset load events.
@@ -137,7 +137,7 @@ public final class GVRAssetLoader {
             }
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
-        
+
         public GVRContext getContext()       { return mContext; }
         public String getFileName()          { return mFileName; }
         public GVRResourceVolume getVolume() { return mVolume; }
@@ -154,7 +154,7 @@ public final class GVRAssetLoader {
             }
             return mFileName;
         }
-        
+
         /**
          * Load a texture asynchronously with a callback.
          * @param request callback that indicates which texture to load
@@ -169,7 +169,7 @@ public final class GVRAssetLoader {
             }
             catch (FileNotFoundException ex2)
             {
-                onTextureError(mContext, ex2.getMessage(), request.TextureFile);                
+                onTextureError(mContext, ex2.getMessage(), request.TextureFile);
             }
             catch (IOException ex1)
             {
@@ -193,7 +193,7 @@ public final class GVRAssetLoader {
             }
             catch (FileNotFoundException ex2)
             {
-                onTextureError(mContext, ex2.getMessage(), request.TextureFile);                
+                onTextureError(mContext, ex2.getMessage(), request.TextureFile);
             }
             catch (IOException ex1)
             {
@@ -201,7 +201,7 @@ public final class GVRAssetLoader {
             }
             return null;
          }
-        
+
         /**
          * Called when a model is successfully loaded.
          * @param context   GVRContext which loaded the model
@@ -216,7 +216,7 @@ public final class GVRAssetLoader {
                 generateLoadEvent();
             }
         }
-        
+
         /**
          * Called when a texture is successfully loaded.
          * @param context GVRContext which loaded the texture
@@ -232,9 +232,9 @@ public final class GVRAssetLoader {
                 {
                     generateLoadEvent();
                 }
-            }           
+            }
         }
-        
+
         /**
          * Called when a model cannot be loaded.
          * @param context GVRContext which loaded the texture
@@ -248,7 +248,7 @@ public final class GVRAssetLoader {
             mModel = null;
             generateLoadEvent();
         }
-        
+
         /**
          * Called when a texture cannot be loaded.
          * @param context GVRContext which loaded the texture
@@ -266,7 +266,7 @@ public final class GVRAssetLoader {
                 {
                     generateLoadEvent();
                 }
-            }                       
+            }
         }
 
         /**
@@ -281,16 +281,17 @@ public final class GVRAssetLoader {
         {
             mContext.getEventReceiver().removeListener(this);
         }
-        
+
         private void generateLoadEvent()
         {
-            if ((mScene != null) && (mModel != null) && (mErrors == ""))
+            String errors = !"".equals(mErrors) ? mErrors : null;
+            if ((mScene != null) && (mModel != null) && (errors == null))
             {
                 Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
                 mScene.addSceneObject(mModel);
             }
             mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
-                    "onAssetLoaded", new Object[] { mContext, mModel, mFileName, (mErrors != "") ? mErrors : null });
+                    "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
             if (mUserHandler != null)
             {
                 mContext.getEventReceiver().removeListener(mUserHandler);
@@ -305,13 +306,13 @@ public final class GVRAssetLoader {
     {
         public final String TextureFile;
         protected final GVRContext mContext;
-       
+
         public TextureRequest(GVRContext context, String texFile)
         {
             mContext = context;
             TextureFile = texFile;
         }
-                
+
         public void loaded(GVRTexture texture, GVRAndroidResource ignored)
         {
             mContext.getEventManager().sendEvent(mContext,
@@ -341,14 +342,14 @@ public final class GVRAssetLoader {
     {
         public final GVRMaterial Material;
         public final String TextureName;
-       
+
         public MaterialTextureRequest(GVRContext context, String texFile)
         {
         	super(context, texFile);
             Material = null;
             TextureName = null;
         }
-        
+
         public MaterialTextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName)
         {
         	super(context, texFile);
@@ -359,7 +360,7 @@ public final class GVRAssetLoader {
                 Material.setTexture(textureName, (GVRTexture) null);
             }
         }
-        
+
         public void loaded(GVRTexture texture, GVRAndroidResource ignored)
         {
             if (Material != null)
@@ -374,7 +375,7 @@ public final class GVRAssetLoader {
     public GVRAssetLoader(GVRContext context) {
         mContext = context;
     }
-       
+
     /** @since 1.6.2 */
     GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
             GVRAndroidResource resource, EnumSet<GVRImportSettings> settings) {
@@ -403,10 +404,10 @@ public final class GVRAssetLoader {
     /**
      * Imports a 3D model from a file on the device's SD card. The application
      * must have read permission for the directory containing the file.
-     * 
+     *
      * Does not check that file exists and is readable by this process: the only
      * public caller does that check.
-     * 
+     *
      * @param gvrContext
      *            Context to import file from.
      * @param filename
@@ -489,6 +490,25 @@ public final class GVRAssetLoader {
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
      *            Otherwise the file is assumed to be relative to the "assets" directory.
      *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException
+     *
+     */
+    public GVRModelSceneObject loadModel(final String filePath) throws IOException {
+        return loadModel(filePath, (GVRScene)null);
+    }
+
+    /**
+     * Loads a scene object {@link GVRModelSceneObject} from
+     * a 3D model and adds it to the scene.
+     *
+     * @param assetFile
+     *            A filename, relative to the root of the volume.
+     *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
+     *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
+     *            Otherwise the file is assumed to be relative to the "assets" directory.
+     *
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
      *            loaded and then adds the model to the scene.
@@ -502,10 +522,10 @@ public final class GVRAssetLoader {
     {
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, scene);
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
-		if (ext.equals("x3d"))
-		    return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
-		else
-		    return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+        if (ext.equals("x3d"))
+            return loadX3DModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
+        else
+            return loadJassimpModel(assetRequest, GVRImportSettings.getRecommendedSettings(), false);
     }
 
     /**
