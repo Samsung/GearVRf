@@ -120,7 +120,6 @@ bool Scene::addLight(Light* light) {
     if (it != lightList.end())
         return false;
      lightList.push_back(light);
-     LOGD("Light: ADDLIGHT %s", light->getLightID().c_str());
      return true;
 }
 }
