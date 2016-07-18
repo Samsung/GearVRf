@@ -803,6 +803,45 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
     }
     
+    public interface SceneVisitor {
+        public boolean visit(GVRSceneObject obj);
+    }
+    
+    public interface ComponentVisitor {
+        public boolean visit(GVRComponent comp);
+    }
+    
+    public void forAllDescendants(SceneVisitor visitor) {
+        if (visitor.visit(this)) {
+            for (GVRSceneObject child : mChildren) {
+                child.forAllDescendants(visitor);
+            }
+        }
+    }
+    
+    public void forAllComponents(ComponentVisitor visitor, long componentType) {
+        GVRComponent comp = getComponent(componentType);
+        if ((comp != null) && !visitor.visit(comp)) {
+            return;
+        }
+        for (int i = 0; i < mChildren.size(); ++i) {
+            GVRSceneObject child = mChildren.get(i);
+            child.forAllComponents(visitor, componentType);
+        }
+    }
+
+    public void forAllComponents(ComponentVisitor visitor) {
+        for (GVRComponent comp : mComponents.values()) {
+            if (!visitor.visit(comp)) {
+                return;
+            }
+        }
+        for (int i = 0; i < mChildren.size(); ++i) {
+            GVRSceneObject child = mChildren.get(i);
+            child.forAllComponents(visitor);
+        }
+    }
+    
     /**
      * Performs case-sensitive search
      * 
