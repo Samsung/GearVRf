@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-hu/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"vissza"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Mégse"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Szemüvege konfigurálásához töltse le a Cardboard alkalmazást."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"A szemüveg beállítása a legjobb élmény eléréséhez."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Konfigurálás"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Figyelmeztetés"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Előfordulhat, hogy ez az alkalmazás nem működik megfelelően a Google VR-szolgáltatások engedélyezése nélkül. A folytatás előtt engedélyezze a telefon Beállítások alkalmazásában."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Előfordulhat, hogy ez az alkalmazás nem működik megfelelően a Google VR-szolgáltatások nélkül. A folytatás előtt telepítse a Google VR-szolgáltatásokat a Play Áruházból."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Play Áruház megnyitása"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Ugrás a beállításokhoz"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"Nem található böngésző a webhely megnyitásához"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Helyezze a telefont a Cardboard szemüvegbe"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Helyezze telefonját a(z) <ns1:g id="VIEWER_NAME">%s</ns1:g> szemüvegbe"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"beállítások"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Beállítás"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Váltás"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"Másik szemüveg?"</string>
+</resources>

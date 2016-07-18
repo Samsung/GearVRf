@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+    <!-- UiLayer layout when portrait support is enabled.
+         See corresponding file in layout-land/ui_layer_with_portrait_support.xml
+
+         Portrait orientation while in VR mode should be reserved for special cases,
+         such as widgets for fast transitions between embed and full-screen VR.
+         See b/26580727 for details.
+    -->
+
+    <include layout="@layout/back_button" android:id="@+id/ui_back_button"/>
+
+    <RelativeLayout
+      android:id="@+id/ui_alignment_marker"
+      android:layout_height="@dimen/alignment_marker_thickness"
+      android:layout_width="match_parent"
+      android:layout_centerInParent="true"
+      android:layout_marginRight="@dimen/alignment_marker_margin"
+      android:layout_toRightOf="@+id/ui_settings_icon"
+      android:background="@color/alignment_marker_color">
+    </RelativeLayout>
+
+    <ImageButton
+      style="@style/UiButton"
+      android:id="@+id/ui_settings_icon"
+      android:contentDescription="@string/settings_button_content_description"
+      android:src="@drawable/quantum_ic_settings_white_24"
+      android:layout_centerVertical="true"
+      android:layout_alignParentLeft="true"/>
+
+</RelativeLayout>
+<!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/vr/gvr/platform/common/android/res/layout/ui_layer_with_portrait_support.xml -->

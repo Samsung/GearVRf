@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-sr/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"назад"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Откажи"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Преузмите апликацију Cardboard да бисте конфигурисали маску."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"Подесите маску за најбољи доживљај."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Конфигуришите"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Упозорење"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Ова апликација можда неће исправно функционисати ако не омогућите Google ВР услуге. Омогућите их у подешавањима телефона пре него што наставите."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Ова апликација можда неће исправно функционисати без Google ВР услуга. Инсталирајте Google ВР услуге из Play продавнице пре него што наставите."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Иди у Play продавницу"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Иди у подешавања"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"Нема прегледача за отварање веб-сајта"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Ставите телефон у Cardboard маску"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Ставите телефон у <ns1:g id="VIEWER_NAME">%s</ns1:g> маску"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"подешавања"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Подеси"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Промени"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"Имате другу маску?"</string>
+</resources>

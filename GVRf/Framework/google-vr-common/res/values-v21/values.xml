@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/vr/gvr/platform/common/android/res/values-v21/style.xml -->
+    <eat-comment/>
+    <style name="CardboardDialogTheme" parent="@android:style/Theme.Material.Light.Dialog"/>
+</resources>

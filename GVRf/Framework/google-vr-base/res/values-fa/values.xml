@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-fa/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"برگشت"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"لغو"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"‏برای پیکربندی نظاره‌گر، برنامه Cardboard را دریافت کنید."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"برای اینکه بهترین تجربه را داشته باشید، نظاره‌گرتان را راه‌اندازی کنید."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"پیکربندی"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"هشدار"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"‏ممکن است این برنامه بدون فعال کردن خدمات واقعیت مجازی Google به‌درستی کار نکند. قبل از ادامه، لطفاً آن را در تنظیمات تلفن فعال کنید."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"‏ممکن است این برنامه بدون خدمات واقعیت مجازی Google به‌درستی کار نکند. قبل از ادامه، لطفاً خدمات واقعیت مجازی Google را از فروشگاه Play نصب کنید."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"‏رفتن به فروشگاه Play"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"رفتن به تنظیمات"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"مرورگری برای باز کردن وب‌سایت نیست"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"‏تلفنتان را در نظاره‌گر Cardboard قرار دهید"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"تلفنتان را در نظاره‌گر <ns1:g id="VIEWER_NAME">%s</ns1:g> بگذارید"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"تنظیمات"</string>
+    <string msgid="1112346456654686733" name="setup_button">"راه‌اندازی"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"جابه‌جایی"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"از نظاره‌گر دیگری استفاده می‌کنید؟"</string>
+</resources>

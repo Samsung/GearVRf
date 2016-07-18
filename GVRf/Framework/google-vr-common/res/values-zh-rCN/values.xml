@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-zh-rCN/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"返回"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"取消"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"获取 Cardboard 应用以配置您的眼镜。"</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"设置眼镜以获得最佳体验。"</string>
+    <string msgid="3248614679403583554" name="dialog_title">"配置"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"提醒"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"如果不启用 Google VR 服务，此应用可能无法正常运作，请先在手机设置中启用此服务，然后再继续操作。"</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"如果不安装 Google VR 服务，此应用可能无法正常运作。请先通过 Play 商店安装 Google VR 服务，然后再继续操作。"</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"转到 Play 商店"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"转到“设置”"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"找不到可以打开网站的浏览器"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"将您的手机放入 Cardboard 眼镜"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"将您的手机放入 <ns1:g id="VIEWER_NAME">%s</ns1:g> 眼镜"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"设置"</string>
+    <string msgid="1112346456654686733" name="setup_button">"设置"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"切换"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"要使用其他眼镜吗？"</string>
+</resources>

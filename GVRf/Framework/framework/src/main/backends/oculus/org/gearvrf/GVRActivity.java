@@ -17,7 +17,6 @@ package org.gearvrf;
 
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.View;
 
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
@@ -34,8 +33,8 @@ public class GVRActivity extends GVRActivityBase {
         try {
             mActivityHandler = new VrapiActivityHandler(this, mRenderingCallbacks);
         } catch (final Exception ignored) {
-            // will fall back to mono rendering in that case
-            mForceMonoscopic = true;
+            // GVRf will fallback to GoogleVR/Monoscopic in this case.
+            mUseFallback = true;
         }
     }
 
@@ -52,6 +51,12 @@ public class GVRActivity extends GVRActivityBase {
     @Override
     protected final GVRMonoscopicViewManager makeMonoscopicViewManager(final GVRXMLParser xmlParser) {
         return new GVRMonoscopicViewManager(this, getScript(), xmlParser);
+    }
+
+    @Override
+    protected final GoogleVRViewManager makeGoogleVRViewManager(GVRXMLParser xmlParser) {
+        return new GoogleVRViewManager(this, getScript(), xmlParser);
+
     }
 
     @Override
@@ -84,9 +89,6 @@ public class GVRActivity extends GVRActivityBase {
 
     @Override
     protected void onInitAppSettings(VrAppSettings appSettings) {
-        if (mForceMonoscopic) {
-            appSettings.getMonoscopicModeParams().setMonoscopicMode(true);
-        }
         super.onInitAppSettings(appSettings);
     }
 
@@ -153,5 +155,4 @@ public class GVRActivity extends GVRActivityBase {
     };
 
     private ActivityHandler mActivityHandler;
-    private boolean mForceMonoscopic;
 }

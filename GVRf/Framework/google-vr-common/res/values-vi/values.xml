@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-vi/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"quay lại"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Hủy"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Hãy tải ứng dụng Cardboard để định cấu hình thiết bị xem của bạn."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"Thiết lập thiết bị xem của bạn để có trải nghiệm tốt nhất."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Định cấu hình"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Cảnh báo"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Ứng dụng này có thể không hoạt động chính xác khi không có Dịch vụ VR của Google, vui lòng bật dịch vụ này trong Cài đặt của điện thoại trước khi tiếp tục."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Ứng dụng này có thể không hoạt động chính xác khi không có Dịch vụ VR của Google. Vui lòng cài đặt Dịch vụ VR của Google từ Cửa hàng Play trước khi tiếp tục."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Chuyển tới Cửa hàng Play"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Truy cập Cài đặt"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"Không có trình duyệt nào để mở trang web"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Đặt điện thoại vào thiết bị xem Cardboard của bạn"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Đặt điện thoại của bạn vào thiết bị xem <ns1:g id="VIEWER_NAME">%s</ns1:g>"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"cài đặt"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Thiết lập"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Chuyển đổi"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"Dùng th.b.xem khác?"</string>
+</resources>
