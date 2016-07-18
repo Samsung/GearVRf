@@ -57,7 +57,7 @@ public:
 
     void set_occlusion_culling( bool occlusion_flag){ occlusion_flag_ = occlusion_flag; }
     bool get_occlusion_culling(){ return occlusion_flag_; }
-    void addLight(Light* light);
+    bool addLight(Light* light);
 
     void resetStats() {
         if (!statsInitialized) {

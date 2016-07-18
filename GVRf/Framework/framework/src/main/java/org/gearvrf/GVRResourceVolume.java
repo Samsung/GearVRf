@@ -93,12 +93,12 @@ public class GVRResourceVolume {
         String fname = filename.toLowerCase();
         gvrContext = context;
         volumeType = GVRResourceVolume.VolumeType.ANDROID_ASSETS;
+        defaultPath = FileNameUtils.getParentDirectory(filename);
         if (fname.startsWith("sd:"))
         {
-            String s = FileNameUtils.getParentDirectory(filename);
-            if (s != null)
+            if (defaultPath != null)
             {
-                defaultPath = s.substring(3);
+                defaultPath = defaultPath.substring(3);
             }
             volumeType = GVRResourceVolume.VolumeType.ANDROID_SDCARD;
         }
