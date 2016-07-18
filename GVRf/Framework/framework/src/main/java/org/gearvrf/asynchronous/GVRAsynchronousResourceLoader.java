@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.gearvrf.FutureWrapper;
+import org.gearvrf.IAssetEvents;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
@@ -43,6 +44,7 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRShaders;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
+import org.gearvrf.IErrorEvents;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
@@ -549,6 +551,7 @@ public class GVRAsynchronousResourceLoader {
             @Override
             public void failed(Throwable t, GVRAndroidResource androidResource) {
                 Log.d(TAG, "failed(%s), %s", androidResource, t);
+                result.getGVRContext().getEventManager().sendEvent(result.getGVRContext(), IAssetEvents.class, "onTextureError", new Object[] { t.getMessage(), "future" });
                 synchronized (lock) {
                     error = t;
                     pending = false;

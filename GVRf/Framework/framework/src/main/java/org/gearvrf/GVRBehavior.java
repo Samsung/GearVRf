@@ -43,7 +43,6 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
      * Constructor for a behavior.
      *
      * @param gvrContext    The current GVRF context
-     * @param nativePointer Pointer to the native object, returned by the native constructor
      */
     protected GVRBehavior(GVRContext gvrContext)
     {
@@ -57,9 +56,9 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
      * @param gvrContext    The current GVRF context
      * @param nativePointer Pointer to the native object, returned by the native constructor
      */
-    protected GVRBehavior(GVRContext gvrContext, long nativeConstructor)
+    protected GVRBehavior(GVRContext gvrContext, long nativePointer)
     {
-        super(gvrContext, nativeConstructor);
+        super(gvrContext, nativePointer);
         mIsListening = false;
         mHasFrameCallback = isImplemented("onDrawFrame", float.class);
     }    
