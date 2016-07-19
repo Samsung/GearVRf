@@ -18,13 +18,11 @@
  * Holds left, right cameras and reacts to the rotation sensor.
  ***************************************************************************/
 
-#ifndef CAMERA_RIG_H_
-#define CAMERA_RIG_H_
+#ifndef CAMERA_RIG_BASE_H_
+#define CAMERA_RIG_BASE_H_
 
 #include <map>
-#include <memory>
 #include <string>
-#include <vector>
 
 #include "glm/glm.hpp"
 #include "glm/gtx/quaternion.hpp"
@@ -37,15 +35,21 @@ namespace gvr {
 class Camera;
 class PerspectiveCamera;
 
-class CameraRig: public Component {
+class CameraRigBase: public Component {
 public:
     enum CameraRigType {
         FREE = 0, YAW_ONLY = 1, ROLL_FREEZE = 2, FREEZE = 3, ORBIT_PIVOT = 4,
     };
 
-    CameraRig();
-    ~CameraRig();
+    static long long getComponentType() {
+        return (long long) getComponentType;
+    }
 
+protected:
+    CameraRigBase(long long componentType);
+    ~CameraRigBase();
+
+public:
     CameraRigType camera_rig_type() const {
         return camera_rig_type_;
     }
@@ -137,10 +141,6 @@ public:
         vec4s_[key] = vector;
     }
 
-    static long long getComponentType() {
-        return (long long) getComponentType;
-    }
-
     void attachLeftCamera(Camera* const left_camera);
     void attachRightCamera(Camera* const right_camera);
     void attachCenterCamera(PerspectiveCamera* const center_camera);
@@ -149,18 +149,15 @@ public:
     void resetYawPitch();
     void setRotationSensorData(long long time_stamp, float w, float x, float y,
             float z, float gyro_x, float gyro_y, float gyro_z);
-    void predict(float time);
-    void predict(float time, const RotationSensorData& rotationSensorData);
-    Transform* getHeadTransform() const; // for rotation/k-sensor
+    virtual Transform* getHeadTransform() const = 0;
     glm::vec3 getLookAt() const;
     void setRotation(const glm::quat& transform_rotation);
-    void setPosition(const glm::vec3& transform_position);
 
 private:
-    CameraRig(const CameraRig& camera_rig);
-    CameraRig(CameraRig&& camera_rig);
-    CameraRig& operator=(const CameraRig& camera_rig);
-    CameraRig& operator=(CameraRig&& camera_rig);
+    CameraRigBase(const CameraRigBase& camera_rig);
+    CameraRigBase(CameraRigBase&& camera_rig);
+    CameraRigBase& operator=(const CameraRigBase& camera_rig);
+    CameraRigBase& operator=(CameraRigBase&& camera_rig);
 
 private:
     static const CameraRigType DEFAULT_CAMERA_RIG_TYPE = FREE;
@@ -175,6 +172,7 @@ private:
     std::map<std::string, glm::vec2> vec2s_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
+protected:
     glm::quat complementary_rotation_;
     RotationSensorData rotation_sensor_data_;
 };

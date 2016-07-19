@@ -247,7 +247,8 @@ public class X3Dobject
       GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
       centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
   
-      cameraRigAtRoot = new GVRCameraRig(gvrContext, root);
+      cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
+      cameraRigAtRoot.setOwnerObject(root);
       cameraRigAtRoot.attachLeftCamera(leftCamera);
       cameraRigAtRoot.attachRightCamera(rightCamera);
       cameraRigAtRoot.attachCenterCamera(centerCamera);

@@ -33,20 +33,6 @@ class GVRRenderBundle {
         update();
     }
 
-    /**
-     * Updates the distortion compensation coefficients.
-     * <p>
-     * <span style="color:red"><b>NOTE:</b></span>For internal use.
-     * 
-     * @param k0
-     * @param k1
-     * @param k2
-     * @param k3
-     */
-    void updateKValues(float k0, float k1, float k2, float k3) {
-        update();
-    }
-
     GVRMaterialShaderManager getMaterialShaderManager() {
         return mMaterialShaderManager;
     }
