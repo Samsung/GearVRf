@@ -115,11 +115,12 @@ void Scene::exportToFile(std::string filepath) {
     Exporter::writeToFile(this, filepath);
 }
 
-void Scene::addLight(Light* light) {
+bool Scene::addLight(Light* light) {
     auto it = std::find(lightList.begin(), lightList.end(), light);
     if (it != lightList.end())
-        return;
+        return false;
      lightList.push_back(light);
+     return true;
 }
 }
 

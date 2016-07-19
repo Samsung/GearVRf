@@ -167,13 +167,9 @@ public final class GVRAssetLoader {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
                 mContext.loadTexture(request, resource);
             }
-            catch (FileNotFoundException ex2)
+            catch (IOException ex)
             {
-                onTextureError(mContext, ex2.getMessage(), request.TextureFile);
-            }
-            catch (IOException ex1)
-            {
-                onTextureError(mContext, ex1.getMessage(), request.TextureFile);
+                onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
         }
 
@@ -191,13 +187,9 @@ public final class GVRAssetLoader {
                 mContext.loadTexture(request, resource);
                 return result;
             }
-            catch (FileNotFoundException ex2)
+            catch (IOException ex)
             {
-                onTextureError(mContext, ex2.getMessage(), request.TextureFile);
-            }
-            catch (IOException ex1)
-            {
-                onTextureError(mContext, ex1.getMessage(), request.TextureFile);
+                onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
             return null;
          }
@@ -503,7 +495,7 @@ public final class GVRAssetLoader {
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene.
      *
-     * @param assetFile
+     * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
@@ -532,7 +524,7 @@ public final class GVRAssetLoader {
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene.
      *
-     * @param assetFile
+     * @param filePath
      *            A filename, relative to the root of the volume.
      * @param volumeType
      *            Which volume the file is on: ANDROID_ASSETS, ANDROID_SDCARD or NETWORK
@@ -568,7 +560,7 @@ public final class GVRAssetLoader {
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and raises asset events to a handler.
      *
-     * @param assetFile
+     * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
@@ -596,7 +588,7 @@ public final class GVRAssetLoader {
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene.
      *
-     * @param assetFile
+     * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
@@ -634,7 +626,7 @@ public final class GVRAssetLoader {
     /**
      * Loads a scene object {@link GVRModelSceneObject} from a 3D model.
      *
-     * @param assetFile
+     * @param filePath
      *            A filename, relative to the root of the volume.
      *
      * @param settings
@@ -825,11 +817,11 @@ public final class GVRAssetLoader {
      *            directory. The file can be in a sub-directory of the
      *            {@code assets} directory: {@code "foo/bar.png"} will open the
      *            file {@code assets/foo/bar.png}
-     * @param wholeSceneObject A reference of the {@link GVRSceneObject}, to
+     * @param parentSceneObject A reference of the {@link GVRSceneObject}, to
      *            which all other scene objects are attached.
      * @param node A reference to the AiNode for which we want to recurse all
      *            its children and meshes.
-     * @param sWrapperProvider AiWrapperProvider for unwrapping Jassimp
+     * @param wrapperProvider AiWrapperProvider for unwrapping Jassimp
      *            properties.
      */
     @SuppressWarnings("resource")
@@ -892,7 +884,7 @@ public final class GVRAssetLoader {
      * @param node A reference to the AiNode for which we want to recurse all
      *            its children and meshes.
      * @param index The index of the mesh in the array of meshes for that node.
-     * @param sWrapperProvider AiWrapperProvider for unwrapping Jassimp
+     * @param wrapperProvider AiWrapperProvider for unwrapping Jassimp
      *            properties.
      * @return The new {@link GVRSceneObject} with the mesh at the index
      *         {@link index} for the node {@link node}

@@ -192,3 +192,16 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
 }
+
+task copyAARFiles(type: Copy) {
+    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+        def libsdir = rootProject.property("LIBS_DIRECTORY")
+        from 'build/outputs/aar'
+        into libsdir
+        include '**/*.aar'
+    }
+}
+
+assembleDebug {}.doLast{
+    tasks.copyAARFiles.execute()
+}
