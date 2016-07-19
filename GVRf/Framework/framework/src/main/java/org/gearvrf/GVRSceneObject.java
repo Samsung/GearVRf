@@ -811,6 +811,20 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         public boolean visit(GVRComponent comp);
     }
     
+	/**
+	 * Visits all the descendants of this scene object.
+	 * The SceneVisitor.visit function is called for every
+	 * descendant until it returns false. This allows you
+	 * to traverse the scene graph safely without copying it.
+	 * This method gives much better performance than iterating
+	 * children() or getChildren().
+	 *
+	 * @param visitor SceneVisitor interface implementing "visit" function
+	 * @see children
+	 * @see getChildren
+	 * @see SceneVisitor
+	 * @see forAllComponents
+	 */
     public void forAllDescendants(SceneVisitor visitor) {
         if (visitor.visit(this)) {
             for (GVRSceneObject child : mChildren) {
@@ -818,7 +832,25 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
             }
         }
     }
-    
+
+	/**
+	 * Visits all the components of the specified type attached to
+	 * the descendants of this scene object.
+	 * The ComponentVisitor.visit function is called for every
+	 * eligible component of each descendant until it returns false.
+	 * This allows you to traverse the scene graph safely without copying it.
+	 * This method gives much better performance than iterating
+	 * children() or getChildren().
+	 *
+	 * @param visitor ComponentVisitor interface implementing "visit" function
+	 * @param componentType type of component to find
+	 *
+	 * @see children
+	 * @see getChildren
+	 * @see SceneVisitor
+	 * @see forAllDescendants
+	 * @see getComponent
+	 */    
     public void forAllComponents(ComponentVisitor visitor, long componentType) {
         GVRComponent comp = getComponent(componentType);
         if ((comp != null) && !visitor.visit(comp)) {
@@ -830,6 +862,23 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
     }
 
+    /**
+	 * Visits all the components attached to
+	 * the descendants of this scene object.
+	 * The ComponentVisitor.visit function is called for every
+	 * component of each descendant until it returns false.
+	 * This allows you to traverse the scene graph safely without copying it.
+	 * This method gives much better performance than iterating
+	 * children() or getChildren().
+	 *
+	 * @param visitor ComponentVisitor interface implementing "visit" function
+	 *
+	 * @see children
+	 * @see getChildren
+	 * @see SceneVisitor
+	 * @see forAllDescendants
+	 * @see getComponent
+	 */  
     public void forAllComponents(ComponentVisitor visitor) {
         for (GVRComponent comp : mComponents.values()) {
             if (!visitor.visit(comp)) {
