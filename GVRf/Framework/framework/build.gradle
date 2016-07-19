@@ -15,30 +15,8 @@ android {
         }
     }
 
-    //copy tasks duplicated since I had trouble getting the same task executed more
-    //than once; and the copying must happen for both release and debug otherwise
-    //the releaseToGitHub may delete the files; should be possible to be done much
-    //better but I left it as a future exercise
-    task copyOculusFilesDebug() << {
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            def oculusDir = rootProject.property("OVR_MOBILE_SDK")
-            copy {
-                from oculusDir+'/VrApi/Libs/Android/VrApi.jar'
-                into 'src/main/libs'
-            }
-            copy {
-                from oculusDir+'/VrApi/Libs/Android/armeabi-v7a/libvrapi.so'
-                into 'src/main/libs/armeabi-v7a'
-            }
-            copy {
-                from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
-                into 'src/main/libs'
-            }
-        } else {
-            println "WARNING: not copying Oculus files; OVR_MOBILE_SDK not found"
-        }
-    }
-    task copyOculusFilesRelease() << {
+    task copyOculusFiles(type: Copy) {
+        println "copying oculus binaries"
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             def oculusDir = rootProject.property("OVR_MOBILE_SDK")
             copy {
@@ -124,28 +102,10 @@ android {
     clean.dependsOn 'cleanNative'
 
     tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative
+        compileTask -> compileTask.dependsOn buildNative, copyOculusFiles
     }
 
-    task deleteOculusFiles() << {
-        delete 'src/main/libs/armeabi-v7a/libvrapi.so'
-        delete 'src/main/libs/VrApi.jar'
-        delete 'src/main/libs/SystemUtils.jar'
-    }
-
-    tasks.whenTaskAdded { task ->
-        if (task.name == 'bundleReleaseToGitHub') {
-            task.dependsOn eclipseAssembleReleaseToGitHub
-        }
-        if (task.name == 'packageDebugJar') {
-            task.dependsOn copyOculusFilesDebug
-        }
-        if (task.name == 'packageReleaseJar') {
-            task.dependsOn copyOculusFilesRelease
-        }
-    }
-
-    task eclipseZip(type: Zip, dependsOn: deleteOculusFiles) {
+    task eclipseZip(type: Zip) {
         into('GearVRf/res/') {
             from 'src/main/res/'
         }
@@ -176,8 +136,10 @@ android {
         baseName 'gvrf-for-eclipse'
     }
 
-    task eclipseAssembleReleaseToGitHub(dependsOn: eclipseZip) << {
-        description "Preparing Android Library project for Eclipse"
+    task eclipseAssembleReleaseToGitHub() << {
+        println "preparing android library project for eclipse"
+
+        eclipseZip.execute()
 
         copy {
             from 'build/distributions/gvrf-for-eclipse.zip'
@@ -193,15 +155,29 @@ dependencies {
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
 }
 
-task copyAARFiles(type: Copy) {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        def libsdir = rootProject.property("LIBS_DIRECTORY")
-        from 'build/outputs/aar'
-        into libsdir
-        include '**/*.aar'
+assembleDebug {}.doLast {
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            println "copying aar files to the libs_directory"
+            def libsdir = rootProject.property("LIBS_DIRECTORY")
+            from 'build/outputs/aar'
+            into libsdir
+            include '**/*.aar'
+        }
     }
 }
 
-assembleDebug {}.doLast{
-    tasks.copyAARFiles.execute()
+assembleReleaseToGitHub {}.doLast {
+    println 'removing oculus binaries'
+    exec {
+        commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/VrApi.jar']
+    }
+    exec {
+        commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/SystemUtils.jar']
+    }
+    exec {
+        commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'jni/armeabi-v7a/libvrapi.so']
+    }
+
+    eclipseAssembleReleaseToGitHub.execute()
 }
