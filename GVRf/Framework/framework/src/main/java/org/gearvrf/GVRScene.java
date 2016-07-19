@@ -471,7 +471,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             {
                 mLightList.add(light);
                 NativeLight.setLightID(light.getNative(), name);
-                Log.d(TAG, "Light: addLight " + name);
                 return true;
             }
         }

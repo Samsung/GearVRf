@@ -553,7 +553,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @throws IOException
      *             File does not exist or cannot be read
      *
-     * @deprecated Replaced by {@link #loadJassimpModel(String, EnumSet)}
+     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
@@ -561,28 +561,28 @@ public abstract class GVRContext implements IEventReceiver {
     }
     
     /**
-     * @deprecated Replaced by {@link #loadModelFromSD}
+     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
         return loadModelFromSD(externalFile);
     }
 
     /**
-     * @deprecated Replaced by {@link #loadModelFromSD}
+     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return loadModelFromSD(externalFile, settings);
     }
 
     /**
-     * @deprecated Replaced by {@link #loadModel}
+     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModel(String assetFile) throws IOException {
         return loadModel(assetFile);
     }
 
     /**
-     * @deprecated Replaced by {@link #loadModel}
+     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return loadModel(assetFile, settings);
@@ -620,20 +620,20 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated Replaced by {@link GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return mImporter.loadModel("sd:" + externalFile, settings, true, null);
     }
 
     /**
-     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from
-     * a 3D model stored in Android application assets.
+     * Simple, high-level method to load a scene object {@link GVRModelSceneObject} from a 3D model.
      *
-     * @param assetFile
-     *            A filename, relative to the {@code assets} directory. The file
-     *            can be in a sub-directory of the {@code assets} directory:
-     *            {@code "foo/bar.png"} will open the file
-     *            {@code assets/foo/bar.png}
+     * @param assetFile The filename or URL of the model.
+     *                  If the filename begins with "sd:" it is assumed to be on the SD card.
+     *                  If it begins with "http:" or "https:", it is assumed to be a URL.
+     *                  Otherwise, it is assumed to be in the {@code assets directory}:
+     *                  {@code "foo/bar.png"} will open the file {@code assets/foo/bar.png}
      *
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
@@ -648,11 +648,11 @@ public abstract class GVRContext implements IEventReceiver {
     /**
      * Load a scene object {@link GVRModelSceneObject} from a 3D model and add it to the scene.
      *
-     * @param assetFile
-     *            A filename, relative to the {@code assets} directory. The file
-     *            can be in a sub-directory of the {@code assets} directory:
-     *            {@code "foo/bar.png"} will open the file
-     *            {@code assets/foo/bar.png}
+     * @param assetFile The filename or URL of the model.
+     *                  If the filename begins with "sd:" it is assumed to be on the SD card.
+     *                  If it begins with "http:" or "https:", it is assumed to be a URL.
+     *                  Otherwise, it is assumed to be in the {@code assets directory}:
+     *                  {@code "foo/bar.png"} will open the file {@code assets/foo/bar.png}
      *
      * @param settings
      *            Additional import {@link GVRImportSettings settings}

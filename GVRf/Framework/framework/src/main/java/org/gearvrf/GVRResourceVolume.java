@@ -107,6 +107,10 @@ public class GVRResourceVolume {
             volumeType = GVRResourceVolume.VolumeType.NETWORK;
             defaultPath = FileNameUtils.getURLParentDirectory(filename);
         }
+        else
+        {
+            defaultPath = FileNameUtils.getParentDirectory(filename);        	
+        }
     }
     
     /**
@@ -252,3 +256,4 @@ public class GVRResourceVolume {
         return fullPath.toString();
     }
 }
+
