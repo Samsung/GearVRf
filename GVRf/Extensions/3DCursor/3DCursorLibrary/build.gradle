@@ -61,3 +61,20 @@ class XmlValidator implements Plugin<Project> {
 }
 
 preBuild.dependsOn validateXml
+
+assembleDebug {}.doLast {
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            def libsdirPath = projectDir.absolutePath + '/../../../../' +
+                    rootProject.property("LIBS_DIRECTORY")
+            def libsDir = new File(libsdirPath);
+            if (!libsDir.exists()) {
+                throw new IllegalArgumentException("Libs Directory Does not exist")
+            }
+            from 'build/outputs/aar'
+            into libsDir
+            include '**/*.aar'
+        }
+    }
+    tasks.copyAARFiles.execute()
+}

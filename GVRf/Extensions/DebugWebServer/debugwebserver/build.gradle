@@ -10,6 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -22,4 +23,18 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.koushikdutta.async:androidasync:2.1.8'
     compile project(path: ':framework')
+}
+
+assembleDebug {}.doLast{
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            def libsdir = projectDir.absolutePath + '/../../../../' +
+                    rootProject.property("LIBS_DIRECTORY")
+            from 'build/outputs/aar'
+            into libsdir
+            include '**/*.aar'
+        }
+
+    }
+    tasks.copyAARFiles.execute()
 }
