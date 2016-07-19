@@ -38,7 +38,11 @@ class GLProgram;
 
 class ShaderBase: public HybridObject {
 public:
-    ShaderBase() : program_(nullptr) { };
+    ShaderBase() : program_(nullptr), use_multiview(false) {
+        const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+        if(std::strstr(extensions, "GL_OVR_multiview2")!= NULL)
+            use_multiview = true;
+    };
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material)=0;
     GLuint getProgramId()
@@ -55,6 +59,7 @@ public:
 
 protected:
     GLProgram* program_;
+    bool use_multiview;
 };
 
 }

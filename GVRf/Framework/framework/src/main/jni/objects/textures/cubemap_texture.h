@@ -115,6 +115,8 @@ public:
             );
 
             glBindTexture(TARGET, gl_texture_->id());
+			glGenerateMipmap (TARGET);
+			glTexParameteri(TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 
             for (int i = 0; i < 6; i++) {
                 jobject bitmap = bitmapRef_[i];
@@ -160,6 +162,8 @@ public:
             );
 
             glBindTexture(TARGET, gl_texture_->id());
+			glGenerateMipmap (TARGET);
+			glTexParameteri(TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 
             for (int i = 0; i < 6; i++) {
                 jbyteArray byteArray = static_cast<jbyteArray>(textureRef_[i]);

@@ -14,6 +14,9 @@
  */
 package org.gearvrf;
 
+import static android.opengl.GLES20.GL_EXTENSIONS;
+import static android.opengl.GLES20.glGetString;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -227,7 +230,17 @@ public class GVRShaderTemplate
                 definedNames.put(name, 1);
         }
     }
-
+    /**
+     * Checks  whether device supports OGL_MULTIVIEW extension
+     * 
+     */    
+    private boolean isMultiviewPresent(){
+        String extensionString = glGetString(GL_EXTENSIONS);
+        if(extensionString.contains("GL_OVR_multiview2"))
+            return true;
+        
+        return false;
+    }
     /**
      * Construct the source code for a GL shader based on the input defines. The
      * shader segments attached to slots that start with <type> are combined to
@@ -289,6 +302,10 @@ public class GVRShaderTemplate
             if (entry.getValue() != 0)
                 defines += "#define HAS_" + entry.getKey() + " 1\n";
         }
+ 
+        if(isMultiviewPresent())
+            defines = "#define HAS_MULTIVIEW\n" + defines;
+        
         return "#version 300 es\n" + defines + combinedSource;
     }
 

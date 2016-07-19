@@ -21,7 +21,7 @@
 #include "VrApi_Types.h"
 #include "VrApi_Helpers.h"
 #include "SystemActivities.h"
-
+#include <cstring>
 static const char* activityClassName = "org/gearvrf/GVRActivity";
 static const char* activityHandlerRenderingCallbacksClassName = "org/gearvrf/ActivityHandlerRenderingCallbacks";
 
@@ -32,7 +32,7 @@ namespace gvr {
 //=============================================================================
 
 GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
-        jobject callbacks) : envMainThread_(&env), configurationHelper_(env, vrAppSettings)
+        jobject callbacks) : envMainThread_(&env), configurationHelper_(env, vrAppSettings), use_multiview(false)
 {
     activity_ = env.NewGlobalRef(activity);
     activityRenderingCallbacks_ = env.NewGlobalRef(callbacks);
@@ -140,10 +140,23 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         if (mMultisamplesConfiguration > maxSamples)
             mMultisamplesConfiguration = maxSamples;
 
-        for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
-            bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
+        const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+        if(std::strstr(extensions, "GL_OVR_multiview2")!= NULL){
+            use_multiview = true;
+        }
+
+
+        if(use_multiview){
+            bool b = frameBuffer_[0].create(mColorTextureFormatConfiguration, mWidthConfiguration,
                     mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
-                    mDepthTextureFormatConfiguration);
+                    mDepthTextureFormatConfiguration, use_multiview);
+        }
+        else {
+            for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
+                bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
+                        mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
+                        mDepthTextureFormatConfiguration, use_multiview);
+            }
         }
 
         // default viewport same as window size
@@ -176,7 +189,7 @@ void GVRActivity::onDrawFrame() {
     const ovrTracking tracking = vrapi_ApplyHeadModel(&headModelParms, &baseTracking);
 
     // Render the eye images.
-    for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
+    for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
         ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_, tracking.HeadPose.TimeInSeconds);
         updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;
 
@@ -193,11 +206,18 @@ void GVRActivity::onDrawFrame() {
         eyeTexture.DepthTextureSwapChain = frameBuffer_[eye].mDepthTextureSwapChain;
         eyeTexture.TextureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
 
-        for (int layer = 0; layer < VRAPI_FRAME_LAYER_TYPE_MAX; layer++) {
-            parms.Layers[layer].Textures[eye].TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
-            parms.Layers[layer].Textures[eye].HeadPose = updatedTracking.HeadPose;
-        }
+        if(use_multiview){
+            parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
+            parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].HeadPose = updatedTracking.HeadPose;
 
+        }
+        else {
+
+            for (int layer = 0; layer < VRAPI_FRAME_LAYER_TYPE_MAX; layer++) {
+                parms.Layers[layer].Textures[eye].TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
+                parms.Layers[layer].Textures[eye].HeadPose = updatedTracking.HeadPose;
+            }
+        }
         endRenderingEye(eye);
     }
 
