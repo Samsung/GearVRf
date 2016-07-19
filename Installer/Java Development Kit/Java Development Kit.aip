@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FRAGMENT Type="ReadOnly" CreateVersion="13.0" RootPath="." Language="en">
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqComponent">
+    <ROW PrereqKey="JavaDevelopmentKit" DisplayName="Java Development Kit" VersionMin="8" SetupFileUrl="http://download.oracle.com/otn-pub/java/jdk/8u91-b15/jdk-8u91-windows-x64.exe" Location="1" ExactSize="0" Win9xVersions="Windows 9x/ME" Operator="1" Options="pi" Type="1" Feature="JavaDevelopmentKit"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqSearchComponent">
+    <ROW SearchKey="SystemFolderfile.dll_1" Prereq="JavaDevelopmentKit" SearchType="0" SearchString="[SystemFolder]file.dll" VerMin="1.0" Order="1" MsiKey="SystemFolderfile.dll_1" Property="PreReqSearch_1"/>
+  </COMPONENT>
+</FRAGMENT>
