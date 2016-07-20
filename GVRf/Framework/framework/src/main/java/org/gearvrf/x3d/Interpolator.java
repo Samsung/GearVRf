@@ -15,6 +15,14 @@
 
 package org.gearvrf.x3d;
 
+/**
+ * 
+ * @author m1.williams
+ * Saves interpolator key and keyvalues.
+ * Used for most any interpolator: Color, Position, Orientation, Scale
+ * Texture animations.
+ */
+
 public class Interpolator
 {
   String name = null;

@@ -1,4 +1,5 @@
-/* Copyright 2016 Samsung Electronics Co., LTD
+/*
+ * Copyright 2016 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,37 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+include ':GearWearIoDevice'
+include ':3DCursorLibrary'
+include ':gearwearlibrary'
+include ':framework'
+project(':framework').projectDir = new File('../../../../Framework/framework/')
+project(':3DCursorLibrary').projectDir = new File('../../3DCursorLibrary')
+project(':gearwearlibrary').projectDir = new File('PhoneSide/gearwearlibrary')
 
-package org.gearvrf.x3d;
-
-public class VertexNormal
-{
-
-  private float[] vector =
-
-  {
-      0, 0, 1
-  };
-
-  public VertexNormal(float x, float y, float z)
-  {
-    this.vector[0] = x;
-    this.vector[1] = y;
-    this.vector[2] = z;
-
-  }
-
-  public VertexNormal(float[] vn)
-  {
-    for (int i = 0; i < 3; i++)
-    {
-      this.vector[i] = vn[i];
-    }
-  }
-
-  
-  public float getVertexNormalCoord(int i) {
-    return vector[i];
-  }
-
-}

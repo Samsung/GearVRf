@@ -45,8 +45,24 @@ task createJar(type: Copy) {
 }
 
 createJar.dependsOn(deleteJar, build)
-
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
+}
+
+assembleDebug {}.doLast{
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            def libsdirPath = projectDir.absolutePath + '/../../../../../../../' +
+                    rootProject.property("LIBS_DIRECTORY")
+            def libsDir = new File(libsdirPath);
+            if( !libsDir.exists() ) {
+                throw new IllegalArgumentException("Libs Directory Does not exist")
+            }
+            from 'build/outputs/aar'
+            into libsDir
+            include '**/*.aar'
+        }
+    }
+    tasks.copyAARFiles.execute()
 }

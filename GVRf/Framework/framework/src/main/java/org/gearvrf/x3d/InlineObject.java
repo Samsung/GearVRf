@@ -17,6 +17,14 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.GVRSceneObject;
 
+/**
+ * 
+ * @author m1.williams
+ * Class of an array list of <Inline> objects
+ * These are added to the Scene Graph after parsing
+ * the original file.  
+ */
+
 public class InlineObject {
 
   private GVRSceneObject inlineGVRSceneObject = null;
