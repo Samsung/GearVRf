@@ -15,58 +15,28 @@
 
 package org.gearvrf.x3d;
 
-import java.nio.Buffer;
-
-import javax.microedition.khronos.opengles.GL10;
-
-import android.util.Log;
-
-
 
 /**
- * {@hide}
+ * Holds a single x, y texture coordinate
  */
-public class TextureValues {
-	public float[] coord = { 0, 0 };
+public class TextureValues
+{
+  public float[] coord =
+  {
+      0, 0
+  };
 
-	public TextureValues (float u, float v) {
-		//Log.d("Texture.constr", ": " + u + ", " + v ); 		    					
-		coord[0] = u;
-		coord[1] = v;
-	}
-	public TextureValues (float[] tv) {
-		coord[0] = tv[0];
-		coord[1] = tv[1];
-	}
+  public TextureValues(float u, float v)
+  {
+    coord[0] = u;
+    coord[1] = v;
+  }
 
-    public int loadTexture(GL10 gl, int textureUnit, int minFilter, int magFilter, int wrapS, int wrapT, int mode, int width, int height, int dataType, Buffer data)
-    {
-        int[] texture = new int[1];
-        gl.glGenTextures(1, texture, 0);
+  public TextureValues(float[] textureCoord)
+  {
+    coord[0] = textureCoord[0];
+    coord[1] = textureCoord[1];
+  }
 
-        gl.glEnable(GL10.GL_TEXTURE_2D);
-        gl.glClientActiveTexture(textureUnit);
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, texture[0]);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, minFilter);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, magFilter);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, wrapS);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, wrapT);
-        gl.glTexEnvf(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, mode);
 
-        gl.glTexImage2D(GL10.GL_TEXTURE_2D, 0, GL10.GL_RGB, width, height, 0, GL10.GL_RGB, dataType, data);
-
-        return texture[0];
-    }
-
-    /*
-    public void setTextureParameters(GL10 gl)
-    {
-        if (name < 0)
-        {
-            name = loadTexture(gl, GL10.GL_TEXTURE0, GL10.GL_NEAREST, GL10.GL_NEAREST, GL10.GL_REPEAT, GL10.GL_REPEAT, GL10.GL_MODULATE, width, height, GL10.GL_UNSIGNED_SHORT_5_6_5, data);
-        }
-
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, name);
-    }
-    */
 }

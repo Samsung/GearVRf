@@ -30,7 +30,24 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
-public class DefinedItem {
+
+/**
+ * @author m1.williams DefinedItem is an array list of each X3D node that has a
+ *         DEF="some_name" between the < > brackets. The name is saved, and a
+ *         reference to the GVR structure
+ *
+ *         For example <IndexedFaceSet DEF="myIFS"> will create a DefinedItem
+ *         setting name to "myIFS" and gvrMesh will point to a GVRmesh object.
+ *         Later, if an <IndexedFaceSet USE="myIFS">, both IndexedFaceSet will
+ *         point to the same GVRmesh.
+ * 
+ *         This also allows implementation of X3D's working with with HTML5
+ *         Document Object Model (DOM) getElementByTagName() method since every
+ *         DEF name will be in this array list containing DEFined values.
+ */
+public class DefinedItem
+{
+
 
   private String name = "";
   private GVRMesh gvrMesh = null;
@@ -38,74 +55,75 @@ public class DefinedItem {
   private Future<GVRTexture> gvrTexture = null;
   private GVRRenderData gvrRenderData = null;
 
-  // Only have ShaderSetting set until parsing the end Shape </Shape> node
-  //private ShaderSettings shaderSettingsMaterial = null;
+
   private GVRMaterial gvrMaterial = null;
 
-  
-  public DefinedItem () {
+  public DefinedItem()
+  {
   }
 
-  public DefinedItem (String name) {
+  public DefinedItem(String name)
+  {
     this.name = name;
   }
 
-  public void setName (String name) {
+  public void setName(String name)
+  {
     this.name = name;
   }
 
-  public String getName() {
+  public String getName()
+  {
     return this.name;
   }
-  
-  public void setGVRRenderData (GVRRenderData gvrRenderData) {
-	  this.gvrRenderData = gvrRenderData;
+
+  public void setGVRRenderData(GVRRenderData gvrRenderData)
+  {
+    this.gvrRenderData = gvrRenderData;
   }
 
-  public GVRRenderData getGVRRenderData() {
-	  return this.gvrRenderData;
-  }
-  
-  public void setGVRTexture (Future<GVRTexture> gvrTexture) {
-	  this.gvrTexture = gvrTexture;
+  public GVRRenderData getGVRRenderData()
+  {
+    return this.gvrRenderData;
   }
 
-  public Future<GVRTexture> getGVRTexture() {
-	  return this.gvrTexture;
+  public void setGVRTexture(Future<GVRTexture> gvrTexture)
+  {
+    this.gvrTexture = gvrTexture;
   }
 
-  public void setGVRMesh (GVRMesh gvrMesh) {
+  public Future<GVRTexture> getGVRTexture()
+  {
+    return this.gvrTexture;
+  }
+
+  public void setGVRMesh(GVRMesh gvrMesh)
+  {
     this.gvrMesh = gvrMesh;
   }
 
-  public GVRMesh getGVRMesh() {
+  public GVRMesh getGVRMesh()
+  {
     return this.gvrMesh;
   }
 
-  public void setGVRMaterial (GVRMaterial gvrMaterial) {
+  public void setGVRMaterial(GVRMaterial gvrMaterial)
+  {
     this.gvrMaterial = gvrMaterial;
   }
 
-  public GVRMaterial getGVRMaterial() {
+  public GVRMaterial getGVRMaterial()
+  {
     return this.gvrMaterial;
   }
 
-  /*
-  public void setShaderSettingsMaterial(ShaderSettings shaderSettingsMaterial) {
-    this.shaderSettingsMaterial = shaderSettingsMaterial;
-  }
-
-  public ShaderSettings getShaderSettingsMaterial() {
-    return this.shaderSettingsMaterial;
-  }
-  */
-
-
-  public void setGVRSceneObject (GVRSceneObject gvrSceneObject) {
+  public void setGVRSceneObject(GVRSceneObject gvrSceneObject)
+  {
     this.gvrSceneObject = gvrSceneObject;
   }
 
-  public GVRSceneObject getGVRSceneObject() {
+  public GVRSceneObject getGVRSceneObject()
+  {
     return this.gvrSceneObject;
   }
 

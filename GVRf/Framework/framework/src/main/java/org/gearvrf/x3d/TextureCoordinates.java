@@ -15,34 +15,32 @@
 
 package org.gearvrf.x3d;
 
-public class KeyValue
+/**
+ * 
+ * @author m1.williams Used for the texture coordinate values in an array list
+ *         Can also construct texture coordinates for X3D via coding.
+ */
+public class TextureCoordinates
 {
-  public float[] keyValues = null;
-  //private float[] keyValues = null;
+  public short[] coords = new short[3];
 
-  public KeyValue(float x, float y, float z)
+  public TextureCoordinates()
   {
-    this.keyValues = new float[3];
-    this.keyValues[0] = x;
-    this.keyValues[1] = y;
-    this.keyValues[2] = z;
   }
 
-  public KeyValue(float w, float x, float y, float z)
+  public TextureCoordinates(short x, short y, short z)
   {
-    this.keyValues = new float[4];
-    this.keyValues[0] = w;
-    this.keyValues[1] = x;
-    this.keyValues[2] = y;
-    this.keyValues[3] = z;
+    this.coords[0] = x;
+    this.coords[1] = y;
+    this.coords[2] = z;
   }
 
-  public KeyValue(float[] values)
+  public TextureCoordinates(short[] tc)
   {
-    this.keyValues = new float[values.length];
-    for (int i = 0; i < values.length; i++)
+    for (int i = 0; i < 3; i++)
     {
-      this.keyValues[i] = values[i];
+      this.coords[i] = tc[i];
     }
   }
+
 }

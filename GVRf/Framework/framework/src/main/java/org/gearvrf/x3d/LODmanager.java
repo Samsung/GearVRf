@@ -15,6 +15,16 @@
 
 package org.gearvrf.x3d;
 
+
+/**
+ * 
+ * @author m1.williams
+ * Contains data used for Level-of-Detail
+ * Retains the data for constructing the parameters
+ * of the level of detail
+ * 
+ */
+
 public class LODmanager {
   private int totalRange = -1;
   private float[] range = null;
@@ -23,9 +33,15 @@ public class LODmanager {
   private boolean active = false;
 
 
-
   public LODmanager () {
   }
+
+  /**
+   * When parsing an <LOD> node, set the range of values
+   * Values must be in sequential order.
+   * @param newRange
+   * @param newCenter
+   */
 
   public void set(float[] newRange, float[] newCenter) {
     this.range = new float[newRange.length];
