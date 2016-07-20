@@ -17,7 +17,7 @@ package org.gearvrf.x3d;
 
 public class Vertex
 {
-  public float[] point =
+  private float[] point =
   {
       0, 0, 0
   };
@@ -37,4 +37,10 @@ public class Vertex
       this.point[i] = values[i];
     }
   }
+
+  public float getVertexCoord(int i)
+  {
+    return point[i];
+  }
+
 }

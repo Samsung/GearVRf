@@ -17,35 +17,58 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
-public abstract class  Route {
+
+/**
+ * 
+ * @author m1.williams
+ *  Route contains the fields used in <Route> for animation and
+ *  interactivity.  This is the base class for an array list of
+ *  <ROUTE>s.  
+ */
+public abstract class Route
+{
+
   private String fromNode = null;
   private String fromField = null;
   private String toNode = null;
   private String toField = null;
 
-  public Route(String fromNode, String fromField, String toNode, String toField) {
+
+  /**
+   * Constructor, every ROUTE has the 4 fields below
+   * @param fromNode
+   * @param fromField
+   * @param toNode
+   * @param toField
+   */
+  public Route(String fromNode, String fromField, String toNode, String toField)
+  {
+
     this.fromNode = fromNode;
     this.fromField = fromField;
     this.toNode = toNode;
     this.toField = toField;
   }
 
-    public String getRouteFromNode() {
-      return this.fromNode;
-    }
 
-    public String getRouteFromField() {
-        return this.fromField;
-    }
+  public String getRouteFromNode()
+  {
+    return this.fromNode;
+  }
 
-    public String getRouteToNode() {
-        return this.toNode;
-    }
+  public String getRouteFromField()
+  {
+    return this.fromField;
+  }
 
-    public String getRouteToField() {
-        return this.toField;
-    }
+  public String getRouteToNode()
+  {
+    return this.toNode;
+  }
+
+  public String getRouteToField()
+  {
+    return this.toField;
+  }
 }
-
-
 
