@@ -1,3 +1,0 @@
-include ':Widget_plugin'
-include ':framework'
-project(':framework').projectDir = new File('../Framework/framework')
