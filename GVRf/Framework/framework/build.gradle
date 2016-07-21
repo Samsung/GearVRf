@@ -36,7 +36,14 @@ android {
         }
     }
 
-    task buildNative(type: Exec) {
+    task copyAndroidMk(type: Copy) {
+        assert rootProject.hasProperty("GVRF_BACKEND")
+        from '../'+rootProject.property("GVRF_BACKEND")+'/src/main/jni/'
+        into 'src/main/jni'
+        include 'Android.mk'
+    }
+
+    task buildNative(type: Exec, dependsOn: copyAndroidMk) {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         } else {
@@ -58,6 +65,9 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
 
+        assert rootProject.hasProperty("GVRF_BACKEND")
+        environment 'GVRF_BACKEND', '' + rootDir + '/' + rootProject.property("GVRF_BACKEND")
+
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
     }
 
@@ -73,7 +83,7 @@ android {
     }
 
     sourceSets.main {
-        java.srcDirs = ['src/main/java', 'src/main/backends/oculus']
+        java.srcDirs = ['src/main/java', '../' + rootProject.property("GVRF_BACKEND")+'/src/main/java']
         jni.srcDirs = [] // no auto generation of Android.mk
         // pre-compiled libraries
         jniLibs {
@@ -97,6 +107,9 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16, 'clean'
+    }
+    cleanNative << {
+        delete 'src/main/jni/Android.mk'
     }
 
     clean.dependsOn 'cleanNative'
