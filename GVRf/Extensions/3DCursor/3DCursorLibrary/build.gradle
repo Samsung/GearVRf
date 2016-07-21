@@ -68,12 +68,13 @@ assembleDebug {}.doLast {
             def libsdirPath = projectDir.absolutePath + '/../../../../' +
                     rootProject.property("LIBS_DIRECTORY")
             def libsDir = new File(libsdirPath);
-            if (!libsDir.exists()) {
-                throw new IllegalArgumentException("Libs Directory Does not exist")
+            if (libsDir.exists()) {
+                from 'build/outputs/aar'
+                into libsDir
+                include '**/*.aar'
+            } else {
+                println "Cannot copy aar files, libs directory does not exist!"
             }
-            from 'build/outputs/aar'
-            into libsDir
-            include '**/*.aar'
         }
     }
     tasks.copyAARFiles.execute()
