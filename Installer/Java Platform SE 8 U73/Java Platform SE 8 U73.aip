@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FRAGMENT Type="ReadOnly" CreateVersion="13.0" RootPath="." Language="en">
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqComponent">
+    <ROW PrereqKey="JavaPlatformSE8U" DisplayName="Java Platform SE 8 U73" VersionMin="8.0.730.2" SetupFileUrl="jdk-8u73-windows-x64.exe" Location="0" ExactSize="0" WinNTVersions="Windows 9x/ME/NT/2000/XP/Vista/Windows 7/Windows 8 x86/Windows 8.1 x86/Windows 10 x86" Operator="1" Options="p" TargetName="jdk-8u73-windows-x64.exe" Type="1" Feature="JavaPlatformSE8U_1"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqSearchComponent">
+    <ROW SearchKey="JavaRuntimeEnvironment" Prereq="JavaPlatformSE8U" SearchType="2" SearchString="HKLM\Software\JavaSoft\Java Runtime Environment" VerMin="1.7" Order="1" MsiKey="JavaRuntimeEnvironment" Property="PreReqSearch"/>
+  </COMPONENT>
+</FRAGMENT>
