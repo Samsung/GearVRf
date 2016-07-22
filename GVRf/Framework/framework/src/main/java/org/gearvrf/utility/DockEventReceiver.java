@@ -31,6 +31,18 @@ public final class DockEventReceiver {
         }
     }
 
+    public void runOnDock() {
+        if (null != mRunOnDock) {
+            mRunOnDock.run();
+        }
+    }
+
+    public void runOnUndock() {
+        if (null != mRunOnUndock) {
+            mRunOnUndock.run();
+        }
+    }
+
     private final class BroadcastReceiverImpl extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, final Intent intent) {

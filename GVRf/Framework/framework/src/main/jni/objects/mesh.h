@@ -384,12 +384,18 @@ public:
 
     }
 
+     void forceShouldReset() { // one time, then false
+         vao_dirty_ = true;
+         bone_data_dirty_ = true;
+     }
+
+     // generate VAO
+     void generateVAO(int programId);
+
 private:
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);
     Mesh& operator=(const Mesh& mesh);
-    // generate VAO
-    void generateVAO(int programId);
 
 
 private:

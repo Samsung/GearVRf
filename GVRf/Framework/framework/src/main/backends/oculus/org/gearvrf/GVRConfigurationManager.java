@@ -31,7 +31,7 @@ final class GVRConfigurationManager {
         mActivity = new WeakReference<GVRActivityBase>(gvrActivity);
     }
 
-    static void onInitialize(GVRActivityBase activity) {
+    static void onInitialize(GVRActivityBase activity, VrAppSettings settings) {
         sInstance = new GVRConfigurationManager(activity);
     }
 

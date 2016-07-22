@@ -23,8 +23,9 @@
 
 #include "gl/gl_render_buffer.h"
 #include "gl/gl_frame_buffer.h"
-
+#include "util/gvr_parameters.h"
 #include "objects/textures/base_texture.h"
+#include "util/gvr_gl.h"
 
 namespace gvr {
 
@@ -32,10 +33,14 @@ class RenderTexture: public Texture {
 public:
     explicit RenderTexture(int width, int height);
     explicit RenderTexture(int width, int height, int sample_count);
+    explicit RenderTexture(int width, int height, int sample_count,
+            int jcolor_format, int jdepth_format, bool resolve_depth,
+            int* texture_parameters);
 
     virtual ~RenderTexture() {
         delete gl_render_buffer_;
         delete gl_frame_buffer_;
+        delete gl_color_buffer_;
 
         if (0 != gl_pbo_) {
             glDeleteBuffers(1, &gl_pbo_);
@@ -67,6 +72,9 @@ public:
         return height_;
     }
 
+    void beginRendering();
+    void endRendering();
+
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.
     void startReadBack();
@@ -80,16 +88,23 @@ private:
     RenderTexture(RenderTexture&& render_texture);
     RenderTexture& operator=(const RenderTexture& render_texture);
     RenderTexture& operator=(RenderTexture&& render_texture);
-
+    void generateRenderTextureNoMultiSampling(int jdepth_format,GLenum depth_format, int width, int height);
+    void generateRenderTextureEXT(int sample_count,int jdepth_format,GLenum depth_format, int width, int height);
+    void generateRenderTexture(int sample_count, int jdepth_format, GLenum depth_format, int width,
+            int height, int jcolor_format);
+    void invalidateFrameBuffer(bool is_fbo, const bool color_buffer, const bool depth_buffer);
 private:
     static const GLenum TARGET = GL_TEXTURE_2D;
     int width_;
     int height_;
     int sample_count_;
-    GLRenderBuffer* gl_render_buffer_ = nullptr;
+    GLenum texture_filter;
+    GLRenderBuffer* gl_render_buffer_ = nullptr;// This is actually depth buffer.
     GLFrameBuffer* gl_frame_buffer_ = nullptr;
+    GLFrameBuffer* gl_resolve_buffer_ = nullptr;
+    GLRenderBuffer* gl_color_buffer_ = nullptr;// This is only for multisampling case
+                                     // when resolveDepth is on.
     GLuint gl_pbo_ = 0;
     bool readback_started_;          // set by startReadBack()
-};
-}
+};}
 #endif

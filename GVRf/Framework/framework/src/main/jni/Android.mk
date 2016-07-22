@@ -70,7 +70,9 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/jassimp2/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/util
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/backends/oculus/
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/backends/oculus/util
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/backends/oculus/objects
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/glm/*.cpp)
@@ -118,6 +120,8 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/backends/oculus/objects/components/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/backends/oculus/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/backends/oculus/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
