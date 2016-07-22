@@ -28,7 +28,7 @@ public:
     void clear();
     bool create(const ovrTextureFormat colorFormat, const int width, const int height,
             const int multisamples, bool resolveDepth, const ovrTextureFormat depthFormat, bool use_multiview);
-    void destroy();
+    void destroy(bool);
     void bind();
     static void unbind();
     void resolve();

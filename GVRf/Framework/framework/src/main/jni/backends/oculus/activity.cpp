@@ -154,17 +154,10 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
             throw error;
         }
 
-        if(use_multiview){
-            bool b = frameBuffer_[0].create(mColorTextureFormatConfiguration, mWidthConfiguration,
+        for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+            bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
                     mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
                     mDepthTextureFormatConfiguration, use_multiview);
-        }
-        else {
-            for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
-                bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
-                        mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
-                        mDepthTextureFormatConfiguration, use_multiview);
-            }
         }
 
         // default viewport same as window size
@@ -196,10 +189,22 @@ void GVRActivity::onDrawFrame() {
     const ovrHeadModelParms headModelParms = vrapi_DefaultHeadModelParms();
     const ovrTracking tracking = vrapi_ApplyHeadModel(&headModelParms, &baseTracking);
 
+    ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_, tracking.HeadPose.TimeInSeconds);
+    updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;
+
+    for ( int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++ )
+    {
+        ovrFrameLayerTexture& eyeTexture = parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye];
+
+        eyeTexture.ColorTextureSwapChain = frameBuffer_[use_multiview ? 0 : eye].mColorTextureSwapChain;
+        eyeTexture.DepthTextureSwapChain = frameBuffer_[use_multiview ? 0 : eye].mDepthTextureSwapChain;
+        eyeTexture.TextureSwapChainIndex = frameBuffer_[use_multiview ? 0 : eye].mTextureSwapChainIndex;
+        eyeTexture.TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
+        eyeTexture.HeadPose = updatedTracking.HeadPose;
+    }
+
     // Render the eye images.
     for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
-        ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_, tracking.HeadPose.TimeInSeconds);
-        updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;
 
         beginRenderingEye(eye);
 
@@ -209,23 +214,6 @@ void GVRActivity::onDrawFrame() {
         headRotationProvider_.predict(*this, parms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
         oculusJavaGlThread_.Env->CallVoidMethod(activityRenderingCallbacks_, onDrawEyeMethodId, eye);
 
-        ovrFrameLayerTexture& eyeTexture = parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye];
-        eyeTexture.ColorTextureSwapChain = frameBuffer_[eye].mColorTextureSwapChain;
-        eyeTexture.DepthTextureSwapChain = frameBuffer_[eye].mDepthTextureSwapChain;
-        eyeTexture.TextureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-
-        if(use_multiview){
-            parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
-            parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].HeadPose = updatedTracking.HeadPose;
-
-        }
-        else {
-
-            for (int layer = 0; layer < VRAPI_FRAME_LAYER_TYPE_MAX; layer++) {
-                parms.Layers[layer].Textures[eye].TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
-                parms.Layers[layer].Textures[eye].HeadPose = updatedTracking.HeadPose;
-            }
-        }
         endRenderingEye(eye);
     }
 
@@ -291,7 +279,7 @@ void GVRActivity::leaveVrMode() {
 
     if (nullptr != oculusMobile_) {
         for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
-            frameBuffer_[eye].destroy();
+            frameBuffer_[eye].destroy(use_multiview);
         }
 
         vrapi_LeaveVrMode(oculusMobile_);

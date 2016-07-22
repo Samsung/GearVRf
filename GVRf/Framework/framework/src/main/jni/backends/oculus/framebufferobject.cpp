@@ -196,13 +196,6 @@ bool FrameBufferObject::create(const ovrTextureFormat colorFormat, const int wid
         const GLuint depthTexture = (mDepthTextureSwapChain != nullptr)
                                 ? vrapi_GetTextureSwapChainHandle(mDepthTextureSwapChain, i) : 0;
         GLenum colorTextureTarget = use_multiview ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
-        GL( glBindTexture( colorTextureTarget, colorTexture ) );
-        GL( glTexParameteri( colorTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE ) );
-        GL( glTexParameteri( colorTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE ) );
-        GL( glTexParameteri( colorTextureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR ) );
-        GL( glTexParameteri( colorTextureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
-        GL( glBindTexture( colorTextureTarget, 0 ) );
-
         GL( glGenFramebuffers(1, &mRenderFrameBuffers[i]) );
         GL( glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mRenderFrameBuffers[i]) );
 
@@ -302,7 +295,7 @@ bool FrameBufferObject::create(const ovrTextureFormat colorFormat, const int wid
     return true;
 }
 
-void FrameBufferObject::destroy() {
+void FrameBufferObject::destroy(bool use_multiview) {
     if (nullptr != mRenderFrameBuffers) {
         GL(glDeleteFramebuffers(mTextureSwapChainLength, mRenderFrameBuffers));
         delete[] mRenderFrameBuffers;
@@ -316,13 +309,20 @@ void FrameBufferObject::destroy() {
     }
 
     if (nullptr != mDepthBuffers) {
-        GL(glDeleteRenderbuffers(mTextureSwapChainLength, mDepthBuffers));
+        if(use_multiview)
+            glDeleteTextures(mTextureSwapChainLength, mDepthBuffers);
+        else
+            glDeleteRenderbuffers(mTextureSwapChainLength, mDepthBuffers);
+
         delete[] mDepthBuffers;
         mDepthBuffers = nullptr;
     }
 
     if (0 != mColorBuffer) {
-        GL(glDeleteRenderbuffers(1, &mColorBuffer));
+        if(use_multiview)
+            glDeleteTextures(1, &mColorBuffer);
+        else
+            glDeleteRenderbuffers(1, &mColorBuffer);
         mColorBuffer = 0;
     }
 
