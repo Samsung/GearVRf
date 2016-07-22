@@ -17,6 +17,15 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.GVRSceneObject;
 
+
+/**
+ * 
+ * @author m1.williams 
+ * Class part of a linked list of <Viewpoint> nodes X3D can
+ *         have multiple viewpoints and switch the active viewpoint.
+ * 
+ */
+
 public class Viewpoint
 {
   private float[] centerOfRotation =

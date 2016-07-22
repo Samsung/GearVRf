@@ -1,0 +1,55 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion '23.0.3'
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 19
+
+        ndk {
+            moduleName "gvrf-extensions"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+
+    sourceSets.main {
+        java.srcDirs = ['src/main/java']
+        jni.srcDirs = [] // no auto generation of Android.mk
+        jniLibs.srcDir 'src/main/libs' // pre-compiled libraries
+    }
+
+}
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    compile project(':framework')
+}
+
+assembleDebug {}.doLast{
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            def libsdirPath = projectDir.absolutePath + '/../../../../' +
+                    rootProject.property("LIBS_DIRECTORY")
+            def libsDir = new File(libsdirPath);
+            if (libsDir.exists()) {
+                from 'build/outputs/aar'
+                into libsDir
+                include '**/*.aar'
+            } else {
+                println "Cannot copy aar files, libs directory does not exist!"
+            }
+        }
+
+    }
+    tasks.copyAARFiles.execute()
+}

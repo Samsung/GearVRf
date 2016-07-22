@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
+    compile project(path: ':framework')
+}
+
+assembleDebug {}.doLast{
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            def libsdirPath = projectDir.absolutePath + '/../../../../' +
+                    rootProject.property("LIBS_DIRECTORY")
+            def libsDir = new File(libsdirPath);
+            if (libsDir.exists()) {
+                from 'build/outputs/aar'
+                into libsDir
+                include '**/*.aar'
+            } else {
+                println "Cannot copy aar files, libs directory does not exist!"
+            }
+        }
+
+    }
+    tasks.copyAARFiles.execute()
+}

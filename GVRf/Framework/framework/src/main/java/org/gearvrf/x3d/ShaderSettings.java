@@ -19,17 +19,22 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial;
 
-//import static org.gearvrf.utility.Assert.checkNotNull;
-//import static org.gearvrf.utility.Assert.checkStringNotNullOrEmpty;
 
 import org.gearvrf.GVRTexture;
 
-// class sets the default material values, saves any settings
-// and then sets GVRMaterial when the VERTEX and FRAGMENT
-// shader values are set.
+/**
+ * 
+ * @author m1.williams
+ * ShaderSettings retain Material values and Textures for X3D
+ * This sets shader values in GearVRf's Vertex and Fragment
+ * Shader.
+ * Can also be set to overwrite or construct X3D programmatically
+ * the shader values while still using GearVR's internal Shader.
+ */
 
 /*
- * May eventually include the Texture parameters of wrapping settings
+ * TODO: May eventually include the Texture parameters of wrapping settings
+
  */
 public class ShaderSettings
 {
@@ -70,6 +75,7 @@ public class ShaderSettings
   private float transparency = 0;
 
   public float[] modelMatrix = new float[16];
+
 
   public Future<GVRTexture> texture = null;
 
@@ -115,7 +121,11 @@ public class ShaderSettings
           modelMatrix[i * 4 + j] = 1;
       }
     }
+
+    texture = null;
   }
+
+
 
   public ShaderSettings(GVRMaterial material)
   {

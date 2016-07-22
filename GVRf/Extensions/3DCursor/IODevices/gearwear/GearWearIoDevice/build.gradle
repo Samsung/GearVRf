@@ -39,3 +39,20 @@ dependencies {
     compile project(':gearwearlibrary')
 }
 
+assembleDebug {}.doLast{
+    task copyAARFiles(type: Copy) {
+        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+            def libsdirPath = projectDir.absolutePath + '/../../../../../../' +
+                    rootProject.property("LIBS_DIRECTORY")
+            def libsDir = new File(libsdirPath);
+            if (libsDir.exists()) {
+                from 'build/outputs/aar'
+                into libsDir
+                include '**/*.aar'
+            } else {
+                println "Cannot copy aar files, libs directory does not exist!"
+            }
+        }
+    }
+    tasks.copyAARFiles.execute()
+}

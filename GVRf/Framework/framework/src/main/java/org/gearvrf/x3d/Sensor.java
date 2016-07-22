@@ -18,9 +18,22 @@ package org.gearvrf.x3d;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
-public class Sensor {
 
-  public enum Type { ANCHOR, PROXIMITY, TOUCH, VISIBILITY };
+/**
+ * 
+ * @author m1.williams Class of information for various sensors and what they
+ *         control Sensors can send us to new viewpoints, web pages, and invoke
+ *         animations based on if an object is touched, visible, within
+ *         proximity of the camera.
+ */
+public class Sensor
+{
+
+  public enum Type
+  {
+    ANCHOR, PROXIMITY, TOUCH, VISIBILITY
+  };
+
 
   String name = null;
   Type sensorType;
@@ -28,29 +41,35 @@ public class Sensor {
   private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
   private String anchorURL = null;
 
-  public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject) {
+
+  public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject)
+  {
+
     this.name = name;
     this.sensorType = sensorType;
     this.sensorSceneObject = sensorSceneObject;
   }
 
-  public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation) {
-  	this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
+
+  public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
+  {
+    this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
   }
 
-  public GVRKeyFrameAnimation getGVRKeyFrameAnimation() {
-  	return this.gvrKeyFrameAnimation;
+  public GVRKeyFrameAnimation getGVRKeyFrameAnimation()
+  {
+    return this.gvrKeyFrameAnimation;
   }
 
-  public void setAnchorURL(String anchorURL) {
-  	this.anchorURL = anchorURL;
+  public void setAnchorURL(String anchorURL)
+  {
+    this.anchorURL = anchorURL;
   }
 
-  public String getAnchorURL() {
-  	return this.anchorURL;
+  public String getAnchorURL()
+  {
+    return this.anchorURL;
   }
-  
+
 }
-
-
 
