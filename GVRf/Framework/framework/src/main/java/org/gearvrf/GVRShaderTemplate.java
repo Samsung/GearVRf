@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRLightBase;
+import org.mozilla.javascript.NativeGenerator.GeneratorClosedException;
 
 import android.util.Log;
 
@@ -230,17 +231,7 @@ public class GVRShaderTemplate
                 definedNames.put(name, 1);
         }
     }
-    /**
-     * Checks  whether device supports OGL_MULTIVIEW extension
-     * 
-     */    
-    private boolean isMultiviewPresent(){
-        String extensionString = glGetString(GL_EXTENSIONS);
-        if(extensionString.contains("GL_OVR_multiview2"))
-            return true;
-        
-        return false;
-    }
+
     /**
      * Construct the source code for a GL shader based on the input defines. The
      * shader segments attached to slots that start with <type> are combined to
@@ -302,9 +293,6 @@ public class GVRShaderTemplate
             if (entry.getValue() != 0)
                 defines += "#define HAS_" + entry.getKey() + " 1\n";
         }
- 
-        if(isMultiviewPresent())
-            defines = "#define HAS_MULTIVIEW\n" + defines;
         
         return "#version 300 es\n" + defines + combinedSource;
     }
@@ -362,6 +350,7 @@ public class GVRShaderTemplate
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, lightlist, lightClasses);
             mShaderVariants.put(signature, variant);            
         }
+        
         generateGLShader(context, material, signature);
     }
 

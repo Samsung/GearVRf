@@ -140,11 +140,19 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         if (mMultisamplesConfiguration > maxSamples)
             mMultisamplesConfiguration = maxSamples;
 
+
+        bool multiview;
+        configurationHelper_.getMultiviewConfiguration(env,multiview);
+
         const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-        if(std::strstr(extensions, "GL_OVR_multiview2")!= NULL){
+        if(multiview && std::strstr(extensions, "GL_OVR_multiview2")!= NULL){
             use_multiview = true;
         }
-
+        if(multiview && !use_multiview){
+            std::string error = "Multiview is not supported by your device";
+            LOGE(" Multiview is not supported by your device");
+            throw error;
+        }
 
         if(use_multiview){
             bool b = frameBuffer_[0].create(mColorTextureFormatConfiguration, mWidthConfiguration,

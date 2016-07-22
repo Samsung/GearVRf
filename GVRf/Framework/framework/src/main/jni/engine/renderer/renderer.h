@@ -81,6 +81,7 @@ struct RenderState {
     Material*               material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
+    bool                    use_multiview;
 };
 
 class Renderer {

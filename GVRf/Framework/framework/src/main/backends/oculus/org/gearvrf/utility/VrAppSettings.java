@@ -600,6 +600,9 @@ public class VrAppSettings {
     // the phone is docked.
     boolean useGazeCursorController;
 
+    // Use multiview feature
+    boolean useMultiview;
+    
     public ModeParams modeParams;
     public EyeBufferParams eyeBufferParams;
     public HeadModelParams headModelParams;
@@ -617,6 +620,23 @@ public class VrAppSettings {
         isShowDebugLog = showDebugLog;
     }
 
+    /**
+     * Set if user wants to use multiview or not
+     * 
+     * @param useMultiview
+     *            
+     */
+    public void setUseMultiview(boolean useMultiview){
+        this.useMultiview = useMultiview;
+    }
+    /**
+     * Check if user has set usemultiview flag
+     * 
+     * @return if user has set usemultiview flag
+     */
+    public boolean isMultiviewSet() {
+        return useMultiview;
+    }  
     /**
      * Get if current app prints information from ovrAppSettings
      * 
@@ -837,6 +857,7 @@ public class VrAppSettings {
 
     public VrAppSettings() {
         showLoadingIcon = true;
+        useMultiview = false;
         useSrgbFramebuffer = false;
         useProtectedFramebuffer = false;
         framebufferPixelsWide = -1;
@@ -854,6 +875,7 @@ public class VrAppSettings {
         res.append("showLoadingIcon = " + showLoadingIcon);
         res.append(" useSrgbFramebuffer = " + useSrgbFramebuffer);
         res.append(" useProtectedFramebuffer = " + useProtectedFramebuffer);
+        res.append(" useMultiview = " + useMultiview);
         res.append(" framebufferPixelsWide = " + this.framebufferPixelsWide);
         res.append(" framebufferPixelsHigh = " + this.framebufferPixelsHigh);
         res.append(modeParams.toString());

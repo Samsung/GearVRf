@@ -503,9 +503,16 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     if(!multiview_init){
         multiview_init = true;
         const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-        if(std::strstr(extensions, "GL_OVR_multiview2")!= NULL)
+        if(scene->isMultiviewSet() && std::strstr(extensions, "GL_OVR_multiview2")!= NULL)
             use_multiview = true;
+
+        if(scene->isMultiviewSet() && !use_multiview){
+            std::string error = "Multiview is not supported by your device";
+            LOGE(" Multiview is not supported by your device");
+            throw error;
+        }
     }
+    rstate.use_multiview = use_multiview;
 
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));

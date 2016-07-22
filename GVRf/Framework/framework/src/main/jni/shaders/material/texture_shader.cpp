@@ -228,10 +228,10 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
     bool batching_enabled = batching;
     int feature_set =0;
     feature_set |= (use_light) ? LIGHT : NO_LIGHT;
-    feature_set |= (use_multiview) ? MULTIVIEW : NO_MULTIVIEW;
+    feature_set |= (rstate->use_multiview) ? MULTIVIEW : NO_MULTIVIEW;
     feature_set |= (batching_enabled) ? BATCHING : NO_BATCHING;
 
-    bool properties [] = {use_light, use_multiview, batching_enabled};
+    bool properties [] = {use_light, rstate->use_multiview, batching_enabled};
     const char* feature_strings[2][3]={{NOT_USE_LIGHT, NOT_USE_MULTIVIEW, NOT_USE_BATCHING},
             {USE_LIGHT, USE_MULTIVIEW, USE_BATCHING}};
 
@@ -324,7 +324,7 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
 
     }
 
-    if(use_multiview)
+    if(rstate->use_multiview)
         glUniformMatrix4fv(uniform_locations.u_view, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view_[0]));
     else
         glUniformMatrix4fv(uniform_locations.u_view, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
@@ -352,7 +352,7 @@ void TextureShader::render_batch(const std::vector<glm::mat4>& model_matrix,
     uniforms uniform_locations;
     programInit(&rstate,render_data,rstate.material_override,model_matrix,drawcount,true);
 
-    if(use_multiview)
+    if(rstate.use_multiview)
         glDrawElementsInstanced(render_data->draw_mode(),indexCount, GL_UNSIGNED_SHORT, NULL, 2 );
     else
         GL(glDrawElements(render_data->draw_mode(), indexCount, GL_UNSIGNED_SHORT,

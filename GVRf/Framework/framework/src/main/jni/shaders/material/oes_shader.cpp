@@ -68,10 +68,12 @@ static const char FRAGMENT_SHADER[] =
                 "  out_color = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
                 "}\n";
 
+
 OESShader::OESShader() :
         u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0) {
-
+}
+void OESShader::programInit(RenderState* rstate){
     const char* frag_shader_strings[3];
     GLint frag_shader_string_lengths[3];
 
@@ -84,7 +86,7 @@ OESShader::OESShader() :
     vertex_shader_string_lengths [2] = (GLint) strlen(VERTEX_SHADER);
     frag_shader_string_lengths[2] = (GLint)strlen(FRAGMENT_SHADER);
 
-    if(use_multiview){
+    if(rstate->use_multiview){
         vertex_shader_strings[1] = USE_MULTIVIEW;
         frag_shader_strings[1] = USE_MULTIVIEW;
         vertex_shader_string_lengths [1] =(GLint)strlen(USE_MULTIVIEW);
@@ -103,7 +105,7 @@ OESShader::OESShader() :
                     vertex_shader_string_lengths, frag_shader_strings,
                     frag_shader_string_lengths, 3);
 
-    if(use_multiview)
+    if(rstate->use_multiview)
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
     else
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -111,13 +113,16 @@ OESShader::OESShader() :
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
     u_opacity_ = glGetUniformLocation(program_->id(), "u_opacity");
-}
 
+}
 OESShader::~OESShader() {
     delete program_;
 }
 
 void OESShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
+    if(!program_)
+        programInit(rstate);
+
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -128,7 +133,7 @@ void OESShader::render(RenderState* rstate, RenderData* render_data, Material* m
     }
 
     glUseProgram(program_->id());
-    if(use_multiview)
+    if(rstate->use_multiview)
         glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
     else
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));

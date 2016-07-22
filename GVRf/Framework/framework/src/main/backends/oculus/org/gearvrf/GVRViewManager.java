@@ -663,6 +663,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             if (mActivity.getAppSettings().showLoadingIcon) {
                 mSplashScreen = mScript.createSplashScreen();
                 if (mSplashScreen != null) {
+                    getMainScene().setUseMultiview(mActivity.getAppSettings().isMultiviewSet());
                     getMainScene().addSceneObject(mSplashScreen);
                 }
             } else {

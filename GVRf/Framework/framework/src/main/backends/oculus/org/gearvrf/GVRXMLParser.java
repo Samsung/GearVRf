@@ -29,7 +29,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.content.res.AssetManager;
-
+import org.gearvrf.GVRHybridObject.*;
 /**
  * This class simply parses XML file for distortion stored in assets folder, and
  * allows users to read specific distortion value from the XML file.
@@ -119,6 +119,10 @@ class GVRXMLParser {
                                     .equals("framebufferPixelsHigh")) {
                                 settings.setFramebufferPixelsHigh(Integer
                                         .parseInt(xpp.getAttributeValue(i)));
+                            } else if (attributeName
+                                    .equals("useMultiview")){                              
+                                settings.setUseMultiview(Boolean.
+                                        parseBoolean(xpp.getAttributeValue(i)));
                             }
                         } else if (tagName.equals("mode-parms")
                                 || "mode-params".equals(tagName)) {
