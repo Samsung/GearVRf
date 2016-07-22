@@ -15,15 +15,22 @@
 
 package org.gearvrf;
 
+import android.os.Environment;
+
+import org.gearvrf.GVRCameraRigBase.GVRCameraRigType;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
+import org.gearvrf.script.GVRScriptBehavior;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 import org.gearvrf.script.GVRScriptBehavior;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -82,6 +89,10 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
 
         GVRCameraRig cameraRig = GVRCameraRig.makeInstance(gvrContext);
+        final int cameraRigType = getCameraRigType(gvrContext);
+        if (-1 != cameraRigType) {
+            cameraRig.setCameraRigType(cameraRigType);
+        }
         cameraRig.attachLeftCamera(leftCamera);
         cameraRig.attachRightCamera(rightCamera);
         cameraRig.attachCenterCamera(centerCamera);
@@ -621,6 +632,45 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             }
         }
     };
+
+    private static int getCameraRigType(final GVRContext gvrContext) {
+        int cameraRigType = -1;
+        try {
+            final File dir = new File(Environment.getExternalStorageDirectory(),
+                    gvrContext.getContext().getPackageName());
+            if (dir.exists()) {
+                final File config = new File(dir, ".gvrf");
+                if (config.exists()) {
+                    final FileInputStream fis = new FileInputStream(config);
+                    try {
+                        final Properties p = new Properties();
+                        p.load(fis);
+                        fis.close();
+
+                        final String property = p.getProperty("cameraRigType");
+                        if (null != property) {
+                            final int value = Integer.parseInt(property);
+                            switch (value) {
+                                case GVRCameraRigType.Free.ID:
+                                case GVRCameraRigType.YawOnly.ID:
+                                case GVRCameraRigType.RollFreeze.ID:
+                                case GVRCameraRigType.Freeze.ID:
+                                case GVRCameraRigType.OrbitPivot.ID:
+                                    cameraRigType = value;
+                                    Log.w(TAG, "camera rig type override specified in config file; using type "
+                                            + cameraRigType);
+                                    break;
+                            }
+                        }
+                    } finally {
+                        fis.close();
+                    }
+                }
+            }
+        } catch (final Exception e) {
+        }
+        return cameraRigType;
+    }
 }
 
 class NativeScene {
