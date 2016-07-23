@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-el/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"πίσω"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Ακύρωση"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Αποκτήστε την εφαρμογή Cardboard για να διαμορφώσετε το σύστημα προβολής σας."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"Ρυθμίστε το σύστημα προβολής σας για τη βέλτιστη εμπειρία."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Διαμόρφωση"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Προειδοποίηση"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Αυτή η εφαρμογή ενδέχεται να μην λειτουργεί σωστά χωρίς την ενεργοποίηση των Υπηρεσιών Google VR. Προτού συνεχίσετε, ενεργοποιήστε τες στις Ρυθμίσεις του τηλεφώνου."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Αυτή η εφαρμογή ενδέχεται να μην λειτουργεί σωστά χωρίς τις Υπηρεσίες Google VR. Προτού συνεχίσετε, εγκαταστήστε τις Υπηρεσίες Google VR από το Play Store."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Μετάβαση στο Play Store"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Μετάβαση στις Ρυθμίσεις"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"Δεν βρέθηκε πρόγρ. περιήγ. για άνοιγμα ιστότοπου"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Τοποθετήστε το τηλ. στο σύστημα προβολής Cardboard"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Τοποθετήστε το τηλέφωνο στο σύστημα προβολής <ns1:g id="VIEWER_NAME">%s</ns1:g>"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"ρυθμίσεις"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Ρύθμιση"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Aλλαγή"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"Άλλο σύστ. προβολής;"</string>
+</resources>

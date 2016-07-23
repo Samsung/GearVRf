@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+    <!-- Default UiLayer layout that assumes landscape orientation !-->
+    <ImageButton
+      style="@style/UiButton"
+      android:id="@+id/ui_back_button"
+      android:contentDescription="@string/back_button_content_description"
+      android:src="@drawable/quantum_ic_arrow_back_white_24"
+      android:layout_alignParentStart="true"
+      android:layout_alignParentTop="true"/>
+
+    <RelativeLayout
+      android:id="@+id/ui_alignment_marker"
+      android:layout_width="@dimen/alignment_marker_thickness"
+      android:layout_height="match_parent"
+      android:layout_centerInParent="true"
+      android:layout_marginTop="@dimen/alignment_marker_margin"
+      android:layout_above="@+id/ui_settings_icon"
+      android:background="@color/alignment_marker_color">
+    </RelativeLayout>
+
+    <ImageButton
+      style="@style/UiButton"
+      android:id="@+id/ui_settings_icon"
+      android:contentDescription="@string/settings_button_content_description"
+      android:src="@drawable/quantum_ic_settings_white_24"
+      android:layout_centerHorizontal="true"
+      android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
+<!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/vr/gvr/platform/common/android/res/layout/ui_layer.xml -->

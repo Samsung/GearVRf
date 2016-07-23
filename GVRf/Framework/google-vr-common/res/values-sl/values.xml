@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-sl/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"nazaj"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Prekliči"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Če želite konfigurirati pregledovalnik, namestite aplikacijo Cardboard."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"Da bo izkušnja čim boljša, nastavite pregledovalnik."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Konfiguriranje"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Opozorilo"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Ta aplikacija morda ne deluje pravilno, če niso omogočene Googlove storitve VR. Preden nadaljujete, jih omogočite v nastavitvah telefona."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Ta aplikacija morda ne deluje pravilno brez Googlovih storitev VR. Preden nadaljujete, pojdite v Trgovino Play in namestite Googlove storitve VR."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Pojdi v Trgovino Play"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Pojdi v nastavitve"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"Tega mesta ni mogoče odpreti z nobenim brskalnikom"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Postavite telefon v pregledovalnik Cardboard"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Namestite telefon v pregledovalnik <ns1:g id="VIEWER_NAME">%s</ns1:g>"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"nastavitve"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Nastavi"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Preklopi"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"Drug pregledovalnik?"</string>
+</resources>

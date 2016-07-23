@@ -1,1 +1,3 @@
 include ':framework'
+include ':google-vr-base'
+include ':google-vr-common'

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Background that ripples with a white transparent color when touched.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/white_transparent">
+</ripple>
+<!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/vr/gvr/platform/common/android/res/drawable-v21/rippleable.xml -->

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+    <!-- UiLayer layout when portrait support is enabled.
+         See corresponding file in layout/ui_layer_with_portrait_support.xml
+
+         Since this is the layout for landscape mode, this should correspond to the default layout
+         at layout/ui_layourt.xml used when portrait support is disabled.
+    -->
+    <include layout="@layout/back_button" android:id="@+id/ui_back_button"/>
+
+    <RelativeLayout
+      android:id="@+id/ui_alignment_marker"
+      android:layout_width="@dimen/alignment_marker_thickness"
+      android:layout_height="match_parent"
+      android:layout_centerInParent="true"
+      android:layout_marginTop="@dimen/alignment_marker_margin"
+      android:layout_above="@+id/ui_settings_icon"
+      android:background="@color/alignment_marker_color">
+    </RelativeLayout>
+
+    <ImageButton
+      style="@style/UiButton"
+      android:id="@+id/ui_settings_icon"
+      android:contentDescription="@string/settings_button_content_description"
+      android:src="@drawable/quantum_ic_settings_white_24"
+      android:layout_centerHorizontal="true"
+      android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
+<!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/vr/gvr/platform/common/android/res/layout-land/ui_layer_with_portrait_support.xml -->

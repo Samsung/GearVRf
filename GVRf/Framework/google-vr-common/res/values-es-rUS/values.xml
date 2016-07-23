@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-es-rUS/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"atrás"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Cancelar"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Obtén la app de Cardboard para poder configurar el visor."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"Configura el visor para obtener la mejor experiencia."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Configurar"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Advertencia"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Es posible que esta aplicación no funcione correctamente si no se habilitan los Servicios de RV de Google. Habilítalos en la configuración del teléfono antes de continuar."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Es posible que esta aplicación no funcione correctamente sin los Servicios de RV de Google. Instálalos desde Play Store antes de continuar."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Ir a Play Store"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Ir a Configuración"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"No hay ningún navegador para abrir el sitio web"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Coloca el teléfono en el visor Cardboard"</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Coloca el teléfono dentro del visor <ns1:g id="VIEWER_NAME">%s</ns1:g>"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"configuración"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Configuración"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Cambiar"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"¿Usas otro visor?"</string>
+</resources>

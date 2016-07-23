@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Back button for portrait orientation with left-to-right locale -->
+<ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/UiButton"
+  android:src="@drawable/quantum_ic_arrow_upward_white_24"
+  android:layout_alignParentRight="true"
+  android:layout_alignParentTop="true"/>
+
+<!-- From: file:/tmp/aar_gen_tmp2501350502583213698/tmp-deduplicated/vr/gvr/platform/common/android/res/layout/back_button.xml -->

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- From: file:/tmp/aar_gen_tmp3610624546047682319/tmp-deduplicated/blaze-out/arm-linux-androideabi-4.8-bionic-libcxx-armv7a-opt/genfiles/vr/gvr/platform/common/android/res/values-pl/strings.xml -->
+    <eat-comment/>
+    <string msgid="7991510501576515350" name="back_button_content_description">"wstecz"</string>
+    <string msgid="5437310423659570107" name="cancel_button">"Anuluj"</string>
+    <string msgid="8936160057500596687" name="dialog_message_no_cardboard">"Pobierz aplikację Cardboard, by skonfigurować gogle."</string>
+    <string msgid="6627029590803109915" name="dialog_message_setup">"Skonfiguruj gogle, by uzyskać optymalny efekt."</string>
+    <string msgid="3248614679403583554" name="dialog_title">"Konfiguracja"</string>
+    <string msgid="64877516357481593" name="dialog_title_warning">"Ostrzeżenie"</string>
+    <string msgid="5792956538580418330" name="dialog_vr_core_not_enabled">"Ta aplikacja może nie działać prawidłowo bez włączenia Usług Google VR. Włącz je w Ustawieniach telefonu, zanim przejdziesz dalej."</string>
+    <string msgid="2625827230415478591" name="dialog_vr_core_not_installed">"Ta aplikacja może nie działać prawidłowo bez Usług Google VR. Zainstaluj je ze Sklepu Play, zanim przejdziesz dalej."</string>
+    <string msgid="8365361659814172105" name="go_to_playstore_button">"Otwórz Sklep Play"</string>
+    <string msgid="7232070790833049562" name="go_to_vr_listeners_settings_button">"Otwórz Ustawienia"</string>
+    <string msgid="4242663779247493666" name="no_browser_text">"Brak przeglądarki, w której można otworzyć witrynę"</string>
+    <string msgid="3033913737471886041" name="place_your_phone_into_cardboard">"Umieść telefon w swoich goglach Cardboard."</string>
+    <string msgid="8644661894594395876" name="place_your_viewer_into_viewer_format">"Umieść telefon w goglach <ns1:g id="VIEWER_NAME">%s</ns1:g>"</string>
+    <string msgid="7565578605458926311" name="settings_button_content_description">"ustawienia"</string>
+    <string msgid="1112346456654686733" name="setup_button">"Skonfiguruj"</string>
+    <string msgid="1762411366348526647" name="switch_viewer_action">"Przełącz"</string>
+    <string msgid="4518576606713444785" name="switch_viewer_prompt">"Masz inne gogle?"</string>
+</resources>
