@@ -77,7 +77,9 @@ public class GVRActivity extends GVRActivityBase {
     public final void setScript(GVRScript gvrScript, String dataFileName) {
         super.setScript(gvrScript, dataFileName);
 
-        if (null != mActivityHandler) {
+        if (getAppSettings().getMonoscopicModeParams().isMonoscopicMode()) {
+            mActivityHandler = null;
+        } else if (null != mActivityHandler) {
             mActivityHandler.onSetScript();
         }
     }
