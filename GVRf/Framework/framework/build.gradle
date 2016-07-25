@@ -148,6 +148,20 @@ android {
 
         project.delete('build/distributions/gvrf-for-eclipse.zip')
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
@@ -187,4 +201,5 @@ assembleReleaseToGitHub {}.doLast {
     }
 
     eclipseAssembleReleaseToGitHub.execute()
+    uploadToGitHub.execute();
 }
