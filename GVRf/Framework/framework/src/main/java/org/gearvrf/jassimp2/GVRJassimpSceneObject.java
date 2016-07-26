@@ -46,18 +46,20 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             AiNode node,Hashtable<String, GVRLightBase> lightlist) {
         try {
             final GVRSceneObject sceneObject;
+            final boolean hasLights = (0 != lightlist.size());
+
             if (node.getNumMeshes() == 0) {
                 sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
                 parentSceneObject.addChildObject(sceneObject);
             } else if (node.getNumMeshes() == 1) {
                 // add the scene object to the scene graph
-                sceneObject = createSubSceneObject(request, node, 0);
+                sceneObject = createSubSceneObject(request, node, 0, hasLights);
                 parentSceneObject.addChildObject(sceneObject);
             } else {
                 sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
                 parentSceneObject.addChildObject(sceneObject);
                 for (int i = 0; i < node.getNumMeshes(); i++) {
-                    GVRSceneObject childSceneObject = createSubSceneObject(request, node, i);
+                    GVRSceneObject childSceneObject = createSubSceneObject(request, node, i, hasLights);
                     sceneObject.addChildObject(childSceneObject);
                 }
             }
@@ -130,14 +132,15 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     private GVRSceneObject createSubSceneObject(
             GVRAssetLoader.AssetRequest assetRequest,
             AiNode node,
-           int index)
+           int index, boolean hasLights)
             throws IOException {
         AiMesh aiMesh = scene.getMeshes().get(node.getMeshes()[index]);
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-        		GVRJassimpAdapter.get().createMesh(getGVRContext(), aiMesh));
+                GVRJassimpAdapter.get().createMesh(getGVRContext(), aiMesh));
 
         AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
-        final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.BeingGenerated.ID);
+        final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(),
+                hasLights ? GVRShaderType.BeingGenerated.ID : GVRShaderType.Assimp.ID);
 
         /* Diffuse color & Opacity */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);        /* Opacity */
@@ -154,39 +157,38 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 specularColor.getGreen(), specularColor.getBlue(),
                 specularColor.getAlpha());
 
-        
         /* Ambient color */
         AiColor ambientColor = material.getAmbientColor(GVRJassimpAdapter.sWrapperProvider);
         meshMaterial.setAmbientColor(ambientColor.getRed(),
                 ambientColor.getGreen(), ambientColor.getBlue(),
                 ambientColor.getAlpha());
 
-        
         /* Emissive color */
         AiColor emissiveColor = material.getEmissiveColor(GVRJassimpAdapter.sWrapperProvider);
         meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
                 emissiveColor.getGreen(), emissiveColor.getBlue(),
                 emissiveColor.getAlpha());
 
-        
         /* Specular Exponent */
-        float specularExponent = material.getShininess();        
+        float specularExponent = material.getShininess();
         meshMaterial.setSpecularExponent(specularExponent);
-        
-        /* Diffuse Texture */
-        loadTextures(assetRequest, material, meshMaterial,  getGVRContext());
 
- 
+        /* Diffuse Texture */
+        loadTextures(assetRequest, material, meshMaterial, getGVRContext());
+
         GVRSceneObject sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
         GVRRenderData sceneObjectRenderData = new GVRRenderData(getGVRContext());
         sceneObjectRenderData.setMesh(futureMesh);
 
         sceneObjectRenderData.setMaterial(meshMaterial);
-        sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
+        if (hasLights) {
+            sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
+        }
         sceneObject.attachRenderData(sceneObjectRenderData);
 
         return sceneObject;
     }
+
     private static final Map<AiTextureType, String> textureMap;
     static
     {

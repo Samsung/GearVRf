@@ -178,7 +178,6 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         PostEffectShaderManager* post_effect_shader_manager,
         RenderTexture* post_effect_render_texture_a,
         RenderTexture* post_effect_render_texture_b) {
-
     numberDrawCalls = 0;
     numberTriangles = 0;
 
