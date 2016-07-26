@@ -35,6 +35,7 @@ public:
     GLProgram(const char* pVertexSourceStrings,
             const char* pFragmentSourceStrings) {
         deleter_ = getDeleterForThisThread();
+
         GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
                 pVertexSourceStrings) };
         GLint fragment_shader_string_lengths[1] = { (GLint) strlen(
@@ -116,6 +117,14 @@ public:
 
         GLuint program = glCreateProgram();
         if (program) {
+            LOGW("createProgram attaching shaders");
+            GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            if (status != GL_FRAMEBUFFER_COMPLETE) {
+                LOGW("createProgram glCheckFramebufferStatus not complete, status %d", status);
+                std::string error = "glCheckFramebufferStatus not complete.";
+                throw error;
+            }
+
             glAttachShader(program, vertexShader);
             checkGlError("glAttachShader");
             glAttachShader(program, pixelShader);

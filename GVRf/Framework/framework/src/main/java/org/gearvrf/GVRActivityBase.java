@@ -128,7 +128,7 @@ abstract class GVRActivityBase extends Activity implements IEventReceiver, IScri
     }
 
     private void onConfigure(){
-        GVRConfigurationManager.onInitialize(this);
+        GVRConfigurationManager.onInitialize(this, getAppSettings());
         GVRConfigurationManager.getInstance().invalidate();
 
         onInitAppSettings(mAppSettings);
