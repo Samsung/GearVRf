@@ -373,6 +373,8 @@ class AsyncBitmapTexture {
                 int width = (headerTGA[12] & 0xFF) | (headerTGA[13] & 0xFF) << 8;
                 int height = (headerTGA[14] & 0xFF) | (headerTGA[15] & 0xFF) << 8;
                 bitmap = decodeStreamRGB(stream, width, height, depth, descriptor);
+            } else {
+                Log.d(TAG, "TGA format not supported: type is not uncompressed RGB");
             }
         } catch (IOException e) {
             e.printStackTrace();
