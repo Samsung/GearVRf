@@ -1071,9 +1071,8 @@ public class X3Dobject
         gvrRenderData = new GVRRenderData(gvrContext);
         // gvrRenderData.setCullFace(GVRCullFaceEnum.None);
         gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
-        shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext));
-        if (UNIVERSAL_LIGHTS)
-          gvrRenderData.setShaderTemplate(GVRPhongShader.class);
+        shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
+        gvrRenderData.setShaderTemplate(GVRPhongShader.class);
 
         // Check if this is part of a Level-of-Detail
         if (lodManager.isActive())
