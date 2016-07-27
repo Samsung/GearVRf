@@ -27,10 +27,6 @@ extern "C" {
     Java_org_gearvrf_NativeScene_ctor(JNIEnv * env, jobject obj);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeScene_setUseMultiview(JNIEnv * env,
-            jobject obj, jlong jscene, jboolean flag);
-
-    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
             jobject obj, jlong jscene, jlong jscene_object);
 
@@ -203,12 +199,7 @@ Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
     Collider* collider = reinterpret_cast<Collider*>(jcollider);
     scene->addCollider(collider);
 }
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_setUseMultiview(JNIEnv * env,
-        jobject obj, jlong jscene, jboolean flag){
-    Scene* scene = reinterpret_cast<Scene*>(jscene);
-    scene->setUseMultiview(flag);
-}
+
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene) {
     Scene::set_main_scene(reinterpret_cast<Scene*>(jscene));

@@ -17,6 +17,7 @@
 #include "util/gvr_log.h"
 #include "VrApi.h"
 #include <EGL/egl.h>
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 
@@ -39,7 +40,7 @@ void FrameBufferObject::clear() {
 }
 
 bool FrameBufferObject::create(const ovrTextureFormat colorFormat, const int width, const int height,
-        const int multisamples, bool resolveDepth, const ovrTextureFormat depthFormat, bool use_multiview) {
+        const int multisamples, bool resolveDepth, const ovrTextureFormat depthFormat) {
     clearGLError("FrameBufferObject::create: GL error on entry");
 
     mWidth = width;
@@ -295,7 +296,7 @@ bool FrameBufferObject::create(const ovrTextureFormat colorFormat, const int wid
     return true;
 }
 
-void FrameBufferObject::destroy(bool use_multiview) {
+void FrameBufferObject::destroy() {
     if (nullptr != mRenderFrameBuffers) {
         GL(glDeleteFramebuffers(mTextureSwapChainLength, mRenderFrameBuffers));
         delete[] mRenderFrameBuffers;

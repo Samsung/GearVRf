@@ -22,6 +22,9 @@
 #include "VrApi_Helpers.h"
 #include "SystemActivities.h"
 #include <cstring>
+#include "engine/renderer/renderer.h"
+
+
 static const char* activityClassName = "org/gearvrf/GVRActivity";
 static const char* activityHandlerRenderingCallbacksClassName = "org/gearvrf/ActivityHandlerRenderingCallbacks";
 
@@ -32,7 +35,7 @@ namespace gvr {
 //=============================================================================
 
 GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
-        jobject callbacks) : envMainThread_(&env), configurationHelper_(env, vrAppSettings), use_multiview(false)
+        jobject callbacks) : envMainThread_(&env), configurationHelper_(env, vrAppSettings) //use_multiview(false)
 {
     activity_ = env.NewGlobalRef(activity);
     activityRenderingCallbacks_ = env.NewGlobalRef(callbacks);
@@ -157,7 +160,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
                     mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
-                    mDepthTextureFormatConfiguration, use_multiview);
+                    mDepthTextureFormatConfiguration);
         }
 
         // default viewport same as window size
@@ -278,8 +281,8 @@ void GVRActivity::leaveVrMode() {
     LOGV("GVRActivity::leaveVrMode");
 
     if (nullptr != oculusMobile_) {
-        for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
-            frameBuffer_[eye].destroy(use_multiview);
+        for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+            frameBuffer_[eye].destroy();
         }
 
         vrapi_LeaveVrMode(oculusMobile_);

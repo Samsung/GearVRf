@@ -68,7 +68,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private GVRMaterial mShadowMaterial = null;
     private boolean mShadowMapDirty = true;
     private GVRSceneObject mSceneRoot;
-    private static boolean mUseMultiview = false;
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -110,26 +109,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         setFrustumCulling(true);
     }
-
-    /**
-     * Sets the useMultiview flag in scene
-     * 
-     * @param useMultiview
-     *            
-     */
     
-    public void setUseMultiview(boolean useMultiview){
-        mUseMultiview = useMultiview;
-        NativeScene.setUseMultiview(getNative(), useMultiview);
-    }
-    /**
-     * Returns if application has set multiview or not
-     * 
-     *            
-     */   
-    public boolean isMultiviewSet(){
-        return mUseMultiview;
-    }
     /**
      * Add a {@linkplain GVRSceneObject scene object} as
      * a child of the scene root.
@@ -722,6 +702,4 @@ class NativeScene {
     static native void setMainScene(long scene);
     
     static native void setPickVisible(long scene, boolean flag);
-    
-    static native void setUseMultiview(long scene, boolean flag);
 }

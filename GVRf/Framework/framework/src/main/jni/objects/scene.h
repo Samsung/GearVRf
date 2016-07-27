@@ -92,12 +92,6 @@ public:
     const bool isShadowMapsInvalid(){
     	return is_shadowmap_invalid;
     }
-    void setUseMultiview(bool use_multiview){
-        this->is_multiview_set_ = use_multiview;
-    }
-    const bool isMultiviewSet(){
-        return is_multiview_set_;
-    }
     /*
      * If set to true only visible objects will be pickable.
      * Otherwise, all objects are pickable.
@@ -188,7 +182,6 @@ private:
     std::vector<Component*> allColliders;
     std::vector<Component*> visibleColliders;
     bool is_shadowmap_invalid;
-    static bool is_multiview_set_;
 };
 
 }

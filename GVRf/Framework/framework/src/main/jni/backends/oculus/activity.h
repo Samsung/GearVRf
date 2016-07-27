@@ -44,7 +44,6 @@ public:
     HeadRotationProvider headRotationProvider_;
 
 private:
-    bool use_multiview;                         // flag to check if device has multiview extension
     JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
 
     jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail

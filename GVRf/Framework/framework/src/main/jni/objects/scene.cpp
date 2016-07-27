@@ -25,7 +25,6 @@
 namespace gvr {
 
 Scene* Scene::main_scene_ = NULL;
-bool Scene::is_multiview_set_ = false;
 Scene::Scene() :
         HybridObject(),
         main_camera_rig_(),

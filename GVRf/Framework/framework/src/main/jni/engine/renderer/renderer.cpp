@@ -39,8 +39,9 @@
 
 #define BATCH_SIZE 60
 
-namespace gvr {
 
+namespace gvr {
+bool use_multiview= false;
 static int numberDrawCalls;
 static int numberTriangles;
 
@@ -62,8 +63,6 @@ int Renderer::getNumberTriangles() {
 }
 
 static std::vector<RenderData*> render_data_vector;
-static bool multiview_init= false;
-static bool use_multiview= false;
 
 void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
         float frustum[6][4], std::vector<SceneObject*>& scene_objects,
@@ -497,22 +496,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     rstate.render_mask = camera->render_mask();
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
 
-
     std::vector<PostEffectData*> post_effects = camera->post_effect_data();
-
-    if(!multiview_init){
-        multiview_init = true;
-        const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-        if(scene->isMultiviewSet() && std::strstr(extensions, "GL_OVR_multiview2")!= NULL)
-            use_multiview = true;
-
-        if(scene->isMultiviewSet() && !use_multiview){
-            std::string error = "Multiview is not supported by your device";
-            LOGE(" Multiview is not supported by your device");
-            throw error;
-        }
-    }
-    rstate.use_multiview = use_multiview;
 
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));

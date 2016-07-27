@@ -86,7 +86,7 @@ void OESShader::programInit(RenderState* rstate){
     vertex_shader_string_lengths [2] = (GLint) strlen(VERTEX_SHADER);
     frag_shader_string_lengths[2] = (GLint)strlen(FRAGMENT_SHADER);
 
-    if(rstate->use_multiview){
+    if(use_multiview){
         vertex_shader_strings[1] = USE_MULTIVIEW;
         frag_shader_strings[1] = USE_MULTIVIEW;
         vertex_shader_string_lengths [1] =(GLint)strlen(USE_MULTIVIEW);
@@ -105,7 +105,7 @@ void OESShader::programInit(RenderState* rstate){
                     vertex_shader_string_lengths, frag_shader_strings,
                     frag_shader_string_lengths, 3);
 
-    if(rstate->use_multiview)
+    if(use_multiview)
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
     else
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -133,7 +133,7 @@ void OESShader::render(RenderState* rstate, RenderData* render_data, Material* m
     }
 
     glUseProgram(program_->id());
-    if(rstate->use_multiview)
+    if(use_multiview)
         glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
     else
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
