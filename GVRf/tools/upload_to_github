@@ -34,6 +34,6 @@ do
 
         echo about to upload asset $FILENAME
         #todo: upload url has to be retrieved from the release info
-        curl -H "Content-Type:application/zip" -H "Authorization: token $ACCESS_TOKEN" https://uploads.github.com/repos/Samsung/GearVRf/releases/$RELEASE_ID/assets?name=$NAME-$TODAY.$EXTENSION --data @"$var"
+        curl -H "Content-Type:application/zip" -H "Authorization: token $ACCESS_TOKEN" https://uploads.github.com/repos/Samsung/GearVRf/releases/$RELEASE_ID/assets?name=$NAME-$TODAY.$EXTENSION --data-binary @"$var"
     fi
 done
