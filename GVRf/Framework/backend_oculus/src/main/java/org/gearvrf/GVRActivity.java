@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 
@@ -25,6 +26,7 @@ import org.gearvrf.utility.VrAppSettings;
  * {@inheritDoc}
  */
 public class GVRActivity extends GVRActivityBase {
+    private boolean mUseFallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +35,8 @@ public class GVRActivity extends GVRActivityBase {
         try {
             mActivityHandler = new VrapiActivityHandler(this, mRenderingCallbacks);
         } catch (final Exception ignored) {
-            // will fall back to mono rendering in that case
-            mForceMonoscopic = true;
+            // GVRf will fallback to GoogleVR in this case.
+            mUseFallback = true;
         }
     }
 
@@ -45,7 +47,11 @@ public class GVRActivity extends GVRActivityBase {
 
     @Override
     protected final GVRViewManager makeViewManager(final GVRXMLParser xmlParser) {
-        return new GVRViewManager(this, getScript(), xmlParser);
+        if(!mUseFallback) {
+            return new GVRViewManager(this, getScript(), xmlParser);
+        }else{
+            return new GoogleVRViewManager(this, getScript(), xmlParser);
+        }
     }
 
     @Override
@@ -76,7 +82,7 @@ public class GVRActivity extends GVRActivityBase {
     public final void setScript(GVRScript gvrScript, String dataFileName) {
         super.setScript(gvrScript, dataFileName);
 
-        if (getAppSettings().getMonoscopicModeParams().isMonoscopicMode()) {
+        if (mUseFallback) {
             mActivityHandler = null;
         } else if (null != mActivityHandler) {
             mActivityHandler.onSetScript();
@@ -85,8 +91,14 @@ public class GVRActivity extends GVRActivityBase {
 
     @Override
     protected void onInitAppSettings(VrAppSettings appSettings) {
-        if (mForceMonoscopic) {
-            appSettings.getMonoscopicModeParams().setMonoscopicMode(true);
+        if(mUseFallback){
+            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+                //force monoscopic when android version is < 19
+                appSettings.getMonoscopicModeParams().setMonoscopicMode(true);
+            }
+            // This is the only place where the setDockListenerRequired flag can be set before
+            // the check in GVRActivityBase.
+            GVRConfigurationManager.getInstance().setDockListenerRequired(false);
         }
         super.onInitAppSettings(appSettings);
     }
@@ -154,5 +166,4 @@ public class GVRActivity extends GVRActivityBase {
     };
 
     private ActivityHandler mActivityHandler;
-    private boolean mForceMonoscopic;
 }
