@@ -152,7 +152,7 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::mat4& model_view, 
                 data.IsHit = true;
                 data.HitPosition = hitPos;
                 p = model_view * p;
-                data.Distance = glm::length(rayStart - glm::vec3(hitPos));
+                data.Distance = glm::length(rayStart - glm::vec3(p));
             }
          }
       }
