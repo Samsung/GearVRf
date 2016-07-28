@@ -36,6 +36,18 @@ android {
         }
     }
 
+    task copyAndroidMkForClean(type: Copy) {
+        def gvrf_backend = "backend_oculus"
+        if (rootProject.hasProperty("GVRF_BACKEND")) {
+            gvrf_backend = rootProject.property("GVRF_BACKEND")
+        }
+
+        from '../'+gvrf_backend+'/src/main/jni/'
+        into 'src/main/jni'
+        include 'Android.mk'
+        outputs.upToDateWhen { false }
+    }
+
     task copyAndroidMk(type: Copy) {
         def gvrf_backend = "backend_oculus"
         if (rootProject.hasProperty("GVRF_BACKEND")) {
@@ -103,7 +115,7 @@ android {
         }
     }
 
-    task cleanNative(type: Exec, dependsOn: copyAndroidMk) {
+    task cleanNative(type: Exec, dependsOn: copyAndroidMkForClean) {
         def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
             ndkbuild = rootProject.property("ANDROID_NDK_HOME")
@@ -119,9 +131,10 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16, 'clean'
-    }
-    cleanNative << {
-        delete 'src/main/jni/Android.mk'
+
+        doLast {
+            delete 'src/main/jni/Android.mk'
+        }
     }
 
     clean.dependsOn 'cleanNative'
