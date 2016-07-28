@@ -16,6 +16,8 @@
 package org.gearvrf.x3d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Vector;
 
@@ -171,7 +173,7 @@ public class X3Dobject
   private final static int interpolatorKeyValueComponent = 8;
   private final static int LODComponent = 9;
   private final static int elevationGridHeight = 10;
-
+  private boolean reorganizeVerts = false;
 
   private final static float framesPerSecond = 60.0f;
   private static final float CUBE_WIDTH = 20.0f; // used for cube maps, based on
@@ -233,7 +235,8 @@ public class X3Dobject
   private Vector<Coordinates> indexedFaceSet = new Vector<Coordinates>();
   private Vector<Coordinates> indexedVertexNormals = new Vector<Coordinates>();
   private Vector<TextureCoordinates> indexedTextureCoord = new Vector<TextureCoordinates>();
-
+  private ArrayList<Integer> texcoordIndices = new ArrayList<Integer>();
+  private ArrayList<Integer> normalIndices = new ArrayList<Integer>();
 
   private Vector<Key> keys = new Vector<Key>();
   private Vector<KeyValue> keyValues = new Vector<KeyValue>();
@@ -1068,9 +1071,8 @@ public class X3Dobject
         gvrRenderData = new GVRRenderData(gvrContext);
         // gvrRenderData.setCullFace(GVRCullFaceEnum.None);
         gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
-        shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext));
-        if (UNIVERSAL_LIGHTS)
-          gvrRenderData.setShaderTemplate(GVRPhongShader.class);
+        shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
+        gvrRenderData.setShaderTemplate(GVRPhongShader.class);
 
         // Check if this is part of a Level-of-Detail
         if (lodManager.isActive())
@@ -1440,6 +1442,7 @@ public class X3Dobject
               }
             }
             gvrMesh.setIndices(ifs);
+            reorganizeVerts = true;
           }
           String normalIndexAttribute = attributes.getValue("normalIndex");
           if (normalIndexAttribute != null)
@@ -1477,11 +1480,11 @@ public class X3Dobject
           {
 
             // 'useItem' points to GVRMesh who's useItem.getGVRMesh Coordinates
-            // were DEFined earlier. We don't want to share the entire GVRMesh 
-            // since the 2 meshes may have different Normals and 
+            // were DEFined earlier. We don't want to share the entire GVRMesh
+            // since the 2 meshes may have different Normals and
             // Texture Coordinates.  So as an alternative, copy the vertices.
             gvrMesh.setVertices(useItem.getGVRMesh().getVertices());
-
+            reorganizeVerts = false;
           }
         } // end USE Coordinate
         else
@@ -1537,12 +1540,12 @@ public class X3Dobject
           {
 
             // 'useItem' points to GVRMesh who's useItem.getGVRMesh
-            // TextureCoordinates were DEFined earlier. 
+            // TextureCoordinates were DEFined earlier.
             // We don't want to share the entire GVRMesh since the
             // the 2 meshes may have different Normals and Coordinates
             // So as an alternative, copy the texture coordinates.
             gvrMesh.setTexCoords(useItem.getGVRMesh().getTexCoords());
-
+            reorganizeVerts = false;
           }
         } // end USE TextureCoordinate
         else
@@ -1562,93 +1565,40 @@ public class X3Dobject
           String pointAttribute = attributes.getValue("point");
           if (pointAttribute != null)
           {
-            parseNumbersString(pointAttribute, X3Dobject.textureCoordComponent,
-                               2);
+            parseNumbersString(pointAttribute, X3Dobject.textureCoordComponent, 2);
             // initialize the list
             // Reorganize the order of the texture coordinates if there
             // isn't a 1-to-1 match of coordinates, and texture coordinates.
-            char[] ifs = gvrMesh.getIndices();
-
-
-            float[] textureCoordinateList = new float[ifs.length * 2];
-            int[] indexedTextureCoordList = null;
-
 
             // check if an indexedTextureCoordinat list is present
+            texcoordIndices.clear();
             if (indexedTextureCoord.size() != 0)
             {
               // current indexedFaceSet has a textureCoordIndex.
-              indexedTextureCoordList = new int[indexedTextureCoord.size() * 3];
+              texcoordIndices.ensureCapacity(indexedTextureCoord.size() * 3);
               for (int i = 0; i < indexedTextureCoord.size(); i++)
               {
-
                 TextureCoordinates tcIndex = GetTexturedCoordSet(i);
 
                 for (int j = 0; j < 3; j++)
                 {
-                  indexedTextureCoordList[i * 3 + j] = tcIndex.coords[j];
+                  texcoordIndices.add((int) tcIndex.coords[j]);
                 }
               }
             }
             else
             {
               // use the coordIndex if there is no indexedTextureCoord.
-              indexedTextureCoordList = new int[indexedFaceSet.size() * 3];
+              texcoordIndices.ensureCapacity(indexedFaceSet.size() * 3);
               for (int i = 0; i < indexedFaceSet.size(); i++)
               {
-
                 Coordinates coordinate = indexedFaceSet.get(i);
                 for (int j = 0; j < 3; j++)
                 {
-                  indexedTextureCoordList[i * 3
-                      + j] = (char) coordinate.getCoordinate(j);
-
+                  texcoordIndices.add((int) coordinate.getCoordinate(j));
                 }
               }
             }
-            try
-            {
-              for (int i = 0; i < ifs.length; i++)
-              {
-                int index = ifs[i];
-                int tcIndex = indexedTextureCoordList[i];
-                TextureValues textureValues = textureCoord.get(tcIndex);
-                for (int j = 0; j < 2; j++)
-                {
-                  textureCoordinateList[index * 2 + j] = textureValues.coord[j];
-                }
-              }
-            }
-            catch (ArrayIndexOutOfBoundsException e)
-            {
-              Log.e(TAG,
-                    "Texture Coordinates array indexed out of bounds exception");
-              Log.e(TAG, "error: " + e);
-            }
-
-
-            // Flip the Y texture coordinate since y-axis 'up' is positive in
-            // X3D, and down in GearVR
-
-            float minYtextureCoordinate = Float.MAX_VALUE;
-            float maxYtextureCoordinate = Float.MIN_VALUE;
-            for (int i = 0; i < textureCoord.size(); i++)
-            {
-              if (textureCoordinateList[i * 2 + 1] > maxYtextureCoordinate)
-                maxYtextureCoordinate = textureCoordinateList[i * 2 + 1];
-              else if (textureCoordinateList[i * 2 + 1] < minYtextureCoordinate)
-                minYtextureCoordinate = textureCoordinateList[i * 2 + 1];
-            }
-            // flip the Y vertices
-            // float maxMinDiff = maxYtextureCoordinate - minYtextureCoordinate;
-            int maxMinDiff = (int) Math.round((float) Math
-                .ceil(maxYtextureCoordinate - minYtextureCoordinate));
-            for (int i = 1; i < textureCoordinateList.length; i += 2)
-            {
-              // for ( i = 1; i < textureCoordinateList.length; i+=2) {
-              textureCoordinateList[i] = -textureCoordinateList[i] + maxMinDiff;
-            }
-            gvrMesh.setTexCoords(textureCoordinateList);
           }
 
         } // end NOT a USE TextureCoordinate condition
@@ -1680,7 +1630,7 @@ public class X3Dobject
             // 2meshes may have different Normals and Texture Coordinates
             // So as an alternative, copy the normals.
             gvrMesh.setNormals(useItem.getGVRMesh().getNormals());
-
+            reorganizeVerts = false;
           }
         } // end USE Coordinate
         else
@@ -1707,63 +1657,35 @@ public class X3Dobject
 
 
             // check if an indexedVertexNormals list is present
-            int[] indexedVertexNormalsList = null;
+            normalIndices.clear();
             if (indexedVertexNormals.size() != 0)
             {
               // current indexedFaceSet has a normalIndex.
               // We may need to reorganize the order of the texture coordinates
 
-              indexedVertexNormalsList = new int[indexedVertexNormals.size()
-                  * 3];
+              normalIndices.ensureCapacity(indexedVertexNormals.size() * 3);
               for (int i = 0; i < indexedVertexNormals.size(); i++)
               {
                 Coordinates vnIndex = GetIndexedVertexNormals(i);
                 for (int j = 0; j < 3; j++)
                 {
-                  indexedVertexNormalsList[i * 3 + j] = vnIndex.getCoordinate(j);
-
+                  normalIndices.add((int) vnIndex.getCoordinate(j));
                 }
               }
             }
             else
             {
               // use the coordIndex if there is no normalIndex.
-              indexedVertexNormalsList = new int[indexedFaceSet.size() * 3];
+              normalIndices.ensureCapacity(indexedFaceSet.size() * 3);
               for (int i = 0; i < indexedFaceSet.size(); i++)
               {
-
                 Coordinates coordinate = indexedFaceSet.get(i);
                 for (int j = 0; j < 3; j++)
                 {
-                  indexedVertexNormalsList[i * 3
-                      + j] = (char) coordinate.getCoordinate(j);
-
+                  normalIndices.add((int) coordinate.getCoordinate(j));
                 }
               }
             }
-            try
-            {
-              for (int i = 0; i < ifs.length; i++)
-              {
-                int index = ifs[i];
-                int vnIndex = indexedVertexNormalsList[i];
-                VertexNormal vertexNormals = vertexNormal.get(vnIndex);
-                for (int j = 0; j < 3; j++)
-                {
-
-                  normalVectorList[index * 3 + j] = vertexNormals.getVertexNormalCoord(j);
-
-                }
-              }
-            }
-            catch (ArrayIndexOutOfBoundsException e)
-            {
-              Log.e(TAG, "Normals array indexed out of bounds exception");
-              Log.e(TAG, "error: " + e);
-            }
-
-
-            gvrMesh.setNormals(normalVectorList);
           }
         } // end NOT a USE Normals condition
       } // end <Normal> node
@@ -2995,7 +2917,7 @@ public class X3Dobject
         if (attributeValue != null)
         {
 
-          // url = parseMFString(attributeValue); 
+          // url = parseMFString(attributeValue);
           // TODO: issues with parsing
 
           // multiple strings with special chars
@@ -3783,27 +3705,35 @@ public class X3Dobject
       {
         ;
       }
-
       else if (qName.equalsIgnoreCase("IndexedFaceSet"))
       {
+        if (reorganizeVerts)
+        {
+          organizeVertices(gvrMesh);
+        }
         gvrRenderData.setMesh(gvrMesh);
         gvrMesh = null;
         indexedFaceSet.clear(); // clean up this Vector<coordinates> list.
         indexedVertexNormals.clear(); // clean up this Vector<coordinates> list
         indexedTextureCoord.clear(); // clean up this Vector<textureCoordinates>
                                      // ist
+        texcoordIndices.clear();
+        normalIndices.clear();
+        vertices.clear();
+        vertexNormal.clear();
+        textureCoord.clear();
       }
       else if (qName.equalsIgnoreCase("Coordinate"))
       {
-        vertices.clear(); // clean up this Vector<Vertex> list.
+       // vertices.clear(); // clean up this Vector<Vertex> list.
       }
       else if (qName.equalsIgnoreCase("TextureCoordinate"))
       {
-        textureCoord.clear(); // clean up this Vector<TextureValues> list.
+       // textureCoord.clear(); // clean up this Vector<TextureValues> list.
       }
       else if (qName.equalsIgnoreCase("Normal"))
       {
-        vertexNormal.clear(); // clean up this Vector<VertexNormal> list.
+       // vertexNormal.clear(); // clean up this Vector<VertexNormal> list.
       }
       else if (qName.equalsIgnoreCase("DirectionalLight"))
       {
@@ -4212,6 +4142,118 @@ public class X3Dobject
     {
       GVRSphereCollider collider = new GVRSphereCollider(gvrContext);
       sceneObject.attachComponent(collider);
+    }
+
+    private void organizeVertices(GVRMesh mesh)
+    {
+      int vtxsize = 3;
+      boolean hasNormals = normalIndices.size() > 0;
+      boolean hasTexcoords = texcoordIndices.size() > 0;
+      vtxsize += (hasNormals ? 3 : 0) + (hasTexcoords ? 2 : 0);
+      float[] dstVert = new float[vtxsize];
+      HashSet<float[]> vertexMap = new HashSet<float[]>();
+
+      //
+      // Collect all the unique position, normal, texcoord combinations
+      //
+      for (int ii = 0; ii < vertices.size(); ++ii)
+      {
+        Vertex srcVert = vertices.get(ii);
+        int ofs = 3;
+        dstVert[0] = srcVert.getVertexCoord(0);
+        dstVert[1] = srcVert.getVertexCoord(1);
+        dstVert[2] = srcVert.getVertexCoord(2);
+        if (hasNormals)
+        {
+          int nindex = normalIndices.get(ii);
+          VertexNormal nml = vertexNormal.get(nindex);
+          dstVert[ofs] = nml.getVertexNormalCoord(0);
+          dstVert[ofs + 1] = nml.getVertexNormalCoord(1);
+          dstVert[ofs + 2] = nml.getVertexNormalCoord(2);
+          ofs += 3;
+        }
+        if (hasTexcoords)
+        {
+          int tindex = texcoordIndices.get(ii);
+          TextureValues tv = textureCoord.get(tindex);
+          dstVert[ofs] = tv.coord[0];
+          dstVert[ofs + 1] = tv.coord[1];
+          ofs += 2;
+        }
+        if (vertexMap.add(dstVert))
+        {
+          dstVert = new float[vtxsize];
+        }
+      }
+    //
+    // Use the vertex map to generate new vertices, normals, texcoords
+    //
+      int nverts = vertexMap.size();
+      float[] newVertices = new float[nverts * 3];
+      float[] newNormals = hasNormals ? new float[nverts * 3] : null;
+      float[] newTexcoords = hasTexcoords ? new float[nverts * 2] : null;
+      char[] newIndices = new char[indexedFaceSet.size() * 3];
+      int i = 0;
+      float minYtextureCoordinate = Float.MAX_VALUE;
+      float maxYtextureCoordinate = Float.MIN_VALUE;
+
+      for (float[] vert : vertexMap)
+      {
+        int ofs = 3;
+        newVertices[3 * i] = vert[0];
+        newVertices[3 * i + 1] = vert[1];
+        newVertices[3 * i + 2] = vert[2];
+        if (hasNormals)
+        {
+          newNormals[3 * i] = vert[ofs];
+          newNormals[3 * i + 1] = vert[ofs + 1];
+          newNormals[2 * i + 2] = vert[ofs + 2];
+          ofs += 3;
+        }
+        if (hasTexcoords)
+        {
+          newTexcoords[2 * i] = vert[ofs];
+          newTexcoords[2 * i + 1] = vert[ofs + 1];
+          if (vert[ofs] > maxYtextureCoordinate)
+            maxYtextureCoordinate = vert[ofs];
+          else if (vert[ofs + 1] < minYtextureCoordinate)
+            minYtextureCoordinate = vert[ofs + 1];
+          ofs += 2;
+        }
+        ++i;
+      }
+      //
+      // Generate the corresponding index table
+      //
+      for (char f = 0; f < indexedFaceSet.size(); f++)
+      {
+        Coordinates coordinate = indexedFaceSet.get(f);
+        for (char j = 0; j < 3; j++)
+        {
+          int findex = f * 3 + j;
+          char v = (char) coordinate.getCoordinate(j);
+          newIndices[v] = (char) findex;
+        }
+      }
+      mesh.setVertices(newVertices);
+      if (newNormals != null)
+      {
+        mesh.setNormals(newNormals);
+      }
+      //
+      // Flip the Y texture coordinate
+      //
+      if (newTexcoords != null)
+      {
+        int maxMinDiff = (int) Math.round((float) Math
+                .ceil(maxYtextureCoordinate - minYtextureCoordinate));
+        for (int tc = 0; tc < newTexcoords.length; tc += 2)
+        {
+          newTexcoords[tc] = -newTexcoords[tc] + maxMinDiff;
+        }
+        mesh.setTexCoords(newTexcoords);
+      }
+      mesh.setIndices(newIndices);
     }
 
     @Override
