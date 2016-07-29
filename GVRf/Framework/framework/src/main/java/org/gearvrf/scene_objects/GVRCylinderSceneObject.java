@@ -609,7 +609,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
 
         vertices = new float[3 * vertexNumber];
         normals = new float[3 * vertexNumber];
-        texCoords = new float[2 * triangleNumber];
+        texCoords = new float[2 * vertexNumber];
         indices = new char[triangleNumber];
 
         // top cap
