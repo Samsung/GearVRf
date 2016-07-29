@@ -73,7 +73,7 @@ private:
     void addAttributeKey(const std::string& variable_name, const std::string& key, AttributeVariableBind f);
     void addUniformKey(const std::string& variable_name, const std::string& key, UniformVariableBind f);
 
-    void initializeOnDemand();
+    void initializeOnDemand(RenderState* rstate);
 
     template <class T> struct Descriptor {
         Descriptor(const std::string& v, const std::string& k) : variable(v), key(k) {

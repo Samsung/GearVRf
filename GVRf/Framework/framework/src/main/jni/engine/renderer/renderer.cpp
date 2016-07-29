@@ -34,8 +34,14 @@
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
 
-namespace gvr {
+#include <unordered_map>
+#include <unordered_set>
 
+#define BATCH_SIZE 60
+
+
+namespace gvr {
+bool use_multiview= false;
 static int numberDrawCalls;
 static int numberTriangles;
 
@@ -58,7 +64,6 @@ int Renderer::getNumberTriangles() {
 
 static std::vector<RenderData*> render_data_vector;
 
-
 void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
         float frustum[6][4], std::vector<SceneObject*>& scene_objects,
         bool need_cull, int planeMask) {
@@ -77,17 +82,21 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
 
         cullVal = object->frustumCull(camera_position, frustum, planeMask);
         if (cullVal == 0) {
+            object->setCullStatus(true);
             return;
         }
 
         if (cullVal >= 2) {
+            object->setCullStatus(false);
             scene_objects.push_back(object);
         }
 
         if (cullVal == 3) {
+            object->setCullStatus(false);
             need_cull = false;
         }
     } else {
+        object->setCullStatus(false);
         scene_objects.push_back(object);
     }
 
@@ -121,7 +130,195 @@ void Renderer::state_sort() {
         }
     }
 }
+struct comparator {
+    std::string renderdata_properties;
+    Material* mat;
+    Material::ShaderType shader_type;
+    bool mesh_dynamic;
+};
 
+/*
+ * batch_set stores all the batches, batch_map stores the indices of batches and the respective map
+ * to get constant look up time
+ */
+std::vector<Batch*> batch_set;
+std::unordered_map<Batch*, int> batch_map;
+#define MAX_INDICES 400
+
+void getNewBatch(RenderData* rdata, Batch** existing_batch){
+    Batch* new_batch = new Batch(MAX_INDICES, MAX_INDICES);
+    new_batch->add(rdata);
+    rdata->setBatch(new_batch);
+    batch_set.push_back(new_batch);
+    batch_map[new_batch] = batch_set.size() - 1;
+    *existing_batch = new_batch;
+}
+
+/*
+ * batch indices stores the indices in render_vector where batches are split
+ */
+std::vector<int> batch_indices;
+void createBatch(int start, int end) {
+    Batch* existing_batch = nullptr;
+    int size = BATCH_SIZE;
+    // get batch with least no of meshes in it
+    for (int i = start; i <= end; ++i) {
+        if (render_data_vector[i]->getBatch() != nullptr) {
+            if (render_data_vector[i]->getBatch()->getNumberOfMeshes()
+                    <= size) {
+                size = render_data_vector[i]->getBatch()->getNumberOfMeshes();
+                existing_batch = render_data_vector[i]->getBatch();
+            }
+        }
+    }
+
+    for (int i = start; i <= end; ++i) {
+        RenderData* render_data = render_data_vector[i];
+        Batch* current_batch = render_data->getBatch();
+        if (!current_batch) {
+            if (!render_data->mesh()->isDynamic()) { // mesh is static
+                // existing batch is not full
+                if (existing_batch
+                        && existing_batch->getNumberOfMeshes() < BATCH_SIZE) {
+                    // add failed because mesh is large try with next batch
+                    if (!existing_batch->add(render_data)) {
+                        getNewBatch(render_data, &existing_batch);
+                    }
+
+                    // if batch does not exist in set, add it
+                    if (batch_map.find(existing_batch) == batch_map.end()) {
+                        batch_set.push_back(existing_batch);
+                        batch_map[existing_batch] = batch_set.size() - 1;
+
+                    }
+                    render_data->setBatch(existing_batch);
+                } else { // existing batch is full or does not exists
+                    getNewBatch(render_data, &existing_batch);
+                }
+            } else { // mesh is dynamic
+
+                // if one of the mesh is modified
+                if (existing_batch && existing_batch->isBatchDirty()) {
+                    existing_batch->setMeshesDirty();
+
+                    std::unordered_map<Batch*, int>::iterator it =
+                            batch_map.find(existing_batch);
+                    if (it != batch_map.end()) {
+                        int index = it->second;
+                        batch_set.erase(batch_set.begin() + index);
+                    }
+                    delete existing_batch;
+                    getNewBatch(render_data, &existing_batch);
+                }
+                // existing batch is not full
+                else if (existing_batch
+                        && existing_batch->getNumberOfMeshes() < BATCH_SIZE) {
+
+                    if (!existing_batch->add(render_data)) {
+                        getNewBatch(render_data, &existing_batch);
+                    }
+
+                    render_data->setBatch(existing_batch);
+
+                    if (batch_map.find(existing_batch) == batch_map.end()) {
+                        batch_set.push_back(existing_batch);
+                        batch_map[existing_batch] = batch_set.size() - 1;
+                    }
+                } else { //existing batch is full or not exists
+                    getNewBatch(render_data, &existing_batch);
+                }
+            }
+        } else { // batch is not null
+
+            // update the transform if model matrix is changed
+             if (render_data->owner_object()->isTransformDirty()
+                   && render_data->owner_object()->transform()) {
+                current_batch->UpdateModelMatrix(render_data,
+                        render_data->owner_object()->transform()->getModelMatrix());
+            }
+
+            if (!render_data->mesh()->isDynamic()) {
+                if (batch_map.find(current_batch) == batch_map.end()) {
+                    batch_set.push_back(current_batch);
+                    batch_map[current_batch] = batch_set.size() - 1;
+                }
+            } else { // mesh is dynamic
+                if (current_batch->isBatchDirty()) {
+                    current_batch->setMeshesDirty();
+
+                    std::unordered_map<Batch*, int>::iterator it =
+                            batch_map.find(current_batch);
+                    if (it != batch_map.end()) {
+                        int index = it->second;
+                        batch_set.erase(batch_set.begin() + index);
+                    }
+
+                    delete current_batch;
+                    Batch* new_batch = new Batch(MAX_INDICES, MAX_INDICES);
+                    render_data->setBatch(new_batch);
+                    new_batch->add(render_data);
+                    batch_set.push_back(new_batch);
+                    batch_map[new_batch] = batch_set.size() - 1;
+
+                } else {
+                    if (batch_map.find(current_batch) == batch_map.end()) {
+                        batch_set.push_back(current_batch);
+                        batch_map[current_batch] = batch_set.size() - 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/*
+ * It creates array of indices which specifies indices of the spliting of batches in renderdata vector
+ * for renderdatas to have in same batch, they need to have same render order, material,
+ * shader type and mesh dynamic-ness
+ */
+void Renderer::BatchSetup() {
+    batch_indices.clear();
+    comparator prev, current;
+
+    // copy first render vector properties
+    if (render_data_vector.size() != 0) {
+        prev.renderdata_properties = render_data_vector[0]->getHashCode();
+        prev.mat = render_data_vector[0]->material(0);
+        prev.shader_type = render_data_vector[0]->material(0)->shader_type();
+        prev.mesh_dynamic = render_data_vector[0]->mesh()->isDynamic();
+        batch_indices.push_back(0);
+    }
+
+    // if previous render data does not have same properies which are required for batching, split them
+    // into different batches
+    for (int i = 1; i < render_data_vector.size(); i++) {
+        current.renderdata_properties = render_data_vector[i]->getHashCode();
+        current.mat = render_data_vector[i]->material(0);
+        current.shader_type = render_data_vector[i]->material(0)->shader_type();
+        current.mesh_dynamic = render_data_vector[i]->mesh()->isDynamic();
+        if (!current.renderdata_properties.compare(prev.renderdata_properties)
+                && current.mesh_dynamic == prev.mesh_dynamic
+                && current.mat == prev.mat
+                && current.shader_type == prev.shader_type) {
+            continue;
+        } else {
+            batch_indices.push_back(i);
+            prev.mat = current.mat;
+            prev.renderdata_properties = current.renderdata_properties;
+            prev.shader_type = current.shader_type;
+            prev.mesh_dynamic = current.mesh_dynamic;
+        }
+    }
+    batch_indices.push_back(render_data_vector.size());
+    batch_set.clear(); // Clear batch vector
+    batch_map.clear();
+
+  //  LOGE("render data vector size %d", render_data_vector.size());
+    for (int i = 1; i < batch_indices.size(); i++) {
+        createBatch(batch_indices[i - 1], batch_indices[i] - 1);
+    }
+
+}
 void Renderer::cull(Scene *scene, Camera *camera,
         ShaderManager* shader_manager) {
 
@@ -132,12 +329,12 @@ void Renderer::cull(Scene *scene, Camera *camera,
     std::vector<SceneObject*> scene_objects;
     scene_objects.reserve(1024);
 
-//    makeShadowMaps(scene, shader_manager);
     cullFromCamera(scene, camera, shader_manager, scene_objects);
 
     // Note: this needs to be scaled to sort on N states
     state_sort();
 
+    BatchSetup();
 }
 
 /*
@@ -171,7 +368,110 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
 }
 
+/**
+ * Set the render states for render data
+ */
+void Renderer::setRenderStates(RenderData* render_data, RenderState& rstate) {
 
+    if (!(rstate.render_mask & render_data->render_mask()))
+        return;
+
+    if (render_data->offset()) {
+        GL(glEnable (GL_POLYGON_OFFSET_FILL));
+        GL(
+                glPolygonOffset(render_data->offset_factor(),
+                        render_data->offset_units()));
+    }
+    if (!render_data->depth_test()) {
+        GL(glDisable (GL_DEPTH_TEST));
+    }
+    if (!render_data->alpha_blend()) {
+        GL(glDisable (GL_BLEND));
+    }
+    if (render_data->alpha_to_coverage()) {
+        GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+        GL(
+                glSampleCoverage(render_data->sample_coverage(),
+                        render_data->invert_coverage_mask()));
+    }
+}
+/**
+ * Restore the render states for render data
+ */
+void Renderer::restoreRenderStates(RenderData* render_data) {
+    if (render_data->cull_face() != RenderData::CullBack) {
+        GL(glEnable (GL_CULL_FACE));
+        GL(glCullFace (GL_BACK));
+    }
+
+    if (render_data->offset()) {
+        GL(glDisable (GL_POLYGON_OFFSET_FILL));
+    }
+    if (!render_data->depth_test()) {
+        GL(glEnable (GL_DEPTH_TEST));
+    }
+    if (!render_data->alpha_blend()) {
+        GL(glEnable (GL_BLEND));
+    }
+    if (render_data->alpha_to_coverage()) {
+        GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+    }
+}
+
+void Renderer::renderbatches(RenderState& rstate) {
+    glm::mat4 vp_matrix = glm::mat4(
+            rstate.uniforms.u_proj * rstate.uniforms.u_view);
+
+    for (auto it = batch_set.begin(); it != batch_set.end(); ++it) {
+
+        Batch* batch = *it;
+        rstate.material_override = batch->get_material();
+        int currentShaderType = rstate.material_override->shader_type();
+
+        // if shader type is other than texture shader, render it with non-batching mode
+        // if the mesh is large, we are not batching it
+        if (currentShaderType != Material::ShaderType::TEXTURE_SHADER
+                || batch->notBatched()) {
+            const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
+            for (auto it3 = render_data_set.begin();
+                    it3 != render_data_set.end(); ++it3) {
+                renderRenderData(rstate, (*it3));
+            }
+            continue;
+        }
+
+        RenderData* renderdata = batch->get_renderdata();
+        const std::vector<glm::mat4>& matrices = batch->get_matrices();
+        numberDrawCalls++;
+        batch->setupMesh();
+        setRenderStates(renderdata, rstate);
+
+        if(use_multiview){
+
+            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
+            rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
+        }
+
+        rstate.shader_manager->getTextureShader()->render_batch(matrices,
+                renderdata, rstate, batch->getIndexCount(),
+                batch->getNumberOfMeshes());
+        restoreRenderStates(renderdata);
+    }
+
+}
+bool do_batching = true;
+
+void Renderer::renderRenderDataVector(RenderState &rstate) {
+
+    if (!do_batching) {
+        for (auto it = render_data_vector.begin();
+                it != render_data_vector.end(); ++it) {
+            GL(renderRenderData(rstate, *it));
+        }
+    } else {
+        renderbatches(rstate);
+    }
+}
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
         ShaderManager* shader_manager,
@@ -196,7 +496,6 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     rstate.render_mask = camera->render_mask();
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
 
-
     std::vector<PostEffectData*> post_effects = camera->post_effect_data();
 
     GL(glEnable (GL_DEPTH_TEST));
@@ -218,11 +517,7 @@ void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
                 camera->background_color_g(), camera->background_color_b(),
                 camera->background_color_a()));
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-
-        for (auto it = render_data_vector.begin();
-                it != render_data_vector.end(); ++it) {
-            GL(renderRenderData(rstate, *it));
-        }
+        renderRenderDataVector(rstate);
     } else {
         RenderTexture* texture_render_texture = post_effect_render_texture_a;
         RenderTexture* target_render_texture;
@@ -608,21 +903,9 @@ bool Renderer::isDefaultPosition3d(const Material* curr_material) {
 void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     if (!(rstate.render_mask & render_data->render_mask()))
         return;
-    if (render_data->offset()) {
-        GL(glEnable (GL_POLYGON_OFFSET_FILL));
-        GL(glPolygonOffset(render_data->offset_factor(),
-                    render_data->offset_units()));
-    }
-    if (!render_data->depth_test()) {
-        GL(glDisable (GL_DEPTH_TEST));
-    }
-    if (!render_data->alpha_blend()) {
-        GL(glDisable (GL_BLEND));
-    }
-    if( render_data->alpha_to_coverage()) {
-        GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-        GL(glSampleCoverage(render_data->sample_coverage(),render_data->invert_coverage_mask()));
-    }
+
+    // Set the states
+    setRenderStates(render_data, rstate);
     if (render_data->mesh() != 0) {
         GL(renderMesh(rstate, render_data));
     }
@@ -630,23 +913,7 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     // Restoring to Default.
     // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
     // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
-    if (render_data->cull_face() != RenderData::CullBack) {
-        GL(glEnable (GL_CULL_FACE));
-        GL(glCullFace (GL_BACK));
-    }
-
-    if (render_data->offset()) {
-        GL(glDisable (GL_POLYGON_OFFSET_FILL));
-    }
-    if (!render_data->depth_test()) {
-        GL(glEnable (GL_DEPTH_TEST));
-    }
-    if (!render_data->alpha_blend()) {
-        GL(glEnable (GL_BLEND));
-    }
-    if (render_data->alpha_to_coverage()) {
-        GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-    }
+    restoreRenderStates(render_data);
 }
 
 void Renderer::renderMesh(RenderState& rstate, RenderData* render_data) {
@@ -687,6 +954,18 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
 	rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
 	rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+
+
+    if(use_multiview){
+        rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
+        rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
+        rstate.uniforms.u_mv_[0] = rstate.uniforms.u_view_[0] * rstate.uniforms.u_model;
+        rstate.uniforms.u_mv_[1] = rstate.uniforms.u_view_[1] * rstate.uniforms.u_model;
+        rstate.uniforms.u_mv_it_[0] = glm::inverseTranspose(rstate.uniforms.u_mv_[0]);
+        rstate.uniforms.u_mv_it_[1] = glm::inverseTranspose(rstate.uniforms.u_mv_[1]);
+        rstate.uniforms.u_mvp_[0] = rstate.uniforms.u_proj * rstate.uniforms.u_mv_[0];
+        rstate.uniforms.u_mvp_[1] = rstate.uniforms.u_proj * rstate.uniforms.u_mv_[1];
+    }
     Mesh* mesh = render_data->mesh();
 
     GLuint programId = -1;
@@ -716,7 +995,12 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 shader = shader_manager->getCubemapShader();
                 break;
             case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                rstate.uniforms.u_view_inv = glm::inverse(rstate.uniforms.u_view);
+                if(use_multiview){
+                    rstate.uniforms.u_view_inv_[0] = glm::inverse(rstate.uniforms.u_view_[0]);
+                    rstate.uniforms.u_view_inv_[1] = glm::inverse(rstate.uniforms.u_view_[1]);
+                }
+                else
+                    rstate.uniforms.u_view_inv = glm::inverse(rstate.uniforms.u_view);
                 shader = shader_manager->getCubemapReflectionShader();
                 break;
             case Material::ShaderType::TEXTURE_SHADER:
@@ -766,10 +1050,16 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
 
     glBindVertexArray(mesh->getVAOId(programId));
     if (mesh->indices().size() > 0) {
-        glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
+        if(use_multiview)
+            glDrawElementsInstanced(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, NULL, 2 );
+        else
+            glDrawElements(render_data->draw_mode(), mesh->indices().size(), GL_UNSIGNED_SHORT, 0);
     }
     else {
-        glDrawArrays(render_data->draw_mode(), 0, mesh->vertices().size());
+        if(use_multiview)
+            glDrawArraysInstanced(render_data->draw_mode(), 0, mesh->vertices().size(),2);
+        else
+            glDrawArrays(render_data->draw_mode(), 0, mesh->vertices().size());
     }
     glBindVertexArray(0);
     checkGlError("renderMesh::renderMaterialShader");

@@ -106,6 +106,10 @@ extern "C" {
     JNIEXPORT jobjectArray JNICALL
     Java_org_gearvrf_NativeMesh_getAttribNames(JNIEnv * env,
             jobject obj, jlong jmesh);
+
+    JNIEXPORT jobjectArray JNICALL
+    Java_org_gearvrf_NativeMesh_setDynamic(JNIEnv * env,
+            jobject obj, jlong jmesh, jboolean status);
 };
 
 JNIEXPORT jobjectArray JNICALL
@@ -442,5 +446,13 @@ Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
     sphere[2] = bvol.center().z;
     sphere[3] = bvol.radius();
     env->SetFloatArrayRegion(jsphere, 0, 4, sphere);
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_org_gearvrf_NativeMesh_setDynamic(JNIEnv * env,
+        jobject obj, jlong jmesh, jboolean status){
+	Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+	bool is_dynamic = reinterpret_cast<bool*>(status);
+	mesh->setDynamic(is_dynamic);
 }
 }

@@ -33,20 +33,33 @@ namespace gvr {
 CustomShader::CustomShader(const std::string& vertex_shader, const std::string& fragment_shader)
     : vertexShader_(vertex_shader), fragmentShader_(fragment_shader) {
 }
-
-
-void CustomShader::initializeOnDemand() {
+void CustomShader::initializeOnDemand(RenderState* rstate) {
     if (nullptr == program_)
     {
         program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
-        vertexShader_.clear();
-        fragmentShader_.clear();
-        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
-        u_view_ = glGetUniformLocation(program_->id(), "u_view");
-        u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
-        u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
+        if(use_multiview && !(strstr(vertexShader_.c_str(),"gl_ViewID_OVR")
+                && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
+                && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){
+            std::string error = "Your shaders are not multiview";
+            LOGE("Your shaders are not multiview");
+            throw error;
+        }
+        if(use_multiview){
+            u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
+            u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
+            u_mv_ = glGetUniformLocation(program_->id(), "u_mv_[0]");
+            u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it_[0]");
+        }
+        else {
+            u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+            u_view_ = glGetUniformLocation(program_->id(), "u_view");
+            u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
+            u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
+        }
         u_right_ = glGetUniformLocation(program_->id(), "u_right");
         u_model_ = glGetUniformLocation(program_->id(), "u_model");
+        vertexShader_.clear();
+        fragmentShader_.clear();
         LOGE("Custom shader added program %d", program_->id());
     }
    if (textureVariablesDirty_) {
@@ -86,9 +99,6 @@ void CustomShader::initializeOnDemand() {
     }
 }
 
-
-	
-
 CustomShader::~CustomShader() {
     delete program_;
 }
@@ -104,7 +114,7 @@ void CustomShader::addTextureKey(const std::string& variable_name, const std::st
     };
 
     d.variableType.f_bind = [key] (int& textureIndex, const Material& material, GLuint location) {
-        glActiveTexture(getGLTexture(textureIndex));
+        glActiveTexture(GL_TEXTURE0 + textureIndex);
         Texture* texture = material.getTextureNoError(key);
         if (nullptr != texture) {
             glBindTexture(texture->getTarget(), texture->getId());
@@ -240,7 +250,7 @@ void CustomShader::addUniformMat4Key(const std::string& variable_name,
 
 void CustomShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
 	//LOGE(" start of render %s", render_data->owner_object()->name().c_str());
-	initializeOnDemand();
+	initializeOnDemand(rstate);
     {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
@@ -300,16 +310,28 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     	glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
     }
     if (u_mvp_ != -1) {
-        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+        if(use_multiview)
+            glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
+        else
+            glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     }
     if (u_view_ != -1) {
-        glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
+        if(use_multiview)
+            glUniformMatrix4fv(u_view_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view_[0]));
+        else
+            glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
     }
     if (u_mv_ != -1) {
-        glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
+       if(use_multiview)
+           glUniformMatrix4fv(u_mv_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_[0]));
+       else
+          glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
     }
     if (u_mv_it_ != -1) {
-        glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
+        if(use_multiview)
+            glUniformMatrix4fv(u_mv_it_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it_[0]));
+        else
+            glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));
     }
     if (u_right_ != 0) {
         glUniform1i(u_right_, rstate->uniforms.u_right ? 1 : 0);
@@ -346,34 +368,4 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     }
     checkGlError("CustomShader::render");
 }
-
-int CustomShader::getGLTexture(int n) {
-    switch (n) {
-    case 0:
-        return GL_TEXTURE0;
-    case 1:
-        return GL_TEXTURE1;
-    case 2:
-        return GL_TEXTURE2;
-    case 3:
-        return GL_TEXTURE3;
-    case 4:
-        return GL_TEXTURE4;
-    case 5:
-        return GL_TEXTURE5;
-    case 6:
-        return GL_TEXTURE6;
-    case 7:
-        return GL_TEXTURE7;
-    case 8:
-        return GL_TEXTURE8;
-    case 9:
-        return GL_TEXTURE9;
-    case 10:
-        return GL_TEXTURE10;
-    default:
-        return GL_TEXTURE0;
-    }
-}
-
 } /* namespace gvr */
