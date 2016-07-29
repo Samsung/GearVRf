@@ -85,7 +85,7 @@ android {
         if (rootProject.hasProperty("GVRF_BACKEND")) {
             gvrf_backend = rootProject.property("GVRF_BACKEND")
         }
-        environment 'GVRF_BACKEND', '' + rootDir + '/' + gvrf_backend
+        environment 'GVRF_BACKEND', '' + projectDir + "/../" + gvrf_backend
 
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
     }
