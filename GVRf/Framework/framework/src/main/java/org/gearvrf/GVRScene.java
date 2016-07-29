@@ -68,7 +68,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private GVRMaterial mShadowMaterial = null;
     private boolean mShadowMapDirty = true;
     private GVRSceneObject mSceneRoot;
-    
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.
      * 
@@ -100,8 +99,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         addSceneObject(cameraRig.getOwnerObject());
 
         setMainCameraRig(cameraRig);
-        setFrustumCulling(true);
-
+        setFrustumCulling(true);      
         getEventReceiver().addListener(mSceneEventListener);
     }
 
@@ -111,7 +109,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         setFrustumCulling(true);
     }
-
+    
     /**
      * Add a {@linkplain GVRSceneObject scene object} as
      * a child of the scene root.

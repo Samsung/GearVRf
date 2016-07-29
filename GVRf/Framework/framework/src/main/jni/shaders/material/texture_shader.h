@@ -21,7 +21,8 @@
 #define TEXTURE_SHADER_H_
 
 #include "shaderbase.h"
-
+#include <vector>
+#include <unordered_map>
 namespace gvr {
 class GLProgram;
 
@@ -31,6 +32,8 @@ public:
     virtual ~TextureShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
+    void render_batch(const std::vector<glm::mat4>& model_matrix,
+              RenderData* render_data,  RenderState& rstate, unsigned int, int);
 
 private:
     TextureShader(const TextureShader& texture_shader);
@@ -39,28 +42,31 @@ private:
     TextureShader& operator=(TextureShader&& texture_shader);
 
 private:
-    GLProgram* program_light_;
-    GLProgram* program_no_light_;
 
-    GLuint u_mvp_no_light_;
-    GLuint u_texture_no_light_;
-    GLuint u_color_no_light_;
-    GLuint u_opacity_no_light_;
+    std::unordered_map<int, GLProgram*>program_object_map_;
+    struct uniforms{
+        GLuint u_model;
+        GLuint u_texture;
+        GLuint u_color;
+        GLuint u_opacity;
+        GLuint u_view;
+        GLuint u_proj;
+        GLuint u_light_pos;
+        GLuint u_material_ambient_color_;
+        GLuint u_material_diffuse_color_;
+        GLuint u_material_specular_color_;
+        GLuint u_material_specular_exponent_;
+        GLuint u_light_ambient_intensity_;
+        GLuint u_light_diffuse_intensity_;
+        GLuint u_light_specular_intensity_;
+    };
+    std::unordered_map<int,uniforms> uniform_loc;
 
-    GLuint u_mv_;
-    GLuint u_mv_it_;
-    GLuint u_mvp_;
-    GLuint u_light_pos_;
-    GLuint u_texture_;
-    GLuint u_color_;
-    GLuint u_opacity_;
-    GLuint u_material_ambient_color_;
-    GLuint u_material_diffuse_color_;
-    GLuint u_material_specular_color_;
-    GLuint u_material_specular_exponent_;
-    GLuint u_light_ambient_intensity_;
-    GLuint u_light_diffuse_intensity_;
-    GLuint u_light_specular_intensity_;
+
+public:
+    void initUniforms(int, GLuint ,uniforms& );
+    void programInit(RenderState* rstate, RenderData* rdata, Material* material, const std::vector<glm::mat4>& model_matrix
+            ,int drawcount, bool batching);
 };
 
 }

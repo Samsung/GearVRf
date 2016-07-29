@@ -122,7 +122,11 @@ void ConfigurationHelper::getFramebufferConfiguration(JNIEnv& env, int& fbWidthO
     LOGV("ConfigurationHelper: --- depth texture format: %d", depthTextureFormatOut);
     LOGV("ConfigurationHelper: ---------------------------------");
 }
+void ConfigurationHelper::getMultiviewConfiguration(JNIEnv& env, bool& useMultiview){
 
+    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "useMultiview", "Z");
+    useMultiview = env.GetBooleanField(vrAppSettings_, fid);
+}
 void ConfigurationHelper::getModeConfiguration(JNIEnv& env, bool& allowPowerSaveOut, bool& resetWindowFullscreenOut) {
     LOGV("ConfigurationHelper: --- mode configuration ---");
 

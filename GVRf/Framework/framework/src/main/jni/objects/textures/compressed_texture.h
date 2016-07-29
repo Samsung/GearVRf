@@ -93,6 +93,11 @@ public:
             glCompressedTexImage2D(target, 0, internalFormat_, width_, height_, 0,
                     imageSize_, data + dataOffset_);
 
+            // create mipmaps if it is not external texture
+            if(target==GL_TEXTURE_2D){
+				glGenerateMipmap (target);
+				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+            }
             env->ReleaseByteArrayElements(bytesRef_, data, 0);
             env->DeleteGlobalRef(bytesRef_);
             break;

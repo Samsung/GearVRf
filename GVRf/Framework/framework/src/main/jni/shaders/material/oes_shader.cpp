@@ -26,14 +26,32 @@
 #include "util/gvr_gl.h"
 #include "engine/renderer/renderer.h"
 
+static const char USE_MULTIVIEW[] = "#define MULTIVIEW\n";
+static const char NOT_USE_MULTIVIEW[] = "#undef MULTIVIEW\n";
+static const char version[] = "#version 300 es\n";
+
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-        "attribute vec4 a_tex_coord;\n"
+
+static const char VERTEX_SHADER[] =
+        "#ifdef MULTIVIEW\n"
+        "#extension GL_OVR_multiview2 : enable\n"
+        "layout(num_views = 2) in;\n"
+        "uniform mat4 u_mvp_[2];\n"
+        "#else\n"
         "uniform mat4 u_mvp;\n"
-        "varying vec2 v_tex_coord;\n"
+        "#endif\n"
+
+        "in vec3 a_position;\n"
+        "in vec2 a_tex_coord;\n"
+
+        "out vec2 v_tex_coord;\n"
         "void main() {\n"
         "  v_tex_coord = a_tex_coord.xy;\n"
-        "  gl_Position = u_mvp * a_position;\n"
+        "#ifdef MULTIVIEW\n"
+        "  gl_Position = u_mvp_[gl_ViewID_OVR] * vec4(a_position,1.0);\n"
+        "#else\n"
+        "  gl_Position = u_mvp * vec4(a_position,1.0);\n"
+        "#endif\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
@@ -42,28 +60,69 @@ static const char FRAGMENT_SHADER[] =
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform vec3 u_color;\n"
                 "uniform float u_opacity;\n"
-                "varying vec2 v_tex_coord;\n"
+                "in vec2 v_tex_coord;\n"
+                "out vec4 out_color;\n"
                 "void main()\n"
                 "{\n"
-                "  vec4 color = texture2D(u_texture, v_tex_coord);"
-                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+                "  vec4 color = texture(u_texture, v_tex_coord);"
+                "  out_color = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
                 "}\n";
+
 
 OESShader::OESShader() :
         u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0) {
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-    u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+}
+void OESShader::programInit(RenderState* rstate){
+    const char* frag_shader_strings[3];
+    GLint frag_shader_string_lengths[3];
+
+    const char* vertex_shader_strings[3];
+    GLint vertex_shader_string_lengths[3];
+    vertex_shader_strings[0] = version;
+    frag_shader_strings[0] = version;
+    vertex_shader_string_lengths [0]=(GLint) strlen(version);
+    frag_shader_string_lengths[0] = vertex_shader_string_lengths [0];
+    vertex_shader_string_lengths [2] = (GLint) strlen(VERTEX_SHADER);
+    frag_shader_string_lengths[2] = (GLint)strlen(FRAGMENT_SHADER);
+
+    if(use_multiview){
+        vertex_shader_strings[1] = USE_MULTIVIEW;
+        frag_shader_strings[1] = USE_MULTIVIEW;
+        vertex_shader_string_lengths [1] =(GLint)strlen(USE_MULTIVIEW);
+        frag_shader_string_lengths[1] = vertex_shader_string_lengths [1];
+    }
+    else {
+        vertex_shader_strings[1] = NOT_USE_MULTIVIEW;
+        frag_shader_strings[1] = NOT_USE_MULTIVIEW;
+        vertex_shader_string_lengths [1] =(GLint)strlen(NOT_USE_MULTIVIEW);
+        frag_shader_string_lengths[1] = (GLint)strlen(NOT_USE_MULTIVIEW);
+    }
+    vertex_shader_strings [2] = VERTEX_SHADER;
+    frag_shader_strings [2] = FRAGMENT_SHADER;
+
+    program_ = new GLProgram(vertex_shader_strings,
+                    vertex_shader_string_lengths, frag_shader_strings,
+                    frag_shader_string_lengths, 3);
+
+    if(use_multiview)
+        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
+    else
+        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
     u_opacity_ = glGetUniformLocation(program_->id(), "u_opacity");
-}
 
+}
 OESShader::~OESShader() {
     delete program_;
 }
 
 void OESShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
+    if(!program_)
+        programInit(rstate);
+
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -74,7 +133,11 @@ void OESShader::render(RenderState* rstate, RenderData* render_data, Material* m
     }
 
     glUseProgram(program_->id());
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+    if(use_multiview)
+        glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
+    else
+        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);

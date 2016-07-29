@@ -33,13 +33,16 @@
 #endif
 
 #include "glm/glm.hpp"
-
+#include "batch.h"
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
+#include <unordered_map>
 
+typedef unsigned long Long;
 namespace gvr {
+extern bool use_multiview;
 class Camera;
 class Scene;
 class SceneObject;
@@ -58,10 +61,15 @@ struct ShaderUniformsPerObject {
     glm::mat4   u_model;        // Model matrix
     glm::mat4   u_view;         // View matrix
     glm::mat4   u_proj;         // projection matrix
+    glm::mat4   u_view_[2];     // for multiview
     glm::mat4   u_view_inv;     // inverse of View matrix
+    glm::mat4   u_view_inv_[2];     // inverse of View matrix
     glm::mat4   u_mv;           // ModelView matrix
+    glm::mat4   u_mv_[2];           // ModelView matrix
     glm::mat4   u_mvp;          // ModelViewProjection matrix
+    glm::mat4   u_mvp_[2];          // ModelViewProjection matrix
     glm::mat4   u_mv_it;        // inverse transpose of ModelView
+    glm::mat4   u_mv_it_[2];        // inverse transpose of ModelView
     int         u_right;        // 1 = right eye, 0 = left
 };
 
@@ -82,6 +90,11 @@ private:
     Renderer();
 
 public:
+    static void restoreRenderStates(RenderData* render_data);
+    static void setRenderStates(RenderData* render_data, RenderState& rstate);
+    static void BatchSetup();
+    static void renderbatches(RenderState& rstate);
+    static void renderRenderDataVector(RenderState &rstate);
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,

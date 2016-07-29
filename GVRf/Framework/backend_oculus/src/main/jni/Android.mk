@@ -71,9 +71,9 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/util
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/backends/oculus/
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/backends/oculus/util
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/backends/oculus/objects
+LOCAL_C_INCLUDES += $(GVRF_BACKEND)/src/main/jni
+LOCAL_C_INCLUDES += $(GVRF_BACKEND)/src/main/jni/util
+LOCAL_C_INCLUDES += $(GVRF_BACKEND)/src/main/jni/objects
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/glm/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
@@ -82,8 +82,6 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/glm/gtc/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/glm/gtx/*.cpp)
-LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/glm/virtrev/*.cpp)	
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/eglextension/msaa/*.cpp)
@@ -119,11 +117,11 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
-FILE_LIST := $(wildcard $(LOCAL_PATH)/backends/oculus/objects/components/*.cpp)
+FILE_LIST := $(wildcard $(GVRF_BACKEND)/src/main/jni/objects/components/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-FILE_LIST := $(wildcard $(LOCAL_PATH)/backends/oculus/util/*.cpp)
+FILE_LIST := $(wildcard $(GVRF_BACKEND)/src/main/jni/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-FILE_LIST := $(wildcard $(LOCAL_PATH)/backends/oculus/*.cpp)
+FILE_LIST := $(wildcard $(GVRF_BACKEND)/src/main/jni/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 #LOCAL_STATIC_LIBRARIES += staticAssimp
