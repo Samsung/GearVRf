@@ -29,33 +29,46 @@
 static const char USE_MULTIVIEW[] = "#define MULTIVIEW\n";
 static const char NOT_USE_MULTIVIEW[] = "#undef MULTIVIEW\n";
 static const char version[] = "#version 300 es\n";
-
+static const char EGL_IMAGE_EXT_ADRENO [] = "#extension GL_OES_EGL_image_external_essl3 : require\n";
+static const char EGL_IMAGE_EXT_MALI [] = "#extension GL_OES_EGL_image_external : require\n";
 namespace gvr {
-
-static const char VERTEX_SHADER[] =
-        "#ifdef MULTIVIEW\n"
-        "#extension GL_OVR_multiview2 : enable\n"
-        "layout(num_views = 2) in;\n"
-        "uniform mat4 u_mvp_[2];\n"
-        "#else\n"
+static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
+        "attribute vec4 a_tex_coord;\n"
         "uniform mat4 u_mvp;\n"
-        "#endif\n"
-
-        "in vec3 a_position;\n"
-        "in vec2 a_tex_coord;\n"
-
-        "out vec2 v_tex_coord;\n"
+        "varying vec2 v_tex_coord;\n"
         "void main() {\n"
         "  v_tex_coord = a_tex_coord.xy;\n"
-        "#ifdef MULTIVIEW\n"
-        "  gl_Position = u_mvp_[gl_ViewID_OVR] * vec4(a_position,1.0);\n"
-        "#else\n"
-        "  gl_Position = u_mvp * vec4(a_position,1.0);\n"
-        "#endif\n"
+        "  gl_Position = u_mvp * a_position;\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
         "#extension GL_OES_EGL_image_external : require\n"
+                "precision highp float;\n"
+                "uniform samplerExternalOES u_texture;\n"
+                "uniform vec3 u_color;\n"
+                "uniform float u_opacity;\n"
+                "varying vec2 v_tex_coord;\n"
+                "void main()\n"
+                "{\n"
+                "  vec4 color = texture2D(u_texture, v_tex_coord);"
+                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+                "}\n";
+
+
+static const char VERTEX_SHADER_MULTIVIEW[] =
+
+        "#extension GL_OVR_multiview2 : enable\n"
+        "layout(num_views = 2) in;\n"
+        "uniform mat4 u_mvp_[2];\n"
+        "in vec3 a_position;\n"
+        "in vec2 a_tex_coord;\n"
+        "out vec2 v_tex_coord;\n"
+        "void main() {\n"
+        "  v_tex_coord = a_tex_coord.xy;\n"
+        "  gl_Position = u_mvp_[gl_ViewID_OVR] * vec4(a_position,1.0);\n"
+        "}\n";
+
+static const char FRAGMENT_SHADER_MULTIVIEW[] =
                 "precision highp float;\n"
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform vec3 u_color;\n"
@@ -83,27 +96,38 @@ void OESShader::programInit(RenderState* rstate){
     frag_shader_strings[0] = version;
     vertex_shader_string_lengths [0]=(GLint) strlen(version);
     frag_shader_string_lengths[0] = vertex_shader_string_lengths [0];
-    vertex_shader_string_lengths [2] = (GLint) strlen(VERTEX_SHADER);
-    frag_shader_string_lengths[2] = (GLint)strlen(FRAGMENT_SHADER);
+    vertex_shader_string_lengths [2] = (GLint) strlen(VERTEX_SHADER_MULTIVIEW);
+    frag_shader_string_lengths[2] = (GLint)strlen(FRAGMENT_SHADER_MULTIVIEW);
+    vertex_shader_strings [2] = VERTEX_SHADER_MULTIVIEW;
+    frag_shader_strings [2] = FRAGMENT_SHADER_MULTIVIEW;
 
     if(use_multiview){
-        vertex_shader_strings[1] = USE_MULTIVIEW;
-        frag_shader_strings[1] = USE_MULTIVIEW;
-        vertex_shader_string_lengths [1] =(GLint)strlen(USE_MULTIVIEW);
-        frag_shader_string_lengths[1] = vertex_shader_string_lengths [1];
-    }
-    else {
-        vertex_shader_strings[1] = NOT_USE_MULTIVIEW;
-        frag_shader_strings[1] = NOT_USE_MULTIVIEW;
-        vertex_shader_string_lengths [1] =(GLint)strlen(NOT_USE_MULTIVIEW);
-        frag_shader_string_lengths[1] = (GLint)strlen(NOT_USE_MULTIVIEW);
-    }
-    vertex_shader_strings [2] = VERTEX_SHADER;
-    frag_shader_strings [2] = FRAGMENT_SHADER;
-
-    program_ = new GLProgram(vertex_shader_strings,
+        const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+        const char* vendor= (const char*)glGetString(GL_VENDOR);
+        if(strcmp(vendor,"Qualcomm")==0 && std::strstr(extensions, "GL_OES_EGL_image_external")!= NULL ){
+            frag_shader_strings[1] = EGL_IMAGE_EXT_ADRENO;
+            frag_shader_string_lengths [1] = (GLint) strlen(EGL_IMAGE_EXT_ADRENO);
+            vertex_shader_strings [1] = "\n";
+            vertex_shader_string_lengths[1]=(GLint) strlen("\n");
+        }
+        else if(std::strstr(extensions, "GL_OES_EGL_image_external")!= NULL){
+             frag_shader_strings[1] = EGL_IMAGE_EXT_MALI;
+             frag_shader_string_lengths [1] = (GLint) strlen(EGL_IMAGE_EXT_MALI);
+             vertex_shader_strings [1] = "\n";
+             vertex_shader_string_lengths[1]=(GLint) strlen("\n");
+        }
+        else {
+            LOGE("GLSL does not support GL_OES_EGL_image_external, try with disabling multiview \n");
+        }
+       program_ = new GLProgram(vertex_shader_strings,
                     vertex_shader_string_lengths, frag_shader_strings,
                     frag_shader_string_lengths, 3);
+    }
+    else {
+    LOGE("not a multiview");
+         program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+    }
+
 
     if(use_multiview)
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
