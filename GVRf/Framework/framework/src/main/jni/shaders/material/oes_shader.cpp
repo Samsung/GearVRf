@@ -38,6 +38,7 @@ static const char VERTEX_SHADER[] =
         "layout(num_views = 2) in;\n"
         "uniform mat4 u_mvp_[2];\n"
         "#else\n"
+        "#extension GL_OES_EGL_image_external_essl3 : enable\n"
         "uniform mat4 u_mvp;\n"
         "#endif\n"
 
@@ -56,6 +57,10 @@ static const char VERTEX_SHADER[] =
 
 static const char FRAGMENT_SHADER[] =
         "#extension GL_OES_EGL_image_external : require\n"
+        "#ifndef MULTIVIEW\n"
+            "#extension GL_OES_EGL_image_external_essl3 : enable\n"
+        "#endif\n"
+
                 "precision highp float;\n"
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform vec3 u_color;\n"
