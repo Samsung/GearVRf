@@ -73,7 +73,6 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transf
 
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
     Transform* t = scene->main_camera_rig()->getHeadTransform();
-
     pickScene(scene, pickList, t, 0, 0, 0, 0, 0, -1.0f);
 }
 

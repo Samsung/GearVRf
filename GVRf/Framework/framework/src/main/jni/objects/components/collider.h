@@ -74,7 +74,7 @@ public:
 
 
     static long long getComponentType() {
-        return (long long) getComponentType;
+        return COMPONENT_TYPE_COLLIDER;
     }
 
     void set_pick_distance(float dist) {

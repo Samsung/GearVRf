@@ -26,9 +26,7 @@
  * that descends from {@link org.gearvrf.GVRScript} and pass
  * that instance to {@link 
  * org.gearvrf.GVRActivity#setScript(GVRScript, String)} 
- * (or to {@link 
- * org.gearvrf.GVRActivity#setScript(GVRScript, String, GVRSurfaceViewRenderer)}.
- * 
+ *
  * A {@linkplain org.gearvrf.GVRScene scene graph} contains any 
  * number of {@linkplain org.gearvrf.GVRSceneObject scene 
  * objects.} Scene objects have an {@linkplain org.gearvrf.GVRTransform 
