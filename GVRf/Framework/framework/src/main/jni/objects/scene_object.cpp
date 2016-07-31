@@ -200,7 +200,12 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
 
     float this_object_bounding_box[6], check_object_bounding_box[6];
 
+    if (nullptr == this->render_data()->mesh()) {
+        LOGE("isColliding: no mesh for this scene object");
+        return false;
+    }
     Transform* t = this->render_data()->owner_object()->transform();
+
     if (nullptr == t) {
         LOGE("isColliding: no transform for this scene object");
         return false;
@@ -209,6 +214,10 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
     this->render_data()->mesh()->getTransformedBoundingBoxInfo(
             &this_object_model_matrix, this_object_bounding_box);
 
+    if (nullptr == scene_object->render_data()->mesh()) {
+        LOGE("isColliding: no mesh for target scene object");
+        return false;
+    }
     t = scene_object->render_data()->owner_object()->transform();
     if (nullptr == t) {
         LOGE("isColliding: no transform for target scene object");
