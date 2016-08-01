@@ -69,6 +69,8 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    glActiveTexture(GL_TEXTURE0);
+
     TextureCapturer *capturer(render_data->get_texture_capturer());
     if (!capturer || !capturer->getAndClearPendingCapture()) {
         // Original rendering
