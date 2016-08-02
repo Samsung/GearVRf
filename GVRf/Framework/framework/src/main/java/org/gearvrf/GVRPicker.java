@@ -493,7 +493,40 @@ public class GVRPicker extends GVRBehavior {
             float dy, float dz) {
         return Arrays.asList(pickObjects(scene, ox, oy, oz, dx, dy, dz));
     }
-    
+
+    /**
+     * Returns the list of colliders attached to scene objects that are
+     * visible from the viewpoint of the camera.
+     *
+     * <p>
+     * This method is thread safe because it guarantees that only
+     * one thread at a time is doing a ray cast into a particular scene graph,
+     * and it extracts the hit data during within its synchronized block. You
+     * can then examine the return list without worrying about another thread
+     * corrupting your hit data.
+     *
+     * The hit location returned is the world position of the scene object center.
+     *
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     *
+     * @return A list of {@link GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link GVRPickedObject} contains the scene object
+     *         which owns the {@link GVRCollider} along with the hit
+     *         location and distance from the camera.
+     *
+     * @since 1.6.6
+     */
+    public static final GVRPickedObject[] pickVisible(GVRScene scene) {
+        sFindObjectsLock.lock();
+        try {
+            final GVRPickedObject[] result = NativePicker.pickVisible(scene.getNative());
+            return result;
+        } finally {
+            sFindObjectsLock.unlock();
+        }
+    }
+
     /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
@@ -634,6 +667,8 @@ final class NativePicker {
             float dx, float dy, float dz);
 
     static native float pickSceneObject(long sceneObject, long cameraRig);
+
+    static native GVRPicker.GVRPickedObject[] pickVisible(long scenez);
 
     static native float[] pickSceneObjectAgainstBoundingBox(long sceneObject,
             float ox, float oy, float oz, float dx, float dy, float dz);
