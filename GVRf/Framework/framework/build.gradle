@@ -36,30 +36,7 @@ android {
         }
     }
 
-    task copyAndroidMkForClean(type: Copy) {
-        def gvrf_backend = "backend_oculus"
-        if (rootProject.hasProperty("GVRF_BACKEND")) {
-            gvrf_backend = rootProject.property("GVRF_BACKEND")
-        }
-
-        from '../'+gvrf_backend+'/src/main/jni/'
-        into 'src/main/jni'
-        include 'Android.mk'
-        outputs.upToDateWhen { false }
-    }
-
-    task copyAndroidMk(type: Copy) {
-        def gvrf_backend = "backend_oculus"
-        if (rootProject.hasProperty("GVRF_BACKEND")) {
-            gvrf_backend = rootProject.property("GVRF_BACKEND")
-        }
-
-        from '../'+gvrf_backend+'/src/main/jni/'
-        into 'src/main/jni'
-        include 'Android.mk'
-    }
-
-    task buildNative(type: Exec, dependsOn: copyAndroidMk) {
+    task buildNative(type: Exec) {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         } else {
@@ -88,6 +65,14 @@ android {
         environment 'GVRF_BACKEND', '' + projectDir + "/../" + gvrf_backend
 
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
+
+        doFirst {
+            copy {
+                from '../' + gvrf_backend + '/src/main/jni/'
+                into 'src/main/jni'
+                include 'Android.mk'
+            }
+        }
     }
 
     buildTypes {
@@ -115,7 +100,7 @@ android {
         }
     }
 
-    task cleanNative(type: Exec, dependsOn: copyAndroidMkForClean) {
+    task cleanNative(type: Exec) {
         def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
             ndkbuild = rootProject.property("ANDROID_NDK_HOME")
@@ -132,6 +117,17 @@ android {
         }
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16, 'clean'
 
+        doFirst {
+            def gvrf_backend = "backend_oculus"
+            if (rootProject.hasProperty("GVRF_BACKEND")) {
+                gvrf_backend = rootProject.property("GVRF_BACKEND")
+            }
+            copy {
+                from '../' + gvrf_backend + '/src/main/jni/'
+                into 'src/main/jni'
+                include 'Android.mk'
+            }
+        }
         doLast {
             delete 'src/main/jni/Android.mk'
         }
