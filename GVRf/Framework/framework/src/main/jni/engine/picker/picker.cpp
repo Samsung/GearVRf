@@ -118,4 +118,34 @@ glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
     return glm::vec3(std::numeric_limits<float>::infinity());
 }
 
+/*
+ * Returns the list of all visible colliders.
+ *
+ * This function is not thread-safe because it relies on a static
+ * array of colliders which could be updated by a different thread.
+ */
+void Picker::pickVisible(Scene* scene, std::vector<ColliderData>& picklist) {
+    const std::vector<Component*>& colliders = scene->lockColliders();
+    Transform* const t = scene->main_camera_rig()->getHeadTransform();
+
+    if (nullptr != t) {
+        glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
+
+        for (auto it = colliders.begin(); it != colliders.end(); ++it) {
+            Collider* collider = reinterpret_cast<Collider*>(*it);
+            SceneObject* owner = collider->owner_object();
+            if (collider->enabled() && (owner != NULL) && owner->enabled()) {
+                ColliderData data(collider);
+                Transform* trans = owner->transform();
+                glm::mat4 worldmtx = trans->getModelMatrix();
+                data.HitPosition = glm::vec3(worldmtx[3]);
+                data.Distance = data.HitPosition.length();
+                data.IsHit = true;
+                picklist.push_back(data);
+            }
+        }
+        std::sort(picklist.begin(), picklist.end(), compareColliderData);
+    }
+    scene->unlockColliders();
+ }
 }
