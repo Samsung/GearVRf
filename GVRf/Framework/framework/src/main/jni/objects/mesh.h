@@ -147,11 +147,13 @@ public:
     void set_tex_coords(const std::vector<glm::vec2>& tex_coords, int index=0){
         vao_dirty_ = true;
         tex_coords_[index]= tex_coords;
+        mesh_modified_ = true;
     }
 
     void set_tex_coords(const std::vector<glm::vec2>&& tex_coords, int index=0){
         vao_dirty_ = true;
         tex_coords_[index]= std::move(tex_coords);
+        mesh_modified_ = true;
     }
 
     const std::vector<unsigned short>& triangles() const {

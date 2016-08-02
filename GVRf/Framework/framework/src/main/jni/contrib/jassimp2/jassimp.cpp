@@ -1328,7 +1328,11 @@ static bool loadLights(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		jstring lightName = env->NewStringUTF(cLight->mName.C_Str());
 		DeleteLocalRef refLightName(env, lightName);
 		params[0].l = lightName;
-		params[1].i = cLight->mType;
+		// Assimp does not handle area lights, it sets it to undefined, change it to point-lights
+		if(cLight->mType == aiLightSource_UNDEFINED)
+	        params[1].i = aiLightSource_POINT;
+    	else
+		    params[1].i = cLight->mType;
 		params[2].l = jPosition;
 		params[3].l = jDirection;
 		params[4].f = cLight->mAttenuationConstant;
