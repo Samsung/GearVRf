@@ -38,8 +38,8 @@ class GLProgram;
 
 class ShaderBase: public HybridObject {
 public:
-    ShaderBase() : program_(nullptr) { };
-
+    ShaderBase() : program_(nullptr) {
+    };
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material)=0;
     GLuint getProgramId()
     {

@@ -33,9 +33,8 @@ class OESShader: public ShaderBase {
 public:
     OESShader();
     virtual ~OESShader();
-
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
-
+    void programInit(RenderState* rstate);
 private:
     OESShader(const OESShader& oes_shader);
     OESShader(OESShader&& oes_shader);

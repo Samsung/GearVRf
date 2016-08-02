@@ -36,7 +36,30 @@ android {
         }
     }
 
-    task buildNative(type: Exec) {
+    task copyAndroidMkForClean(type: Copy) {
+        def gvrf_backend = "backend_oculus"
+        if (rootProject.hasProperty("GVRF_BACKEND")) {
+            gvrf_backend = rootProject.property("GVRF_BACKEND")
+        }
+
+        from '../'+gvrf_backend+'/src/main/jni/'
+        into 'src/main/jni'
+        include 'Android.mk'
+        outputs.upToDateWhen { false }
+    }
+
+    task copyAndroidMk(type: Copy) {
+        def gvrf_backend = "backend_oculus"
+        if (rootProject.hasProperty("GVRF_BACKEND")) {
+            gvrf_backend = rootProject.property("GVRF_BACKEND")
+        }
+
+        from '../'+gvrf_backend+'/src/main/jni/'
+        into 'src/main/jni'
+        include 'Android.mk'
+    }
+
+    task buildNative(type: Exec, dependsOn: copyAndroidMk) {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         } else {
@@ -58,6 +81,12 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
 
+        def gvrf_backend = "backend_oculus"
+        if (rootProject.hasProperty("GVRF_BACKEND")) {
+            gvrf_backend = rootProject.property("GVRF_BACKEND")
+        }
+        environment 'GVRF_BACKEND', '' + projectDir + "/../" + gvrf_backend
+
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
     }
 
@@ -73,7 +102,12 @@ android {
     }
 
     sourceSets.main {
-        java.srcDirs = ['src/main/java', 'src/main/backends/oculus']
+        def gvrf_backend = "backend_oculus"
+        if (rootProject.hasProperty("GVRF_BACKEND")) {
+            gvrf_backend = rootProject.property("GVRF_BACKEND")
+        }
+
+        java.srcDirs = ['src/main/java', '../' + gvrf_backend + '/src/main/java']
         jni.srcDirs = [] // no auto generation of Android.mk
         // pre-compiled libraries
         jniLibs {
@@ -81,7 +115,7 @@ android {
         }
     }
 
-    task cleanNative(type: Exec) {
+    task cleanNative(type: Exec, dependsOn: copyAndroidMkForClean) {
         def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
             ndkbuild = rootProject.property("ANDROID_NDK_HOME")
@@ -97,6 +131,10 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16, 'clean'
+
+        doLast {
+            delete 'src/main/jni/Android.mk'
+        }
     }
 
     clean.dependsOn 'cleanNative'
@@ -148,6 +186,20 @@ android {
 
         project.delete('build/distributions/gvrf-for-eclipse.zip')
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
@@ -162,12 +214,13 @@ assembleDebug {}.doLast {
             def libsdirPath = projectDir.absolutePath + '/../../../' +
                     rootProject.property("LIBS_DIRECTORY")
             def libsDir = new File(libsdirPath);
-            if (!libsDir.exists()) {
-                throw new IllegalArgumentException("Libs Directory Does not exist")
+            if (libsDir.exists()) {
+                from 'build/outputs/aar'
+                into libsDir
+                include '**/*.aar'
+            } else {
+                println "Cannot copy aar files, libs directory does not exist!"
             }
-            from 'build/outputs/aar'
-            into libsDir
-            include '**/*.aar'
         }
     }
     tasks.copyAARFiles.execute()
@@ -186,4 +239,5 @@ assembleReleaseToGitHub {}.doLast {
     }
 
     eclipseAssembleReleaseToGitHub.execute()
+    uploadToGitHub.execute();
 }

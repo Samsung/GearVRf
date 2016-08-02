@@ -91,7 +91,6 @@ public:
     }
     const bool isShadowMapsInvalid(){
     	return is_shadowmap_invalid;
-
     }
     /*
      * If set to true only visible objects will be pickable.

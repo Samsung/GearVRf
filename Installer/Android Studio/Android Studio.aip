@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FRAGMENT Type="ReadOnly" CreateVersion="13.0" RootPath="." Language="en">
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqComponent">
+    <ROW PrereqKey="AndroidStudio" DisplayName="Android Studio" VersionMin="2.1" SetupFileUrl="https://dl.google.com/dl/android/studio/install/2.1.2.0/android-studio-bundle-143.2915827-windows.exe" Location="1" ExactSize="0" Win9xVersions="Windows 9x/ME" Operator="1" Options="pi" Type="1" Feature="AndroidStudio"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqSearchComponent">
+    <ROW SearchKey="SystemFolderfile.dll" Prereq="AndroidStudio" SearchType="0" SearchString="[SystemFolder]file.dll" VerMin="1.0" Order="1" MsiKey="SystemFolderfile.dll" Property="PreReqSearch"/>
+  </COMPONENT>
+</FRAGMENT>

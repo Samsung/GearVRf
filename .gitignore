@@ -37,3 +37,7 @@ local.properties
 *.iml
 lib.jar
 import-summary.txt
+
+/GVRf/Framework/framework/src/main/jni/Android.mk
+/GVRf/Framework/backend_*
+!/GVRf/Framework/backend_oculus

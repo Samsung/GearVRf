@@ -45,6 +45,26 @@ static long long getNanoTime() {
     return time;
 }
 
+static long long sleepNanos(long long nanoSeconds) {
+
+    //long long startNS     = getNanoTime();
+    // int nanosleep(const struct timespec *req, struct timespec
+    // *rem);
+    timespec ts, rem;
+    ts.tv_sec = 0;
+    if (nanoSeconds >= 1000000000LL) {
+        // no usual case with longer than 1 second
+        ts.tv_sec = nanoSeconds / 1000000000LL;
+        nanoSeconds = nanoSeconds % 1000000000LL;
+    }
+    ts.tv_nsec = nanoSeconds;
+
+    // while(nanosleep(&ts, &rem)) ;
+    nanosleep(&ts, &rem);
+
+    //LOGE( "sleepNanos: %lli", (getNanoTime() - startNS));
+}
+
 }
 
 #endif

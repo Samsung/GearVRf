@@ -1,7 +1,14 @@
 precision highp float;
 precision highp sampler2DArray;
 
-uniform mat4 u_view;
+#ifdef HAS_MULTIVIEW
+	flat in int view_id;
+	uniform mat4 u_view_[2];
+#else
+    uniform mat4 u_view; 
+#endif
+
+
 uniform mat4 u_model;
 in vec3 viewspace_position;
 in vec3 viewspace_normal;

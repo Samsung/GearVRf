@@ -32,6 +32,10 @@ Java_org_gearvrf_NativeTime_getCurrentTime(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTime_getNanoTime(JNIEnv * env,
         jobject obj);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTime_sleepNanos(JNIEnv * env,
+        jobject obj, jlong nanoSeconds);
 }
 ;
 
@@ -47,4 +51,9 @@ Java_org_gearvrf_NativeTime_getNanoTime(JNIEnv * env,
     return getNanoTime();
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTime_sleepNanos(JNIEnv * env,
+        jobject obj, jlong nanoSeconds) {
+    sleepNanos(nanoSeconds);
+}
 }

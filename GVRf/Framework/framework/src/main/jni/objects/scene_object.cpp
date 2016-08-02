@@ -28,9 +28,9 @@
 
 namespace gvr {
 SceneObject::SceneObject() :
-        HybridObject(), name_(""), children_(), visible_(true), in_frustum_(false),
-                enabled_(true), query_currently_issued_(false), vis_count_(0), lod_min_range_(
-                0), lod_max_range_(MAXFLOAT), using_lod_(false), bounding_volume_dirty_(
+        HybridObject(), name_(""), children_(), visible_(true), transform_dirty_(false), in_frustum_(
+                false),  enabled_(true),query_currently_issued_(false), vis_count_(0), lod_min_range_(
+                0), lod_max_range_(MAXFLOAT), cull_status_(false), using_lod_(false), bounding_volume_dirty_(
                 true) {
 
     // Occlusion query setup

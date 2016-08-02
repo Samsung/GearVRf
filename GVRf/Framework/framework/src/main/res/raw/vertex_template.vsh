@@ -1,9 +1,20 @@
-uniform mat4 u_model;
+
+#ifdef HAS_MULTIVIEW
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+uniform mat4 u_view_[2];
+uniform mat4 u_mvp_[2];
+uniform mat4 u_mv_[2];
+uniform mat4 u_mv_it_[2];
+flat out int view_id;
+#else
 uniform mat4 u_view;
 uniform mat4 u_mvp;
 uniform mat4 u_mv;
 uniform mat4 u_mv_it;
+#endif	
 
+uniform mat4 u_model;
 in vec3 a_position;
 in vec2 a_texcoord;
 in vec3 a_normal;
@@ -61,8 +72,14 @@ void main() {
 #ifdef HAS_LIGHTSOURCES
 	LightVertex(vertex);
 #endif
+
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
+#ifdef HAS_MULTIVIEW
+	view_id = int(gl_ViewID_OVR);
+	gl_Position = u_mvp_[gl_ViewID_OVR] * vertex.local_position;
+#else
 	gl_Position = u_mvp * vertex.local_position;	
+#endif	
 }

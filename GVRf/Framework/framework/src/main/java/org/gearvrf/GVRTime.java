@@ -50,10 +50,16 @@ public class GVRTime {
     public static long getMilliTime() {
         return GVRTime.getNanoTime() / GVRTime.NANO_TO_MILLIS;
     }
+
+    static void sleepNanos(long nanoSeconds) {
+        NativeTime.sleepNanos(nanoSeconds);
+    }
 }
 
 class NativeTime {
     static native long getCurrentTime();
 
     static native long getNanoTime();
+
+    static native long sleepNanos(long nanoSeconds);
 }

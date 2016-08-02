@@ -1,0 +1,39 @@
+#!/bin/bash
+
+#assumes these environment variables have been set correctly
+#ACCESS_TOKEN=<>
+#Generate one at GitHub/Settings/Personal access tokens
+#RELEASE_ID=<>
+#release id for the repo; determine the id by running
+#curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases
+#look for the "id" property of the release that is to be updated
+
+#get assets
+ASSET_URLS_RAW="$(curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases/$RELEASE_ID/assets|grep '"url"'|grep assets)"
+
+TMP_ARRAY=$(echo $ASSET_URLS_RAW | tr ", \"" "\n")
+
+#delete existing assets
+for ELEMENT in $TMP_ARRAY
+do
+    THE_URL="$(echo $ELEMENT|grep https)"
+    if [ -n "$THE_URL" ]; then
+        echo about to delete asset $THE_URL
+        curl -H "Authorization: token $ACCESS_TOKEN" -X DELETE $THE_URL
+    fi  
+done
+
+#upload assets specified as arguments
+for var in "$@"
+do
+    if [ -f "$var" ]; then
+        FILENAME="${var##*/}"
+        EXTENSION="${FILENAME##*.}"
+        NAME="${FILENAME%.*}"
+        TODAY=$(date +"%m-%d-%Y")
+
+        echo about to upload asset $FILENAME
+        #todo: upload url has to be retrieved from the release info
+        curl -H "Content-Type:application/zip" -H "Authorization: token $ACCESS_TOKEN" https://uploads.github.com/repos/Samsung/GearVRf/releases/$RELEASE_ID/assets?name=$NAME-$TODAY.$EXTENSION --data-binary @"$var"
+    fi
+done

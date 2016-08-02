@@ -1,6 +1,11 @@
 Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType vertex)
 {
-	vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
+#ifdef HAS_MULTIVIEW
+	vec4 L = u_view_[int(view_id)] * vec4(data.world_direction.xyz, 0.0);
+#else
+     vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
+#endif
+	
 	float attenuation = 1.0;
  
  #ifdef HAS_SHADOWS	  
