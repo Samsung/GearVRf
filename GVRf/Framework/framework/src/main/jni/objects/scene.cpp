@@ -121,5 +121,9 @@ bool Scene::addLight(Light* light) {
      lightList.push_back(light);
      return true;
 }
+
+void Scene::clearLights() {
+    lightList.clear();
+}
 }
 
