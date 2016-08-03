@@ -441,21 +441,22 @@ void Renderer::renderbatches(RenderState& rstate) {
         }
 
         RenderData* renderdata = batch->get_renderdata();
-        const std::vector<glm::mat4>& matrices = batch->get_matrices();
-        numberDrawCalls++;
-        batch->setupMesh();
-        setRenderStates(renderdata, rstate);
+        if (nullptr != renderdata) {
+            const std::vector<glm::mat4>& matrices = batch->get_matrices();
+            numberDrawCalls++;
+            batch->setupMesh();
+            setRenderStates(renderdata, rstate);
 
-        if(use_multiview){
+            if(use_multiview){
+                rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
+                rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
+            }
 
-            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
-            rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
-        }
-
-        rstate.shader_manager->getTextureShader()->render_batch(matrices,
+            rstate.shader_manager->getTextureShader()->render_batch(matrices,
                 renderdata, rstate, batch->getIndexCount(),
                 batch->getNumberOfMeshes());
-        restoreRenderStates(renderdata);
+            restoreRenderStates(renderdata);
+        }
     }
 
 }
@@ -1064,6 +1065,7 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 glDrawArrays(render_data->draw_mode(), 0, mesh->vertices().size());
             }
         }
+        glBindVertexArray(0);
     }
     checkGlError("renderMesh::renderMaterialShader");
 }
