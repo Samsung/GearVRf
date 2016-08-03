@@ -97,45 +97,12 @@ public abstract class GVRHybridObject {
      */
 
     /**
-     * Set or clear the keep-wrapper flag.
-     * 
-     * @deprecated This is a no-op as of version 2.0, and will be removed
-     *             sometime in (or after) Q4 2015.
-     */
-    public void setKeepWrapper(boolean keep) {
-    }
-
-    /**
-     * Get the current state of the keep-wrapper flag.
-     * 
-     * @deprecated As of version 2.0 this always returns {@code false}, and will
-     *             be removed sometime in (or after) Q4 2015.
-     */
-    public boolean getKeepWrapper() {
-        return false;
-    }
-
-    /**
      * Get the {@link GVRContext} this object is attached to.
      * 
      * @return The object's {@link GVRContext}.
      */
     public GVRContext getGVRContext() {
         return mGVRContext;
-    }
-
-    /**
-     * The address of the {@code std:shared_ptr} pointing to the native object.
-     * 
-     * <p>
-     * This is an internal method that may be useful in diagnostic code.
-     * 
-     * @deprecated As of version 2.0, this is synonymous with
-     *             {@link #getNative()}, and will be removed sometime in (or
-     *             after) Q4 2015.
-     */
-    public long getPtr() {
-        return getNative();
     }
 
     /**
@@ -188,19 +155,6 @@ public abstract class GVRHybridObject {
     public int hashCode() {
         Long nativePointer = getNative();
         return nativePointer.hashCode();
-    }
-
-    /**
-     * How many references are there to the native object?
-     * 
-     * <p>
-     * This is an internal method that may be useful in diagnostic code.
-     * 
-     * @deprecated This is meaningless, as of version 2.0, and will be removed
-     *             sometime in (or after) Q4 2015.
-     */
-    public int getUseCount() {
-        return 0;
     }
 
     /*
@@ -292,23 +246,6 @@ public abstract class GVRHybridObject {
      * @since 3.0.0
      */
     public final void releaseNative() {
-        mGVRContext.releaseNative(this);
-    }
-
-    /**
-     * Close this object, releasing any native resources.
-     * 
-     * Most objects will be automatically closed when Java's garbage collector
-     * detects that they are no longer being used: Explicitly closing an object
-     * that's still linked into the scene graph will almost certainly crash your
-     * GVRF app. You should only {@code close()} transient objects (especially
-     * those that use lots of memory, like large textures) that you
-     * <em>know</em> are no longer being used.
-     * 
-     * @since 2.0.0
-     */
-    @Deprecated
-    public final void close() throws IOException {
         mGVRContext.releaseNative(this);
     }
 }

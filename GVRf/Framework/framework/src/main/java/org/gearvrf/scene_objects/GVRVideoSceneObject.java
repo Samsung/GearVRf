@@ -81,11 +81,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                 materialType = GVRShaderType.OESVerticalStereo.ID;
                 break;
             default:
-                try {
-                    texture.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                texture.releaseNative();
                 throw new IllegalArgumentException();
         }
         GVRMaterial material = new GVRMaterial(gvrContext, materialType);
