@@ -100,18 +100,12 @@ class AsyncCompressedTexture {
         }
 
         @Override
-        protected CompressedTexture loadResource() {
+        protected CompressedTexture loadResource() throws IOException {
             GVRCompressedTextureLoader loader = resource.getCompressedLoader();
             CompressedTexture compressedTexture = null;
-            try {
-                compressedTexture = CompressedTexture
-                        .parse(resource.getStream(), false, loader);
-                Log.d("ASYNC", "parse compressed texture %s", resource);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                resource.closeStream();
-            }
+            compressedTexture = CompressedTexture.parse(resource.getStream(), false, loader);
+            Log.d("ASYNC", "parse compressed texture %s", resource);
+            resource.closeStream();
             return compressedTexture;
         }
     }
