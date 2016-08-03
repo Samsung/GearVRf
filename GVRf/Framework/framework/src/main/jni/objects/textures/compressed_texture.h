@@ -32,7 +32,8 @@ public:
 
     // The constructor to use when loading a mipmap chain, from Java
     explicit CompressedTexture(GLenum target) :
-            Texture(new GLTexture(target)), target(target) {
+            Texture(new GLTexture(target)),
+            target(target) {
         pending_gl_task_ = GL_TASK_INIT_PLAIN;
     }
 
@@ -93,11 +94,6 @@ public:
             glCompressedTexImage2D(target, 0, internalFormat_, width_, height_, 0,
                     imageSize_, data + dataOffset_);
 
-            // create mipmaps if it is not external texture
-            if(target==GL_TEXTURE_2D){
-				glGenerateMipmap (target);
-				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-            }
             env->ReleaseByteArrayElements(bytesRef_, data, 0);
             env->DeleteGlobalRef(bytesRef_);
             break;
@@ -109,10 +105,10 @@ public:
     }
 
 private:
-    CompressedTexture(const CompressedTexture& compressed_texture);
-    CompressedTexture(CompressedTexture&& compressed_texture);
-    CompressedTexture& operator=(const CompressedTexture& compressed_texture);
-    CompressedTexture& operator=(CompressedTexture&& compressed_texture);
+    CompressedTexture(const CompressedTexture& compressed_texture) = delete;
+    CompressedTexture(CompressedTexture&& compressed_texture) = delete;
+    CompressedTexture& operator=(const CompressedTexture& compressed_texture) = delete;
+    CompressedTexture& operator=(CompressedTexture&& compressed_texture) = delete;
 
 private:
     GLenum const target;
