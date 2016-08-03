@@ -17,7 +17,6 @@ package org.gearvrf;
 
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.View;
 
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
