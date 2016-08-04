@@ -61,6 +61,7 @@ public:
 	bool notBatched(){
 		return not_batched_;
 	}
+	void regenerateMeshData();
 	Material* material(int passIndex=0){
 	    if(passIndex ==0)
 	        return material_;

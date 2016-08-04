@@ -130,6 +130,20 @@ bool Batch::add(RenderData *render_data) {
 }
 
 void Batch::setupMesh(){
+    bool update_vbo = false;
+    for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
+        if(!(*it)->enabled()){
+            (*it)->set_batching(false);
+            render_data_set_.erase(it++);
+            update_vbo = true;
+        }
+        else {
+            ++it;
+        }
+    }
+    if(update_vbo)
+        regenerateMeshData();
+
     if(!mesh_init_){
         mesh_init_ = true;
         mesh_.set_vertices(vertices_);
@@ -140,6 +154,64 @@ void Batch::setupMesh(){
         renderdata_->set_mesh(&mesh_);
     }
 }
+void Batch::regenerateMeshData(){
+    vertex_count_ = 0;
+    index_count_ = 0;
+    index_offset_ = 0;
+    draw_count_=0;
+    matrix_index_map_.clear();
+    matrix_indices_.clear();
+    matrices_.clear();
+    tex_coords_.clear();
+    vertices_.clear();
+    normals_.clear();
+    for(auto it= render_data_set_.begin();it!=render_data_set_.end();++it){
+        RenderData* render_data = *it;
+        Mesh *render_mesh = render_data->mesh();
+        const std::vector<unsigned short>& indices = render_mesh->indices();
+
+        Transform* const t = render_data->owner_object()->transform();
+        glm::mat4 model_matrix;
+        if (t != NULL) {
+            model_matrix = glm::mat4(t->getModelMatrix());
+        }
+
+        // Store the model matrix and its index into map for update
+        matrix_index_map_[render_data] = draw_count_;
+        matrices_.push_back(model_matrix);
+
+        const std::vector<glm::vec3>& vertices = render_mesh->vertices();
+        const std::vector<glm::vec3>& normals = render_mesh->normals();
+        const std::vector<glm::vec2>& tex_coords = render_mesh->tex_coords();
+        int size = 0;
+
+        size = vertices.size();
+
+        for(int i=0;i<size;i++){
+            vertices_.push_back(vertices[i]);
+            normals_.push_back(normals[i]);
+            tex_coords_.push_back(tex_coords[i]);
+            matrix_indices_.push_back(draw_count_);
+        }
+
+        size = indices.size();
+        index_count_+=size;
+        for (int i = 0; i < size; i++) {
+            unsigned short index = indices[i];
+            index += index_offset_;
+            indices_.push_back(index);
+        }
+
+        // update all VBO data
+        vertex_count_ += vertices.size();
+        index_offset_ += vertices.size();
+        draw_count_++;
+        mesh_init_ = false;
+
+    }
+
+}
+
 /*
  *  Check if any of the meshes in batch are modified
  */
