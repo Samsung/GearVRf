@@ -18,7 +18,10 @@ package org.gearvrf.x3d;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import java.util.concurrent.Future;
@@ -184,7 +187,7 @@ public class X3Dobject
   private Context activityContext = null;
 
   private GVRSceneObject root = null;
-
+  private GVRSceneObject mainCamera = null;
   private List<GVRAnimation> mAnimations;
   /** Array list of DEFined items Clones objects with 'USE' parameter
    * As public, enables implementation of HTML5 DOM's 
@@ -303,9 +306,11 @@ public class X3Dobject
       GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
       centerCamera
           .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
-
+      this.mainCamera = new GVRSceneObject(gvrContext);
+      this.mainCamera.setName("MainCamera");
       cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
-      cameraRigAtRoot.setOwnerObject(root);
+      this.mainCamera.attachComponent(cameraRigAtRoot);
+      cameraRigAtRoot.setOwnerObject(this.mainCamera);
 
       cameraRigAtRoot.attachLeftCamera(leftCamera);
       cameraRigAtRoot.attachRightCamera(rightCamera);
@@ -314,9 +319,7 @@ public class X3Dobject
 
       cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
       cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
-      // attach the camera rig to the root instead of the GVRscene
-      root.attachComponent(cameraRigAtRoot);
-
+      this.root.addChildObject(this.mainCamera);
 
       this.mAnimations = root.getAnimations();
       lodManager = new LODmanager();
@@ -3234,7 +3237,7 @@ public class X3Dobject
           GVRDirectLight headLight = new GVRDirectLight(gvrContext);
           headlightSceneObject.attachLight(headLight);
           headLight.setDiffuseIntensity(1, 1, 1, 1);
-
+          headlightSceneObject.setName("HeadLight");
           cameraRigAtRoot.addChildObject(headlightSceneObject);
         }
 
@@ -3710,6 +3713,7 @@ public class X3Dobject
         if (reorganizeVerts)
         {
           organizeVertices(gvrMesh);
+          reorganizeVerts = false;
         }
         gvrRenderData.setMesh(gvrMesh);
         gvrMesh = null;
@@ -4146,93 +4150,117 @@ public class X3Dobject
 
     private void organizeVertices(GVRMesh mesh)
     {
-      int vtxsize = 3;
       boolean hasNormals = normalIndices.size() > 0;
       boolean hasTexcoords = texcoordIndices.size() > 0;
-      vtxsize += (hasNormals ? 3 : 0) + (hasTexcoords ? 2 : 0);
-      float[] dstVert = new float[vtxsize];
-      HashSet<float[]> vertexMap = new HashSet<float[]>();
-
-      //
-      // Collect all the unique position, normal, texcoord combinations
-      //
-      for (int ii = 0; ii < vertices.size(); ++ii)
-      {
-        Vertex srcVert = vertices.get(ii);
-        int ofs = 3;
-        dstVert[0] = srcVert.getVertexCoord(0);
-        dstVert[1] = srcVert.getVertexCoord(1);
-        dstVert[2] = srcVert.getVertexCoord(2);
-        if (hasNormals)
-        {
-          int nindex = normalIndices.get(ii);
-          VertexNormal nml = vertexNormal.get(nindex);
-          dstVert[ofs] = nml.getVertexNormalCoord(0);
-          dstVert[ofs + 1] = nml.getVertexNormalCoord(1);
-          dstVert[ofs + 2] = nml.getVertexNormalCoord(2);
-          ofs += 3;
-        }
-        if (hasTexcoords)
-        {
-          int tindex = texcoordIndices.get(ii);
-          TextureValues tv = textureCoord.get(tindex);
-          dstVert[ofs] = tv.coord[0];
-          dstVert[ofs + 1] = tv.coord[1];
-          ofs += 2;
-        }
-        if (vertexMap.add(dstVert))
-        {
-          dstVert = new float[vtxsize];
-        }
-      }
-    //
-    // Use the vertex map to generate new vertices, normals, texcoords
-    //
-      int nverts = vertexMap.size();
-      float[] newVertices = new float[nverts * 3];
-      float[] newNormals = hasNormals ? new float[nverts * 3] : null;
-      float[] newTexcoords = hasTexcoords ? new float[nverts * 2] : null;
+      Map<String, Integer> vertexMap = new LinkedHashMap<String, Integer>();
       char[] newIndices = new char[indexedFaceSet.size() * 3];
-      int i = 0;
+      List<Float> gvrVerts = new ArrayList<Float>();
+      List<Float> gvrNormals = new ArrayList<Float>();
+      List<Float> gvrTexcoords = new ArrayList<Float>();
       float minYtextureCoordinate = Float.MAX_VALUE;
       float maxYtextureCoordinate = Float.MIN_VALUE;
-
-      for (float[] vert : vertexMap)
-      {
-        int ofs = 3;
-        newVertices[3 * i] = vert[0];
-        newVertices[3 * i + 1] = vert[1];
-        newVertices[3 * i + 2] = vert[2];
-        if (hasNormals)
-        {
-          newNormals[3 * i] = vert[ofs];
-          newNormals[3 * i + 1] = vert[ofs + 1];
-          newNormals[2 * i + 2] = vert[ofs + 2];
-          ofs += 3;
-        }
-        if (hasTexcoords)
-        {
-          newTexcoords[2 * i] = vert[ofs];
-          newTexcoords[2 * i + 1] = vert[ofs + 1];
-          if (vert[ofs] > maxYtextureCoordinate)
-            maxYtextureCoordinate = vert[ofs];
-          else if (vert[ofs + 1] < minYtextureCoordinate)
-            minYtextureCoordinate = vert[ofs + 1];
-          ofs += 2;
-        }
-        ++i;
-      }
       //
-      // Generate the corresponding index table
+      // Scan all the faces and compose the set of unique vertices
       //
       for (char f = 0; f < indexedFaceSet.size(); f++)
       {
         Coordinates coordinate = indexedFaceSet.get(f);
+        float x;
+        float y;
+        float z;
+        float nx = 0;
+        float ny = 0;
+        float nz = 0;
+        float u = 0;
+        float v = 0;
+
         for (char j = 0; j < 3; j++)
         {
           int findex = f * 3 + j;
-          char v = (char) coordinate.getCoordinate(j);
-          newIndices[v] = (char) findex;
+          int vindex = coordinate.getCoordinate(j);
+          Vertex srcVert = vertices.get(vindex);
+          String key = "";
+
+          x = srcVert.getVertexCoord(0);
+          y = srcVert.getVertexCoord(1);
+          z = srcVert.getVertexCoord(2);
+          key += String.valueOf(x) + String.valueOf(y) + String.valueOf(z);
+          if (hasNormals)
+          {
+            int nindex = normalIndices.get(findex);
+            VertexNormal nml = vertexNormal.get(nindex);
+            nx = nml.getVertexNormalCoord(0);
+            ny  = nml.getVertexNormalCoord(1);
+            nz = nml.getVertexNormalCoord(2);
+            key += String.valueOf(nx) + String.valueOf(ny) + String.valueOf(nz);
+          }
+          if (hasTexcoords)
+          {
+            int tindex = texcoordIndices.get(findex);
+            TextureValues tv = textureCoord.get(tindex);
+            u = tv.coord[0];
+            v = tv.coord[1];
+            key += String.valueOf(u) + String.valueOf(v);
+          }
+          Integer newindex = vertexMap.get(key);
+          if (newindex == null)
+          {
+            newindex = vertexMap.size();
+            vertexMap.put(key, newindex);
+            gvrVerts.add(x);
+            gvrVerts.add(y);
+            gvrVerts.add(z);
+            if (hasNormals)
+            {
+              gvrNormals.add(nx);
+              gvrNormals.add(ny);
+              gvrNormals.add(nz);
+            }
+            if (hasTexcoords)
+            {
+              gvrTexcoords.add(u);
+              gvrTexcoords.add(v);
+              if (v < minYtextureCoordinate)
+              {
+                minYtextureCoordinate = y;
+              }
+              if (u > maxYtextureCoordinate)
+              {
+                maxYtextureCoordinate = u;
+              }
+            }
+          }
+          newIndices[findex] = (char) (int) newindex;
+        }
+      }
+    //
+    // Copy the new vertex data into the GVRMesh
+    //
+      int nverts = gvrVerts.size() / 3;
+      float[] newVertices = new float[nverts * 3];
+      float[] newNormals = hasNormals ? new float[nverts * 3] : null;
+      float[] newTexcoords = hasTexcoords ? new float[nverts * 2] : null;
+      int maxMinDiff = (int) Math.round((float) Math
+              .ceil(maxYtextureCoordinate - minYtextureCoordinate));
+
+      for (int i = 0; i < nverts; ++i)
+      {
+        int t = 3 * i;
+        newVertices[t] = gvrVerts.get(t++);
+        newVertices[t] = gvrVerts.get(t++);
+        newVertices[t] = gvrVerts.get(t++);
+        if (hasNormals)
+        {
+          t = 3 * i;
+          newNormals[t] = gvrNormals.get(t++);
+          newNormals[t] = gvrNormals.get(t++);
+          newNormals[t] = gvrNormals.get(t++);
+        }
+        if (hasTexcoords) // flip the Y texture coordinate
+        {
+          t = 2 * i;
+          newTexcoords[t] = gvrTexcoords.get(t++);
+          newTexcoords[t] = maxMinDiff - gvrTexcoords.get(t);
         }
       }
       mesh.setVertices(newVertices);
@@ -4240,17 +4268,8 @@ public class X3Dobject
       {
         mesh.setNormals(newNormals);
       }
-      //
-      // Flip the Y texture coordinate
-      //
       if (newTexcoords != null)
       {
-        int maxMinDiff = (int) Math.round((float) Math
-                .ceil(maxYtextureCoordinate - minYtextureCoordinate));
-        for (int tc = 0; tc < newTexcoords.length; tc += 2)
-        {
-          newTexcoords[tc] = -newTexcoords[tc] + maxMinDiff;
-        }
         mesh.setTexCoords(newTexcoords);
       }
       mesh.setIndices(newIndices);
