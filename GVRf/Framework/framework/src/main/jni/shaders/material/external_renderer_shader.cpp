@@ -63,12 +63,13 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
         scratchBuffer[5] = max_corner[2];
     }
 
+    //state invariants for surface flinger
     //Oculus leaves buffers bound before calling us; SurfaceFlinger is ES 2.0
     //so the following two lines ensure that SF doesn't end up using incorrect
     //buffers
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+    glBindVertexArray(0);
     glActiveTexture(GL_TEXTURE0);
 
     TextureCapturer *capturer(render_data->get_texture_capturer());
