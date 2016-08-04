@@ -24,7 +24,6 @@
 #include "shaderbase.h"
 
 namespace gvr {
-class GLProgram;
 class RenderData;
 class Material;
 struct RenderState;
@@ -34,15 +33,16 @@ public:
     OESShader();
     virtual ~OESShader();
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
-    void programInit(RenderState* rstate);
 private:
-    OESShader(const OESShader& oes_shader);
-    OESShader(OESShader&& oes_shader);
-    OESShader& operator=(const OESShader& oes_shader);
-    OESShader& operator=(OESShader&& oes_shader);
+    OESShader(const OESShader& oes_shader) = delete;
+    OESShader(OESShader&& oes_shader) = delete;
+    OESShader& operator=(const OESShader& oes_shader) = delete;
+    OESShader& operator=(OESShader&& oes_shader) = delete;
+
+    void programInit();
 
 private:
-     GLuint u_mvp_;
+    GLuint u_mvp_;
     GLuint u_texture_;
     GLuint u_color_;
     GLuint u_opacity_;

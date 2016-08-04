@@ -151,7 +151,9 @@ void Batch::setupMesh(){
         mesh_.set_tex_coords(tex_coords_);
         mesh_.set_indices(indices_);
         mesh_.setFloatVector("a_matrix_index", matrix_indices_);
-        renderdata_->set_mesh(&mesh_);
+        if (nullptr != renderdata_) {
+            renderdata_->set_mesh(&mesh_);
+        }
     }
 }
 void Batch::regenerateMeshData(){

@@ -452,12 +452,12 @@ void Renderer::renderbatches(RenderState& rstate) {
             return;
 
 
-        batch->setupMesh();
-        setRenderStates(renderdata, rstate);
-        if(use_multiview){
+            batch->setupMesh();
+            setRenderStates(renderdata, rstate);
+            if(use_multiview){
              rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
              rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
-        }
+            }
 
         const std::vector<glm::mat4>& matrices = batch->get_matrices();
         for(int passIndex =0; passIndex< renderdata->pass_count();passIndex++){
@@ -469,7 +469,8 @@ void Renderer::renderbatches(RenderState& rstate) {
                         renderdata, rstate, batch->getIndexCount(),
                         batch->getNumberOfMeshes());
         }
-        restoreRenderStates(renderdata);
+            restoreRenderStates(renderdata);
+        }
     }
 
 }
@@ -1080,6 +1081,7 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 glDrawArrays(render_data->draw_mode(), 0, mesh->vertices().size());
             }
         }
+        glBindVertexArray(0);
     }
     checkGlError("renderMesh::renderMaterialShader");
 }

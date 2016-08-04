@@ -62,11 +62,11 @@ static void checkGLError(const char* name)
     bool error = false;
 #endif
     for (int i = 0; i < 10; ++i) {
-        const GLenum error = glGetError();
-        if (GL_NO_ERROR == error) {
+        const GLenum glError = glGetError();
+        if (GL_NO_ERROR == glError) {
             break;
         }
-        LOGE("%s error: %s", name, GlErrorString(error));
+        LOGE("%s error: %s", name, GlErrorString(glError));
 #ifdef STOP_ON_ERROR
         error = true;
 #endif

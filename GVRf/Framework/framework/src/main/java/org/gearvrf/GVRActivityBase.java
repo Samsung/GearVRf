@@ -330,7 +330,7 @@ abstract class GVRActivityBase extends Activity implements IEventReceiver, IScri
      * @deprecated
      */
     @Deprecated
-    public final void setForceMonoscopic(boolean force) {
+    public void setForceMonoscopic(boolean force) {
         mAppSettings.monoscopicModeParams.setMonoscopicMode(force);
     }
 
