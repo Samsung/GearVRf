@@ -696,7 +696,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                                 mScript, IScriptEvents.class,
                                 "onInit", GVRViewManager.this);
 
-                        if (null != mSplashScreen && SplashMode.AUTOMATIC == mScript.getSplashMode()) {
+                        if (null != mSplashScreen && SplashMode.AUTOMATIC == mScript
+                                .getSplashMode() && mScript.getSplashDisplayTime() < 0f) {
                             runOnGlThread(new Runnable() {
                                 public void run() {
                                     mSplashScreen.closeSplashScreen();
