@@ -1,14 +1,21 @@
 package org.gearvrf.io.cursor3d;
 
+import android.os.Handler;
+import android.os.Handler.Callback;
+import android.os.Message;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSceneObject.BoundingVolume;
 import org.gearvrf.GVRSwitch;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.utility.Log;
+import org.gearvrf.scene_objects.GVRSphereSceneObject;
 
 import java.util.HashMap;
 
@@ -23,7 +30,7 @@ import java.util.HashMap;
 public class SelectableBehavior extends GVRBehavior {
     private static final String TAG = SelectableBehavior.class.getSimpleName();
     static private long TYPE_SELECTABLE = ((long)SelectableBehavior.class.hashCode() << 32) & (System
-            .currentTimeMillis() & 0xffffffff);;
+            .currentTimeMillis() & 0xffffffff);
     private static final String DEFAULT_ASSET_NEEDED = "Asset for Default state should be " +
             "specified";
     private GVRSwitch gvrSwitch;
@@ -45,10 +52,14 @@ public class SelectableBehavior extends GVRBehavior {
         /**
          * is called whenever the state of the {@link SelectableBehavior} changes.
          *
+         * @param behavior the instance of {@link SelectableBehavior} associated with the
+         *                 GVRSceneObject
          * @param prev    the previous state
          * @param current current state to be set.
+         * @param cursor the instance of {@link Cursor} that caused the state change
          */
-        void onStateChanged(ObjectState prev, ObjectState current);
+        void onStateChanged(SelectableBehavior behavior, ObjectState prev, ObjectState current,
+                            Cursor cursor);
     }
 
     /**
@@ -165,7 +176,7 @@ public class SelectableBehavior extends GVRBehavior {
         if (!defaultState) {
             throw new IllegalArgumentException(DEFAULT_ASSET_NEEDED);
         }
-        setState(ObjectState.DEFAULT);
+        setState(ObjectState.DEFAULT, null);
     }
 
     @Override
@@ -212,29 +223,32 @@ public class SelectableBehavior extends GVRBehavior {
         return false;
     }
 
-    private void setButtonPress(int cursorId) {
+    private void setButtonPress(Cursor cursor) {
+        int cursorId = cursor.getId();
         states.remove(cursorId);
         if (!isHigherOrEqualStatePresent(ObjectState.CLICKED)) {
             currentState = ObjectState.CLICKED;
-            setState(currentState);
+            setState(currentState, cursor);
         }
         states.put(cursorId, ObjectState.CLICKED);
     }
 
-    private void setIntersect(int cursorId) {
+    private void setIntersect(Cursor cursor) {
+        int cursorId = cursor.getId();
         states.remove(cursorId);
         if (!isHigherOrEqualStatePresent(ObjectState.CLICKED)) {
             currentState = ObjectState.COLLIDING;
-            setState(currentState);
+            setState(currentState, cursor);
         }
         states.put(cursorId, ObjectState.COLLIDING);
     }
 
-    private void setWireFrame(int cursorId) {
+    private void setWireFrame(Cursor cursor) {
+        int cursorId = cursor.getId();
         states.remove(cursorId);
         if (!isHigherOrEqualStatePresent(ObjectState.BEHIND)) {
             currentState = ObjectState.BEHIND;
-            setState(currentState);
+            setState(currentState, cursor);
         }
         states.put(cursorId, ObjectState.BEHIND);
     }
@@ -251,24 +265,26 @@ public class SelectableBehavior extends GVRBehavior {
         return highestPriority;
     }
 
-    private void setDefault(int cursorId) {
+    private void setDefault(Cursor cursor) {
+        int cursorId = cursor.getId();
         states.remove(cursorId);
         ObjectState highestPriority = getHighestPriorityState();
         if (currentState != highestPriority) {
             currentState = highestPriority;
-            setState(currentState);
+            setState(currentState, cursor);
         }
         states.put(cursorId, ObjectState.DEFAULT);
     }
 
-    private void setState(ObjectState state) {
-        if (this.state != state && stateChangedListener != null) {
-            stateChangedListener.onStateChanged(this.state, state);
-        }
+    private void setState(ObjectState state, Cursor cursor) {
+        ObjectState prevState = this.state;
         this.state = state;
         Integer childIndex = stateIndexMap.get(state);
         if (childIndex != null && gvrSwitch != null) {
             gvrSwitch.setSwitchIndex(childIndex);
+        }
+        if (prevState != this.state && stateChangedListener != null) {
+            stateChangedListener.onStateChanged(this, prevState, currentState, cursor);
         }
     }
 
@@ -295,14 +311,14 @@ public class SelectableBehavior extends GVRBehavior {
                 if (isColliding) {
                     if (isActive && previousOver && !previousActive) {
                         if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                            setButtonPress(cursor);
                             handleClickEvent(event);
-                            setButtonPress(cursorId);
                         }
                     } else if (!isActive) {
-                        setIntersect(cursorId);
+                        setIntersect(cursor);
                     }
                 } else if (cursorDistance > soDistance) {
-                    setWireFrame(cursorId);
+                    setWireFrame(cursor);
                 }
                 break;
             case CLICKED:
@@ -310,57 +326,57 @@ public class SelectableBehavior extends GVRBehavior {
                     if (isActive) {
                         handleDragEvent(event);
                     } else {
+                        setIntersect(cursor);
                         handleClickReleased(event);
-                        setIntersect(cursorId);
                     }
                 } else {
                     if (isActive) {
                         if (event.getCursor().getCursorType() == CursorType.OBJECT) {
-                            setDefault(cursorId);
+                            setDefault(cursor);
                         }
                         handleCursorLeave(event);
                     } else {
+                        setDefault(cursor);
                         handleClickReleased(event);
-                        setDefault(cursorId);
                     }
                 }
                 break;
             case COLLIDING:
                 if (!isOver) {
-                    setDefault(cursorId);
+                    setDefault(cursor);
                     break;
                 }
                 if (isColliding) {
                     if (isActive) {
                         if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                            setButtonPress(cursor);
                             handleClickEvent(event);
-                            setButtonPress(cursorId);
                         }
                     }
                 } else {
                     if (cursorDistance > soDistance) {
-                        setWireFrame(cursorId);
+                        setWireFrame(cursor);
                     } else if (cursorDistance < soDistance) {
-                        setDefault(cursorId);
+                        setDefault(cursor);
                     }
                 }
                 break;
             case BEHIND:
                 if (!isOver) {
-                    setDefault(cursorId);
+                    setDefault(cursor);
                     break;
                 }
                 if (isColliding) {
                     if (isActive) {
                         if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                            setButtonPress(cursor);
                             handleClickEvent(event);
-                            setButtonPress(cursorId);
                         }
                     } else {
-                        setIntersect(cursorId);
+                        setIntersect(cursor);
                     }
                 } else if (cursorDistance < soDistance) {
-                    setDefault(cursorId);
+                    setDefault(cursor);
                 }
                 break;
         }
@@ -398,8 +414,8 @@ public class SelectableBehavior extends GVRBehavior {
         if (state != null) {
             states.remove(cursorId);
             if (currentState == state) {
-                ObjectState highestPrioritState = getHighestPriorityState();
-                setState(highestPrioritState);
+                ObjectState highestPriorityState = getHighestPriorityState();
+                setState(highestPriorityState, cursor);
             }
         }
 
@@ -414,8 +430,8 @@ public class SelectableBehavior extends GVRBehavior {
 
     /**
      * Set the {@link StateChangedListener} to be associated with the {@link SelectableBehavior}.
-     * The {@link StateChangedListener#onStateChanged(ObjectState, ObjectState)} is called every
-     * time the state of the {@link SelectableBehavior} is changed.
+     * The {@link StateChangedListener#onStateChanged(SelectableBehavior, ObjectState, ObjectState, Cursor)}
+     * is called every time the state of the {@link SelectableBehavior} is changed.
      *
      * @param listener the {@link StateChangedListener}
      */

@@ -115,11 +115,16 @@ class CursorSceneObject {
     }
 
     void set(GVRSceneObject sceneObject){
-        meshSceneObject = getMeshObject(sceneObject);
+        GVRSceneObject sceneObjectWithMesh = getMeshObject(sceneObject);
+        synchronized (lock) {
+            meshSceneObject = sceneObjectWithMesh;
+        }
     }
 
     void reset(){
-        meshSceneObject = null;
+        synchronized (lock) {
+            meshSceneObject = null;
+        }
     }
 
     void removeChildObject(GVRSceneObject sceneObject) {
