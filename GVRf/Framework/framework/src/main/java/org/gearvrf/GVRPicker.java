@@ -70,9 +70,10 @@ public class GVRPicker extends GVRBehavior {
     private Vector3f mRayOrigin = new Vector3f(0, 0, 0);
     private Vector3f mRayDirection = new Vector3f(0, 0, -1);
     private float[] mPickRay = new float[6];
-    private boolean mHasChanged;
-    private GVRScene mScene;
-    private GVRPickedObject[] mPicked = null;
+
+    protected boolean mHasChanged;
+    protected GVRScene mScene;
+    protected GVRPickedObject[] mPicked = null;
 
     /**
      * Construct a picker which picks from a given scene.
@@ -193,10 +194,16 @@ public class GVRPicker extends GVRBehavior {
      */
     public void doPick()
     {
-        boolean selectionChanged = false;
         GVRPickedObject[] picked = pickObjects(mScene,
                 mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
                 mRayDirection.x, mRayDirection.y, mRayDirection.z);
+        generatePickEvents(picked);
+    }
+
+    protected void generatePickEvents(GVRPickedObject[] picked)
+    {
+        boolean selectionChanged = false;
+
         /*
          * Send "onExit" events for colliders that were picked but
          * are not picked anymore.
@@ -212,7 +219,7 @@ public class GVRPicker extends GVRBehavior {
                 GVRCollider collider = collision.hitCollider;
                 if (!hasCollider(picked, collider))
                 {
-                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());                   
+                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());
                     selectionChanged = true;
                 }
             }
@@ -230,12 +237,12 @@ public class GVRPicker extends GVRBehavior {
             GVRCollider collider = collision.hitCollider;
             if (!hasCollider(mPicked, collider))
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);                   
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);
                 selectionChanged = true;
             }
             else
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);                   
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);
             }
         }
         if (selectionChanged)
@@ -248,7 +255,7 @@ public class GVRPicker extends GVRBehavior {
             else
             {
                 mPicked = null;
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", this);                
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", this);
             }
         }
     }
@@ -494,38 +501,6 @@ public class GVRPicker extends GVRBehavior {
         return Arrays.asList(pickObjects(scene, ox, oy, oz, dx, dy, dz));
     }
 
-    /**
-     * Returns the list of colliders attached to scene objects that are
-     * visible from the viewpoint of the camera.
-     *
-     * <p>
-     * This method is thread safe because it guarantees that only
-     * one thread at a time is doing a ray cast into a particular scene graph,
-     * and it extracts the hit data during within its synchronized block. You
-     * can then examine the return list without worrying about another thread
-     * corrupting your hit data.
-     *
-     * The hit location returned is the world position of the scene object center.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @return A list of {@link GVRPickedObject}, sorted by distance from the
-     *         camera rig. Each {@link GVRPickedObject} contains the scene object
-     *         which owns the {@link GVRCollider} along with the hit
-     *         location and distance from the camera.
-     *
-     * @since 1.6.6
-     */
-    public static final GVRPickedObject[] pickVisible(GVRScene scene) {
-        sFindObjectsLock.lock();
-        try {
-            final GVRPickedObject[] result = NativePicker.pickVisible(scene.getNative());
-            return result;
-        } finally {
-            sFindObjectsLock.unlock();
-        }
-    }
 
     /**
      * Internal utility to help JNI add hit objects to the pick list.
@@ -668,7 +643,7 @@ final class NativePicker {
 
     static native float pickSceneObject(long sceneObject, long cameraRig);
 
-    static native GVRPicker.GVRPickedObject[] pickVisible(long scenez);
+    static native GVRPicker.GVRPickedObject[] pickVisible(long scene);
 
     static native float[] pickSceneObjectAgainstBoundingBox(long sceneObject,
             float ox, float oy, float oz, float dx, float dy, float dz);
