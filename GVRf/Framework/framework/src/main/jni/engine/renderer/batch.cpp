@@ -65,10 +65,14 @@ bool Batch::add(RenderData *render_data) {
 
 
     // if it is not texture shader, dont add into batch, render in normal way
-    if (material_->shader_type() != Material::ShaderType::TEXTURE_SHADER) {
-        render_data_set_.insert(render_data);
-        render_mesh->setMeshModified(false); // mark mesh clean
-        return true;
+    for(int i=0; i<render_data->pass_count();i++)
+    {
+        Material* mat = render_data->pass(i)->material();
+        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
+            render_data_set_.insert(render_data);
+            render_mesh->setMeshModified(false); // mark mesh clean
+            return true;
+        }
     }
 
     // if mesh is large, render in normal way

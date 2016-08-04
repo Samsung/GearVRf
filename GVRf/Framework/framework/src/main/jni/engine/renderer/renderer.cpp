@@ -131,9 +131,10 @@ void Renderer::state_sort() {
     }
 }
 struct comparator {
-    std::string renderdata_properties;
     Material* mat;
     Material::ShaderType shader_type;
+    int no_passes;
+    std::string renderdata_properties;
     bool mesh_dynamic;
 };
 
@@ -270,7 +271,25 @@ void createBatch(int start, int end) {
         }
     }
 }
+/**
+    This function compares passes of render-data
+    it checks whether no of passes are equal and then material and cull_status of each pass
 
+*/
+bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2){
+    int pass_count1 = rdata1->pass_count();
+    int pass_count2 = rdata2->pass_count();
+
+    if(pass_count1 != pass_count2)
+        return false;
+
+    for(int i=0; i< pass_count1; i++){
+        if(!(rdata1->material(i) == rdata2->material(i) && rdata1->material(i)->shader_type() == rdata2->material(i)->shader_type() &&
+                   rdata1->cull_face(i) != rdata2->cull_face(i)))
+            return false;
+    }
+    return true;
+}
 /*
  * It creates array of indices which specifies indices of the spliting of batches in renderdata vector
  * for renderdatas to have in same batch, they need to have same render order, material,
@@ -278,10 +297,11 @@ void createBatch(int start, int end) {
  */
 void Renderer::BatchSetup() {
     batch_indices.clear();
-    comparator prev, current;
-
+ //   comparator prev, current;
+/*
     // copy first render vector properties
     if (render_data_vector.size() != 0) {
+        prev.no_passes = render_data_vector[0]->pass_count();
         prev.renderdata_properties = render_data_vector[0]->getHashCode();
         prev.mat = render_data_vector[0]->material(0);
         prev.shader_type = render_data_vector[0]->material(0)->shader_type();
@@ -307,6 +327,24 @@ void Renderer::BatchSetup() {
             prev.renderdata_properties = current.renderdata_properties;
             prev.shader_type = current.shader_type;
             prev.mesh_dynamic = current.mesh_dynamic;
+        }
+    }
+    */
+    int render_vector_size = render_data_vector.size();
+    RenderData* prev = nullptr;
+    RenderData* curr = nullptr;
+
+    if(render_vector_size != 0){
+        batch_indices.push_back(0);
+        prev = render_data_vector[0];
+    }
+
+    for (int i = 1; i < render_vector_size ; i++) {
+        curr = render_data_vector[i];
+        if(!(prev->rendering_order() == curr->rendering_order() && prev->mesh()->isDynamic() == curr->mesh()->isDynamic()
+              && isRenderPassEqual(prev,curr) && !prev->getHashCode().compare(curr->getHashCode()))){
+            batch_indices.push_back(i);
+            prev = curr;
         }
     }
     batch_indices.push_back(render_data_vector.size());
@@ -417,7 +455,7 @@ void Renderer::restoreRenderStates(RenderData* render_data) {
         GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
     }
 }
-
+/*
 void Renderer::renderbatches(RenderState& rstate) {
     glm::mat4 vp_matrix = glm::mat4(
             rstate.uniforms.u_proj * rstate.uniforms.u_view);
@@ -425,7 +463,7 @@ void Renderer::renderbatches(RenderState& rstate) {
     for (auto it = batch_set.begin(); it != batch_set.end(); ++it) {
 
         Batch* batch = *it;
-        rstate.material_override = batch->get_material();
+        rstate.material_override = batch->material(0);
         int currentShaderType = rstate.material_override->shader_type();
 
         // if shader type is other than texture shader, render it with non-batching mode
@@ -441,24 +479,74 @@ void Renderer::renderbatches(RenderState& rstate) {
         }
 
         RenderData* renderdata = batch->get_renderdata();
-        const std::vector<glm::mat4>& matrices = batch->get_matrices();
-        numberDrawCalls++;
-        batch->setupMesh();
-        setRenderStates(renderdata, rstate);
+        if (nullptr != renderdata) {
+            const std::vector<glm::mat4>& matrices = batch->get_matrices();
+            numberDrawCalls++;
+            batch->setupMesh();
+            setRenderStates(renderdata, rstate);
 
-        if(use_multiview){
+            if(use_multiview){
+                rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
+                rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
+            }
 
-            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
-            rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
-        }
-
-        rstate.shader_manager->getTextureShader()->render_batch(matrices,
+            rstate.shader_manager->getTextureShader()->render_batch(matrices,
                 renderdata, rstate, batch->getIndexCount(),
                 batch->getNumberOfMeshes());
+            restoreRenderStates(renderdata);
+        }
+    }
+
+}*/
+
+void Renderer::renderbatches(RenderState& rstate) {
+    glm::mat4 vp_matrix = glm::mat4(
+            rstate.uniforms.u_proj * rstate.uniforms.u_view);
+
+    for (auto it = batch_set.begin(); it != batch_set.end(); ++it) {
+
+        Batch* batch = *it;
+        int currentShaderType = batch->material(0)->shader_type();
+
+        rstate.material_override = batch->material(0);
+        // if shader type is other than texture shader, render it with non-batching mode
+        // if the mesh is large, we are not batching it
+        if (currentShaderType != Material::ShaderType::TEXTURE_SHADER
+                || batch->notBatched()  ) {
+            const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
+            for (auto it3 = render_data_set.begin();
+                    it3 != render_data_set.end(); ++it3) {
+                renderRenderData(rstate, (*it3));
+            }
+            continue;
+        }
+
+        RenderData* renderdata = batch->get_renderdata();
+        if (!(rstate.render_mask & renderdata->render_mask()))
+            return;
+
+        batch->setupMesh();
+        setRenderStates(renderdata, rstate);
+        if(use_multiview){
+             rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
+             rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
+        }
+
+        const std::vector<glm::mat4>& matrices = batch->get_matrices();
+        for(int passIndex =0; passIndex< renderdata->pass_count();passIndex++){
+
+            set_face_culling(renderdata->pass(passIndex)->cull_face());
+            rstate.material_override = batch->material(passIndex);
+            numberDrawCalls++;
+            rstate.shader_manager->getTextureShader()->render_batch(matrices,
+                        renderdata, rstate, batch->getIndexCount(),
+                        batch->getNumberOfMeshes());
+        }
         restoreRenderStates(renderdata);
     }
 
 }
+
 bool do_batching = true;
 
 void Renderer::renderRenderDataVector(RenderState &rstate) {
