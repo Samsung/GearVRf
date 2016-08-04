@@ -69,6 +69,8 @@ public:
 	    return renderdata_->pass(passIndex)->material();
 	}
 	bool isBatchDirty();
+	void clearData();
+	bool updateMesh(Mesh* render_mesh);
 
 	unsigned int getIndexCount(){
 		return index_count_;

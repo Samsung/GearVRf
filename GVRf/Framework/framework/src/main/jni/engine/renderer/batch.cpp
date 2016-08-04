@@ -34,16 +34,45 @@ Batch::Batch(int no_vertices, int no_indices) :
 }
 
 Batch::~Batch() {
-    vertices_.clear();
-    normals_.clear();
-    tex_coords_.clear();
-    indices_.clear();
-    matrices_.clear();
-    matrix_indices_.clear();
+    clearData();
     delete renderdata_;
-
 }
 
+bool Batch::updateMesh(Mesh* render_mesh){
+    const std::vector<unsigned short>& indices = render_mesh->indices();
+    const std::vector<glm::vec3>& vertices = render_mesh->vertices();
+    const std::vector<glm::vec3>& normals = render_mesh->normals();
+    const std::vector<glm::vec2>& tex_cords = render_mesh->tex_coords();
+
+    int size = 0;
+    size = vertices.size();
+
+    for(int i=0;i<size;i++){
+        vertices_.push_back(vertices[i]);
+        matrix_indices_.push_back(draw_count_);
+        tex_coords_.push_back(tex_cords[i]);
+    }
+
+    // Check if models has normals
+    if(normals.size() > 0){
+        for(int i=0;i<size;i++)
+            normals_.push_back(normals[i]);
+    }
+
+    size = indices.size();
+    index_count_+=size;
+    for (int i = 0; i < size; i++) {
+        unsigned short index = indices[i];
+        index += index_offset_;
+        indices_.push_back(index);
+    }
+
+    // update all VBO data
+    vertex_count_ += vertices.size();
+    index_offset_ += vertices.size();
+    draw_count_++;
+    mesh_init_ = false;
+}
 /*
  * Add renderdata of scene object into mesh, add vertices, texcoords, normals, model matrices
  */
@@ -92,45 +121,31 @@ bool Batch::add(RenderData *render_data) {
             renderdata_ = new RenderData(*render_data);
             renderdata_->set_batching(true);
        }
-
     }
 
     render_data_set_.insert(render_data); // store all the renderdata which are in batch
     render_mesh->setMeshModified(false); // mark mesh clean
 
-    const std::vector<glm::vec3>& vertices = render_mesh->vertices();
-    const std::vector<glm::vec3>& normals = render_mesh->normals();
-    const std::vector<glm::vec2>& tex_coords = render_mesh->tex_coords();
-    int size = 0;
-
-    size = vertices.size();
-
-    for(int i=0;i<size;i++){
-        vertices_.push_back(vertices[i]);
-        normals_.push_back(normals[i]);
-        tex_coords_.push_back(tex_coords[i]);
-        matrix_indices_.push_back(draw_count_);
-    }
-
-    size = indices.size();
-    index_count_+=size;
-    for (int i = 0; i < size; i++) {
-        unsigned short index = indices[i];
-        index += index_offset_;
-        indices_.push_back(index);
-    }
-
-    // update all VBO data
-    vertex_count_ += vertices.size();
-    index_offset_ += vertices.size();
-    draw_count_++;
-    mesh_init_ = false;
+    updateMesh(render_mesh);
 
     return true;
 }
-
+void Batch::clearData(){
+    vertex_count_ = 0;
+    index_count_ = 0;
+    index_offset_ = 0;
+    draw_count_=0;
+    matrix_index_map_.clear();
+    matrix_indices_.clear();
+    matrices_.clear();
+    tex_coords_.clear();
+    vertices_.clear();
+    normals_.clear();
+}
 void Batch::setupMesh(){
     bool update_vbo = false;
+
+    // check whether user has disabled render data, it it is, then remove it from the batch and update VBOs
     for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
         if(!(*it)->enabled()){
             (*it)->set_batching(false);
@@ -141,6 +156,7 @@ void Batch::setupMesh(){
             ++it;
         }
     }
+
     if(update_vbo)
         regenerateMeshData();
 
@@ -157,16 +173,8 @@ void Batch::setupMesh(){
     }
 }
 void Batch::regenerateMeshData(){
-    vertex_count_ = 0;
-    index_count_ = 0;
-    index_offset_ = 0;
-    draw_count_=0;
-    matrix_index_map_.clear();
-    matrix_indices_.clear();
-    matrices_.clear();
-    tex_coords_.clear();
-    vertices_.clear();
-    normals_.clear();
+
+    clearData();
     for(auto it= render_data_set_.begin();it!=render_data_set_.end();++it){
         RenderData* render_data = *it;
         Mesh *render_mesh = render_data->mesh();
@@ -181,39 +189,10 @@ void Batch::regenerateMeshData(){
         // Store the model matrix and its index into map for update
         matrix_index_map_[render_data] = draw_count_;
         matrices_.push_back(model_matrix);
-
-        const std::vector<glm::vec3>& vertices = render_mesh->vertices();
-        const std::vector<glm::vec3>& normals = render_mesh->normals();
-        const std::vector<glm::vec2>& tex_coords = render_mesh->tex_coords();
-        int size = 0;
-
-        size = vertices.size();
-
-        for(int i=0;i<size;i++){
-            vertices_.push_back(vertices[i]);
-            normals_.push_back(normals[i]);
-            tex_coords_.push_back(tex_coords[i]);
-            matrix_indices_.push_back(draw_count_);
-        }
-
-        size = indices.size();
-        index_count_+=size;
-        for (int i = 0; i < size; i++) {
-            unsigned short index = indices[i];
-            index += index_offset_;
-            indices_.push_back(index);
-        }
-
-        // update all VBO data
-        vertex_count_ += vertices.size();
-        index_offset_ += vertices.size();
-        draw_count_++;
-        mesh_init_ = false;
-
+        updateMesh(render_mesh);
     }
 
 }
-
 /*
  *  Check if any of the meshes in batch are modified
  */

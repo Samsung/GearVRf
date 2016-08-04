@@ -39,6 +39,7 @@
 #include "objects/bounding_volume.h"
 #include "gl/gl_program.h"
 #include <unordered_map>
+#include "batch_manager.h"
 
 typedef unsigned long Long;
 namespace gvr {
@@ -88,12 +89,11 @@ struct RenderState {
 class Renderer {
 private:
     Renderer();
-
+    static BatchManager* batch_manager;
 public:
+    static int incrementDrawCalls();
     static void restoreRenderStates(RenderData* render_data);
     static void setRenderStates(RenderData* render_data, RenderState& rstate);
-    static void BatchSetup();
-    static void renderbatches(RenderState& rstate);
     static void renderRenderDataVector(RenderState &rstate);
     static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
@@ -128,12 +128,12 @@ public:
     static int getNumberTriangles();
     static void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
     static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height);
+    static void renderRenderData(RenderState& rstate, RenderData* render_data);
+    static void set_face_culling(int cull_face);
 private:
     static void cullFromCamera(Scene *scene, Camera *camera,
             ShaderManager* shader_manager,
             std::vector<SceneObject*>& scene_objects);
-
-    static void renderRenderData(RenderState& rstate, RenderData* render_data);
 
     static void renderMesh(RenderState& rstate, RenderData* render_data);
 
@@ -153,9 +153,6 @@ private:
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
     static void state_sort();
-
-    static void set_face_culling(int cull_face);
-
     static bool isShader3d(const Material* curr_material);
     static bool isDefaultPosition3d(const Material* curr_material);
     void light_cull(Scene *scene, ShaderManager* shader_manager);
