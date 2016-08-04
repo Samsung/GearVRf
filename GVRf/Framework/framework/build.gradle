@@ -130,7 +130,7 @@ android {
                 include 'Android.mk'
             }
             file('src/main/jni/Android.mk').setLastModified(
-                    file('../' + gvrf_backend + '/src/main/jni/Android.mk').lastModified)
+                    file('../' + gvrf_backend + '/src/main/jni/Android.mk').lastModified())
         }
         doLast {
             delete 'src/main/jni/Android.mk'
