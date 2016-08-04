@@ -92,10 +92,6 @@ public class GVRActivity extends GVRActivityBase {
     @Override
     protected void onInitAppSettings(VrAppSettings appSettings) {
         if(mUseFallback){
-            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-                //force monoscopic when android version is < 19
-                appSettings.getMonoscopicModeParams().setMonoscopicMode(true);
-            }
             // This is the only place where the setDockListenerRequired flag can be set before
             // the check in GVRActivityBase.
             GVRConfigurationManager.getInstance().setDockListenerRequired(false);
