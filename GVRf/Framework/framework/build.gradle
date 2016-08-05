@@ -16,8 +16,9 @@ android {
     }
 
     task copyOculusFiles(type: Copy) {
-        println "copying oculus binaries"
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
+            println "copying oculus binaries"
+
             def oculusDir = rootProject.property("OVR_MOBILE_SDK")
             copy {
                 from oculusDir+'/VrApi/Libs/Android/VrApi.jar'
@@ -84,7 +85,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
-        releaseToGitHub {
+        if(rootProject.hasProperty("GVRF_BACKEND") && ("backend_oculus" == rootProject.property("GVRF_BACKEND") || "" == rootProject.property("GVRF_BACKEND"))) {
+            releaseToGitHub {
+            }
         }
     }
 
@@ -174,31 +177,33 @@ android {
         baseName 'gvrf-for-eclipse'
     }
 
-    task eclipseAssembleReleaseToGitHub() << {
-        println "preparing android library project for eclipse"
+    if(rootProject.hasProperty("GVRF_BACKEND") && ("backend_oculus" == rootProject.property("GVRF_BACKEND") || "" == rootProject.property("GVRF_BACKEND"))) {
+        task eclipseAssembleReleaseToGitHub() << {
+            println "preparing android library project for eclipse"
 
-        eclipseZip.execute()
+            eclipseZip.execute()
 
-        copy {
-            from 'build/distributions/gvrf-for-eclipse.zip'
-            into 'build/outputs/aar/'
+            copy {
+                from 'build/distributions/gvrf-for-eclipse.zip'
+                into 'build/outputs/aar/'
+            }
+
+            project.delete('build/distributions/gvrf-for-eclipse.zip')
         }
 
-        project.delete('build/distributions/gvrf-for-eclipse.zip')
-    }
+        task uploadToGitHub(type: Exec) {
+            onlyIf {
+                System.env['RELEASE_ID'] != null
+            }
+            onlyIf {
+                System.env['ACCESS_TOKEN'] != null
+            }
 
-    task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['RELEASE_ID'] != null
+            commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
         }
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
+        uploadToGitHub.doFirst {
+            println('uploading to github')
         }
-
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
-    }
-    uploadToGitHub.doFirst {
-        println('uploading to github')
     }
 }
 
@@ -228,18 +233,20 @@ assembleDebug {}.doLast {
     tasks.copyAARFiles.execute()
 }
 
-assembleReleaseToGitHub {}.doLast {
-    println 'removing oculus binaries'
-    exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/VrApi.jar']
-    }
-    exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/SystemUtils.jar']
-    }
-    exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'jni/armeabi-v7a/libvrapi.so']
-    }
+if(rootProject.hasProperty("GVRF_BACKEND") && ("backend_oculus" == rootProject.property("GVRF_BACKEND") || "" == rootProject.property("GVRF_BACKEND"))) {
+    assembleReleaseToGitHub {}.doLast {
+        println 'removing oculus binaries'
+        exec {
+            commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/VrApi.jar']
+        }
+        exec {
+            commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/SystemUtils.jar']
+        }
+        exec {
+            commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'jni/armeabi-v7a/libvrapi.so']
+        }
 
-    eclipseAssembleReleaseToGitHub.execute()
-    uploadToGitHub.execute();
+        eclipseAssembleReleaseToGitHub.execute()
+        uploadToGitHub.execute();
+    }
 }
