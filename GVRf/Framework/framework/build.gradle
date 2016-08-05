@@ -130,7 +130,7 @@ android {
                 include 'Android.mk'
             }
             file('src/main/jni/Android.mk').setLastModified(
-                    file('../' + gvrf_backend + '/src/main/jni/Android.mk').lastModified)
+                    file('../' + gvrf_backend + '/src/main/jni/Android.mk').lastModified())
         }
         doLast {
             delete 'src/main/jni/Android.mk'
@@ -205,6 +205,8 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    compile(name:'google-vr-base', ext:'aar')
+    compile(name:'google-vr-common',ext:'aar')
 }
 
 assembleDebug {}.doLast {
