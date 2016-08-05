@@ -166,8 +166,8 @@ public:
         if (it != custom_shaders_.end()) {
             return it->second;
         } else {
-            LOGE("ShaderManager::getCustomShader()");
-            throw "ShaderManager::getCustomShader()";
+            LOGE("ShaderManager::getCustomShader() %d", id);
+            throw std::string("ShaderManager::getCustomShader()");
         }
     }
 
