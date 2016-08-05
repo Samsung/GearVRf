@@ -26,17 +26,14 @@ import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
-import org.joml.Vector2f;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -224,7 +221,8 @@ abstract class GVRActivityBase extends Activity implements IEventReceiver, IScri
             GVRXMLParser xmlParser = new GVRXMLParser(getAssets(),
                     dataFileName, mAppSettings);
             onConfigure();
-            if (!mAppSettings.getMonoscopicModeParams().isMonoscopicMode()) {
+            boolean isMonoscopicMode = mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
+            if (!isMonoscopicMode) {
                 mViewManager = makeViewManager(xmlParser);
             } else {
                 mViewManager = makeMonoscopicViewManager(xmlParser);
@@ -239,16 +237,18 @@ abstract class GVRActivityBase extends Activity implements IEventReceiver, IScri
                     this,
                     IActivityEvents.class,
                     "onSetScript", gvrScript);
-
-            if (null != mDockEventReceiver && !mAppSettings.getMonoscopicModeParams().isMonoscopicMode()) {
+            final GVRConfigurationManager configurationManager = GVRConfigurationManager.getInstance();
+            if (null != mDockEventReceiver && !isMonoscopicMode && configurationManager
+                    .isDockListenerRequired()) {
                 getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
                     @Override
                     public void onDrawFrame(float frameTime) {
-                        if (GVRConfigurationManager.getInstance().isHmtConnected()) {
+                        if (configurationManager.isHmtConnected()) {
                             handleOnDock();
                             getGVRContext().unregisterDrawFrameListener(this);
                         }
                     }
+
                 });
             }
         } else {
@@ -438,6 +438,21 @@ abstract class GVRActivityBase extends Activity implements IEventReceiver, IScri
         }
 
         super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            setImmersiveSticky();
+        }
+    }
+
+    // Set Immersive Sticky as described here:
+    // https://developer.android.com/training/system-ui/immersive.html
+    private void setImmersiveSticky() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
     final boolean updateSensoredScene() {
