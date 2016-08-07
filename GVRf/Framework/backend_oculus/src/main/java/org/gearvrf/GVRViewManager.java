@@ -313,7 +313,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         setMainScene(new GVRScene(this));
     }
 
-    private void renderCamera(long activity_ptr, GVRScene scene, GVRCamera camera, GVRRenderBundle renderBundle) {
+    protected void renderCamera(long activity_ptr, GVRScene scene, GVRCamera camera, GVRRenderBundle
+            renderBundle) {
         renderCamera(activity_ptr, scene.getNative(), camera.getNative(),
                 renderBundle.getMaterialShaderManager().getNative(),
                 renderBundle.getPostEffectShaderManager().getNative(),
