@@ -15,7 +15,9 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.ISensorEvents;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
 
@@ -34,12 +36,16 @@ public class Sensor
     ANCHOR, PROXIMITY, TOUCH, VISIBILITY
   };
 
+  private static final String TAG = Sensor.class.getSimpleName();
+  static final String IS_OVER = "isOver";
+  static final String IS_ACTIVE = "isActive";
 
   String name = null;
   Type sensorType;
   public GVRSceneObject sensorSceneObject = null;
   private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
   private String anchorURL = null;
+  private final GVRBaseSensor baseSensor;
 
 
   public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject)
@@ -48,8 +54,13 @@ public class Sensor
     this.name = name;
     this.sensorType = sensorType;
     this.sensorSceneObject = sensorSceneObject;
+    baseSensor = new GVRBaseSensor(sensorSceneObject.getGVRContext());
+    sensorSceneObject.setSensor(baseSensor);
   }
 
+  void addISensorEvents(ISensorEvents sensorEvents){
+    sensorSceneObject.getEventReceiver().addListener(sensorEvents);
+  }
 
   public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
   {

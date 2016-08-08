@@ -74,48 +74,44 @@ class SensorManager {
     }
 
     private void recurseSceneObject(GVRCursorController controller,
-            GVRSceneObject object, GVRBaseSensor sensor,
-            boolean markActiveNodes) {
+                                    GVRSceneObject object, GVRBaseSensor sensor,
+                                    boolean markActiveNodes) {
         GVRBaseSensor objectSensor = object.getSensor();
 
         if (objectSensor == null) {
             objectSensor = sensor;
         }
-
-        // Well at least we are not comparing against all scene objects.
-        if (objectSensor != null && objectSensor.isEnabled() && object.isEnabled()) {
-
-            /**
-             * Compare ray against the hierarchical bounding volume and then add
-             * the children accordingly.
-             */
-            Vector3f ray = controller.getRay();
-            if (false == object.intersectsBoundingVolume(ORIGIN[0], ORIGIN[1],
-                    ORIGIN[2], ray.x, ray.y, ray.z)) {                
-                return;
-            }
-
-            if (object.hasMesh()) {
-                float[] hitPoint = GVRPicker.pickSceneObjectAgainstBoundingBox(
-                        object, ORIGIN[0], ORIGIN[1], ORIGIN[2], ray.x, ray.y,
-                        ray.z);
-
-                if (hitPoint != null) {
-                    objectSensor.addSceneObject(controller, object, hitPoint);
-
-                    // if we are doing an active search and we find one.
-                    if (markActiveNodes) {
-                        objectSensor.setActive(controller, true);
-                    }
-                }
-            }
-
-            for (GVRSceneObject child : object.getChildren()) {
-                recurseSceneObject(controller, child, objectSensor,
-                        markActiveNodes);
-            }
+        /**
+         * Compare ray against the hierarchical bounding volume and then add
+         * the children accordingly.
+         */
+        Vector3f ray = controller.getRay();
+        if (false == object.intersectsBoundingVolume(ORIGIN[0], ORIGIN[1],
+                ORIGIN[2], ray.x, ray.y, ray.z)) {
+            return;
         }
 
+        // Well at least we are not comparing against all scene objects.
+        if (objectSensor != null && objectSensor.isEnabled() && object.isEnabled()
+                & object.hasMesh()) {
+
+            float[] hitPoint = GVRPicker.pickSceneObjectAgainstBoundingBox(
+                    object, ORIGIN[0], ORIGIN[1], ORIGIN[2], ray.x, ray.y,
+                    ray.z);
+
+            if (hitPoint != null) {
+                objectSensor.addSceneObject(controller, object, hitPoint);
+
+                // if we are doing an active search and we find one.
+                if (markActiveNodes) {
+                    objectSensor.setActive(controller, true);
+                }
+            }
+        }
+        for (GVRSceneObject child : object.getChildren()) {
+            recurseSceneObject(controller, child, objectSensor,
+                    markActiveNodes);
+        }
     }
 
     void addSensor(GVRBaseSensor sensor) {
