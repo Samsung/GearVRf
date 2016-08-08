@@ -31,6 +31,7 @@ class Scene;
 class Collider;
 class SceneObject;
 class CameraRig;
+class Transform;
 
 class Picker {
 private:
@@ -38,10 +39,11 @@ private:
     ~Picker();
 
 public:
-    static void pickVisible(Scene* scene, std::vector<ColliderData>& pickList);
+    static void pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& pickList);
     static void pickScene(Scene* scene, std::vector<ColliderData>& pickList);
     static void pickScene(
             Scene* scene, std::vector<ColliderData>& pickList,
+            Transform* t,
             float ox, float oy, float oz,
             float dx, float dy, float dz);
     static float pickSceneObject(

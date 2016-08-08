@@ -40,7 +40,7 @@ void ColliderGroup::removeCollider(Collider* pointee) {
             colliders_.end());
 }
 
-ColliderData ColliderGroup::isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir) {
+ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) {
     ColliderData finalHit(reinterpret_cast<Collider*>(this));
     SceneObject* ownerObject = owner_object();
 
@@ -49,10 +49,13 @@ ColliderData ColliderGroup::isHit(const glm::mat4& view_matrix, const glm::vec3&
         Transform* transform = ownerObject->transform();
         finalHit.ObjectHit = ownerObject;
         if (nullptr != transform) {
-            glm::mat4 model_view = view_matrix * transform->getModelMatrix();
+            glm::mat4 model_matrix = transform->getModelMatrix();
+            glm::vec3 O(rayStart);
+            glm::vec3 D(rayDir);
 
+            transformRay(model_matrix, O, D);
             for (auto it = colliders_.begin(); it != colliders_.end(); ++it) {
-                ColliderData currentHit = (*it)->isHit(model_view, rayStart, rayDir);
+                ColliderData currentHit = (*it)->isHit(O, D);
                 if (currentHit.IsHit && (currentHit.Distance < finalHit.Distance)) {
                     hit_ = currentHit.HitPosition;
                     finalHit.CopyHit(currentHit);

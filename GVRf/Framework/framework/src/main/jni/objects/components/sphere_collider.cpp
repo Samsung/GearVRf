@@ -30,12 +30,17 @@
 #include "objects/mesh.h"
 
 namespace gvr {
-ColliderData SphereCollider::isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir)
+/*
+ * Determine if the ray hits the collider.
+ * @param rayStart      origin of ray in world coordinates
+ * @param rayDir        direction of ray in world coordinates
+ */
+ColliderData SphereCollider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
     glm::vec3    sphCenter(0, 0, 0);
-    float        radius = (radius_ > 0) ? radius_ : 1;
+    float        radius = radius_;
     SceneObject* owner = owner_object();
-    glm::mat4    model_view(view_matrix);
+    glm::mat4    model_matrix;
 
     /*
      * If we have a scene object with a mesh
@@ -47,7 +52,7 @@ ColliderData SphereCollider::isHit(const glm::mat4& view_matrix, const glm::vec3
         Transform* t = owner->transform();
         if (t != NULL)
         {
-            model_view *= t->getModelMatrix();
+            model_matrix = t->getModelMatrix();
         }
         /*
          * If there is a mesh attached to the scene object
@@ -61,24 +66,45 @@ ColliderData SphereCollider::isHit(const glm::mat4& view_matrix, const glm::vec3
             {
                 const BoundingVolume& meshbv = mesh->getBoundingVolume();
                 sphCenter = meshbv.center();
-                radius = meshbv.radius();
+                if (radius <= 0)
+                {
+                    radius = meshbv.radius();
+                }
             }
         }
     }
-    ColliderData data = isHit(model_view, sphCenter, radius, rayStart, rayDir);
+    if (radius <= 0)
+    {
+        radius = 1;
+    }
+    ColliderData data = isHit(model_matrix, sphCenter, radius, rayStart, rayDir);
     data.ObjectHit = owner;
     data.ColliderHit = this;
     return data;
 }
 
-ColliderData SphereCollider::isHit(Mesh& mesh, const glm::mat4& model_view, const glm::vec3& rayStart, const glm::vec3& rayDir)
+/*
+ * Determine if the ray hits the collider.
+ * @param model_matrix  matrix to transform model to world coordinates
+ * @param Mesh          mesh to get origin and radius of collision sphere from
+ * @param rayStart      origin of ray in world coordinates
+ * @param rayDir        direction of ray in world coordinates
+ */
+ColliderData SphereCollider::isHit(Mesh& mesh, const glm::mat4& model_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
     const BoundingVolume& meshbv = mesh.getBoundingVolume();
 
-    return isHit(model_view, meshbv.center(), meshbv.radius(), rayStart, rayDir);
+    return isHit(model_matrix, meshbv.center(), meshbv.radius(), rayStart, rayDir);
 }
 
-ColliderData SphereCollider::isHit(const glm::mat4& model_view, const glm::vec3& center, float radius, const glm::vec3& rayStart, const glm::vec3& rayDir)
+/*
+ * Determine if the ray hits the collider.
+ * @param model_matrix  matrix to transform model to world coordinates
+ * @param radius        radius of collider in model coordinates
+ * @param rayStart      origin of ray in world coordinates
+ * @param rayDir        direction of ray in world coordinates
+ */
+ColliderData SphereCollider::isHit(const glm::mat4& model_matrix, const glm::vec3& center, float radius, const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
     ColliderData hitData;
 
@@ -89,7 +115,7 @@ ColliderData SphereCollider::isHit(const glm::mat4& model_view, const glm::vec3&
      */
     glm::vec3 start(rayStart);
     glm::vec3 dir(rayDir);
-    transformRay(model_view, start, dir);
+    transformRay(model_matrix, start, dir);
 
     /*
      * Compute the intersection of the ray and sphere in local coordinates.
@@ -104,7 +130,7 @@ ColliderData SphereCollider::isHit(const glm::mat4& model_view, const glm::vec3&
 
         hitData.IsHit = true;
         hitData.HitPosition = hitPoint;
-        p = model_view * p;
+        p = model_matrix * p;
         hitData.Distance = glm::length(rayStart - glm::vec3(p));
     }
     return hitData;

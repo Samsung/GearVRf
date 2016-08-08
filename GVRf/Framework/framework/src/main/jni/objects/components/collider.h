@@ -58,34 +58,17 @@ public:
     virtual ~Collider() {}
 
     /*
-     * Hit test this collider against the camera look vector.
-     *
-     * Casts the ray against the collider geometry and computes the hit
-     * position (if any) in camera space. The camera look vector starts
-     * at the origin and is in the direction of the negative Z axis.
-     *
-     * @param view_matrix   camera view matrix (inverse of camera model matrix)
-     *
-     * @returns ColliderData structure with hit point and distance from camera
-     */
-    ColliderData isHit(const glm::mat4& view_matrix)
-    {
-        return isHit(view_matrix, glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
-    }
-
-    /*
      * Hit test the input ray against this collider.
      *
      * Casts the ray against the collider geometry and computes the hit
-     * position (if any) in camera space.
+     * position (if any) in world space.
      *
-     * @param view_matrix   camera view matrix (inverse of camera model matrix)
-     * @param rayStart      origin of the ray in camera coordinates
-     * @param rayDir        direction of the ray in camera coordinates
+     * @param rayStart      origin of the ray in world coordinates
+     * @param rayDir        direction of the ray in world coordinates
      *
      * @returns ColliderData structure with hit point and distance from camera
      */
-    virtual ColliderData isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir) = 0;
+    virtual ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) = 0;
 
     virtual void set_owner_object(SceneObject*);
 

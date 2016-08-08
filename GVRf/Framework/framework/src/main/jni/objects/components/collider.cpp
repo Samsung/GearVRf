@@ -25,12 +25,21 @@
 
 namespace gvr {
 
-void Collider::transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::vec3& rayDir)
+/*
+ * Transform a ray in world coordinates to be in the coordinate space of a model.
+ * @param model_matrix 4x4 matrix to transform model into world coordinates
+ * @param rayStart origin of ray in world coordinates
+ * @param rayDir directin of ray in world coordinates
+ *
+ * To put the ray in model coordinates it is pre-mulitplied by
+ * the inverse of the model mtraix
+ */
+void Collider::transformRay(const glm::mat4& model_matrix, glm::vec3& rayStart, glm::vec3& rayDir)
 {
-    glm::mat4 mv_inverse = glm::affineInverse(matrix);
-    glm::vec4 start = mv_inverse * glm::vec4(rayStart, 1);
+    glm::mat4 model_inverse = glm::affineInverse(model_matrix);
+    glm::vec4 start = model_inverse * glm::vec4(rayStart, 1);
     glm::vec4 dir(rayDir, 0);
-    dir = mv_inverse * dir;
+    dir = model_inverse * dir;
     rayDir = glm::vec3(glm::normalize(dir));
     rayStart = glm::vec3(start);
 }
