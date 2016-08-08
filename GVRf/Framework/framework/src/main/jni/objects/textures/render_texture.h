@@ -64,6 +64,10 @@ public:
         return gl_frame_buffer_->id();
     }
 
+    void bind() {
+        glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    }
+
     int width() const {
         return width_;
     }
