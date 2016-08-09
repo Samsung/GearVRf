@@ -92,6 +92,12 @@ bool Batch::add(RenderData *render_data) {
     matrices_.push_back(model_matrix);
     render_data->owner_object()->setTransformUnDirty();
 
+     if(!render_data->batching()){
+        render_data_set_.insert(render_data);
+        render_mesh->setMeshModified(false); // mark mesh clean
+        not_batched_ = true;
+        return true;
+    }
 
     // if it is not texture shader, dont add into batch, render in normal way
     for(int i=0; i<render_data->pass_count();i++)
@@ -142,13 +148,12 @@ void Batch::clearData(){
     vertices_.clear();
     normals_.clear();
 }
-void Batch::setupMesh(){
-    bool update_vbo = false;
-
-    // check whether user has disabled render data, it it is, then remove it from the batch and update VBOs
-    for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
-        if(!(*it)->enabled()){
+bool Batch::isRenderDataDisabled(){
+     bool update_vbo = false;
+     for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
+        if(!(*it)->enabled() || !(*it)->owner_object()->enabled()){
             (*it)->set_batching(false);
+            (*it)->setBatchNull();
             render_data_set_.erase(it++);
             update_vbo = true;
         }
@@ -156,6 +161,13 @@ void Batch::setupMesh(){
             ++it;
         }
     }
+    return update_vbo;
+}
+void Batch::setupMesh(){
+    bool update_vbo = isRenderDataDisabled();
+
+    if(render_data_set_.size() ==0)
+        return;
 
     if(update_vbo)
         regenerateMeshData();

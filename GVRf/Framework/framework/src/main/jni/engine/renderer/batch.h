@@ -70,6 +70,10 @@ public:
 	}
 	bool isBatchDirty();
 	void clearData();
+	bool isRenderDataDisabled();
+	int renderDataSetSize(){
+	    return render_data_set_.size();
+	}
 	bool updateMesh(Mesh* render_mesh);
 
 	unsigned int getIndexCount(){
