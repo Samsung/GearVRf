@@ -2,6 +2,12 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 apply plugin: 'com.android.library'
 
+repositories {
+    flatDir {
+        dirs 'src/main/libs'
+    }
+}
+
 android {
     compileSdkVersion 21
     buildToolsVersion '23.0.3'
