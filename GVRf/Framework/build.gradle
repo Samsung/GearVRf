@@ -11,8 +11,5 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
-        flatDir {
-            dirs 'src/main/libs'
-        }
     }
 }

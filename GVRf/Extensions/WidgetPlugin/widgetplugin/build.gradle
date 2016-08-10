@@ -2,12 +2,9 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 apply plugin: 'com.android.library'
 
-allprojects {
-    repositories {
-        jcenter()
-        flatDir {
-            dirs '../../../Framework/framework/src/main/libs/'
-        }
+repositories {
+    flatDir {
+        dirs '../../../Framework/framework/src/main/libs/'
     }
 }
 
