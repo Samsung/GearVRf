@@ -324,8 +324,8 @@ BoundingVolume& SceneObject::getBoundingVolume() {
         // || !transform_->isModelMatrixValid()) {
         mesh_bounding_volume = rdata->mesh()->getBoundingVolume();
         if (mesh_bounding_volume.radius() > 0) {
-            BoundingVolume mesh_volume = mesh_bounding_volume;
-            transformed_bounding_volume_.transform(mesh_volume, transform()->getModelMatrix());
+            mesh_bounding_volume.transform(rdata->mesh()->getBoundingVolume(), transform()->getModelMatrix());
+            transformed_bounding_volume_ = mesh_bounding_volume;
         }
     }
     // 2. Aggregate with all its children's bounding volumes
