@@ -72,6 +72,10 @@ extern "C" {
             JNIEnv * env, jobject obj, jlong jscene, jlong light);
 
     JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_clearLights(
+            JNIEnv * env, jobject obj, jlong jscene);
+
+    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
             jobject obj, jlong jscene);
 
@@ -190,6 +194,13 @@ Java_org_gearvrf_NativeScene_addLight(JNIEnv * env,
         return scene->addLight(light);
     }
     return false;
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeScene_clearLights(JNIEnv * env,
+        jobject obj, jlong jscene) {
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
+    scene->clearLights();
 }
 
 JNIEXPORT void JNICALL

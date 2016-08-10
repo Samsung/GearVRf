@@ -63,6 +63,7 @@ public:
      * Return true if light was added, false if already there or too many lights.
      */
     bool addLight(Light* light);
+    void clearLights();
 
     void resetStats() {
         if (!statsInitialized) {
