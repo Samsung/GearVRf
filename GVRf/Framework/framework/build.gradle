@@ -64,8 +64,7 @@ android {
             gvrf_backend = rootProject.property("GVRF_BACKEND")
         }
         environment 'GVRF_BACKEND', '' + projectDir + "/../" + gvrf_backend
-
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16//, 'NDK_DEBUG=1'
+        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
 
         doFirst {
             copy {
@@ -120,7 +119,7 @@ android {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', 16, 'clean'
+        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
 
         doFirst {
             def gvrf_backend = "backend_oculus"
