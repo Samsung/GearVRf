@@ -30,6 +30,7 @@ import org.gearvrf.utility.VrAppSettings;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
@@ -360,11 +361,29 @@ abstract class GVRActivityBase extends Activity implements IEventReceiver, IScri
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        boolean handled = mViewManager.dispatchKeyEvent(event);
-        if (handled == false) {
-            handled = super.dispatchKeyEvent(event);
+        if (mViewManager.dispatchKeyEvent(event)) {
+            return true;
         }
-        return handled;
+
+        final int keyAction = event.getAction();
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                if(keyAction == KeyEvent.ACTION_DOWN) {
+                    final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                    audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                            AudioManager.ADJUST_RAISE, 0);
+                    return true;
+                }
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if(keyAction == KeyEvent.ACTION_DOWN) {
+                    final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                    audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                            AudioManager.ADJUST_LOWER, 0);
+                    return true;
+                }
+        }
+
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
