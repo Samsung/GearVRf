@@ -38,7 +38,7 @@ public:
 
     void addCollider(Collider* pointee);
     void removeCollider(Collider* pointee);
-    ColliderData isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir);
+    ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
 
     const glm::vec3& hit() const {
         return hit_;

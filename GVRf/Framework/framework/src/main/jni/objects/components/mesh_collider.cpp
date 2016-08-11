@@ -26,6 +26,8 @@
 #include "mesh_collider.h"
 #include "render_data.h"
 #include "objects/mesh.h"
+#include "objects/bounding_volume.h"
+#include "objects/mesh.h"
 #include "objects/scene_object.h"
 #include "sphere_collider.h"
 
@@ -52,17 +54,20 @@ MeshCollider::~MeshCollider() { }
  * space as the mesh vertices).
  *
  * @param view_matrix   camera view matrix (inverse of camera model matrix)
- * @param rayStart      origin of the ray in camera coordinates
- * @param rayDir        direction of the ray in camera coordinates
+ * @param rayStart      origin of the ray in world coordinates
+ * @param rayDir        direction of the ray in world coordinates
  *
  * @returns EyePointData structure with hit point and distance from camera
  */
-ColliderData MeshCollider::isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir)
+ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
     Mesh* mesh = mesh_;
     RenderData* rd = NULL;
-    glm::mat4 model_view(view_matrix);
+    glm::mat4 model_view;
     SceneObject* owner = owner_object();
+    glm::mat4 model_matrix;
+    glm::vec3 O(rayStart);
+    glm::vec3 D(rayDir);
 
     /*
      * If the scene object this collider is attached to also
@@ -73,7 +78,8 @@ ColliderData MeshCollider::isHit(const glm::mat4& view_matrix, const glm::vec3& 
     if (owner != NULL)
     {
         RenderData* rd = owner->render_data();
-        model_view *= owner->transform()->getModelMatrix();
+        model_matrix = owner->transform()->getModelMatrix();
+        transformRay(model_matrix, O, D);
         if ((mesh == NULL) && (rd != NULL))
         {
             mesh = rd->mesh();
@@ -89,14 +95,20 @@ ColliderData MeshCollider::isHit(const glm::mat4& view_matrix, const glm::vec3& 
     {
         if (useMeshBounds_)
         {
-            data = SphereCollider::isHit(*mesh, model_view, rayStart, rayDir);
+            const BoundingVolume& bounds = mesh->getBoundingVolume();
+            data = MeshCollider::isHit(bounds, O, D);
         }
         else
         {
-            data = MeshCollider::isHit(*mesh, model_view, rayStart, rayDir);
+            data = MeshCollider::isHit(*mesh, O, D);
         }
-        data.ColliderHit = this;
-        data.ObjectHit = owner;
+        if (data.IsHit)
+        {
+            glm::vec4 hitPos = model_matrix * glm::vec4(data.HitPosition, 1);
+            data.Distance = glm::distance(rayStart, glm::vec3(hitPos));
+            data.ColliderHit = this;
+            data.ObjectHit = owner;
+        }
     }
     return data;
 }
@@ -104,24 +116,15 @@ ColliderData MeshCollider::isHit(const glm::mat4& view_matrix, const glm::vec3& 
 /*
  * Hit test the input ray against the triangles of the given mesh.
  * @param mesh  mesh to hit test
- * @param rayStart  start of the pick ray in camera coordinates
- * @param rayDir    direction of the pick ray in camera coordinates
- * @return EyePointData with the hit point in mesh coordinates
+ * @param rayStart  start of the pick ray in model coordinates
+ * @param rayDir    direction of the pick ray in model coordinates
+ * @return ColliderData with the hit point and distance in model coordinates
  */
-ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::mat4& model_view, const glm::vec3& rayStart, const glm::vec3& rayDir) {
+ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir) {
     const std::vector<glm::vec3>& vertices = mesh.vertices();
     ColliderData data;
     if (vertices.size() > 0)
     {
-        /*
-         * Compute the inverse of the model view matrix and
-         * apply it to the input ray. This puts it into the
-         * same coordinate space as the mesh.
-         */
-        glm::vec3 O(rayStart);
-        glm::vec3 D(rayDir);
-        transformRay(model_view, O, D);
-
         //http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
         for (int i = 0; i < mesh.triangles().size(); i += 3)
         {
@@ -129,7 +132,7 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::mat4& model_view, 
             glm::vec3 V2(vertices[mesh.triangles()[i + 1]]);
             glm::vec3 V3(vertices[mesh.triangles()[i + 2]]);
             glm::vec3 hitPos;
-            float     distance = rayTriangleIntersect(hitPos, O, D,
+            float     distance = rayTriangleIntersect(hitPos, rayStart, rayDir,
                                                       (const glm::vec3&) V1, (const glm::vec3&) V2, (const glm::vec3&) V3);
 
             /*
@@ -142,22 +145,34 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::mat4& model_view, 
             {
                 continue;
             }
-            glm::vec4 p = model_view * glm::vec4(hitPos, 1);
-            glm::vec3 distVec = rayStart - glm::vec3(p);
-
-            distance = distVec.length();
+            distance = glm::distance(rayStart, hitPos);
             if (distance < data.Distance)
             {
-                glm::vec4 p = glm::vec4(hitPos, 1);
                 data.IsHit = true;
                 data.HitPosition = hitPos;
-                p = model_view * p;
-                data.Distance = glm::length(rayStart - glm::vec3(p));
-            }
+             }
          }
       }
       return data;
    }
+
+    /*
+     * Determine if the ray penetrates an axially aligned bounding box
+     * @param bounds    bounding volume (radius ignored, corners of box are used)
+     * @param rayStart  origin of ray in model coordinates
+     * @param rayDir    direction of ray in model coordinates
+     */
+    ColliderData MeshCollider::isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir) {
+        ColliderData data;
+        glm::vec3 hitPos;
+        if (bounds.intersect(hitPos, rayStart, rayDir))
+        {
+            data.IsHit = true;
+            data.HitPosition = hitPos;
+            data.Distance = glm::distance(rayStart, hitPos);
+         }
+         return data;
+    }
 
     float MeshCollider::rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
                                        const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3)

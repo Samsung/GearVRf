@@ -27,6 +27,7 @@
 
 namespace gvr {
 class Mesh;
+class BoundingVolume;
 
 class MeshCollider: public Collider {
 public:
@@ -42,17 +43,17 @@ public:
         mesh_ = mesh;
     }
 
-    ColliderData isHit(const glm::mat4& view_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir);
-    static ColliderData isHit(const Mesh& mesh, const glm::mat4& model_view, const glm::vec3& rayStart, const glm::vec3& rayDir);
+    ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
     static float rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
                                       const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3);
-
+    static ColliderData isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir);
 
 private:
     MeshCollider(const MeshCollider& mesh_collider);
     MeshCollider(MeshCollider&& mesh_collider);
     MeshCollider& operator=(const MeshCollider& mesh_collider);
     MeshCollider& operator=(MeshCollider&& mesh_collider);
+    static ColliderData isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir);
 
 private:
     bool useMeshBounds_;
