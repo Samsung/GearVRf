@@ -34,9 +34,15 @@ class SplashScreen extends GVRSceneObject {
 
         mCloseRequested = false; // unnecessary, but ...
 
-        long currentTime = GVRTime.getCurrentTime();
-        mTimeout = currentTime + (long) (script.getSplashDisplayTime() * 1e9f);
+        float splashDisplayTime = script.getSplashDisplayTime();
 
+        // check if we have a splash display time, else request for
+        // an immediate timeout
+        if (splashDisplayTime < 0f) {
+            splashDisplayTime = 0f;
+        }
+        long currentTime = GVRTime.getCurrentTime();
+        mTimeout = currentTime + (long) (splashDisplayTime * 1e9f);
         Log.d(TAG, "currentTime = %,d, timeout = %,d", currentTime, mTimeout);
     }
 

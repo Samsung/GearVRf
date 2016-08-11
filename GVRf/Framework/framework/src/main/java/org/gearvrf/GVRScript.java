@@ -35,7 +35,7 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * Default minimum time for splash screen to show: returned by
      * {@link #getSplashDisplayTime()}.
      */
-    private static final float DEFAULT_SPLASH_DISPLAY_SECONDS = 5f;
+    private static final float DEFAULT_SPLASH_DISPLAY_SECONDS = -1f;
 
     /**
      * Default fade-to-transparency time for the splash screen: returned by
@@ -192,17 +192,20 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
 
     /**
      * The minimum amount of time the splash screen will be visible, in seconds.
-     * 
+     *
      * Override this method to change the default.
-     * 
-     * In {@linkplain SplashMode#AUTOMATIC AUTOMATIC} mode, the splash screen
-     * will stay up for {@link #getSplashDisplayTime()} seconds. In
-     * {@linkplain SplashMode#MANUAL MANUAL} mode, the splash screen will stay
-     * up for <em>at least</em> {@link #getSplashDisplayTime()} seconds:
+     *
+     * If the value returned by {@link #getSplashDisplayTime()} is positive then the splash screen
+     * will stay up for  {@link #getSplashDisplayTime()} seconds in
+     * {@linkplain SplashMode#AUTOMATIC AUTOMATIC} mode.
+     * In {@linkplain SplashMode#MANUAL MANUAL} mode, the splash screen will stay
+     * up for <em>at least</em> {@link #getSplashDisplayTime()} seconds (if positive):
      * {@link #closeSplashScreen()} will not take effect until the splash screen
      * times out, even if you call it long before that timeout.
-     * 
-     * @return The minimum splash screen display time, in seconds.
+     *
+     * @return The minimum splash screen display time, in seconds. Any value less than 0 will
+     * result in the splash screen closing as soon as the framework is ready to render the main
+     * scene. The default value returned by this call is -1.
      */
     public float getSplashDisplayTime() {
         return DEFAULT_SPLASH_DISPLAY_SECONDS;
