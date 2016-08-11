@@ -192,12 +192,16 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
     {
         textureMap = new HashMap<AiTextureType, String>();
         textureMap.put(AiTextureType.DIFFUSE,"diffuseTexture");
-        textureMap.put(AiTextureType.AMBIENT,"ambientTexture");
-        textureMap.put(AiTextureType.NORMALS,"normalTexture");
-        textureMap.put(AiTextureType.EMISSIVE,"emissiveTexture");
         textureMap.put(AiTextureType.SPECULAR,"specularTexture");
-        textureMap.put(AiTextureType.LIGHTMAP,"lightmapTexture");
+        textureMap.put(AiTextureType.AMBIENT,"ambientTexture");
+        textureMap.put(AiTextureType.EMISSIVE,"emissiveTexture");
+        textureMap.put(AiTextureType.HEIGHT,"heightTexture");
+        textureMap.put(AiTextureType.NORMALS,"normalTexture");
+        textureMap.put(AiTextureType.SHININESS,"shininessTexture");
         textureMap.put(AiTextureType.OPACITY,"opacityTexture");
+        textureMap.put(AiTextureType.DISPLACEMENT,"displacementTexture");
+        textureMap.put(AiTextureType.LIGHTMAP,"lightmapTexture");
+        textureMap.put(AiTextureType.REFLECTION,"reflectionTexture");
     }
     
     private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
