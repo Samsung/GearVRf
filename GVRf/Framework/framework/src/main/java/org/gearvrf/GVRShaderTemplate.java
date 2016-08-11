@@ -67,6 +67,8 @@ import android.util.Log;
  */
 public class GVRShaderTemplate
 {
+    protected Integer mGLSLVersion = 300;
+
     protected class ShaderVariant
     {
         String FragmentShaderSource;
@@ -103,6 +105,21 @@ public class GVRShaderTemplate
     {
         mUniformDescriptor = descriptor;
         mShaderSegments = new HashMap<String, String>();
+    }
+
+    /**
+     * Construct a shader template
+     *
+     * @param descriptor
+     *            string describing uniform names and types
+     * @param glslVersion
+     *            integer giving GLSL version (e.g. 300)
+     */
+    public GVRShaderTemplate(String descriptor, int glslVersion)
+    {
+        mUniformDescriptor = descriptor;
+        mShaderSegments = new HashMap<String, String>();
+        mGLSLVersion = glslVersion;
     }
 
     /**
@@ -307,7 +324,7 @@ public class GVRShaderTemplate
         if(isMultiviewSet && isMultiviewPresent())
             defines = "#define HAS_MULTIVIEW\n" + defines;
         
-        return "#version 300 es\n" + defines + combinedSource;
+        return "#version " + mGLSLVersion.toString() + "\n" + defines + combinedSource;
     }
 
     /**
