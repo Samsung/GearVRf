@@ -1,5 +1,11 @@
 apply plugin: 'com.android.library'
 
+repositories {
+    flatDir {
+        dirs '../../../Framework/framework/src/main/libs/'
+    }
+}
+
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.3"

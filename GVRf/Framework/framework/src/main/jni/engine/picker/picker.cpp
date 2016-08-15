@@ -45,34 +45,34 @@ Picker::~Picker() {
  * This function is not thread-safe because it relies on a static
  * array of colliders which could be updated by a different thread.
  */
-void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, float ox,
+void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transform* t, float ox,
         float oy, float oz, float dx, float dy, float dz) {
+    glm::vec3 ray_start(ox, oy, oz);
+    glm::vec3 ray_dir(dx, dy, dz);
     const std::vector<Component*>& colliders = scene->lockColliders();
-    Transform* const t = scene->main_camera_rig()->getHeadTransform();
 
-    if (nullptr != t) {
-        glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
-
-        for (auto it = colliders.begin(); it != colliders.end(); ++it) {
-            Collider* collider = reinterpret_cast<Collider*>(*it);
-            SceneObject* owner = collider->owner_object();
-            if (collider->enabled() && (owner != NULL) && owner->enabled()) {
-                ColliderData data = collider->isHit(view_matrix, glm::vec3(ox, oy, oz), glm::vec3(dx, dy, dz));
-                if ((collider->pick_distance() > 0) && (collider->pick_distance() < data.Distance)) {
-                    data.IsHit = false;
-                }
-                 if (data.IsHit) {
-                    picklist.push_back(data);
-                }
+    Collider::transformRay(t->getModelMatrix(), ray_start, ray_dir);
+    for (auto it = colliders.begin(); it != colliders.end(); ++it) {
+        Collider* collider = reinterpret_cast<Collider*>(*it);
+        SceneObject* owner = collider->owner_object();
+        if (collider->enabled() && (owner != NULL) && owner->enabled()) {
+            ColliderData data = collider->isHit(ray_start, ray_dir);
+            if ((collider->pick_distance() > 0) && (collider->pick_distance() < data.Distance)) {
+                data.IsHit = false;
+            }
+             if (data.IsHit) {
+                picklist.push_back(data);
             }
         }
-        std::sort(picklist.begin(), picklist.end(), compareColliderData);
     }
+    std::sort(picklist.begin(), picklist.end(), compareColliderData);
     scene->unlockColliders();
  }
 
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
-    pickScene(scene, pickList, 0, 0, 0, 0, 0, -1.0f);
+    Transform* t = scene->main_camera_rig()->getHeadTransform();
+
+    pickScene(scene, pickList, t, 0, 0, 0, 0, 0, -1.0f);
 }
 
 float Picker::pickSceneObject(const SceneObject* scene_object,
@@ -81,9 +81,15 @@ float Picker::pickSceneObject(const SceneObject* scene_object,
     if (scene_object->collider() != 0) {
         Collider* collider = scene_object->collider();
         if (collider->enabled()) {
-            glm::mat4 view_matrix = glm::affineInverse(camera_rig->getHeadTransform()->getModelMatrix());
-            ColliderData data = collider->isHit(view_matrix);
-            return data.Distance;
+            glm::mat4 view_matrix = camera_rig->getHeadTransform()->getModelMatrix();
+            glm::vec3 rayStart(0, 0, 0);
+            glm::vec3 rayDir(0, 0, -1);
+
+            Collider::transformRay(view_matrix, rayStart, rayDir);
+            ColliderData data = collider->isHit(rayStart, rayDir);
+            if (data.IsHit) {
+                return data.Distance;
+            }
         }
     }
     return std::numeric_limits<float>::infinity();
@@ -106,16 +112,43 @@ glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
         return glm::vec3(std::numeric_limits<float>::infinity());
     }
     glm::mat4 model_matrix = scene_object->transform()->getModelMatrix();
-    std::unique_ptr<Mesh> mesh(rd->mesh()->createBoundingBox());
+    const BoundingVolume& bounds = rd->mesh()->getBoundingVolume();
     glm::vec3 rayStart(ox, oy, oz);
     glm::vec3 rayDir(dx, dy, dz);
 
     glm::normalize(rayDir);
-    ColliderData data = MeshCollider::isHit(*mesh, model_matrix, rayStart, rayDir);
+    Collider::transformRay(model_matrix, rayStart, rayDir);
+    ColliderData data = MeshCollider::isHit(bounds, rayStart, rayDir);
     if (data.IsHit) {
         return data.HitPosition;
     }
     return glm::vec3(std::numeric_limits<float>::infinity());
 }
 
+/*
+ * Returns the list of all visible colliders.
+ *
+ * This function is not thread-safe because it relies on a static
+ * array of colliders which could be updated by a different thread.
+ */
+void Picker::pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& picklist) {
+    const std::vector<Component*>& colliders = scene->lockColliders();
+    glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
+
+    for (auto it = colliders.begin(); it != colliders.end(); ++it) {
+        Collider* collider = reinterpret_cast<Collider*>(*it);
+        SceneObject* owner = collider->owner_object();
+        if (collider->enabled() && (owner != NULL) && owner->enabled()) {
+            ColliderData data(collider);
+            Transform* trans = owner->transform();
+            glm::mat4 worldmtx = trans->getModelMatrix();
+            data.HitPosition = glm::vec3(worldmtx[3]);
+            data.Distance = data.HitPosition.length();
+            data.IsHit = true;
+            picklist.push_back(data);
+        }
+    }
+    std::sort(picklist.begin(), picklist.end(), compareColliderData);
+    scene->unlockColliders();
+ }
 }

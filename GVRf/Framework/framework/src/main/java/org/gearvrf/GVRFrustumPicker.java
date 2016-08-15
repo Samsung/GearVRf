@@ -1,0 +1,262 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.gearvrf;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.gearvrf.utility.Log;
+import org.joml.FrustumCuller;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+
+/**
+ * Finds the scene objects that are within a view frustum.
+ *
+ * The picker can function in two modes. One way is to simply call its
+ * static functions to make a single scan through the scene to determine
+ * what is within the view frustum.
+ *
+ * The other way is to add the picker as a component to a scene object
+ * and specify the view frustum dimensions. The viewpoint of the frustum
+ * is the center of the scene object. The view direction is the forward
+ * direction of the scene object. The frustum will pick what a camera
+ * attached to the scene object with that view frustum would see.
+ *
+ * For a {@linkplain GVRSceneObject scene object} to be pickable, it must have a
+ * {@link GVRCollider} component attached to it that is enabled.
+ * The picker returns an array containing all the collisions as instances of GVRPickedObject.
+ * The picked object contains the collider instance, the distance from the
+ * origin of the view frustum and the center of the object.
+ *
+ * If it is attached to a scene object, the picker maintains the list of currently
+ * picked objects which can be obtains with getPicked() and continually
+ * updates it each frame. (If it is not attached to a scene object,
+ * you must manually call doPick() to cause pick events to be generated.)
+ *
+ * In this mode, when a pickable object is inside the view frustum,
+ * the picker generates one or more pick events (IPickEvents interface)
+ * which are sent the event receiver of the scene. These events can be
+ * observed by listeners.
+ *  - onEnter(GVRSceneObject)  called when the scene object enters the frustum.
+ *  - onExit(GVRSceneObject)   called when the scene object exits the frustum.
+ *  - onInside(GVRSceneObject) called while the scene object is inside the frustum.
+ *  - onPick(GVRPicker)        called when the set of picked objects changes.
+ *  - onNoPick(GVRPicker)      called once when nothing is picked.
+ *
+ * @see IPickEvents
+ * @see GVRSceneObject.attachCollider
+ * @see GVRCollider
+ * @see GVRCollider.setEnable
+ * @see GVRPickedObject
+ */
+public class GVRFrustumPicker extends GVRPicker {
+    private static final String TAG = Log.tag(GVRFrustumPicker.class);
+    protected FrustumCuller mCuller;
+    protected float[] mProjMatrix = null;
+    protected Matrix4f mProjection = null;
+
+    /**
+     * Construct a picker which picks from a given scene.
+     * @param context context that owns the scene
+     * @param scene scene containing the scene objects to pick from
+     */
+    public GVRFrustumPicker(GVRContext context, GVRScene scene)
+    {
+        super(context, scene);
+    }
+
+    /**
+     * Set the view frustum to pick against from the minimum and maximum corners.
+     * The viewpoint of the frustum is the center of the scene object
+     * the picker is attached to. The view direction is the forward
+     * direction of that scene object. The frustum will pick what a camera
+     * attached to the scene object with that view frustum would see.
+     * If the frustum is not attached to a scene object, it defaults to
+     * the view frustum of the main camera of the scene.
+     *
+     * @param frustum array of 6 floats as follows:
+     *                frustum[0] = left corner of frustum
+     *                frustum[1] = bottom corner of frustum
+     *                frustum[2] = front corner of frustum (near plane)
+     *                frustum[3] = right corner of frustum
+     *                frustum[4] = top corner of frustum
+     *                frustum[5 = back corner of frustum (far plane)
+     */
+    public void setFrustum(float[] frustum)
+    {
+        Matrix4f projMatrix = new Matrix4f();
+        projMatrix.setFrustum(frustum[0], frustum[3], frustum[1], frustum[4], frustum[2], frustum[5]);
+        setFrustum(projMatrix);
+    }
+
+    /**
+     * Set the view frustum to pick against from the field of view, aspect
+     * ratio and near, far clip planes. The viewpoint of the frustum
+     * is the center of the scene object the picker is attached to.
+     * The view direction is the forward direction of that scene object.
+     * The frustum will pick what a camera attached to the scene object
+     * with that view frustum would see. If the frustum is not attached
+     * to a scene object, it defaults to the view frustum of the main camera of the scene.
+     *
+     * @param fovy  vertical field of view in degrees
+     * @param aspect aspect ratio (width / height)
+
+     */
+    public void setFrustum(float fovy, float aspect, float znear, float zfar)
+    {
+        Matrix4f projMatrix = new Matrix4f();
+        projMatrix.perspective(fovy, (float) Math.toRadians(aspect), znear, zfar);
+        setFrustum(projMatrix);
+    }
+
+    /**
+     * Set the view frustum to pick against from the given projection  matrix.
+     *
+     * If the projection matrix is null, the picker will revert to picking
+     * objects that are visible from the viewpoint of the scene's current camera.
+     * If a matrix is given, the picker will pick objects that are visible
+     * from the viewpoint of it's owner the given projection matrix.
+     *
+     * @param projMatrix 4x4 projection matrix or null
+     * @see GVRScene.setPickVisible
+     */
+    public void setFrustum(Matrix4f projMatrix)
+    {
+        if (projMatrix != null)
+        {
+            if (mProjMatrix == null)
+            {
+                mProjMatrix = new float[16];
+            }
+            mProjMatrix = projMatrix.get(mProjMatrix, 0);
+            mScene.setPickVisible(false);
+        }
+        else
+        {
+            mScene.setPickVisible(true);
+        }
+        mProjection = projMatrix;
+        if (mCuller != null)
+        {
+            mCuller.set(projMatrix);
+        }
+        else
+        {
+            mCuller = new FrustumCuller(projMatrix);
+        }
+    }
+
+    public void onDrawFrame(float frameTime)
+    {
+        if (isEnabled())
+        {
+            doPick();
+        }
+    }
+
+    /**
+     * Scans the scene graph to collect picked items
+     * and generates appropriate pick events.
+     * This function is called automatically by
+     * the picker if it is attached to a scene object.
+     * You can instantiate the picker and not attach
+     * it to a scene object. In this case you must
+     * manually set the pick ray and call doPick()
+     * to generate the pick events.
+     * @see IPickEvents
+     * @see GVRFrustumPicker.pickVisible
+     */
+    public void doPick()
+    {
+        GVRSceneObject owner = getOwnerObject();
+        GVRPickedObject[] picked = pickVisible(mScene);
+
+        if ((owner != null) && (mProjMatrix != null))
+        {
+            Matrix4f view_matrix = owner.getTransform().getModelMatrix4f();
+            Vector4f center = new Vector4f(0, 0, 0, 1);
+            Vector4f dir = new Vector4f(0, 0, 1, 0);
+
+            view_matrix.invert();
+            if (mCuller != null)
+            {
+                mCuller.set(mProjection);
+            }
+            else
+            {
+                mCuller = new FrustumCuller(mProjection);
+            }
+
+            for (int i = 0; i < picked.length; ++i)
+            {
+                GVRPickedObject hit = picked[i];
+
+                if (hit != null)
+                {
+                    GVRSceneObject sceneObj = hit.hitObject;
+                    GVRSceneObject.BoundingVolume bv = sceneObj.getBoundingVolume();
+                    center.set(bv.center, 1);
+                    center.mul(view_matrix);
+                    dir.z = bv.radius;
+                    dir.mul(view_matrix);
+                    if (!mCuller.isSphereInsideFrustum(center.x, center.y, center.z, dir.length()))
+                    {
+                        Log.d("Picker", "Picker: outside %s (%f, %f, %f) %f", sceneObj.getName(), center.x, center.y, center.z, dir.length());
+                        picked[i] = null;
+                    }
+                }
+            }
+        }
+        generatePickEvents(picked);
+    }
+
+    /**
+     * Returns the list of colliders attached to scene objects that are
+     * visible from the viewpoint of the camera.
+     *
+     * <p>
+     * This method is thread safe because it guarantees that only
+     * one thread at a time is picking against particular scene graph,
+     * and it extracts the hit data during within its synchronized block. You
+     * can then examine the return list without worrying about another thread
+     * corrupting your hit data.
+     *
+     * The hit location returned is the world position of the scene object center.
+     *
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     *
+     * @return A list of {@link GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link GVRPickedObject} contains the scene object
+     *         which owns the {@link GVRCollider} along with the hit
+     *         location and distance from the camera.
+     *
+     * @since 1.6.6
+     */
+    public static final GVRPickedObject[] pickVisible(GVRScene scene) {
+        sFindObjectsLock.lock();
+        try {
+            final GVRPickedObject[] result = NativePicker.pickVisible(scene.getNative());
+            return result;
+        } finally {
+            sFindObjectsLock.unlock();
+        }
+    }
+}

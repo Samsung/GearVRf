@@ -313,7 +313,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
         setMainScene(new GVRScene(this));
     }
 
-    private void renderCamera(long activity_ptr, GVRScene scene, GVRCamera camera, GVRRenderBundle renderBundle) {
+    protected void renderCamera(long activity_ptr, GVRScene scene, GVRCamera camera, GVRRenderBundle
+            renderBundle) {
         renderCamera(activity_ptr, scene.getNative(), camera.getNative(),
                 renderBundle.getMaterialShaderManager().getNative(),
                 renderBundle.getPostEffectShaderManager().getNative(),
@@ -696,7 +697,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
                                 mScript, IScriptEvents.class,
                                 "onInit", GVRViewManager.this);
 
-                        if (null != mSplashScreen && SplashMode.AUTOMATIC == mScript.getSplashMode()) {
+                        if (null != mSplashScreen && SplashMode.AUTOMATIC == mScript
+                                .getSplashMode() && mScript.getSplashDisplayTime() < 0f) {
                             runOnGlThread(new Runnable() {
                                 public void run() {
                                     mSplashScreen.closeSplashScreen();
@@ -795,7 +797,7 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             runOnTheFrameworkThread(new Runnable() {
                 public void run() {
                     try {
-                        getEventManager().sendEvent(mScript, IScriptEvents.class, "onStep");
+                        mScript.onStep();
 
                         // Issue "onStep" to the scene
                         GVRViewManager.this.getEventManager().sendEvent(

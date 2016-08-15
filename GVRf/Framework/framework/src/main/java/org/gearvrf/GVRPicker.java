@@ -70,9 +70,10 @@ public class GVRPicker extends GVRBehavior {
     private Vector3f mRayOrigin = new Vector3f(0, 0, 0);
     private Vector3f mRayDirection = new Vector3f(0, 0, -1);
     private float[] mPickRay = new float[6];
-    private boolean mHasChanged;
-    private GVRScene mScene;
-    private GVRPickedObject[] mPicked = null;
+
+    protected boolean mHasChanged;
+    protected GVRScene mScene;
+    protected GVRPickedObject[] mPicked = null;
 
     /**
      * Construct a picker which picks from a given scene.
@@ -97,6 +98,10 @@ public class GVRPicker extends GVRBehavior {
      * The origin of the ray is the translation component
      * of the total model matrix and the ray direction
      * is the forward look vector.
+     *
+     * If not attached to a scene object, the origin of the
+     * ray is the position of the viewer and its direction
+     * is where the viewer is looking.
      * 
      * @return pick ray
      */
@@ -130,6 +135,7 @@ public class GVRPicker extends GVRBehavior {
     {
         return mPicked;
     }
+
     /*
      * Sets the origin and direction of the pick ray.
      * 
@@ -137,12 +143,22 @@ public class GVRPicker extends GVRBehavior {
      * still want to get pick events, you must set the pick
      * ray manually with this function and call {@link doPick}.
      * 
-     * @param ox    X coordinate of origin in world coordinates.
-     * @param oy    Y coordinate of origin in world coordinates.
-     * @param oz    Z coordinate of origin in world coordinates.
-     * @param dx    X coordinate of ray direction in world coordinates.
-     * @param dy    Y coordinate of ray direction in world coordinates.
-     * @param dz    Z coordinate of ray direction in world coordinates.
+     * @param ox    X coordinate of origin.
+     * @param oy    Y coordinate of origin.
+     * @param oz    Z coordinate of origin.
+     * @param dx    X coordinate of ray direction.
+     * @param dy    Y coordinate of ray direction.
+     * @param dz    Z coordinate of ray direction.
+     *
+     * The coordinate system of the ray depends on the whether the
+     * picker is attached to a scene object or not. When attached
+     * to a scene object, the ray is in the coordinate system of
+     * that object where (0, 0, 0) is the center of the scene object
+     * and (0, 0, 1) is it's positive Z axis. If not attached to an
+     * object, the ray is in the coordinate system of the scene's
+     * main camera with (0, 0, 0) at the viewer and (0, 0, -1)
+     * where the viewer is looking.
+     *
      * @see doPick
      */
     public void setPickRay(float ox, float oy, float oz, float dx, float dy, float dz)
@@ -158,23 +174,9 @@ public class GVRPicker extends GVRBehavior {
     
     public void onDrawFrame(float frameTime)
     {
-        if (getOwnerObject() != null)
+        if (isEnabled() && ((getOwnerObject() != null) || mHasChanged))
         {
-            GVRTransform trans = getOwnerObject().getTransform();
-            Matrix4f worldmtx = trans.getModelMatrix4f();
-            worldmtx.getTranslation(mRayOrigin);
-            mRayDirection.x = 0;
-            mRayDirection.y = 0;
-            mRayDirection.z = -1;
-            mRayDirection.mulDirection(worldmtx);
-            mHasChanged = true;
-        }
-        if (mHasChanged)
-        {
-            if (isEnabled())
-            {
-                doPick();
-            }
+            doPick();
             mHasChanged = false;
         }        
     }
@@ -193,10 +195,18 @@ public class GVRPicker extends GVRBehavior {
      */
     public void doPick()
     {
-        boolean selectionChanged = false;
-        GVRPickedObject[] picked = pickObjects(mScene,
+        GVRSceneObject owner = getOwnerObject();
+        GVRTransform trans = (owner != null) ? owner.getTransform() : null;
+        GVRPickedObject[] picked = pickObjects(mScene, trans,
                 mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
                 mRayDirection.x, mRayDirection.y, mRayDirection.z);
+        generatePickEvents(picked);
+    }
+
+    protected void generatePickEvents(GVRPickedObject[] picked)
+    {
+        boolean selectionChanged = false;
+
         /*
          * Send "onExit" events for colliders that were picked but
          * are not picked anymore.
@@ -212,7 +222,7 @@ public class GVRPicker extends GVRBehavior {
                 GVRCollider collider = collision.hitCollider;
                 if (!hasCollider(picked, collider))
                 {
-                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());                   
+                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());
                     selectionChanged = true;
                 }
             }
@@ -230,12 +240,12 @@ public class GVRPicker extends GVRBehavior {
             GVRCollider collider = collision.hitCollider;
             if (!hasCollider(mPicked, collider))
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);                   
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);
                 selectionChanged = true;
             }
             else
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);                   
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);
             }
         }
         if (selectionChanged)
@@ -248,7 +258,7 @@ public class GVRPicker extends GVRBehavior {
             else
             {
                 mPicked = null;
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", this);                
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", this);
             }
         }
     }
@@ -274,7 +284,7 @@ public class GVRPicker extends GVRBehavior {
      * 
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
      * {@code [dx, dy, dz]}.
-     * 
+     *
      * <p>
      * The ray origin may be [0, 0, 0] and the direction components should be
      * normalized from -1 to 1: Note that the y direction runs from -1 at the
@@ -345,7 +355,7 @@ public class GVRPicker extends GVRBehavior {
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
      * 
-     * @return the {@link GVREyePointeeHolders which are penetrated by the
+     * @return the array of {@link GVREyePointeeHolder } objects which are penetrated by the
      *         picking ray. They are sorted by distance from the camera.
      * 
      * @deprecated use pickObjects instead
@@ -448,7 +458,7 @@ public class GVRPicker extends GVRBehavior {
      *
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
-     * 
+     *
      * @param ox
      *            The x coordinate of the ray origin.
      * 
@@ -477,7 +487,72 @@ public class GVRPicker extends GVRBehavior {
             float dy, float dz) {
         sFindObjectsLock.lock();        
         try {            
-            final GVRPickedObject[] result = NativePicker.pickObjects(scene.getNative(), ox, oy, oz, dx, dy, dz);
+            final GVRPickedObject[] result = NativePicker.pickObjects(scene.getNative(), 0L, ox, oy, oz, dx, dy, dz);
+            return result;
+        } finally {
+            sFindObjectsLock.unlock();
+        }
+    }
+
+    /**
+     * Casts a ray into the scene graph, and returns the objects it intersects.
+     *
+     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
+     * {@code [dx, dy, dz]}. The ray is in the coordinate system of the
+     * input transform, allowing it to be with respect to a scene object.
+     *
+     * <p>
+     * The ray origin may be [0, 0, 0] and the direction components should be
+     * normalized from -1 to 1: Note that the y direction runs from -1 at the
+     * bottom to 1 at the top. To construct a picking ray originating at the
+     * center of a scene object and pointing where that scene object looks,
+     * attach the GVRPicker to the scene object and  pass (0, 0, 0) as
+     * the ray origin and (0, 0, -1) for the direction.
+     *
+     * <p>
+     * This method is thread safe because it guarantees that only
+     * one thread at a time is doing a ray cast into a particular scene graph,
+     * and it extracts the hit data during within its synchronized block. You
+     * can then examine the return list without worrying about another thread
+     * corrupting your hit data.
+     *
+     * Depending on the type of collider, that the hit location may not be exactly
+     * where the ray would intersect the scene object itself. Rather, it is
+     * where the ray intersects the collision geometry associated with the collider.
+     *
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     * @param transform
+     *            The {@link GVRTransform} establishing the coordinate system of the ray.
+     * @param ox
+     *            The x coordinate of the ray origin.
+     *
+     * @param oy
+     *            The y coordinate of the ray origin.
+     *
+     * @param oz
+     *            The z coordinate of the ray origin.
+     *
+     * @param dx
+     *            The x vector of the ray direction.
+     *
+     * @param dy
+     *            The y vector of the ray direction.
+     *
+     * @param dz
+     *            The z vector of the ray direction.
+     * @return A list of {@link GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link GVRPickedObject} contains the scene object
+     *         which owns the {@link GVRCollider} along with the hit
+     *         location and distance from the camera.
+     *
+     * @since 1.6.6
+     */
+    public static final GVRPickedObject[] pickObjects(GVRScene scene, GVRTransform trans, float ox, float oy, float oz, float dx,
+                                                      float dy, float dz) {
+        sFindObjectsLock.lock();
+        try {
+            final GVRPickedObject[] result = NativePicker.pickObjects(scene.getNative(), trans.getNative(), ox, oy, oz, dx, dy, dz);
             return result;
         } finally {
             sFindObjectsLock.unlock();
@@ -493,7 +568,8 @@ public class GVRPicker extends GVRBehavior {
             float dy, float dz) {
         return Arrays.asList(pickObjects(scene, ox, oy, oz, dx, dy, dz));
     }
-    
+
+
     /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
@@ -630,10 +706,12 @@ final class NativePicker {
     static native long[] pickScene(long scene, float ox, float oy, float oz,
             float dx, float dy, float dz);
 
-    static native GVRPicker.GVRPickedObject[] pickObjects(long scene, float ox, float oy, float oz,
+    static native GVRPicker.GVRPickedObject[] pickObjects(long scene, long transform, float ox, float oy, float oz,
             float dx, float dy, float dz);
 
     static native float pickSceneObject(long sceneObject, long cameraRig);
+
+    static native GVRPicker.GVRPickedObject[] pickVisible(long scene);
 
     static native float[] pickSceneObjectAgainstBoundingBox(long sceneObject,
             float ox, float oy, float oz, float dx, float dy, float dz);

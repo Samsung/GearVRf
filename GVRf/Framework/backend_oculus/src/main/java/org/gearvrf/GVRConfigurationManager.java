@@ -26,6 +26,7 @@ final class GVRConfigurationManager {
 
     private WeakReference<GVRActivityBase> mActivity;
     private static GVRConfigurationManager sInstance;
+    private boolean isDockListenerRequired = true;
 
     private GVRConfigurationManager(GVRActivityBase gvrActivity) {
         mActivity = new WeakReference<GVRActivityBase>(gvrActivity);
@@ -33,6 +34,26 @@ final class GVRConfigurationManager {
 
     static void onInitialize(GVRActivityBase activity, VrAppSettings settings) {
         sInstance = new GVRConfigurationManager(activity);
+    }
+
+    /**
+     * For cases where the dock events are not required by the {@link GVRViewManager}, this
+     * method returns a <code>false</code>
+     *
+     * @return <code>true</code> if the framework needs to register a listener to receive
+     * dock events.
+     */
+    public boolean isDockListenerRequired(){
+        return isDockListenerRequired;
+    }
+
+    /**
+     * Set the flag to determine if the dock listener is required or not
+     * @param value <code>true</code> is the dock listener is required, <code>false</code>
+     *              otherwise.
+     */
+    void setDockListenerRequired(boolean value){
+        isDockListenerRequired = value;
     }
 
     /**

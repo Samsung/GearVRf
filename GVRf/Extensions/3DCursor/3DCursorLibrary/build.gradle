@@ -17,8 +17,14 @@
 apply plugin: 'com.android.library'
 apply plugin: XmlValidator
 
+repositories {
+    flatDir {
+        dirs '../../../Framework/framework/src/main/libs/'
+    }
+}
+
 android {
-    compileSdkVersion 19
+    compileSdkVersion 21
     buildToolsVersion "23.0.1"
 
     defaultConfig {
@@ -36,7 +42,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v4:19.0.0'
+    compile 'com.android.support:support-v4:21.0.0'
     compile project(':framework')
 }
 

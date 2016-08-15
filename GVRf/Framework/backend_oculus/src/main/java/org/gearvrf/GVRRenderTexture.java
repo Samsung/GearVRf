@@ -87,6 +87,15 @@ public class GVRRenderTexture extends GVRTexture {
         return NativeRenderTexture.readRenderResult(getNative(), readbackBuffer);
     }
 
+    /**
+     * Bind the framebuffer for this GVRRenderTexture.
+     *      
+     *      Before calling this, remember to retrieve the currently bound framebuffer (with glGetIntegerv(GL_FRAMEBUFFER_BINDING, int[])) so you can restore it after issuing calls to this GVRRenderTexture.
+     */
+    public void bind() {
+        NativeRenderTexture.bind(getNative());
+    }
+
     private int mWidth, mHeight;
 }
 
@@ -96,4 +105,6 @@ class NativeRenderTexture {
     static native long ctorMSAA(int width, int height, int sampleCount);
 
     static native boolean readRenderResult(long ptr, int[] readbackBuffer);
+
+    static native void bind(long ptr);
 }

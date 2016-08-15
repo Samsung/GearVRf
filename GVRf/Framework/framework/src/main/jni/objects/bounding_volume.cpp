@@ -149,5 +149,43 @@ void BoundingVolume::transform(const BoundingVolume &in_volume,
     expand(transformed_min);
     expand(transformed_max);
 }
+
+bool BoundingVolume::intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const
+{
+	/* Algorithm from http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms */
+	glm::vec3 direction = glm::normalize(rayDir);
+	glm::vec3 dirfrac;
+	float t;
+
+	dirfrac.x = 1.0f / direction.x;
+	dirfrac.y = 1.0f / direction.y;
+	dirfrac.z = 1.0f / direction.z;
+
+	float t1 = (min_corner_.x - rayStart.x) * dirfrac.x;
+	float t2 = (max_corner_.x - rayStart.x) * dirfrac.x;
+	float t3 = (min_corner_.y - rayStart.y) * dirfrac.y;
+	float t4 = (max_corner_.y - rayStart.y) * dirfrac.y;
+	float t5 = (min_corner_.z - rayStart.z) * dirfrac.z;
+	float t6 = (max_corner_.z - rayStart.z) * dirfrac.z;
+
+	float tmin = glm::max( glm::max( glm::min(t1,t2), glm::min(t3,t4)), glm::min(t5,t6) );
+	float tmax = glm::min( glm::min( glm::max(t1,t2), glm::max(t3,t4)), glm::max(t5,t6) );
+
+     // Ray intersection, but whole AABB is behind us
+	if (tmax < 0.0f)
+	{
+		t = tmax;
+		return false;
+	}
+   // No intersection
+	if(tmin > tmax)
+	{
+		t = tmax;
+		return false;
+	}
+	t = tmin; // Store length of ray until intersection in t
+	hitPoint = rayStart + direction * t; // intersection point
+}
+
 } // namespace
 
