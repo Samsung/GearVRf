@@ -21,6 +21,12 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    /**
+     * Thanks to the manifest merging this permission will be automatically added to the
+     * application's manifest. Yet another reason why we should be using AS and gradle exclusively.
+     */
+    <uses-permission android:name="com.samsung.android.hmt.permission.READ_SETTINGS" />
+
     <uses-sdk
         android:minSdkVersion="19"
         android:targetSdkVersion="19" />

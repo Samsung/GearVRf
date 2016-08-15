@@ -129,7 +129,7 @@ public:
             checkGlError("glAttachShader");
             glAttachShader(program, pixelShader);
             checkGlError("glAttachShader");
-            bindCommonAttributes(program);
+
             glLinkProgram(program);
             GLint linkStatus = GL_FALSE;
             glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -151,22 +151,10 @@ public:
         return program;
     }
 
-//    enum attributeBindLocation {
-//        POSITION_ATTRIBUTE_LOCATION = 0,
-//        TEXCOORD_ATTRIBUT_LOCATION = 1,
-//        NORMAL_ATTRIBUTE_LOCATION = 2
-//    };
-
 private:
     GLuint id_;
     GlDelete* deleter_;
-
-    static void bindCommonAttributes(GLuint id) {
-//        glBindAttribLocation(id, POSITION_ATTRIBUTE_LOCATION, "a_position");
-//        glBindAttribLocation(id, TEXCOORD_ATTRIBUT_LOCATION, "a_tex_coord");
-//        glBindAttribLocation(id, NORMAL_ATTRIBUTE_LOCATION, "a_normal");
-    }
-
 };
+
 }
 #endif
