@@ -797,6 +797,8 @@ class GVRViewManager extends GVRContext implements RotationSensorListener {
             runOnTheFrameworkThread(new Runnable() {
                 public void run() {
                     try {
+                        mScript.onStep();
+
                         // Issue "onStep" to the scene
                         GVRViewManager.this.getEventManager().sendEvent(
                             mMainScene, ISceneEvents.class, "onStep");
