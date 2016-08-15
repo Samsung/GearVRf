@@ -103,7 +103,7 @@ abstract class GVRCameraRigBase extends GVRComponent implements PrettyPrint {
     }
 
     protected abstract void addHeadTransformObject();
-    protected final GVRSceneObject getHeadTransformObject() {
+    public final GVRSceneObject getHeadTransformObject() {
         return headTransformObject;
     }
 

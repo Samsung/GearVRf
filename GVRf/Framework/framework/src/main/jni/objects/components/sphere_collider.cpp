@@ -115,21 +115,22 @@ ColliderData SphereCollider::isHit(const glm::mat4& model_matrix, const glm::vec
      */
     glm::vec3 start(rayStart);
     glm::vec3 dir(rayDir);
-    transformRay(model_matrix, start, dir);
+    glm::mat4 model_inverse = glm::affineInverse(model_matrix);
 
+    transformRay(model_inverse, start, dir);
     /*
      * Compute the intersection of the ray and sphere in local coordinates.
      * The distance will be in world coordinates.
      */
-    glm::vec3 hitPoint;
+    glm::vec3 hitPos;
     glm::vec3 hitNormal;
 
-    if (glm::intersectRaySphere(start, dir, center, radius, hitPoint, hitNormal))
+    if (glm::intersectRaySphere(start, dir, center, radius, hitPos, hitNormal))
     {
-        glm::vec4 p = glm::vec4(hitPoint, 1);
+        glm::vec4 p = glm::vec4(hitPos, 1);
 
         hitData.IsHit = true;
-        hitData.HitPosition = hitPoint;
+        hitData.HitPosition = hitPos;
         p = model_matrix * p;
         hitData.Distance = glm::length(rayStart - glm::vec3(p));
     }
