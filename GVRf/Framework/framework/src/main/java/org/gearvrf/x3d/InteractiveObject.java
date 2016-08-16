@@ -34,17 +34,24 @@ public class InteractiveObject {
 
 
   private Sensor sensor = null;
+  private String sensorFromField; // usually isActive or isOver
   private TimeSensor timeSensor = null;
+  private String timeSensorFromField; // often setEnabled
+  private String timeSensorToField; // usually fraction_changed
   private Interpolator interpolator = null;
+  private String interpolatorFromField; // often value_changed
+  private String interpolatorToField; // usually set_fraction
   private DefinedItem definedItem = null;
+  private String definedItemToField; // can be set_translation, set_rotation, set_position, set_orientation, set_scale
   // Scripting functionality will eventually be added
   // ScriptingObject scriptingObject = null;
 
   public InteractiveObject() {
   }
 
-  public void setSensor(Sensor sensor) {
+  public void setSensor(Sensor sensor, String sensorFromField) {
     this.sensor = sensor;
+    this.sensorFromField = sensorFromField;
   }
   public Sensor getSensor() {
     return this.sensor;
@@ -64,11 +71,15 @@ public class InteractiveObject {
     return this.interpolator;
   }
 
-  public void setDefinedItem(DefinedItem definedItem) {
+  public void setDefinedItem(DefinedItem definedItem, String definedItemToField) {
     this.definedItem = definedItem;
+    this.definedItemToField = definedItemToField;
   }
   public DefinedItem getDefinedItem() {
     return this.definedItem;
+  }
+  public String getDefinedItemToField() {
+    return this.definedItemToField;
   }
 
   public void printInteractiveObject() {
@@ -78,6 +89,7 @@ public class InteractiveObject {
     if (this.getInterpolator() != null) Log.e("RouteB IO", this.getInterpolator().name);
     if (this.getDefinedItem() != null) Log.e("RouteB IO", this.getDefinedItem().getName());
   }
+
 
 }
 

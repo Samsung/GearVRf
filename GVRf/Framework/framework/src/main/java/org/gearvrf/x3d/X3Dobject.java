@@ -120,13 +120,13 @@ public class X3Dobject
   // Strings appended to GVRScene names when there are multiple
   // animations on the same <Transform> or GVRSceneObject
 
-  private static final String KEY_FRAME_ANIMATION = "KeyFrameAnimation_";
+  public static final String KEY_FRAME_ANIMATION = "KeyFrameAnimation_";
 
   private static final String TRANSFORM_CENTER_ = "_Transform_Center_";
   private static final String TRANSFORM_NEGATIVE_CENTER_ = "_Transform_Neg_Center_";
-  private static final String TRANSFORM_ROTATION_ = "_Transform_Rotation_";
-  private static final String TRANSFORM_TRANSLATION_ = "_Transform_Translation_";
-  private static final String TRANSFORM_SCALE_ = "_Transform_Scale_";
+  public static final String TRANSFORM_ROTATION_ = "_Transform_Rotation_";
+  public static final String TRANSFORM_TRANSLATION_ = "_Transform_Translation_";
+  public static final String TRANSFORM_SCALE_ = "_Transform_Scale_";
   private static final String TRANSFORM_SCALE_ORIENTATION_ = "_Transform_Scale_Orientation_";
   private static final String TRANSFORM_NEGATIVE_SCALE_ORIENTATION_ = "_Transform_Neg_Scale_Orientation_";
 
@@ -296,7 +296,7 @@ public class X3Dobject
       this.mAnimations = root.getAnimations();
       lodManager = new LODmanager();
 
-      routeBuilder = new  RouteBuilder(mDefinedItems, interpolators, sensors, timeSensors);
+      routeBuilder = new  RouteBuilder(this, gvrContext, root, mDefinedItems, interpolators, sensors, timeSensors);
     }
     catch (Exception e)
     {
@@ -3676,7 +3676,6 @@ public class X3Dobject
       else if (qName.equalsIgnoreCase("scene"))
       {
         // Now that the scene is over, we can set construct the animations since
-
         // we now have all the ROUTES, and set up either the default or an actual
         // camera based on a <Viewpoint> in the scene.
 
@@ -3726,6 +3725,8 @@ public class X3Dobject
             }
           } // <Viewpoint> node existed
         } // end setting based on new camera rig
+
+        routeBuilder.initAniamtionsAndInteractivity();
 
         // Handle ROUTES
         TimeSensor routeTimeSensor = null;

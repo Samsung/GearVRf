@@ -22,10 +22,11 @@ import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 /**
  * 
  * @author m1.williams
- * Handles those <ROUTE>s that setup animations as opposed to Sensors
- * such as TouchSensors.
- * When this <ROUTE> is accessed in the parser and during the animation
- * loop, we have access to turning animations off and on.
+ * Individual <ROUTE> that verifies the links 'from' and 'to' object.
+ * already added to the scene.
+ * Also will have links to and from those objects.
+ * After the scene is parsed, an array of RouteObject will be
+ * reviwed to set up the Interactive Object.
  */
 
 public class RouteObject extends Route {
@@ -33,13 +34,23 @@ public class RouteObject extends Route {
    // If a ROUTE is associated with GVRKeyFrameAnimation, then
    // this value will point to it.
    // Assists with Touch Sensors
+  /*
    private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
+   */
+  Sensor sensorFrom = null;
+  TimeSensor timeSensorFrom = null;
+  TimeSensor timeSensorTo = null;
+  Interpolator interpolatorFrom = null;
+  Interpolator interpolatorTo = null;
+  DefinedItem definedItemTo = null;
+  // Scripting functionality will eventually be added
+  // ScriptingObject scriptingObject = null;
 
   public RouteObject(String fromNode, String fromField, String toNode, String toField) {
     super(fromNode, fromField, toNode, toField);
   }
 
-
+/*
   public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation) {
   	this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
   }
@@ -47,7 +58,7 @@ public class RouteObject extends Route {
   public GVRKeyFrameAnimation getGVRKeyFrameAnimation() {
   	return this.gvrKeyFrameAnimation;
   }
-
+*/
 }
 
 
