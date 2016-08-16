@@ -3728,6 +3728,7 @@ public class X3Dobject
 
         routeBuilder.initAniamtionsAndInteractivity();
 
+        /*
         // Handle ROUTES
         TimeSensor routeTimeSensor = null;
         Interpolator routeToInterpolator = null;
@@ -3946,8 +3947,9 @@ public class X3Dobject
                         // 4) Match the from-node of the Interpolator-to-Object
 
                         // to the to-Node which is the same name as the Object
-                        sensor.setGVRKeyFrameAnimation(routeAnim2
-                            .getGVRKeyFrameAnimation());
+  //                      sensor.setGVRKeyFrameAnimation(routeAnim2
+  //                          .getGVRKeyFrameAnimation());
+
                         sensor.addISensorEvents(new ISensorEvents() {
                           boolean isRunning;
                           @Override
@@ -3971,6 +3973,7 @@ public class X3Dobject
                             }
                           }
                         });
+
                       }
                     } // end for routeAnim2 for loop
                   } // end if routeAnim1_fromNode == routeSensor_toNode
@@ -3978,17 +3981,17 @@ public class X3Dobject
               } // end if sensor.name == routeSensor name
             } // end for RouteSensor for-loop
           } // end if sensor type = TOUCH
-          else if (sensor.sensorType == Sensor.Type.ANCHOR)
+           if (sensor.sensorType == Sensor.Type.ANCHOR)
           {
-            /*
-             * all the setup was created during the parsing String url =
+            // all the setup was created during the parsing String url =
              * sensor.getAnchorURL(); GVRSceneObject anchorSceneObject =
              * sensor.sensorSceneObject; for (GVRSceneObject anchorChildObject:
              * anchorSceneObject.getChildren()) { // may not need to set
              * anything here. }
-             */
+             //
           }
         } // end search on sensors
+    */
 
       } // end </scene>
       else if (qName.equalsIgnoreCase("x3d"))
@@ -4238,7 +4241,6 @@ public class X3Dobject
 
       // parse the Inline files
       if (inlineObjects.size() != 0)
-        ;
       {
         for (int i = 0; i < inlineObjects.size(); i++)
         {

@@ -18,6 +18,10 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.ISensorEvents;
+import org.gearvrf.SensorEvent;
+import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
@@ -85,17 +89,14 @@ public class RouteBuilder {
   }
 
   public void createRouteObject(String fromNode, String fromField, String toNode, String toField) {
-    // scan the arrays of
     Sensor routeFromSensor = null;
     TimeSensor routeToTimeSensor = null;
     TimeSensor routeFromTimeSensor = null;
     Interpolator routeToInterpolator = null;
     Interpolator routeFromInterpolator = null;
     DefinedItem routeToDefinedItem = null;
-    // Scripting functionality will eventually be added
-    // ScriptingObject scriptingObject = null;
-    //Log.e("RouteBldr", "  ");
-    //Log.e("RouteBldr", "fromNode: " + fromNode + ", toNode: " + toNode);
+    // TODO: Scripting functionality will eventually be added
+    // TODO: ScriptingObject scriptingObject = null;
 
     // Get pointers to the Sensor, TimeSensor, Interpolator and/or
     // Defined Items based the nodes of this object
@@ -103,7 +104,6 @@ public class RouteBuilder {
       if (sensor.name.equalsIgnoreCase(fromNode)) {
         routeFromSensor = sensor;
         Log.e("RouteBldr", "sensor: " + fromNode + "." + fromField + " to " + toNode + "." + toField);
-
       }
     }
 
@@ -139,7 +139,7 @@ public class RouteBuilder {
         if (routeToTimeSensor == interactiveObject.getTimeSensor()) {
           if (interactiveObject.getSensor() == null) {
             //This sensor already exists inside an interactive Object
-            //Log.e("RouteBldr", "   routeToTimeSensor in Int_Obj.  Set Sensor");
+            Log.e("RouteBldr", "   SensorToTimeSensor (set): " +  routeFromSensor.name + "." + fromField);
             interactiveObject.setSensor(routeFromSensor, fromField);
             routeToTimeSensorFound = true;
           }
@@ -148,6 +148,7 @@ public class RouteBuilder {
       if ( !routeToTimeSensorFound ) {
         // construct a new interactiveObject for this sensor and timeSensor
         InteractiveObject interactiveObject = new InteractiveObject();
+        Log.e("RouteBldr", "   SensorToTimeSensor (new): " +  routeFromSensor.name + "." + fromField);
         interactiveObject.setSensor(routeFromSensor, fromField);
         interactiveObject.setTimeSensor(routeToTimeSensor);
         interactiveObjects.add(interactiveObject);
@@ -162,8 +163,8 @@ public class RouteBuilder {
         if (routeToInterpolator == interactiveObject.getInterpolator()) {
           if (interactiveObject.getTimeSensor() == null) {
             //This sensor already exists inside an interactive Object
-            //Log.e("RouteBldr", "   routeToInterpolaotr in Int_Obj.  Set timeSensor");
             interactiveObject.setTimeSensor(routeFromTimeSensor);
+            Log.e("RouteBldr", "   TimeSensor2Interpolator(set): " + routeFromTimeSensor.name + "." + fromField + " -> " + routeToInterpolator.name);
             routeToInterpolatorFound = true;
           }
         }
@@ -174,22 +175,23 @@ public class RouteBuilder {
         interactiveObject.setTimeSensor(routeFromTimeSensor);
         interactiveObject.setInterpolator(routeToInterpolator);
         interactiveObjects.add(interactiveObject);
-        //Log.e("RouteBldr", "   Add new Int_Obj " + fromNode + ", " + toNode);
+        Log.e("RouteBldr", "   TimeSensor2Interpolator(new): " + routeFromTimeSensor.name + "." + fromField + " -> " + routeToInterpolator.name);
       }
     }
 
-
     if (routeToDefinedItem != null) {
-      //Log.e("RouteBldr", "Add Interpolator - DEFined InteractiveObject");
       boolean routeToDEFinedItemFound = false;
       for (InteractiveObject interactiveObject : interactiveObjects) {
         if (routeFromInterpolator == interactiveObject.getInterpolator()) {
-          //if (interactiveObject.getInterpolator() == null) {
-            //This sensor already exists inside an interactive Object
-            //Log.e("RouteBldr", "   routeToDEFinedIteam in Int_Obj.  Set defined item");
+          if (interactiveObject.getDefinedItemToField() == null ) {
             interactiveObject.setDefinedItem(routeToDefinedItem, toField);
             routeToDEFinedItemFound = true;
-          //}
+            Log.e("RouteBldr", "   Interpolator2DEFobj(set): " + routeFromInterpolator.name + "." + fromField + " -> " + routeToDefinedItem.getName() + "." + toField);
+          }
+          else {
+            Log.e("RouteBldr", "*** route already defined to " + interactiveObject.getDefinedItem().getName() + " ***");
+
+          }
         }
       }
       if ( !routeToDEFinedItemFound ) {
@@ -198,19 +200,19 @@ public class RouteBuilder {
         interactiveObject.setInterpolator(routeFromInterpolator);
         interactiveObject.setDefinedItem(routeToDefinedItem, toField);
         interactiveObjects.add(interactiveObject);
-        //Log.e("RouteBldr", "   Add new Int_Obj " + fromNode + ", " + toNode);
+        Log.e("RouteBldr", "   Interpolator2DEFobj(new): " + routeFromInterpolator.name + "." + fromField + " -> " + routeToDefinedItem.getName() + "." + toField);
       }
     }
   }  //  end createRouteObject
 
   public void initAniamtionsAndInteractivity() {
+    Log.e("RouteBldr", " ");
     Log.e("RouteBldr", "initAniamtionsAndInteractivity");
     for (InteractiveObject interactiveObject : interactiveObjects) {
       GVRAnimationChannel gvrAnimationChannel = null;
       GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
       GVRSceneObject gvrAnimatedObject = null;
-      if (interactiveObject.getSensor() == null) {
-        Log.e("RouteBldr", "no Sensor");
+      //if (interactiveObject.getSensor() == null) {
         interactiveObject.printInteractiveObject();
         // likely and animated non-interactive object
         if ( (interactiveObject.getTimeSensor() != null) &&
@@ -299,16 +301,55 @@ public class RouteBuilder {
               gvrKeyFrameAnimation.setRepeatCount(-1);
             }
             gvrKeyFrameAnimation.prepare();
-            //mAnimations.add((GVRKeyFrameAnimation) gvrKeyFrameAnimation);
-            gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine());
             animationCount++;
+            if (interactiveObject.getSensor() == null) {
+              // this is an animation without interactivity
+              gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine());
+            }
+            else {
+              // this is an interactive object
+              Log.e("RouteBldr", "Sensor, interactive object");
+              final InteractiveObject interactiveObjectFinal = interactiveObject;
+              final GVRKeyFrameAnimation gvrKeyFrameAnimationFinal = gvrKeyFrameAnimation;
+              interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+                boolean isRunning;
+                @Override
+                public void onSensorEvent(SensorEvent event) {
+                  //Handle SensorEvent here
+                  if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) ||
+                          (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor
+                                  .IS_ACTIVE))) {
+                    if (!isRunning) {
+                      isRunning = true;
+                      //GVRKeyFrameAnimation gvrKeyFrameAnimation = routeAnim2
+                     //         .getGVRKeyFrameAnimation();
+                      Log.e("RouteBldr", "Sensor, OVER Object");
+                      float[] hitPoint = event.getHitPoint();
+                      Log.e("RouteBldr", "event hit pt (" + hitPoint[0] + "," + hitPoint[1] + "," + hitPoint[2] + ")");
+                      Log.e("RouteBldr", "   isOver " + event.isOver() + ", isActive " + event.isOver());
+                      Log.e("RouteBldr", " ");
+                      gvrKeyFrameAnimationFinal.start(gvrContext.getAnimationEngine())
+                              .setOnFinish(new GVROnFinish() {
+                                @Override
+                                public void finished(GVRAnimation animation) {
+                                  isRunning = false;
+                                }
+                              });
+                    }
+                  }
+                }
+              });
+
+            }
+            Log.e("RouteBldr", " ");
+
           }
           else {
             Log.e("RouteBldr", interactiveObject.getDefinedItem().getName() + " possibly not found in the scene.");
           }
 
         }
-      }
+      //}
     }
   }   //  end initAniamtionsAndInteractivity
 

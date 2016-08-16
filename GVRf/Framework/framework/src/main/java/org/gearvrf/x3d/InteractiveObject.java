@@ -56,7 +56,9 @@ public class InteractiveObject {
   public Sensor getSensor() {
     return this.sensor;
   }
-
+  public String getSensorFromField() {
+    return this.sensorFromField;
+  }
   public void setTimeSensor(TimeSensor timeSensor) {
     this.timeSensor = timeSensor;
   }
