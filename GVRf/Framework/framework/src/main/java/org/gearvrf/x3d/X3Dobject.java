@@ -46,6 +46,9 @@ import java.net.URL;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.gearvrf.ISensorEvents;
+import org.gearvrf.SensorEvent;
+import org.gearvrf.animation.GVROnFinish;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -4078,7 +4081,7 @@ public class X3Dobject
             for (RouteSensor routeSensor : routeSensors)
             {
               String routeSensor_fromNode = routeSensor.getRouteFromNode();
-              String routeSensor_fromField = routeSensor.getRouteFromField();
+              final String routeSensor_fromField = routeSensor.getRouteFromField();
               String routeSensor_toNode = routeSensor.getRouteToNode();
               String routeSensor_toField = routeSensor.getRouteToField();
 
@@ -4099,7 +4102,7 @@ public class X3Dobject
                     // 3) Match the from-node of the Timer-to-Interpolator
 
                     // to the to-Node of the Interpolator-to-Object ROUTE
-                    for (RouteAnimation routeAnim2 : routeAnimations)
+                    for (final RouteAnimation routeAnim2 : routeAnimations)
                     {
                       String routeAnim2_fromNode = routeAnim2
                           .getRouteFromNode();
@@ -4116,6 +4119,29 @@ public class X3Dobject
                         // to the to-Node which is the same name as the Object
                         sensor.setGVRKeyFrameAnimation(routeAnim2
                             .getGVRKeyFrameAnimation());
+                        sensor.addISensorEvents(new ISensorEvents() {
+                          boolean isRunning;
+                          @Override
+                          public void onSensorEvent(SensorEvent event) {
+                            //Handle SensorEvent here
+                            if ((event.isOver() && routeSensor_fromField.equals(Sensor.IS_OVER)) ||
+                                    (event.isActive() && routeSensor_fromField.equals(Sensor
+                                            .IS_ACTIVE))) {
+                              if (!isRunning) {
+                                isRunning = true;
+                                GVRKeyFrameAnimation gvrKeyFrameAnimation = routeAnim2
+                                        .getGVRKeyFrameAnimation();
+                                gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine())
+                                        .setOnFinish(new GVROnFinish() {
+                                          @Override
+                                          public void finished(GVRAnimation animation) {
+                                            isRunning = false;
+                                          }
+                                        });
+                              }
+                            }
+                          }
+                        });
                       }
                     } // end for routeAnim2 for loop
                   } // end if routeAnim1_fromNode == routeSensor_toNode
