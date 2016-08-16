@@ -15,8 +15,14 @@
 
 apply plugin: 'com.android.library'
 
+repositories {
+    flatDir {
+        dirs '../../../../../Framework/framework/src/main/libs/'
+    }
+}
+
 android {
-    compileSdkVersion 19
+    compileSdkVersion 21
     buildToolsVersion "23.0.2"
 
     defaultConfig {
