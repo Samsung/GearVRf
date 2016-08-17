@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.gearvrf.utility.Log;
 import org.joml.FrustumCuller;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -61,13 +60,12 @@ import org.joml.Vector4f;
  *  - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject.attachCollider
+ * @see GVRSceneObject.attachComponent
  * @see GVRCollider
- * @see GVRCollider.setEnable
+ * @see GVRComponent.setEnable
  * @see GVRPickedObject
  */
 public class GVRFrustumPicker extends GVRPicker {
-    private static final String TAG = Log.tag(GVRFrustumPicker.class);
     protected FrustumCuller mCuller;
     protected float[] mProjMatrix = null;
     protected Matrix4f mProjection = null;
@@ -191,8 +189,6 @@ public class GVRFrustumPicker extends GVRPicker {
         if ((owner != null) && (mProjMatrix != null))
         {
             Matrix4f view_matrix = owner.getTransform().getModelMatrix4f();
-            Vector4f center = new Vector4f(0, 0, 0, 1);
-            Vector4f dir = new Vector4f(0, 0, 1, 0);
 
             view_matrix.invert();
             if (mCuller != null)
@@ -212,13 +208,17 @@ public class GVRFrustumPicker extends GVRPicker {
                 {
                     GVRSceneObject sceneObj = hit.hitObject;
                     GVRSceneObject.BoundingVolume bv = sceneObj.getBoundingVolume();
-                    center.set(bv.center, 1);
+                    Vector4f center = new Vector4f(bv.center.x, bv.center.y, bv.center.z, 1);
+                    Vector4f p = new Vector4f(bv.center.x, bv.center.y, bv.center.z + bv.radius, 1);
+                    float radius;
+
                     center.mul(view_matrix);
-                    dir.z = bv.radius;
-                    dir.mul(view_matrix);
-                    if (!mCuller.isSphereInsideFrustum(center.x, center.y, center.z, dir.length()))
+                    p.mul(view_matrix);
+                    p.sub(center, p);
+                    p.w = 0;
+                    radius = p.length();
+                    if (!mCuller.isSphereInsideFrustum(center.x, center.y, center.z, radius))
                     {
-                        Log.d("Picker", "Picker: outside %s (%f, %f, %f) %f", sceneObj.getName(), center.x, center.y, center.z, dir.length());
                         picked[i] = null;
                     }
                 }

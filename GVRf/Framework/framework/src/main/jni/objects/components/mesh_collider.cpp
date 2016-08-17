@@ -22,6 +22,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
+#include "glm/gtx/intersect.hpp"
 #include "util/gvr_log.h"
 #include "mesh_collider.h"
 #include "render_data.h"
@@ -79,7 +80,9 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     {
         RenderData* rd = owner->render_data();
         model_matrix = owner->transform()->getModelMatrix();
-        transformRay(model_matrix, O, D);
+        glm::mat4 model_inverse = glm::affineInverse(model_matrix);
+
+        transformRay(model_inverse, O, D);
         if ((mesh == NULL) && (rd != NULL))
         {
             mesh = rd->mesh();
@@ -105,6 +108,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
         if (data.IsHit)
         {
             glm::vec4 hitPos = model_matrix * glm::vec4(data.HitPosition, 1);
+
             data.Distance = glm::distance(rayStart, glm::vec3(hitPos));
             data.ColliderHit = this;
             data.ObjectHit = owner;
@@ -125,32 +129,24 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, co
     ColliderData data;
     if (vertices.size() > 0)
     {
-        //http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
         for (int i = 0; i < mesh.triangles().size(); i += 3)
         {
             glm::vec3 V1(vertices[mesh.triangles()[i]]);
             glm::vec3 V2(vertices[mesh.triangles()[i + 1]]);
             glm::vec3 V3(vertices[mesh.triangles()[i + 2]]);
-            glm::vec3 hitPos;
-            float     distance = rayTriangleIntersect(hitPos, rayStart, rayDir,
-                                                      (const glm::vec3&) V1, (const glm::vec3&) V2, (const glm::vec3&) V3);
 
             /*
              * Compute the point where the ray penetrates the mesh in
              * the coordinate space of the mesh. The hit point will
-             * be in mesh coordinates as will the distance. We must
-             * recompute the distance in world coordinates.
+             * be in mesh coordinates as will the distance.
              */
-            if (distance <= 0)
-            {
-                continue;
-            }
-            distance = glm::distance(rayStart, hitPos);
-            if (distance < data.Distance)
+            glm::vec3 hitPos;
+            float distance = rayTriangleIntersect(hitPos, rayStart, rayDir, V1, V2, V3);
+            if ((distance > 0) && (distance < data.Distance))
             {
                 data.IsHit = true;
                 data.HitPosition = hitPos;
-             }
+            }
          }
       }
       return data;
@@ -210,5 +206,4 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, co
         }
         return -1;
     }
-
 }
