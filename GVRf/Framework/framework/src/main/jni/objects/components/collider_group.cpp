@@ -21,6 +21,8 @@
 #include "collider_group.h"
 
 #include "objects/scene_object.h"
+#include "glm/gtc/matrix_inverse.hpp"
+
 
 namespace gvr {
 
@@ -49,11 +51,11 @@ ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& ra
         Transform* transform = ownerObject->transform();
         finalHit.ObjectHit = ownerObject;
         if (nullptr != transform) {
-            glm::mat4 model_matrix = transform->getModelMatrix();
+            glm::mat4 model_inverse = glm::affineInverse(transform->getModelMatrix());
             glm::vec3 O(rayStart);
             glm::vec3 D(rayDir);
 
-            transformRay(model_matrix, O, D);
+            transformRay(model_inverse, O, D);
             for (auto it = colliders_.begin(); it != colliders_.end(); ++it) {
                 ColliderData currentHit = (*it)->isHit(O, D);
                 if (currentHit.IsHit && (currentHit.Distance < finalHit.Distance)) {
