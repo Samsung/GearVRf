@@ -63,7 +63,6 @@ bool Batch::add(RenderData *render_data) {
     matrices_.push_back(model_matrix);
     render_data->owner_object()->setTransformUnDirty();
 
-
     // if it is not texture shader, dont add into batch, render in normal way
     if (material_->shader_type() != Material::ShaderType::TEXTURE_SHADER) {
         render_data_set_.insert(render_data);
@@ -100,12 +99,15 @@ bool Batch::add(RenderData *render_data) {
     int size = 0;
 
     size = vertices.size();
-
-    for(int i=0;i<size;i++){
+    for (int i=0; i < size; i++) {
         vertices_.push_back(vertices[i]);
-        normals_.push_back(normals[i]);
         tex_coords_.push_back(tex_coords[i]);
         matrix_indices_.push_back(draw_count_);
+    }
+
+    size = normals.size();
+    for (int i=0; i < size; i++) {
+        normals_.push_back(normals[i]);
     }
 
     size = indices.size();
