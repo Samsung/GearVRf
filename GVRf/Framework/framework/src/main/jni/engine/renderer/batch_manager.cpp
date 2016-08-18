@@ -72,6 +72,8 @@ void BatchManager::renderBatches(RenderState& rstate) {
         // if the mesh is large, we are not batching it
         if (currentShaderType != Material::ShaderType::TEXTURE_SHADER
                 || batch->notBatched()) {
+                
+            rstate.material_override = nullptr;
             const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
             for (auto it3 = render_data_set.begin();
                     it3 != render_data_set.end(); ++it3) {
