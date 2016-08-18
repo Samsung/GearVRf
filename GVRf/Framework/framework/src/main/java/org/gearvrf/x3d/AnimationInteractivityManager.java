@@ -37,17 +37,18 @@ import java.util.Vector;
 /**
  * 
  * @author m1.williams
- * RouteBuilder will construct a RouteObject based on the to/from node/field strings.
- * If the strings refer to actual object (DEFitems, TimeSensors, Iterpolators, etc),
- * RouteBuilder will construct an interactiveObject and add it to an array list,
- * or it will modify an interactiveObject to include a 'pointer' to the TimeSensor,
- * Sensor, Interpolator, etc. to tie all the sensors, timers, interpolators and
- * defined items (Transform, Material, TextureTransform, Color, etc) into one object.
+ * AnimationInteractivityManager will construct an InteractiveObject based on the to/from node/field Strings.
+ * If the Strings match actual objects (DEFitems, TimeSensors, Iterpolators, etc) from their
+ * respective array lists, then
+ * AnimationInteractivityManager will either construct an interactiveObject and add it to an array list,
+ * or modify an existing interactiveObject to include a 'pointer' (to the TimeSensor,
+ * Sensor, Interpolator, etc.) to tie all the sensors, timers, interpolators and
+ * defined items (Transform, Material, TextureTransform, Color, etc) into a single object.
  */
 
-public class RouteBuilder {
+public class AnimationInteractivityManager {
 
-  private static final String TAG = RouteBuilder.class.getSimpleName();
+  private static final String TAG = AnimationInteractivityManager.class.getSimpleName();
   private final static float FRAMES_PER_SECOND = 60.0f;
   private Vector<InteractiveObject> interactiveObjects = new Vector<InteractiveObject>();
 
@@ -59,7 +60,7 @@ public class RouteBuilder {
   private static final String TRANSLATION = "translation";
   private static final String POSITION = "position";
   private static final String SCALE = "scale";
-  public static final String KEY_FRAME_ANIMATION = "KeyFrameAnimation_";
+  private static final String KEY_FRAME_ANIMATION = "KeyFrameAnimation_";
 
   private X3Dobject x3dObject = null;
   private GVRContext gvrContext = null;
@@ -69,17 +70,17 @@ public class RouteBuilder {
   private Vector<Sensor> sensors = null;
   private Vector<TimeSensor> timeSensors = null;
 
-  // Append this incremented value to GVRScene names to insure unique
+  // Append this incremented value to GVRSceneObject names to insure unique
   // GVRSceneObjects when new GVRScene objects are generated to support animation
   private static int animationCount = 1;
 
 
-  public RouteBuilder(X3Dobject x3dObject, GVRContext gvrContext,
-                      GVRModelSceneObject root,
-                      Vector<DefinedItem> definedItems,
-                      Vector<Interpolator> interpolators,
-                      Vector<Sensor> sensors,
-                      Vector<TimeSensor> timeSensors) {
+  public AnimationInteractivityManager(X3Dobject x3dObject, GVRContext gvrContext,
+                                       GVRModelSceneObject root,
+                                       Vector<DefinedItem> definedItems,
+                                       Vector<Interpolator> interpolators,
+                                       Vector<Sensor> sensors,
+                                       Vector<TimeSensor> timeSensors) {
     this.x3dObject = x3dObject;
     this.gvrContext = gvrContext;
     this.root = root; // helps search for GVRSCeneObjects by name
@@ -89,7 +90,22 @@ public class RouteBuilder {
     this.timeSensors = timeSensors;
   }
 
-  public void createRouteObject(String fromNode, String fromField, String toNode, String toField) {
+  /**
+   * buildInteractiveObject represents one X3D <ROUTE /> tag.
+   * This method matches the fromNode and toNode with objects in sensors, timeSensors,
+   * interpolators and DEFinded Items array lists.  It will either construct a new
+   * InteractiveObject if a related <ROUTE /> has not called this method, or modify
+   * an InteractiveObject if a related <ROUTE /> has been parsed here.
+   * For example if a <ROUTE myTouchSensor TO myTimeSensor /> has been parsed, then another
+   * call to this method <ROUTE myTimeSensor TO myInterpolator /> will match the previous
+   * "myTimeSensor" and modify that InteractiveObject
+   * The 4 parameters are from an X3D <ROUTE /> node
+   * @param fromNode
+   * @param fromField
+   * @param toNode
+   * @param toField
+   */
+  public void buildInteractiveObject(String fromNode, String fromField, String toNode, String toField) {
     Sensor routeFromSensor = null;
     TimeSensor routeToTimeSensor = null;
     TimeSensor routeFromTimeSensor = null;
@@ -189,10 +205,16 @@ public class RouteBuilder {
         interactiveObject.setDefinedItem(routeToDefinedItem, toField);
         interactiveObjects.add(interactiveObject);
       }
-      GVRSceneObject gvrSceneObject = routeToDefinedItem.getGVRSceneObject();
     }  //  end if routeToDefinedItem != null
   }  //  end createRouteObject
 
+  /**
+   * initAniamtionsAndInteractivity() called when we parse </scene> in
+   * an X3D file.  This method will parse the array list of InteractiveObjects
+   * determining which are animations (when interactiveObject.sensor is null)
+   * or which are interactive and thus have a event attached to invoke the
+   * animation upon a TouchSensor, Anchor, etc.
+   */
   public void initAniamtionsAndInteractivity() {
     for (InteractiveObject interactiveObject : interactiveObjects) {
       GVRAnimationChannel gvrAnimationChannel = null;
@@ -327,7 +349,7 @@ public class RouteBuilder {
             });
 
           }
-          Log.e("RouteBldr", " ");
+          //Log.e("RouteBldr", " ");
         }
         else {
           Log.e(TAG, interactiveObject.getDefinedItem().getName() + " possibly not found in the scene.");
@@ -336,7 +358,7 @@ public class RouteBuilder {
     }
   }   //  end initAniamtionsAndInteractivity
 
-}  //  end RouteBuilder class
+}  //  end AnimationInteractivityManager class
 
 
 

@@ -15,9 +15,30 @@
 
 package org.gearvrf.x3d;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import java.util.concurrent.Future;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAssetLoader;
@@ -35,25 +56,29 @@ import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.GVRRenderData.GVRRenderingOrder;
 import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRSphereCollider;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.ISensorEvents;
-import org.gearvrf.SensorEvent;
+
+import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
+import org.gearvrf.GVRRenderData.GVRRenderingOrder;
 import org.gearvrf.animation.GVRAnimation;
-import org.gearvrf.animation.GVROnFinish;
-import org.gearvrf.animation.GVRRepeatMode;
-import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
-import org.gearvrf.animation.keyframe.GVRAnimationChannel;
-import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+
+import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
+import org.gearvrf.GVRTextureParameters.TextureWrapType;
+
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
+
+
+import org.joml.Vector3f;
+
+
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -120,8 +145,6 @@ public class X3Dobject
   // Strings appended to GVRScene names when there are multiple
   // animations on the same <Transform> or GVRSceneObject
 
-  public static final String KEY_FRAME_ANIMATION = "KeyFrameAnimation_";
-
   private static final String TRANSFORM_CENTER_ = "_Transform_Center_";
   private static final String TRANSFORM_NEGATIVE_CENTER_ = "_Transform_Neg_Center_";
   public static final String TRANSFORM_ROTATION_ = "_Transform_Rotation_";
@@ -148,7 +171,7 @@ public class X3Dobject
   private final static int elevationGridHeight = 10;
   private boolean reorganizeVerts = false;
 
-  private final static float framesPerSecond = 60.0f;
+  //private final static float framesPerSecond = 60.0f;
   private static final float CUBE_WIDTH = 20.0f; // used for cube maps, based on
   // gvrcubemap [GearVRf-Demos
   // master]
@@ -158,7 +181,7 @@ public class X3Dobject
 
   private GVRSceneObject root = null;
   private GVRSceneObject mainCamera = null;
-  private List<GVRAnimation> mAnimations;
+  //private List<GVRAnimation> mAnimations;
   /** Array list of DEFined items Clones objects with 'USE' parameter
    * As public, enables implementation of HTML5 DOM's
    * getElementByTagName() method.
@@ -217,8 +240,8 @@ public class X3Dobject
 
   private Vector<TimeSensor> timeSensors = new Vector<TimeSensor>();
   private Vector<Interpolator> interpolators = new Vector<Interpolator>();
-  private Vector<RouteAnimation> routeAnimations = new Vector<RouteAnimation>();
-  private Vector<RouteSensor> routeSensors = new Vector<RouteSensor>();
+  //private Vector<RouteAnimation> routeAnimations = new Vector<RouteAnimation>();
+  //private Vector<RouteSensor> routeSensors = new Vector<RouteSensor>();
 
   private Vector<InlineObject> inlineObjects = new Vector<InlineObject>();
 
@@ -242,7 +265,7 @@ public class X3Dobject
   private LODmanager lodManager = null;
   private GVRCameraRig cameraRigAtRoot = null;
 
-  private RouteBuilder routeBuilder = null;
+  private AnimationInteractivityManager animationInteractivityManager = null;
 
 
   /**
@@ -293,10 +316,10 @@ public class X3Dobject
       cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
       this.root.addChildObject(this.mainCamera);
 
-      this.mAnimations = root.getAnimations();
+      //this.mAnimations = root.getAnimations();
       lodManager = new LODmanager();
 
-      routeBuilder = new  RouteBuilder(this, gvrContext, root, mDefinedItems, interpolators, sensors, timeSensors);
+      animationInteractivityManager = new AnimationInteractivityManager(this, gvrContext, root, mDefinedItems, interpolators, sensors, timeSensors);
     }
     catch (Exception e)
     {
@@ -2260,9 +2283,9 @@ public class X3Dobject
             toField = attributeValue;
           }
 
-          routeBuilder.createRouteObject(fromNode, fromField, toNode, toField);
+          animationInteractivityManager.buildInteractiveObject(fromNode, fromField, toNode, toField);
 
-
+/*
           Interpolator routeToInterpolator = null;
           Interpolator routeFromInterpolator = null;
           for (int j = 0; j < interpolators.size(); j++) {
@@ -2291,7 +2314,7 @@ public class X3Dobject
               routeSensors.add(newRoute);
             }
           }
-
+*/
         } // end <ROUTE> node
 
 
@@ -3738,7 +3761,7 @@ public class X3Dobject
           } // <Viewpoint> node existed
         } // end setting based on new camera rig
 
-        routeBuilder.initAniamtionsAndInteractivity();
+        animationInteractivityManager.initAniamtionsAndInteractivity();
 
       } // end </scene>
       else if (qName.equalsIgnoreCase("x3d"))
