@@ -32,7 +32,7 @@ import java.util.Vector;
 
 public class InteractiveObject {
 
-
+  private static final String TAG = InteractiveObject.class.getSimpleName();
   private Sensor sensor = null;
   private String sensorFromField; // usually isActive or isOver
   private TimeSensor timeSensor = null;
@@ -43,8 +43,8 @@ public class InteractiveObject {
   private String interpolatorToField; // usually set_fraction
   private DefinedItem definedItem = null;
   private String definedItemToField; // can be set_translation, set_rotation, set_position, set_orientation, set_scale
-  // Scripting functionality will eventually be added
-  // ScriptingObject scriptingObject = null;
+  // TODO: Scripting functionality will eventually be added
+  // TODO: ScriptingObject scriptingObject = null;
 
   public InteractiveObject() {
   }
@@ -86,10 +86,10 @@ public class InteractiveObject {
 
   public void printInteractiveObject() {
     Log.e("RouteB IO", " ");
-    if (this.getSensor() != null)Log.e("RouteB IO", this.getSensor().name);
+    if (this.getSensor() != null)Log.e("RouteB IO", this.getSensor().getName() + "." + this.getSensorFromField());
     if (this.getTimeSensor() != null) Log.e("RouteB IO", this.getTimeSensor().name);
     if (this.getInterpolator() != null) Log.e("RouteB IO", this.getInterpolator().name);
-    if (this.getDefinedItem() != null) Log.e("RouteB IO", this.getDefinedItem().getName());
+    if (this.getDefinedItem() != null) Log.e("RouteB IO", this.getDefinedItem().getName() + "." + this.getDefinedItemToField());
   }
 
 

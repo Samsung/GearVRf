@@ -2281,7 +2281,7 @@ public class X3Dobject
             Sensor routeSensor = null;
             for (int j = 0; j < sensors.size(); j++) {
               Sensor sensor = sensors.get(j);
-              if (sensor.name.equalsIgnoreCase(fromNode)) {
+              if (sensor.getName().equalsIgnoreCase(fromNode)) {
                 routeSensor = sensor;
               }
             }
@@ -2824,8 +2824,6 @@ public class X3Dobject
           sensor.setAnchorURL(url);
           sensors.add(sensor);
           currentSensor = sensor;
-          currentSceneObject.attachEyePointeeHolder();
-
         } // end <Anchor> node
 
 
@@ -2860,14 +2858,11 @@ public class X3Dobject
             // sensor object
             GVRSceneObject childObject = currentSceneObject.getChildByIndex(i);
 
-            attachCollider(childObject);
             currentSceneObject.removeChildObject(childObject);
             gvrSensorSceneObject.addChildObject(childObject);
           }
           currentSceneObject.addChildObject(gvrSensorSceneObject);
           currentSceneObject = gvrSensorSceneObject;
-          currentSceneObject.attachEyePointeeHolder();
-
         } // end <TouchSensor> node
 
 
@@ -3290,7 +3285,13 @@ public class X3Dobject
         {
           if (currentSensor != null)
           {
-            attachCollider(currentSceneObject);
+            // A GVRScene object was added between the parent and it's children.
+            // If the currentSensor points to the currentSceneObject, go up to
+            //   it's parent thus skipping past the sensor's sensor's GVRSceneObject
+            if (currentSensor.getGVRSceneObject() == currentSceneObject) {
+              currentSensor = null;
+              currentSceneObject = currentSceneObject.getParent();
+            }
           }
 
           if (currentSceneObject.getParent() == root)
@@ -3320,6 +3321,17 @@ public class X3Dobject
       } // end </Transform> parsing
       else if (qName.equalsIgnoreCase("Group"))
       {
+        if (currentSensor != null)
+        {
+          // A GVRScene object was added between the parent and it's children.
+          // If the currentSensor points to the currentSceneObject, go up to
+          //   it's parent thus skipping past the sensor's sensor's GVRSceneObject
+          if (currentSensor.getGVRSceneObject() == currentSceneObject) {
+            currentSensor = null;
+            currentSceneObject = currentSceneObject.getParent();
+          }
+        }
+
         if (currentSceneObject.getParent() == root)
           currentSceneObject = null;
         else
@@ -3598,7 +3610,7 @@ public class X3Dobject
       }
       else if (qName.equalsIgnoreCase("TouchSensor"))
       {
-        currentSensor = null;
+        ;
       }
       else if (qName.equalsIgnoreCase("ProximitySensor"))
       {
@@ -3689,7 +3701,7 @@ public class X3Dobject
           if (viewpoints.isEmpty())
           {
 
-            // No <Viewpoint> nodex included in X3D file,
+            // No <Viewpoint> node(s) included in X3D file,
 
             // so use default viewpoint values
             cameraTransform.setPosition(0, 0, 10);
@@ -3728,271 +3740,6 @@ public class X3Dobject
 
         routeBuilder.initAniamtionsAndInteractivity();
 
-        /*
-        // Handle ROUTES
-        TimeSensor routeTimeSensor = null;
-        Interpolator routeToInterpolator = null;
-        Interpolator routeFromInterpolator = null;
-
-        // Building the Interactive Object by parsing all the Route
-
-        // Implement the ROUTES involving with Animations
-        for (RouteAnimation route : routeAnimations)
-        {
-          String fromNode = route.getRouteFromNode();
-          String fromField = route.getRouteFromField();
-          String toNode = route.getRouteToNode();
-          String toField = route.getRouteToField();
-
-          // declared outside the for loop since we set the boolean 'loop' value
-          // later
-          // TimeSensor timeSensor = null;
-          for (TimeSensor timeSensor : timeSensors)
-          {
-            if (timeSensor.name.equalsIgnoreCase(fromNode))
-            {
-              routeTimeSensor = timeSensor;
-              break;
-            }
-          }
-          for (Interpolator interpolator : interpolators)
-          {
-
-            if (interpolator.name.equalsIgnoreCase(toNode))
-            {
-              routeToInterpolator = interpolator;
-            }
-            else if (interpolator.name.equalsIgnoreCase(fromNode))
-            {
-              routeFromInterpolator = interpolator;
-            }
-          }
-          GVRSceneObject gvrSceneObject = root.getSceneObjectByName(toNode);
-          if (gvrSceneObject != null)
-          {
-            // Handle "set_translation" or "translation", "rotation" or
-            // "set_rotation", etc.
-            GVRAnimationChannel gvrAnimationChannel = null;
-            GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
-            toField = toField.toLowerCase();
-            if ((toField.endsWith("translation")
-                    || toField.endsWith("position")))
-            {
-              GVRSceneObject gvrAnimatedTranslation = root
-                      .getSceneObjectByName((toNode + TRANSFORM_TRANSLATION_));
-
-              gvrAnimationChannel = new GVRAnimationChannel(
-                      gvrAnimatedTranslation.getName(),
-                      routeToInterpolator.key.length, 0, 0,
-                      GVRAnimationBehavior.LINEAR, GVRAnimationBehavior.LINEAR);
-
-              for (int j = 0; j < routeToInterpolator.key.length; j++)
-              {
-                Vector3f vector3f = new Vector3f(
-                        routeFromInterpolator.keyValue[j * 3],
-                        routeFromInterpolator.keyValue[j * 3 + 1],
-                        routeFromInterpolator.keyValue[j * 3 + 2]);
-                gvrAnimationChannel.setPosKeyVector(j,
-                        routeToInterpolator.key[j]
-                                * routeTimeSensor.cycleInterval
-                                * framesPerSecond,
-                        vector3f);
-              }
-
-              gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
-                      gvrAnimatedTranslation.getName() + KEY_FRAME_ANIMATION
-                              + animationCount,
-                      gvrAnimatedTranslation,
-                      routeTimeSensor.cycleInterval * framesPerSecond,
-                      framesPerSecond);
-              // Assists in connecting a TouchSensor to an animation
-              route.setGVRKeyFrameAnimation(gvrKeyFrameAnimation);
-            } // end translation
-            else if (toField.endsWith("rotation"))
-            {
-
-              GVRSceneObject gvrAnimatedRotation = root
-                      .getSceneObjectByName((toNode + TRANSFORM_ROTATION_));
-
-              gvrAnimationChannel = new GVRAnimationChannel(
-                      gvrAnimatedRotation.getName(), 0,
-                      routeToInterpolator.key.length, 0,
-                      GVRAnimationBehavior.DEFAULT, GVRAnimationBehavior.DEFAULT);
-
-              for (int j = 0; j < routeToInterpolator.key.length; j++)
-              {
-                AxisAngle4f axisAngle4f = new AxisAngle4f(
-                        routeFromInterpolator.keyValue[j * 4 + 3],
-                        routeFromInterpolator.keyValue[j * 4],
-                        routeFromInterpolator.keyValue[j * 4 + 1],
-                        routeFromInterpolator.keyValue[j * 4 + 2]);
-                Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                gvrAnimationChannel.setRotKeyQuaternion(j,
-                        routeToInterpolator.key[j]
-                                * routeTimeSensor.cycleInterval
-                                * framesPerSecond,
-                        quaternionf);
-              }
-
-              gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
-                      gvrAnimatedRotation.getName() + KEY_FRAME_ANIMATION
-                              + animationCount,
-                      gvrAnimatedRotation,
-                      routeTimeSensor.cycleInterval * framesPerSecond,
-                      framesPerSecond);
-              // Assists in connecting a TouchSensor to an animation
-              route.setGVRKeyFrameAnimation(gvrKeyFrameAnimation);
-            } // end rotation animation
-
-            else if (toField.endsWith("scale"))
-            {
-              GVRSceneObject gvrAnimatedScale = root
-                      .getSceneObjectByName((toNode + TRANSFORM_SCALE_));
-
-              gvrAnimationChannel = new GVRAnimationChannel(
-                      gvrAnimatedScale.getName(), 0, 0,
-                      routeToInterpolator.key.length, GVRAnimationBehavior.DEFAULT,
-                      GVRAnimationBehavior.DEFAULT);
-              for (int j = 0; j < routeToInterpolator.key.length; j++)
-              {
-                Vector3f vector3f = new Vector3f(
-                        routeFromInterpolator.keyValue[j * 3],
-                        routeFromInterpolator.keyValue[j * 3 + 1],
-                        routeFromInterpolator.keyValue[j * 3 + 2]);
-                gvrAnimationChannel.setScaleKeyVector(j,
-                        routeToInterpolator.key[j]
-                                * routeTimeSensor.cycleInterval
-                                * framesPerSecond,
-                        vector3f);
-              }
-
-              gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
-                      gvrAnimatedScale.getName() + KEY_FRAME_ANIMATION
-                              + animationCount,
-                      gvrAnimatedScale,
-                      routeTimeSensor.cycleInterval * framesPerSecond,
-                      framesPerSecond);
-              // Assists in connecting a TouchSensor to an animation
-              route.setGVRKeyFrameAnimation(gvrKeyFrameAnimation);
-            } // end scale animation
-
-            if (gvrAnimationChannel != null)
-            {
-              gvrKeyFrameAnimation.addChannel(gvrAnimationChannel);
-              if (routeTimeSensor.loop)
-              {
-                gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.REPEATED);
-                gvrKeyFrameAnimation.setRepeatCount(-1);
-              }
-              gvrKeyFrameAnimation.prepare();
-              mAnimations.add((GVRKeyFrameAnimation) gvrKeyFrameAnimation);
-            }
-            animationCount++;
-          } // end if (gvrSceneObject != null)
-
-
-        } // end for-loop for animation routes
-
-        // Implement the ROUTES involving Touch Sensors, Anchors, etc.
-        // will need to connect the 'sensor' object to the GVRKeyFrameAnimation
-        // or other object(s). This requires parsing the sensor ROUTE based on
-
-        // Touch Sensor, the timer-to-interpolator route, then from the
-        // interpolator-to-3d mesh route so that the sensor can link to
-        // the GVRKeyFrameAnimation.
-        // There are several steps in parsing from one route to the next
-
-        // 1) get the (Touch) sensor node to the ROUTE with the touch sensor
-        for (Sensor sensor : sensors)
-        {
-          if (sensor.sensorType == Sensor.Type.TOUCH)
-          {
-
-            for (RouteSensor routeSensor : routeSensors)
-            {
-              String routeSensor_fromNode = routeSensor.getRouteFromNode();
-              final String routeSensor_fromField = routeSensor.getRouteFromField();
-              String routeSensor_toNode = routeSensor.getRouteToNode();
-              String routeSensor_toField = routeSensor.getRouteToField();
-
-              // 2) Now match the sensor-to-timer ROUTE to-node to the from-node
-
-              // of the same name for the Timer-to-Interpolator ROUTE
-              if (sensor.name.equalsIgnoreCase(routeSensor_fromNode))
-              {
-                for (RouteAnimation routeAnim1 : routeAnimations)
-                {
-                  String routeAnim1_fromNode = routeAnim1.getRouteFromNode();
-                  String routeAnim1_fromField = routeAnim1.getRouteFromField();
-                  String routeAnim1_toNode = routeAnim1.getRouteToNode();
-                  String routeAnim1_toField = routeAnim1.getRouteToField();
-                  if (routeAnim1_fromNode.equalsIgnoreCase(routeSensor_toNode))
-                  {
-
-                    // 3) Match the from-node of the Timer-to-Interpolator
-
-                    // to the to-Node of the Interpolator-to-Object ROUTE
-                    for (final RouteAnimation routeAnim2 : routeAnimations)
-                    {
-                      String routeAnim2_fromNode = routeAnim2
-                              .getRouteFromNode();
-                      String routeAnim2_fromField = routeAnim2
-                              .getRouteFromField();
-                      String routeAnim2_toNode = routeAnim2.getRouteToNode();
-                      String routeAnim2_toField = routeAnim2.getRouteToField();
-                      if (routeAnim2_fromNode
-                              .equalsIgnoreCase(routeAnim1_toNode))
-                      {
-
-                        // 4) Match the from-node of the Interpolator-to-Object
-
-                        // to the to-Node which is the same name as the Object
-  //                      sensor.setGVRKeyFrameAnimation(routeAnim2
-  //                          .getGVRKeyFrameAnimation());
-
-                        sensor.addISensorEvents(new ISensorEvents() {
-                          boolean isRunning;
-                          @Override
-                          public void onSensorEvent(SensorEvent event) {
-                            //Handle SensorEvent here
-                            if ((event.isOver() && routeSensor_fromField.equals(Sensor.IS_OVER)) ||
-                                    (event.isActive() && routeSensor_fromField.equals(Sensor
-                                            .IS_ACTIVE))) {
-                              if (!isRunning) {
-                                isRunning = true;
-                                GVRKeyFrameAnimation gvrKeyFrameAnimation = routeAnim2
-                                        .getGVRKeyFrameAnimation();
-                                gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine())
-                                        .setOnFinish(new GVROnFinish() {
-                                          @Override
-                                          public void finished(GVRAnimation animation) {
-                                            isRunning = false;
-                                          }
-                                        });
-                              }
-                            }
-                          }
-                        });
-
-                      }
-                    } // end for routeAnim2 for loop
-                  } // end if routeAnim1_fromNode == routeSensor_toNode
-                } // end for-loop of routeAnim1
-              } // end if sensor.name == routeSensor name
-            } // end for RouteSensor for-loop
-          } // end if sensor type = TOUCH
-           if (sensor.sensorType == Sensor.Type.ANCHOR)
-          {
-            // all the setup was created during the parsing String url =
-             * sensor.getAnchorURL(); GVRSceneObject anchorSceneObject =
-             * sensor.sensorSceneObject; for (GVRSceneObject anchorChildObject:
-             * anchorSceneObject.getChildren()) { // may not need to set
-             * anything here. }
-             //
-          }
-        } // end search on sensors
-    */
-
       } // end </scene>
       else if (qName.equalsIgnoreCase("x3d"))
       {
@@ -4000,11 +3747,6 @@ public class X3Dobject
       } // end </x3d>
     }
 
-    private void attachCollider(GVRSceneObject sceneObject)
-    {
-      GVRSphereCollider collider = new GVRSphereCollider(gvrContext);
-      sceneObject.attachComponent(collider);
-    }
 
     // if the mesh contains no normals, then they must be generated.
     // First generate the polygon normal from the cross product of any
