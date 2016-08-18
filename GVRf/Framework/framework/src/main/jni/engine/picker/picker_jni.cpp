@@ -52,8 +52,8 @@ Java_org_gearvrf_NativePicker_pickScene(JNIEnv * env,
         jfloat dy, jfloat dz) {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     std::vector<ColliderData> colliders;
-
-    Picker::pickScene(scene, colliders, (Transform*) NULL, ox, oy, oz, dx, dy, dz);
+    Transform* t = scene->main_camera_rig()->getHeadTransform();
+    Picker::pickScene(scene, colliders, t, ox, oy, oz, dx, dy, dz);
     jlongArray jcolliders = env->NewLongArray(colliders.size());
     jlong* ptrArray = env->GetLongArrayElements(jcolliders, 0);
     jlong* ptrs = ptrArray;

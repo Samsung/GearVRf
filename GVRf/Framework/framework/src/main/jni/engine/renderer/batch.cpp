@@ -55,7 +55,8 @@ bool Batch::updateMesh(Mesh* render_mesh){
 
     // Check if models has normals
     if(normals.size() > 0){
-        for(int i=0;i<size;i++)
+        int normals_size = normals.size();
+        for(int i=0;i<normals_size;i++)
             normals_.push_back(normals[i]);
     }
 
