@@ -41,7 +41,7 @@
 #include "objects/vertex_bone_data.h"
 
 #include "engine/memory/gl_delete.h"
-
+#define MAX_TEX_COORDS 8
 namespace gvr {
 class Mesh: public HybridObject {
 public:
@@ -61,8 +61,10 @@ public:
         vertices.swap(vertices_);
         std::vector<glm::vec3> normals;
         normals.swap(normals_);
-        std::vector<glm::vec2> tex_coords;
-        tex_coords.swap(tex_coords_);
+        for(int i=0; i<MAX_TEX_COORDS; i++){
+            std::vector<glm::vec2> tex_coords;
+            tex_coords.swap(tex_coords_[i]);
+        }
         std::vector<unsigned short> indices;
         indices.swap(indices_);
 
@@ -132,18 +134,25 @@ public:
     }
 
     const std::vector<glm::vec2>& tex_coords() const {
-        return tex_coords_;
+        return tex_coords(0);
     }
 
-    void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
-        tex_coords_ = tex_coords;
+    const std::vector<glm::vec2>& tex_coords(int index) const {
+        return tex_coords_[index];
+    }
+    void setCurrentUVIndex(int uvIndex){
+        curr_texCord_index = uvIndex;
+    }
+
+    void set_tex_coords(const std::vector<glm::vec2>& tex_coords, int index=0){
         vao_dirty_ = true;
+        tex_coords_[index]= tex_coords;
         mesh_modified_ = true;
     }
 
-    void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
-        tex_coords_ = std::move(tex_coords);
+    void set_tex_coords(const std::vector<glm::vec2>&& tex_coords, int index=0){
         vao_dirty_ = true;
+        tex_coords_[index]= std::move(tex_coords);
         mesh_modified_ = true;
     }
 
@@ -358,8 +367,11 @@ public:
     	 if(vertices_.size() > 0)
     		 attrib_names.insert("a_position");
 
-    	 if(tex_coords_.size() > 0)
-    		 attrib_names.insert("a_texcoord");
+    	 for(int i=0; i<MAX_TEX_COORDS; i++)
+    	     if(tex_coords_[i].size() > 0){
+    	         attrib_names.insert("a_texcoord");
+    	         break;
+    	     }
 
     	 if(normals_.size() > 0)
     		 attrib_names.insert("a_normal");
@@ -401,7 +413,9 @@ private:
 private:
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
-    std::vector<glm::vec2> tex_coords_;
+    std::vector<glm::vec2> tex_coords_[MAX_TEX_COORDS];
+    int curr_texCord_index;
+
     std::map<std::string, std::vector<float>> float_vectors_;
     std::map<std::string, std::vector<glm::vec2>> vec2_vectors_;
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;

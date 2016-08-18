@@ -176,6 +176,7 @@ public class GVRMaterial extends GVRHybridObject implements
         setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
         setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
         setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
+        setFloat("uvIndex", 0);
         setSpecularExponent(0.0f);
         this.mShaderFeatureSet = 0;
     }
@@ -193,6 +194,7 @@ public class GVRMaterial extends GVRHybridObject implements
 
     GVRMaterial(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        setFloat("uvIndex", 0);
     }
 
     public GVRMaterialShaderId getShaderType() {

@@ -27,7 +27,8 @@ public class GVRJassimpAdapter {
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
     private static GVRJassimpAdapter sInstance;
     private List<INodeFactory> mNodeFactories;
-
+    private static final int MAX_TEX_COORDS = 8;
+    
     public interface INodeFactory {
         GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
     }
@@ -87,25 +88,27 @@ public class GVRJassimpAdapter {
             mesh.setNormals(normalsArray);
         }
 
-        // TexCoords
-        final int coordIdx = 0;
-        FloatBuffer fbuf = aiMesh.getTexCoordBuffer(coordIdx);
-        if (fbuf != null) {
-            FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
-            if (aiMesh.getNumUVComponents(coordIdx) == 2) {
-                FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(coordIdx);
-                coords.put(coordsSource);
-            } else {
-                for (int i = 0; i < aiMesh.getNumVertices(); ++i) {
-                    float u = aiMesh.getTexCoordU(i, coordIdx);
-                    float v = aiMesh.getTexCoordV(i, coordIdx);
-                    coords.put(u);
-                    coords.put(v);
+       
+        for(int texIndex=0; texIndex< MAX_TEX_COORDS; texIndex++){
+            FloatBuffer fbuf = aiMesh.getTexCoordBuffer(texIndex);
+            if (fbuf != null) {
+                FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
+                if (aiMesh.getNumUVComponents(texIndex) == 2) {
+                    FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(texIndex);
+                    coords.put(coordsSource);
+                } else {
+                    for (int i = 0; i < aiMesh.getNumVertices(); ++i) {
+                        float u = aiMesh.getTexCoordU(i, texIndex);
+                        float v = aiMesh.getTexCoordV(i, texIndex);
+                        coords.put(u);
+                        coords.put(v);
+                    }
                 }
+                mesh.setTexCoords(coords.array(),texIndex);
             }
-            mesh.setTexCoords(coords.array());
         }
-
+        
+        
         // Triangles
         IntBuffer indexBuffer = aiMesh.getIndexBuffer();
         if (indexBuffer != null) {

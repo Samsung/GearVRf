@@ -95,7 +95,7 @@ bool Batch::add(RenderData *render_data) {
 
     const std::vector<glm::vec3>& vertices = render_mesh->vertices();
     const std::vector<glm::vec3>& normals = render_mesh->normals();
-    const std::vector<glm::vec2>& tex_coords = render_mesh->tex_coords();
+    const std::vector<glm::vec2>& tex_coords = render_mesh->tex_coords(int(material_->getFloat("uvIndex")));
     int size = 0;
 
     size = vertices.size();
@@ -132,7 +132,8 @@ void Batch::setupMesh(){
         mesh_init_ = true;
         mesh_.set_vertices(vertices_);
         mesh_.set_normals(normals_);
-        mesh_.set_tex_coords(tex_coords_);
+        int uvIndex = int(material_->getFloat("uvIndex"));
+        mesh_.set_tex_coords(tex_coords_,uvIndex);
         mesh_.set_indices(indices_);
         mesh_.setFloatVector("a_matrix_index", matrix_indices_);
         if (nullptr != renderdata_) {

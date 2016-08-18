@@ -4,7 +4,6 @@
 #include <assimp/cfileio.h>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
-
 #include "android/asset_manager_jni.h"
 
 #ifdef JNI_LOG
@@ -895,9 +894,24 @@ static bool loadSceneGraph(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 
 static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene) 
 {
-	for (unsigned int m = 0; m < cScene->mNumMaterials; m++)
+    // Get the minimum UV index
+	int min_index = 999999;
+    for (unsigned int m = 0; m < cScene->mNumMaterials; m++)
+    {
+        aiMaterial* cMaterial = cScene->mMaterials[m];
+        for (int ttInd = aiTextureType_DIFFUSE; ttInd < aiTextureType_UNKNOWN; ttInd++)
+        {
+            int index ;
+            cMaterial->Get("$tex.uvwsrc",ttInd,0,index);
+            if(min_index > index)
+                min_index = index;
+        }
+
+    }
+
+    for (unsigned int m = 0; m < cScene->mNumMaterials; m++)
 	{
-		const aiMaterial* cMaterial = cScene->mMaterials[m];
+	    aiMaterial* cMaterial = cScene->mMaterials[m];
 
 		lprintf("converting material %d ...\n", m);
 
@@ -928,7 +942,15 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		/* set texture numbers */
 		for (int ttInd = aiTextureType_DIFFUSE; ttInd < aiTextureType_UNKNOWN; ttInd++) 
 		{
-			aiTextureType tt = static_cast<aiTextureType>(ttInd);
+		    // uvIndex ordering starts from 1, make it 0
+		    if(min_index == 1){
+	            int index ;
+	            cMaterial->Get("$tex.uvwsrc",ttInd,0,index);
+	            index = index - 1;
+		        cMaterial->AddProperty(&index,1,_AI_MATKEY_UVWSRC_BASE,ttInd,0);
+		    }
+
+		    aiTextureType tt = static_cast<aiTextureType>(ttInd);
 
 			unsigned int num = cMaterial->GetTextureCount(tt);
 
@@ -1308,7 +1330,11 @@ static bool loadLights(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		jstring lightName = env->NewStringUTF(cLight->mName.C_Str());
 		DeleteLocalRef refLightName(env, lightName);
 		params[0].l = lightName;
-		params[1].i = cLight->mType;
+		// Assimp does not handle area lights, it sets it to undefined, change it to point-lights
+		if(cLight->mType == aiLightSource_UNDEFINED)
+	        params[1].i = aiLightSource_POINT;
+    	else
+		    params[1].i = cLight->mType;
 		params[2].l = jPosition;
 		params[3].l = jDirection;
 		params[4].f = cLight->mAttenuationConstant;

@@ -208,6 +208,9 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                 final String texFileName = material.getTextureFile(texType, 0);
                 if (!"".equals(texFileName))
                 {
+                    // add texture coordinate index
+                    meshMaterial.setFloat("uvIndex", (float)material.getTextureUVIndex(texType, 0));
+                    
                     GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureMap.get(texType));
                     assetRequest.loadTexture(texRequest);
                 }

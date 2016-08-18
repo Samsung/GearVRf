@@ -236,15 +236,15 @@ void Mesh::createAttributeMapping(int programId,
             else if (strcmp(attrName, "a_texcoord") == 0)
             {
                 attrData.size = 2;
-                len = tex_coords_.size();
-                attrData.data = tex_coords_.data();
+                len = tex_coords_[curr_texCord_index].size();
+                attrData.data = tex_coords_[curr_texCord_index].data();
                 //attrData.index = 2;
             }
             else if (strcmp(attrName, "a_tex_coord") == 0)
             {
                 attrData.size = 2;
-                len = tex_coords_.size();
-                attrData.data = tex_coords_.data();
+                len = tex_coords_[curr_texCord_index].size();
+                attrData.data = tex_coords_[curr_texCord_index].data();
                 //attrData.index = 2;
             }
             else
@@ -360,7 +360,7 @@ void Mesh::generateVAO(int programId) {
     obtainDeleter();
 
     if (vertices_.size() == 0 && normals_.size() == 0
-            && tex_coords_.size() == 0) {
+            && tex_coords_[curr_texCord_index].size() == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
         throw error;
     }

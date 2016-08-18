@@ -1047,7 +1047,7 @@ void Renderer::renderMaterialShader(RenderState& rstate, RenderData* render_data
                 error.c_str());
         shader_manager->getErrorShader()->render(&rstate, render_data, curr_material);
     }
-
+    mesh->setCurrentUVIndex(int(curr_material->getFloat("uvIndex")));
     programId = shader->getProgramId();
     //there is no program associated with EXTERNAL_RENDERER_SHADER
     if (-1 != programId) {
