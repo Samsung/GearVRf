@@ -17,6 +17,7 @@
 #define BATCH_H
 #include "renderer.h"
 #include "objects/mesh.h"
+#include "objects/components/render_data.h"
 #include <map>
 #include <unordered_map>
 #include <memory>
@@ -57,13 +58,24 @@ public:
 	const std::unordered_set<RenderData*>& getRenderDataSet(){
 		return render_data_set_;
 	}
-	Material *get_material() {
-		return material_;
-	}
 	bool notBatched(){
 		return not_batched_;
 	}
+	void regenerateMeshData();
+	Material* material(int passIndex=0){
+	    if(passIndex ==0)
+	        return material_;
+
+	    return renderdata_->pass(passIndex)->material();
+	}
 	bool isBatchDirty();
+	void clearData();
+	bool isRenderDataDisabled();
+	int renderDataSetSize(){
+	    return render_data_set_.size();
+	}
+	bool updateMesh(Mesh* render_mesh);
+
 	unsigned int getIndexCount(){
 		return index_count_;
 	}
