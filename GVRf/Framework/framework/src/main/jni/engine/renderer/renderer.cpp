@@ -33,14 +33,16 @@
 #include "shaders/post_effect_shader_manager.h"
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
+#include "batch_manager.h"
 
 #include <unordered_map>
 #include <unordered_set>
-
+#define MAX_INDICES 400
 #define BATCH_SIZE 60
-
+bool do_batching = true;
 
 namespace gvr {
+BatchManager* Renderer::batch_manager = nullptr;
 bool use_multiview= false;
 static int numberDrawCalls;
 static int numberTriangles;
@@ -61,7 +63,9 @@ int Renderer::getNumberDrawCalls() {
 int Renderer::getNumberTriangles() {
     return numberTriangles;
 }
-
+int Renderer::incrementDrawCalls(){
+    numberDrawCalls++;
+}
 static std::vector<RenderData*> render_data_vector;
 
 void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
@@ -130,195 +134,26 @@ void Renderer::state_sort() {
         }
     }
 }
-struct comparator {
-    std::string renderdata_properties;
-    Material* mat;
-    Material::ShaderType shader_type;
-    bool mesh_dynamic;
-};
+/**
+    This function compares passes of render-data
+    it checks whether no of passes are equal and then material and cull_status of each pass
 
-/*
- * batch_set stores all the batches, batch_map stores the indices of batches and the respective map
- * to get constant look up time
- */
-std::vector<Batch*> batch_set;
-std::unordered_map<Batch*, int> batch_map;
-#define MAX_INDICES 400
+*/
+bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2){
+    int pass_count1 = rdata1->pass_count();
+    int pass_count2 = rdata2->pass_count();
 
-void getNewBatch(RenderData* rdata, Batch** existing_batch){
-    Batch* new_batch = new Batch(MAX_INDICES, MAX_INDICES);
-    new_batch->add(rdata);
-    rdata->setBatch(new_batch);
-    batch_set.push_back(new_batch);
-    batch_map[new_batch] = batch_set.size() - 1;
-    *existing_batch = new_batch;
+    if(pass_count1 != pass_count2)
+        return false;
+
+    for(int i=0; i< pass_count1; i++){
+        if(!(rdata1->material(i) == rdata2->material(i) && rdata1->material(i)->shader_type() == rdata2->material(i)->shader_type() &&
+                   rdata1->cull_face(i) == rdata2->cull_face(i)))
+            return false;
+    }
+    return true;
 }
 
-/*
- * batch indices stores the indices in render_vector where batches are split
- */
-std::vector<int> batch_indices;
-void createBatch(int start, int end) {
-    Batch* existing_batch = nullptr;
-    int size = BATCH_SIZE;
-    // get batch with least no of meshes in it
-    for (int i = start; i <= end; ++i) {
-        if (render_data_vector[i]->getBatch() != nullptr) {
-            if (render_data_vector[i]->getBatch()->getNumberOfMeshes()
-                    <= size) {
-                size = render_data_vector[i]->getBatch()->getNumberOfMeshes();
-                existing_batch = render_data_vector[i]->getBatch();
-            }
-        }
-    }
-
-    for (int i = start; i <= end; ++i) {
-        RenderData* render_data = render_data_vector[i];
-        Batch* current_batch = render_data->getBatch();
-        if (!current_batch) {
-            if (!render_data->mesh()->isDynamic()) { // mesh is static
-                // existing batch is not full
-                if (existing_batch
-                        && existing_batch->getNumberOfMeshes() < BATCH_SIZE) {
-                    // add failed because mesh is large try with next batch
-                    if (!existing_batch->add(render_data)) {
-                        getNewBatch(render_data, &existing_batch);
-                    }
-
-                    // if batch does not exist in set, add it
-                    if (batch_map.find(existing_batch) == batch_map.end()) {
-                        batch_set.push_back(existing_batch);
-                        batch_map[existing_batch] = batch_set.size() - 1;
-
-                    }
-                    render_data->setBatch(existing_batch);
-                } else { // existing batch is full or does not exists
-                    getNewBatch(render_data, &existing_batch);
-                }
-            } else { // mesh is dynamic
-
-                // if one of the mesh is modified
-                if (existing_batch && existing_batch->isBatchDirty()) {
-                    existing_batch->setMeshesDirty();
-
-                    std::unordered_map<Batch*, int>::iterator it =
-                            batch_map.find(existing_batch);
-                    if (it != batch_map.end()) {
-                        int index = it->second;
-                        batch_set.erase(batch_set.begin() + index);
-                    }
-                    delete existing_batch;
-                    getNewBatch(render_data, &existing_batch);
-                }
-                // existing batch is not full
-                else if (existing_batch
-                        && existing_batch->getNumberOfMeshes() < BATCH_SIZE) {
-
-                    if (!existing_batch->add(render_data)) {
-                        getNewBatch(render_data, &existing_batch);
-                    }
-
-                    render_data->setBatch(existing_batch);
-
-                    if (batch_map.find(existing_batch) == batch_map.end()) {
-                        batch_set.push_back(existing_batch);
-                        batch_map[existing_batch] = batch_set.size() - 1;
-                    }
-                } else { //existing batch is full or not exists
-                    getNewBatch(render_data, &existing_batch);
-                }
-            }
-        } else { // batch is not null
-
-            // update the transform if model matrix is changed
-             if (render_data->owner_object()->isTransformDirty()
-                   && render_data->owner_object()->transform()) {
-                current_batch->UpdateModelMatrix(render_data,
-                        render_data->owner_object()->transform()->getModelMatrix());
-            }
-
-            if (!render_data->mesh()->isDynamic()) {
-                if (batch_map.find(current_batch) == batch_map.end()) {
-                    batch_set.push_back(current_batch);
-                    batch_map[current_batch] = batch_set.size() - 1;
-                }
-            } else { // mesh is dynamic
-                if (current_batch->isBatchDirty()) {
-                    current_batch->setMeshesDirty();
-
-                    std::unordered_map<Batch*, int>::iterator it =
-                            batch_map.find(current_batch);
-                    if (it != batch_map.end()) {
-                        int index = it->second;
-                        batch_set.erase(batch_set.begin() + index);
-                    }
-
-                    delete current_batch;
-                    Batch* new_batch = new Batch(MAX_INDICES, MAX_INDICES);
-                    render_data->setBatch(new_batch);
-                    new_batch->add(render_data);
-                    batch_set.push_back(new_batch);
-                    batch_map[new_batch] = batch_set.size() - 1;
-
-                } else {
-                    if (batch_map.find(current_batch) == batch_map.end()) {
-                        batch_set.push_back(current_batch);
-                        batch_map[current_batch] = batch_set.size() - 1;
-                    }
-                }
-            }
-        }
-    }
-}
-
-/*
- * It creates array of indices which specifies indices of the spliting of batches in renderdata vector
- * for renderdatas to have in same batch, they need to have same render order, material,
- * shader type and mesh dynamic-ness
- */
-void Renderer::BatchSetup() {
-    batch_indices.clear();
-    comparator prev, current;
-
-    // copy first render vector properties
-    if (render_data_vector.size() != 0) {
-        prev.renderdata_properties = render_data_vector[0]->getHashCode();
-        prev.mat = render_data_vector[0]->material(0);
-        prev.shader_type = render_data_vector[0]->material(0)->shader_type();
-        prev.mesh_dynamic = render_data_vector[0]->mesh()->isDynamic();
-        batch_indices.push_back(0);
-    }
-
-    // if previous render data does not have same properies which are required for batching, split them
-    // into different batches
-    for (int i = 1; i < render_data_vector.size(); i++) {
-        current.renderdata_properties = render_data_vector[i]->getHashCode();
-        current.mat = render_data_vector[i]->material(0);
-        current.shader_type = render_data_vector[i]->material(0)->shader_type();
-        current.mesh_dynamic = render_data_vector[i]->mesh()->isDynamic();
-        if (!current.renderdata_properties.compare(prev.renderdata_properties)
-                && current.mesh_dynamic == prev.mesh_dynamic
-                && current.mat == prev.mat
-                && current.shader_type == prev.shader_type) {
-            continue;
-        } else {
-            batch_indices.push_back(i);
-            prev.mat = current.mat;
-            prev.renderdata_properties = current.renderdata_properties;
-            prev.shader_type = current.shader_type;
-            prev.mesh_dynamic = current.mesh_dynamic;
-        }
-    }
-    batch_indices.push_back(render_data_vector.size());
-    batch_set.clear(); // Clear batch vector
-    batch_map.clear();
-
-  //  LOGE("render data vector size %d", render_data_vector.size());
-    for (int i = 1; i < batch_indices.size(); i++) {
-        createBatch(batch_indices[i - 1], batch_indices[i] - 1);
-    }
-
-}
 void Renderer::cull(Scene *scene, Camera *camera,
         ShaderManager* shader_manager) {
 
@@ -334,7 +169,12 @@ void Renderer::cull(Scene *scene, Camera *camera,
     // Note: this needs to be scaled to sort on N states
     state_sort();
 
-    BatchSetup();
+    if(do_batching){
+        if(batch_manager == nullptr){
+            batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
+        }
+        batch_manager->batchSetup(render_data_vector);
+    }
 }
 
 /*
@@ -418,50 +258,6 @@ void Renderer::restoreRenderStates(RenderData* render_data) {
     }
 }
 
-void Renderer::renderbatches(RenderState& rstate) {
-    glm::mat4 vp_matrix = glm::mat4(
-            rstate.uniforms.u_proj * rstate.uniforms.u_view);
-
-    for (auto it = batch_set.begin(); it != batch_set.end(); ++it) {
-
-        Batch* batch = *it;
-        rstate.material_override = batch->get_material();
-        int currentShaderType = rstate.material_override->shader_type();
-
-        // if shader type is other than texture shader, render it with non-batching mode
-        // if the mesh is large, we are not batching it
-        if (currentShaderType != Material::ShaderType::TEXTURE_SHADER
-                || batch->notBatched()) {
-            const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
-            for (auto it3 = render_data_set.begin();
-                    it3 != render_data_set.end(); ++it3) {
-                renderRenderData(rstate, (*it3));
-            }
-            continue;
-        }
-
-        RenderData* renderdata = batch->get_renderdata();
-        if (nullptr != renderdata) {
-            const std::vector<glm::mat4>& matrices = batch->get_matrices();
-            numberDrawCalls++;
-            batch->setupMesh();
-            setRenderStates(renderdata, rstate);
-
-            if(use_multiview){
-                rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
-                rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
-            }
-
-            rstate.shader_manager->getTextureShader()->render_batch(matrices,
-                renderdata, rstate, batch->getIndexCount(),
-                batch->getNumberOfMeshes());
-            restoreRenderStates(renderdata);
-        }
-    }
-
-}
-bool do_batching = true;
-
 void Renderer::renderRenderDataVector(RenderState &rstate) {
 
     if (!do_batching) {
@@ -470,9 +266,10 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
             GL(renderRenderData(rstate, *it));
         }
     } else {
-        renderbatches(rstate);
+         batch_manager->renderBatches(rstate);
     }
 }
+
 void Renderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
         ShaderManager* shader_manager,
