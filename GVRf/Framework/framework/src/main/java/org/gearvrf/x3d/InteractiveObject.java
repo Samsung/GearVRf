@@ -84,15 +84,6 @@ public class InteractiveObject {
     return this.definedItemToField;
   }
 
-  public void printInteractiveObject() {
-    Log.e("RouteB IO", " ");
-    if (this.getSensor() != null)Log.e("RouteB IO", this.getSensor().getName() + "." + this.getSensorFromField());
-    if (this.getTimeSensor() != null) Log.e("RouteB IO", this.getTimeSensor().name);
-    if (this.getInterpolator() != null) Log.e("RouteB IO", this.getInterpolator().name);
-    if (this.getDefinedItem() != null) Log.e("RouteB IO", this.getDefinedItem().getName() + "." + this.getDefinedItemToField());
-  }
-
-
 }
 
 

@@ -171,7 +171,6 @@ public class X3Dobject
   private final static int elevationGridHeight = 10;
   private boolean reorganizeVerts = false;
 
-  //private final static float framesPerSecond = 60.0f;
   private static final float CUBE_WIDTH = 20.0f; // used for cube maps, based on
   // gvrcubemap [GearVRf-Demos
   // master]
@@ -240,8 +239,6 @@ public class X3Dobject
 
   private Vector<TimeSensor> timeSensors = new Vector<TimeSensor>();
   private Vector<Interpolator> interpolators = new Vector<Interpolator>();
-  //private Vector<RouteAnimation> routeAnimations = new Vector<RouteAnimation>();
-  //private Vector<RouteSensor> routeSensors = new Vector<RouteSensor>();
 
   private Vector<InlineObject> inlineObjects = new Vector<InlineObject>();
 
@@ -2284,37 +2281,6 @@ public class X3Dobject
           }
 
           animationInteractivityManager.buildInteractiveObject(fromNode, fromField, toNode, toField);
-
-/*
-          Interpolator routeToInterpolator = null;
-          Interpolator routeFromInterpolator = null;
-          for (int j = 0; j < interpolators.size(); j++) {
-            Interpolator interpolator = interpolators.get(j);
-            if (interpolator.name.equalsIgnoreCase(toNode)) {
-              routeToInterpolator = interpolator;
-            } else if (interpolator.name.equalsIgnoreCase(fromNode)) {
-              routeFromInterpolator = interpolator;
-            }
-          }
-          if ((routeToInterpolator != null) || (routeFromInterpolator != null)) {
-            RouteAnimation newRoute = new RouteAnimation(fromNode, fromField,
-                    toNode, toField);
-            routeAnimations.add(newRoute);
-          } else {
-            Sensor routeSensor = null;
-            for (int j = 0; j < sensors.size(); j++) {
-              Sensor sensor = sensors.get(j);
-              if (sensor.getName().equalsIgnoreCase(fromNode)) {
-                routeSensor = sensor;
-              }
-            }
-            if (routeSensor != null) {
-              RouteSensor newRoute = new RouteSensor(fromNode, fromField, toNode,
-                      toField);
-              routeSensors.add(newRoute);
-            }
-          }
-*/
         } // end <ROUTE> node
 
 

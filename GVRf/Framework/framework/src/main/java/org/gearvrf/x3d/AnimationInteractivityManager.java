@@ -100,6 +100,7 @@ public class AnimationInteractivityManager {
    * call to this method <ROUTE myTimeSensor TO myInterpolator /> will match the previous
    * "myTimeSensor" and modify that InteractiveObject
    * The 4 parameters are from an X3D <ROUTE /> node
+   * For example: <ROUTE fromNode.fromField to toNode.toField />
    * @param fromNode
    * @param fromField
    * @param toNode
@@ -220,8 +221,9 @@ public class AnimationInteractivityManager {
       GVRAnimationChannel gvrAnimationChannel = null;
       GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
       GVRSceneObject gvrAnimatedObject = null;
-      interactiveObject.printInteractiveObject();
-      // likely and animated non-interactive object
+      //interactiveObject.printInteractiveObject();
+      // both animated and interactive objects currently must have a time
+      // sensor, interpolator and a Transform node with a DEF="..." parameter
       if ( (interactiveObject.getTimeSensor() != null) &&
                 (interactiveObject.getInterpolator() != null) &&
                 (interactiveObject.getDefinedItem() != null) ) {
@@ -309,7 +311,8 @@ public class AnimationInteractivityManager {
           gvrKeyFrameAnimation.prepare();
           animationCount++;
 
-          // Determine if this will be animation only, or interactive triggered in picking
+          // Third, determine if this will be animation only, or
+          // interactive triggered in picking
           if (interactiveObject.getSensor() == null) {
             // this is an animation without interactivity
             gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine());
@@ -318,25 +321,18 @@ public class AnimationInteractivityManager {
             // this is an interactive object
             final InteractiveObject interactiveObjectFinal = interactiveObject;
             final GVRKeyFrameAnimation gvrKeyFrameAnimationFinal = gvrKeyFrameAnimation;
-            GVRSceneObject gvrSO = interactiveObjectFinal.getSensor().getGVRSceneObject();
 
             interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
               boolean isRunning;
               @Override
               public void onSensorEvent(SensorEvent event) {
-                //Handle SensorEvent here
+                //Setup SensorEvent callback here
                 if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) ||
                           (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor
                                   .IS_ACTIVE))) {
                   if (!isRunning) {
                     isRunning = true;
-                    Log.e("RouteBldr", "Sensor, OVER/Active Object " + interactiveObjectFinal.getSensor().getName() );
                     interactiveObjectFinal.getSensor().setHitPoint( event.getHitPoint() );
-
-                    float[] hitPoint = event.getHitPoint();
-                    Log.e("RouteBldr", "event hit pt (" + hitPoint[0] + "," + hitPoint[1] + "," + hitPoint[2] + ")");
-                    Log.e("RouteBldr", "   isOver=" + event.isOver() + ", isActive=" + event.isActive());
-                    Log.e("RouteBldr", " ");
                     gvrKeyFrameAnimationFinal.start(gvrContext.getAnimationEngine())
                             .setOnFinish(new GVROnFinish() {
                                 @Override
@@ -349,7 +345,6 @@ public class AnimationInteractivityManager {
             });
 
           }
-          //Log.e("RouteBldr", " ");
         }
         else {
           Log.e(TAG, interactiveObject.getDefinedItem().getName() + " possibly not found in the scene.");
