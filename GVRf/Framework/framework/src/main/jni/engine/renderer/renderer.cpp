@@ -37,7 +37,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
-#define MAX_INDICES 400
+#define MAX_INDICES 5000
 #define BATCH_SIZE 60
 bool do_batching = true;
 
@@ -153,6 +153,19 @@ bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2){
     }
     return true;
 }
+/***
+    Traverses through all passes in renderdata and checks if any of the material is modified
+***/
+bool isMaterialModified(RenderData* rdata){
+    if(nullptr == rdata)
+        return false;
+
+    for(int i=0; i<rdata->pass_count();i++){
+        if(rdata->material(i)->isMaterialDirty())
+            return true;
+    }
+    return false;
+}
 
 void Renderer::cull(Scene *scene, Camera *camera,
         ShaderManager* shader_manager) {
@@ -243,7 +256,6 @@ void Renderer::restoreRenderStates(RenderData* render_data) {
         GL(glEnable (GL_CULL_FACE));
         GL(glCullFace (GL_BACK));
     }
-
     if (render_data->offset()) {
         GL(glDisable (GL_POLYGON_OFFSET_FILL));
     }
@@ -701,17 +713,21 @@ bool Renderer::isDefaultPosition3d(const Material* curr_material) {
 void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     if (!(rstate.render_mask & render_data->render_mask()))
         return;
+    // LOGE("set render states");
 
+    render_data->cull_face();
     // Set the states
     setRenderStates(render_data, rstate);
+    //LOGE("calling rendermesh");
     if (render_data->mesh() != 0) {
         GL(renderMesh(rstate, render_data));
     }
-
+    //LOGE("restore render states");
     // Restoring to Default.
     // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
     // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
     restoreRenderStates(render_data);
+   // LOGE("restore render done");
 }
 
 void Renderer::renderMesh(RenderState& rstate, RenderData* render_data) {

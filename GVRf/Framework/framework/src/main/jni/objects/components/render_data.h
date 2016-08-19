@@ -70,7 +70,7 @@ public:
                     false), offset_factor_(0.0f), offset_units_(0.0f), depth_test_(
                     true), alpha_blend_(true), alpha_to_coverage_(false), sample_coverage_(
                     1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(
-                    GL_TRIANGLES), texture_capturer(0) {
+                    GL_TRIANGLES), texture_capturer(0),renderdata_dirty_(true) {
     }
 
     void copy(const RenderData& rdata) {
@@ -83,7 +83,8 @@ public:
         batching_ = rdata.batching_;
         render_mask_ = rdata.render_mask_;
         batch_ = rdata.batch_;
-        render_pass_list_ = rdata.render_pass_list_;
+        for(int i=0;i<rdata.render_pass_list_.size();i++)
+            render_pass_list_.push_back((rdata.render_pass_list_)[i]);
         rendering_order_ = rdata.rendering_order_;
         hash_code_dirty_ = rdata.hash_code_dirty_;
         offset_ = rdata.offset_;
@@ -116,10 +117,12 @@ public:
 
     void set_mesh(Mesh* mesh) {
         mesh_ = mesh;
+        renderdata_dirty_ = true;
     }
 
     void add_pass(RenderPass* render_pass) {
         render_pass_list_.push_back(render_pass);
+        renderdata_dirty_ = true;
     }
 
     const RenderPass* pass(int pass) const {
@@ -145,9 +148,15 @@ public:
     void set_material(Material* material, int pass) {
         if (pass >= 0 && pass < render_pass_list_.size()) {
             render_pass_list_[pass]->set_material(material);
+            renderdata_dirty_ = true;
         }
     }
-
+    void set_renderdata_dirty(bool dirty_){
+        renderdata_dirty_ = dirty_;
+    }
+    bool renderdata_dirty(){
+        return renderdata_dirty_;
+    }
     Light* light() const {
         return light_;
     }
@@ -155,6 +164,7 @@ public:
     void set_light(Light* light) {
         light_ = light;
         use_light_ = true;
+        hash_code_dirty_ = true;
     }
 
     void enable_light() {
@@ -224,6 +234,8 @@ public:
 
     bool cull_face(int pass = 0) const {
         if (pass >= 0 && pass < render_pass_list_.size()) {
+            if(render_pass_list_[pass] == nullptr)
+                LOGE("renderpass is null");
             return render_pass_list_[pass]->cull_face();
         }
 
@@ -233,6 +245,7 @@ public:
     void set_cull_face(int cull_face, int pass) {
         if (pass >= 0 && pass < render_pass_list_.size()) {
             render_pass_list_[pass]->set_cull_face(cull_face);
+            renderdata_dirty_ = true;
         }
     }
 
@@ -325,6 +338,12 @@ public:
         hash_code_dirty_ = true;
     }
 
+    bool isHashCodeDirty()  {
+        return hash_code_dirty_;
+    }
+    void setHashCodeDirty(bool dirty){
+        hash_code_dirty_ = dirty;
+    }
     void set_texture_capturer(TextureCapturer *capturer) {
         texture_capturer = capturer;
     }
@@ -334,7 +353,7 @@ public:
     }
 
     std::string getHashCode() {
-        if (!hash_code_dirty_) {
+        if (hash_code_dirty_) {
             std::string render_data_string;
             render_data_string.append(to_string(use_light_));
             render_data_string.append(to_string(light_));
@@ -372,6 +391,7 @@ private:
     std::string hash_code;
     std::vector<RenderPass*> render_pass_list_;
     Light* light_;
+    bool renderdata_dirty_;
     bool use_light_;
     bool batching_;
     bool use_lightmap_;
@@ -459,16 +479,13 @@ static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
 
                             if (i->getHashCode().compare(j->getHashCode()) == 0) {
 
-                                if (i->mesh()->isDynamic() == j->mesh()->isDynamic()) {
-                                    // if it is a transparent object, sort by camera distance from back to front
-                                    if (i->rendering_order() >= RenderData::Transparent
-                                            && i->rendering_order() < RenderData::Overlay) {
-                                        return i->camera_distance() > j->camera_distance();
-                                    }
-                                    // otherwise sort from front to back
-                                    return i->camera_distance() < j->camera_distance();
+                                  // if it is a transparent object, sort by camera distance from back to front
+                                if (i->rendering_order() >= RenderData::Transparent
+                                       && i->rendering_order() < RenderData::Overlay) {
+                                    return i->camera_distance() > j->camera_distance();
                                 }
-                                return -1;
+                                    // otherwise sort from front to back
+                                return i->camera_distance() < j->camera_distance();
                             }
                             return i->getHashCode() < j->getHashCode();
                         }

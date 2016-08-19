@@ -47,7 +47,7 @@ class Mesh: public HybridObject {
 public:
     Mesh() :
             vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
-                    have_bounding_volume_(false), vao_dirty_(true),is_dynamic_(false), mesh_modified_(true),
+                    have_bounding_volume_(false), vao_dirty_(true), mesh_modified_(true),
                     boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
     {
     }
@@ -325,12 +325,6 @@ public:
         vertexBoneData_.setBones(std::move(bones));
         bone_data_dirty_ = true;
     }
-    void setDynamic(bool status){
-    	is_dynamic_ = status;
-    }
-    bool isDynamic(){
-    	return is_dynamic_;
-    }
     bool isMeshModified(){
     	return mesh_modified_;
     }
@@ -453,7 +447,6 @@ private:
 
     GLuint boneVboID_;
     bool bone_data_dirty_;
-    bool is_dynamic_;
     bool mesh_modified_;
     GlDelete* deleter_ = nullptr;
     static std::vector<std::string> dynamicAttribute_Names_;

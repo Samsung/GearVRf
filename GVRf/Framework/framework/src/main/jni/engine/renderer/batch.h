@@ -20,13 +20,14 @@
 #include "objects/components/render_data.h"
 #include <map>
 #include <unordered_map>
+#include "batch_manager.h"
 #include <memory>
 #include <vector>
 #include <string>
 #include <set>
 #include<unordered_set>
-namespace gvr{
 
+namespace gvr{
 class RenderData;
 class Material;
 class Mesh;
@@ -41,10 +42,18 @@ public:
 			matrices_[matrix_index_map_[renderdata]] = model_matrix;
 		}
 	}
-	void setupMesh();
+	bool setupMesh(bool);
+
 	void removeRenderData(RenderData* renderdata){
+	    renderdata->set_batching(false);
 		render_data_set_.erase(renderdata);
+		batch_dirty_ = true;
+
+		if(0 == render_data_set_.size())
+		    resetBatch();
 	}
+    void resetBatch();
+    void meshInit();
 	void setMeshesDirty();
 	const std::vector<glm::mat4>& get_matrices() {
 		return matrices_;
@@ -61,28 +70,38 @@ public:
 	bool notBatched(){
 		return not_batched_;
 	}
-	void regenerateMeshData();
 	Material* material(int passIndex=0){
 	    if(passIndex ==0)
 	        return material_;
 
 	    return renderdata_->pass(passIndex)->material();
 	}
-	bool isBatchDirty();
-	void clearData();
-	bool isRenderDataDisabled();
+	//bool isBatchDirty();
+
+    void setDirty(bool dirty){
+        batch_dirty_ = dirty;
+    }
+    bool isBatchDirty(){
+        return batch_dirty_;
+    }
 	int renderDataSetSize(){
 	    return render_data_set_.size();
 	}
-	bool updateMesh(Mesh* render_mesh);
+
 
 	unsigned int getIndexCount(){
 		return index_count_;
 	}
+	void regenerateMeshData();
 private:
+
+    bool updateMesh(Mesh* render_mesh);
+    void clearData();
+    bool isRenderModified();
+    bool batch_dirty_;
+
 	std::unordered_map<RenderData*,int>matrix_index_map_;
 	std::unordered_set<RenderData*>render_data_set_;  // use it later if we want to modify meshes
-
 	Mesh mesh_;
 	RenderData *renderdata_;
 	Material *material_;
@@ -93,7 +112,7 @@ private:
 	std::vector<unsigned short> indices_;
 	std::vector<glm::mat4> matrices_;
 	std::vector<float> matrix_indices_;
-//	std::vector<glm::vec2> matrix_indices_;
+
 	int vertex_limit_;
 	int indices_limit_;
 	int draw_count_;

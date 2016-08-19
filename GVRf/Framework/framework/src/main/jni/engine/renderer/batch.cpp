@@ -24,7 +24,7 @@ namespace gvr {
 Batch::Batch(int no_vertices, int no_indices) :
         draw_count_(0), vertex_count_(0), index_count_(0), vertex_limit_(no_vertices),
         indices_limit_(no_indices), renderdata_(nullptr),mesh_init_(false),
-        index_offset_(0), not_batched_(false) {
+        index_offset_(0), not_batched_(false), batch_dirty_(false) {
 
     vertices_.reserve(no_vertices);
     indices_.reserve(no_indices);
@@ -88,14 +88,19 @@ bool Batch::add(RenderData *render_data) {
         model_matrix = glm::mat4(t->getModelMatrix());
     }
 
+    render_data->getHashCode();
+    render_data->set_renderdata_dirty(false);
+    material_->set_material_dirty(false);
+    render_mesh->setMeshModified(false); // mark mesh clean
+
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;
     matrices_.push_back(model_matrix);
     render_data->owner_object()->setTransformUnDirty();
 
      if(!render_data->batching()){
+        LOGE("in add ");
         render_data_set_.insert(render_data);
-        render_mesh->setMeshModified(false); // mark mesh clean
         not_batched_ = true;
         return true;
     }
@@ -105,8 +110,8 @@ bool Batch::add(RenderData *render_data) {
     {
         Material* mat = render_data->pass(i)->material();
         if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
+            LOGE("it is custom shader");
             render_data_set_.insert(render_data);
-            render_mesh->setMeshModified(false); // mark mesh clean
             return true;
         }
     }
@@ -116,9 +121,10 @@ bool Batch::add(RenderData *render_data) {
         if (draw_count_ > 0) {
             return false;
         } else {
+            LOGE("mesh is large %d", indices.size());
             render_data_set_.insert(render_data);
             not_batched_ = true;
-            render_mesh->setMeshModified(false); // mark mesh clean
+
             return true;
         }
     }
@@ -131,8 +137,6 @@ bool Batch::add(RenderData *render_data) {
     }
 
     render_data_set_.insert(render_data); // store all the renderdata which are in batch
-    render_mesh->setMeshModified(false); // mark mesh clean
-
     updateMesh(render_mesh);
 
     return true;
@@ -148,11 +152,16 @@ void Batch::clearData(){
     tex_coords_.clear();
     vertices_.clear();
     normals_.clear();
+    indices_.clear();
+    mesh_init_ = false;
+    batch_dirty_ = false;
 }
-bool Batch::isRenderDataDisabled(){
+
+bool Batch::isRenderModified(){
      bool update_vbo = false;
      for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
-        if(!(*it)->enabled() || !(*it)->owner_object()->enabled()){
+        if(!(*it)->enabled() || !(*it)->owner_object()->enabled() ){
+            LOGE("disabling batching");
             (*it)->set_batching(false);
             (*it)->setBatchNull();
             render_data_set_.erase(it++);
@@ -164,16 +173,13 @@ bool Batch::isRenderDataDisabled(){
     }
     return update_vbo;
 }
-void Batch::setupMesh(){
-    bool update_vbo = isRenderDataDisabled();
+void Batch::resetBatch(){
+    clearData();
+    delete renderdata_;
+    Renderer::batch_manager->deallocateBatch(this);
+}
 
-    if(render_data_set_.size() ==0)
-        return;
-
-    if(update_vbo)
-        regenerateMeshData();
-
-    if(!mesh_init_){
+void Batch::meshInit(){
         mesh_init_ = true;
         mesh_.set_vertices(vertices_);
         mesh_.set_normals(normals_);
@@ -183,7 +189,25 @@ void Batch::setupMesh(){
         if (nullptr != renderdata_) {
             renderdata_->set_mesh(&mesh_);
         }
+}
+bool Batch::setupMesh(bool batch_dirty){
+    bool update_vbo = isRenderModified();
+
+    // batch is empty, add it back to the pool
+    if(0 == render_data_set_.size()){
+        resetBatch();
+        return false;
     }
+
+    if(batch_dirty || update_vbo)
+        regenerateMeshData();
+
+    batch_dirty_ = false;
+
+    if(!mesh_init_)
+        meshInit();
+
+    return true;
 }
 void Batch::regenerateMeshData(){
 
@@ -209,6 +233,7 @@ void Batch::regenerateMeshData(){
 /*
  *  Check if any of the meshes in batch are modified
  */
+ /*
 bool Batch::isBatchDirty() {
     for (auto it = render_data_set_.begin(); it != render_data_set_.end();
             it++) {
@@ -217,7 +242,7 @@ bool Batch::isBatchDirty() {
     }
     return false;
 }
-
+*/
 /*
  * Set batch in render data to null. can be use to mark dirty.
  */

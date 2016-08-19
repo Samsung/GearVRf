@@ -148,6 +148,15 @@ Java_org_gearvrf_NativeRenderData_setDrawMode(
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
         jlong jrender_data, jlong jtexture_capturer);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env, jobject obj,
+        jlong jrender_data, jlong material, jint passIndex);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env, jobject obj,
+        jlong jrender_data, jint cull_face, jint passIndex);
+
 }
 ;
 
@@ -374,6 +383,22 @@ Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     render_data->set_texture_capturer(
             reinterpret_cast<TextureCapturer*>(jtexture_capturer));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setMaterial(JNIEnv * env, jobject obj,
+        jlong jrender_data, jlong jmaterial, jint passIndex){
+   RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+   Material* material = reinterpret_cast<Material*>(jmaterial);
+   render_data->set_material(material, passIndex);
+
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setCullFace(JNIEnv * env, jobject obj,
+        jlong jrender_data, jint cull_face, jint passIndex){
+   RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+   render_data->set_cull_face(cull_face, passIndex);
 }
 
 }

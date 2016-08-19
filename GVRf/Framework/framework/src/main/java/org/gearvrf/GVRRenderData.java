@@ -412,7 +412,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public void setMaterial(GVRMaterial material, int passIndex) {
         if (passIndex < mRenderPassList.size()) {
-            mRenderPassList.get(passIndex).setMaterial(material);
+            //mRenderPassList.get(passIndex).setMaterial(material);
+            NativeRenderData.setMaterial(getNative(),material.getNative(),passIndex);
         } else {
             Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
         }
@@ -696,7 +697,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public void setCullFace(GVRCullFaceEnum cullFace, int passIndex) {
         if (passIndex < mRenderPassList.size()) {
-            mRenderPassList.get(passIndex).setCullFace(cullFace);
+            //mRenderPassList.get(passIndex).setCullFace(cullFace);
+            NativeRenderData.setCullFace(getNative(),cullFace.getValue(),passIndex);
         } else {
             Log.e(TAG, "Trying to set cull face to a invalid pass. Pass " + passIndex + " was not created.");
         }
@@ -988,4 +990,8 @@ class NativeRenderData {
     public static native void setDrawMode(long renderData, int draw_mode);
 
     public static native void setTextureCapturer(long renderData, long texture_capturer);
+
+    public static native void setMaterial(long renderData, long material, int passIndex);
+
+    public static native void setCullFace(long renderData, int cullFace, int passIndex);
 }
