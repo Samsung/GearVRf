@@ -101,11 +101,7 @@ static const char VERTEX_SHADER[] =
                 "#ifdef MULTIVIEW\n"
                 "mv = u_view_[gl_ViewID_OVR] * model_matrix; \n"
                 "#else\n"
-                "#ifndef USE_BATCHING\n"
-                    "mv = u_view * u_model;\n"
-                "#else\n"
-                    "mv = u_view * model_matrix;\n"
-                "#endif\n"
+                "mv = u_view * model_matrix;\n"
                 "#endif\n"
 
                 "mv_it = transpose(inverse(mv));\n"
