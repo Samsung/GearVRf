@@ -21,12 +21,7 @@
 #ifndef TILED_RENDERING_H_
 #define TILED_RENDERING_H_
 
-#define __gl2_h_
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES3/gl3.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl3ext.h>
+#include "gl/gl_headers.h"
 
 namespace gvr {
 
