@@ -89,7 +89,8 @@ public class GVRObjectPicker extends GVRPicker
             {
                 GVRPickedObject hit = picked[i];
 
-                if (hit != null) {
+                if (hit != null)
+                {
                     GVRSceneObject sceneObj = hit.hitObject;
                     if (!owner.intersectsBoundingVolume(sceneObj))
                     {
