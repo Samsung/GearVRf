@@ -31,33 +31,36 @@ package org.gearvrf;
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
- * - onEnter(GVRSceneObject)  called when the scene object enters the frustum.
- * - onExit(GVRSceneObject)   called when the scene object exits the frustum.
- * - onInside(GVRSceneObject) called while the scene object is inside the frustum.
- * - onPick(GVRPicker)        called when the set of picked objects changes.
- * - onNoPick(GVRPicker)      called once when nothing is picked.
+ *  - onEnter(GVRSceneObject)  called when the scene object enters the frustum.
+ *  - onExit(GVRSceneObject)   called when the scene object exits the frustum.
+ *  - onInside(GVRSceneObject) called while the scene object is inside the frustum.
+ *  - onPick(GVRPicker)        called when the set of picked objects changes.
+ *  - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject#attachComponent
+ * @see GVRSceneObject.attachComponent
  * @see GVRCollider
- * @see GVRComponent#setEnable
+ * @see GVRComponent.setEnable
  * @see GVRPickedObject
  * @see GVRPicker
  */
-public class GVRObjectPicker extends GVRPicker {
+public class GVRObjectPicker extends GVRPicker
+{
 
     /**
      * Construct a picker which picks from a given scene.
-     *
      * @param context context that owns the scene
-     * @param scene   scene containing the scene objects to pick from
+     * @param scene scene containing the scene objects to pick from
      */
-    public GVRObjectPicker(GVRContext context, GVRScene scene) {
+    public GVRObjectPicker(GVRContext context, GVRScene scene)
+    {
         super(context, scene);
     }
 
-    public void onDrawFrame(float frameTime) {
-        if (isEnabled()) {
+    public void onDrawFrame(float frameTime)
+    {
+        if (isEnabled())
+        {
             doPick();
         }
     }
@@ -75,17 +78,21 @@ public class GVRObjectPicker extends GVRPicker {
      * @see IPickEvents
      * @see GVRFrustumPicker#pickVisible
      */
-    public void doPick() {
+    public void doPick()
+    {
         GVRSceneObject owner = getOwnerObject();
         GVRPickedObject[] picked = GVRFrustumPicker.pickVisible(mScene);
 
-        if (owner != null) {
-            for (int i = 0; i < picked.length; ++i) {
+        if (owner != null)
+        {
+            for (int i = 0; i < picked.length; ++i)
+            {
                 GVRPickedObject hit = picked[i];
 
                 if (hit != null) {
                     GVRSceneObject sceneObj = hit.hitObject;
-                    if (!owner.intersectsBoundingVolume(sceneObj)) {
+                    if (!owner.intersectsBoundingVolume(sceneObj))
+                    {
                         picked[i] = null;
                     }
                 }
