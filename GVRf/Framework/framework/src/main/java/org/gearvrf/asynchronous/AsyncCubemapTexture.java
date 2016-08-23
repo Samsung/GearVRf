@@ -28,6 +28,7 @@ import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
 import org.gearvrf.utility.FileNameUtils;
+import org.gearvrf.utility.Log;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -41,7 +42,7 @@ import android.graphics.BitmapFactory;
  * @since 1.6.9
  */
 class AsyncCubemapTexture {
-
+    private static final String TAG = AsyncCubemapTexture.class.getSimpleName();
     /*
      * The API
      */
@@ -121,12 +122,22 @@ class AsyncCubemapTexture {
                     String imageBaseName = FileNameUtils.getBaseName(imageName);
                     Integer imageIndex = faceIndexMap.get(imageBaseName);
                     if (imageIndex == null) {
-                        throw new IllegalArgumentException("Name of image ("
-                                + imageName + ") is not set!");
+                        continue;
                     }
                     bitmapArray[imageIndex] = BitmapFactory
                             .decodeStream(zipInputStream);
                 }
+               for(int i=0; i < bitmapArray.length; i++) {
+                   if(bitmapArray[i] == null) {
+                       for(Map.Entry<String,Integer> entry:faceIndexMap.entrySet()) {
+                           if(entry.getValue() == i) {
+                               throw new IllegalArgumentException("Could not find texture " +
+                                       "corresponding to " + entry.getKey() + " in the cubemap " +
+                                       "texture");
+                           }
+                       }
+                   }
+               }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
