@@ -331,9 +331,9 @@ BoundingVolume& SceneObject::getBoundingVolume() {
     // 2. Aggregate with all its children's bounding volumes
     std::vector<SceneObject*> childrenCopy = children();
     for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
-        mesh_bounding_volume = (*it)->getBoundingVolume();
-        if (mesh_bounding_volume.radius() > 0) {
-            transformed_bounding_volume_.expand(mesh_bounding_volume);
+        BoundingVolume child_bounding_volume = (*it)->getBoundingVolume();
+        if (child_bounding_volume.radius() > 0) {
+            transformed_bounding_volume_.expand(child_bounding_volume);
         }
     }
     bounding_volume_dirty_ = false;
