@@ -90,16 +90,13 @@ bool Batch::add(RenderData *render_data) {
 
     render_data->getHashCode();
     render_data->set_renderdata_dirty(false);
-    material_->set_material_dirty(false);
-    render_mesh->setMeshModified(false); // mark mesh clean
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;
     matrices_.push_back(model_matrix);
     render_data->owner_object()->setTransformUnDirty();
 
-     if(!render_data->batching()){
-        LOGE("in add ");
+    if(!render_data->batching()){
         render_data_set_.insert(render_data);
         not_batched_ = true;
         return true;
@@ -110,7 +107,6 @@ bool Batch::add(RenderData *render_data) {
     {
         Material* mat = render_data->pass(i)->material();
         if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
-            LOGE("it is custom shader");
             render_data_set_.insert(render_data);
             return true;
         }
@@ -121,10 +117,8 @@ bool Batch::add(RenderData *render_data) {
         if (draw_count_ > 0) {
             return false;
         } else {
-            LOGE("mesh is large %d", indices.size());
             render_data_set_.insert(render_data);
             not_batched_ = true;
-
             return true;
         }
     }
@@ -135,7 +129,6 @@ bool Batch::add(RenderData *render_data) {
             renderdata_->set_batching(true);
        }
     }
-
     render_data_set_.insert(render_data); // store all the renderdata which are in batch
     updateMesh(render_mesh);
 
@@ -155,13 +148,13 @@ void Batch::clearData(){
     indices_.clear();
     mesh_init_ = false;
     batch_dirty_ = false;
+    dirty_scene_objects_.clear();
 }
 
 bool Batch::isRenderModified(){
      bool update_vbo = false;
      for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
-        if(!(*it)->enabled() || !(*it)->owner_object()->enabled() ){
-            LOGE("disabling batching");
+        if(!(*it)->enabled() || !(*it)->owner_object()->enabled()){
             (*it)->set_batching(false);
             (*it)->setBatchNull();
             render_data_set_.erase(it++);
@@ -230,19 +223,6 @@ void Batch::regenerateMeshData(){
     }
 
 }
-/*
- *  Check if any of the meshes in batch are modified
- */
- /*
-bool Batch::isBatchDirty() {
-    for (auto it = render_data_set_.begin(); it != render_data_set_.end();
-            it++) {
-        if ((*it)->mesh()->isMeshModified())
-            return true;
-    }
-    return false;
-}
-*/
 /*
  * Set batch in render data to null. can be use to mark dirty.
  */

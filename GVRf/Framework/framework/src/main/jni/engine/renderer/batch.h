@@ -76,7 +76,6 @@ public:
 
 	    return renderdata_->pass(passIndex)->material();
 	}
-	//bool isBatchDirty();
 
     void setDirty(bool dirty){
         batch_dirty_ = dirty;
@@ -87,8 +86,6 @@ public:
 	int renderDataSetSize(){
 	    return render_data_set_.size();
 	}
-
-
 	unsigned int getIndexCount(){
 		return index_count_;
 	}
@@ -101,7 +98,7 @@ private:
     bool batch_dirty_;
 
 	std::unordered_map<RenderData*,int>matrix_index_map_;
-	std::unordered_set<RenderData*>render_data_set_;  // use it later if we want to modify meshes
+	std::unordered_set<RenderData*>render_data_set_;
 	Mesh mesh_;
 	RenderData *renderdata_;
 	Material *material_;
@@ -112,7 +109,6 @@ private:
 	std::vector<unsigned short> indices_;
 	std::vector<glm::mat4> matrices_;
 	std::vector<float> matrix_indices_;
-
 	int vertex_limit_;
 	int indices_limit_;
 	int draw_count_;

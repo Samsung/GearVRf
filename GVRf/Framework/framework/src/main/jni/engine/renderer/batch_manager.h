@@ -26,7 +26,7 @@
 #include "batch.h"
 #include <set>
 #include<unordered_set>
-#define BATCH_POOL_SIZE 100
+#define BATCH_POOL_SIZE 150
 namespace gvr{
 class RenderData;
 class Material;
@@ -34,7 +34,6 @@ class Mesh;
 class Batch;
 struct RenderState;
 extern bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2);
-extern bool isMaterialModified(RenderData* rdata);
 class BatchManager{
 public:
     BatchManager(int batch_size, int max_indices);

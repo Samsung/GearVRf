@@ -80,49 +80,39 @@ void BatchManager::batchSetup(std::vector<RenderData*>& render_data_vector) {
 }
 void BatchManager::renderBatches(RenderState& rstate) {
 
-    LOGE("begin %d", batch_set_.size());
     for (auto it = batch_set_.begin(); it != batch_set_.end(); ++it) {
         Batch* batch = *it;
         rstate.material_override = batch->material(0);
-        if(rstate.material_override == nullptr){
-            LOGE("material is null");
+        if(rstate.material_override == nullptr)
             continue;
-            }
 
-         int currentShaderType = batch->material(0)->shader_type();
-        // if shader type is other than texture shader, render it with non-batching mode
-        // if the mesh is large, we are not batching it
-        if (currentShaderType != Material::ShaderType::TEXTURE_SHADER
-                || batch->notBatched()) {
-                
-            rstate.material_override = nullptr;
-            const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
-           // LOGE("size is %d " , render_data_set.size());
-            for (auto it3 = render_data_set.begin();
-                    it3 != render_data_set.end(); ++it3) {
-                if((*it3)->owner_object()==nullptr){
-                    continue;
-                }
-                LOGE("rendering in normal mode");
-               // this check is needed as we are not removing render data from batches
-               if(!(*it3)->owner_object()->isCulled() && (*it3)->enabled() && (*it3)->owner_object()->enabled())
 
-                    Renderer::renderRenderData(rstate, (*it3));
+    int currentShaderType = batch->material(0)->shader_type();
+     // if shader type is other than texture shader, render it with non-batching mode
+     // if the mesh is large, we are not batching it
+    if (currentShaderType != Material::ShaderType::TEXTURE_SHADER || batch->notBatched()) {
+
+        rstate.material_override = nullptr;
+        const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
+        for (auto it3 : render_data_set) {
+            if(it3->owner_object()==nullptr)
+                continue;
+
+            // this check is needed as we are not removing render data from batches
+            if(!it3->owner_object()->isCulled() && it3->enabled() && it3->owner_object()->enabled())
+                Renderer::renderRenderData(rstate, it3);
             }
             continue;
         }
 
         RenderData* renderdata = batch->get_renderdata();
 
-        if(renderdata == nullptr){
-            LOGE("renderdata null");
+        if(renderdata == nullptr)
             continue;
-        }
 
-        if (!(rstate.render_mask & renderdata->render_mask())){
-            LOGE("mask disabled");
+        if (!(rstate.render_mask & renderdata->render_mask()))
             continue;
-         }
+
 
         // checks whether one of the scene object is diabled, if it is, remove it from the batch
         if(!batch->setupMesh(batch->isBatchDirty()))
@@ -140,16 +130,13 @@ void BatchManager::renderBatches(RenderState& rstate) {
         for(int passIndex =0; passIndex< renderdata->pass_count(); passIndex++){
             Renderer::set_face_culling(renderdata->pass(passIndex)->cull_face());
             rstate.material_override = batch->material(passIndex);
-            LOGE("rendering with batch");
             if(rstate.material_override == nullptr)
                 continue;
-
 
             rstate.shader_manager->getTextureShader()->render_batch(matrices,
                         renderdata, rstate, batch->getIndexCount(),
                         batch->getNumberOfMeshes());
         }
-
         Renderer::restoreRenderStates(renderdata);
     }
 }
@@ -187,7 +174,6 @@ void BatchManager::createBatch(int start, int end, std::vector<RenderData*>& ren
                  render_data->setBatch(existing_batch);
 
              } else { // existing batch is full or does not exists
-                LOGE("batch is null");
                  getNewBatch(render_data, &existing_batch);
              }
 
@@ -201,25 +187,23 @@ void BatchManager::createBatch(int start, int end, std::vector<RenderData*>& ren
              2. if mesh is modified
              3. Material is modified
             ***/
-           if(render_data->batching() && (isMaterialModified(render_data) || render_data->renderdata_dirty() || render_data->isHashCodeDirty() || render_data->mesh()->isMeshModified())){
-                  LOGE("hash code is dirty");
+           if(render_data->batching() && (render_data->renderdata_dirty() || render_data->isHashCodeDirty())){
                   current_batch->removeRenderData(render_data);
                   current_batch == nullptr;
                   getNewBatch(render_data, &current_batch);
-
             }
 
              // update the transform if model matrix is changed
-             if (render_data->owner_object()->isTransformDirty()
-                    && render_data->owner_object()->transform()) {
+           if (render_data->owner_object()->isTransformDirty()
+                  && render_data->owner_object()->transform()) {
                  current_batch->UpdateModelMatrix(render_data,
                          render_data->owner_object()->transform()->getModelMatrix());
-             }
+           }
 
-             if (batch_map_.find(current_batch) == batch_map_.end()) {
-                  batch_set_.push_back(current_batch);
-                  batch_map_[current_batch] = batch_set_.size() - 1;
-             }
+           if (batch_map_.find(current_batch) == batch_map_.end()) {
+                 batch_set_.push_back(current_batch);
+                 batch_map_[current_batch] = batch_set_.size() - 1;
+           }
 
          }
      }
