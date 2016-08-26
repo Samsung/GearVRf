@@ -116,6 +116,8 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/shaders/posteffect/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/vulkan/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 FILE_LIST := $(wildcard $(GVRF_BACKEND)/src/main/jni/objects/components/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)

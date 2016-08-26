@@ -19,7 +19,7 @@
 
 #ifndef GVR_CPP_IMAGE_CAPTURE_H_
 #define GVR_CPP_IMAGE_CAPTURE_H_
-#include "GLES3/gl3.h"
+#include "gl/gl_headers.h"
 #include <vector>
 #include <string>
 
