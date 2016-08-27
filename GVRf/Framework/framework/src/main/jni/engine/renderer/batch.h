@@ -26,7 +26,6 @@
 #include <string>
 #include <set>
 #include<unordered_set>
-
 namespace gvr{
 class RenderData;
 class Material;
@@ -37,13 +36,15 @@ public:
 	Batch(int,int);
 	~Batch();
 	bool add(RenderData *render_data);
+	bool setupMesh(bool);
+    void resetBatch();
+    void meshInit();
+	void regenerateMeshData();
 	void UpdateModelMatrix(RenderData* renderdata, glm::mat4 model_matrix){
 		if(renderdata){
 			matrices_[matrix_index_map_[renderdata]] = model_matrix;
 		}
 	}
-	bool setupMesh(bool);
-
 	void removeRenderData(RenderData* renderdata){
 	    renderdata->set_batching(false);
 		render_data_set_.erase(renderdata);
@@ -52,9 +53,6 @@ public:
 		if(0 == render_data_set_.size())
 		    resetBatch();
 	}
-    void resetBatch();
-    void meshInit();
-	void setMeshesDirty();
 	const std::vector<glm::mat4>& get_matrices() {
 		return matrices_;
 	}
@@ -73,10 +71,8 @@ public:
 	Material* material(int passIndex=0){
 	    if(passIndex ==0)
 	        return material_;
-
 	    return renderdata_->pass(passIndex)->material();
 	}
-
     void setDirty(bool dirty){
         batch_dirty_ = dirty;
     }
@@ -89,20 +85,16 @@ public:
 	unsigned int getIndexCount(){
 		return index_count_;
 	}
-	void regenerateMeshData();
 private:
-
     bool updateMesh(Mesh* render_mesh);
     void clearData();
     bool isRenderModified();
     bool batch_dirty_;
-
 	std::unordered_map<RenderData*,int>matrix_index_map_;
 	std::unordered_set<RenderData*>render_data_set_;
 	Mesh mesh_;
 	RenderData *renderdata_;
 	Material *material_;
-
 	std::vector<glm::vec3> vertices_;
 	std::vector<glm::vec3> normals_;
 	std::vector<glm::vec2> tex_coords_;
@@ -112,14 +104,11 @@ private:
 	int vertex_limit_;
 	int indices_limit_;
 	int draw_count_;
-
 	unsigned int index_offset_;
 	unsigned int vertex_count_;
 	unsigned int index_count_;
-
 	bool mesh_init_;
 	bool not_batched_;
-
 };
 }
 #endif
