@@ -1,6 +1,6 @@
 package org.gearvrf;
 
-public interface ISceneEvents extends ILifeCycleEvents {
+public interface ISceneEvents extends IEvents {
     /**
      * Called when the scene has been initialized.
      * @param gvrContext
@@ -9,4 +9,9 @@ public interface ISceneEvents extends ILifeCycleEvents {
      *         The GVRScene.
      */
     void onInit(GVRContext gvrContext, GVRScene scene);
+
+    /**
+     * Called after all handlers of onInit are completed.
+     */
+    void onAfterInit();
 }

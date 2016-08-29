@@ -639,12 +639,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             recursivelySendSimpleEvent(mSceneRoot, "onAfterInit");
         }
 
-        @Override
-        public void onStep() {
-            // Send "onStep" to all scene objects and their children
-            recursivelySendSimpleEvent(mSceneRoot, "onStep");
-         }
-
         private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
             getGVRContext().getEventManager().sendEvent(
                     sceneObject, ISceneObjectEvents.class, eventName);
