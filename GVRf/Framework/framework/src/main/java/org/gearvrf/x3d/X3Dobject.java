@@ -3898,7 +3898,7 @@ public class X3Dobject
               gvrTexcoords.add(v);
               if (v < minYtextureCoordinate)
               {
-                minYtextureCoordinate = y;
+                minYtextureCoordinate = v;
               }
               if (u > maxYtextureCoordinate)
               {
