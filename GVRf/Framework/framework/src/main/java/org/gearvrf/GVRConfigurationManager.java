@@ -23,10 +23,10 @@ import java.lang.ref.WeakReference;
 
 abstract class GVRConfigurationManager {
 
-    protected WeakReference<GVRActivity> mActivity;
+    protected WeakReference<Activity> mActivity;
     private boolean isDockListenerRequired = true;
 
-    protected GVRConfigurationManager(GVRActivity gvrActivity) {
+    protected GVRConfigurationManager(Activity gvrActivity) {
         mActivity = new WeakReference<>(gvrActivity);
     }
 

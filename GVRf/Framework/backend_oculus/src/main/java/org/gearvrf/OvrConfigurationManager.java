@@ -24,7 +24,7 @@ final class OvrConfigurationManager extends GVRConfigurationManager {
     @Override
     public boolean isHmtConnected() {
 
-        final GVRActivity activity = mActivity.get();
+        final GVRActivity activity = (GVRActivity) mActivity.get();
         if (null == activity) {
             return false;
         }
