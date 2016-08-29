@@ -50,10 +50,17 @@ struct GVR_VK_Vertices {
 
 class CoreVulkan {
 public:
+    static CoreVulkan* getInstance() {
+        if (!theInstance) {
+            theInstance = new CoreVulkan;
+        }
+        return theInstance;
+    }
+private:
+    static CoreVulkan* theInstance;
     CoreVulkan() : m_pPhysicalDevices(NULL){
         initVulkanCore();
     }
-private:
     bool CreateInstance();
     bool GetPhysicalDevices();
     void initVulkanCore();

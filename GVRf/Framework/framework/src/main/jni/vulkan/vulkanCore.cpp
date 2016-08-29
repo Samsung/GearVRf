@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <cstring>
 
-CoreVulkan gvrCoreVulkan;
+CoreVulkan* CoreVulkan::theInstance = NULL;
 
 #define QUEUE_INDEX_MAX 99999
 
