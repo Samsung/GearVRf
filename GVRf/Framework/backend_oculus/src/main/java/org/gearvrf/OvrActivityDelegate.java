@@ -115,7 +115,7 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     public void onInitAppSettings(VrAppSettings appSettings) {
         if(mUseFallback){
             // This is the only place where the setDockListenerRequired flag can be set before
-            // the check in GVRActivityBase.
+            // the check in GVRActivity.
             mActivity.getConfigurationManager().setDockListenerRequired(false);
         }
     }

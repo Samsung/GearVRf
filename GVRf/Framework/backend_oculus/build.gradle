@@ -112,50 +112,6 @@ android {
         compileTask -> compileTask.dependsOn buildNative, copyOculusFiles
     }
 
-    task eclipseZip(type: Zip) {
-        into('GearVRf/res/') {
-            from 'src/main/res/'
-        }
-        into('GearVRf/libs/') {
-            from('src/main/libs/') {
-                exclude 'libassimp.so'
-                exclude 'libjnlua.so'
-            }
-            from('build/intermediates/bundles/release/') {
-                include 'classes.jar'
-                rename('classes.jar', 'gvrf.jar')
-            }
-        }
-        into('GearVRf/') {
-            from('src/main/') {
-                include 'AndroidManifest.xml'
-                include '.project'
-                include '.classpath'
-                include 'project.properties'
-            }
-        }
-        into('GearVRf/java') {
-            from('src/main/') {
-                include 'donotdelete.txt'
-            }
-        }
-
-        baseName 'gvrf-for-eclipse'
-    }
-
-    task eclipseAssembleReleaseToGitHub() << {
-        println "preparing android library project for eclipse"
-
-        eclipseZip.execute()
-
-        copy {
-            from 'build/distributions/gvrf-for-eclipse.zip'
-            into 'build/outputs/aar/'
-        }
-
-        project.delete('build/distributions/gvrf-for-eclipse.zip')
-    }
-
     task uploadToGitHub(type: Exec) {
         onlyIf {
             System.env['RELEASE_ID'] != null
@@ -211,6 +167,5 @@ assembleReleaseToGitHub {}.doLast {
         commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'jni/armeabi-v7a/libvrapi.so']
     }
 
-    eclipseAssembleReleaseToGitHub.execute()
     uploadToGitHub.execute();
 }
