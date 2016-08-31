@@ -66,17 +66,19 @@ public:
     void clearLights();
 
     void resetStats() {
-        if (!statsInitialized) {
-            Renderer::initializeStats();
-            statsInitialized = true;
-        }
-        Renderer::resetStats();
+        renderer = Renderer::getInstance();
+        if(nullptr!= renderer)
+            renderer->resetStats();
     }
     int getNumberDrawCalls() {
-        return Renderer::getNumberDrawCalls();
+        renderer = Renderer::getInstance();
+        if(nullptr!= renderer)
+            return renderer->getNumberDrawCalls();
     }
     int getNumberTriangles() {
-        return Renderer::getNumberTriangles();
+        renderer = Renderer::getInstance();
+        if(nullptr!= renderer)
+            return renderer->getNumberTriangles();
     }
 
     void exportToFile(std::string filepath);
@@ -170,6 +172,7 @@ private:
     void clearAllColliders();
 
 private:
+    Renderer* renderer;
     static Scene* main_scene_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;
@@ -178,7 +181,6 @@ private:
     bool occlusion_flag_;
     bool pick_visible_;
     std::mutex collider_mutex_;
-    bool statsInitialized = false;
     std::vector<Light*> lightList;
     std::vector<Component*> allColliders;
     std::vector<Component*> visibleColliders;

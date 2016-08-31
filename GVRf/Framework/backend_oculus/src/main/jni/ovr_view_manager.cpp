@@ -29,7 +29,8 @@ void Java_org_gearvrf_OvrViewManager_cull(JNIEnv * jni, jclass clazz,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    Renderer::cull(scene, camera, shader_manager);
+    Renderer* renderer = Renderer::getInstance();
+    renderer->cull(scene, camera, shader_manager);
 }
 
 
@@ -38,7 +39,9 @@ void Java_org_gearvrf_OvrViewManager_makeShadowMaps(JNIEnv * jni, jclass clazz,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
 
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    Renderer::makeShadowMaps(scene, shader_manager, width, height);
+    Renderer* renderer = Renderer::getInstance();
+    renderer->makeShadowMaps(scene, shader_manager, width, height);
+
 }
 
 void Java_org_gearvrf_OvrViewManager_renderCamera(JNIEnv * jni, jclass clazz,
@@ -100,6 +103,7 @@ void Java_org_gearvrf_OvrViewManager_readRenderResultNative(JNIEnv * jni,
 //=============================================================================
 
 GVRViewManager::GVRViewManager() {
+    renderer = Renderer::getInstance();
 }
 
 GVRViewManager::~GVRViewManager() {
@@ -122,7 +126,7 @@ void GVRViewManager::renderCamera(Scene* scene,
     gettimeofday(&start, NULL);
 #endif
 
-    Renderer::renderCamera(scene, camera, shader_manager,
+    renderer->renderCamera(scene, camera, shader_manager,
             post_effect_shader_manager, post_effect_render_texture_a,
             post_effect_render_texture_b);
 

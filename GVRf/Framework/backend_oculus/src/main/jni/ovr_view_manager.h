@@ -17,7 +17,7 @@
 #define VIEW_MANAGER_H
 
 #include "objects/textures/render_texture.h"
-
+#include "engine/renderer/renderer.h"
 namespace gvr {
 
 class Camera;
@@ -45,6 +45,7 @@ public:
                         RenderTexture* post_effect_render_texture_a,
                         RenderTexture* post_effect_render_texture_b);
 
+    Renderer* renderer;
     // collect data
     float  m_fps = 0;
     int    m_frameRendered = 0;
