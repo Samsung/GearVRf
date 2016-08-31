@@ -107,7 +107,7 @@ public:
     }
 
     static long long getComponentType() {
-        return (long long) &getComponentType;
+        return COMPONENT_TYPE_RENDER_DATA;
     }
 
     Mesh* mesh() const {

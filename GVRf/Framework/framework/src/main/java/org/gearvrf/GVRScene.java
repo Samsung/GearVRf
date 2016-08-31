@@ -17,13 +17,12 @@ package org.gearvrf;
 
 import android.os.Environment;
 
-import org.gearvrf.GVRCameraRigBase.GVRCameraRigType;
+import org.gearvrf.GVRCameraRig.GVRCameraRigType;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.script.GVRScriptBehavior;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
-import org.gearvrf.script.GVRScriptBehavior;
 
 import java.io.File;
 import java.io.FileInputStream;

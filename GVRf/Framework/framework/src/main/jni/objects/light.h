@@ -55,7 +55,7 @@ public:
     }
 
     static long long getComponentType() {
-        return (long long) &getComponentType;
+        return COMPONENT_TYPE_LIGHT;
     }
 
     virtual void set_enable(bool enable) {
