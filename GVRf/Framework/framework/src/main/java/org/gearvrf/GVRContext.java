@@ -2518,9 +2518,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @return The {@linkplain GVRMaterialShaderManager shader manager}
      *         singleton.
      */
-    public GVRMaterialShaderManager getMaterialShaderManager() {
-        return getRenderBundle().getMaterialShaderManager();
-    }
+    public abstract GVRMaterialShaderManager getMaterialShaderManager();
 
     /**
      * The {@linkplain GVRPostEffectShaderManager scene shader manager}
@@ -2534,9 +2532,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @return The {@linkplain GVRPostEffectShaderManager post effect shader
      *         manager} singleton.
      */
-    public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return getRenderBundle().getPostEffectShaderManager();
-    }
+    public abstract GVRPostEffectShaderManager getPostEffectShaderManager();
 
     /**
      * The {@linkplain GVRAnimationEngine animation engine} singleton.
@@ -2619,8 +2615,6 @@ public abstract class GVRContext implements IEventReceiver {
     }
 
     private static final List<Runnable> sHandlers = new ArrayList<Runnable>();
-
-    abstract GVRRenderBundle getRenderBundle();
 
     /**
      * Capture a 2D screenshot from the position in the middle of left eye and
