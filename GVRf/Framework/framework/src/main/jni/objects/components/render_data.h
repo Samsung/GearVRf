@@ -64,7 +64,7 @@ public:
 
     RenderData() :
             Component(RenderData::getComponentType()), mesh_(0), light_(0), use_light_(
-                    false), use_lightmap_(false), batching_(false), render_mask_(
+                    false), use_lightmap_(false), batching_(true), render_mask_(
                     DEFAULT_RENDER_MASK), batch_(nullptr), rendering_order_(
                     DEFAULT_RENDERING_ORDER), hash_code_dirty_(true), offset_(
                     false), offset_factor_(0.0f), offset_units_(0.0f), depth_test_(
@@ -83,6 +83,7 @@ public:
         batching_ = rdata.batching_;
         render_mask_ = rdata.render_mask_;
         batch_ = rdata.batch_;
+        render_pass_list_ = rdata.render_pass_list_;
         rendering_order_ = rdata.rendering_order_;
         hash_code_dirty_ = rdata.hash_code_dirty_;
         offset_ = rdata.offset_;
@@ -106,7 +107,7 @@ public:
     }
 
     static long long getComponentType() {
-        return (long long) &getComponentType;
+        return COMPONENT_TYPE_RENDER_DATA;
     }
 
     Mesh* mesh() const {
@@ -335,7 +336,6 @@ public:
     std::string getHashCode() {
         if (!hash_code_dirty_) {
             std::string render_data_string;
-
             render_data_string.append(to_string(use_light_));
             render_data_string.append(to_string(light_));
             render_data_string.append(to_string(getComponentType()));
@@ -446,24 +446,38 @@ static inline bool compareRenderDataByOrderShaderDistance(RenderData* i,
 
         if (i->material(0)->shader_type() == j->material(0)->shader_type()) {
 
-            if (i->material(0) == j->material(0)) {
+            int no_passes1 = i->pass_count();
+            int no_passes2 = j->pass_count();
 
-                if (i->getHashCode().compare(j->getHashCode()) == 0) {
+            if(no_passes1 == no_passes2){
 
-                    if (i->mesh()->isDynamic() == j->mesh()->isDynamic()) {
-                        // if it is a transparent object, sort by camera distance from back to front
-                        if (i->rendering_order() >= RenderData::Transparent
-                                && i->rendering_order() < RenderData::Overlay) {
-                            return i->camera_distance() > j->camera_distance();
+               for(int pass=0; pass < no_passes1; pass++){
+
+                    if (i->material(pass) == j->material(pass)) {
+
+                        if(i->cull_face(pass) == j->cull_face(pass)){
+
+                            if (i->getHashCode().compare(j->getHashCode()) == 0) {
+
+                                if (i->mesh()->isDynamic() == j->mesh()->isDynamic()) {
+                                    // if it is a transparent object, sort by camera distance from back to front
+                                    if (i->rendering_order() >= RenderData::Transparent
+                                            && i->rendering_order() < RenderData::Overlay) {
+                                        return i->camera_distance() > j->camera_distance();
+                                    }
+                                    // otherwise sort from front to back
+                                    return i->camera_distance() < j->camera_distance();
+                                }
+                                return -1;
+                            }
+                            return i->getHashCode() < j->getHashCode();
                         }
-                        // otherwise sort from front to back
-                        return i->camera_distance() < j->camera_distance();
+                        return i->cull_face(pass) < j->cull_face(pass);
                     }
-                    return true;
+                    return i->material(pass) < j->material(pass);
                 }
-                return i->getHashCode() < j->getHashCode();
-            }
-            return i->material(0) < j->material(0);
+           }
+           return no_passes1 < no_passes2;
         }
         return i->material(0)->shader_type() < j->material(0)->shader_type();
     }

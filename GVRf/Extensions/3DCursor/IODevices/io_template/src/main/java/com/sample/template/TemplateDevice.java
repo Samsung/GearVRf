@@ -56,7 +56,7 @@ public class TemplateDevice extends IoDevice {
         /** The last param (boolean) denotes that the device is not ready when this constructor
          * is called. We will use the setConnected call to let the framework know that the device
          * is ready. */
-        super(deviceId, VENDOR_ID, PRODUCT_ID, name, VENDOR_NAME, false);
+        super(deviceId, VENDOR_ID, PRODUCT_ID, name, VENDOR_NAME, true);
         this.context = context;
 
         // Set the initial position for the cursor here
@@ -79,14 +79,14 @@ public class TemplateDevice extends IoDevice {
          * Simulate startup sequence using a delayed handler, use the {@link #setConnected
          * (boolean)} call to let the framework know that the device is ready.
          */
-        Handler handler = new Handler(context.getActivity().getMainLooper());
+        /*Handler handler = new Handler(context.getActivity().getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 Log.d(TAG, "Send out setConnected");
                 TemplateDevice.this.setConnected(true);
             }
-        }, SET_CONNECTED_DELAY);
+        }, SET_CONNECTED_DELAY);*/
     }
 
     private Runnable threadRunnable = new Runnable() {

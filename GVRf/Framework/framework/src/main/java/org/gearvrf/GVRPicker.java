@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.gearvrf.utility.Log;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 /**
@@ -43,10 +42,8 @@ import org.joml.Vector3f;
  * The picked object contains the collider instance hit, the distance from the
  * camera and the hit position.
  * 
- * If it is attached to a scene object, the picker maintains the list of currently
- * picked objects which can be obtains with getPicked() and continually
- * updates it each frame. (If it is not attached to a scene object,
- * you must manually call doPick() to cause pick events to be generated.)
+ * The picker maintains the list of currently picked objects
+ * (which can be obtains with getPicked()) and continually updates it each frame.
  *
  * In this mode, when the ray from the scene object hits a pickable object,
  * the picker generates one or more pick events (IPickEvents interface)
@@ -71,12 +68,14 @@ public class GVRPicker extends GVRBehavior {
     private Vector3f mRayDirection = new Vector3f(0, 0, -1);
     private float[] mPickRay = new float[6];
 
-    protected boolean mHasChanged;
     protected GVRScene mScene;
     protected GVRPickedObject[] mPicked = null;
 
     /**
      * Construct a picker which picks from a given scene.
+     * Instantiating the picker will cause it to scan the scene
+     * every frame and generate pick events based on the result.
+     *
      * @param context context that owns the scene
      * @param scene scene containing the scene objects to pick from
      */
@@ -84,8 +83,8 @@ public class GVRPicker extends GVRBehavior {
     {
         super(context);
         mScene = scene;
-        mHasChanged = true;
         mType = getComponentType();
+        startListening();
     }
 
     static public long getComponentType() { return TYPE_PICKMANAGER; }
@@ -139,10 +138,6 @@ public class GVRPicker extends GVRBehavior {
     /*
      * Sets the origin and direction of the pick ray.
      * 
-     * If the picker is not attached to a scene object but you
-     * still want to get pick events, you must set the pick
-     * ray manually with this function and call {@link doPick}.
-     * 
      * @param ox    X coordinate of origin.
      * @param oy    Y coordinate of origin.
      * @param oz    Z coordinate of origin.
@@ -169,31 +164,25 @@ public class GVRPicker extends GVRBehavior {
         mRayDirection.x = dx;
         mRayDirection.y = dy;
         mRayDirection.z = dz;
-        mHasChanged = true;
     }
     
     public void onDrawFrame(float frameTime)
     {
-        if (isEnabled() && ((getOwnerObject() != null) || mHasChanged))
+        if (isEnabled())
         {
             doPick();
-            mHasChanged = false;
-        }        
+        }
     }
     
     /**
      * Scans the scene graph to collect picked items
      * and generates appropriate pick events.
      * This function is called automatically by
-     * the picker if it is attached to a scene object.
-     * You can instantiate the picker and not attach
-     * it to a scene object. In this case you must
-     * manually set the pick ray and call doPick()
-     * to generate the pick events.
+     * the picker every frame.
      * @see IPickEvents 
      * @see pickObjects
      */
-    public void doPick()
+    protected void doPick()
     {
         GVRSceneObject owner = getOwnerObject();
         GVRTransform trans = (owner != null) ? owner.getTransform() : null;
@@ -552,7 +541,8 @@ public class GVRPicker extends GVRBehavior {
                                                       float dy, float dz) {
         sFindObjectsLock.lock();
         try {
-            final GVRPickedObject[] result = NativePicker.pickObjects(scene.getNative(), trans.getNative(), ox, oy, oz, dx, dy, dz);
+            long nativeTrans = (trans != null) ? trans.getNative() : 0L;
+            final GVRPickedObject[] result = NativePicker.pickObjects(scene.getNative(), nativeTrans, ox, oy, oz, dx, dy, dz);
             return result;
         } finally {
             sFindObjectsLock.unlock();

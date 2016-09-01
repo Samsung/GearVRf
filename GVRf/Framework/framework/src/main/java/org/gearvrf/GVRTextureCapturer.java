@@ -1,13 +1,13 @@
 package org.gearvrf;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.graphics.Bitmap;
 
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
-import android.graphics.Bitmap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Captures rendered contents from a shader into a {@code GVRRenderTexture} while
@@ -28,7 +28,7 @@ public class GVRTextureCapturer extends GVRHybridObject {
     /**
      * An interface to receive captured {@code Bitmap}s.
      */
-    public static interface TextureCapturerListener {
+    public interface TextureCapturerListener {
         void onTextureCaptured(Bitmap capturedTexture);
     }
 
@@ -64,7 +64,7 @@ public class GVRTextureCapturer extends GVRHybridObject {
      */
     public GVRTextureCapturer(GVRContext gvrContext, int width, int height, int sampleCount) {
         super(gvrContext, NativeTextureCapturer.ctor(
-                gvrContext.getRenderBundle().getMaterialShaderManager().getNative()));
+                gvrContext.getMaterialShaderManager().getNative()));
         NativeTextureCapturer.setCapturerObject(getNative(), this);
 
         mListeners = new ArrayList<TextureCapturerListener>();
