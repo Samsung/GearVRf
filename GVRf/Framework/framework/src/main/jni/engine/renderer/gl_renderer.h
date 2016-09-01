@@ -54,7 +54,10 @@ class ShaderManager;
 class Light;
 
 class GLRenderer: public Renderer {
-
+    friend class Renderer;
+protected:
+    GLRenderer(){}
+    virtual ~GLRenderer(){}
 public:
     // pure virtual
      void renderCamera(Scene* scene, Camera* camera,

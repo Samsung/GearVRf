@@ -107,6 +107,9 @@ public:
         numberDrawCalls++;
      }
      static Renderer* getInstance(const char* type = " ");
+     static void resetInstance(){
+        delete instance;
+     }
      virtual void initializeStats();
      virtual void set_face_culling(int cull_face) = 0;
      virtual void renderRenderDataVector(RenderState &rstate);
@@ -145,7 +148,6 @@ public:
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
     virtual void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) = 0;
     virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height) = 0;
-    static Renderer* instance;
 
 private:
 
@@ -163,9 +165,13 @@ private:
     Renderer& operator=(const Renderer& render_engine);
     Renderer& operator=(Renderer&& render_engine);
     BatchManager* batch_manager;
-
+    static Renderer* instance;
+    
 protected:
     Renderer();
+    virtual ~Renderer(){
+        delete batch_manager;
+    }
     virtual void renderMesh(RenderState& rstate, RenderData* render_data) = 0;
     virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material) = 0;
     virtual void occlusion_cull(Scene* scene,

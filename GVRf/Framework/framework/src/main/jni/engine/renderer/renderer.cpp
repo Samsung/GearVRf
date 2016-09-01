@@ -60,6 +60,7 @@ Renderer* Renderer::getInstance(const char* type){
             instance = new VulkanRenderer();
         else
             instance = new GLRenderer();
+        std::atexit(resetInstance);      // Destruction of instance registered at runtime exit
     }
     return instance;
 }

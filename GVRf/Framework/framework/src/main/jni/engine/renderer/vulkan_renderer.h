@@ -54,7 +54,10 @@ class ShaderManager;
 class Light;
 
 class VulkanRenderer: public Renderer {
-
+    friend class Renderer;
+protected:
+    VulkanRenderer(){}
+    virtual ~VulkanRenderer(){}
 
 public:
     // pure virtual
