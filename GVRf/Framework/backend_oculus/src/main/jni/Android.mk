@@ -46,12 +46,7 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/components/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-
-FILE_LIST := $(wildcard $(LOCAL_PATH)/vulkan/*.cpp)
-LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-
 FILE_LIST := $(wildcard $(LOCAL_PATH)/monoscopic/*.cpp)
-
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += vrapi
