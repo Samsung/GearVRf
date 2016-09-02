@@ -108,11 +108,12 @@ bool Batch::add(RenderData *render_data) {
         }
     }
     // if mesh is large, render in normal way
-    if (indices.size() + index_count_ > indices_limit_) {
+    if (indices.size() == 0 || (indices.size() + index_count_ > indices_limit_)) {
         if (draw_count_ > 0) {
             return false;
         } else {
             render_data_set_.insert(render_data);
+            render_data->set_batching(false);
             not_batched_ = true;
             return true;
         }
