@@ -310,7 +310,6 @@ public class VrAppSettings {
             resolutionHeight = -1;
             depthFormat = DepthFormat.DEPTH_24;
             colorFormat = ColorFormat.COLOR_8888;
-            mFovY = 90.0f;
         }
 
         @Override
