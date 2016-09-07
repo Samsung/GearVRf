@@ -198,7 +198,7 @@ class Throttler implements Scheduler {
                     }
                 } else {
                     // loadResource() returned null
-                    callback.failed(null, resource);
+                    callback.failed(new Throwable("Not able to load resource"), resource);
                 }
             }
         }
@@ -387,7 +387,6 @@ class Throttler implements Scheduler {
                 // gvrResource may be null, if we caught an exception in
                 // AsyncLoadImage.run)
                 synchronized (pendingRequests) {
-                    // TODO Auto-generated method stub
                     if (gvrResource != null) {
                         List<CancelableCallback<OUTPUT>> listeners = new ArrayList<CancelableCallback<OUTPUT>>();
                         /*
@@ -411,7 +410,6 @@ class Throttler implements Scheduler {
                         for (CancelableCallback<OUTPUT> callback : listeners) {
                             /*
                              * Each callback in its own exception frame,
-                             * 
                              * to minimize the damage.
                              */
                             try {
@@ -446,8 +444,41 @@ class Throttler implements Scheduler {
 
             @Override
             public void failed(Throwable t, GVRAndroidResource androidResource) {
-                throw Exceptions
-                        .RuntimeAssertion("Not expecting this to be called");
+                synchronized (pendingRequests) {
+                    List<CancelableCallback<OUTPUT>> listeners = new ArrayList<CancelableCallback<OUTPUT>>();
+                    /*
+                     * Copy the list of listeners then clear it, so any
+                     * requests that come in after we leave the sync block
+                     * but before return will not spawn a new thread. We
+                     * only delete the pendingRequests entry once we've
+                     * notified everybody.
+                     */
+                    listeners.clear();
+                    if (callbacks.isEmpty()) {
+                        if (VERBOSE_SCHEDULING) {
+                            Log.d(TAG, "ready(), thread %d: no callbacks for request %s",
+                                    threadId(), request);
+                        }
+                    }
+                    listeners.addAll(callbacks);
+                    callbacks.clear();
+                    for (CancelableCallback<OUTPUT> callback : listeners) {
+                        /*
+                         * Each callback in its own exception frame,
+                         * to minimize the damage.
+                         */
+                        try {
+                            // Inform handler the resource failed
+                            callback.failed(t, androidResource);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    PendingRequest<OUTPUT, INTER> removed = (PendingRequest<OUTPUT, INTER>) pendingRequests
+                            .remove(request);
+                }
             }
 
             @Override
