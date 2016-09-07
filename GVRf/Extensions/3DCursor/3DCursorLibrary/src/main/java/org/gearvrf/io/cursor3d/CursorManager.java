@@ -16,7 +16,6 @@
 package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBaseSensor;
-import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMesh;
@@ -28,6 +27,7 @@ import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorInputManager.IoDeviceListener;
 import org.gearvrf.io.cursor3d.settings.SettingsView;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.FrustumCuller;
 import org.joml.Matrix4f;
@@ -88,6 +88,7 @@ public class CursorManager {
     private final GlobalSettings globalSettings;
     //Create a laser cursor to use on the settings menu
     private LaserCursor settingsCursor;
+    private float settingsIoDeviceFarDepth, settingsIoDeviceNearDepth;
     private CursorActivationListener activationListener;
     private List<SelectableBehavior> selectableBehaviors;
 
@@ -451,6 +452,50 @@ public class CursorManager {
     }
 
     /**
+     * This method modifies the {@link Cursor} passed in the argument to a settings cursor. A
+     * settings cursor is a {@link Cursor} of type {@link CursorType#LASER} used to interact with a
+     * {@link GVRViewSceneObject}. Since it is easier to use a {@link Crusor} of type
+     * {@link CursorType#LASER} to interract with {@link GVRViewSceneObject} this convinience
+     * method is provided, so that the applications which do not use a {@link Cursor} of type
+     * {@link CursorType#LASER} do not have to instantiate and manage two cursors while
+     * interracting with a {@link GVRViewSceneObject}.
+     *
+     * @param cursor The {@link Cursor} whose {@link IoDevice} will be used for the settings
+     *               cursor.
+     */
+    public void enableSettingsCursor(Cursor cursor) {
+        IoDevice device = cursor.getIoDevice();
+        settingsIoDeviceFarDepth = device.getFarDepth();
+        settingsIoDeviceNearDepth = device.getNearDepth();
+        cursor.destroyIoDevice(device);
+        scene.removeSceneObject(cursor.getMainSceneObject());
+        settingsCursor.setIoDevice(device);
+        scene.addSceneObject(settingsCursor.getMainSceneObject());
+    }
+
+    /**
+     * This method disables the settings cursor enabled by the
+     * {@link CursorManager#enableSettingsCursor(Cursor)} method and restores the {@link Cursor}
+     * that was passed as an argument to the {@link CursorManager#enableSettingsCursor(Cursor)}
+     * method. This method is used once interraction with a {@link GVRViewSceneObject} is not
+     * longer needed.
+     */
+    public void disableSettingsCursor() {
+        for (Cursor cursor : cursors) {
+            if (cursor.getIoDevice() == settingsCursor.getIoDevice()) {
+                IoDevice device = cursor.getIoDevice();
+                settingsCursor.resetIoDevice(device);
+                scene.removeSceneObject(settingsCursor.getMainSceneObject());
+                cursor.setIoDevice(device);
+                device.setFarDepth(settingsIoDeviceFarDepth);
+                device.setNearDepth(settingsIoDeviceNearDepth);
+                scene.addSceneObject(cursor.getMainSceneObject());
+                break;
+            }
+        }
+    }
+
+    /**
      * Presents the Cursor Settings to the User. Only works if scene is set.
      */
     private void showSettingsMenu(final Cursor cursor) {
@@ -715,32 +760,32 @@ public class CursorManager {
     private void addSelectableBehavior(GVRSceneObject object) {
         SelectableBehavior selectableBehavior = (SelectableBehavior) object.getComponent(
                 SelectableBehavior.getComponentType());
-        if(selectableBehavior == null) {
+        if (selectableBehavior == null) {
             selectableBehavior = (SelectableBehavior) object.getComponent(MovableBehavior.
                     getComponentType());
         }
-        if(selectableBehavior != null) {
-            Log.d(TAG,"Adding a Selectable Object");
+        if (selectableBehavior != null) {
+            Log.d(TAG, "Adding a Selectable Object");
             selectableBehaviors.add(selectableBehavior);
-            if(activationListener == null) {
+            if (activationListener == null) {
                 createLocalActivationListener();
             }
-            for(Cursor cursor: cursors) {
+            for (Cursor cursor : cursors) {
                 selectableBehavior.onCursorActivated(cursor);
             }
         } else {
-            Log.d(TAG,"Scene Object is not selectable");
+            Log.d(TAG, "Scene Object is not selectable");
         }
     }
 
     private void removeSelectableBehavior(GVRSceneObject object) {
         SelectableBehavior selectableBehavior = (SelectableBehavior) object.getComponent(
                 SelectableBehavior.getComponentType());
-        if(selectableBehavior == null) {
+        if (selectableBehavior == null) {
             selectableBehavior = (SelectableBehavior) object.getComponent(MovableBehavior.
                     getComponentType());
         }
-        if(selectableBehavior != null) {
+        if (selectableBehavior != null) {
             selectableBehaviors.remove(selectableBehavior);
         }
     }
@@ -965,8 +1010,8 @@ public class CursorManager {
         @Override
         public void onEvent(CursorEvent event) {
             GVRSceneObject sceneObject = event.getObject();
-            if(!callEventHandler(sceneObject,event)) {
-                callEventHandler(sceneObject.getParent(),event);
+            while (!callEventHandler(sceneObject, event) && sceneObject.getParent() != null) {
+                sceneObject = sceneObject.getParent();
             }
         }
     };
@@ -974,11 +1019,11 @@ public class CursorManager {
     private boolean callEventHandler(GVRSceneObject sceneObject, CursorEvent event) {
         SelectableBehavior selectableBehavior = (SelectableBehavior) sceneObject.getComponent
                 (SelectableBehavior.getComponentType());
-        if(selectableBehavior == null) {
+        if (selectableBehavior == null) {
             selectableBehavior = (SelectableBehavior) sceneObject.getComponent(MovableBehavior
                     .getComponentType());
         }
-        if(selectableBehavior != null) {
+        if (selectableBehavior != null) {
             selectableBehavior.handleCursorEvent(event);
             return true;
         } else {
@@ -986,7 +1031,7 @@ public class CursorManager {
         }
     }
 
-    GVRContext getGVRContext() {
+    public GVRContext getGVRContext() {
         return context;
     }
 }
