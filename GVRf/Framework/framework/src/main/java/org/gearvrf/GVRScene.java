@@ -17,13 +17,12 @@ package org.gearvrf;
 
 import android.os.Environment;
 
-import org.gearvrf.GVRCameraRigBase.GVRCameraRigType;
+import org.gearvrf.GVRCameraRig.GVRCameraRigType;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
 import org.gearvrf.script.GVRScriptBehavior;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
-import org.gearvrf.script.GVRScriptBehavior;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -638,12 +637,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             bindShaders();
             recursivelySendSimpleEvent(mSceneRoot, "onAfterInit");
         }
-
-        @Override
-        public void onStep() {
-            // Send "onStep" to all scene objects and their children
-            recursivelySendSimpleEvent(mSceneRoot, "onStep");
-         }
 
         private void recursivelySendSimpleEvent(GVRSceneObject sceneObject, String eventName) {
             getGVRContext().getEventManager().sendEvent(

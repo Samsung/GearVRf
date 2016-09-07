@@ -586,7 +586,7 @@ public class GVRShaderTemplate
                 else
                     lightFunction += "   r = " + lightClassName + "(s, " + uniformId + ");\n";
                 lightFunction += "   enable = " + uniformId + ".enabled;\n";
-                lightFunction += "   c = vec4(enable, enable, enable, enable) * AddLight(s, r);\n";
+                lightFunction += "   c = vec4(enable, enable, enable, 1) * AddLight(s, r);\n";
                 lightFunction += "   color.xyz += c.xyz;\n";
                 lightFunction += "   color.w = c.w;\n";
                 lightSources += "\nuniform Uniform" + lightClassName + " " + uniformId + ";\n";

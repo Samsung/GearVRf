@@ -21,35 +21,7 @@ android {
         }
     }
 
-    task copyOculusFiles(type: Copy) {
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            println "copying oculus binaries"
-
-            def oculusDir = rootProject.property("OVR_MOBILE_SDK")
-            copy {
-                from oculusDir+'/VrApi/Libs/Android/VrApi.jar'
-                into 'src/main/libs'
-            }
-            copy {
-                from oculusDir+'/VrApi/Libs/Android/armeabi-v7a/libvrapi.so'
-                into 'src/main/libs/armeabi-v7a'
-            }
-            copy {
-                from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
-                into 'src/main/libs'
-            }
-        } else {
-            println "WARNING: not copying Oculus files; OVR_MOBILE_SDK not found"
-        }
-    }
-
     task buildNative(type: Exec) {
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
-        } else {
-            println "WARNING: relying on hard-coded paths and environment variables; OVR_MOBILE_SDK not found"
-        }
-
         def ndkbuild = ""
         if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
             ndkbuild = rootProject.property("ANDROID_NDK_HOME")
@@ -61,26 +33,7 @@ android {
             ndkbuild += 'ndk-build'
         }
 
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
-        }
-
-        def gvrf_backend = "backend_oculus"
-        if (rootProject.hasProperty("GVRF_BACKEND")) {
-            gvrf_backend = rootProject.property("GVRF_BACKEND")
-        }
-        environment 'GVRF_BACKEND', '' + projectDir + "/../" + gvrf_backend
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
-
-        doFirst {
-            copy {
-                from '../' + gvrf_backend + '/src/main/jni/'
-                into 'src/main/jni'
-                include 'Android.mk'
-            }
-            file('src/main/jni/Android.mk').setLastModified(
-                    file('../' + gvrf_backend + '/src/main/jni/Android.mk').lastModified())
-        }
     }
 
     buildTypes {
@@ -90,19 +43,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
-        if(rootProject.hasProperty("GVRF_BACKEND") && ("backend_oculus" == rootProject.property("GVRF_BACKEND") || "" == rootProject.property("GVRF_BACKEND"))) {
-            releaseToGitHub {
-            }
-        }
     }
 
     sourceSets.main {
-        def gvrf_backend = "backend_oculus"
-        if (rootProject.hasProperty("GVRF_BACKEND")) {
-            gvrf_backend = rootProject.property("GVRF_BACKEND")
-        }
-
-        java.srcDirs = ['src/main/java', '../' + gvrf_backend + '/src/main/java']
+        java.srcDirs = ['src/main/java']
         jni.srcDirs = [] // no auto generation of Android.mk
         // pre-compiled libraries
         jniLibs {
@@ -122,101 +66,19 @@ android {
             ndkbuild += 'ndk-build'
         }
 
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
-        }
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
-
-        doFirst {
-            def gvrf_backend = "backend_oculus"
-            if (rootProject.hasProperty("GVRF_BACKEND")) {
-                gvrf_backend = rootProject.property("GVRF_BACKEND")
-            }
-            copy {
-                from '../' + gvrf_backend + '/src/main/jni/'
-                into 'src/main/jni'
-                include 'Android.mk'
-            }
-            file('src/main/jni/Android.mk').setLastModified(
-                    file('../' + gvrf_backend + '/src/main/jni/Android.mk').lastModified())
-        }
-        doLast {
-            delete 'src/main/jni/Android.mk'
-        }
     }
 
     clean.dependsOn 'cleanNative'
 
     tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative, copyOculusFiles
-    }
-
-    task eclipseZip(type: Zip) {
-        into('GearVRf/res/') {
-            from 'src/main/res/'
-        }
-        into('GearVRf/libs/') {
-            from('src/main/libs/') {
-                exclude 'libassimp.so'
-                exclude 'libjnlua.so'
-            }
-            from('build/intermediates/bundles/release/') {
-                include 'classes.jar'
-                rename('classes.jar', 'gvrf.jar')
-            }
-        }
-        into('GearVRf/') {
-            from('src/main/') {
-                include 'AndroidManifest.xml'
-                include '.project'
-                include '.classpath'
-                include 'project.properties'
-            }
-        }
-        into('GearVRf/java') {
-            from('src/main/') {
-                include 'donotdelete.txt'
-            }
-        }
-
-        baseName 'gvrf-for-eclipse'
-    }
-
-    if(rootProject.hasProperty("GVRF_BACKEND") && ("backend_oculus" == rootProject.property("GVRF_BACKEND") || "" == rootProject.property("GVRF_BACKEND"))) {
-        task eclipseAssembleReleaseToGitHub() << {
-            println "preparing android library project for eclipse"
-
-            eclipseZip.execute()
-
-            copy {
-                from 'build/distributions/gvrf-for-eclipse.zip'
-                into 'build/outputs/aar/'
-            }
-
-            project.delete('build/distributions/gvrf-for-eclipse.zip')
-        }
-
-        task uploadToGitHub(type: Exec) {
-            onlyIf {
-                System.env['RELEASE_ID'] != null
-            }
-            onlyIf {
-                System.env['ACCESS_TOKEN'] != null
-            }
-
-            commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
-        }
-        uploadToGitHub.doFirst {
-            println('uploading to github')
-        }
+        compileTask -> compileTask.dependsOn buildNative
     }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
-    compile(name:'google-vr-base', ext:'aar')
-    compile(name:'google-vr-common',ext:'aar')
 }
 
 assembleDebug {}.doLast {
@@ -236,22 +98,4 @@ assembleDebug {}.doLast {
         }
     }
     tasks.copyAARFiles.execute()
-}
-
-if(rootProject.hasProperty("GVRF_BACKEND") && ("backend_oculus" == rootProject.property("GVRF_BACKEND") || "" == rootProject.property("GVRF_BACKEND"))) {
-    assembleReleaseToGitHub {}.doLast {
-        println 'removing oculus binaries'
-        exec {
-            commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/VrApi.jar']
-        }
-        exec {
-            commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'libs/SystemUtils.jar']
-        }
-        exec {
-            commandLine = ['zip', '-d', 'build/outputs/aar/framework-releaseToGitHub.aar', 'jni/armeabi-v7a/libvrapi.so']
-        }
-
-        eclipseAssembleReleaseToGitHub.execute()
-        uploadToGitHub.execute();
-    }
 }
