@@ -18,12 +18,12 @@
 #include <assert.h>
 #include <cstring>
 
-CoreVulkan* CoreVulkan::theInstance = NULL;
+VulkanCore* VulkanCore::theInstance = NULL;
 
 #define QUEUE_INDEX_MAX 99999
 
 
-bool CoreVulkan::CreateInstance(){
+bool VulkanCore::CreateInstance(){
     VkResult ret = VK_SUCCESS;
 
     // Discover the number of extensions listed in the instance properties in order to allocate
@@ -115,7 +115,7 @@ bool CoreVulkan::CreateInstance(){
     return true;
 }
 
-bool CoreVulkan::GetPhysicalDevices(){
+bool VulkanCore::GetPhysicalDevices(){
     VkResult ret = VK_SUCCESS;
 
     // Query number of physical devices available
@@ -150,7 +150,7 @@ bool CoreVulkan::GetPhysicalDevices(){
     return true;
 }
 
-void CoreVulkan::InitDevice() {
+void VulkanCore::InitDevice() {
     VkResult ret = VK_SUCCESS;
     // Akin to when creating the instance, we can query extensions supported by the physical device
     // that we have selected to use.
@@ -257,7 +257,7 @@ void CoreVulkan::InitDevice() {
     vkGetDeviceQueue(m_device, m_queueFamilyIndex, 0, &m_queue);
 }
 
-void CoreVulkan::InitSwapchain(uint32_t width, uint32_t height){
+void VulkanCore::InitSwapchain(uint32_t width, uint32_t height){
     VkResult ret = VK_SUCCESS;
 
 
@@ -405,7 +405,7 @@ void CoreVulkan::InitSwapchain(uint32_t width, uint32_t height){
     }
 }
 
-bool CoreVulkan::GetMemoryTypeFromProperties( uint32_t typeBits, VkFlags requirements_mask, uint32_t* typeIndex)
+bool VulkanCore::GetMemoryTypeFromProperties( uint32_t typeBits, VkFlags requirements_mask, uint32_t* typeIndex)
 {
     GVR_VK_CHECK(typeIndex != nullptr);
     // Search memtypes to find first index with those properties
@@ -424,7 +424,7 @@ bool CoreVulkan::GetMemoryTypeFromProperties( uint32_t typeBits, VkFlags require
     return false;
 }
 
-void CoreVulkan::InitCommandbuffers(){
+void VulkanCore::InitCommandbuffers(){
     VkResult ret = VK_SUCCESS;
     // Command buffers are allocated from a pool; we define that pool here and create it.
     VkCommandPoolCreateInfo commandPoolCreateInfo = {};
@@ -452,7 +452,7 @@ void CoreVulkan::InitCommandbuffers(){
     }
 }
 
-void CoreVulkan::InitVertexBuffers(){
+void VulkanCore::InitVertexBuffers(){
     // Our vertex buffer data is a simple triangle, with associated vertex colors.
     const float vb[3][7] = {
             //      position                   color
@@ -545,7 +545,7 @@ void CoreVulkan::InitVertexBuffers(){
     m_vertices.vi_attrs[1].offset = sizeof(float) * 3;
 }
 
-void CoreVulkan::InitLayouts(){
+void VulkanCore::InitLayouts(){
     VkResult ret = VK_SUCCESS;
     // This sample has no bindings, so the layout is empty.
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
@@ -567,7 +567,7 @@ void CoreVulkan::InitLayouts(){
     GVR_VK_CHECK(!ret);
 }
 
-void CoreVulkan::InitRenderPass(){
+void VulkanCore::InitRenderPass(){
 // The renderpass defines the attachments to the framebuffer object that gets
     // used in the pipeline. We have two attachments, the colour buffer, and the
     // depth buffer. The operations and layouts are set to defaults for this type
@@ -634,7 +634,7 @@ void CoreVulkan::InitRenderPass(){
     GVR_VK_CHECK(!ret);
 }
 
-void CoreVulkan::InitPipeline(){
+void VulkanCore::InitPipeline(){
 #if 0
     VkResult   err;
 
@@ -762,7 +762,7 @@ void CoreVulkan::InitPipeline(){
 #endif
 }
 
-void CoreVulkan::InitFrameBuffers(){
+void VulkanCore::InitFrameBuffers(){
 //The framebuffer objects reference the renderpass, and allow
     // the references defined in that renderpass to now attach to views.
     // The views in this example are the colour view, which is our swapchain image,
@@ -799,7 +799,7 @@ void CoreVulkan::InitFrameBuffers(){
     }
 }
 
-void CoreVulkan::InitSync(){
+void VulkanCore::InitSync(){
     VkResult ret = VK_SUCCESS;
     // For synchronization, we have semaphores for rendering and backbuffer signalling.
     VkSemaphoreCreateInfo semaphoreCreateInfo = {};
@@ -814,7 +814,7 @@ void CoreVulkan::InitSync(){
 }
 
 
-void CoreVulkan::initVulkanCore()
+void VulkanCore::initVulkanCore()
 {
 
 }

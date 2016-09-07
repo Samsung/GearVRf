@@ -48,17 +48,21 @@ struct GVR_VK_Vertices {
 };
 
 
-class CoreVulkan {
+class VulkanCore {
 public:
-    static CoreVulkan* getInstance() {
+    // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
+    static VulkanCore* getInstance() {
         if (!theInstance) {
-            theInstance = new CoreVulkan;
+            theInstance = new VulkanCore;
         }
-        return theInstance;
+        if (theInstance->m_Vulkan_Initialised)
+            return theInstance;
+        return NULL;
     }
 private:
-    static CoreVulkan* theInstance;
-    CoreVulkan() : m_pPhysicalDevices(NULL){
+    static VulkanCore* theInstance;
+    VulkanCore() : m_pPhysicalDevices(NULL){
+        m_Vulkan_Initialised = false;
         initVulkanCore();
     }
     bool CreateInstance();
@@ -74,6 +78,8 @@ private:
     void InitPipeline();
     void InitFrameBuffers();
     void InitSync();
+
+    bool m_Vulkan_Initialised;
 
 
     VkInstance m_instance;
@@ -112,6 +118,6 @@ private:
 };
 
 
-extern CoreVulkan gvrCoreVulkan;
+extern VulkanCore gvrVulkanCore;
 
 #endif //FRAMEWORK_VULKANCORE_H
