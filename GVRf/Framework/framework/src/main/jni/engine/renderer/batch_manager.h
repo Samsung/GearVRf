@@ -39,7 +39,7 @@ public:
     BatchManager(int batch_size, int max_indices);
     ~BatchManager();
     Batch* getNewBatch();
-    void deallocateBatch(Batch* batch){
+    void freeBatch(Batch* batch){
         batch_pool_.push_back(batch);
     }
     void batchSetup(std::vector<RenderData*>& render_data_vector);

@@ -36,6 +36,7 @@ Batch::Batch(int no_vertices, int no_indices) :
 Batch::~Batch() {
     clearData();
     delete renderdata_;
+    renderdata_ = nullptr;
 }
 
 bool Batch::updateMesh(Mesh* render_mesh){
@@ -163,7 +164,8 @@ bool Batch::isRenderModified(){
 void Batch::resetBatch(){
     clearData();
     delete renderdata_;
-    Renderer::batch_manager->deallocateBatch(this);
+    renderdata_ = nullptr;
+    Renderer::batch_manager->freeBatch(this);
 }
 
 void Batch::meshInit(){
