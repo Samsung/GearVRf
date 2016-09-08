@@ -3,43 +3,93 @@ package org.gearvrf.jassimp2;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAssetLoader;
+import org.gearvrf.GVRCamera;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRPerspectiveCamera;
+import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSpotLight;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
-public class GVRJassimpSceneObject extends GVRModelSceneObject {
-    private static final String TAG = GVRJassimpSceneObject.class.getSimpleName();
-    protected AiScene scene;
-    protected GVRResourceVolume volume;
+public final class GVRJassimpModelHelper
+{
+    private static final String TAG = GVRJassimpModelHelper.class.getSimpleName();
+    private AiScene scene;
+    private GVRResourceVolume volume;
+    private GVRModelSceneObject mModel;
+    private GVRContext mContext;
+    Hashtable<String, GVRLightBase> mLightList;
 
-  public GVRJassimpSceneObject(GVRAssetLoader.AssetRequest request, AiScene scene, GVRResourceVolume volume, Hashtable<String, GVRLightBase> lightlist) {
-        super(request.getContext());
+    public GVRJassimpModelHelper(GVRAssetLoader.AssetRequest request, GVRModelSceneObject model, AiScene scene, GVRResourceVolume volume)
+    {
+        List<AiLight> aiLights = scene.getLights();
+        GVRSceneObject camera;
+
+        mModel = model;
+        mContext = mModel.getGVRContext();
         this.volume = volume;
-
-        if (scene != null) {
+        mLightList = new Hashtable<String, GVRLightBase>();
+        camera = makeCamera(scene);
+        if (camera != null)
+        {
+            mModel.addChildObject(camera);
+        }
+        importLights(aiLights, mLightList);
+        if (scene != null)
+        {
             this.scene = scene;
-            recurseAssimpNodes(request, this, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), lightlist);
-
-            // Animations
-            for (AiAnimation aiAnim : scene.getAnimations()) {
-                mAnimations.add(GVRJassimpAdapter.get().createAnimation(aiAnim, this));
+            recurseAssimpNodes(request, mModel, scene.getSceneRoot(GVRJassimpAdapter.sWrapperProvider), mLightList);
+            for (AiAnimation aiAnim : scene.getAnimations())
+            {
+                mModel.getAnimations().add(GVRJassimpAdapter.get().createAnimation(aiAnim, mModel));
             }
         }    
     } 
-    
+
+    private GVRSceneObject makeCamera(AiScene scene)
+    {
+        List<AiCamera> cameras = scene.getCameras();
+        if (cameras.size() == 0)
+        {
+            return null;
+        }
+        GVRSceneObject mainCamera = new GVRSceneObject(mContext);
+        GVRCameraRig cameraRig = GVRCameraRig.makeInstance(mContext);
+        AiCamera aiCam = cameras.get(0);
+        AiVector up = (AiVector) aiCam.getUp(Jassimp.BUILTIN);
+        AiVector fwd = (AiVector) aiCam.getLookAt(Jassimp.BUILTIN);
+        AiVector pos = (AiVector) aiCam.getPosition(Jassimp.BUILTIN);
+        Matrix4f mtx = new Matrix4f();
+
+        mtx.setLookAt(pos.getX(), pos.getY(), pos.getZ(),
+                      pos.getX() + fwd.getX(), pos.getY() + fwd.getY(), pos.getZ() + fwd.getZ(),
+                      up.getX(), up.getY(), up.getZ());
+        mainCamera.setName("MainCamera");
+        mainCamera.getTransform().setModelMatrix(mtx);
+        cameraRig.setNearClippingDistance(aiCam.getClipPlaneNear());
+        cameraRig.setFarClippingDistance(aiCam.getClipPlaneFar());
+        mainCamera.attachComponent(cameraRig);
+        return mainCamera;
+    }
+
     private void recurseAssimpNodes(
             GVRAssetLoader.AssetRequest request,
             GVRSceneObject parentSceneObject,
@@ -47,18 +97,16 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         try {
             final GVRSceneObject sceneObject;
             if (node.getNumMeshes() == 0) {
-                sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
+                sceneObject = GVRJassimpAdapter.get().createSceneObject(mContext, node);
                 parentSceneObject.addChildObject(sceneObject);
             } else if (node.getNumMeshes() == 1) {
                 // add the scene object to the scene graph
-                sceneObject = createSubSceneObject(request, node, 0);
-                parentSceneObject.addChildObject(sceneObject);
+                sceneObject = createSubSceneObject(request, parentSceneObject, node, 0);
             } else {
-                sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
+                sceneObject = GVRJassimpAdapter.get().createSceneObject(mContext, node);
                 parentSceneObject.addChildObject(sceneObject);
                 for (int i = 0; i < node.getNumMeshes(); i++) {
-                    GVRSceneObject childSceneObject = createSubSceneObject(request, node, i);
-                    sceneObject.addChildObject(childSceneObject);
+                    GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, node, i);
                 }
             }
 
@@ -71,10 +119,10 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
                recurseAssimpNodes(request, sceneObject, child, lightlist);
             }
 
-            getGVRContext().runOnTheFrameworkThread(new Runnable() {
+            mModel.getGVRContext().runOnTheFrameworkThread(new Runnable() {
                 public void run() {
                     // Inform the loaded object after it has been attached to the scene graph
-                    getGVRContext().getEventManager().sendEvent(
+                    mContext.getEventManager().sendEvent(
                             sceneObject,
                             ISceneObjectEvents.class,
                             "onLoaded");
@@ -97,8 +145,6 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         }
 
     }
-       
-    
 
     /**
      * Helper method to create a new {@link GVRSceneObject} with the mesh at the
@@ -129,15 +175,15 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
      */
     private GVRSceneObject createSubSceneObject(
             GVRAssetLoader.AssetRequest assetRequest,
+            GVRSceneObject parent,
             AiNode node,
-           int index)
+            int index)
             throws IOException {
         AiMesh aiMesh = scene.getMeshes().get(node.getMeshes()[index]);
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-        		GVRJassimpAdapter.get().createMesh(getGVRContext(), aiMesh));
-
+        		GVRJassimpAdapter.get().createMesh(parent.getGVRContext(), aiMesh));
         AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
-        final GVRMaterial meshMaterial = new GVRMaterial(getGVRContext(), GVRShaderType.BeingGenerated.ID);
+        final GVRMaterial meshMaterial = new GVRMaterial(mContext, GVRShaderType.BeingGenerated.ID);
 
         /* Diffuse color & Opacity */
         AiColor diffuseColor = material.getDiffuseColor(GVRJassimpAdapter.sWrapperProvider);        /* Opacity */
@@ -174,19 +220,21 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
         meshMaterial.setSpecularExponent(specularExponent);
         
         /* Diffuse Texture */
-        loadTextures(assetRequest, material, meshMaterial,  getGVRContext());
+        loadTextures(assetRequest, material, meshMaterial, mContext);
 
  
-        GVRSceneObject sceneObject = GVRJassimpAdapter.get().createSceneObject(getGVRContext(), node);
-        GVRRenderData sceneObjectRenderData = new GVRRenderData(getGVRContext());
+        GVRSceneObject sceneObject = GVRJassimpAdapter.get().createSceneObject(mContext, node);
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
         sceneObjectRenderData.setMesh(futureMesh);
 
         sceneObjectRenderData.setMaterial(meshMaterial);
         sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
         sceneObject.attachRenderData(sceneObjectRenderData);
 
+        parent.addChildObject(sceneObject);
         return sceneObject;
     }
+
     private static final Map<AiTextureType, String> textureMap;
     static
     {
@@ -218,4 +266,52 @@ public class GVRJassimpSceneObject extends GVRModelSceneObject {
             }
         }
     }
+
+    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){
+        for(AiLight light: lights){
+            AiLightType type = light.getType();
+            if(type == AiLightType.DIRECTIONAL){
+                GVRDirectLight gvrLight = new GVRDirectLight(mContext);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+            if(type == AiLightType.POINT){
+                GVRPointLight gvrLight = new GVRPointLight(mContext);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+            if(type == AiLightType.SPOT){
+                GVRSpotLight gvrLight = new GVRSpotLight(mContext);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
+                gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+        }
+
+    }
+
+    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
+        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
+        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
+
+    }
+
+    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+        org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(GVRJassimpAdapter.sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(GVRJassimpAdapter.sWrapperProvider);
+        gvrLight.setVec4("ambient_intensity", ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+        gvrLight.setVec4("diffuse_intensity", diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+        gvrLight.setVec4("specular_intensity", specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+
+    }
+
 }
