@@ -19,7 +19,8 @@ public class MovableBehavior extends SelectableBehavior {
     private Quaternionf rotation;
     private Vector3f cross;
 
-    private boolean selected;
+    private GVRSceneObject selected;
+    private final Object selectedLock = new Object();
     private GVRSceneObject cursorSceneObject;
     private Cursor cursor;
     private CursorManager cursorManager;
@@ -105,26 +106,28 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickEvent(CursorEvent event) {
-        if (selected && cursor != event.getCursor()) {
-            // We have a selected object but not the correct cursor
-            return;
-        }
+       synchronized (selectedLock) {
+            if (selected != null && cursor != event.getCursor()) {
+                // We have a selected object but not the correct cursor
+                return;
+            }
 
-        cursor = event.getCursor();
-        cursorSceneObject = event.getCursor().getSceneObject();
-        prevCursorPosition.set(cursor.getPositionX(), cursor.getPositionY(), cursor
-                .getPositionZ());
-        selected = true;
-        if (cursor.getCursorType() == CursorType.OBJECT) {
-            Vector3f position = new Vector3f(cursor.getPositionX(), cursor.getPositionY(),
-                    cursor.getPositionZ());
+            cursor = event.getCursor();
+            cursorSceneObject = event.getCursor().getSceneObject();
+            prevCursorPosition.set(cursor.getPositionX(), cursor.getPositionY(), cursor
+                    .getPositionZ());
+            selected = getOwnerObject();
+            if (cursor.getCursorType() == CursorType.OBJECT) {
+                Vector3f position = new Vector3f(cursor.getPositionX(), cursor.getPositionY(),
+                        cursor.getPositionZ());
 
-            ownerObject.getTransform().setPosition(-position.x + ownerObject.getTransform()
-                    .getPositionX(), -position.y + ownerObject.getTransform()
-                    .getPositionY(), -position.z + ownerObject.getTransform().getPositionZ());
-            ownerParent = ownerObject.getParent();
-            ownerParent.removeChildObject(ownerObject);
-            cursorSceneObject.addChildObject(ownerObject);
+                selected.getTransform().setPosition(-position.x + selected.getTransform()
+                        .getPositionX(), -position.y + selected.getTransform()
+                        .getPositionY(), -position.z + selected.getTransform().getPositionZ());
+                ownerParent = selected.getParent();
+                ownerParent.removeChildObject(selected);
+                cursorSceneObject.addChildObject(selected);
+            }
         }
     }
 
@@ -155,25 +158,27 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickReleased(CursorEvent event) {
-        if (selected && cursor != event.getCursor()) {
-            // We have a selected object but not the correct cursor
-            return;
-        }
+        synchronized (selectedLock) {
+            if (selected != null && cursor != event.getCursor()) {
+                // We have a selected object but not the correct cursor
+                return;
+            }
 
-        if (selected && cursor.getCursorType() == CursorType.OBJECT) {
-            Vector3f position = new Vector3f(cursor.getPositionX(), cursor.getPositionY
-                    (), cursor.getPositionZ());
-            cursorSceneObject.removeChildObject(ownerObject);
-            ownerParent.addChildObject(ownerObject);
-            ownerObject.getTransform().setPosition(+position.x + ownerObject.getTransform()
-                    .getPositionX(), +position.y + ownerObject.getTransform()
-                    .getPositionY(), +position.z + ownerObject.getTransform().getPositionZ());
-        }
-        selected = false;
-        // object has been moved, invalidate all other cursors to check for events
-        for (Cursor remaining : cursorManager.getActiveCursors()) {
-            if (cursor != remaining) {
-                remaining.invalidate();
+            if (selected != null && cursor.getCursorType() == CursorType.OBJECT) {
+                Vector3f position = new Vector3f(cursor.getPositionX(), cursor.getPositionY
+                        (), cursor.getPositionZ());
+                cursorSceneObject.removeChildObject(selected);
+                ownerParent.addChildObject(selected);
+                selected.getTransform().setPosition(+position.x + selected.getTransform()
+                        .getPositionX(), +position.y + selected.getTransform()
+                        .getPositionY(), +position.z + selected.getTransform().getPositionZ());
+            }
+            selected = null;
+            // object has been moved, invalidate all other cursors to check for events
+            for (Cursor remaining : cursorManager.getActiveCursors()) {
+                if (cursor != remaining) {
+                    remaining.invalidate();
+                }
             }
         }
     }
