@@ -362,14 +362,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         return mBones;
     }
     /**
-     * Sets the status of mesh, whether static or dynamic, by default it is static.
-     *
-     * @param boolean status
-     */
-    public void setDynamic(boolean status) {
-        NativeMesh.setDynamic(getNative(), status);
-    }
-    /**
      * Sets bones of this mesh.
      *
      * @param bones a list of bones
@@ -525,6 +517,4 @@ class NativeMesh {
     static native void getSphereBound(long mesh, float[] sphere);
     
     static native boolean hasAttribute(long mesh, String key);
-
-    static native boolean setDynamic(long mesh, boolean status);
 }
