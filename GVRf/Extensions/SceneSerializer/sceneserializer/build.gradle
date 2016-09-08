@@ -4,7 +4,8 @@ allprojects {
     repositories {
         jcenter()
         flatDir {
-            dirs '../../../Framework/framework/src/main/libs/'
+            dirs '../../../Framework/framework/src/main/libs/',
+            '../../../Framework/framework/build/outputs/aar/'
         }
     }
 }
@@ -29,7 +30,7 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':framework')
+    compile(name: 'framework-debug', ext: 'aar')
 }
 
 assembleDebug {}.doLast {

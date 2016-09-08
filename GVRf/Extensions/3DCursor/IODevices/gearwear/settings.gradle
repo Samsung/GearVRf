@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 include ':GearWearIoDevice'
-include ':3DCursorLibrary'
 include ':gearwearlibrary'
-include ':framework'
-project(':framework').projectDir = new File('../../../../Framework/framework/')
-project(':3DCursorLibrary').projectDir = new File('../../3DCursorLibrary')
 project(':gearwearlibrary').projectDir = new File('PhoneSide/gearwearlibrary')
 
