@@ -307,8 +307,10 @@ public class GVREventManager {
             method.invoke(target, params);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+            mGvrContext.logError(e.getMessage(), target);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
+            mGvrContext.logError(e.getMessage(), target);
         } catch (InvocationTargetException e) {
             Throwable throwable = e.getCause();
             // rethrow the RuntimeException back to the application
@@ -316,6 +318,7 @@ public class GVREventManager {
                 throw (RuntimeException) throwable;
             } else {
                 e.printStackTrace();
+                mGvrContext.logError(e.getMessage(), target);
             }
         }
     }

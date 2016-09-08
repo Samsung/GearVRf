@@ -279,14 +279,10 @@ public class X3Dobject
   {
     try
     {
-
       this.assetRequest = assetRequest;
       this.gvrContext = assetRequest.getContext();
       this.activityContext = gvrContext.getContext();
       this.root = root;
-      // this will need to be referenced in the X3DparserScript
-      this.root.setName(X3D_ROOT_NODE);
-
 
       // Camera rig setup code based on GVRScene::init()
       GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
