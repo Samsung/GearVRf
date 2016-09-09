@@ -1029,5 +1029,29 @@ void VulkanCore::BuildCmdBuffer()
 
 void VulkanCore::initVulkanCore()
 {
+#if 0
+        InitVulkan();
+        CreateInstance();
+        GetPhysicalDevices();
+        InitDevice();
+        InitSwapchain(1024  , 1024);
+        LOGI("Vulkan after swap chain");
+        InitCommandbuffers();
+        LOGI("Vulkan after cmd buffers");
+        InitVertexBuffers();
+        LOGI("Vulkan after vert buf");
+        InitLayouts();
+        LOGI("Vulkan after layout");
+        InitRenderPass();
+        LOGI("Vulkan after render pass");
+        InitPipeline();
+        LOGI("Vulkan after piplen");
+        InitFrameBuffers();
+        LOGI("Vulkan after FBO");
+        InitSync();
+        LOGI("Vulkan after synch");
 
+        // Initialize our command buffers
+        BuildCmdBuffer();
+#endif
 }
