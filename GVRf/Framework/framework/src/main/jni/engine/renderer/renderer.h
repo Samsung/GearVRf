@@ -92,6 +92,9 @@ public:
         numberDrawCalls = 0;
         numberTriangles = 0;
     }
+    bool isVulkanInstace(){
+        return isVulkan_;
+    }
     void freeBatch(Batch* batch){
         batch_manager->freeBatch(batch);
     }
@@ -152,7 +155,7 @@ public:
     virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height) = 0;
 
 private:
-
+    static bool isVulkan_;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
     virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
@@ -193,6 +196,6 @@ protected:
     int numberDrawCalls;
     int numberTriangles;
 };
-extern Renderer* renderer;
+extern Renderer* gRenderer;
 }
 #endif

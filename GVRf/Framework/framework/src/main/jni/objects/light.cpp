@@ -249,11 +249,8 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     rstate.uniforms.u_view = lightcam.getViewMatrix();
     rstate.uniforms.u_proj = lightcam.getProjectionMatrix();
     rstate.render_mask = 1;
-    renderer = Renderer::getInstance();
-    if(renderer)
-        renderer->renderShadowMap(rstate, &lightcam, fboId_, scene_objects);
-    else
-        LOGE("renderer is null");
+    gRenderer = Renderer::getInstance();
+    gRenderer->renderShadowMap(rstate, &lightcam, fboId_, scene_objects);
     return true;
 }
 }

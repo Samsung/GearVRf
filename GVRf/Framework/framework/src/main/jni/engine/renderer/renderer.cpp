@@ -45,9 +45,10 @@
 bool do_batching = true;
 
 namespace gvr {
-Renderer* renderer = nullptr;
+Renderer* gRenderer = nullptr;
 bool use_multiview= false;
 Renderer* Renderer::instance = nullptr;
+bool Renderer::isVulkan_ = false;
 void Renderer::initializeStats() {
     // TODO: this function will be filled in once we add draw time stats
 }
@@ -56,17 +57,21 @@ void Renderer::initializeStats() {
 ***/
 Renderer* Renderer::getInstance(const char* type){
     if(nullptr == instance){
-        if(0 == std::strcmp(type,"Vulkan"))
+        if(0 == std::strcmp(type,"Vulkan")) {
             instance = new VulkanRenderer();
-        else
+            isVulkan_ = true;
+        }
+        else {
             instance = new GLRenderer();
+        }
         std::atexit(resetInstance);      // Destruction of instance registered at runtime exit
     }
     return instance;
 }
-Renderer::Renderer():numberDrawCalls(0), numberTriangles(0), batch_manager(nullptr){
-    if(do_batching)
+Renderer::Renderer():numberDrawCalls(0), numberTriangles(0), batch_manager(nullptr) {
+    if(do_batching) {
         batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
+    }
 }
 void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
         float frustum[6][4], std::vector<SceneObject*>& scene_objects,
@@ -169,7 +174,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
     // Note: this needs to be scaled to sort on N states
     state_sort();
 
-    if(do_batching){
+    if(do_batching && !gRenderer->isVulkanInstace()){
         batch_manager->batchSetup(render_data_vector);
     }
 }
@@ -208,7 +213,7 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
 
 void Renderer::renderRenderDataVector(RenderState &rstate) {
 
-    if (!do_batching) {
+    if (!do_batching || gRenderer->isVulkanInstace() ) {
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(rstate, *it));

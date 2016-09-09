@@ -46,8 +46,8 @@ void Java_org_gearvrf_OvrNativeMonoscopicRenderer_renderCamera(JNIEnv * env,
     RenderTexture* post_effect_render_texture_b =
             reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_b);
 
-    Renderer* renderer = Renderer::getInstance();
-    renderer->renderCamera(scene, camera, viewportX, viewportY, viewportWidth,
+    gRenderer = Renderer::getInstance();
+    gRenderer->renderCamera(scene, camera, viewportX, viewportY, viewportWidth,
                viewportHeight, shader_manager, post_effect_shader_manager,
                post_effect_render_texture_a, post_effect_render_texture_b);
 
@@ -59,11 +59,9 @@ void Java_org_gearvrf_OvrNativeMonoscopicRenderer_cull(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    renderer = Renderer::getInstance();
-    if(renderer)
-        renderer->cull(scene, camera, shader_manager);
-    else
-        LOGE("renderer is null");
+    gRenderer = Renderer::getInstance();
+    gRenderer->cull(scene, camera, shader_manager);
+
 }
 
 }

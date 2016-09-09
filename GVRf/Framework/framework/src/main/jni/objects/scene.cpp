@@ -28,7 +28,6 @@ Scene* Scene::main_scene_ = NULL;
 Scene::Scene() :
         HybridObject(),
         main_camera_rig_(),
-        renderer(nullptr),
         frustum_flag_(false),
         dirtyFlag_(0),
         occlusion_flag_(false),

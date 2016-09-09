@@ -29,11 +29,9 @@ void Java_org_gearvrf_OvrViewManager_cull(JNIEnv * jni, jclass clazz,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    renderer = Renderer::getInstance();
-    if(renderer)
-        renderer->cull(scene, camera, shader_manager);
-    else
-        LOGE("renderer is null");
+    gRenderer = Renderer::getInstance();
+    gRenderer->cull(scene, camera, shader_manager);
+
 }
 
 
@@ -42,11 +40,8 @@ void Java_org_gearvrf_OvrViewManager_makeShadowMaps(JNIEnv * jni, jclass clazz,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
 
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    renderer = Renderer::getInstance();
-    if(renderer)
-        renderer->makeShadowMaps(scene, shader_manager, width, height);
-    else
-        LOGE("renderer is null");
+    gRenderer = Renderer::getInstance();
+    gRenderer->makeShadowMaps(scene, shader_manager, width, height);
 }
 
 void Java_org_gearvrf_OvrViewManager_renderCamera(JNIEnv * jni, jclass clazz,
@@ -129,12 +124,9 @@ void GVRViewManager::renderCamera(Scene* scene,
     float fps = 0.0;
     gettimeofday(&start, NULL);
 #endif
-    if(renderer)
-        renderer->renderCamera(scene, camera, shader_manager,
+    gRenderer->renderCamera(scene, camera, shader_manager,
                 post_effect_shader_manager, post_effect_render_texture_a,
                 post_effect_render_texture_b);
-    else
-        LOGE("renderer is null");
 
 #ifdef GVRF_FBO_FPS
     // finish rendering

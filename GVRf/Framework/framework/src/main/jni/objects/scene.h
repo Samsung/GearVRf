@@ -66,19 +66,19 @@ public:
     void clearLights();
 
     void resetStats() {
-        renderer = Renderer::getInstance();
-        if(nullptr!= renderer)
-            renderer->resetStats();
+        gRenderer = Renderer::getInstance();
+        gRenderer->resetStats();
+
     }
     int getNumberDrawCalls() {
-        renderer = Renderer::getInstance();
-        if(nullptr!= renderer)
-            return renderer->getNumberDrawCalls();
+        if(nullptr!= gRenderer){
+            return gRenderer->getNumberDrawCalls();
+        }
     }
     int getNumberTriangles() {
-        renderer = Renderer::getInstance();
-        if(nullptr!= renderer)
-            return renderer->getNumberTriangles();
+        if(nullptr!= gRenderer) {
+            return gRenderer->getNumberTriangles();
+        }
     }
 
     void exportToFile(std::string filepath);
@@ -172,7 +172,6 @@ private:
     void clearAllColliders();
 
 private:
-    Renderer* renderer;
     static Scene* main_scene_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;
