@@ -324,7 +324,7 @@ public class GVRShaderTemplate
         if(isMultiviewSet && isMultiviewPresent())
             defines = "#define HAS_MULTIVIEW\n" + defines;
         
-        return "#version " + mGLSLVersion.toString() + " es\n" + defines + combinedSource;
+        return "#version " + mGLSLVersion.toString() + "\n" + defines + combinedSource;
     }
 
     /**
