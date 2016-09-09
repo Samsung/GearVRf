@@ -15,46 +15,17 @@
 
 
 /***************************************************************************
- * Renders a GL_TEXTURE_EXTERNAL_OES texture.
+ * Common header files for GL ES
  ***************************************************************************/
 
-#ifndef SHADER_BASE_H_
-#define SHADER_BASE_H_
+#ifndef GL_HEADERS_H_
+#define GL_HEADERS_H_
 
-#include "gl/gl_headers.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "gl/gl_program.h"
+#define __gl2_h_
+#include <GLES3/gl3.h>
+#include <GLES2/gl2ext.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
-#include "objects/hybrid_object.h"
-
-namespace gvr {
-struct RenderState;
-class RenderData;
-class Material;
-class GLProgram;
-
-class ShaderBase: public HybridObject {
-public:
-    ShaderBase() : program_(nullptr) {
-    };
-    virtual void render(RenderState* rstate, RenderData* render_data, Material* material)=0;
-    GLuint getProgramId()
-    {
-        if (program_)
-        {
-            return program_->id();
-        }
-        else
-        {
-            return -1;
-        }
-    }
-
-protected:
-    GLProgram* program_;
-};
-
-}
 
 #endif
