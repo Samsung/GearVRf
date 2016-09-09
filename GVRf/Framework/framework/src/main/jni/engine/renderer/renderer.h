@@ -92,7 +92,9 @@ public:
         numberDrawCalls = 0;
         numberTriangles = 0;
     }
-
+    void freeBatch(Batch* batch){
+        batch_manager->freeBatch(batch);
+    }
     int getNumberDrawCalls() {
         return numberDrawCalls;
     }
@@ -191,6 +193,6 @@ protected:
     int numberDrawCalls;
     int numberTriangles;
 };
-
+extern Renderer* renderer;
 }
 #endif

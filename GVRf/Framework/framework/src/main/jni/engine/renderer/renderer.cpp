@@ -40,11 +40,12 @@
 
 #include "gl_renderer.h"
 #include "vulkan_renderer.h"
-#define MAX_INDICES 400
+#define MAX_INDICES 500
 #define BATCH_SIZE 60
 bool do_batching = true;
 
 namespace gvr {
+Renderer* renderer = nullptr;
 bool use_multiview= false;
 Renderer* Renderer::instance = nullptr;
 void Renderer::initializeStats() {
@@ -55,7 +56,6 @@ void Renderer::initializeStats() {
 ***/
 Renderer* Renderer::getInstance(const char* type){
     if(nullptr == instance){
-    //    if(0 == std::strcmp(type,"GL"))
         if(0 == std::strcmp(type,"Vulkan"))
             instance = new VulkanRenderer();
         else
@@ -399,7 +399,6 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     if (render_data->mesh() != 0) {
         GL(renderMesh(rstate, render_data));
     }
-
     // Restoring to Default.
     // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
     // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.

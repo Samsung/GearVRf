@@ -529,7 +529,7 @@ public abstract class GVRCursorController {
      * @return value representing the near depth. By default the value returned
      * is zero.
      */
-    protected float getNearDepth() {
+    public float getNearDepth() {
         return nearDepth;
     }
 
@@ -539,7 +539,7 @@ public abstract class GVRCursorController {
      * @return value representing the far depth. By default the value returned
      * is negative {@link Float#MAX_VALUE}.
      */
-    protected float getFarDepth() {
+    public float getFarDepth() {
         return farDepth;
     }
 

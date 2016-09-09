@@ -59,8 +59,11 @@ void Java_org_gearvrf_OvrNativeMonoscopicRenderer_cull(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    Renderer* renderer = Renderer::getInstance();
-    renderer->cull(scene, camera, shader_manager);
+    renderer = Renderer::getInstance();
+    if(renderer)
+        renderer->cull(scene, camera, shader_manager);
+    else
+        LOGE("renderer is null");
 }
 
 }
