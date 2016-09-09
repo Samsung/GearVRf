@@ -20,7 +20,6 @@
 #ifndef compressed_texture_H_
 #define compressed_texture_H_
 
-//#include <GLES3/gl3.h>
 #include "objects/textures/texture.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_log.h"

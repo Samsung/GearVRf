@@ -25,9 +25,7 @@
 #include <vector>
 #include <string>
 #include <set>
-#ifndef GL_ES_VERSION_3_0
-#include "GLES3/gl3.h"
-#endif
+#include "gl/gl_headers.h"
 
 #include "glm/glm.hpp"
 #include "gl/gl_program.h"

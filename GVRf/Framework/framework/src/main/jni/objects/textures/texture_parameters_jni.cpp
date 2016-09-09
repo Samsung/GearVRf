@@ -23,7 +23,7 @@
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 #endif /* GL_EXT_texture_filter_anisotropic */
 
-#include "GLES3/gl3.h"
+#include "gl/gl_headers.h"
 #include "util/gvr_log.h"
 
 #include "engine/memory/gl_delete.h"
