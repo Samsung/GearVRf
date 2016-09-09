@@ -78,6 +78,7 @@ private:
     void InitPipeline();
     void InitFrameBuffers();
     void InitSync();
+    void BuildCmdBuffer();
 
     bool m_Vulkan_Initialised;
 
