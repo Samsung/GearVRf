@@ -37,7 +37,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
-#define MAX_INDICES 400
+#define MAX_INDICES 500
 #define BATCH_SIZE 60
 bool do_batching = true;
 
@@ -243,7 +243,6 @@ void Renderer::restoreRenderStates(RenderData* render_data) {
         GL(glEnable (GL_CULL_FACE));
         GL(glCullFace (GL_BACK));
     }
-
     if (render_data->offset()) {
         GL(glDisable (GL_POLYGON_OFFSET_FILL));
     }
@@ -707,7 +706,6 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     if (render_data->mesh() != 0) {
         GL(renderMesh(rstate, render_data));
     }
-
     // Restoring to Default.
     // TODO: There's a lot of redundant state changes. If on every render face culling is being set there's no need to
     // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.

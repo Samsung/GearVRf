@@ -21,10 +21,11 @@
 #define RENDER_PASS_H_
 
 #include "objects/hybrid_object.h"
-
+#include "objects/components/render_data.h"
+#include "objects/components/event_handler.h"
 namespace gvr {
 class Material;
-
+class RenderData;
 class RenderPass : public HybridObject {
 public:
 
@@ -33,16 +34,14 @@ public:
     };
 
     RenderPass() :
-            material_(0), cull_face_(DEFAULT_CULL_FACE) {
+            material_(0), cull_face_(DEFAULT_CULL_FACE), listener_(new Listener) {
     }
 
     Material* material() const {
         return material_;
     }
 
-    void set_material(Material* material) {
-        material_ = material;
-    }
+    void set_material(Material* material);
 
     int cull_face() const {
         return cull_face_;
@@ -50,10 +49,13 @@ public:
 
     void set_cull_face(int cull_face) {
         cull_face_ = cull_face;
+        listener_->notify_listeners(true);
     }
 
-private:
+    void add_listener(RenderData* render_data);
 
+private:
+    Listener* listener_;
     static const int DEFAULT_CULL_FACE = CullBack;
     Material* material_;
     int cull_face_;
