@@ -317,11 +317,7 @@ public class IoDevice {
      * @return the value of the near depth. By default the value is set to 0.
      */
     protected float getNearDepth() {
-        if (gvrCursorController instanceof GVRExternalCursorController) {
-            return ((GVRExternalCursorController) gvrCursorController).getNearDepth();
-        } else {
-            throw new UnsupportedOperationException("getNearDepth not supported");
-        }
+        return gvrCursorController.getNearDepth();
     }
 
     void setFarDepth(float farDepth) {
@@ -337,11 +333,7 @@ public class IoDevice {
      * Float#MAX_VALUE}.
      */
     protected float getFarDepth() {
-        if (gvrCursorController instanceof GVRExternalCursorController) {
-            return ((GVRExternalCursorController) gvrCursorController).getFarDepth();
-        } else {
-            throw new UnsupportedOperationException("getFarDepth not supported");
-        }
+            return gvrCursorController.getFarDepth();
     }
 
     /**

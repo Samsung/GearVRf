@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.gearvrf.GVRCursorController.ActiveState;
 import org.gearvrf.utility.Log;
@@ -34,7 +35,7 @@ class SensorManager {
     private static SensorManager instance;
 
     private SensorManager() {
-        sensors = new HashMap<GVRBaseSensor, Integer>();
+        sensors = new ConcurrentHashMap<GVRBaseSensor, Integer>();
     }
 
     static SensorManager getInstance(){

@@ -82,8 +82,8 @@ struct RenderState {
 class Renderer {
 private:
     Renderer();
-    static BatchManager* batch_manager;
 public:
+    static BatchManager* batch_manager;
     static int incrementDrawCalls();
     static void restoreRenderStates(RenderData* render_data);
     static void setRenderStates(RenderData* render_data, RenderState& rstate);

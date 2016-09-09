@@ -152,6 +152,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     private void onConfigure(final String dataFilename) {
         mConfigurationManager = mDelegate.makeConfigurationManager(this);
+        mConfigurationManager.configureForHeadset(GVRConfigurationManager.DEFAULT_HEADSET_MODEL);
         mDelegate.parseXmlSettings(getAssets(), dataFilename);
 
         startDockEventReceiver();
@@ -387,6 +388,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (mViewManager.dispatchKeyEvent(event)) {
+            return true;
+        }
+        if (mDelegate.dispatchKeyEvent(event)) {
             return true;
         }
 
@@ -658,6 +662,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyDown(int keyCode, KeyEvent event);
         boolean onKeyUp(int keyCode, KeyEvent event);
         boolean onKeyLongPress(int keyCode, KeyEvent event);
+        boolean dispatchKeyEvent(KeyEvent event);
 
         void setScript(GVRScript gvrScript, String dataFileName);
         void setViewManager(GVRViewManager viewManager);

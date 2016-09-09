@@ -16,30 +16,26 @@
 package org.gearvrf.io;
 
 import android.os.Handler;
+import android.os.Handler.Callback;
+import android.os.HandlerThread;
 import android.os.Message;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
 class GVRGazeCursorController extends GVRBaseController implements
         GVRDrawFrameListener {
     private static final String TAG = GVRGazeCursorController.class
             .getSimpleName();
-    private static final int SET_KEY_DOWN = 1;
-    private static final int TAP_TIMEOUT = 160;
+    private static final int TAP_TIMEOUT = 60;
     private static float TOUCH_SQUARE = 8.0f * 8.0f;
     private static final float DEPTH_SENSITIVITY = 0.1f;
-    private final KeyEvent BUTTON_GAZE_DOWN = new KeyEvent(
-            KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
-    private final KeyEvent BUTTON_GAZE_UP = new KeyEvent(KeyEvent.ACTION_UP,
-            KeyEvent.KEYCODE_BUTTON_1);
     private final GVRContext context;
     private int referenceCount = 0;
-    private boolean keyEventSent = false;
+    private boolean buttonDownSent = false;
     private float actionDownX;
     private float actionDownY;
     private float actionDownZ;
@@ -51,7 +47,8 @@ class GVRGazeCursorController extends GVRBaseController implements
 
     // Saves the relative position of the cursor with respect to the camera.
     private final Vector3f setPosition;
-    private GestureHandler handler;
+    private EventHandlerThread thread;
+    private boolean threadStarted;
 
     public GVRGazeCursorController(GVRContext context,
                                    GVRControllerType controllerType, String name, int vendorId,
@@ -60,22 +57,7 @@ class GVRGazeCursorController extends GVRBaseController implements
         this.context = context;
         gazePosition = new Vector3f();
         setPosition = new Vector3f();
-        handler = new GestureHandler();
-    }
-
-    // Use a handler like the one used in the gesture detector.
-    private class GestureHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case SET_KEY_DOWN:
-                    keyEventSent = true;
-                    setKeyEvent(BUTTON_GAZE_DOWN);
-                    break;
-                default:
-                    Log.e(TAG, "Unknown message type");
-            }
-        }
+        thread = new EventHandlerThread();
     }
 
     /*
@@ -85,6 +67,10 @@ class GVRGazeCursorController extends GVRBaseController implements
     void incrementReferenceCount() {
         referenceCount++;
         if (referenceCount == 1) {
+            if (!threadStarted) {
+                thread.start();
+                thread.prepareHandler();
+            }
             context.registerDrawFrameListener(this);
         }
     }
@@ -98,12 +84,17 @@ class GVRGazeCursorController extends GVRBaseController implements
         // no more devices
         if (referenceCount == 0) {
             context.unregisterDrawFrameListener(this);
+            if (threadStarted) {
+                thread.quitSafely();
+                thread = new EventHandlerThread();
+                threadStarted = false;
+            }
         }
     }
 
     @Override
     boolean dispatchKeyEvent(KeyEvent event) {
-        setKeyEvent(event);
+        thread.dispatchKeyEvent(event);
         return true;
     }
 
@@ -113,19 +104,20 @@ class GVRGazeCursorController extends GVRBaseController implements
         float eventX = event.getX();
         float eventY = event.getY();
         int action = clone.getAction();
+        Handler handler = thread.getGazeEventHandler();
         if (action == MotionEvent.ACTION_DOWN) {
             actionDownX = eventX;
             actionDownY = eventY;
             actionDownZ = setPosition.z;
             // report ACTION_DOWN as a button
-            handler.sendEmptyMessageAtTime(SET_KEY_DOWN, event.getDownTime()
+            handler.sendEmptyMessageAtTime(EventHandlerThread.SET_KEY_DOWN, event.getDownTime()
                     + TAP_TIMEOUT);
         } else if (action == MotionEvent.ACTION_UP) {
             // report ACTION_UP as a button
-            handler.removeMessages(SET_KEY_DOWN);
-            if (keyEventSent) {
-                setKeyEvent(BUTTON_GAZE_UP);
-                keyEventSent = false;
+            handler.removeMessages(EventHandlerThread.SET_KEY_DOWN);
+            if (buttonDownSent) {
+                handler.sendEmptyMessage(EventHandlerThread.SET_KEY_UP);
+                buttonDownSent = false;
             }
         } else if (action == MotionEvent.ACTION_MOVE) {
             float deltaX = eventX - actionDownX;
@@ -144,7 +136,7 @@ class GVRGazeCursorController extends GVRBaseController implements
             }
             float distance = (deltaX * deltaX) + (deltaY * deltaY);
             if (distance > TOUCH_SQUARE) {
-                handler.removeMessages(SET_KEY_DOWN);
+                handler.removeMessages(EventHandlerThread.SET_KEY_DOWN);
             }
         }
         setMotionEvent(clone);
@@ -154,16 +146,18 @@ class GVRGazeCursorController extends GVRBaseController implements
     @Override
     public void setPosition(float x, float y, float z) {
         setPosition.set(x, y, z);
-        super.setPosition(x, y, z);
+        thread.setPosition(x, y, z);
     }
 
     @Override
     public void onDrawFrame(float frameTime) {
-        synchronized (lock) {
-            setPosition.mulPoint(context.getMainScene().getMainCameraRig()
-                    .getHeadTransform().getModelMatrix4f(), gazePosition);
+        if (isEnabled()) {
+            synchronized (lock) {
+                setPosition.mulPoint(context.getMainScene().getMainCameraRig()
+                        .getHeadTransform().getModelMatrix4f(), gazePosition);
+            }
+            thread.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
         }
-        super.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
     }
 
     void close() {
@@ -172,5 +166,78 @@ class GVRGazeCursorController extends GVRBaseController implements
             context.unregisterDrawFrameListener(this);
         }
         referenceCount = 0;
+        if (threadStarted) {
+            thread.quitSafely();
+        }
+    }
+
+    private class EventHandlerThread extends HandlerThread {
+        private static final String THREAD_NAME = "GVRGazeEventHandlerThread";
+        public static final int SET_POSITION = 0;
+        public static final int SET_KEY_EVENT = 1;
+        public static final int SET_KEY_DOWN = 2;
+        public static final int SET_KEY_UP = 3;
+        private final KeyEvent BUTTON_GAZE_DOWN = new KeyEvent(
+                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
+        private final KeyEvent BUTTON_GAZE_UP = new KeyEvent(KeyEvent.ACTION_UP,
+                KeyEvent.KEYCODE_BUTTON_1);
+        private Handler gazeEventHandler;
+        private final Vector3f position;
+
+        public EventHandlerThread() {
+            super(THREAD_NAME);
+            position = new Vector3f();
+        }
+
+        public void prepareHandler() {
+            gazeEventHandler = new Handler(getLooper(), new Callback() {
+                @Override
+                public boolean handleMessage(Message msg) {
+                    switch (msg.what) {
+                        case SET_POSITION:
+                            float x, y, z;
+                            synchronized (position) {
+                                x = position.x;
+                                y = position.y;
+                                z = position.z;
+                            }
+                            GVRGazeCursorController.super.setPosition(x, y, z);
+                            break;
+                        case SET_KEY_DOWN:
+                            buttonDownSent = true;
+                            setKeyEvent(BUTTON_GAZE_DOWN);
+                            break;
+                        case SET_KEY_UP:
+                            setKeyEvent(BUTTON_GAZE_UP);
+                            break;
+                        case SET_KEY_EVENT:
+                            KeyEvent keyEvent = (KeyEvent) msg.obj;
+                            setKeyEvent(keyEvent);
+                            break;
+                    }
+                    return false;
+                }
+            });
+        }
+
+        public void setPosition(float x, float y, float z) {
+            synchronized (position) {
+                position.x = x;
+                position.y = y;
+                position.z = z;
+            }
+            Message msg = Message.obtain(gazeEventHandler, SET_POSITION, position);
+            gazeEventHandler.removeMessages(SET_POSITION);
+            msg.sendToTarget();
+        }
+
+        public void dispatchKeyEvent(KeyEvent keyEvent) {
+            Message msg = Message.obtain(gazeEventHandler, SET_KEY_EVENT, keyEvent);
+            msg.sendToTarget();
+        }
+
+        public Handler getGazeEventHandler() {
+            return gazeEventHandler;
+        }
     }
 }

@@ -26,6 +26,7 @@
 #include "batch.h"
 #include <set>
 #include<unordered_set>
+#define BATCH_POOL_SIZE 150
 namespace gvr{
 class RenderData;
 class Material;
@@ -34,11 +35,12 @@ class Batch;
 struct RenderState;
 extern bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2);
 class BatchManager{
-
 public:
-    BatchManager(int batch_size, int max_indices){
-        batch_size_ = batch_size;
-        max_indices_ = max_indices;
+    BatchManager(int batch_size, int max_indices);
+    ~BatchManager();
+    Batch* getNewBatch();
+    void freeBatch(Batch* batch){
+        batch_pool_.push_back(batch);
     }
     void batchSetup(std::vector<RenderData*>& render_data_vector);
     void renderBatches(RenderState& rstate);
@@ -51,6 +53,7 @@ private:
     void getNewBatch(RenderData* rdata, Batch** existing_batch);
     void createBatch(int start, int end, std::vector<RenderData*>& render_data_vector);
 
+    std::vector<Batch*>batch_pool_;
     /*
      * batch_set stores all the batches, batch_map stores the indices of batches and the respective map
      * to get constant look up time

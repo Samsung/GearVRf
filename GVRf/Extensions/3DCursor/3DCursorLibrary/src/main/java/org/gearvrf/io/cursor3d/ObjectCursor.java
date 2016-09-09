@@ -100,7 +100,7 @@ class ObjectCursor extends Cursor {
     private ControllerEventListener listener = new ControllerEventListener() {
         @Override
         public void onEvent(GVRCursorController controller) {
-            if(scene == null){
+            if (scene == null) {
                 return;
             }
 
@@ -192,5 +192,12 @@ class ObjectCursor extends Cursor {
     void setIoDevice(IoDevice ioDevice) {
         super.setIoDevice(ioDevice);
         ioDevice.setNearDepth(POINT_CURSOR_NEAR_DEPTH);
+    }
+
+    void destroyIoDevice(IoDevice ioDevice) {
+        super.destroyIoDevice(ioDevice);
+        if (active) {
+            active = false;
+        }
     }
 }
