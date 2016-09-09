@@ -34,4 +34,14 @@ public interface GVRVideoSceneObjectPlayer<T> {
      * @return
      */
     boolean canReleaseSurfaceImmediately();
+
+    /**
+     * Pause playback
+     */
+    void pause();
+
+    /**
+     * Start playback
+     */
+    void start();
 }

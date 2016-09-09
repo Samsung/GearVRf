@@ -473,6 +473,16 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             public boolean canReleaseSurfaceImmediately() {
                 return true;
             }
+
+            @Override
+            public void pause() {
+                mediaPlayer.pause();
+            }
+
+            @Override
+            public void start() {
+                mediaPlayer.start();
+            }
         };
     }
 }
