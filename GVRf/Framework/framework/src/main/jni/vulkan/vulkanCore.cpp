@@ -20,9 +20,6 @@
 
 VulkanCore* VulkanCore::theInstance = NULL;
 
-#define QUEUE_INDEX_MAX 99999
-
-
 bool VulkanCore::CreateInstance(){
     VkResult ret = VK_SUCCESS;
 
@@ -205,7 +202,7 @@ void VulkanCore::InitDevice() {
 
     // Search for a graphics queue, and ensure it also supports our surface. We want a
     // queue which can be used for both, as to simplify operations.
-    uint32_t queueIndex = QUEUE_INDEX_MAX;
+    uint32_t queueIndex = queueFamilyCount + 1;
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
         if ((queueProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
             if (supportsPresent[i] == VK_TRUE) {
@@ -218,7 +215,7 @@ void VulkanCore::InitDevice() {
     delete [] supportsPresent;
     delete [] queueProperties;
 
-    if (queueIndex == QUEUE_INDEX_MAX) {
+    if (queueIndex == (queueFamilyCount + 1)) {
         GVR_VK_CHECK("Could not obtain a queue family for both graphics and presentation." && 0);
     }
 
