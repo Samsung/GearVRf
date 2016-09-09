@@ -38,18 +38,19 @@ public:
             int* texture_parameters);
 
     virtual ~RenderTexture() {
-        delete gl_render_buffer_;
-        delete gl_frame_buffer_;
-        delete gl_color_buffer_;
+        delete renderTexture_gl_render_buffer_;
+        delete renderTexture_gl_frame_buffer_;
+        delete renderTexture_gl_color_buffer_;
+        delete renderTexture_gl_resolve_buffer_;
 
-        if (0 != gl_pbo_) {
-            glDeleteBuffers(1, &gl_pbo_);
+        if (0 != renderTexture_gl_pbo_) {
+            glDeleteBuffers(1, &renderTexture_gl_pbo_);
         }
     }
 
     void initialize(int width, int height) {
-        glGenBuffers(1, &gl_pbo_);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
+        glGenBuffers(1, &renderTexture_gl_pbo_);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, renderTexture_gl_pbo_);
         glBufferData(GL_PIXEL_PACK_BUFFER, width_ * height_ * 4, 0, GL_DYNAMIC_READ);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
@@ -61,11 +62,11 @@ public:
     }
 
     GLuint getFrameBufferId() const {
-        return gl_frame_buffer_->id();
+        return renderTexture_gl_frame_buffer_->id();
     }
 
     void bind() {
-        glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     }
 
     int width() const {
@@ -103,12 +104,12 @@ private:
     int height_;
     int sample_count_;
     GLenum texture_filter;
-    GLRenderBuffer* gl_render_buffer_ = nullptr;// This is actually depth buffer.
-    GLFrameBuffer* gl_frame_buffer_ = nullptr;
-    GLFrameBuffer* gl_resolve_buffer_ = nullptr;
-    GLRenderBuffer* gl_color_buffer_ = nullptr;// This is only for multisampling case
+    GLRenderBuffer* renderTexture_gl_render_buffer_ = nullptr;// This is actually depth buffer.
+    GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
+    GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;
+    GLRenderBuffer* renderTexture_gl_color_buffer_ = nullptr;// This is only for multisampling case
                                      // when resolveDepth is on.
-    GLuint gl_pbo_ = 0;
+    GLuint renderTexture_gl_pbo_ = 0;
     bool readback_started_;          // set by startReadBack()
 };}
 #endif

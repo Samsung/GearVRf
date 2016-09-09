@@ -16,9 +16,7 @@
 #ifndef SHARED_TEXTURE_H_
 #define SHARED_TEXTURE_H_
 
-#define __gl2_h_
-#include <GLES3/gl3.h>
-#include <GLES2/gl2ext.h>
+#include "gl/gl_headers.h"
 
 #include "objects/textures/texture.h"
 

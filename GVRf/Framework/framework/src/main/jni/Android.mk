@@ -84,6 +84,8 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/shaders/posteffect/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/util/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/vulkan/*.cpp)
+LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += assimp
 LOCAL_SHARED_LIBRARIES += jnlua

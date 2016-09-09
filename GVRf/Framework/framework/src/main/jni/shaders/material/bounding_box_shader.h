@@ -22,7 +22,7 @@
 
 #include <memory>
 
-#include "GLES3/gl3.h"
+#include "gl/gl_headers.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
