@@ -15,21 +15,20 @@
 
 package org.gearvrf.scene_objects;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
+import android.graphics.SurfaceTexture;
+import android.media.MediaPlayer;
+import android.view.Surface;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterialShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRMaterial.GVRShaderType;
 
-import android.graphics.SurfaceTexture;
-import android.media.MediaPlayer;
-import android.view.Surface;
+import java.lang.ref.WeakReference;
 
 /**
  * A {@linkplain GVRSceneObject scene object} that shows video, using the
@@ -48,7 +47,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
     /**
      * Play a video on a {@linkplain GVRSceneObject scene object} with an
      * arbitrarily complex geometry, using the Android {@link MediaPlayer}
-     * 
+     *
      * @param gvrContext
      *            current {@link GVRContext}
      * @param mesh
@@ -66,6 +65,75 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
                                final MediaPlayer mediaPlayer, final GVRExternalTexture texture,
+                               int videoType) {
+        this(gvrContext, mesh, makePlayerInstance(mediaPlayer), texture, videoType);
+    }
+
+    /**
+     * Play a video on a {@linkplain GVRSceneObject scene object} with an
+     * arbitrarily complex geometry, using the Android {@link MediaPlayer}
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param mesh
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}
+     * @param mediaPlayer
+     *            an Android {@link MediaPlayer}
+     * @param videoType
+     *            One of the {@linkplain GVRVideoType video type constants}
+     * @throws IllegalArgumentException
+     *             on an invalid {@code videoType} parameter
+     */
+    public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
+                               final MediaPlayer mediaPlayer, int videoType) {
+        this(gvrContext, mesh, makePlayerInstance(mediaPlayer), videoType);
+    }
+
+    /**
+     * Play a video on a 2D, rectangular {@linkplain GVRSceneObject scene
+     * object,} using the Android {@link MediaPlayer}
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param width
+     *            the rectangle's width
+     * @param height
+     *            the rectangle's height
+     * @param mediaPlayer
+     *            an Android {@link MediaPlayer}
+     * @param videoType
+     *            One of the {@linkplain GVRVideoType video type constants}
+     * @throws IllegalArgumentException
+     *             on an invalid {@code videoType} parameter
+     */
+    public GVRVideoSceneObject(GVRContext gvrContext, float width,
+                               float height, MediaPlayer mediaPlayer, int videoType) {
+        this(gvrContext, width, height, makePlayerInstance(mediaPlayer), videoType);
+    }
+
+    /**
+     * Play a video on a {@linkplain GVRSceneObject scene object} with an
+     * arbitrarily complex geometry, using the Android {@link MediaPlayer}
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param mesh
+     *            a {@link GVRMesh} - see
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            and {@link GVRContext#createQuad(float, float)}
+     * @param mediaPlayer
+     *            a wrapper for a media player
+     * @param texture
+     *            a {@link GVRExternalTexture} to link with {@link MediaPlayer}
+     * @param videoType
+     *            One of the {@linkplain GVRVideoType video type constants}
+     * @throws IllegalArgumentException
+     *             on an invalid {@code videoType} parameter
+     */
+    public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
+                               final GVRVideoSceneObjectPlayer mediaPlayer, final GVRExternalTexture texture,
                                int videoType) {
         super(gvrContext, mesh);
         GVRMaterialShaderId materialType;
@@ -109,14 +177,14 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
-     *            an Android {@link MediaPlayer}
+     *            a wrapper for a media player
      * @param videoType
      *            One of the {@linkplain GVRVideoType video type constants}
      * @throws IllegalArgumentException
      *             on an invalid {@code videoType} parameter
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
-            final MediaPlayer mediaPlayer, int videoType) {
+            final GVRVideoSceneObjectPlayer mediaPlayer, int videoType) {
         this(gvrContext, mesh, mediaPlayer, new GVRExternalTexture(gvrContext), videoType);
     }
 
@@ -131,14 +199,14 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @param height
      *            the rectangle's height
      * @param mediaPlayer
-     *            an Android {@link MediaPlayer}
+     *            a wrapper for a video player
      * @param videoType
      *            One of the {@linkplain GVRVideoType video type constants}
      * @throws IllegalArgumentException
      *             on an invalid {@code videoType} parameter
      */
     public GVRVideoSceneObject(GVRContext gvrContext, float width,
-            float height, MediaPlayer mediaPlayer, int videoType) {
+            float height, GVRVideoSceneObjectPlayer mediaPlayer, int videoType) {
         this(gvrContext, gvrContext.createQuad(width, height), mediaPlayer,
                 videoType);
     }
@@ -196,7 +264,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * 
      * @return current {@link MediaPlayer}
      */
-    public MediaPlayer getMediaPlayer() {
+    public GVRVideoSceneObjectPlayer getMediaPlayer() {
         if (mVideo == null) {
             return null;
         }
@@ -210,7 +278,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @param mediaPlayer
      *            An Android {@link MediaPlayer}
      */
-    public void setMediaPlayer(final MediaPlayer mediaPlayer) {
+    public void setMediaPlayer(final GVRVideoSceneObjectPlayer mediaPlayer) {
         if (mVideo == null) {
             getGVRContext().runOnGlThread(new Runnable() {
                 @Override
@@ -249,11 +317,11 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         return mVideo.getTimeStamp();
     }
 
-    private static class GVRVideo implements GVRDrawFrameListener {
+    private class GVRVideo implements GVRDrawFrameListener {
 
         private final GVRContext mContext;
         private SurfaceTexture mSurfaceTexture = null;
-        private WeakReference<MediaPlayer> mMediaPlayerRef = null;
+        private WeakReference<GVRVideoSceneObjectPlayer> mMediaPlayerRef = null;
         private boolean mActive = true;
 
         /**
@@ -267,7 +335,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          *            the {@link GVRExternalTexture} type object to be used in
          *            the class
          */
-        public GVRVideo(GVRContext gvrContext, MediaPlayer mediaPlayer, GVRExternalTexture texture) {
+        public GVRVideo(GVRContext gvrContext, GVRVideoSceneObjectPlayer mediaPlayer, GVRExternalTexture texture) {
             mContext = gvrContext;
             mSurfaceTexture = new SurfaceTexture(texture.getId());
             if (mediaPlayer != null) {
@@ -323,7 +391,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          * 
          * @return the current {@link MediaPlayer}
          */
-        public MediaPlayer getMediaPlayer() {
+        public GVRVideoSceneObjectPlayer getMediaPlayer() {
             return mMediaPlayerRef.get();
         }
 
@@ -333,13 +401,15 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          * @param mediaPlayer
          *            An Android {@link MediaPlayer}
          */
-        public void setMediaPlayer(MediaPlayer mediaPlayer) {
+        public void setMediaPlayer(GVRVideoSceneObjectPlayer mediaPlayer) {
             release(); // any current MediaPlayer
 
-            mMediaPlayerRef = new WeakReference<MediaPlayer>(mediaPlayer);
+            mMediaPlayerRef = new WeakReference<>(mediaPlayer);
             Surface surface = new Surface(mSurfaceTexture);
             mediaPlayer.setSurface(surface);
-            surface.release();
+            if (mediaPlayer.canReleaseSurfaceImmediately()) {
+                surface.release();
+            }
         }
 
         /**
@@ -359,7 +429,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          */
         public void release() {
             if (mMediaPlayerRef != null) {
-                MediaPlayer mediaPlayer = mMediaPlayerRef.get();
+                GVRVideoSceneObjectPlayer mediaPlayer = mMediaPlayerRef.get();
                 if (mediaPlayer != null) {
                     mediaPlayer.release();
                 }
@@ -368,7 +438,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
 
         @Override
         public void onDrawFrame(float drawTime) {
-            MediaPlayer mediaPlayer = mMediaPlayerRef.get();
+            GVRVideoSceneObjectPlayer mediaPlayer = mMediaPlayerRef.get();
             if (mediaPlayer != null && mActive) {
                 mSurfaceTexture.updateTexImage();
             }
@@ -379,4 +449,40 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         }
     }
 
+    /**
+     * Creates a player wrapper for the Android MediaPlayer.
+     */
+    public static GVRVideoSceneObjectPlayer<MediaPlayer> makePlayerInstance(final MediaPlayer mediaPlayer) {
+        return new GVRVideoSceneObjectPlayer<MediaPlayer>() {
+            @Override
+            public MediaPlayer getPlayer() {
+                return mediaPlayer;
+            }
+
+            @Override
+            public void setSurface(Surface surface) {
+                mediaPlayer.setSurface(surface);
+            }
+
+            @Override
+            public void release() {
+                mediaPlayer.release();
+            }
+
+            @Override
+            public boolean canReleaseSurfaceImmediately() {
+                return true;
+            }
+
+            @Override
+            public void pause() {
+                mediaPlayer.pause();
+            }
+
+            @Override
+            public void start() {
+                mediaPlayer.start();
+            }
+        };
+    }
 }
