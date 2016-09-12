@@ -79,7 +79,6 @@ void BatchManager::batchSetup(std::vector<RenderData*>& render_data_vector) {
     }
 }
 void BatchManager::renderBatches(RenderState& rstate) {
-
     for (auto it = batch_set_.begin(); it != batch_set_.end(); ++it) {
         Batch* batch = *it;
         rstate.material_override = batch->material(0);
@@ -100,7 +99,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
 
             // this check is needed as we are not removing render data from batches
             if(!it3->owner_object()->isCulled() && it3->enabled() && it3->owner_object()->enabled())
-                Renderer::renderRenderData(rstate, it3);
+                    gRenderer->renderRenderData(rstate, it3);
             }
             continue;
         }
@@ -118,7 +117,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
         if(!batch->setupMesh(batch->isBatchDirty()))
             continue;
 
-        Renderer::setRenderStates(renderdata, rstate);
+        gRenderer->setRenderStates(renderdata, rstate);
 
         if(use_multiview){
            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
@@ -128,7 +127,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
         const std::vector<glm::mat4>& matrices = batch->get_matrices();
 
         for(int passIndex =0; passIndex< renderdata->pass_count(); passIndex++){
-            Renderer::set_face_culling(renderdata->pass(passIndex)->cull_face());
+            gRenderer->set_face_culling(renderdata->pass(passIndex)->cull_face());
             rstate.material_override = batch->material(passIndex);
             if(rstate.material_override == nullptr)
                 continue;
@@ -137,7 +136,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
                         renderdata, rstate, batch->getIndexCount(),
                         batch->getNumberOfMeshes());
         }
-        Renderer::restoreRenderStates(renderdata);
+        gRenderer->restoreRenderStates(renderdata);
     }
 }
 
@@ -189,7 +188,7 @@ void BatchManager::createBatch(int start, int end, std::vector<RenderData*>& ren
             ***/
            if(render_data->batching() && (render_data->renderdata_dirty() || render_data->isHashCodeDirty())){
                   current_batch->removeRenderData(render_data);
-                  current_batch == nullptr;
+                  current_batch = nullptr;
                   getNewBatch(render_data, &current_batch);
             }
 

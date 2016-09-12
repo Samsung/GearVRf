@@ -80,80 +80,115 @@ struct RenderState {
 };
 
 class Renderer {
-private:
-    Renderer();
 public:
-    static BatchManager* batch_manager;
-    static int incrementDrawCalls();
-    static void restoreRenderStates(RenderData* render_data);
-    static void setRenderStates(RenderData* render_data, RenderState& rstate);
-    static void renderRenderDataVector(RenderState &rstate);
-    static void renderCamera(Scene* scene, Camera* camera, int framebufferId,
+    void resetStats() {
+        numberDrawCalls = 0;
+        numberTriangles = 0;
+    }
+    bool isVulkanInstace(){
+        return isVulkan_;
+    }
+    void freeBatch(Batch* batch){
+        batch_manager->freeBatch(batch);
+    }
+    int getNumberDrawCalls() {
+        return numberDrawCalls;
+    }
+
+     int getNumberTriangles() {
+        return numberTriangles;
+     }
+     int incrementTriangles(int number=1){
+        numberTriangles += number;
+     }
+     int incrementDrawCalls(){
+        numberDrawCalls++;
+     }
+     static Renderer* getInstance(const char* type = " ");
+     static void resetInstance(){
+        delete instance;
+     }
+     virtual void initializeStats();
+     virtual void set_face_culling(int cull_face) = 0;
+     virtual void renderRenderDataVector(RenderState &rstate);
+     virtual void cull(Scene *scene, Camera *camera,
+            ShaderManager* shader_manager);
+     virtual void renderRenderData(RenderState& rstate, RenderData* render_data);
+
+
+     virtual void renderCamera(Scene* scene, Camera* camera,
+             ShaderManager* shader_manager,
+             PostEffectShaderManager* post_effect_shader_manager,
+             RenderTexture* post_effect_render_texture_a,
+             RenderTexture* post_effect_render_texture_b) = 0;
+
+     virtual void renderCamera(Scene* scene, Camera* camera, int viewportX,
+             int viewportY, int viewportWidth, int viewportHeight,
+             ShaderManager* shader_manager,
+             PostEffectShaderManager* post_effect_shader_manager,
+             RenderTexture* post_effect_render_texture_a,
+             RenderTexture* post_effect_render_texture_b)=0;
+
+     virtual void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b);
+            RenderTexture* post_effect_render_texture_b) = 0;
 
-    static void renderCamera(Scene* scene, Camera* camera,
+     virtual void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b);
+            RenderTexture* post_effect_render_texture_b) = 0;
 
-    static void renderCamera(Scene* scene, Camera* camera, int viewportX,
-            int viewportY, int viewportWidth, int viewportHeight,
-            ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b);
+    virtual void restoreRenderStates(RenderData* render_data) = 0;
+    virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
+    virtual void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) = 0;
+    virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height) = 0;
 
-    static void renderCamera(Scene* scene, Camera* camera,
-            ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b);
-    static void cull(Scene *scene, Camera *camera,
-            ShaderManager* shader_manager);
-    static void initializeStats();
-    static void resetStats();
-    static int getNumberDrawCalls();
-    static int getNumberTriangles();
-    static void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
-    static void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height);
-    static void renderRenderData(RenderState& rstate, RenderData* render_data);
-    static void set_face_culling(int cull_face);
 private:
-    static void cullFromCamera(Scene *scene, Camera *camera,
-            ShaderManager* shader_manager,
-            std::vector<SceneObject*>& scene_objects);
-
-    static void renderMesh(RenderState& rstate, RenderData* render_data);
-
-    static void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material);
-
-    static void renderPostEffectData(Camera* camera,
-            RenderTexture* render_texture, PostEffectData* post_effect_data,
-            PostEffectShaderManager* post_effect_shader_manager);
-
-    static bool checkTextureReady(Material* material);
-    static void cullDepthMaps(RenderState& rstate,Camera* camera, std::vector<SceneObject*>& scene_objects);
-    static void occlusion_cull(Scene* scene,
-            std::vector<SceneObject*>& scene_objects,
-            ShaderManager *shader_manager, glm::mat4 vp_matrix);
-    static void build_frustum(float frustum[6][4], const float *vp_matrix);
-    static void frustum_cull(glm::vec3 camera_position, SceneObject *object,
+    static bool isVulkan_;
+    virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
+    virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
-    static void state_sort();
-    static bool isShader3d(const Material* curr_material);
-    static bool isDefaultPosition3d(const Material* curr_material);
-    void light_cull(Scene *scene, ShaderManager* shader_manager);
+
+    virtual void state_sort();
+    virtual bool isShader3d(const Material* curr_material);
+    virtual bool isDefaultPosition3d(const Material* curr_material);
+
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);
     Renderer& operator=(Renderer&& render_engine);
-};
+    BatchManager* batch_manager;
+    static Renderer* instance;
+    
+protected:
+    Renderer();
+    virtual ~Renderer(){
+        delete batch_manager;
+    }
+    virtual void renderMesh(RenderState& rstate, RenderData* render_data) = 0;
+    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material) = 0;
+    virtual void occlusion_cull(Scene* scene,
+                std::vector<SceneObject*>& scene_objects,
+                ShaderManager *shader_manager, glm::mat4 vp_matrix) = 0;
+    void addRenderData(RenderData *render_data);
+    virtual bool occlusion_cull_init(Scene* scene, std::vector<SceneObject*>& scene_objects);
+    virtual void cullFromCamera(Scene *scene, Camera *camera,
+            ShaderManager* shader_manager,
+            std::vector<SceneObject*>& scene_objects);
 
+    virtual void renderPostEffectData(Camera* camera,
+            RenderTexture* render_texture, PostEffectData* post_effect_data,
+            PostEffectShaderManager* post_effect_shader_manager);
+
+    std::vector<RenderData*> render_data_vector;
+    int numberDrawCalls;
+    int numberTriangles;
+};
+extern Renderer* gRenderer;
 }
 #endif

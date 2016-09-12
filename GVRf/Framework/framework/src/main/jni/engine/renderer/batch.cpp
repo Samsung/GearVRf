@@ -165,7 +165,7 @@ void Batch::resetBatch(){
     clearData();
     delete renderdata_;
     renderdata_ = nullptr;
-    Renderer::batch_manager->freeBatch(this);
+    gRenderer->freeBatch(this);
 }
 
 void Batch::meshInit(){
