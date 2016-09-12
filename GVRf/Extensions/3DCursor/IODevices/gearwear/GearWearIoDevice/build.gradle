@@ -17,7 +17,9 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs '../../../../../Framework/framework/src/main/libs/'
+        dirs '../../../../../Framework/framework/src/main/libs/',
+        '../../../3DCursorLibrary/build/outputs/aar/',
+        '../../../../../Framework/framework/build/outputs/aar/'
     }
 }
 
@@ -41,6 +43,7 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile(name: 'framework-debug', ext: 'aar')
     compile project(':3DCursorLibrary')
     compile project(':gearwearlibrary')
 }

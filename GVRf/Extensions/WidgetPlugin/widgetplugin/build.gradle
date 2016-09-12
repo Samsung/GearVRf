@@ -4,7 +4,8 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs '../../../Framework/framework/src/main/libs/'
+        dirs '../../../Framework/framework/src/main/libs/',
+        '../../../Framework/framework/build/outputs/aar/'
     }
 }
 
@@ -38,7 +39,7 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
-    compile project(':framework')
+    compile(name: 'framework-debug', ext: 'aar')
 }
 
 assembleDebug {}.doLast{

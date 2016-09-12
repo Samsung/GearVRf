@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-include ':GearWearIoDevice'
 include ':gearwearlibrary'
-project(':gearwearlibrary').projectDir = new File('PhoneSide/gearwearlibrary')
+project(':gearwearlibrary').projectDir = new File('3DCursor/IODevices/gearwear/PhoneSide/gearwearlibrary')
+
 include ':3DCursorLibrary'
-project(':3DCursorLibrary').projectDir = new File('../../3DCursorLibrary')
+project(':3DCursorLibrary').projectDir = new File('3DCursor/3DCursorLibrary')
+
+include ':DebugWebServer'
+project(':DebugWebServer').projectDir = new File('DebugWebServer/debugwebserver')
+
+include ':SceneSerializer'
+project(':SceneSerializer').projectDir = new File('SceneSerializer/sceneserializer')
+
+include ':WidgetPlugin'
+project(':WidgetPlugin').projectDir = new File('WidgetPlugin/widgetplugin')
+
+include ':GearWearIoDevice'
+project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
