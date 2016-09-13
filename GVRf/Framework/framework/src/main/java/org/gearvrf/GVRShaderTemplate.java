@@ -67,7 +67,7 @@ import android.util.Log;
  */
 public class GVRShaderTemplate
 {
-    protected Integer mGLSLVersion = 300;
+    protected Integer mGLSLVersion = 100;
 
     protected class ShaderVariant
     {
@@ -96,7 +96,8 @@ public class GVRShaderTemplate
     };
     
     /**
-     * Construct a shader template
+     * Construct a shader template for a shader using GLSL version 100.
+     * To make a shader for another version use the other form of the constructor.
      * 
      * @param descriptor
      *            string describing uniform names and types
@@ -323,8 +324,11 @@ public class GVRShaderTemplate
         
         if(isMultiviewSet && isMultiviewPresent())
             defines = "#define HAS_MULTIVIEW\n" + defines;
-        
-        return "#version " + mGLSLVersion.toString() + " es\n" + defines + combinedSource;
+        if (mGLSLVersion > 100)
+        {
+            defines = "#version " + mGLSLVersion.toString() + " es\n" + defines;
+        }
+        return defines + combinedSource;
     }
 
     /**

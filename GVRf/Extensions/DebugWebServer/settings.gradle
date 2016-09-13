@@ -14,6 +14,3 @@
  * limitations under the License.
  */
 include ':debugwebserver'
-include ':framework'
-project(':framework').projectDir = new File('../../Framework/framework/')
-

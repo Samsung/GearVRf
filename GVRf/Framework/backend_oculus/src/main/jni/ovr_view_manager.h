@@ -17,7 +17,7 @@
 #define VIEW_MANAGER_H
 
 #include "objects/textures/render_texture.h"
-
+#include "engine/renderer/renderer.h"
 namespace gvr {
 
 class Camera;

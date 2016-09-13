@@ -19,7 +19,8 @@ apply plugin: XmlValidator
 
 repositories {
     flatDir {
-        dirs '../../../Framework/framework/src/main/libs/'
+        dirs '../../../Framework/framework/src/main/libs/',
+        '../../../Framework/framework/build/outputs/aar/'
     }
 }
 
@@ -43,7 +44,7 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:support-v4:21.0.0'
-    compile project(':framework')
+    compile(name: 'framework-debug', ext: 'aar')
 }
 
 //TODO export plugin to jar

@@ -39,7 +39,7 @@ import org.gearvrf.R;
 
        public GVRPhongShader(GVRContext gvrcontext)
        {
-           super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent");
+           super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent", 300);
            if (fragTemplate == null) {
                Context context = gvrcontext.getContext();
                fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template);
