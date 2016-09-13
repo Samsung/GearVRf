@@ -2438,14 +2438,6 @@ public abstract class GVRContext implements IEventReceiver {
     public abstract GVRScriptManager getScriptManager();
 
     /**
-     * Is the key pressed?
-     * 
-     * @param keyCode
-     *            An Android {@linkplain KeyEvent#KEYCODE_0 key code}
-     */
-    public abstract boolean isKeyDown(int keyCode);
-
-    /**
      * The interval between this frame and the previous frame, in seconds: a
      * rough gauge of Frames Per Second.
      */

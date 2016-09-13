@@ -10,4 +10,6 @@ interface OvrActivityHandler {
     public boolean onBack();
 
     public boolean onBackLongPress();
+
+    void setViewManager(GVRViewManager viewManager);
 }

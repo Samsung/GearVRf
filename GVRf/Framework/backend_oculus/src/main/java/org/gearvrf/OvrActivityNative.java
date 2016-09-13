@@ -26,16 +26,12 @@ class OvrActivityNative implements IActivityNative {
 
     private final long mPtr;
 
-    OvrActivityNative(Activity act, VrAppSettings vrAppSettings, OvrActivityHandlerRenderingCallbacks callbacks) {
-        mPtr = onCreate(act, vrAppSettings, callbacks);
+    OvrActivityNative(Activity act, VrAppSettings vrAppSettings) {
+        mPtr = onCreate(act, vrAppSettings);
     }
 
     public void onDestroy() {
         onDestroy(mPtr);
-    }
-
-    public void setCamera(GVRCamera camera) {
-        setCamera(mPtr, camera.getNative());
     }
 
     public void setCameraRig(GVRCameraRig cameraRig) {
@@ -54,8 +50,9 @@ class OvrActivityNative implements IActivityNative {
         return mPtr;
     }
 
-
-    private static native void setCamera(long appPtr, long camera);
+    public void setViewManager(OvrViewManager viewManager) {
+        setViewManager(mPtr, viewManager);
+    }
 
     private static native void setCameraRig(long appPtr, long cameraRig);
 
@@ -65,5 +62,7 @@ class OvrActivityNative implements IActivityNative {
 
     private static native void onDestroy(long appPtr);
 
-    private static native long onCreate(Activity act, VrAppSettings vrAppSettings, OvrActivityHandlerRenderingCallbacks callbacks);
+    private static native long onCreate(Activity act, VrAppSettings vrAppSettings);
+
+    private static native void setViewManager(long appPtr, OvrViewManager viewManager);
 }

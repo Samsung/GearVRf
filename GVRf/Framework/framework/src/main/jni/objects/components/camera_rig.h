@@ -48,11 +48,16 @@ LOGD("ND: GVRCameraRig.getComponentType = %lld", COMPONENT_TYPE_CAMERA_RIG);
         return COMPONENT_TYPE_CAMERA_RIG;
     }
 
-protected:
-    CameraRig(long long componentType);
+    CameraRig();
     virtual ~CameraRig();
 
 public:
+    void predict(float time);
+    void predict(float time, const RotationSensorData& rotationSensorData);
+    void setPosition(const glm::vec3& transform_position);
+
+    virtual Transform* getHeadTransform() const;
+
     CameraRigType camera_rig_type() const {
         return camera_rig_type_;
     }
@@ -152,7 +157,7 @@ public:
     void resetYawPitch();
     void setRotationSensorData(long long time_stamp, float w, float x, float y,
             float z, float gyro_x, float gyro_y, float gyro_z);
-    virtual Transform* getHeadTransform() const = 0;
+
     glm::vec3 getLookAt() const;
     void setRotation(const glm::quat& transform_rotation);
 

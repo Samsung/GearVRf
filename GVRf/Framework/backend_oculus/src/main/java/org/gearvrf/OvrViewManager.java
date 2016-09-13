@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
@@ -85,38 +84,13 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
     private static final String TAG = Log.tag(OvrViewManager.class);
 
-    protected final Queue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
-    protected final Map<Runnable, Integer> mRunnablesPostRender = new HashMap<Runnable, Integer>();
-
-    protected GVRScript mScript;
     protected OvrRotationSensor mRotationSensor;
-
     protected OvrLensInfo mLensInfo;
-    protected OvrRenderBundle mRenderBundle = null;
 
-    protected long mPreviousTimeNanos = 0l;
-    protected float mFrameTime = 0.0f;
-    protected final List<Integer> mDownKeys = new ArrayList<Integer>();
-
-    GVRActivity mActivity;
     protected int mCurrentEye;
 
-    private GVRScreenshotCallback mScreenshotCenterCallback = null;
-    private GVRScreenshotCallback mScreenshotLeftCallback = null;
-    private GVRScreenshotCallback mScreenshotRightCallback = null;
-    private GVRScreenshot3DCallback mScreenshot3DCallback = null;
     ByteBuffer mReadbackBuffer = null;
     int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
-    private final GVRScriptManager mScriptManager;
-
-    private native void cull(long scene, long camera, long shader_manager);
-
-    private native void makeShadowMaps(long scene, long shader_manager, int width, int height);
-
-    private native void renderCamera(long appPtr, long scene, long camera, long shaderManager,
-            long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
-
-    private native void readRenderResultNative(long renderTexture, Object readbackBuffer);
 
     // Statistic debug info
     private GVRStatsLine mStatsLine;
@@ -141,7 +115,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      *            distortion filename under assets folder
      */
     OvrViewManager(GVRActivity gvrActivity, GVRScript gvrScript, OvrXMLParser xmlParser) {
-        super(gvrActivity);
+        super(gvrActivity, gvrScript);
 
         // Apply view manager preferences
         GVRPreference prefs = GVRPreference.get();
@@ -153,17 +127,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
-
-        // Clear singletons and per-run data structures
-        resetOnRestart();
-
-        GVRAsynchronousResourceLoader.setup(this);
-
-        /*
-         * Links with the script.
-         */
-        mScript = gvrScript;
-        mActivity = gvrActivity;
 
         /*
          * Starts listening to the sensor.
@@ -184,14 +147,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         VrAppSettings vrAppSettings = gvrActivity.getAppSettings();
         mLensInfo = new OvrLensInfo(screenWidthPixels, screenHeightPixels, screenWidthMeters, screenHeightMeters,
                 vrAppSettings);
-
-        GVRPerspectiveCamera.setDefaultFovY(vrAppSettings.getEyeBufferParams().getFovY());
-        // Different width/height aspect ratio makes the rendered screen warped
-        // when the screen rotates
-        // GVRPerspectiveCamera.setDefaultAspectRatio(mLensInfo
-        // .getRealScreenWidthMeters()
-        // / mLensInfo.getRealScreenHeightMeters());
-        mScriptManager = new GVRScriptManager(this);
 
         // Debug statistics
         mStatsLine = new GVRStatsLine("gvrf-stats");
@@ -252,57 +207,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         super.onDestroy();
     }
 
-    /*
-     * GL life cycle
-     */
-
-    /**
-     * Called when the surface changed size. When
-     * setPreserveEGLContextOnPause(true) is called in the surface, this is
-     * called only once.
-     */
-    void onSurfaceCreated() {
-        Log.v(TAG, "onSurfaceCreated");
-
-        Thread currentThread = Thread.currentThread();
-
-        // Reduce contention with other Android processes
-        currentThread.setPriority(Thread.MAX_PRIORITY);
-
-        // we know that the current thread is a GL one, so we store it to
-        // prevent non-GL thread from calling GL functions
-        mGLThreadID = currentThread.getId();
-        mGlDeleterPtr = NativeGLDelete.ctor();
-
-        // Evaluating anisotropic support on GL Thread
-        String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
-        isAnisotropicSupported = extensions.contains("GL_EXT_texture_filter_anisotropic");
-
-        // Evaluating max anisotropic value if supported
-        if (isAnisotropicSupported) {
-            maxAnisotropicValue = NativeTextureParameters.getMaxAnisotropicValue();
-        }
-
-        mPreviousTimeNanos = GVRTime.getCurrentTime();
-
-        /*
-         * GL Initializations.
-         */
-        mRenderBundle = new OvrRenderBundle(this, mLensInfo);
-        setMainScene(new GVRScene(this));
-
-        mRotationSensor.onResume();
-    }
-
-    protected void renderCamera(long activity_ptr, GVRScene scene, GVRCamera camera, OvrRenderBundle
-            renderBundle) {
-        renderCamera(activity_ptr, scene.getNative(), camera.getNative(),
-                renderBundle.getMaterialShaderManager().getNative(),
-                renderBundle.getPostEffectShaderManager().getNative(),
-                renderBundle.getPostEffectRenderTextureA().getNative(),
-                renderBundle.getPostEffectRenderTextureB().getNative());
-    }
-
     /**
      * Called when the surface is created or recreated. Avoided because this can
      * be called twice at the beginning.
@@ -312,7 +216,8 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         mRotationSensor.onResume();
     }
 
-    void beforeDrawEyes() {
+    @Override
+    protected void beforeDrawEyes() {
         if (DEBUG_STATS) {
             mStatsLine.startLine();
 
@@ -322,43 +227,11 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
             mTracerBeforeDrawEyes.enter();
         }
 
-        mFrameHandler.beforeDrawEyes();
+        super.beforeDrawEyes();
 
         if (DEBUG_STATS) {
             mTracerBeforeDrawEyes.leave();
         }
-    }
-
-    @Override
-    public void captureScreenCenter(GVRScreenshotCallback callback) {
-        if (callback == null) {
-            throw new IllegalArgumentException("callback should not be null.");
-        } else {
-            mScreenshotCenterCallback = callback;
-        }
-    }
-
-    @Override
-    public void captureScreenLeft(GVRScreenshotCallback callback) {
-        if (callback == null) {
-            throw new IllegalArgumentException("callback should not be null.");
-        } else {
-            mScreenshotLeftCallback = callback;
-        }
-    }
-
-    @Override
-    public void captureScreenRight(GVRScreenshotCallback callback) {
-        if (callback == null) {
-            throw new IllegalArgumentException("callback should not be null.");
-        } else {
-            mScreenshotRightCallback = callback;
-        }
-    }
-
-    @Override
-    public void captureScreen3D(GVRScreenshot3DCallback callback) {
-        mScreenshot3DCallback = callback;
     }
 
     private void readRenderResult() {
@@ -384,8 +257,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     }
 
     private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, byte[][] byteArrays, int index) {
-
-        renderCamera(mActivity.getNative(), mMainScene, centerCamera, mRenderBundle);
+        renderCamera(mMainScene, centerCamera, mRenderBundle);
         readRenderResult();
         byteArrays[index] = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
     }
@@ -484,7 +356,11 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
     }
 
-    void onDrawEyeView(int eye) {
+    /**
+     * Called from the native side
+     * @param eye
+     */
+    void onDrawEye(int eye) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
@@ -495,7 +371,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                 }
 
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
-                renderCamera(mActivity.getNative(), mMainScene, rightCamera, mRenderBundle);
+                renderCamera(mMainScene, rightCamera, mRenderBundle);
 
                 // if mScreenshotRightCallback is not null, capture right eye
                 if (mScreenshotRightCallback != null) {
@@ -503,8 +379,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     returnScreenshotToCaller(mScreenshotRightCallback, mReadbackBufferWidth, mReadbackBufferHeight);
                     mScreenshotRightCallback = null;
                 }
-
-                mActivity.getActivityNative().setCamera(rightCamera);
 
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.leave();
@@ -520,7 +394,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                 if (mScreenshotCenterCallback != null) {
                     GVRPerspectiveCamera centerCamera = mainCameraRig.getCenterCamera();
 
-                    renderCamera(mActivity.getNative(), mMainScene, centerCamera, mRenderBundle);
+                    renderCamera(mMainScene, centerCamera, mRenderBundle);
 
                     readRenderResult();
                     returnScreenshotToCaller(mScreenshotCenterCallback, mReadbackBufferWidth, mReadbackBufferHeight);
@@ -539,7 +413,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                 }
 
                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
-                renderCamera(mActivity.getNative(), mMainScene, leftCamera, mRenderBundle);
+                renderCamera(mMainScene, leftCamera, mRenderBundle);
 
                 // if mScreenshotLeftCallback is not null, capture left eye
                 if (mScreenshotLeftCallback != null) {
@@ -554,8 +428,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     mReadbackBuffer = null;
                 }
 
-                mActivity.getActivityNative().setCamera(leftCamera);
-
                 if (DEBUG_STATS) {
                     mTracerDrawEyes2.leave();
                 }
@@ -563,43 +435,21 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
     }
 
-    /** Called once per frame, before {@link #onDrawEyeView(int, float)}. */
-    void onDrawFrame() {
-        GVRPerspectiveCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
-        makeShadowMaps(mMainScene.getNative(), mRenderBundle.getMaterialShaderManager().getNative(),
-                mRenderBundle.getPostEffectRenderTextureA().getWidth(),
-                mRenderBundle.getPostEffectRenderTextureB().getHeight());
-        cull(mMainScene.getNative(), centerCamera.getNative(), mRenderBundle.getMaterialShaderManager().getNative());
-
-        if (mCurrentEye == 1) {
-            mActivity.getActivityNative().setCamera(mMainScene.getMainCameraRig().getLeftCamera());
-        } else {
-            mActivity.getActivityNative().setCamera(mMainScene.getMainCameraRig().getRightCamera());
-        }
+    /** Called once per frame */
+    protected void onDrawFrame() {
+        beforeDrawEyes();
+        drawEyes(mActivity.getActivityNative().getNative());
+        afterDrawEyes();
     }
 
-    void afterDrawEyes() {
+    @Override
+    protected void afterDrawEyes() {
         if (DEBUG_STATS) {
             // Time afterDrawEyes from here
             mTracerAfterDrawEyes.enter();
         }
 
-        // Execute post-rendering tasks (after drawing eyes, but
-        // before afterDrawEyes handlers)
-        synchronized (mRunnablesPostRender) {
-            for (Iterator<Map.Entry<Runnable, Integer>> it = mRunnablesPostRender.entrySet().iterator(); it
-                    .hasNext();) {
-                Map.Entry<Runnable, Integer> entry = it.next();
-                if (entry.getValue() <= 0) {
-                    entry.getKey().run();
-                    it.remove();
-                } else {
-                    entry.setValue(entry.getValue() - 1);
-                }
-            }
-        }
-
-        mFrameHandler.afterDrawEyes();
+        super.afterDrawEyes();
 
         if (DEBUG_STATS) {
             mTracerAfterDrawEyes.leave();
@@ -614,249 +464,11 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
     }
 
-    /*
-     * Splash screen life cycle
-     */
-
-    /**
-     * Efficient handling of the state machine.
-     * 
-     * We want to be able to show an animated splash screen after
-     * {@link GVRScript#onInit(GVRContext) onInit().} That means our frame
-     * handler acts differently on the very first frame than it does during
-     * splash screen animations, and differently again when we get to normal
-     * mode. If we used a state enum and a switch statement, we'd have to keep
-     * the two in synch, and we'd be spending render microseconds in a switch
-     * statement, vectoring to a call to a handler. Using a interface
-     * implementation instead of a state enum, we just call the handler
-     * directly.
-     */
-    protected interface FrameHandler {
-        void beforeDrawEyes();
-
-        void afterDrawEyes();
+    @Override
+    void onSurfaceCreated() {
+        super.onSurfaceCreated();
+        mRotationSensor.onResume();
     }
-
-    private FrameHandler firstFrame = new FrameHandler() {
-
-        @Override
-        public void beforeDrawEyes() {
-            mScript.setViewManager(OvrViewManager.this);
-
-            if (mActivity.getAppSettings().showLoadingIcon) {
-                mSplashScreen = mScript.createSplashScreen();
-                if (mSplashScreen != null) {
-                    getMainScene().addSceneObject(mSplashScreen);
-                }
-            } else {
-                mSplashScreen = null;
-            }
-
-            // execute pending runnables now so any necessary gl calls
-            // are done before onInit().  As an example the request to
-            // get the GL_MAX_TEXTURE_SIZE needs to be fulfilled.
-            synchronized (mRunnables) {
-                Runnable runnable = null;
-                while ((runnable = mRunnables.poll()) != null) {
-                    try {
-                        runnable.run();
-                    } catch (final Exception exc) {
-                        Log.e(TAG, "Runnable-on-GL %s threw %s", runnable, exc.toString());
-                        exc.printStackTrace();
-                    }
-                }
-            }
-
-            runOnTheFrameworkThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        OvrViewManager.this.getEventManager().sendEvent(
-                                mScript, IScriptEvents.class,
-                                "onEarlyInit", OvrViewManager.this);
-
-                        OvrViewManager.this.getEventManager().sendEvent(
-                                mScript, IScriptEvents.class,
-                                "onInit", OvrViewManager.this);
-
-                        if (null != mSplashScreen && SplashMode.AUTOMATIC == mScript
-                                .getSplashMode() && mScript.getSplashDisplayTime() < 0f) {
-                            runOnGlThread(new Runnable() {
-                                public void run() {
-                                    mSplashScreen.closeSplashScreen();
-                                }
-                            });
-                        }
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                        OvrViewManager.this.runOnGlThread(new Runnable() {
-                            public void run() {
-                                mActivity.finish();
-
-                                // Just to be safe ...
-                                mFrameHandler = splashFrames;
-                                firstFrame = null;
-                            }
-                        });
-                    }
-
-                    // Trigger event "onAfterInit" for post-processing of scene
-                    // graph after initialization.
-                    OvrViewManager.this.getEventManager().sendEvent(
-                            mScript, IScriptEvents.class,
-                            "onAfterInit");
-                }
-            });
-
-            if (mSplashScreen == null) {
-                // No splash screen, notify main scene now.
-                OvrViewManager.this.notifyMainSceneReady();
-
-                mFrameHandler = normalFrames;
-                firstFrame = splashFrames = null;
-            } else {
-                mFrameHandler = splashFrames;
-                firstFrame = null;
-            }
-        }
-
-        @Override
-        public void afterDrawEyes() {
-        }
-    };
-
-    private FrameHandler splashFrames = new FrameHandler() {
-
-        @Override
-        public void beforeDrawEyes() {
-            // splash screen post-init animations
-            long currentTime = doMemoryManagementAndPerFrameCallbacks();
-
-            if (mSplashScreen != null && (currentTime >= mSplashScreen.mTimeout || mSplashScreen.closeRequested())) {
-                if (mSplashScreen.closeRequested()
-                        || mScript.getSplashMode() == SplashMode.AUTOMATIC) {
-
-                    final SplashScreen splashScreen = mSplashScreen;
-                    new GVROpacityAnimation(mSplashScreen, mScript.getSplashFadeTime(), 0) //
-                            .setOnFinish(new GVROnFinish() {
-
-                                @Override
-                                public void finished(GVRAnimation animation) {
-                                    if (mNextMainScene != null) {
-                                        setMainScene(mNextMainScene);
-                                        // Splash screen finishes. Notify main
-                                        // scene it is ready.
-                                        OvrViewManager.this.notifyMainSceneReady();
-                                    } else {
-                                        getMainScene().removeSceneObject(splashScreen);
-                                    }
-
-                                    mFrameHandler = normalFrames;
-                                    splashFrames = null;
-                                }
-                            }) //
-                            .start(getAnimationEngine());
-
-                    mSplashScreen = null;
-                }
-            }
-        }
-
-        @Override
-        public void afterDrawEyes() {
-        }
-    };
-
-    private final FrameHandler normalFrames = new FrameHandler() {
-
-        public void beforeDrawEyes() {
-            mMainScene.resetStats();
-
-            GVRNotifications.notifyBeforeStep();
-
-            doMemoryManagementAndPerFrameCallbacks();
-
-            runOnTheFrameworkThread(new Runnable() {
-                public void run() {
-                    try {
-                        mScript.onStep();
-                    } catch (final Exception exc) {
-                        Log.e(TAG, "Exception from onStep: %s", exc.toString());
-                        exc.printStackTrace();
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void afterDrawEyes() {
-            GVRNotifications.notifyAfterStep();
-            mMainScene.updateStats();
-        }
-    };
-
-    // Send onInit and onAfterInit events to main scene when it is ready.
-    // When there is a splash screen, it is called after the splash screen has
-    // completed.
-    // If there is no splash screen, it is called after GVRScript.onInit()
-    // returns.
-    private void notifyMainSceneReady() {
-        runOnTheFrameworkThread(new Runnable() {
-            @Override
-            public void run() {
-                // Initialize the main scene
-                OvrViewManager.this.getEventManager().sendEvent(
-                        mMainScene, ISceneEvents.class,
-                        "onInit", OvrViewManager.this, mMainScene);
-
-                // Late-initialize the main scene
-                OvrViewManager.this.getEventManager().sendEvent(
-                        mMainScene, ISceneEvents.class,
-                        "onAfterInit");
-            }
-        });
-    }
-
-    /**
-     * This is the code that needs to be executed before either eye is drawn.
-     * 
-     * @return Current time, from {@link GVRTime#getCurrentTime()}
-     */
-    private long doMemoryManagementAndPerFrameCallbacks() {
-        long currentTime = GVRTime.getCurrentTime();
-        mFrameTime = (currentTime - mPreviousTimeNanos) / 1e9f;
-        mPreviousTimeNanos = currentTime;
-
-        /*
-         * Without the sensor data, can't draw a scene properly.
-         */
-        if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
-            Runnable runnable = null;
-            while ((runnable = mRunnables.poll()) != null) {
-                try {
-                    runnable.run();
-                } catch (final Exception exc) {
-                    Log.e(TAG, "Runnable-on-GL %s threw %s", runnable, exc.toString());
-                    exc.printStackTrace();
-                }
-            }
-
-            final List<GVRDrawFrameListener> frameListeners = mFrameListeners;
-            for (GVRDrawFrameListener listener : frameListeners) {
-                try {
-                    listener.onDrawFrame(mFrameTime);
-                } catch (final Exception exc) {
-                    Log.e(TAG, "DrawFrameListener %s threw %s", listener, exc.toString());
-                    exc.printStackTrace();
-                }
-            }
-        }
-        NativeGLDelete.processQueues(mGlDeleterPtr);
-
-        return currentTime;
-    }
-
-    protected FrameHandler mFrameHandler = firstFrame;
 
     /*
      * GVRF APIs
@@ -896,98 +508,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
     }
 
-    /**
-     * Called when a key was pressed down and not handled by any of the views
-     * inside of the activity.
-     * 
-     * @param keyCode
-     *            The value in {@link event#getKeyCode() event.getKeyCode()}
-     * @param event
-     *            Description of the key event
-     */
-    void onKeyDown(int keyCode, KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            synchronized (mDownKeys) {
-                mDownKeys.add(keyCode);
-            }
-        }
-    }
-
-    @Override
-    public GVRScene getMainScene() {
-        return mMainScene;
-    }
-
-    @Override
-    public synchronized GVRScene getNextMainScene(Runnable onSwitchMainScene) {
-        if (mNextMainScene == null) {
-            mNextMainScene = new GVRScene(this);
-        }
-        NativeScene.setMainScene(mNextMainScene.getNative());
-        mOnSwitchMainScene = onSwitchMainScene;
-        return mNextMainScene;
-    }
-
-    @Override
-    public boolean isKeyDown(int keyCode) {
-        synchronized (mDownKeys) {
-            return mDownKeys.contains(keyCode);
-        }
-    }
-
-    @Override
-    public float getFrameTime() {
-        return mFrameTime;
-    }
-
-    @Override
-    public void runOnGlThread(Runnable runnable) {
-        if (mGLThreadID == Thread.currentThread().getId()) {
-            runnable.run();
-        } else {
-            mRunnables.add(runnable);
-        }
-    }
-
-    @Override
-    public void runOnGlThreadPostRender(int delayFrames, Runnable runnable) {
-        synchronized (mRunnablesPostRender) {
-            mRunnablesPostRender.put(runnable, delayFrames);
-        }
-    }
-
-    @Override
-    public GVRMaterialShaderManager getMaterialShaderManager() {
-        return mRenderBundle.getMaterialShaderManager();
-    }
-
-    @Override
-    public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return mRenderBundle.getPostEffectShaderManager();
-    }
-
-    @Override
-    public GVRScriptManager getScriptManager() {
-        return mScriptManager;
-    }
-
-    protected long mGlDeleterPtr;
-
-    @Override
-    public void finalize() throws Throwable {
-        try {
-            if (0 != mGlDeleterPtr) {
-                NativeGLDelete.dtor(mGlDeleterPtr);
-            }
-        } catch (final Exception ignored) {
-        } finally {
-            super.finalize();
-        }
-    }
-
-    static {
-        // strictly one-time per process op hence the static block
-        NativeGLDelete.createTlsKey();
-    }
-
+    private static native void drawEyes(long ptr);
+    private native void readRenderResultNative(long renderTexture, Object readbackBuffer);
 }

@@ -17,7 +17,7 @@
 #include "ovr_activity.h"
 #include "VrApi.h"
 #include "VrApi_Helpers.h"
-#include "objects/components/ovr_camera_rig.h"
+#include "objects/components/camera_rig.h"
 
 namespace gvr {
 

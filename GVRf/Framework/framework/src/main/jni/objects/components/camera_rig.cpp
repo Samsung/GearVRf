@@ -31,8 +31,8 @@ namespace gvr {
 
 float CameraRig::default_camera_separation_distance_ = 0.062f;
 
-CameraRig::CameraRig(long long componentType) :
-        Component(componentType),
+CameraRig::CameraRig() :
+        Component(CameraRig::getComponentType()),
         camera_rig_type_(DEFAULT_CAMERA_RIG_TYPE),
         left_camera_(),
         right_camera_(),
@@ -47,6 +47,25 @@ CameraRig::CameraRig(long long componentType) :
 }
 
 CameraRig::~CameraRig() {
+}
+
+void CameraRig::predict(float time) {
+    return predict(time, rotation_sensor_data_);
+}
+
+void CameraRig::predict(float time, const RotationSensorData& rotationSensorData) {
+    setRotation(complementary_rotation_*rotationSensorData.quaternion());
+}
+
+void CameraRig::setPosition(const glm::vec3& transform_position) {
+    Transform* transform = getHeadTransform();
+    transform->set_position(transform_position);
+}
+
+Transform* CameraRig::getHeadTransform() const {
+    SceneObject* sceneObject = owner_object();
+    sceneObject = sceneObject->getChildByIndex(0);
+    return sceneObject->transform();
 }
 
 void CameraRig::attachLeftCamera(Camera* const left_camera) {

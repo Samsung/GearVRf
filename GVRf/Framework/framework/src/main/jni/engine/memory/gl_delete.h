@@ -19,6 +19,7 @@
 #include "util/gvr_log.h"
 #include "util/gvr_cpp_stack_trace.h"
 
+#include <atomic>
 #include <vector>
 #include <pthread.h>
 #include <unistd.h>
@@ -48,7 +49,7 @@ public:
         }
     }
 
-    GlDelete() {
+    GlDelete() : dirty(false) {
         int err = pthread_mutex_init(&mutex, nullptr);
         if (0 != err) {
             LOGE("fatal error: pthread_mutex_init failed with %d!", err);
@@ -85,7 +86,7 @@ public:
 private:
 
     pthread_mutex_t mutex;
-    bool dirty = false;
+    std::atomic<bool> dirty;
 
     void lock() {
         pthread_mutex_lock(&mutex);

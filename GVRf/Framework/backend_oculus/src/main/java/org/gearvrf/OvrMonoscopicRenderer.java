@@ -40,7 +40,7 @@ abstract class OvrMonoscopicRenderer {
      */
     static void renderCamera(GVRScene scene, GVRCamera camera, int viewportX,
             int viewportY, int viewportWidth, int viewportHeight,
-            OvrRenderBundle renderBundle) {
+            IRenderBundle renderBundle) {
 
         OvrNativeMonoscopicRenderer.renderCamera(scene.getNative(), camera
                 .getNative(), viewportX, viewportY, viewportWidth,
@@ -51,7 +51,7 @@ abstract class OvrMonoscopicRenderer {
                 renderBundle.getPostEffectRenderTextureB().getNative());
     }
 
-    static void cull(GVRScene scene, GVRCamera camera, OvrRenderBundle renderBundle) {
+    static void cull(GVRScene scene, GVRCamera camera, IRenderBundle renderBundle) {
         OvrNativeMonoscopicRenderer.cull(scene.getNative(), camera.getNative(), renderBundle.getMaterialShaderManager().getNative());
     }
 }

@@ -19,7 +19,8 @@ import static org.gearvrf.utility.Assert.*;
 
 import org.gearvrf.utility.Log;
 
-public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
+/** Holds the GVRCameras. */
+public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     private GVRSceneObject headTransformObject;
 
     private GVRCamera leftCamera, rightCamera;
@@ -77,6 +78,10 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
         return result;
     }
 
+    protected GVRCameraRig(GVRContext gvrContext) {
+        super(gvrContext, NativeCameraRig.ctor());
+    }
+
     protected GVRCameraRig(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -111,7 +116,10 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
         headTransformObject.addChildObject(centerCameraObject);
     }
 
-    protected abstract void addHeadTransformObject();
+    protected void addHeadTransformObject() {
+        getOwnerObject().addChildObject(getHeadTransformObject());
+    }
+
     public final GVRSceneObject getHeadTransformObject() {
         return headTransformObject;
     }
@@ -520,7 +528,22 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
      *
      * @return The head {@link GVRTransform transform} object.
      */
-    public abstract GVRTransform getHeadTransform();
+    public GVRTransform getHeadTransform() {
+        return getHeadTransformObject().getTransform();
+    }
+
+    /**
+     * Predict what the orientation of the camera rig will be at {@code time}
+     * based on the current rotation and angular velocity.
+     *
+     * @param time
+     *            Time to predict orientation for, in seconds.
+     * @see #setRotationSensorData(long, float, float, float, float, float,
+     *      float, float)
+     */
+    void predict(float time) {
+        NativeCameraRig.predict(getNative(), time);
+    }
 
     /**
      * @return Distance from the origin to the near clipping plane for the
@@ -637,6 +660,10 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
 }
 
 class NativeCameraRig {
+    static native long ctor();
+
+    static native void predict(long cameraRig, float time);
+
     static native int getCameraRigType(long cameraRig);
 
     static native void setCameraRigType(long cameraRig, int cameraRigType);

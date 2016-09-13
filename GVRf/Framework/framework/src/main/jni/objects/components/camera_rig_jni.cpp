@@ -113,6 +113,17 @@ extern "C" {
     JNIEXPORT jfloatArray JNICALL
     Java_org_gearvrf_NativeCameraRig_getLookAt(JNIEnv * env,
             jobject obj, jlong jcamera_rig);
+
+    JNIEXPORT void JNICALL Java_org_gearvrf_NativeCameraRig_predict(
+            JNIEnv * env, jobject obj, jlong jcamera_rig, jfloat time)
+    {
+        CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
+        camera_rig->predict(time);
+    }
+
+    JNIEXPORT jlong JNICALL Java_org_gearvrf_NativeCameraRig_ctor(JNIEnv* env, jobject obj) {
+        return reinterpret_cast<jlong>(new CameraRig());
+    }
 }; // extern "C"
 
 JNIEXPORT jlong JNICALL

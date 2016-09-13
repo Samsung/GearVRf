@@ -89,15 +89,27 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         InputStream inputStream = null;
         BufferedReader reader = null;
         try {
-            inputStream = getAssets().open("backends.txt");
-            reader = new BufferedReader(new InputStreamReader(inputStream));
+            for (int i = 0; i < 10; ++i) {
+                try {
+                    inputStream = getAssets().open("backend_" + i + ".txt");
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
 
-            final String line = reader.readLine();
-            final Class<?> aClass = Class.forName(line);
-            mDelegate = (GVRActivityDelegate) aClass.newInstance();
-            mAppSettings = mDelegate.makeVrAppSettings();
-        } catch (final Exception e) {
-            throw new IllegalStateException("Fatal error: no backend available");
+                    final String line = reader.readLine();
+                    Log.i(TAG, "trying backend " + line);
+                    final Class<?> aClass = Class.forName(line);
+
+                    mDelegate = (GVRActivityDelegate) aClass.newInstance();
+                    mAppSettings = mDelegate.makeVrAppSettings();
+                    mDelegate.onCreate(this);
+
+                    break;
+                } catch (final Exception exc) {
+                }
+            }
+
+            if (null == mDelegate) {
+                throw new IllegalStateException("Fatal error: no backend available");
+            }
         } finally {
             if (null != reader) {
                 try {
@@ -112,8 +124,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 }
             }
         }
-
-        mDelegate.onCreate(this);
 
         if (null != Threads.getThreadPool()) {
             Threads.getThreadPool().shutdownNow();
@@ -222,8 +232,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mDockEventReceiver.stop();
         }
 
-        mActivityNative.onDestroy();
-        mActivityNative = null;
+        if (null != mActivityNative) {
+            mActivityNative.onDestroy();
+            mActivityNative = null;
+        }
         super.onDestroy();
     }
 
@@ -374,7 +386,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     final long getNative() {
-        return mActivityNative.getNative();
+        return null != mActivityNative ? mActivityNative.getNative() : 0;
     }
 
     final IActivityNative getActivityNative() {
@@ -382,7 +394,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     final void setCameraRig(GVRCameraRig cameraRig) {
-        mActivityNative.setCameraRig(cameraRig);
+        if (null != mActivityNative) {
+            mActivityNative.setCameraRig(cameraRig);
+        }
     }
 
     @Override
@@ -520,6 +534,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
+    /**
+     * Called from C++
+     */
     final boolean updateSensoredScene() {
         return mViewManager.updateSensoredScene();
     }

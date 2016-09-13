@@ -134,7 +134,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      * GL life cycle
      */
     @Override
-    void onDrawFrame() {
+    protected void onDrawFrame() {
         // Log.v(TAG, "onDrawFrame");
         beforeDrawEyes();
         drawEyes();
@@ -143,7 +143,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
     private void drawEyes() {
         // Log.d(TAG, "drawEyes()");
-        ((OvrCameraRig)mMainScene.getMainCameraRig()).predict(3.5f / 60.0f);
+        mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
         OvrMonoscopicRenderer.cull(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle);
         OvrMonoscopicRenderer.renderCamera(mMainScene, mMainScene
                 .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,

@@ -26,7 +26,7 @@
 
 
 static const char* activityClassName = "org/gearvrf/GVRActivity";
-static const char* activityHandlerRenderingCallbacksClassName = "org/gearvrf/OvrActivityHandlerRenderingCallbacks";
+static const char* viewManagerClassName = "org/gearvrf/OvrViewManager";
 
 namespace gvr {
 
@@ -38,12 +38,11 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
         jobject callbacks) : envMainThread_(&env), configurationHelper_(env, vrAppSettings) //use_multiview(false)
 {
     activity_ = env.NewGlobalRef(activity);
-    activityRenderingCallbacks_ = env.NewGlobalRef(callbacks);
 
     activityClass_ = GetGlobalClassReference(env, activityClassName);
-    activityRenderingCallbacksClass_ = GetGlobalClassReference(env, activityHandlerRenderingCallbacksClassName);
+    viewManagerClass_ = GetGlobalClassReference(env, viewManagerClassName);
 
-    onDrawEyeMethodId = GetMethodId(env, activityRenderingCallbacksClass_, "onDrawEye", "(I)V");
+    onDrawEyeMethodId = GetMethodId(env, viewManagerClass_, "onDrawEye", "(I)V");
     updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
 }
 
@@ -51,10 +50,10 @@ GVRActivity::~GVRActivity() {
     LOGV("GVRActivity::~GVRActivity");
     uninitializeVrApi();
 
-    envMainThread_->DeleteGlobalRef(activityRenderingCallbacksClass_);
+    envMainThread_->DeleteGlobalRef(viewManagerClass_);
     envMainThread_->DeleteGlobalRef(activityClass_);
 
-    envMainThread_->DeleteGlobalRef(activityRenderingCallbacks_);
+    envMainThread_->DeleteGlobalRef(viewManager_);
     envMainThread_->DeleteGlobalRef(activity_);
 }
 
@@ -104,8 +103,15 @@ bool GVRActivity::updateSensoredScene() {
 }
 
 void GVRActivity::setCameraRig(jlong cameraRig) {
-    cameraRig_ = reinterpret_cast<OvrCameraRig*>(cameraRig);
+    cameraRig_ = reinterpret_cast<CameraRig*>(cameraRig);
     sensoredSceneUpdated_ = false;
+}
+
+/**
+ * Must be called on the main thread
+ */
+void GVRActivity::setViewManager(jobject viewManager) {
+    viewManager_ = oculusJavaMainThread_.Env->NewGlobalRef(viewManager);
 }
 
 void GVRActivity::onSurfaceCreated(JNIEnv& env) {
@@ -215,7 +221,7 @@ void GVRActivity::onDrawFrame() {
             sensoredSceneUpdated_ = updateSensoredScene();
         }
         headRotationProvider_.predict(*this, parms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
-        oculusJavaGlThread_.Env->CallVoidMethod(activityRenderingCallbacks_, onDrawEyeMethodId, eye);
+        oculusJavaGlThread_.Env->CallVoidMethod(viewManager_, onDrawEyeMethodId, eye);
 
         endRenderingEye(eye);
     }

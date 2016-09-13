@@ -93,12 +93,6 @@ class OvrSurfaceView extends GLSurfaceView implements
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        mViewManager.onKeyDown(keyCode, event);
-        return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
     public void doFrame(long frameTimeNanos) {
         requestRender();
         Choreographer.getInstance().postFrameCallback(this);
