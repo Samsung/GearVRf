@@ -43,6 +43,8 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
+        releaseToGitHub {
+        }
     }
 
     sourceSets.main {
@@ -74,6 +76,20 @@ android {
     tasks.withType(JavaCompile) {
         compileTask -> compileTask.dependsOn buildNative
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
@@ -98,4 +114,8 @@ assembleDebug {}.doLast {
         }
     }
     tasks.copyAARFiles.execute()
+}
+
+assembleReleaseToGitHub {}.doLast {
+    uploadToGitHub.execute();
 }
