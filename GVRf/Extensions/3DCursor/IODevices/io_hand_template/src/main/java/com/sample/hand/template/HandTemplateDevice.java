@@ -47,7 +47,7 @@ public class HandTemplateDevice {
     public static final String LEFT_HAND_ID = "left_";
     public static final String RIGHT_HAND_ID = "right_";
 
-    // This the total count of float values coming in from the native layer,
+    // This is the total count of float values coming in from the native layer,
     // Adjust this value accordingly
     private static int DATA_SIZE = 127;
     private static int BYTE_TO_FLOAT = 4;
@@ -127,7 +127,7 @@ public class HandTemplateDevice {
                 if (!(i == IOFinger.INDEX && j == IOJoint.TIP)) {
                     IOJoint joint = finger.getIOJoint(j);
                     joint.setSceneObject(new GVRCubeSceneObject(context, true, jointTexture));
-                    // set joint scene object here
+                    // Customize your joint scene object here
                     //joint.setSceneObject();
                 }
             }
@@ -294,7 +294,7 @@ public class HandTemplateDevice {
 
             GVRMaterial material = new GVRMaterial(context);
             material.setMainTexture(boneTexture);
-
+            // Customize your bone scene object here
             // add a cube
             boneSceneObject = new GVRCubeSceneObject(context, true, material, new Vector3f(1.0f,
                     len - 0.5f, 1.0f));
