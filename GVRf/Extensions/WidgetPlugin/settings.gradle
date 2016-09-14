@@ -1,3 +1,1 @@
 include ':widgetplugin'
-include ':framework'
-project(':framework').projectDir = new File('../../Framework/framework')

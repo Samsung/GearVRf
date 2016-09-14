@@ -21,9 +21,7 @@
 #ifndef SHADER_BASE_H_
 #define SHADER_BASE_H_
 
-#define __gl2_h_
-#include "GLES3/gl3.h"
-#include <GLES2/gl2ext.h>
+#include "gl/gl_headers.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "gl/gl_program.h"

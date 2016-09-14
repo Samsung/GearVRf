@@ -22,9 +22,8 @@
 #include <vector>
 #include <pthread.h>
 #include <unistd.h>
-#ifndef GL_ES_VERSION_3_0
-#include "GLES3/gl3.h"
-#endif
+#include "gl/gl_headers.h"
+
 
 #define GVR_INVALID 0
 

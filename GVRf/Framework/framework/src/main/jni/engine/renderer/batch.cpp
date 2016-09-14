@@ -24,7 +24,7 @@ namespace gvr {
 Batch::Batch(int no_vertices, int no_indices) :
         draw_count_(0), vertex_count_(0), index_count_(0), vertex_limit_(no_vertices),
         indices_limit_(no_indices), renderdata_(nullptr),mesh_init_(false),
-        index_offset_(0), not_batched_(false) {
+        index_offset_(0), not_batched_(false), batch_dirty_(false) {
 
     vertices_.reserve(no_vertices);
     indices_.reserve(no_indices);
@@ -36,6 +36,7 @@ Batch::Batch(int no_vertices, int no_indices) :
 Batch::~Batch() {
     clearData();
     delete renderdata_;
+    renderdata_ = nullptr;
 }
 
 bool Batch::updateMesh(Mesh* render_mesh){
@@ -52,14 +53,12 @@ bool Batch::updateMesh(Mesh* render_mesh){
         matrix_indices_.push_back(draw_count_);
         tex_coords_.push_back(tex_cords[i]);
     }
-
     // Check if models has normals
     if(normals.size() > 0){
         int normals_size = normals.size();
         for(int i=0;i<normals_size;i++)
             normals_.push_back(normals[i]);
     }
-
     size = indices.size();
     index_count_+=size;
     for (int i = 0; i < size; i++) {
@@ -67,7 +66,6 @@ bool Batch::updateMesh(Mesh* render_mesh){
         index += index_offset_;
         indices_.push_back(index);
     }
-
     // update all VBO data
     vertex_count_ += vertices.size();
     index_offset_ += vertices.size();
@@ -87,15 +85,16 @@ bool Batch::add(RenderData *render_data) {
     if (t != NULL) {
         model_matrix = glm::mat4(t->getModelMatrix());
     }
+    render_data->getHashCode();
+    render_data->set_renderdata_dirty(false);
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;
     matrices_.push_back(model_matrix);
     render_data->owner_object()->setTransformUnDirty();
 
-     if(!render_data->batching()){
+    if(!render_data->batching()){
         render_data_set_.insert(render_data);
-        render_mesh->setMeshModified(false); // mark mesh clean
         not_batched_ = true;
         return true;
     }
@@ -106,19 +105,17 @@ bool Batch::add(RenderData *render_data) {
         Material* mat = render_data->pass(i)->material();
         if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
             render_data_set_.insert(render_data);
-            render_mesh->setMeshModified(false); // mark mesh clean
             return true;
         }
     }
-
     // if mesh is large, render in normal way
-    if (indices.size() + index_count_ > indices_limit_) {
+    if (indices.size() == 0 || (indices.size() + index_count_ > indices_limit_)) {
         if (draw_count_ > 0) {
             return false;
         } else {
             render_data_set_.insert(render_data);
+            render_data->set_batching(false);
             not_batched_ = true;
-            render_mesh->setMeshModified(false); // mark mesh clean
             return true;
         }
     }
@@ -129,12 +126,8 @@ bool Batch::add(RenderData *render_data) {
             renderdata_->set_batching(true);
        }
     }
-
     render_data_set_.insert(render_data); // store all the renderdata which are in batch
-    render_mesh->setMeshModified(false); // mark mesh clean
-
     updateMesh(render_mesh);
-
     return true;
 }
 void Batch::clearData(){
@@ -148,8 +141,12 @@ void Batch::clearData(){
     tex_coords_.clear();
     vertices_.clear();
     normals_.clear();
+    indices_.clear();
+    mesh_init_ = false;
+    batch_dirty_ = false;
 }
-bool Batch::isRenderDataDisabled(){
+
+bool Batch::isRenderModified(){
      bool update_vbo = false;
      for(auto it= render_data_set_.begin();it!=render_data_set_.end();){
         if(!(*it)->enabled() || !(*it)->owner_object()->enabled()){
@@ -164,68 +161,53 @@ bool Batch::isRenderDataDisabled(){
     }
     return update_vbo;
 }
-void Batch::setupMesh(){
-    bool update_vbo = isRenderDataDisabled();
+void Batch::resetBatch(){
+    clearData();
+    delete renderdata_;
+    renderdata_ = nullptr;
+    gRenderer->freeBatch(this);
+}
 
-    if(render_data_set_.size() ==0)
-        return;
-
-    if(update_vbo)
-        regenerateMeshData();
-
-    if(!mesh_init_){
-        mesh_init_ = true;
-        mesh_.set_vertices(vertices_);
-        mesh_.set_normals(normals_);
-        mesh_.set_tex_coords(tex_coords_);
-        mesh_.set_indices(indices_);
-        mesh_.setFloatVector("a_matrix_index", matrix_indices_);
-        if (nullptr != renderdata_) {
-            renderdata_->set_mesh(&mesh_);
-        }
+void Batch::meshInit(){
+    mesh_init_ = true;
+    mesh_.set_vertices(vertices_);
+    mesh_.set_normals(normals_);
+    mesh_.set_tex_coords(tex_coords_);
+    mesh_.set_indices(indices_);
+    mesh_.setFloatVector("a_matrix_index", matrix_indices_);
+    if (nullptr != renderdata_) {
+        renderdata_->set_mesh(&mesh_);
     }
 }
+bool Batch::setupMesh(bool batch_dirty){
+    bool update_vbo = isRenderModified();
+    // batch is empty, add it back to the pool
+    if(0 == render_data_set_.size()){
+        resetBatch();
+        return false;
+    }
+    if(batch_dirty || update_vbo)
+        regenerateMeshData();
+    batch_dirty_ = false;
+    if(!mesh_init_)
+        meshInit();
+    return true;
+}
 void Batch::regenerateMeshData(){
-
     clearData();
     for(auto it= render_data_set_.begin();it!=render_data_set_.end();++it){
         RenderData* render_data = *it;
         Mesh *render_mesh = render_data->mesh();
         const std::vector<unsigned short>& indices = render_mesh->indices();
-
         Transform* const t = render_data->owner_object()->transform();
         glm::mat4 model_matrix;
         if (t != NULL) {
             model_matrix = glm::mat4(t->getModelMatrix());
         }
-
         // Store the model matrix and its index into map for update
         matrix_index_map_[render_data] = draw_count_;
         matrices_.push_back(model_matrix);
         updateMesh(render_mesh);
     }
-
 }
-/*
- *  Check if any of the meshes in batch are modified
- */
-bool Batch::isBatchDirty() {
-    for (auto it = render_data_set_.begin(); it != render_data_set_.end();
-            it++) {
-        if ((*it)->mesh()->isMeshModified())
-            return true;
-    }
-    return false;
-}
-
-/*
- * Set batch in render data to null. can be use to mark dirty.
- */
-void Batch::setMeshesDirty() {
-    for (auto it = render_data_set_.begin(); it != render_data_set_.end();
-            it++) {
-        (*it)->setBatchNull();
-    }
-}
-
 }

@@ -31,6 +31,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../../../../../tools/upload_to_github', file('build/outputs/aar/gearwearlibrary-debug.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 task deleteJar(type: Delete) {
@@ -66,4 +80,8 @@ assembleDebug {}.doLast{
         }
     }
     tasks.copyAARFiles.execute()
+}
+
+assembleDebug {}.doLast {
+    uploadToGitHub.execute();
 }

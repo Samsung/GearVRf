@@ -17,7 +17,9 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs '../../../../../Framework/framework/src/main/libs/'
+        dirs '../../../../../Framework/framework/src/main/libs/',
+        '../../../3DCursorLibrary/build/outputs/aar/',
+        '../../../../../Framework/framework/build/outputs/aar/'
     }
 }
 
@@ -37,10 +39,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../../../../tools/upload_to_github', file('build/outputs/aar/GearWearIoDevice-debug.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile(name: 'framework-debug', ext: 'aar')
     compile project(':3DCursorLibrary')
     compile project(':gearwearlibrary')
 }
@@ -61,4 +78,8 @@ assembleDebug {}.doLast{
         }
     }
     tasks.copyAARFiles.execute()
+}
+
+assembleDebug {}.doLast {
+    uploadToGitHub.execute();
 }

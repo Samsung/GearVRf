@@ -24,7 +24,7 @@
 #include <android/log.h>
 #include <exception>
 
-#include "GLES3/gl3.h"
+#include "gl/gl_headers.h"
 
 #define  LOG_TAG    "gvrf"
 #define  LOGV(...)  __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG,__VA_ARGS__)
