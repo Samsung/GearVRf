@@ -39,6 +39,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../../tools/upload_to_github', file('build/outputs/aar/3DCursorLibrary-debug.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
@@ -85,4 +99,8 @@ assembleDebug {}.doLast {
         }
     }
     tasks.copyAARFiles.execute()
+}
+
+assembleDebug {}.doLast {
+    uploadToGitHub.execute();
 }
