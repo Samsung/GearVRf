@@ -71,7 +71,6 @@ import org.gearvrf.GVRTextureParameters.TextureWrapType;
 
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
@@ -275,7 +274,7 @@ public class X3Dobject
   /********** X3Dobject Constructor ************/
   /*********************************************/
   public X3Dobject(GVRAssetLoader.AssetRequest assetRequest,
-                   GVRModelSceneObject root)
+                   GVRSceneObject root)
   {
     try
     {

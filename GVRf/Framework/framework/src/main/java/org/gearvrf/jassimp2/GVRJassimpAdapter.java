@@ -1,24 +1,44 @@
 package org.gearvrf.jassimp2;
 
+import java.io.IOException;
 import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.gearvrf.FutureWrapper;
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRBone;
 import org.gearvrf.GVRBoneWeight;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRImportSettings;
+import org.gearvrf.GVRLightBase;
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRPhongShader;
+import org.gearvrf.GVRPointLight;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSpotLight;
+import org.gearvrf.ISceneObjectEvents;
+import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -270,5 +290,296 @@ public class GVRJassimpAdapter {
                 Log.e(TAG, "Unsupported setting %s", setting);
                 return null;
         }
+    }
+
+    public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume) throws IOException
+    {
+        List<AiLight> aiLights = scene.getLights();
+        final GVRContext context = model.getGVRContext();
+        Hashtable<String, GVRLightBase> lightList = new Hashtable<String, GVRLightBase>();
+        GVRSceneObject camera = makeCamera(context, scene);
+
+        if (camera != null)
+        {
+            model.addChildObject(camera);
+        }
+        importLights(context, aiLights, lightList);
+        if (scene != null)
+        {
+            recurseAssimpNodes(request, model, scene, scene.getSceneRoot(sWrapperProvider), lightList);
+            List<AiAnimation> animations = scene.getAnimations();
+            if (animations.size() > 0)
+            {
+                GVRAnimator animator = new GVRAnimator(context);
+                model.attachComponent(animator);
+                for (AiAnimation aiAnim : scene.getAnimations())
+                {
+                    GVRAnimation animation = createAnimation(aiAnim, model);
+                    GVRModelSceneObject modelRoot = null;
+                    if (GVRModelSceneObject.class.isAssignableFrom(model.getClass()))
+                    {
+                        modelRoot = (GVRModelSceneObject) model;
+                    }
+                    if (animation != null)
+                    {
+                        animator.add(animation);
+                        if (modelRoot != null)
+                        {
+                            modelRoot.getAnimations().add(animation);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private GVRSceneObject makeCamera(GVRContext context, AiScene scene)
+    {
+        List<AiCamera> cameras = scene.getCameras();
+        if (cameras.size() == 0)
+        {
+            return null;
+        }
+        GVRSceneObject mainCamera = new GVRSceneObject(context);
+        GVRCameraRig cameraRig = GVRCameraRig.makeInstance(context);
+        AiCamera aiCam = cameras.get(0);
+        AiVector up = (AiVector) aiCam.getUp(Jassimp.BUILTIN);
+        AiVector fwd = (AiVector) aiCam.getLookAt(Jassimp.BUILTIN);
+        AiVector pos = (AiVector) aiCam.getPosition(Jassimp.BUILTIN);
+        Matrix4f mtx = new Matrix4f();
+
+        mtx.setLookAt(pos.getX(), pos.getY(), pos.getZ(),
+                pos.getX() + fwd.getX(), pos.getY() + fwd.getY(), pos.getZ() + fwd.getZ(),
+                up.getX(), up.getY(), up.getZ());
+        mainCamera.setName("MainCamera");
+        mainCamera.getTransform().setModelMatrix(mtx);
+        cameraRig.setNearClippingDistance(aiCam.getClipPlaneNear());
+        cameraRig.setFarClippingDistance(aiCam.getClipPlaneFar());
+        mainCamera.attachComponent(cameraRig);
+        return mainCamera;
+    }
+
+    private void recurseAssimpNodes(
+        GVRAssetLoader.AssetRequest request,
+        GVRSceneObject parentSceneObject,
+        AiScene scene,
+        AiNode node,
+        Hashtable<String,
+        GVRLightBase> lightlist) throws IOException {
+        final GVRSceneObject sceneObject;
+        final GVRContext context = parentSceneObject.getGVRContext();
+
+        if (node.getNumMeshes() == 0) {
+            sceneObject = createSceneObject(context, node);
+            parentSceneObject.addChildObject(sceneObject);
+        } else if (node.getNumMeshes() == 1) {
+            // add the scene object to the scene graph
+            sceneObject = createSubSceneObject(request, parentSceneObject, scene, node, 0);
+        } else {
+            sceneObject = createSceneObject(context, node);
+            parentSceneObject.addChildObject(sceneObject);
+            for (int i = 0; i < node.getNumMeshes(); i++) {
+                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, scene, node, i);
+            }
+        }
+
+        if (node.getTransform(sWrapperProvider) != null) {
+            float[] matrix = node.getTransform(sWrapperProvider);
+            sceneObject.getTransform().setModelMatrix(matrix);
+        }
+        attachLights(lightlist, sceneObject);
+        for (AiNode child : node.getChildren()) {
+            recurseAssimpNodes(request, sceneObject, scene, child, lightlist);
+        }
+
+        context.runOnTheFrameworkThread(new Runnable() {
+            public void run() {
+                // Inform the loaded object after it has been attached to the scene graph
+                context.getEventManager().sendEvent(
+                        sceneObject,
+                        ISceneObjectEvents.class,
+                        "onLoaded");
+            }
+        });
+     }
+
+    private void attachLights(Hashtable<String, GVRLightBase> lightlist, GVRSceneObject sceneObject){
+        String name = sceneObject.getName();
+        GVRLightBase light =  lightlist.get(name);
+        if (light != null) {
+            Quaternionf q = new Quaternionf();
+            q.rotationX((float) Math.PI / 2.0f);
+            light.setDefaultOrientation(q);
+            sceneObject.attachLight(light);
+        }
+
+    }
+
+    /**
+     * Helper method to create a new {@link GVRSceneObject} with the mesh at the
+     * index {@link index} of the node mesh array with a color or texture
+     * material.
+     *
+     * @param assetRelativeFilename
+     *            A filename, relative to the {@code assets} directory. The file
+     *            can be in a sub-directory of the {@code assets} directory:
+     *            {@code "foo/bar.png"} will open the file
+     *            {@code assets/foo/bar.png}
+     *
+     * @param node
+     *            A reference to the AiNode for which we want to recurse all its
+     *            children and meshes.
+     *
+     * @param index
+     *            The index of the mesh in the array of meshes for that node.
+     *
+     * @param wrapperProvider
+     *            AiWrapperProvider for unwrapping Jassimp properties.
+     *
+     * @return The new {@link GVRSceneObject} with the mesh at the index
+     *         {@link index} for the node {@link node}
+     *
+     * @throws IOException
+     *             File does not exist or cannot be read
+     */
+    private GVRSceneObject createSubSceneObject(
+            GVRAssetLoader.AssetRequest assetRequest,
+            GVRSceneObject parent,
+            AiScene scene,
+            AiNode node,
+            int index)
+            throws IOException {
+        final GVRContext context = parent.getGVRContext();
+        AiMesh aiMesh = scene.getMeshes().get(node.getMeshes()[index]);
+        FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
+                createMesh(parent.getGVRContext(), aiMesh));
+        AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
+        final GVRMaterial meshMaterial = new GVRMaterial(context, GVRMaterial.GVRShaderType.BeingGenerated.ID);
+
+        /* Diffuse color & Opacity */
+        AiColor diffuseColor = material.getDiffuseColor(sWrapperProvider);        /* Opacity */
+        float opacity = diffuseColor.getAlpha();
+        if (material.getOpacity() > 0) {
+            opacity *= material.getOpacity();
+        }
+        meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
+                diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
+
+        /* Specular color */
+        AiColor specularColor = material.getSpecularColor(sWrapperProvider);
+        meshMaterial.setSpecularColor(specularColor.getRed(),
+                specularColor.getGreen(), specularColor.getBlue(),
+                specularColor.getAlpha());
+
+
+        /* Ambient color */
+        AiColor ambientColor = material.getAmbientColor(sWrapperProvider);
+        meshMaterial.setAmbientColor(ambientColor.getRed(),
+                ambientColor.getGreen(), ambientColor.getBlue(),
+                ambientColor.getAlpha());
+
+
+        /* Emissive color */
+        AiColor emissiveColor = material.getEmissiveColor(sWrapperProvider);
+        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                emissiveColor.getGreen(), emissiveColor.getBlue(),
+                emissiveColor.getAlpha());
+
+
+        /* Specular Exponent */
+        float specularExponent = material.getShininess();
+        meshMaterial.setSpecularExponent(specularExponent);
+
+        /* Diffuse Texture */
+        loadTextures(assetRequest, material, meshMaterial, context);
+
+
+        GVRSceneObject sceneObject = createSceneObject(context, node);
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(context);
+        sceneObjectRenderData.setMesh(futureMesh);
+
+        sceneObjectRenderData.setMaterial(meshMaterial);
+        sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
+        sceneObject.attachRenderData(sceneObjectRenderData);
+
+        parent.addChildObject(sceneObject);
+        return sceneObject;
+    }
+
+    private static final Map<AiTextureType, String> textureMap;
+    static
+    {
+        textureMap = new HashMap<AiTextureType, String>();
+        textureMap.put(AiTextureType.DIFFUSE,"diffuseTexture");
+        textureMap.put(AiTextureType.SPECULAR,"specularTexture");
+        textureMap.put(AiTextureType.AMBIENT,"ambientTexture");
+        textureMap.put(AiTextureType.EMISSIVE,"emissiveTexture");
+        textureMap.put(AiTextureType.HEIGHT,"heightTexture");
+        textureMap.put(AiTextureType.NORMALS,"normalTexture");
+        textureMap.put(AiTextureType.SHININESS,"shininessTexture");
+        textureMap.put(AiTextureType.OPACITY,"opacityTexture");
+        textureMap.put(AiTextureType.DISPLACEMENT,"displacementTexture");
+        textureMap.put(AiTextureType.LIGHTMAP,"lightmapTexture");
+        textureMap.put(AiTextureType.REFLECTION,"reflectionTexture");
+    }
+
+    private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
+        for (final AiTextureType texType : AiTextureType.values())
+        {
+            if(texType != AiTextureType.UNKNOWN)
+            {
+                final String texFileName = material.getTextureFile(texType, 0);
+                if (!"".equals(texFileName))
+                {
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureMap.get(texType));
+                    assetRequest.loadTexture(texRequest);
+                }
+            }
+        }
+    }
+
+    private void importLights(final GVRContext context, List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){
+        for(AiLight light: lights){
+            AiLightType type = light.getType();
+            if(type == AiLightType.DIRECTIONAL){
+                GVRDirectLight gvrLight = new GVRDirectLight(context);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+            if(type == AiLightType.POINT){
+                GVRPointLight gvrLight = new GVRPointLight(context);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+            if(type == AiLightType.SPOT){
+                GVRSpotLight gvrLight = new GVRSpotLight(context);
+                setPhongLightProp(gvrLight,light);
+                setLightProp(gvrLight, light);
+                gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
+                gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
+                String name = light.getName();
+                lightlist.put(name, gvrLight);
+            }
+        }
+
+    }
+
+    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
+        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
+        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
+    }
+
+    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+        org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(sWrapperProvider);
+        gvrLight.setVec4("ambient_intensity", ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
+        gvrLight.setVec4("diffuse_intensity", diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
+        gvrLight.setVec4("specular_intensity", specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
     }
 }

@@ -24,24 +24,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.EnumSet;
-import java.util.Hashtable;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
-import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 
-import org.gearvrf.jassimp.AiMaterial;
-import org.gearvrf.jassimp.AiNode;
-import org.gearvrf.jassimp.AiScene;
-import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
-import org.gearvrf.jassimp2.AiLight;
-import org.gearvrf.jassimp2.AiLightType;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
-import org.gearvrf.jassimp2.GVRJassimpModelHelper;
 import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.jassimp2.JassimpFileIO;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
@@ -53,7 +44,7 @@ import org.gearvrf.x3d.X3Dobject;
 import org.gearvrf.x3d.X3DparseLights;
 import android.content.Context;
 import android.content.res.AssetManager;
-import org.gearvrf.jassimp.AiColor;
+
 import org.gearvrf.utility.ResourceCacheBase;
 import org.gearvrf.utility.ResourceReader;
 
@@ -305,15 +296,25 @@ public final class GVRAssetLoader {
                     if (mReplaceScene)
                     {
                         GVRSceneObject mainCam = mModel.getSceneObjectByName("MainCamera");
-                        GVRCameraRig modelCam = (mainCam != null) ? mModel.getCameraRig() : null;
+                        GVRCameraRig modelCam = null;
+                        if (mainCam != null)
+                        {
+                            modelCam = (GVRCameraRig) mainCam.detachComponent(GVRCameraRig.getComponentType());
+                        }
+                        GVRAnimator animator = (GVRAnimator) mModel.getComponent(GVRAnimator.getComponentType());
 
                         mScene.clear();
+                        if ((animator != null) && animator.autoStart())
+                        {
+                            animator.startAll();
+                        }
                         if (modelCam != null)
                         {
                             GVRCameraRig sceneCam = mScene.getMainCameraRig();
-                            sceneCam.setNearClippingDistance(modelCam.getNearClippingDistance());
-                            sceneCam.setFarClippingDistance(modelCam.getFarClippingDistance());
-                            sceneCam.getOwnerObject().getTransform().setModelMatrix(modelCam.getOwnerObject().getTransform().getModelMatrix());
+                            sceneCam.getTransform().setModelMatrix(mainCam.getTransform().getLocalModelMatrix());
+                            mainCam.detachComponent(GVRCameraRig.getComponentType());
+                            mainCam.attachComponent(modelCam);
+                            mScene.setMainCameraRig(modelCam);
                         }
                         else
                         {
@@ -322,7 +323,6 @@ public final class GVRAssetLoader {
                     }
                     mScene.addSceneObject(mModel);
                 }
-                mModel.setEnable(true);
             }
             mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
                     "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
@@ -560,9 +560,10 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            return loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
         else
-            return loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+        return model;
     }
 
     /**
@@ -597,6 +598,41 @@ public final class GVRAssetLoader {
     }
 
     /**
+     * Loads a a 3D model and replaces the current scene with it.
+     * The previous scene objects are removed and the loaded model becomes
+     * the only thing in the scene.
+     *
+     * @param model
+     *          Scene object to become the root of the loaded model.
+     *          This scene object will be named with the base filename of the loaded asset.
+     * @param filePath
+     *            A filename, relative to the root of the volume.
+     *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
+     *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
+     *            Otherwise the file is assumed to be relative to the "assets" directory.
+     *
+     * @param scene
+     *            Scene to be replaced with the model.
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException
+     *
+     */
+    public GVRSceneObject loadScene(GVRSceneObject model, String filePath, GVRScene scene) throws IOException
+    {
+        AssetRequest assetRequest = new AssetRequest(mContext, filePath, scene, true);
+        String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+
+        model.setName(assetRequest.getBaseName());
+        if (ext.equals("x3d"))
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, scene);
+        else
+            loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, scene);
+        return model;
+    }
+
+    /**
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene (if it is not already there).
      *
@@ -615,21 +651,21 @@ public final class GVRAssetLoader {
      * @throws IOException
      *
      */
-    public GVRModelSceneObject loadModel(GVRModelSceneObject model, GVRScene scene) throws IOException
+    public GVRSceneObject loadModel(GVRSceneObject model, String filePath, GVRScene scene) throws IOException
     {
-        String filePath = model.getFileName();
         if ((filePath == null) || (filePath.isEmpty()))
         {
-            throw new IllegalArgumentException("Cannot load a GVRModelSceneObject without a filename");
+            throw new IllegalArgumentException("Cannot load a model without a filename");
         }
         AssetRequest assetRequest = new AssetRequest(mContext, filePath, scene, false);
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            return loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
         else
-            return loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+        return model;
     }
 
     /**
@@ -658,9 +694,10 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            return loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
         else
-            return loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+        return model;
     }
     
     
@@ -700,9 +737,10 @@ public final class GVRAssetLoader {
         model.setName(assetRequest.getBaseName());
 
 		if (ext.equals("x3d"))
-		    return loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+		    loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
 		else
-		    return loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+		    loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        return model;
     }
 
 
@@ -725,13 +763,14 @@ public final class GVRAssetLoader {
      * @throws IOException 
      *
      */
-    private GVRModelSceneObject loadJassimpModel(AssetRequest request, GVRModelSceneObject model,
+    private GVRSceneObject loadJassimpModel(AssetRequest request, GVRSceneObject model,
             EnumSet<GVRImportSettings> settings, boolean cacheEnabled, GVRScene scene) throws IOException
     {
-        model.setEnable(false);
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
         String filePath = request.getBaseName();
+
+        model.setName(filePath);
         GVRResourceVolume volume = request.getVolume();
         try
         {
@@ -754,25 +793,35 @@ public final class GVRAssetLoader {
                     IAssetEvents.class,
                     "onModelError", new Object[] { mContext, errmsg, filePath });
             throw new IOException(errmsg);
-        }        
-
-        GVRJassimpModelHelper helper =
-                new GVRJassimpModelHelper(request, model, assimpScene, volume);
-        mContext.getEventManager().sendEvent(mContext,
-                IAssetEvents.class,
-                "onModelLoaded", new Object[] { mContext, model, filePath });
-         return model;
+        }
+        try
+        {
+            GVRJassimpAdapter.get().processScene(request, model, assimpScene, volume);
+            mContext.getEventManager().sendEvent(mContext,
+                    IAssetEvents.class,
+                    "onModelLoaded", new Object[]{mContext, model, filePath});
+            return model;
+        }
+        catch (IOException ex)
+        {
+            assimpScene = null;
+            mContext.getEventManager().sendEvent(mContext,
+                    IAssetEvents.class,
+                    "onModelError", new Object[] { mContext, ex.getMessage(), filePath });
+            throw ex;
+        }
     }
     
 
-    GVRModelSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
-            GVRModelSceneObject root, EnumSet<GVRImportSettings> settings,
+    GVRSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
+            GVRSceneObject root, EnumSet<GVRImportSettings> settings,
             boolean cacheEnabled, GVRScene scene) throws IOException {
         GVRResourceVolume volume = assetRequest.getVolume();
         InputStream inputStream = null;
         String fileName = assetRequest.getBaseName();
         GVRAndroidResource resource = volume.openResource(fileName);
-        root.setEnable(false);
+
+        root.setName(fileName);
         org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);
         try {
              ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
@@ -794,23 +843,13 @@ public final class GVRAssetLoader {
               inputStream.close();
               mContext.getEventManager().sendEvent(mContext,
                                                    IAssetEvents.class,
-                                                   "onModelLoaded", new Object[] { mContext, (GVRSceneObject) root, fileName });
+                                                   "onModelLoaded", new Object[] { mContext, root, fileName });
         }
-        catch (FileNotFoundException e) {
-          mContext.getEventManager().sendEvent(mContext,
+        catch (Exception ex) {
+            mContext.getEventManager().sendEvent(mContext,
                                                IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, e.getMessage(), fileName });
-        }
-        catch (IOException e1) {
-          mContext.getEventManager().sendEvent(mContext,
-                                               IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, e1.getMessage(), fileName });
-        }
-        catch (Exception e2) {
-          mContext.getEventManager().sendEvent(mContext,
-                                               IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, e2.getMessage(), fileName });
-          e2.printStackTrace();
+                                               "onModelError", new Object[] { mContext, ex.getMessage(), fileName });
+            throw ex;
         }
         return root;
     }
