@@ -293,17 +293,12 @@ public class X3Dobject
       GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
       centerCamera
           .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
-      this.mainCamera = new GVRSceneObject(gvrContext);
-      this.mainCamera.setName("MainCamera");
       cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
-      this.mainCamera.attachComponent(cameraRigAtRoot);
-      cameraRigAtRoot.setOwnerObject(this.mainCamera);
-
+      this.mainCamera = cameraRigAtRoot.getOwnerObject();
+      this.mainCamera.setName("MainCamera");
       cameraRigAtRoot.attachLeftCamera(leftCamera);
       cameraRigAtRoot.attachRightCamera(rightCamera);
       cameraRigAtRoot.attachCenterCamera(centerCamera);
-
-
       cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
       cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
       this.root.addChildObject(this.mainCamera);
@@ -3693,6 +3688,7 @@ public class X3Dobject
             Quaternionf quaternionf = new Quaternionf(axisAngle4f);
             cameraTransform.setRotation(quaternionf.w, quaternionf.x,
                     quaternionf.y, quaternionf.z);
+            mainCamera.setName("DefaultCamera");
           }
           else
           {

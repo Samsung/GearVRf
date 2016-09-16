@@ -276,15 +276,6 @@ public final class GVRAssetLoader {
             mContext.getEventReceiver().removeListener(this);
         }
 
-        private void centerModel(GVRSceneObject model)
-        {
-            GVRSceneObject.BoundingVolume bv = model.getBoundingVolume();
-            float sf = 1 / (4.0f * bv.radius);
-            model.getTransform().setScale(sf, sf, sf);
-            bv = model.getBoundingVolume();
-            model.getTransform().setPosition(-bv.center.x, -bv.center.y, -bv.center.z - 1.5f * bv.radius);
-        }
-
         private void generateLoadEvent()
         {
             String errors = !"".equals(mErrors) ? mErrors : null;
@@ -296,30 +287,23 @@ public final class GVRAssetLoader {
                     if (mReplaceScene)
                     {
                         GVRSceneObject mainCam = mModel.getSceneObjectByName("MainCamera");
-                        GVRCameraRig modelCam = null;
-                        if (mainCam != null)
-                        {
-                            modelCam = (GVRCameraRig) mainCam.detachComponent(GVRCameraRig.getComponentType());
-                        }
-                        GVRAnimator animator = (GVRAnimator) mModel.getComponent(GVRAnimator.getComponentType());
+                        GVRCameraRig modelCam = (mainCam != null) ? mainCam.getCameraRig() : null;
 
                         mScene.clear();
-                        if ((animator != null) && animator.autoStart())
-                        {
-                            animator.start();
-                        }
                         if (modelCam != null)
                         {
                             GVRCameraRig sceneCam = mScene.getMainCameraRig();
                             sceneCam.getTransform().setModelMatrix(mainCam.getTransform().getLocalModelMatrix());
-                            mainCam.detachComponent(GVRCameraRig.getComponentType());
-                            mainCam.attachComponent(modelCam);
-                            mScene.setMainCameraRig(modelCam);
+                            sceneCam.setNearClippingDistance(modelCam.getNearClippingDistance());
+                            sceneCam.setFarClippingDistance(modelCam.getFarClippingDistance());
+                            sceneCam.setCameraRigType(modelCam.getCameraRigType());
                         }
-                        else
-                        {
-                            centerModel(mModel);
-                        }
+                    }
+
+                    GVRAnimator animator = (GVRAnimator) mModel.getComponent(GVRAnimator.getComponentType());
+                    if ((animator != null) && animator.autoStart())
+                    {
+                        animator.start();
                     }
                     mScene.addSceneObject(mModel);
                 }
