@@ -35,7 +35,7 @@ import java.lang.ref.WeakReference;
  * Android {@link MediaPlayer}.
  */
 public class GVRVideoSceneObject extends GVRSceneObject {
-    private GVRVideo mVideo;
+    private volatile GVRVideo mVideo;
 
     /** Video type constants, for use with {@link GVRVideoSceneObject} */
     public abstract class GVRVideoType {
@@ -161,7 +161,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             public void run() {
                 // Because texture.getId() is called, this needs to run in GL thread
                 mVideo = new GVRVideo(gvrContext, mediaPlayer, texture);
-                gvrContext.registerDrawFrameListener(mVideo);
             }
         });
     }
@@ -317,11 +316,22 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         return mVideo.getTimeStamp();
     }
 
-    private class GVRVideo implements GVRDrawFrameListener {
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (null != mVideo) {
+                mVideo.release();
+            }
+        } finally {
+            super.finalize();
+        }
+    }
+
+    private static class GVRVideo implements GVRDrawFrameListener {
 
         private final GVRContext mContext;
         private SurfaceTexture mSurfaceTexture = null;
-        private WeakReference<GVRVideoSceneObjectPlayer> mMediaPlayerRef = null;
+        private GVRVideoSceneObjectPlayer mMediaPlayer;
         private boolean mActive = true;
 
         /**
@@ -392,7 +402,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          * @return the current {@link MediaPlayer}
          */
         public GVRVideoSceneObjectPlayer getMediaPlayer() {
-            return mMediaPlayerRef.get();
+            return mMediaPlayer;
         }
 
         /**
@@ -404,9 +414,11 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         public void setMediaPlayer(GVRVideoSceneObjectPlayer mediaPlayer) {
             release(); // any current MediaPlayer
 
-            mMediaPlayerRef = new WeakReference<>(mediaPlayer);
+            mMediaPlayer = mediaPlayer;
             Surface surface = new Surface(mSurfaceTexture);
             mediaPlayer.setSurface(surface);
+            mContext.registerDrawFrameListener(this);
+
             if (mediaPlayer.canReleaseSurfaceImmediately()) {
                 surface.release();
             }
@@ -428,23 +440,17 @@ public class GVRVideoSceneObject extends GVRSceneObject {
          * {@link MediaPlayer}
          */
         public void release() {
-            if (mMediaPlayerRef != null) {
-                GVRVideoSceneObjectPlayer mediaPlayer = mMediaPlayerRef.get();
-                if (mediaPlayer != null) {
-                    mediaPlayer.release();
-                }
+            if (mMediaPlayer != null) {
+                mMediaPlayer.release();
+                mMediaPlayer = null;
+                mContext.unregisterDrawFrameListener(this);
             }
         }
 
         @Override
         public void onDrawFrame(float drawTime) {
-            GVRVideoSceneObjectPlayer mediaPlayer = mMediaPlayerRef.get();
-            if (mediaPlayer != null && mActive) {
+            if (mMediaPlayer != null && mActive) {
                 mSurfaceTexture.updateTexImage();
-            }
-
-            if (mediaPlayer == null) {
-                mContext.unregisterDrawFrameListener(this);
             }
         }
     }
