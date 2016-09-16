@@ -19,8 +19,8 @@ project(':gearwearlibrary').projectDir = new File('3DCursor/IODevices/gearwear/P
 include ':3DCursorLibrary'
 project(':3DCursorLibrary').projectDir = new File('3DCursor/3DCursorLibrary')
 
-include ':DebugWebServer'
-project(':DebugWebServer').projectDir = new File('DebugWebServer/debugwebserver')
+include ':debugwebserver'
+project(':debugwebserver').projectDir = new File('DebugWebServer/debugwebserver')
 
 include ':SceneSerializer'
 project(':SceneSerializer').projectDir = new File('SceneSerializer/sceneserializer')
