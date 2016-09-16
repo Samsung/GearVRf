@@ -322,7 +322,7 @@ public class GVRJassimpAdapter {
                     }
                     if (animation != null)
                     {
-                        animator.add(animation);
+                        animator.addAnimation(animation);
                         if (modelRoot != null)
                         {
                             modelRoot.getAnimations().add(animation);

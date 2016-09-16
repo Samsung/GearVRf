@@ -306,7 +306,7 @@ public final class GVRAssetLoader {
                         mScene.clear();
                         if ((animator != null) && animator.autoStart())
                         {
-                            animator.startAll();
+                            animator.start();
                         }
                         if (modelCam != null)
                         {
