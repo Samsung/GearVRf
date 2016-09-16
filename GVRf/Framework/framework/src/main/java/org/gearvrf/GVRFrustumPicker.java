@@ -44,12 +44,9 @@ import org.joml.Vector4f;
  * The picked object contains the collider instance, the distance from the
  * origin of the view frustum and the center of the object.
  *
- * If it is attached to a scene object, the picker maintains the list of currently
- * picked objects which can be obtains with getPicked() and continually
- * updates it each frame. (If it is not attached to a scene object,
- * you must manually call doPick() to cause pick events to be generated.)
- *
- * In this mode, when a pickable object is inside the view frustum,
+ * The picker maintains the list of currently
+ * picked objects which can be obtained with getPicked() and continually
+ * updates it each frame. When a pickable object is inside the view frustum,
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
