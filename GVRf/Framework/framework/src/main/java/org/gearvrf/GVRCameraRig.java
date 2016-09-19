@@ -62,7 +62,13 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
         return NativeCameraRig.getComponentType();
     }
 
-    /** Constructs a camera rig without cameras attached. */
+    /**
+     * Constructs a camera rig with cameras attached. An owner scene object is automatically
+     * created for the camera rig.
+     *
+     * Do not try to change the owner object of the camera rig - not supported currently and will
+     * lead to native crashes.
+     */
     public static GVRCameraRig makeInstance(GVRContext gvrContext) {
         final GVRCameraRig result = gvrContext.getActivity().getDelegate().makeCameraRig(gvrContext);
         result.init(gvrContext);
