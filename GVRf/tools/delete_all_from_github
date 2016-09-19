@@ -3,13 +3,13 @@
 #assumes these environment variables have been set correctly
 #ACCESS_TOKEN=<>
 #Generate one at GitHub/Settings/Personal access tokens
-#RELEASE_ID=<>
+RELEASEID=4169404
 #release id for the repo; determine the id by running
 #curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases
 #look for the "id" property of the release that is to be updated
 
 #get assets
-ASSET_URLS_RAW="$(curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases/$RELEASE_ID/assets|grep '"url"'|grep assets)"
+ASSET_URLS_RAW="$(curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases/$RELEASEID/assets|grep '"url"'|grep assets)"
 
 TMP_ARRAY=$(echo $ASSET_URLS_RAW | tr ", \"" "\n")
 
