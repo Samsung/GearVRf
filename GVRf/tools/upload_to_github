@@ -3,7 +3,7 @@
 #assumes these environment variables have been set correctly
 #ACCESS_TOKEN=<>
 #Generate one at GitHub/Settings/Personal access tokens
-#RELEASE_ID=<>
+RELEASEID=4169404
 #release id for the repo; determine the id by running
 #curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases
 #look for the "id" property of the release that is to be updated
@@ -19,6 +19,7 @@ do
 
         echo about to upload asset $FILENAME
         #todo: upload url has to be retrieved from the release info
-        curl -H "Content-Type:application/zip" -H "Authorization: token $ACCESS_TOKEN" https://uploads.github.com/repos/Samsung/GearVRf/releases/$RELEASE_ID/assets?name=$NAME-$TODAY.$EXTENSION --data-binary @"$var"
+        curl -H "Content-Type:application/zip" -H "Authorization: token $ACCESS_TOKEN" https://uploads.github.com/repos/Samsung/GearVRf/releases/$RELEASEID/assets?name=$NAME-$TODAY.$EXTENSION --data-binary @"$var"
+        echo Error code "$?"
     fi
 done
