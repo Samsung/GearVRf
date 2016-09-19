@@ -155,8 +155,7 @@ assembleDebug {}.doLast {
             if (libsDir.exists()) {
                 from 'build/outputs/aar'
                 into libsDir
-                include 'backend_oculus-debug.aar'
-                rename('backend_oculus-debug.aar', 'backend-debug.aar')
+                include '*-debug.aar'
             } else {
                 println "Cannot copy aar files, libs directory does not exist!"
             }
@@ -171,6 +170,16 @@ assembleDebug {}.doLast {
             into testsLibs
             include 'backend_oculus-debug.aar'
         }
+    }
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include 'backend_oculus-debug.aar'
     }
 }
 
