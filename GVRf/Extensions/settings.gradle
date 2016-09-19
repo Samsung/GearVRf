@@ -22,11 +22,11 @@ project(':3DCursorLibrary').projectDir = new File('3DCursor/3DCursorLibrary')
 include ':debugwebserver'
 project(':debugwebserver').projectDir = new File('DebugWebServer/debugwebserver')
 
-include ':SceneSerializer'
-project(':SceneSerializer').projectDir = new File('SceneSerializer/sceneserializer')
+include ':sceneserializer'
+project(':sceneserializer').projectDir = new File('SceneSerializer/sceneserializer')
 
-include ':WidgetPlugin'
-project(':WidgetPlugin').projectDir = new File('WidgetPlugin/widgetplugin')
+include ':widgetplugin'
+project(':widgetplugin').projectDir = new File('WidgetPlugin/widgetplugin')
 
 include ':GearWearIoDevice'
 project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
