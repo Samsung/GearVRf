@@ -43,8 +43,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
-        releaseToGitHub {
-        }
     }
 
     sourceSets.main {
@@ -79,13 +77,10 @@ android {
 
     task uploadToGitHub(type: Exec) {
         onlyIf {
-            System.env['RELEASE_ID'] != null
-        }
-        onlyIf {
             System.env['ACCESS_TOKEN'] != null
         }
 
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-debug.aar').absolutePath
     }
     uploadToGitHub.doFirst {
         println('uploading to github')
@@ -132,8 +127,8 @@ assembleDebug {}.doLast {
         into gearvrfLibs
         include '*-debug.aar'
     }
-}
 
-assembleReleaseToGitHub {}.doLast {
-    uploadToGitHub.execute();
+    if (System.env['ACCESS_TOKEN'] != null) {
+        uploadToGitHub.execute();
+    }
 }
