@@ -163,6 +163,15 @@ assembleDebug {}.doLast {
         }
     }
     tasks.copyAARFiles.execute()
+
+    def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
+    if (file(testsLibs).exists()) {
+        copy {
+            from 'build/outputs/aar'
+            into testsLibs
+            include 'backend_oculus-debug.aar'
+        }
+    }
 }
 
 assembleReleaseToGitHub {}.doLast {
