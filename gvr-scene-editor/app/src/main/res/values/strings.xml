@@ -15,7 +15,6 @@
  */-->
 
 <resources>
-    <string name="app_name">Scene Editor</string>
     <string name="tv_scale">Scale</string>
     <string name="tv_yaw">Yaw</string>
     <string name="tv_pitch">Pitch</string>
