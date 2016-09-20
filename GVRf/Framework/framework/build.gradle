@@ -43,8 +43,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
-        releaseToGitHub {
-        }
     }
 
     sourceSets.main {
@@ -79,13 +77,10 @@ android {
 
     task uploadToGitHub(type: Exec) {
         onlyIf {
-            System.env['RELEASE_ID'] != null
-        }
-        onlyIf {
             System.env['ACCESS_TOKEN'] != null
         }
 
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-releaseToGitHub.aar').absolutePath
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/framework-debug.aar').absolutePath
     }
     uploadToGitHub.doFirst {
         println('uploading to github')
@@ -107,7 +102,7 @@ assembleDebug {}.doLast {
             if (libsDir.exists()) {
                 from 'build/outputs/aar'
                 into libsDir
-                include '**/*.aar'
+                include '*-debug.aar'
             } else {
                 println "Cannot copy aar files, libs directory does not exist!"
             }
@@ -120,11 +115,20 @@ assembleDebug {}.doLast {
         copy {
             from 'build/outputs/aar'
             into testsLibs
-            include '**/*.aar'
+            include '*-debug.aar'
         }
     }
-}
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include '*-debug.aar'
+    }
 
-assembleReleaseToGitHub {}.doLast {
-    uploadToGitHub.execute();
+    if (System.env['ACCESS_TOKEN'] != null) {
+        uploadToGitHub.execute();
+    }
 }

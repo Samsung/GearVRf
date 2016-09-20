@@ -78,6 +78,16 @@ assembleDebug {}.doLast{
         }
     }
     tasks.copyAARFiles.execute()
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include '*-debug.aar'
+    }
 }
 
 assembleDebug {}.doLast {

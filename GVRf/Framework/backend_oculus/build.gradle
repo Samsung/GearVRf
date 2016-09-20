@@ -75,8 +75,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
-        releaseToGitHub {
-        }
     }
 
     sourceSets.main {
@@ -114,23 +112,21 @@ android {
 
     task deleteAllFromGitHub(type: Exec) {
         onlyIf {
-            System.env['RELEASE_ID'] != null
-        }
-        onlyIf {
             System.env['ACCESS_TOKEN'] != null
         }
 
         commandLine '../../tools/delete_all_from_github'
     }
+    deleteAllFromGitHub.doFirst {
+        println('deleting all assets from github release')
+    }
+
     task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['RELEASE_ID'] != null
-        }
         onlyIf {
             System.env['ACCESS_TOKEN'] != null
         }
 
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/backend_oculus-releaseToGitHub.aar').absolutePath
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/backend_oculus-debug.aar').absolutePath
     }
     uploadToGitHub.doFirst {
         println('uploading to github')
@@ -155,8 +151,7 @@ assembleDebug {}.doLast {
             if (libsDir.exists()) {
                 from 'build/outputs/aar'
                 into libsDir
-                include 'backend_oculus-debug.aar'
-                rename('backend_oculus-debug.aar', 'backend-debug.aar')
+                include '*-debug.aar'
             } else {
                 println "Cannot copy aar files, libs directory does not exist!"
             }
@@ -172,18 +167,32 @@ assembleDebug {}.doLast {
             include 'backend_oculus-debug.aar'
         }
     }
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include 'backend_oculus-debug.aar'
+    }
 }
 
-assembleReleaseToGitHub {}.doLast {
+assembleDebug {}.doLast {
+    if (System.env['ACCESS_TOKEN'] == null) {
+        return
+    }
+
     println 'removing oculus binaries'
     exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-releaseToGitHub.aar', 'libs/VrApi.jar']
+        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-debug.aar', 'libs/VrApi.jar']
     }
     exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-releaseToGitHub.aar', 'libs/SystemUtils.jar']
+        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-debug.aar', 'libs/SystemUtils.jar']
     }
     exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-releaseToGitHub.aar', 'jni/armeabi-v7a/libvrapi.so']
+        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-debug.aar', 'jni/armeabi-v7a/libvrapi.so']
     }
 
     deleteAllFromGitHub.execute();
