@@ -132,22 +132,56 @@ void BoundingVolume::expand(const BoundingVolume &volume) {
 
 void BoundingVolume::transform(const BoundingVolume &in_volume,
         glm::mat4 matrix) {
-    // Make sure the bounding volume itself is cleared before transformation
-    reset();
+    float a, b;
 
-    glm::vec4 min_corner(in_volume.min_corner(), 1.0f);
-    glm::vec4 max_corner(in_volume.max_corner(), 1.0f);
-    glm::vec4 transformed_min_corner = matrix * min_corner;
-    glm::vec4 transformed_max_corner = matrix * max_corner;
+    //Inspired by Graphics Gems - TransBox.c
+    //Transform the AABB to the correct position in world space
+    //Generate a new AABB from the non axis aligned bounding box
+    min_corner_.x = matrix[3].x;
+    min_corner_.y = matrix[3].y;
+    min_corner_.z = matrix[3].z;
 
-    glm::vec3 transformed_min(transformed_min_corner.x, transformed_min_corner.y,
-            transformed_min_corner.z);
-    glm::vec3 transformed_max(transformed_max_corner.x, transformed_max_corner.y,
-            transformed_max_corner.z);
+    max_corner_.x = matrix[3].x;
+    max_corner_.y = matrix[3].y;
+    max_corner_.z = matrix[3].z;
 
-    // expand with the new corners
-    expand(transformed_min);
-    expand(transformed_max);
+    glm::vec3 in_min_corner = in_volume.min_corner();
+    glm::vec3 in_max_corner = in_volume.max_corner();
+
+    for (int i = 0; i < 3; i++) {
+        //x coord
+        a = matrix[i].x * in_min_corner.x;
+        b = matrix[i].x * in_max_corner.x;
+        if (a < b) {
+            min_corner_.x += a;
+            max_corner_.x += b;
+        } else {
+            min_corner_.x += b;
+            max_corner_.x += a;
+        }
+
+        //y coord
+        a = matrix[i].y * in_min_corner.y;
+        b = matrix[i].y * in_max_corner.y;
+        if (a < b) {
+            min_corner_.y += a;
+            max_corner_.y += b;
+        } else {
+            min_corner_.y += b;
+            max_corner_.y += a;
+        }
+
+        //z coord
+        a = matrix[i].z * in_min_corner.z;
+        b = matrix[i].z * in_max_corner.z;
+        if (a < b) {
+            min_corner_.z += a;
+            max_corner_.z += b;
+        } else {
+            min_corner_.z += b;
+            max_corner_.z += a;
+        }
+    }
 }
 
 bool BoundingVolume::intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const
