@@ -43,7 +43,7 @@ import org.joml.Vector3f;
  * camera and the hit position.
  * 
  * The picker maintains the list of currently picked objects
- * (which can be obtains with getPicked()) and continually updates it each frame.
+ * (which can be obtained with getPicked()) and continually updates it each frame.
  *
  * In this mode, when the ray from the scene object hits a pickable object,
  * the picker generates one or more pick events (IPickEvents interface)
