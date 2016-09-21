@@ -141,6 +141,7 @@ public:
     bool isColliding(SceneObject* scene_object);
     bool intersectsBoundingVolume(float rox, float roy, float roz, float rdx,
             float rdy, float rdz);
+    bool intersectsBoundingVolume(SceneObject *scene_object);
 
     void setLODRange(float minRange, float maxRange) {
         lod_min_range_ = minRange * minRange;

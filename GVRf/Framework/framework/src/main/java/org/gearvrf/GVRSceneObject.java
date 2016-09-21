@@ -941,7 +941,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     /**
      * Check if {@code otherObject} is colliding with this object.
-     * 
+     *
      * @param otherObject
      *            {@link GVRSceneObject Object} to check for collision with this
      *            object.
@@ -1012,8 +1012,22 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     boolean intersectsBoundingVolume(float ox, float oy, float oz, float dx,
             float dy, float dz) {
-        return NativeSceneObject.intersectsBoundingVolume(getNative(), ox, oy,
+        return NativeSceneObject.rayIntersectsBoundingVolume(getNative(), ox, oy,
                 oz, dx, dy, dz);
+    }
+
+    /**
+     * Tests this {@link GVRSceneObject}'s hierarchical bounding volume against
+     * the provided {@link GVRSceneObject}'s hierarchical bounding volume.
+     *
+     * @param otherObject the {@link GVRSceneObject} to check for intersection.
+     * @return <code>true</code> if the object intersects with the
+     * {@link GVRSceneObject}s hierarchical bounding volume,
+     * <code>false</code> otherwise.
+     */
+    boolean intersectsBoundingVolume(GVRSceneObject otherObject) {
+        return NativeSceneObject.objectIntersectsBoundingVolume(getNative(), otherObject.getNative
+                ());
     }
 
     /**
@@ -1334,8 +1348,10 @@ class NativeSceneObject {
 
     static native void setEnable(long sceneObject, boolean flag);
     
-    static native boolean intersectsBoundingVolume(long sceneObject, float rox,
+    static native boolean rayIntersectsBoundingVolume(long sceneObject, float rox,
             float roy, float roz, float rdx, float rdy, float rdz);
+
+    static native boolean objectIntersectsBoundingVolume(long sceneObject, long otherObject);
 
     static native void setLODRange(long sceneObject, float minRange, float maxRange);
     static native float getLODMinRange(long sceneObject);

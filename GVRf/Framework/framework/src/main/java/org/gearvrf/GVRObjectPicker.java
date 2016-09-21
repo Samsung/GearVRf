@@ -14,17 +14,6 @@
  */
 
 package org.gearvrf;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.joml.FrustumCuller;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-
 /**
  * Finds the scene objects that intersect the scene object the
  * picker is attached to.
@@ -42,36 +31,33 @@ import org.joml.Vector4f;
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
- *  - onEnter(GVRSceneObject)  called when the scene object enters the frustum.
- *  - onExit(GVRSceneObject)   called when the scene object exits the frustum.
- *  - onInside(GVRSceneObject) called while the scene object is inside the frustum.
- *  - onPick(GVRPicker)        called when the set of picked objects changes.
- *  - onNoPick(GVRPicker)      called once when nothing is picked.
+ * - onEnter(GVRSceneObject)  called when the scene object enters the frustum.
+ * - onExit(GVRSceneObject)   called when the scene object exits the frustum.
+ * - onInside(GVRSceneObject) called while the scene object is inside the frustum.
+ * - onPick(GVRPicker)        called when the set of picked objects changes.
+ * - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject.attachComponent
+ * @see GVRSceneObject#attachComponent
  * @see GVRCollider
- * @see GVRComponent.setEnable
+ * @see GVRComponent#setEnable
  * @see GVRPickedObject
  * @see GVRPicker
  */
-public class GVRObjectPicker extends GVRPicker
-{
+public class GVRObjectPicker extends GVRPicker {
 
     /**
      * Construct a picker which picks from a given scene.
+     *
      * @param context context that owns the scene
-     * @param scene scene containing the scene objects to pick from
+     * @param scene   scene containing the scene objects to pick from
      */
-    public GVRObjectPicker(GVRContext context, GVRScene scene)
-    {
+    public GVRObjectPicker(GVRContext context, GVRScene scene) {
         super(context, scene);
     }
 
-    public void onDrawFrame(float frameTime)
-    {
-        if (isEnabled())
-        {
+    public void onDrawFrame(float frameTime) {
+        if (isEnabled()) {
             doPick();
         }
     }
@@ -85,50 +71,26 @@ public class GVRObjectPicker extends GVRPicker
      * it to a scene object. In this case you must
      * manually set the pick ray and call doPick()
      * to generate the pick events.
+     *
      * @see IPickEvents
-     * @see GVRFrustumPicker.pickVisible
+     * @see GVRFrustumPicker#pickVisible
      */
-    public void doPick()
-    {
+    public void doPick() {
         GVRSceneObject owner = getOwnerObject();
         GVRPickedObject[] picked = GVRFrustumPicker.pickVisible(mScene);
 
-        if (owner != null)
-        {
-            GVRSceneObject.BoundingVolume bv1 = owner.getBoundingVolume();
-
-            for (int i = 0; i < picked.length; ++i)
-            {
+        if (owner != null) {
+            for (int i = 0; i < picked.length; ++i) {
                 GVRPickedObject hit = picked[i];
 
-                if (hit != null)
-                {
+                if (hit != null) {
                     GVRSceneObject sceneObj = hit.hitObject;
-                    GVRSceneObject.BoundingVolume bv2 = sceneObj.getBoundingVolume();
-                    if (!intersect(bv1, bv2))
-                    {
+                    if (!owner.intersectsBoundingVolume(sceneObj)) {
                         picked[i] = null;
                     }
                 }
             }
         }
         generatePickEvents(picked);
-    }
-
-    /**
-     * Determines whether or not two axially aligned bounding boxes in
-     * the same coordinate space intersect.
-     * @param bv1 first bounding volume to test.
-     * @param bv2 second bounding volume to test.
-     * @return true if the boxes intersect, false if not.
-     */
-    protected boolean intersect(GVRSceneObject.BoundingVolume bv1, GVRSceneObject.BoundingVolume bv2)
-    {
-        return  (bv1.maxCorner.x >= bv2.minCorner.x) &&
-                (bv1.maxCorner.y >= bv2.minCorner.y) &&
-                (bv1.maxCorner.z >= bv2.minCorner.z) &&
-                (bv1.minCorner.x <= bv2.maxCorner.x) &&
-                (bv1.minCorner.y <= bv2.maxCorner.y) &&
-                (bv1.minCorner.z <= bv2.maxCorner.z);
     }
 }
