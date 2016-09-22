@@ -216,6 +216,9 @@ public class GVRPicker extends GVRBehavior {
                 }
             }
         }
+        // get the count of non null picked objects
+        int pickedCount = 0;
+
         /*
          * Send "onEnter" events for colliders that were picked for the first time.
          * Send "onInside" events for colliders that were already picked.
@@ -226,6 +229,9 @@ public class GVRPicker extends GVRBehavior {
             {
                 continue;
             }
+            //increment the pick count
+            pickedCount++;
+
             GVRCollider collider = collision.hitCollider;
             if (!hasCollider(mPicked, collider))
             {
@@ -239,7 +245,7 @@ public class GVRPicker extends GVRBehavior {
         }
         if (selectionChanged)
         {
-            if ((picked != null) && (picked.length > 0))
+            if (pickedCount > 0)
             {
                 mPicked = picked;
                 getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onPick", this);
