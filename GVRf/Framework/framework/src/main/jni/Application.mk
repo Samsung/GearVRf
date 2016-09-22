@@ -13,7 +13,13 @@
  # See the License for the specific language governing permissions and
  # limitations under the License.
  #
+
+ifndef ARM64
 APP_ABI := armeabi-v7a
+else
+APP_ABI := arm64-v8a
+endif
+
 APP_PLATFORM := android-19
 APP_STL := gnustl_static
 NDK_TOOLCHAIN_VERSION := 4.9

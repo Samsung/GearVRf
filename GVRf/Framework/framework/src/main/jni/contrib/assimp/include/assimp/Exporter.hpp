@@ -496,7 +496,11 @@ inline const aiExportDataBlob* Exporter :: ExportToBlob(  const aiScene* pScene,
 // ----------------------------------------------------------------------------------
 inline aiReturn Exporter :: Export( const aiScene* pScene, const std::string& pFormatId, const std::string& pPath, unsigned int pPreprocessing, const ExportProperties* pProperties)
 {
+#ifndef ARM64
     return Export(pScene,pFormatId.c_str(),pPath.c_str(),pPreprocessing, pProperties);
+#else
+    std::terminate();
+#endif
 }
 
 } // namespace Assimp
