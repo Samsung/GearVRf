@@ -1,2 +1,4 @@
 include ':framework'
-include ':backend_oculus'
+if (!hasProperty("ARM64")) {
+    include ':backend_oculus'
+}
