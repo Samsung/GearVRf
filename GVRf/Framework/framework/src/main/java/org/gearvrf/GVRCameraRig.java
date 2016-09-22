@@ -59,7 +59,9 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
     };
 
     static public long getComponentType() {
-        return NativeCameraRig.getComponentType();
+        long type = NativeCameraRig.getComponentType();
+        Log.d("ND", "ND: GVRCameraRig.getComponentType JAVA %d", type);
+        return type;
     }
 
     /**

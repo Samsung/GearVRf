@@ -71,7 +71,6 @@ import org.gearvrf.GVRTextureParameters.TextureWrapType;
 
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
@@ -275,18 +274,14 @@ public class X3Dobject
   /********** X3Dobject Constructor ************/
   /*********************************************/
   public X3Dobject(GVRAssetLoader.AssetRequest assetRequest,
-                   GVRModelSceneObject root)
+                   GVRSceneObject root)
   {
     try
     {
-
       this.assetRequest = assetRequest;
       this.gvrContext = assetRequest.getContext();
       this.activityContext = gvrContext.getContext();
       this.root = root;
-      // this will need to be referenced in the X3DparserScript
-      this.root.setName(X3D_ROOT_NODE);
-
 
       // Camera rig setup code based on GVRScene::init()
       GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
@@ -298,17 +293,12 @@ public class X3Dobject
       GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
       centerCamera
           .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
-      this.mainCamera = new GVRSceneObject(gvrContext);
-      this.mainCamera.setName("MainCamera");
       cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
-      this.mainCamera.attachComponent(cameraRigAtRoot);
-      cameraRigAtRoot.setOwnerObject(this.mainCamera);
-
+      this.mainCamera = cameraRigAtRoot.getOwnerObject();
+      this.mainCamera.setName("MainCamera");
       cameraRigAtRoot.attachLeftCamera(leftCamera);
       cameraRigAtRoot.attachRightCamera(rightCamera);
       cameraRigAtRoot.attachCenterCamera(centerCamera);
-
-
       cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
       cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
       this.root.addChildObject(this.mainCamera);
@@ -3698,6 +3688,7 @@ public class X3Dobject
             Quaternionf quaternionf = new Quaternionf(axisAngle4f);
             cameraTransform.setRotation(quaternionf.w, quaternionf.x,
                     quaternionf.y, quaternionf.z);
+            mainCamera.setName("DefaultCamera");
           }
           else
           {

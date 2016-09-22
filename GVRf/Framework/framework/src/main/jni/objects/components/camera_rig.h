@@ -31,6 +31,8 @@
 #include "objects/components/transform.h"
 #include "objects/rotation_sensor_data.h"
 
+#include "util/gvr_log.h"
+
 namespace gvr {
 class Camera;
 class PerspectiveCamera;
@@ -42,6 +44,7 @@ public:
     };
 
     static long long getComponentType() {
+LOGD("ND: GVRCameraRig.getComponentType = %lld", COMPONENT_TYPE_CAMERA_RIG);
         return COMPONENT_TYPE_CAMERA_RIG;
     }
 

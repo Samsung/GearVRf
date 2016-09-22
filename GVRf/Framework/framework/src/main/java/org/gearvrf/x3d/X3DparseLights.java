@@ -56,7 +56,7 @@ public class X3DparseLights
 
   private ShaderSettings shaderSettings = null;
 
-  public X3DparseLights(GVRContext gvrContext, GVRModelSceneObject root)
+  public X3DparseLights(GVRContext gvrContext, GVRSceneObject root)
   {
     this.gvrContext = gvrContext;
     this.root = root;

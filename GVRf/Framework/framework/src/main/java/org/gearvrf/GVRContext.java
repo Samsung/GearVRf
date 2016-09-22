@@ -532,8 +532,8 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename)
             throws IOException {
-        return getAssimpModel(assetRelativeFilename,
-                GVRImportSettings.getRecommendedSettings());
+        return mImporter.loadModel(assetRelativeFilename,
+                GVRImportSettings.getRecommendedSettings(), true, (GVRScene) null);
     }
 
     /**
@@ -557,7 +557,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
-        return mImporter.getAssimpModel(this, assetRelativeFilename, settings);
+        return mImporter.loadModel(assetRelativeFilename, settings, true, (GVRScene) null);
     }
     
     /**

@@ -15,10 +15,12 @@
 
 package org.gearvrf.scene_objects;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.PrettyPrint;
 import org.gearvrf.animation.GVRAnimation;
@@ -26,6 +28,8 @@ import org.gearvrf.utility.Log;
 
 /**
  * {@linkplain GVRSceneObject Scene object} that holds a loaded model.
+ * You can specify the path to an asset and it will automatically
+ * load the asset for you.
  */
 
 public class GVRModelSceneObject extends GVRSceneObject {
@@ -41,6 +45,7 @@ public class GVRModelSceneObject extends GVRSceneObject {
         super(gvrContext);
         mAnimations = new ArrayList<GVRAnimation>();
     }
+
 
     /**
      * Gets the list of animations loaded with the model.

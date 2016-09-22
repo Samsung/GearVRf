@@ -21,6 +21,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
@@ -64,7 +65,7 @@ public class AnimationInteractivityManager {
 
   private X3Dobject x3dObject = null;
   private GVRContext gvrContext = null;
-  private GVRModelSceneObject root = null;
+  private GVRSceneObject root = null;
   private Vector<DefinedItem> definedItems = null;
   private Vector<Interpolator> interpolators = null;
   private Vector<Sensor> sensors = null;
@@ -76,7 +77,7 @@ public class AnimationInteractivityManager {
 
 
   public AnimationInteractivityManager(X3Dobject x3dObject, GVRContext gvrContext,
-                                       GVRModelSceneObject root,
+                                       GVRSceneObject root,
                                        Vector<DefinedItem> definedItems,
                                        Vector<Interpolator> interpolators,
                                        Vector<Sensor> sensors,
@@ -221,6 +222,7 @@ public class AnimationInteractivityManager {
       GVRAnimationChannel gvrAnimationChannel = null;
       GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
       GVRSceneObject gvrAnimatedObject = null;
+
       //interactiveObject.printInteractiveObject();
       // both animated and interactive objects currently must have a time
       // sensor, interpolator and a Transform node with a DEF="..." parameter
