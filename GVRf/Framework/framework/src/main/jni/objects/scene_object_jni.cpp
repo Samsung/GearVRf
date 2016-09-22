@@ -68,9 +68,13 @@ extern "C" {
             JNIEnv * env, jobject obj, jlong jscene_object, bool flag);
 
     JNIEXPORT bool JNICALL
-    Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
+    Java_org_gearvrf_NativeSceneObject_rayIntersectsBoundingVolume(JNIEnv * env,
             jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
             jfloat rdx, jfloat rdy, jfloat rdz);
+
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_objectIntersectsBoundingVolume(
+            JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeSceneObject_setLODRange(
@@ -187,11 +191,19 @@ Java_org_gearvrf_NativeSceneObject_setEnable(
 }
 
 JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
+Java_org_gearvrf_NativeSceneObject_rayIntersectsBoundingVolume(JNIEnv * env,
         jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
         jfloat rdx, jfloat rdy, jfloat rdz) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     return scene_object->intersectsBoundingVolume(rox, roy, roz, rdx, rdy, rdz);
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_objectIntersectsBoundingVolume(
+        JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    SceneObject* other_object = reinterpret_cast<SceneObject*>(jother_object);
+    return scene_object->intersectsBoundingVolume(other_object);
 }
 
 JNIEXPORT void JNICALL

@@ -297,6 +297,27 @@ bool SceneObject::intersectsBoundingVolume(float rox, float roy, float roz,
     return true;
 }
 
+/**
+ * Test this scene object's HBV against the HBV of the provided scene object.
+ */
+bool SceneObject::intersectsBoundingVolume(SceneObject *scene_object) {
+    BoundingVolume this_bounding_volume_ = getBoundingVolume();
+    BoundingVolume that_bounding_volume = scene_object->getBoundingVolume();
+
+    glm::vec3 this_min_corner = this_bounding_volume_.min_corner();
+    glm::vec3 this_max_corner = this_bounding_volume_.max_corner();
+
+    glm::vec3 that_min_corner = that_bounding_volume.min_corner();
+    glm::vec3 that_max_corner = that_bounding_volume.max_corner();
+
+    return  (this_max_corner.x >= that_min_corner.x) &&
+            (this_max_corner.y >= that_min_corner.y) &&
+            (this_max_corner.z >= that_min_corner.z) &&
+            (this_min_corner.x <= that_max_corner.x) &&
+            (this_min_corner.y <= that_max_corner.y) &&
+            (this_min_corner.z <= that_max_corner.z);
+}
+
 void SceneObject::dirtyHierarchicalBoundingVolume() {
     if (bounding_volume_dirty_) {
         return;

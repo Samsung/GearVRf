@@ -146,6 +146,7 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, co
             {
                 data.IsHit = true;
                 data.HitPosition = hitPos;
+                data.Distance = distance;
             }
          }
       }
