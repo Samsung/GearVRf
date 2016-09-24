@@ -49,11 +49,11 @@ static const char NO_SPECULAR_TEXTURE[] = "#undef AS_SPECULAR_TEXTURE\n";
 #define STR(x) STR_(x)
 
 static const char VERTEX_SHADER[] =
-                "in vec4 a_position;\n"
+                "in vec3 a_position;\n"
                 "uniform mat4 u_mvp;\n"
                 "\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
-                "in vec4 a_tex_coord;\n"
+                "in vec2 a_texcoord;\n"
                 "out vec2 v_tex_coord;\n"
                 "#endif\n"
                 "\n"
@@ -69,7 +69,7 @@ static const char VERTEX_SHADER[] =
 
                 "void main() {\n"
                 "#ifdef AS_DIFFUSE_TEXTURE\n"
-                "  v_tex_coord = a_tex_coord.xy;\n"
+                "  v_tex_coord = a_texcoord.xy;\n"
                 "#endif\n"
 
                 "#ifdef AS_SKINNING\n"
@@ -79,10 +79,10 @@ static const char VERTEX_SHADER[] =
                 "  bone += u_bone_matrix[bone_idx[1]] * weights[1]; \n"
                 "  bone += u_bone_matrix[bone_idx[2]] * weights[2]; \n"
                 "  bone += u_bone_matrix[bone_idx[3]] * weights[3]; \n"
-                "  vec4 animated_pos = bone * a_position; \n"
+                "  vec4 animated_pos = bone * vec4(a_position, 1); \n"
                 "  gl_Position = u_mvp * animated_pos;\n"
                 "#else\n"
-                "  gl_Position = u_mvp * a_position;\n"
+                "  gl_Position = u_mvp * vec4(a_position, 1);\n"
                 "#endif\n"
 
                 "}\n";

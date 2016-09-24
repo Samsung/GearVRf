@@ -33,11 +33,11 @@ static const char EGL_IMAGE_EXT_ADRENO [] = "#extension GL_OES_EGL_image_externa
 static const char EGL_IMAGE_EXT_MALI [] = "#extension GL_OES_EGL_image_external : require\n";
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-        "attribute vec4 a_tex_coord;\n"
+        "attribute vec2 a_texcoord;\n"
         "uniform mat4 u_mvp;\n"
         "varying vec2 v_tex_coord;\n"
         "void main() {\n"
-        "  v_tex_coord = a_tex_coord.xy;\n"
+        "  v_tex_coord = a_texcoord.xy;\n"
         "  gl_Position = u_mvp * a_position;\n"
         "}\n";
 
@@ -61,10 +61,10 @@ static const char VERTEX_SHADER_MULTIVIEW[] =
         "layout(num_views = 2) in;\n"
         "uniform mat4 u_mvp_[2];\n"
         "in vec3 a_position;\n"
-        "in vec2 a_tex_coord;\n"
-        "out vec2 v_tex_coord;\n"
+        "in vec2 a_texcoord;\n"
+        "out vec2 v_texcoord;\n"
         "void main() {\n"
-        "  v_tex_coord = a_tex_coord.xy;\n"
+        "  v_texcoord = a_texcoord.xy;\n"
         "  gl_Position = u_mvp_[gl_ViewID_OVR] * vec4(a_position,1.0);\n"
         "}\n";
 
@@ -73,11 +73,11 @@ static const char FRAGMENT_SHADER_MULTIVIEW[] =
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform vec3 u_color;\n"
                 "uniform float u_opacity;\n"
-                "in vec2 v_tex_coord;\n"
+                "in vec2 v_texcoord;\n"
                 "out vec4 out_color;\n"
                 "void main()\n"
                 "{\n"
-                "  vec4 color = texture(u_texture, v_tex_coord);"
+                "  vec4 color = texture(u_texture, v_texcoord);"
                 "  out_color = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
                 "}\n";
 
