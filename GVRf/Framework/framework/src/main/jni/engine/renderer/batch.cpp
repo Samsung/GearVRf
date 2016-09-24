@@ -43,7 +43,7 @@ bool Batch::updateMesh(Mesh* render_mesh){
     const std::vector<unsigned short>& indices = render_mesh->indices();
     const std::vector<glm::vec3>& vertices = render_mesh->vertices();
     const std::vector<glm::vec3>& normals = render_mesh->normals();
-    const std::vector<glm::vec2>& tex_cords = render_mesh->tex_coords();
+    const std::vector<glm::vec2>& tex_cords = render_mesh->getVec2Vector("a_texcoord");
 
     int size = 0;
     size = vertices.size();
@@ -172,7 +172,7 @@ void Batch::meshInit(){
     mesh_init_ = true;
     mesh_.set_vertices(vertices_);
     mesh_.set_normals(normals_);
-    mesh_.set_tex_coords(tex_coords_);
+    mesh_.setVec2Vector("a_texcoord",tex_coords_);
     mesh_.set_indices(indices_);
     mesh_.setFloatVector("a_matrix_index", matrix_indices_);
     if (nullptr != renderdata_) {
