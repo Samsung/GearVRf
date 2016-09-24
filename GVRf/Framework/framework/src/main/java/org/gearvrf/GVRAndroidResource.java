@@ -293,7 +293,7 @@ public class GVRAndroidResource {
      * @return An open {@link InputStream}.
      * @throws IOException 
      */
-    public synchronized final InputStream getStream() {
+    public synchronized final InputStream getStream() throws IOException{
         if (streamState != StreamStates.OPEN) {
             openStream();
         }
@@ -331,49 +331,45 @@ public class GVRAndroidResource {
      * 
      * 
      */
-    public synchronized void openStream() {
-        try {
-            switch (resourceType) {
-            case ANDROID_ASSETS:
-                stream = context.getResources().getAssets().open(assetPath);
-                streamState = StreamStates.OPEN;
-                break;
+    public synchronized void openStream() throws IOException {
+        switch (resourceType) {
+        case ANDROID_ASSETS:
+            stream = context.getResources().getAssets().open(assetPath);
+            streamState = StreamStates.OPEN;
+            break;
 
-            case ANDROID_RESOURCE:
-                stream = context.getResources().openRawResource(resourceId);
-                streamState = StreamStates.OPEN;
-                break;
+        case ANDROID_RESOURCE:
+            stream = context.getResources().openRawResource(resourceId);
+            streamState = StreamStates.OPEN;
+            break;
 
-            case LINUX_FILESYSTEM:
-                stream = new MarkingFileInputStream(filePath);
-                streamState = StreamStates.OPEN;
-                break;
+        case LINUX_FILESYSTEM:
+            stream = new MarkingFileInputStream(filePath);
+            streamState = StreamStates.OPEN;
+            break;
 
-            case NETWORK:
-                if (!enableUrlLocalCache) {
-                    Log.d(TAG,
-                            "Do not allow local caching, use streaming to get the resource");
-                    stream = new URLBufferedInputStream(url);
-                    streamState = StreamStates.OPEN;
-                } else {
-                    Log.d(TAG,
-                            "Allow local caching, download the resource to local cache");
-                    File file = GVRAssetLoader.downloadFile(context,
-                            url.toString());
-                    stream = new MarkingFileInputStream(file);
-                    streamState = StreamStates.OPEN;
-                }
-                break;
-
-            case INPUT_STREAM:
-                //input stream is already open
+        case NETWORK:
+            if (!enableUrlLocalCache) {
+                Log.d(TAG,
+                        "Do not allow local caching, use streaming to get the resource");
+                stream = new URLBufferedInputStream(url);
                 streamState = StreamStates.OPEN;
-                break;
-            default:
-                stream = null;
+            } else {
+                Log.d(TAG,
+                        "Allow local caching, download the resource to local cache");
+                File file = GVRAssetLoader.downloadFile(context,
+                        url.toString());
+                stream = new MarkingFileInputStream(file);
+                streamState = StreamStates.OPEN;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            break;
+
+        case INPUT_STREAM:
+            //input stream is already open
+            streamState = StreamStates.OPEN;
+            break;
+        default:
+            stream = null;
         }
     }
 

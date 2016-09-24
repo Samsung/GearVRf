@@ -488,7 +488,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      */
     public void bindShader(GVRScene scene) {
         if (mShaderTemplate != null) {
-            mShaderTemplate.bindShader(scene.getGVRContext(), this, scene.getLightList());
+            mShaderTemplate.bindShader(scene.getGVRContext(), this, scene);
          }
     }
 

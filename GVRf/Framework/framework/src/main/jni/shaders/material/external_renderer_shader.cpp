@@ -78,7 +78,7 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
         externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
                          scratchBuffer, 6,
                          glm::value_ptr(rstate->uniforms.u_mvp), 16,
-                         glm::value_ptr(*mesh->tex_coords().data()), mesh->tex_coords().size() * 2,
+                         glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,
                          material->getFloat("opacity"));
     } else {
         // Capture texture in RenderTexture
@@ -93,7 +93,7 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
             externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
                     scratchBuffer, 6,
                     glm::value_ptr(mvp), 16,
-                    glm::value_ptr(*mesh->tex_coords().data()), mesh->tex_coords().size() * 2,
+                    glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,
                     1.0);
         }
 
