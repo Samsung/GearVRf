@@ -21,7 +21,6 @@
 #include "util/gvr_gl.h"
 #include "util/gvr_log.h"
 #include <string>
-#include <sstream>
 #include <vector>
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_access.hpp"
@@ -74,7 +73,6 @@ void Light::render(int program, int texIndex) {
     dirty_[program] = false;
     std::string key;
     std::string lname = lightID_ + ".";
-    std::stringstream ss;
     int offset;
 
     /*

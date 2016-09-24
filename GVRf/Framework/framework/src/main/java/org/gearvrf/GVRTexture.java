@@ -216,6 +216,7 @@ public class GVRTexture extends GVRHybridObject {
         }
     }
 
+
     protected static final String TAG = "GVRTexture";
 }
 

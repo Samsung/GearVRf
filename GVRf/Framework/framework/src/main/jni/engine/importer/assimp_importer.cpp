@@ -51,6 +51,7 @@ Mesh* AssimpImporter::getMesh(int index) {
         mesh->set_normals(std::move(normals));
     }
 
+
     if (ai_mesh->mTextureCoords[0] != 0) {
         std::vector<glm::vec2> tex_coords;
         for (int i = 0; i < ai_mesh->mNumVertices; ++i) {
@@ -58,7 +59,8 @@ Mesh* AssimpImporter::getMesh(int index) {
                     glm::vec2(ai_mesh->mTextureCoords[0][i].x,
                             ai_mesh->mTextureCoords[0][i].y));
         }
-        mesh->set_tex_coords(std::move(tex_coords));
+        //mesh->set_tex_coords(std::move(tex_coords));
+        mesh->setVec2Vector(std::string("a_texcoord"),tex_coords);
     }
 
     std::vector<unsigned short> triangles;

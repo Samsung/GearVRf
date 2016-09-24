@@ -8,15 +8,32 @@ precision highp sampler2DArray;
     uniform mat4 u_view; 
 #endif
 
+out vec4 fragColor;
 
 uniform mat4 u_model;
+
 in vec3 viewspace_position;
 in vec3 viewspace_normal;
 in vec4 local_position;
 in vec4 proj_position;
-in vec2 diffuse_coord;
 in vec3 view_direction;
-out vec4 fragColor;
+in vec2 diffuse_coord;
+
+#ifdef HAS_ambientTexture
+out vec2 ambient_coord;
+#endif
+
+#ifdef HAS_specularTexture
+out vec2 specular_coord;
+#endif
+
+#ifdef HAS_emissiveTexture
+out vec2 emissive_coord;
+#endif
+
+#ifdef HAS_normalTexture
+out vec2 normal_coord;
+#endif
 
 #ifdef HAS_SHADOWS
 uniform sampler2DArray u_shadow_maps;
