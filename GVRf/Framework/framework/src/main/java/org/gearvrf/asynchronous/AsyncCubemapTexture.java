@@ -110,13 +110,12 @@ class AsyncCubemapTexture {
         }
 
         @Override
-        protected Bitmap[] loadResource() {
+        protected Bitmap[] loadResource() throws IOException {
             Bitmap[] bitmapArray = new Bitmap[6];
-            ZipInputStream zipInputStream = new ZipInputStream(
-                    resource.getStream());
-
+            ZipInputStream zipInputStream = null;
             try {
                 ZipEntry zipEntry = null;
+                zipInputStream = new ZipInputStream(resource.getStream());
                 while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                     String imageName = zipEntry.getName();
                     String imageBaseName = FileNameUtils.getBaseName(imageName);
@@ -138,16 +137,11 @@ class AsyncCubemapTexture {
                        }
                    }
                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    zipInputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
-            resource.closeStream();
+            finally {
+                zipInputStream.close();
+                resource.closeStream();
+            }
             return bitmapArray;
         }
     }

@@ -20,7 +20,6 @@
 #include "picker.h"
 
 #include <limits>
-#include <sstream>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
 

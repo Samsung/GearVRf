@@ -38,11 +38,16 @@ in vec3 a_tangent;
 in vec3 a_bitangent;
 #endif
 
-out vec2 diffuse_coord;
 out vec3 view_direction;
 out vec3 viewspace_position;
 out vec3 viewspace_normal;
 out vec4 local_position;
+out vec2 diffuse_coord;
+out vec2 ambient_coord;
+out vec2 specular_coord;
+out vec2 emissive_coord;
+out vec2 normal_coord;
+out vec2 lightmap_coord;
 
 struct Vertex
 {
@@ -72,7 +77,9 @@ void main() {
 #ifdef HAS_LIGHTSOURCES
 	LightVertex(vertex);
 #endif
-
+#ifdef HAS_TEXCOORDS
+	@TEXCOORDS
+#endif
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
