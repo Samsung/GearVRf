@@ -182,6 +182,9 @@ void BoundingVolume::transform(const BoundingVolume &in_volume,
             max_corner_.z += a;
         }
     }
+    // expand with the new corners
+    expand(min_corner_);
+    expand(max_corner_);
 }
 
 bool BoundingVolume::intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const
