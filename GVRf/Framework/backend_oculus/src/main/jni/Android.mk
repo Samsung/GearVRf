@@ -62,7 +62,7 @@ LOCAL_CFLAGS := -Wattributes
 #LOCAL_LDLIBS += -ljnigraphics -lm_hard
 #softFP
 LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
-LOCAL_LDLIBS += $(LOCAL_PATH)/../../../../framework/src/main/libs/armeabi-v7a/libgvrf.so
+LOCAL_LDLIBS += $(PROJECT_ROOT)/backend_oculus/build/intermediates/exploded-aar/Framework/framework/unspecified/jni/armeabi-v7a/libgvrf.so
 
 include $(BUILD_SHARED_LIBRARY)
 

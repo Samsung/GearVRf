@@ -61,6 +61,7 @@ android {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
 
+        environment 'PROJECT_ROOT', rootProject.projectDir
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
     }
 
@@ -97,6 +98,7 @@ android {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         }
+        environment 'PROJECT_ROOT', rootProject.projectDir
         commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
     }
 
