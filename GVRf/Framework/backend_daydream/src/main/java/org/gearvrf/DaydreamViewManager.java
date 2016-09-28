@@ -49,8 +49,6 @@ class DaydreamViewManager extends GVRViewManager {
 
     public void onDrawEye(Eye eye) {
         if (eye.getType() == Eye.Type.LEFT) {
-//            OvrMonoscopicRenderer.cull(mMainScene, mMainScene.getMainCameraRig().getCenterCamera
-//                    (), mRenderBundle);
             renderCamera(mMainScene, mMainScene.getMainCameraRig().getLeftCamera(), mRenderBundle);
         } else if (eye.getType() == Eye.Type.RIGHT) {
             renderCamera(mMainScene, mMainScene.getMainCameraRig().getRightCamera(), mRenderBundle);
@@ -70,7 +68,6 @@ class DaydreamViewManager extends GVRViewManager {
 
         @Override
         public void onSurfaceChanged(int width, int height) {
-//            mViewManager.onSurfaceChanged(width, height);
         }
 
         @Override
