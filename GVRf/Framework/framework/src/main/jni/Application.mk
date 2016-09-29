@@ -14,15 +14,12 @@
  # limitations under the License.
  #
 
-
+ifndef ARM64
 APP_ABI := armeabi-v7a
-APP_PLATFORM := android-19
-#APP_STL := stlport_static
-APP_STL := gnustl_static
-NDK_TOOLCHAIN_VERSION := 4.9
-ifndef OVR_MOBILE_SDK
-#	OVR_MOBILE_SDK=../../ovr_sdk_mobile
-   	OVR_MOBILE_SDK=../../../../../ovr_sdk_mobile
+else
+APP_ABI := arm64-v8a
 endif
 
-NDK_MODULE_PATH := $(OVR_MOBILE_SDK)
+APP_PLATFORM := android-19
+APP_STL := gnustl_static
+NDK_TOOLCHAIN_VERSION := 4.9

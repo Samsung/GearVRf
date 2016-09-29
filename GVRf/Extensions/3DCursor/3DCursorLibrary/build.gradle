@@ -19,7 +19,8 @@ apply plugin: XmlValidator
 
 repositories {
     flatDir {
-        dirs '../../../Framework/framework/src/main/libs/'
+        dirs '../../../Framework/framework/src/main/libs/',
+        '../../../Framework/framework/build/outputs/aar/'
     }
 }
 
@@ -38,12 +39,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../../tools/upload_to_github', file('build/outputs/aar/3DCursorLibrary-debug.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v4:21.0.0'
-    compile project(':framework')
+    compile(name: 'framework-debug', ext: 'aar')
 }
 
 //TODO export plugin to jar
@@ -77,11 +91,25 @@ assembleDebug {}.doLast {
             if (libsDir.exists()) {
                 from 'build/outputs/aar'
                 into libsDir
-                include '**/*.aar'
+                include '*-debug.aar'
             } else {
                 println "Cannot copy aar files, libs directory does not exist!"
             }
         }
     }
     tasks.copyAARFiles.execute()
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include '*-debug.aar'
+    }
+}
+
+assembleDebug {}.doLast {
+    uploadToGitHub.execute();
 }

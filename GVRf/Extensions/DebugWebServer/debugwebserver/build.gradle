@@ -2,7 +2,8 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs '../../../Framework/framework/src/main/libs/'
+        dirs '../../../Framework/framework/src/main/libs/',
+        '../../../Framework/framework/build/outputs/aar/'
     }
 }
 
@@ -27,7 +28,7 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile project(path: ':framework')
+    compile(name: 'framework-debug', ext: 'aar')
 }
 
 assembleDebug {}.doLast{
@@ -47,4 +48,14 @@ assembleDebug {}.doLast{
 
     }
     tasks.copyAARFiles.execute()
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include '*-debug.aar'
+    }
 }

@@ -28,7 +28,6 @@
 #include <mutex>
 #include <vector>
 #include "shaderbase.h"
-#include "GLES3/gl3.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 

@@ -86,9 +86,8 @@ public:
     glm::mat4 getCenterViewMatrix();
 
     static long long getComponentType() {
-        return (long long) & getComponentType;
+        return COMPONENT_TYPE_CAMERA;
     }
-
 
 private:
     Camera(const Camera& camera);

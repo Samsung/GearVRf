@@ -15,8 +15,16 @@
 
 apply plugin: 'com.android.library'
 
+repositories {
+    flatDir {
+        dirs '../../../../../Framework/framework/src/main/libs/',
+        '../../../3DCursorLibrary/build/outputs/aar/',
+        '../../../../../Framework/framework/build/outputs/aar/'
+    }
+}
+
 android {
-    compileSdkVersion 19
+    compileSdkVersion 21
     buildToolsVersion "23.0.2"
 
     defaultConfig {
@@ -31,10 +39,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['RELEASE_ID'] != null
+        }
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../../../../tools/upload_to_github', file('build/outputs/aar/GearWearIoDevice-debug.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile(name: 'framework-debug', ext: 'aar')
     compile project(':3DCursorLibrary')
     compile project(':gearwearlibrary')
 }
@@ -55,4 +78,18 @@ assembleDebug {}.doLast{
         }
     }
     tasks.copyAARFiles.execute()
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include '*-debug.aar'
+    }
+}
+
+assembleDebug {}.doLast {
+    uploadToGitHub.execute();
 }

@@ -363,7 +363,9 @@ void Mesh::generateVAO(int programId) {
             && tex_coords_.size() == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
         throw error;
-        return;
+    }
+    if (0 != normals_.size() && vertices_.size() != normals_.size()) {
+        LOGW("mesh: number of vertices and normals do not match! vertices %d, normals %d", vertices_.size(), normals_.size());
     }
 
     GLuint vaoID_;

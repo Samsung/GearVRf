@@ -44,7 +44,7 @@ public:
     void callback(int msg, char *info);
 
     static long long getComponentType() {
-        return (long long) &getComponentType;
+        return COMPONENT_TYPE_TEXTURE_CAPTURER;
     }
 
 private:

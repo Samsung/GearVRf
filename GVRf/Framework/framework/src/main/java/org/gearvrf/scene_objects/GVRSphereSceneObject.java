@@ -91,6 +91,34 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      * @param gvrContext
      *            current {@link GVRContext}
      * 
+     * @param stackNumber
+     *            the number of stacks for the sphere. It should be equal or
+     *            greater than 3.
+     * 
+     * @param sliceNumber
+     *            the number of slices for the sphere. It should be equal or
+     *            greater than 4.
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber, boolean facingOut) {
+        super(gvrContext);
+
+        generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, new GVRMaterial(gvrContext));
+    }
+
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     * 
+     * The sphere's triangles and normals are facing either in or out and the
+     * same texture will be applied to each side of the sphere.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
      * @param facingOut
      *            whether the triangles and normals should be facing in or
      *            facing out.
@@ -107,6 +135,40 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         material.setMainTexture(futureTexture);
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
                 material);
+    }
+
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     * 
+     * The sphere's triangles and normals are facing either in or out and the
+     * same texture will be applied to each side of the sphere.
+     * 
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * 
+     * @param stackNumber
+     *            the number of stacks for the sphere. It should be equal or
+     *            greater than 3.
+     * 
+     * @param sliceNumber
+     *            the number of slices for the sphere. It should be equal or
+     *            greater than 4.
+     * 
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * 
+     * @param futureTexture
+     *            the texture for the sphere. {@code Future<GVRTexture>} is used
+     *            here for asynchronously loading the texture.
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber, boolean facingOut, Future<GVRTexture> futureTexture) {
+        super(gvrContext);
+
+        GVRMaterial material = new GVRMaterial(gvrContext);
+        material.setMainTexture(futureTexture);
+        generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, material);
     }
 
     /**

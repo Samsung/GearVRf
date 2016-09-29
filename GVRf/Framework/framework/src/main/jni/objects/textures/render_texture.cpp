@@ -20,13 +20,12 @@
 
 #include "render_texture.h"
 #include "util/gvr_gl_ext.h"
-#include <GLES3/gl3.h>
 #include "eglextension/msaa/msaa.h"
 
 namespace gvr {
 RenderTexture::RenderTexture(int width, int height) :
         Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
-                0), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_ (
+                0), renderTexture_gl_render_buffer_(new GLRenderBuffer()), renderTexture_gl_frame_buffer_ (
                 new GLFrameBuffer()) {
     initialize(width, height);
     glBindTexture(TARGET, gl_texture_->id());
@@ -34,22 +33,22 @@ RenderTexture::RenderTexture(int width, int height) :
             GL_UNSIGNED_BYTE, 0);
     glBindTexture(TARGET, 0);
 
-    glBindRenderbuffer(GL_RENDERBUFFER, gl_render_buffer_->id());
+    glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TARGET,
             gl_texture_->id(), 0);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-            GL_RENDERBUFFER, gl_render_buffer_->id());
+            GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
 }
 
 RenderTexture::RenderTexture(int width, int height, int sample_count) :
         Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
-                sample_count), gl_render_buffer_(new GLRenderBuffer()), gl_frame_buffer_(
+                sample_count), renderTexture_gl_render_buffer_(new GLRenderBuffer()), renderTexture_gl_frame_buffer_(
                 new GLFrameBuffer()) {
     initialize(width, height);
     glBindTexture(TARGET, gl_texture_->id());
@@ -57,25 +56,25 @@ RenderTexture::RenderTexture(int width, int height, int sample_count) :
             GL_UNSIGNED_BYTE, 0);
     glBindTexture(TARGET, 0);
 
-    glBindRenderbuffer(GL_RENDERBUFFER, gl_render_buffer_->id());
+    glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
     MSAA::glRenderbufferStorageMultisampleIMG(GL_RENDERBUFFER, sample_count,
             GL_DEPTH_COMPONENT16, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
 
     MSAA::glFramebufferTexture2DMultisample(GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0, TARGET, gl_texture_->id(), 0, sample_count);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-            GL_RENDERBUFFER, gl_render_buffer_->id());
+            GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
 }
 
 RenderTexture::RenderTexture(int width, int height, int sample_count,
         int jcolor_format, int jdepth_format, bool resolve_depth,
         int* texture_parameters) :
         Texture(new GLTexture(TARGET, texture_parameters)), width_(width), height_(
-                height), sample_count_(sample_count), gl_frame_buffer_(new GLFrameBuffer()) {
+                height), sample_count_(sample_count), renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
     initialize(width, height);
     GLenum depth_format;
     glBindTexture(TARGET, gl_texture_->id());
@@ -126,7 +125,7 @@ RenderTexture::RenderTexture(int width, int height, int sample_count,
     }
     if (jdepth_format != DepthFormat::DEPTH_0) {
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                GL_RENDERBUFFER, gl_render_buffer_->id());
+                GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
     }
 
     glScissor(0, 0, width, height);
@@ -135,14 +134,15 @@ RenderTexture::RenderTexture(int width, int height, int sample_count,
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (resolve_depth && sample_count > 1) {
-        gl_resolve_buffer_ = new GLFrameBuffer();
-        glBindFramebuffer(GL_FRAMEBUFFER, gl_resolve_buffer_->id());
+        delete renderTexture_gl_resolve_buffer_;
+        renderTexture_gl_resolve_buffer_ = new GLFrameBuffer();
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                 GL_TEXTURE_2D, gl_texture_->id(), 0);
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             LOGE(
-                    "resolve FBO %i is not complete: 0x%x", gl_resolve_buffer_->id(), status);
+                    "resolve FBO %i is not complete: 0x%x", renderTexture_gl_resolve_buffer_->id(), status);
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -151,12 +151,13 @@ RenderTexture::RenderTexture(int width, int height, int sample_count,
 void RenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
         GLenum depth_format, int width, int height) {
     if (jdepth_format != DepthFormat::DEPTH_0) {
-        gl_render_buffer_ = new GLRenderBuffer();
-        glBindRenderbuffer(GL_RENDERBUFFER, gl_render_buffer_->id());
+        delete renderTexture_gl_render_buffer_;
+        renderTexture_gl_render_buffer_ = new GLRenderBuffer();
+        glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
         glRenderbufferStorage(GL_RENDERBUFFER, depth_format, width, height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TARGET,
             gl_texture_->id(), 0);
 }
@@ -164,13 +165,14 @@ void RenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
 void RenderTexture::generateRenderTextureEXT(int sample_count,
         int jdepth_format, GLenum depth_format, int width, int height) {
     if (jdepth_format != DepthFormat::DEPTH_0) {
-        gl_render_buffer_ = new GLRenderBuffer();
-        glBindRenderbuffer(GL_RENDERBUFFER, gl_render_buffer_->id());
+        delete renderTexture_gl_render_buffer_;
+        renderTexture_gl_render_buffer_ = new GLRenderBuffer();
+        glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
         MSAA::glRenderbufferStorageMultisampleIMG(GL_RENDERBUFFER, sample_count,
                 depth_format, width, height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     MSAA::glFramebufferTexture2DMultisample(GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0, TARGET, gl_texture_->id(), 0, sample_count);
 }
@@ -193,25 +195,27 @@ void RenderTexture::generateRenderTexture(int sample_count, int jdepth_format,
         break;
     }
     if (jdepth_format != DepthFormat::DEPTH_0) {
-        gl_render_buffer_ = new GLRenderBuffer();
-        glBindRenderbuffer(GL_RENDERBUFFER, gl_render_buffer_->id());
+        delete renderTexture_gl_render_buffer_;
+        renderTexture_gl_render_buffer_ = new GLRenderBuffer();
+        glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
         MSAA::glRenderbufferStorageMultisample(GL_RENDERBUFFER,
                 sample_count, depth_format, width, height);
     }
-    gl_color_buffer_ = new GLRenderBuffer();
-    glBindRenderbuffer(GL_RENDERBUFFER, gl_color_buffer_->id());
+    delete renderTexture_gl_color_buffer_;
+    renderTexture_gl_color_buffer_ = new GLRenderBuffer();
+    glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_color_buffer_->id());
     MSAA::glRenderbufferStorageMultisample(GL_RENDERBUFFER, sample_count,
             color_format, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            GL_RENDERBUFFER, gl_color_buffer_->id());
+            GL_RENDERBUFFER, renderTexture_gl_color_buffer_->id());
 }
 
 void RenderTexture::beginRendering() {
     const int width = width_;
     const int height = height_;
-    glBindFramebuffer(GL_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glViewport(0, 0, width, height);
     glScissor(0, 0, width, height);
     glDepthMask(GL_TRUE);
@@ -225,9 +229,9 @@ void RenderTexture::endRendering() {
     const int width = width_;
     const int height = height_;
     invalidateFrameBuffer(true, false, true);
-    if (gl_resolve_buffer_ && sample_count_ > 1) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_frame_buffer_->id());
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl_resolve_buffer_->id());
+    if (renderTexture_gl_resolve_buffer_ && sample_count_ > 1) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
         glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                 GL_COLOR_BUFFER_BIT, GL_NEAREST);
         invalidateFrameBuffer(true, true, false);
@@ -243,12 +247,12 @@ void RenderTexture::invalidateFrameBuffer(bool is_fbo, const bool color_buffer, 
 }
 
 void RenderTexture::startReadBack() {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glViewport(0, 0, width_, height_);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TARGET,
             gl_texture_->id(), 0);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, renderTexture_gl_pbo_);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
     glReadPixels(0, 0, width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -270,12 +274,12 @@ bool RenderTexture::readRenderResult(uint32_t *readback_buffer, long capacity) {
         return false;
     }
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_frame_buffer_->id());
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glViewport(0, 0, width_, height_);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TARGET,
             gl_texture_->id(), 0);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, gl_pbo_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, renderTexture_gl_pbo_);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
     if (!readback_started_) {

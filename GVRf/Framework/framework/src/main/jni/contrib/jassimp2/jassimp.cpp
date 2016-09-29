@@ -860,6 +860,8 @@ static bool loadSceneNode(JNIEnv *env, const aiNode *cNode, jobject parent, jobj
 	if (NULL != loadedNode)
 	{
 		*loadedNode = jNode;
+	} else {
+	    DeleteLocalRef refNode(env, jNode);
 	}
 
 	return true;

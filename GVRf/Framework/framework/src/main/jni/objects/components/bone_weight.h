@@ -19,7 +19,7 @@ public:
     float getWeight();
 
     static long long getComponentType() {
-        return (long long) & getComponentType;
+        return COMPONENT_TYPE_BONE_WEIGHT;
     }
 
 private:

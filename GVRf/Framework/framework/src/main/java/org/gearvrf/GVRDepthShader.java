@@ -14,18 +14,14 @@
  */
 package org.gearvrf;
 
-import java.util.HashMap;
+import android.content.Context;
 
 import org.gearvrf.utility.TextFile;
 
-import android.content.Context;
-
-import org.gearvrf.R;
-
-   /**
-    * Manages a set of variants on vertex and fragment shaders from the same source
-    * code.
-    */
+/**
+* Manages a set of variants on vertex and fragment shaders from the same source
+* code.
+*/
 public class GVRDepthShader extends GVRShaderTemplate
 {
     private static String fragTemplate = null;
@@ -34,7 +30,7 @@ public class GVRDepthShader extends GVRShaderTemplate
 
     public GVRDepthShader(GVRContext gvrcontext)
     {
-        super("");
+        super("", 300);
         if (fragTemplate == null) {
             Context context = gvrcontext.getContext();
             fragTemplate = TextFile.readTextFile(context, R.raw.depth_shader);

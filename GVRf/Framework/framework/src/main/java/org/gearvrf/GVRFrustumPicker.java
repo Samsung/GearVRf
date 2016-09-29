@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.gearvrf.utility.Log;
 import org.joml.FrustumCuller;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -45,12 +44,9 @@ import org.joml.Vector4f;
  * The picked object contains the collider instance, the distance from the
  * origin of the view frustum and the center of the object.
  *
- * If it is attached to a scene object, the picker maintains the list of currently
- * picked objects which can be obtains with getPicked() and continually
- * updates it each frame. (If it is not attached to a scene object,
- * you must manually call doPick() to cause pick events to be generated.)
- *
- * In this mode, when a pickable object is inside the view frustum,
+ * The picker maintains the list of currently
+ * picked objects which can be obtained with getPicked() and continually
+ * updates it each frame. When a pickable object is inside the view frustum,
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
@@ -61,13 +57,12 @@ import org.joml.Vector4f;
  *  - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject.attachCollider
+ * @see GVRSceneObject.attachComponent
  * @see GVRCollider
- * @see GVRCollider.setEnable
+ * @see GVRComponent.setEnable
  * @see GVRPickedObject
  */
 public class GVRFrustumPicker extends GVRPicker {
-    private static final String TAG = Log.tag(GVRFrustumPicker.class);
     protected FrustumCuller mCuller;
     protected float[] mProjMatrix = null;
     protected Matrix4f mProjection = null;
@@ -80,6 +75,7 @@ public class GVRFrustumPicker extends GVRPicker {
     public GVRFrustumPicker(GVRContext context, GVRScene scene)
     {
         super(context, scene);
+        setFrustum(90.0f, 1.0f, 0.1f, 1000.0f);
     }
 
     /**
@@ -122,7 +118,7 @@ public class GVRFrustumPicker extends GVRPicker {
     public void setFrustum(float fovy, float aspect, float znear, float zfar)
     {
         Matrix4f projMatrix = new Matrix4f();
-        projMatrix.perspective(fovy, (float) Math.toRadians(aspect), znear, zfar);
+        projMatrix.perspective((float) Math.toRadians(fovy), aspect, znear, zfar);
         setFrustum(projMatrix);
     }
 
@@ -147,20 +143,16 @@ public class GVRFrustumPicker extends GVRPicker {
             }
             mProjMatrix = projMatrix.get(mProjMatrix, 0);
             mScene.setPickVisible(false);
-        }
-        else
-        {
-            mScene.setPickVisible(true);
+            if (mCuller != null)
+            {
+                mCuller.set(projMatrix);
+            }
+            else
+            {
+                mCuller = new FrustumCuller(projMatrix);
+            }
         }
         mProjection = projMatrix;
-        if (mCuller != null)
-        {
-            mCuller.set(projMatrix);
-        }
-        else
-        {
-            mCuller = new FrustumCuller(projMatrix);
-        }
     }
 
     public void onDrawFrame(float frameTime)
@@ -188,21 +180,18 @@ public class GVRFrustumPicker extends GVRPicker {
         GVRSceneObject owner = getOwnerObject();
         GVRPickedObject[] picked = pickVisible(mScene);
 
-        if ((owner != null) && (mProjMatrix != null))
+        if (mProjection != null)
         {
-            Matrix4f view_matrix = owner.getTransform().getModelMatrix4f();
-            Vector4f center = new Vector4f(0, 0, 0, 1);
-            Vector4f dir = new Vector4f(0, 0, 1, 0);
-
-            view_matrix.invert();
-            if (mCuller != null)
+            Matrix4f view_matrix;
+            if (owner != null)
             {
-                mCuller.set(mProjection);
+                view_matrix = owner.getTransform().getModelMatrix4f();
             }
             else
             {
-                mCuller = new FrustumCuller(mProjection);
+                view_matrix = mScene.getMainCameraRig().getHeadTransform().getModelMatrix4f();
             }
+            view_matrix.invert();
 
             for (int i = 0; i < picked.length; ++i)
             {
@@ -212,13 +201,18 @@ public class GVRFrustumPicker extends GVRPicker {
                 {
                     GVRSceneObject sceneObj = hit.hitObject;
                     GVRSceneObject.BoundingVolume bv = sceneObj.getBoundingVolume();
-                    center.set(bv.center, 1);
+                    Vector4f center = new Vector4f(bv.center.x, bv.center.y, bv.center.z, 1);
+                    Vector4f p = new Vector4f(bv.center.x, bv.center.y, bv.center.z + bv.radius, 1);
+                    float radius;
+
                     center.mul(view_matrix);
-                    dir.z = bv.radius;
-                    dir.mul(view_matrix);
-                    if (!mCuller.isSphereInsideFrustum(center.x, center.y, center.z, dir.length()))
+                    p.mul(view_matrix);
+                    p.sub(center, p);
+                    p.w = 0;
+                    radius = p.length();
+                    boolean pointIn = mCuller.isPointInsideFrustum(center.x, center.y, center.z);
+                    if (!mCuller.isSphereInsideFrustum(center.x, center.y, center.z, radius))
                     {
-                        Log.d("Picker", "Picker: outside %s (%f, %f, %f) %f", sceneObj.getName(), center.x, center.y, center.z, dir.length());
                         picked[i] = null;
                     }
                 }

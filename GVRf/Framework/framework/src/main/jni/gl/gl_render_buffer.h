@@ -21,9 +21,7 @@
 #ifndef GL_RENDER_BUFFER_H_
 #define GL_RENDER_BUFFER_H_
 
-#ifndef GL_ES_VERSION_3_0
-#include "GLES3/gl3.h"
-#endif
+#include "gl/gl_headers.h"
 
 #include "engine/memory/gl_delete.h"
 

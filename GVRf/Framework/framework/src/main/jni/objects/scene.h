@@ -66,17 +66,19 @@ public:
     void clearLights();
 
     void resetStats() {
-        if (!statsInitialized) {
-            Renderer::initializeStats();
-            statsInitialized = true;
-        }
-        Renderer::resetStats();
+        gRenderer = Renderer::getInstance();
+        gRenderer->resetStats();
+
     }
     int getNumberDrawCalls() {
-        return Renderer::getNumberDrawCalls();
+        if(nullptr!= gRenderer){
+            return gRenderer->getNumberDrawCalls();
+        }
     }
     int getNumberTriangles() {
-        return Renderer::getNumberTriangles();
+        if(nullptr!= gRenderer) {
+            return gRenderer->getNumberTriangles();
+        }
     }
 
     void exportToFile(std::string filepath);
@@ -178,7 +180,6 @@ private:
     bool occlusion_flag_;
     bool pick_visible_;
     std::mutex collider_mutex_;
-    bool statsInitialized = false;
     std::vector<Light*> lightList;
     std::vector<Component*> allColliders;
     std::vector<Component*> visibleColliders;

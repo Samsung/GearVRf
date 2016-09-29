@@ -27,6 +27,7 @@
 #include "objects/scene.h"
 #include "objects/scene_object.h"
 #include "objects/components/camera_rig.h"
+#include "objects/components/perspective_camera.h"
 #include "objects/components/render_data.h"
 #include "objects/components/mesh_collider.h"
 
@@ -45,13 +46,14 @@ Picker::~Picker() {
  * This function is not thread-safe because it relies on a static
  * array of colliders which could be updated by a different thread.
  */
-void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transform* t, float ox,
-        float oy, float oz, float dx, float dy, float dz) {
+void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transform* t,
+         float ox, float oy, float oz, float dx, float dy, float dz) {
     glm::vec3 ray_start(ox, oy, oz);
     glm::vec3 ray_dir(dx, dy, dz);
     const std::vector<Component*>& colliders = scene->lockColliders();
+    const glm::mat4& model_matrix = t->getModelMatrix();
 
-    Collider::transformRay(t->getModelMatrix(), ray_start, ray_dir);
+    Collider::transformRay(model_matrix, ray_start, ray_dir);
     for (auto it = colliders.begin(); it != colliders.end(); ++it) {
         Collider* collider = reinterpret_cast<Collider*>(*it);
         SceneObject* owner = collider->owner_object();
@@ -71,7 +73,6 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transf
 
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
     Transform* t = scene->main_camera_rig()->getHeadTransform();
-
     pickScene(scene, pickList, t, 0, 0, 0, 0, 0, -1.0f);
 }
 
@@ -81,7 +82,7 @@ float Picker::pickSceneObject(const SceneObject* scene_object,
     if (scene_object->collider() != 0) {
         Collider* collider = scene_object->collider();
         if (collider->enabled()) {
-            glm::mat4 view_matrix = camera_rig->getHeadTransform()->getModelMatrix();
+            glm::mat4 view_matrix = camera_rig->center_camera()->getViewMatrix();
             glm::vec3 rayStart(0, 0, 0);
             glm::vec3 rayDir(0, 0, -1);
 
@@ -104,20 +105,19 @@ float Picker::pickSceneObject(const SceneObject* scene_object,
  * to the ray to put it into mesh coordinates.
  */
 glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
-        const SceneObject* scene_object, float ox, float oy, float oz, float dx,
-        float dy, float dz) {
+        const SceneObject* scene_object, float ox, float oy, float oz, float dx, float dy, float dz) {
     RenderData* rd = scene_object->render_data();
 
     if ((rd == NULL) || (rd->mesh() == NULL)) {
         return glm::vec3(std::numeric_limits<float>::infinity());
     }
-    glm::mat4 model_matrix = scene_object->transform()->getModelMatrix();
+    glm::mat4 model_inverse = glm::affineInverse(scene_object->transform()->getModelMatrix());
     const BoundingVolume& bounds = rd->mesh()->getBoundingVolume();
     glm::vec3 rayStart(ox, oy, oz);
     glm::vec3 rayDir(dx, dy, dz);
 
     glm::normalize(rayDir);
-    Collider::transformRay(model_matrix, rayStart, rayDir);
+    Collider::transformRay(model_inverse, rayStart, rayDir);
     ColliderData data = MeshCollider::isHit(bounds, rayStart, rayDir);
     if (data.IsHit) {
         return data.HitPosition;
@@ -133,7 +133,6 @@ glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
  */
 void Picker::pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& picklist) {
     const std::vector<Component*>& colliders = scene->lockColliders();
-    glm::mat4 view_matrix = glm::affineInverse(t->getModelMatrix());
 
     for (auto it = colliders.begin(); it != colliders.end(); ++it) {
         Collider* collider = reinterpret_cast<Collider*>(*it);

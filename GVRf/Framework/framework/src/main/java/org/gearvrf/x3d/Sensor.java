@@ -15,8 +15,11 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.ISensorEvents;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.joml.Vector3f;
 
 
 /**
@@ -34,12 +37,17 @@ public class Sensor
     ANCHOR, PROXIMITY, TOUCH, VISIBILITY
   };
 
+  private static final String TAG = Sensor.class.getSimpleName();
+  public static final String IS_OVER = "isOver";
+  public static final String IS_ACTIVE = "isActive";
 
-  String name = null;
-  Type sensorType;
-  public GVRSceneObject sensorSceneObject = null;
+  private String name = null;
+  private Type sensorType;
+  private GVRSceneObject sensorSceneObject = null;
   private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
   private String anchorURL = null;
+  private final GVRBaseSensor baseSensor;
+  private Vector3f hitPoint = new Vector3f();
 
 
   public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject)
@@ -48,17 +56,47 @@ public class Sensor
     this.name = name;
     this.sensorType = sensorType;
     this.sensorSceneObject = sensorSceneObject;
+    this.baseSensor = new GVRBaseSensor(sensorSceneObject.getGVRContext());
+    sensorSceneObject.setSensor(this.baseSensor);
   }
 
+  void addISensorEvents(ISensorEvents sensorEvents){
+    sensorSceneObject.getEventReceiver().addListener(sensorEvents);
+  }
 
   public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
   {
     this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
   }
 
+  public GVRSceneObject getGVRSceneObject()
+  {
+    return this.sensorSceneObject;
+  }
+
   public GVRKeyFrameAnimation getGVRKeyFrameAnimation()
   {
     return this.gvrKeyFrameAnimation;
+  }
+
+  public String getName()
+  {
+    return this.name;
+  }
+
+  public Type getType()
+  {
+    return this.sensorType;
+  }
+
+  public void setHitPoint(float[] hp)
+  {
+    this.hitPoint.set(hp[0], hp[1], hp[2]);
+  }
+
+  public Vector3f getHitPoint()
+  {
+    return this.hitPoint;
   }
 
   public void setAnchorURL(String anchorURL)

@@ -8,7 +8,7 @@ import android.content.IntentFilter;
 
 public final class DockEventReceiver {
     public DockEventReceiver(final Context context, final Runnable runOnDock,
-            final Runnable runOnUndock) {
+                             final Runnable runOnUndock) {
         mRunOnDock = runOnDock;
         mRunOnUndock = runOnUndock;
         mApplicationContext = context.getApplicationContext();
@@ -20,6 +20,7 @@ public final class DockEventReceiver {
             dockEventFilter.addAction(ACTION_HMT_CONNECT);
             dockEventFilter.addAction(ACTION_HMT_DISCONNECT);
             mApplicationContext.registerReceiver(mBroadcastReceiver, dockEventFilter);
+            Log.v(TAG, "receiver registered");
             mIsStarted = true;
         }
     }
@@ -27,25 +28,15 @@ public final class DockEventReceiver {
     public void stop() {
         if (mIsStarted) {
             mApplicationContext.unregisterReceiver(mBroadcastReceiver);
+            Log.v(TAG, "receiver unregistered");
             mIsStarted = false;
-        }
-    }
-
-    public void runOnDock() {
-        if (null != mRunOnDock) {
-            mRunOnDock.run();
-        }
-    }
-
-    public void runOnUndock() {
-        if (null != mRunOnUndock) {
-            mRunOnUndock.run();
         }
     }
 
     private final class BroadcastReceiverImpl extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, final Intent intent) {
+            Log.v(TAG, "received " + intent);
             if (ACTION_HMT_DISCONNECT.equals(intent.getAction())) {
                 mRunOnUndock.run();
             } else if (ACTION_HMT_CONNECT.equals(intent.getAction())) {
@@ -62,4 +53,6 @@ public final class DockEventReceiver {
 
     private final static String ACTION_HMT_DISCONNECT = "com.samsung.intent.action.HMT_DISCONNECTED";
     private final static String ACTION_HMT_CONNECT = "com.samsung.intent.action.HMT_CONNECTED";
+
+    private static final String TAG = "DockEventReceiver";
 }
