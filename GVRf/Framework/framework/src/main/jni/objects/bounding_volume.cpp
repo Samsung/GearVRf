@@ -61,11 +61,16 @@ void BoundingVolume::expand(const glm::vec3 point) {
         max_corner_[2] = point[2];
     }
 
+    updateCenterAndRadius();
+}
+
+void BoundingVolume::updateCenterAndRadius() {
     center_ = (min_corner_ + max_corner_) * 0.5f;
-    if (min_corner_ == max_corner_)
-    	radius_ = 0;
-    else
-    	radius_ = glm::length(max_corner_ - min_corner_) * 0.5f;
+    if (min_corner_ == max_corner_) {
+        radius_ = 0;
+    } else {
+        radius_ = glm::length(max_corner_ - min_corner_) * 0.5f;
+    }
 }
 
 /*
@@ -182,6 +187,8 @@ void BoundingVolume::transform(const BoundingVolume &in_volume,
             max_corner_.z += a;
         }
     }
+
+    updateCenterAndRadius();
 }
 
 bool BoundingVolume::intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const

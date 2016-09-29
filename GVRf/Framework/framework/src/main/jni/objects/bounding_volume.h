@@ -59,6 +59,9 @@ public:
     bool intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const;
 
 private:
+    void updateCenterAndRadius();
+
+private:
     glm::vec3 center_;
     float radius_ = 0.0f;
     glm::vec3 min_corner_;
