@@ -23,6 +23,7 @@ model {
                 ndkBuild {
                     arguments.add('PROJECT_ROOT='+rootProject.projectDir)
                     arguments.add('OVR_MOBILE_SDK='+rootProject.property("OVR_MOBILE_SDK"))
+                    arguments.add("NDK_DEBUG=1")
                     arguments.add("-j"+Runtime.runtime.availableProcessors())
                 }
             }

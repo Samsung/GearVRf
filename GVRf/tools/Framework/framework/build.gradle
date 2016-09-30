@@ -17,6 +17,7 @@ model {
             externalNativeBuild {
                 ndkBuild {
                     arguments.add("-j"+Runtime.runtime.availableProcessors())
+                    arguments.add("NDK_DEBUG=1")
                 }
             }
         }
