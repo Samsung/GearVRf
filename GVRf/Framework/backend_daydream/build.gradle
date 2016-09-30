@@ -51,27 +51,6 @@ android {
             srcDir 'src/main/libs'
         }
     }
-
-//    task cleanNative(type: Exec) {
-//        def ndkbuild = ""
-//        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-//            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-//            ndkbuild += '/'
-//        }
-//        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-//            ndkbuild += 'ndk-build.cmd'
-//        } else {
-//            ndkbuild += 'ndk-build'
-//        }
-//
-//        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
-//    }
-//
-//    clean.dependsOn 'cleanNative'
-//
-//    tasks.withType(JavaCompile) {
-//        compileTask -> compileTask.dependsOn buildNative
-//    }
 }
 
 dependencies {
@@ -99,4 +78,23 @@ assembleDebug {}.doLast {
         }
     }
     tasks.copyAARFiles.execute()
+
+    def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
+    if (file(testsLibs).exists()) {
+        copy {
+            from 'build/outputs/aar'
+            into testsLibs
+            include '*-debug.aar'
+        }
+    }
+
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (!file(gearvrfLibs).exists()) {
+        file(gearvrfLibs).mkdir();
+    }   
+    copy {
+        from 'build/outputs/aar'
+        into gearvrfLibs
+        include '*-debug.aar'
+    }   
 }
