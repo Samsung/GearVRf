@@ -39,6 +39,4 @@ local.properties
 lib.jar
 import-summary.txt
 
-/GVRf/Framework/backend_*
-!/GVRf/Framework/backend_oculus
 !**/libgdx.so

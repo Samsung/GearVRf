@@ -17,7 +17,6 @@
 #ifndef ACTIVITY_JNI_H
 #define ACTIVITY_JNI_H
 
-#include "ovr_view_manager.h"
 #include "ovr_framebufferobject.h"
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
@@ -27,7 +26,7 @@
 
 namespace gvr {
 
-class OvrCameraRig;
+class CameraRig;
 
 class GVRActivity
 {
@@ -37,11 +36,9 @@ public:
 
     bool updateSensoredScene();
     void setCameraRig(jlong cameraRig);
+    void setViewManager(jobject viewManager);
 
-    GVRViewManager viewManager_;
-
-    Camera* camera = nullptr;
-    OvrCameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
+    CameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
     bool sensoredSceneUpdated_ = false;
     HeadRotationProvider headRotationProvider_;
 
@@ -49,7 +46,7 @@ private:
     JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
 
     jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail
-    jclass activityRenderingCallbacksClass_ = nullptr;
+    jclass viewManagerClass_ = nullptr;
 
     jmethodID onDrawEyeMethodId = nullptr;
     jmethodID updateSensoredSceneMethodId = nullptr;
@@ -81,6 +78,8 @@ private:
     void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
     void beginRenderingEye(const int eye);
     void endRenderingEye(const int eye);
+
+    jobject viewManager_ = nullptr;
 
 public:
     void onSurfaceCreated(JNIEnv& env);

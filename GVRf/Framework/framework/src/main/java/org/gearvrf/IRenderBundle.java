@@ -12,13 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.gearvrf;
 
-interface IActivityNative {
-    void onDestroy();
-    void setCameraRig(GVRCameraRig cameraRig);
-    void onUndock();
-    void onDock();
-    long getNative();
+interface IRenderBundle {
+
+    GVRMaterialShaderManager getMaterialShaderManager();
+
+    GVRPostEffectShaderManager getPostEffectShaderManager();
+
+    GVRRenderTexture getPostEffectRenderTextureA();
+
+    GVRRenderTexture getPostEffectRenderTextureB();
 }

@@ -29,20 +29,13 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     private GVRActivity mActivity;
     private OvrViewManager mActiveViewManager;
     private OvrActivityNative mActivityNative;
-    private boolean mUseFallback;
 
     @Override
     public void onCreate(GVRActivity activity) {
         mActivity = activity;
 
-        mActivityNative = new OvrActivityNative(mActivity, mActivity.getAppSettings(), mRenderingCallbacks);
-
-        try {
-            mActivityHandler = new OvrVrapiActivityHandler(activity, mActivityNative, mRenderingCallbacks);
-        } catch (final Exception ignored) {
-            // GVRf will fallback to GoogleVR in this case.
-            mUseFallback = true;
-        }
+        mActivityNative = new OvrActivityNative(mActivity, mActivity.getAppSettings());
+        mActivityHandler = new OvrVrapiActivityHandler(activity, mActivityNative);
     }
 
     @Override
@@ -52,11 +45,7 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
     @Override
     public GVRViewManager makeViewManager() {
-        if (!mUseFallback) {
-            return new OvrViewManager(mActivity, mActivity.getScript(), mXmlParser);
-        } else {
-            return new OvrGoogleVRViewManager(mActivity, mActivity.getScript(), mXmlParser);
-        }
+        return new OvrViewManager(mActivity, mActivity.getScript(), mXmlParser);
     }
 
     @Override
@@ -66,7 +55,7 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
     @Override
     public GVRCameraRig makeCameraRig(GVRContext context) {
-        return new OvrCameraRig(context);
+        return new GVRCameraRig(context);
     }
 
     @Override
@@ -99,9 +88,7 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
     @Override
     public void setScript(GVRScript gvrScript, String dataFileName) {
-        if (mUseFallback) {
-            mActivityHandler = null;
-        } else if (null != mActivityHandler) {
+        if (null != mActivityHandler) {
             mActivityHandler.onSetScript();
         }
     }
@@ -109,15 +96,12 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     @Override
     public void setViewManager(GVRViewManager viewManager) {
         mActiveViewManager = (OvrViewManager)viewManager;
+        mActivityHandler.setViewManager(mActiveViewManager);
+        mActivityNative.setViewManager(mActiveViewManager);
     }
 
     @Override
     public void onInitAppSettings(VrAppSettings appSettings) {
-        if(mUseFallback){
-            // This is the only place where the setDockListenerRequired flag can be set before
-            // the check in GVRActivity.
-            mActivity.getConfigurationManager().setDockListenerRequired(false);
-        }
     }
 
     @Override
@@ -174,38 +158,6 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
         return false;
     }
-
-    private final OvrActivityHandlerRenderingCallbacks mRenderingCallbacks = new OvrActivityHandlerRenderingCallbacks() {
-        @Override
-        public void onSurfaceCreated() {
-            mActiveViewManager.onSurfaceCreated();
-        }
-
-        @Override
-        public void onSurfaceChanged(int width, int height) {
-            mActiveViewManager.onSurfaceChanged(width, height);
-        }
-
-        @Override
-        public void onBeforeDrawEyes() {
-            mActiveViewManager.beforeDrawEyes();
-            mActiveViewManager.onDrawFrame();
-        }
-
-        @Override
-        public void onAfterDrawEyes() {
-            mActiveViewManager.afterDrawEyes();
-        }
-
-        @Override
-        public void onDrawEye(int eye) {
-            try {
-                mActiveViewManager.onDrawEyeView(eye);
-            } catch (final Exception e) {
-                Log.e(TAG, "error in onDrawEyeView", e);
-            }
-        }
-    };
 
     private OvrXMLParser mXmlParser;
     private OvrActivityHandler mActivityHandler;

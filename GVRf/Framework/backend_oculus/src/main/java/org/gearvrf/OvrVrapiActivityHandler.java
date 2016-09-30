@@ -49,18 +49,16 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     private final GVRActivity mActivity;
     private long mPtr;
     private GLSurfaceView mSurfaceView;
-    private final OvrActivityHandlerRenderingCallbacks mCallbacks;
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
     boolean mVrApiInitialized;
+    private OvrViewManager mViewManager;
 
-    OvrVrapiActivityHandler(final GVRActivity activity, final OvrActivityNative activityNative,
-                            final OvrActivityHandlerRenderingCallbacks callbacks) throws VrapiNotAvailableException {
-        if (null == callbacks || null == activity) {
+    OvrVrapiActivityHandler(final GVRActivity activity, final OvrActivityNative activityNative) throws VrapiNotAvailableException {
+        if (null == activity) {
             throw new IllegalArgumentException();
         }
         mActivity = activity;
-        mCallbacks = callbacks;
         mPtr = activityNative.getNative();
 
         if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
@@ -127,6 +125,11 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     public boolean onBackLongPress() {
         nativeShowGlobalMenu(mPtr);
         return true;
+    }
+
+    @Override
+    public void setViewManager(GVRViewManager viewManager) {
+        mViewManager = (OvrViewManager)viewManager;
     }
 
     @Override
@@ -339,7 +342,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
             mConfig = config;
             nativeOnSurfaceCreated(mPtr);
-            mCallbacks.onSurfaceCreated();
+            mViewManager.onSurfaceCreated();
         }
 
         @Override
@@ -403,27 +406,23 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
             }
 
             startChoreographerThreadIfNotStarted();
-            mCallbacks.onSurfaceChanged(width, height);
+            mViewManager.onSurfaceChanged(width, height);
         }
 
         @Override
         public void onDrawFrame(final GL10 gl) {
-            mCallbacks.onBeforeDrawEyes();
-            nativeOnDrawFrame(mPtr);
-            mCallbacks.onAfterDrawEyes();
+            mViewManager.onDrawFrame();
         }
     };
 
 
     @SuppressWarnings("serial")
-    static final class VrapiNotAvailableException extends Exception {
+    static final class VrapiNotAvailableException extends RuntimeException {
     }
 
     private static native void nativeOnSurfaceCreated(long ptr);
 
     private static native void nativeOnSurfaceChanged(long ptr);
-
-    private static native void nativeOnDrawFrame(long ptr);
 
     private static native void nativeLeaveVrMode(long ptr);
 

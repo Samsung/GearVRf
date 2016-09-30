@@ -15,10 +15,6 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 19
-
-        ndk {
-            moduleName "gvrf"
-        }
     }
 
     task copyOculusFiles(type: Copy) {
@@ -136,8 +132,6 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile(name: 'google-vr-base', ext: 'aar')
-    compile(name: 'google-vr-common', ext: 'aar')
     compile project(':framework')
 }
 
