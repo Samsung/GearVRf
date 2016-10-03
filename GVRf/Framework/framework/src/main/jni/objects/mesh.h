@@ -202,6 +202,17 @@ public:
         }
     }
 
+    bool getVec(std::string key, std::vector<glm::vec2>** const ptr)  {
+        auto it = vec2_vectors_.find(key);
+        if (it != vec2_vectors_.end()) {
+            *ptr = &(it->second);
+            return true;
+        } else {
+            LOGE("Mesh::getVec2Vector() : %s not found", key.c_str());
+            return false;
+        }
+    }
+
     void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
         vec2_vectors_[key] = vector;
         if(strstr((key.c_str()),"a_texcoord"))

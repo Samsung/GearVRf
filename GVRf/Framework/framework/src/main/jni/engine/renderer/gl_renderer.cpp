@@ -292,23 +292,15 @@ bool GLRenderer::checkTextureReady(Material* material) {
 
     //Skip custom shader here since they are rendering multiple textures
     //Check the textures later inside the rendering pass inside the custom shader
-    if (shaderType < 0
-            || shaderType >= Material::ShaderType::BUILTIN_SHADER_SIZE) {
+    if (shaderType < 0 || shaderType >= Material::ShaderType::BUILTIN_SHADER_SIZE)
+    {
         return true;
     }
-    //For regular shaders, check its main texture
-    else if (shaderType != Material::ShaderType::ASSIMP_SHADER) {
+    else
+    {
         return material->isMainTextureReady();
     }
-    //For ASSIMP_SHADER as diffused texture, check its main texture
-    //For non diffused texture, the rendering doesn't take any textures and needs to be skipped
-    else if (ISSET(material->get_shader_feature_set(), AS_DIFFUSE_TEXTURE)) {
-        return material->isMainTextureReady();
-    }
-    else {
-        return true;
-    }
-}
+ }
 
 void GLRenderer::occlusion_cull(Scene* scene,
         std::vector<SceneObject*>& scene_objects, ShaderManager *shader_manager,
