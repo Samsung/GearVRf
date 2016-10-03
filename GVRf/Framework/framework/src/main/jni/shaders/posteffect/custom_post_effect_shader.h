@@ -25,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "gl/gl_headers.h"
 #include "glm/glm.hpp"
@@ -40,16 +41,15 @@ class PostEffectData;
 
 class CustomPostEffectShader: public HybridObject {
 public:
-    CustomPostEffectShader(std::string vertex_shader,
-            std::string fragment_shader);
+    CustomPostEffectShader(const char* vertex_shader, const char* fragment_shader);
     virtual ~CustomPostEffectShader();
 
-    void addTextureKey(std::string variable_name, std::string key);
-    void addFloatKey(std::string variable_name, std::string key);
-    void addVec2Key(std::string variable_name, std::string key);
-    void addVec3Key(std::string variable_name, std::string key);
-    void addVec4Key(std::string variable_name, std::string key);
-    void addMat4Key(std::string variable_name, std::string key);
+    void addTextureKey(const std::string& variable_name, const std::string& key);
+    void addFloatKey(const std::string& variable_name, const std::string& key);
+    void addVec2Key(const std::string& variable_name, const std::string& key);
+    void addVec3Key(const std::string& variable_name, const std::string& key);
+    void addVec4Key(const std::string& variable_name, const std::string& key);
+    void addMat4Key(const std::string& variable_name, const std::string& key);
     void render(Camera* camera,
             RenderTexture* render_texture,
             PostEffectData* post_effect_data,
@@ -75,12 +75,17 @@ private:
     GLuint u_texture_;
     GLuint u_projection_matrix_;
     GLuint u_right_eye_;
-    std::map<int, std::string> texture_keys_;
-    std::map<int, std::string> float_keys_;
-    std::map<int, std::string> vec2_keys_;
-    std::map<int, std::string> vec3_keys_;
-    std::map<int, std::string> vec4_keys_;
-    std::map<int, std::string> mat4_keys_;
+
+    std::mutex lock_;
+    std::map<std::pair<std::string, std::string>, GLint> texture_keys_;
+    std::map<std::pair<std::string, std::string>, GLint> float_keys_;
+    std::map<std::pair<std::string, std::string>, GLint> vec2_keys_;
+    std::map<std::pair<std::string, std::string>, GLint> vec3_keys_;
+    std::map<std::pair<std::string, std::string>, GLint> vec4_keys_;
+    std::map<std::pair<std::string, std::string>, GLint> mat4_keys_;
+
+    std::string vertex_shader_;
+    std::string fragment_shader_;
 
     // add vertex array object
     GLuint vaoID_;

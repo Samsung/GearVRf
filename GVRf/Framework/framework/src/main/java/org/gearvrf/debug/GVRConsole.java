@@ -30,7 +30,6 @@ import org.gearvrf.GVRPostEffectMap;
 import org.gearvrf.GVRPostEffectShaderId;
 import org.gearvrf.GVRPostEffectShaderManager;
 import org.gearvrf.GVRScene;
-import org.gearvrf.GVRScript;
 import org.gearvrf.R;
 
 import android.graphics.Bitmap;
@@ -123,7 +122,7 @@ public class GVRConsole extends GVRPostEffect {
      * 
      * This overload is useful when you are using
      * {@link GVRContext#getNextMainScene()} and creating your debug console in
-     * {@link GVRScript#onInit(GVRContext)}.
+     * {@link org.gearvrf.GVRMain#onInit(GVRContext)}.
      * 
      * @param gvrContext
      *            The GVR context.

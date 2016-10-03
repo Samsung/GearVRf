@@ -67,14 +67,12 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      * 
      * @param gvrActivity
      *            Current activity object
-     * @param gvrScript
-     *            {@link GVRScript} which describes
-     * @param distortionDataFileName
-     *            distortion filename under assets folder
+     * @param gvrMain
+     *            {@link GVRMain} which describes
      */
-    OvrMonoscopicViewManager(GVRActivity gvrActivity, GVRScript gvrScript,
+    OvrMonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
                              OvrXMLParser xmlParser) {
-        super(gvrActivity, gvrScript, xmlParser);
+        super(gvrActivity, gvrMain, xmlParser);
 
         /*
          * Sets things with the numbers in the xml.

@@ -24,37 +24,36 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCustomPostEffectShader_addTextureKey(
-        JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
-        jstring variable_name, jstring key);
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeCustomPostEffectShader_addTextureKey(
+            JNIEnv *env, jobject obj, jlong jcustom_post_effect_shader,
+            jstring variable_name, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCustomPostEffectShader_addFloatKey(
-        JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
-        jstring variable_name, jstring key);
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeCustomPostEffectShader_addFloatKey(
+            JNIEnv *env, jobject obj, jlong jcustom_post_effect_shader,
+            jstring variable_name, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCustomPostEffectShader_addVec2Key(
-        JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
-        jstring variable_name, jstring key);
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeCustomPostEffectShader_addVec2Key(
+            JNIEnv *env, jobject obj, jlong jcustom_post_effect_shader,
+            jstring variable_name, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCustomPostEffectShader_addVec3Key(
-        JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
-        jstring variable_name, jstring key);
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeCustomPostEffectShader_addVec3Key(
+            JNIEnv *env, jobject obj, jlong jcustom_post_effect_shader,
+            jstring variable_name, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCustomPostEffectShader_addVec4Key(
-        JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
-        jstring variable_name, jstring key);
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeCustomPostEffectShader_addVec4Key(
+            JNIEnv *env, jobject obj, jlong jcustom_post_effect_shader,
+            jstring variable_name, jstring key);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCustomPostEffectShader_addMat4Key(
-        JNIEnv * env, jobject obj, jlong jcustom_post_effect_shader,
-        jstring variable_name, jstring key);
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeCustomPostEffectShader_addMat4Key(
+            JNIEnv *env, jobject obj, jlong jcustom_post_effect_shader,
+            jstring variable_name, jstring key);
 }
-;
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCustomPostEffectShader_addTextureKey(

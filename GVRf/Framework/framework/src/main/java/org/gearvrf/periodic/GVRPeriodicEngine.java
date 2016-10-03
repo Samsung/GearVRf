@@ -19,7 +19,6 @@ import java.util.PriorityQueue;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRScript;
 
 /**
  * Schedule {@linkplain Runnable runnables} to run on the GL thread at a future
@@ -59,7 +58,7 @@ import org.gearvrf.GVRScript;
  * {@linkplain GVRDrawFrameListener frame listener}; events run as
  * {@linkplain GVRContext#runOnGlThread(Runnable) run-once events.} Every frame,
  * GVRF runs any run-once events; then any frame listeners (including
- * animations); then your {@linkplain GVRScript#onStep() onStep() method;} and
+ * animations); then your {@linkplain org.gearvrf.GVRMain#onStep() method;} and
  * then it renders the scene. This means that any periodic events that run on a
  * given frame will run before any animations. It also means that there is
  * always a one frame delay between the time an event is dequeued and the time

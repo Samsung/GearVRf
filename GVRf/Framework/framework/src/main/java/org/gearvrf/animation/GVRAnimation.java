@@ -17,10 +17,10 @@ package org.gearvrf.animation;
 
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRHybridObject;
+import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPostEffect;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScript;
 import org.gearvrf.GVRTransform;
 
 import android.graphics.Color;
@@ -71,10 +71,10 @@ import android.graphics.Color;
  * 
  * <p>
  * Animations run in a {@link GVRDrawFrameListener}, so they happen before your
- * {@link GVRScript#onStep() onStep()} handler, which happens before GVRF
+ * {@link GVRMain#onStep()} handler, which happens before GVRF
  * renders the scene graph. This has two consequences:
  * <ul>
- * <li>When you start an animation in an {@link GVRScript#onStep()} handler, it
+ * <li>When you start an animation in an {@link GVRMain#onStep()} handler, it
  * starts running on the <em>next</em> frame.
  * <li>If you start multiple animations (with the same duration and the same
  * interpolator!) in the same {@code onStep()} handler, they will always be in

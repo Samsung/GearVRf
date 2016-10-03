@@ -64,7 +64,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     private GVRViewManager mViewManager;
     private volatile GVRConfigurationManager mConfigurationManager;
-    private GVRScript mGVRScript;
     private GVRMain mGVRMain;
     private VrAppSettings mAppSettings;
     private static View mFullScreenView = null;
@@ -240,10 +239,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     /**
-     * Links {@linkplain GVRScript a script} to the activity; sets the version;
+     * Links {@linkplain GVRMain a script} to the activity; sets the version;
      * 
-     * @param gvrScript
-     *            An instance of {@link GVRScript} to handle callbacks on the GL
+     * @param gvrMain
+     *            An instance of {@link GVRMain} to handle callbacks on the GL
      *            thread.
      * @param dataFileName
      *            Name of the XML file containing the framebuffer parameters. 
@@ -252,13 +251,12 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      *            The XML filename is relative to the application's
      *            {@code assets} directory, and can specify a file in a
      *            directory under the application's {@code assets} directory.
-     * @deprecated
      */
-    public void setScript(GVRScript gvrScript, String dataFileName) {
-        this.mGVRScript = gvrScript;
+    public void setMain(GVRMain gvrMain, String dataFileName) {
+        this.mGVRMain = gvrMain;
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             onConfigure(dataFileName);
-            mDelegate.setScript(gvrScript, dataFileName);
+            mDelegate.setMain(gvrMain, dataFileName);
 
             boolean isMonoscopicMode = mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
             if (!isMonoscopicMode) {
@@ -268,15 +266,11 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             }
             mDelegate.setViewManager(mViewManager);
 
-            if (gvrScript instanceof GVRMain) {
-                mViewManager.setUseTheFrameworkThread(true);
-            }
-
             mViewManager.getEventManager().sendEventWithMask(
                     SEND_EVENT_MASK,
                     this,
                     IActivityEvents.class,
-                    "onSetScript", gvrScript);
+                    "onSetMain", gvrMain);
             final GVRConfigurationManager localConfigurationManager = mConfigurationManager;
             if (null != mDockEventReceiver && !isMonoscopicMode && localConfigurationManager
                     .isDockListenerRequired()) {
@@ -322,34 +316,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     /**
-     * Gets the {@linkplain GVRScript a script} linked to the activity.
-     * @return the {@link GVRScript}.
-     * @deprecated
-     */
-    public final GVRScript getScript() {
-        return mGVRScript;
-    }
-
-    /**
-     * Links {@linkplain GVRMain} to the activity; sets the version;
-     * 
-     * @param gvrMain
-     *            An instance of {@link GVRMain} to handle callbacks on the framework
-     *            thread.
-     * @param dataFileName
-     *            Name of the XML file containing the framebuffer parameters. 
-     *            <p>
-     *            The XML filename is relative to the application's
-     *            {@code assets} directory, and can specify a file in a
-     *            directory under the application's {@code assets} directory.
-     */
-    public final void setMain(GVRMain gvrMain, String dataFileName) {
-        this.mGVRScript = gvrMain;
-        this.mGVRMain = gvrMain;
-        setScript(gvrMain, dataFileName);
-    }
-
-    /**
      * Gets the {@linkplain GVRMain} linked to the activity.
      * @return the {@link GVRMain}.
      */
@@ -362,7 +328,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * 
      * @param force
      *            If true, will create a OvrMonoscopicViewManager when
-     *            {@linkplain setMain setMain()} is called. If false, will
+     *            {@linkplain GVRActivity#setMain(GVRMain, String)} is called. If false, will
      *            proceed to auto-detect whether the device supports VR
      *            rendering and choose the appropriate ViewManager. This call
      *            will only have an effect if it is called before
@@ -377,8 +343,8 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     /**
      * Returns whether a monoscopic view was asked to be forced during
      * {@linkplain #setMain(GVRMain, String) setMain()}.
-     * @return true if monoscopic set, false if not.
-     * @see #setForceMonoscopic
+     * 
+     * @see GVRActivity#setForceMonoscopic(boolean)
      * @deprecated
      */
     @Deprecated
@@ -682,7 +648,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyLongPress(int keyCode, KeyEvent event);
         boolean dispatchKeyEvent(KeyEvent event);
 
-        void setScript(GVRScript gvrScript, String dataFileName);
+        void setMain(GVRMain gvrScript, String dataFileName);
         void setViewManager(GVRViewManager viewManager);
         void onInitAppSettings(VrAppSettings appSettings);
 

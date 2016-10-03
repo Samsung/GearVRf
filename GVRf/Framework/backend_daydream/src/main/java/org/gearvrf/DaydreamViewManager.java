@@ -38,8 +38,8 @@ class DaydreamViewManager extends GVRViewManager {
                 }
             };
 
-    DaydreamViewManager(final GVRActivity gvrActivity, GVRScript gvrScript) {
-        super(gvrActivity, gvrScript);
+    DaydreamViewManager(final GVRActivity gvrActivity, GVRMain gvrMain) {
+        super(gvrActivity, gvrMain);
 
         // Initialize GvrLayout and the native renderer.
         gvrLayout = new GvrLayout(gvrActivity);

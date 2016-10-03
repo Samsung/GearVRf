@@ -72,11 +72,9 @@ public:
         return horizontal_flip_post_effect_shader_;
     }
 
-    int addCustomPostEffectShader(std::string vertex_shader,
-            std::string fragment_shader) {
+    int addCustomPostEffectShader(const char* vertex_shader, const char* fragment_shader) {
         int id = latest_custom_shader_id_++;
-        CustomPostEffectShader* custom_post_effect_shader =
-                new CustomPostEffectShader(vertex_shader, fragment_shader);
+        CustomPostEffectShader* custom_post_effect_shader = new CustomPostEffectShader(vertex_shader, fragment_shader);
         custom_post_effect_shaders_[id] = custom_post_effect_shader;
         return id;
     }
