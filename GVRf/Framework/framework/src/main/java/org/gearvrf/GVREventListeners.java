@@ -68,7 +68,7 @@ public class GVREventListeners {
         }
 
         @Override
-        public void onSetScript(GVRScript script) {
+        public void onSetMain(GVRMain script) {
         }
 
         @Override

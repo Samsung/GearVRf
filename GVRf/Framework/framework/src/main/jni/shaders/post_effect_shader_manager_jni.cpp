@@ -55,11 +55,8 @@ Java_org_gearvrf_NativePostEffectShaderManager_addCustomPostEffectShader(
 
     const char *vertex_str = env->GetStringUTFChars(vertex_shader, 0);
     const char *fragment_str = env->GetStringUTFChars(fragment_shader, 0);
-    std::string native_vertex_shader = std::string(vertex_str);
-    std::string native_fragment_shader = std::string(fragment_str);
 
-    int id = post_effect_shader_manager->addCustomPostEffectShader(
-            native_vertex_shader, native_fragment_shader);
+    int id = post_effect_shader_manager->addCustomPostEffectShader(vertex_str, fragment_str);
 
     env->ReleaseStringUTFChars(vertex_shader, vertex_str);
     env->ReleaseStringUTFChars(fragment_shader, fragment_str);

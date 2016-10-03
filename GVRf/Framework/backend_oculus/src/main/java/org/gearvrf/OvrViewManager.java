@@ -15,37 +15,22 @@
 
 package org.gearvrf;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.util.DisplayMetrics;
 
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
-import org.gearvrf.GVRScript.SplashMode;
-import org.gearvrf.animation.GVRAnimation;
-import org.gearvrf.animation.GVROnFinish;
-import org.gearvrf.animation.GVROpacityAnimation;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.debug.GVRFPSTracer;
 import org.gearvrf.debug.GVRMethodCallTracer;
 import org.gearvrf.debug.GVRStatsLine;
-import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
 
-import android.app.Activity;
-import android.graphics.Bitmap;
-import android.opengl.GLES20;
-import android.util.DisplayMetrics;
-import android.view.KeyEvent;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 
 /*
  * This is the most important part of gvrf.
@@ -109,13 +94,11 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      * 
      * @param gvrActivity
      *            Current activity object
-     * @param gvrScript
-     *            {@link GVRScript} which describes
-     * @param distortionDataFileName
-     *            distortion filename under assets folder
+     * @param gvrMain
+     *            {@link GVRMain} which describes
      */
-    OvrViewManager(GVRActivity gvrActivity, GVRScript gvrScript, OvrXMLParser xmlParser) {
-        super(gvrActivity, gvrScript);
+    OvrViewManager(GVRActivity gvrActivity, GVRMain gvrMain, OvrXMLParser xmlParser) {
+        super(gvrActivity, gvrMain);
 
         // Apply view manager preferences
         GVRPreference prefs = GVRPreference.get();

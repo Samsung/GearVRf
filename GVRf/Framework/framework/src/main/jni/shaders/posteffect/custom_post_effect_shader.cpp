@@ -24,29 +24,17 @@
 #include "objects/post_effect_data.h"
 #include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
-#include "util/gvr_gl.h"
 
 
 namespace gvr {
-CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
-        std::string fragment_shader) :
-        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(), float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_(), mat4_keys_() {
-    deleter_ = getDeleterForThisThread();
-
-    program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
-    a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    checkGlError("glGetAttribLocation");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
-    checkGlError("glGetAttribLocation");
-    u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
-    checkGlError("glGetUniformLocation");
-    u_projection_matrix_ = glGetUniformLocation(program_->id(), "u_projection_matrix");
-    checkGlError("glGetUniformLocation");
-    u_right_eye_ = glGetUniformLocation(program_->id(), "u_right_eye");
-    checkGlError("glGetUniformLocation");
-
-    vaoID_ = 0;
-
+CustomPostEffectShader::CustomPostEffectShader(const char* vertex_shader, const char* fragment_shader) :
+        program_(0),
+        a_position_(0),
+        a_tex_coord_(0),
+        u_texture_(0),
+        vaoID_(0),
+        vertex_shader_(vertex_shader),
+        fragment_shader_(fragment_shader) {
 }
 
 CustomPostEffectShader::~CustomPostEffectShader() {
@@ -57,39 +45,39 @@ CustomPostEffectShader::~CustomPostEffectShader() {
     }
 }
 
-void CustomPostEffectShader::addTextureKey(std::string variable_name,
-        std::string key) {
-    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
-    texture_keys_[location] = key;
+void CustomPostEffectShader::addTextureKey(const std::string& variable_name, const std::string& key) {
+    auto pair = std::make_pair(variable_name, key);
+    std::lock_guard<std::mutex> lock(lock_);
+    texture_keys_[pair] = 0;
 }
 
-void CustomPostEffectShader::addFloatKey(std::string variable_name,
-        std::string key) {
-    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
-    float_keys_[location] = key;
+void CustomPostEffectShader::addFloatKey(const std::string& variable_name, const std::string& key) {
+    auto pair = std::make_pair(variable_name, key);
+    std::lock_guard<std::mutex> lock(lock_);
+    float_keys_[pair] = 0;
 }
-void CustomPostEffectShader::addVec2Key(std::string variable_name,
-        std::string key) {
-    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
-    vec2_keys_[location] = key;
-}
-
-void CustomPostEffectShader::addVec3Key(std::string variable_name,
-        std::string key) {
-    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
-    vec3_keys_[location] = key;
+void CustomPostEffectShader::addVec2Key(const std::string& variable_name, const std::string& key) {
+    auto pair = std::make_pair(variable_name, key);
+    std::lock_guard<std::mutex> lock(lock_);
+    vec2_keys_[pair] = 0;
 }
 
-void CustomPostEffectShader::addVec4Key(std::string variable_name,
-        std::string key) {
-    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
-    vec4_keys_[location] = key;
+void CustomPostEffectShader::addVec3Key(const std::string& variable_name, const std::string& key) {
+    auto pair = std::make_pair(variable_name, key);
+    std::lock_guard<std::mutex> lock(lock_);
+    vec3_keys_[pair] = 0;
 }
 
-void CustomPostEffectShader::addMat4Key(std::string variable_name,
-        std::string key) {
-    int location = glGetUniformLocation(program_->id(), variable_name.c_str());
-    mat4_keys_[location] = key;
+void CustomPostEffectShader::addVec4Key(const std::string& variable_name, const std::string& key) {
+    auto pair = std::make_pair(variable_name, key);
+    std::lock_guard<std::mutex> lock(lock_);
+    vec4_keys_[pair] = 0;
+}
+
+void CustomPostEffectShader::addMat4Key(const std::string& variable_name, const std::string& key) {
+    auto pair = std::make_pair(variable_name, key);
+    std::lock_guard<std::mutex> lock(lock_);
+    mat4_keys_[pair] = 0;
 }
 
 void CustomPostEffectShader::render(Camera* camera,
@@ -97,12 +85,31 @@ void CustomPostEffectShader::render(Camera* camera,
         PostEffectData* post_effect_data,
         std::vector<glm::vec3>& vertices, std::vector<glm::vec2>& tex_coords,
         std::vector<unsigned short>& triangles) {
-    glUseProgram(program_->id());
 
-    GLuint tmpID;
+    if (0 == program_) {
+        deleter_ = getDeleterForThisThread();
+
+        program_ = new GLProgram(vertex_shader_.c_str(), fragment_shader_.c_str());
+        vertex_shader_.empty();
+        fragment_shader_.empty();
+
+        a_position_ = glGetAttribLocation(program_->id(), "a_position");
+        a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
+        u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
+        u_projection_matrix_ = glGetUniformLocation(program_->id(), "u_projection_matrix");
+        u_right_eye_ = glGetUniformLocation(program_->id(), "u_right_eye");
+    }
+    if (0 == program_->id()) {
+        LOGE("CustomPostEffectShader not rendering due to shader-related error");
+        return;
+    }
+
+    glUseProgram(program_->id());
 
     if(vaoID_ == 0)
     {
+        GLuint tmpID;
+
         glGenVertexArrays(1, &vaoID_);
         glBindVertexArray(vaoID_);
 
@@ -146,36 +153,79 @@ void CustomPostEffectShader::render(Camera* camera,
         glUniform1i(u_right_eye_, right ? 1 : 0);
     }
 
+    lock_.lock();
     for (auto it = texture_keys_.begin(); it != texture_keys_.end(); ++it) {
         glActiveTexture(getGLTexture(texture_index));
-        Texture* texture = post_effect_data->getTexture(it->second);
+
+        const std::string& variable = it->first.first;
+        const std::string& key = it->first.second;
+        Texture* texture = post_effect_data->getTexture(key);
         glBindTexture(texture->getTarget(), texture->getId());
-        glUniform1i(it->first, texture_index++);
+
+        if (0 == it->second) {
+            it->second = glGetUniformLocation(program_->id(), variable.c_str());
+        }
+        glUniform1i(it->second, texture_index++);
     }
 
     for (auto it = float_keys_.begin(); it != float_keys_.end(); ++it) {
-        glUniform1f(it->first, post_effect_data->getFloat(it->second));
+        const std::string& variable = it->first.first;
+        const std::string& key = it->first.second;
+
+        if (0 == it->second) {
+            it->second = glGetUniformLocation(program_->id(), variable.c_str());
+        }
+        glUniform1f(it->second, post_effect_data->getFloat(key));
     }
 
     for (auto it = vec2_keys_.begin(); it != vec2_keys_.end(); ++it) {
-        glm::vec2 v = post_effect_data->getVec2(it->second);
-        glUniform2f(it->first, v.x, v.y);
+        const std::string& variable = it->first.first;
+        const std::string& key = it->first.second;
+
+        const glm::vec2& v = post_effect_data->getVec2(key);
+
+        if (0 == it->second) {
+            it->second = glGetUniformLocation(program_->id(), variable.c_str());
+        }
+        glUniform2f(it->second, v.x, v.y);
     }
 
     for (auto it = vec3_keys_.begin(); it != vec3_keys_.end(); ++it) {
-        glm::vec3 v = post_effect_data->getVec3(it->second);
-        glUniform3f(it->first, v.x, v.y, v.z);
+        const std::string& variable = it->first.first;
+        const std::string& key = it->first.second;
+
+        const glm::vec3& v = post_effect_data->getVec3(key);
+
+        if (0 == it->second) {
+            it->second = glGetUniformLocation(program_->id(), variable.c_str());
+        }
+        glUniform3f(it->second, v.x, v.y, v.z);
     }
 
     for (auto it = vec4_keys_.begin(); it != vec4_keys_.end(); ++it) {
-        glm::vec4 v = post_effect_data->getVec4(it->second);
-        glUniform4f(it->first, v.x, v.y, v.z, v.w);
+        const std::string& variable = it->first.first;
+        const std::string& key = it->first.second;
+
+        const glm::vec4& v = post_effect_data->getVec4(key);
+
+        if (0 == it->second) {
+            it->second = glGetUniformLocation(program_->id(), variable.c_str());
+        }
+        glUniform4f(it->second, v.x, v.y, v.z, v.w);
     }
 
     for (auto it = mat4_keys_.begin(); it != mat4_keys_.end(); ++it) {
-        glm::mat4 m = post_effect_data->getMat4(it->second);
-        glUniformMatrix4fv(it->first, 1, GL_FALSE, glm::value_ptr(m));
+        const std::string& variable = it->first.first;
+        const std::string& key = it->first.second;
+
+        const glm::mat4& m = post_effect_data->getMat4(key);
+
+        if (0 == it->second) {
+            it->second = glGetUniformLocation(program_->id(), variable.c_str());
+        }
+        glUniformMatrix4fv(it->second, 1, GL_FALSE, glm::value_ptr(m));
     }
+    lock_.unlock();
 
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);

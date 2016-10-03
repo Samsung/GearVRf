@@ -31,7 +31,7 @@ public interface IActivityEvents extends IEvents {
 
     void onDestroy();
 
-    void onSetScript(GVRScript script);
+    void onSetMain(GVRMain script);
 
     void onWindowFocusChanged(boolean hasFocus);
 

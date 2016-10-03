@@ -19,7 +19,6 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.view.KeyEvent;
 
-import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
 /**
@@ -41,7 +40,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
 
     @Override
     public GVRViewManager makeViewManager() {
-        return new DaydreamViewManager(mActivity, mActivity.getScript());
+        return new DaydreamViewManager(mActivity, mActivity.getMain());
     }
 
     @Override
@@ -93,7 +92,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
     }
 
     @Override
-    public void setScript(GVRScript gvrScript, String dataFileName) {
+    public void setMain(GVRMain gvrMain, String dataFileName) {
     }
 
     @Override

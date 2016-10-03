@@ -19,6 +19,10 @@ include ':framework'
 //include ':gvr-unittestutils'
 //project(':gvr-unittestutils').projectDir = file('demos/gvr-unittestutils')
 
+//include ':gvr-widgetviewer'
+//project(':gvr-widgetviewer').projectDir = file('demos/gvr-widgetviewer')
+//include ':widgetplugin'
+//project(':widgetplugin').projectDir = file('extensions/widgetplugin')
 
 if(file("../../../../extra_settings_exp.gradle").exists()) {
     apply from: '../../../../extra_settings_exp.gradle'

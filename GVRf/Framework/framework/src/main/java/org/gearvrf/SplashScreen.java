@@ -29,7 +29,7 @@ class SplashScreen extends GVRSceneObject {
     final long mTimeout;
 
     SplashScreen(GVRContext gvrContext, GVRMesh mesh, GVRTexture texture,
-            GVRMaterialShaderId shaderId, GVRScript script) {
+            GVRMaterialShaderId shaderId, GVRMain script) {
         super(gvrContext, mesh, texture, shaderId);
 
         mCloseRequested = false; // unnecessary, but ...
@@ -39,11 +39,12 @@ class SplashScreen extends GVRSceneObject {
         // check if we have a splash display time, else request for
         // an immediate timeout
         if (splashDisplayTime < 0f) {
-            splashDisplayTime = 0f;
+            mTimeout = Long.MAX_VALUE;
+        } else {
+            long currentTime = GVRTime.getCurrentTime();
+            mTimeout = currentTime + (long) (splashDisplayTime * 1e9f);
+            Log.d(TAG, "currentTime = %,d, timeout = %,d", currentTime, mTimeout);
         }
-        long currentTime = GVRTime.getCurrentTime();
-        mTimeout = currentTime + (long) (splashDisplayTime * 1e9f);
-        Log.d(TAG, "currentTime = %,d, timeout = %,d", currentTime, mTimeout);
     }
 
     void closeSplashScreen() {
