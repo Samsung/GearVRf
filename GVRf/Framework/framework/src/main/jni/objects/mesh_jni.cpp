@@ -185,11 +185,16 @@ JNIEXPORT jfloatArray JNICALL
 Java_org_gearvrf_NativeMesh_getTexCoords(JNIEnv * env,
         jobject obj, jlong jmesh) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-    const std::vector<glm::vec2>& uvs = mesh->getVec2Vector("a_texcoord");
-    jfloatArray juvs = env->NewFloatArray(uvs.size() * 2);
-    env->SetFloatArrayRegion(juvs, 0, uvs.size() * 2,
-            reinterpret_cast<const jfloat*>(uvs.data()));
-    return juvs;
+    std::vector<glm::vec2>* uvs;
+    if (mesh->getVec("a_texcoord", &uvs))
+    {
+        jfloatArray juvs = env->NewFloatArray(uvs->size() * 2);
+        env->SetFloatArrayRegion(juvs, 0, uvs->size() * 2,
+                                 reinterpret_cast<const jfloat*>(uvs->data()));
+        return juvs;
+
+    }
+    return NULL;
 }
 
 JNIEXPORT jcharArray JNICALL
@@ -284,12 +289,16 @@ Java_org_gearvrf_NativeMesh_getVec2Vector(JNIEnv * env,
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
-    const std::vector<glm::vec2>& vec2_vector = mesh->getVec2Vector(native_key);
+    std::vector<glm::vec2>* vec2_vector;
+    if (mesh->getVec(native_key, &vec2_vector)) {
+        env->ReleaseStringUTFChars(key, char_key);
+        jfloatArray jvec2_vector = env->NewFloatArray(vec2_vector->size() * 2);
+        env->SetFloatArrayRegion(jvec2_vector, 0, vec2_vector->size() * 2,
+                                 reinterpret_cast<const jfloat *>(vec2_vector->data()));
+        return jvec2_vector;
+    }
     env->ReleaseStringUTFChars(key, char_key);
-    jfloatArray jvec2_vector = env->NewFloatArray(vec2_vector.size() * 2);
-    env->SetFloatArrayRegion(jvec2_vector, 0, vec2_vector.size() * 2,
-            reinterpret_cast<const jfloat*>(vec2_vector.data()));
-    return jvec2_vector;
+    return NULL;
 }
 
 JNIEXPORT void JNICALL
