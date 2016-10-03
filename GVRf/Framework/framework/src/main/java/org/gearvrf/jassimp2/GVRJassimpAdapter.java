@@ -346,14 +346,14 @@ public class GVRJassimpAdapter {
         GVRSceneObject mainCamera = new GVRSceneObject(context);
         GVRCameraRig cameraRig = GVRCameraRig.makeInstance(context);
         AiCamera aiCam = cameras.get(0);
-        AiVector up = (AiVector) aiCam.getUp(Jassimp.BUILTIN);
-        AiVector fwd = (AiVector) aiCam.getLookAt(Jassimp.BUILTIN);
-        AiVector pos = (AiVector) aiCam.getPosition(Jassimp.BUILTIN);
+        float[] up = (float[]) aiCam.getUp(Jassimp.BUILTIN);
+        float[] fwd = (float[]) aiCam.getLookAt(Jassimp.BUILTIN);
+        float[] pos = (float[]) aiCam.getPosition(Jassimp.BUILTIN);
         Matrix4f mtx = new Matrix4f();
 
-        mtx.setLookAt(pos.getX(), pos.getY(), pos.getZ(),
-                pos.getX() + fwd.getX(), pos.getY() + fwd.getY(), pos.getZ() + fwd.getZ(),
-                up.getX(), up.getY(), up.getZ());
+        mtx.setLookAt(pos[0], pos[1], pos[2],
+                pos[0] + fwd[0], pos[1] + fwd[1], pos[2] + fwd[2],
+                up[0], up[1], up[2]);
         mainCamera.setName("MainCamera");
         mainCamera.getTransform().setModelMatrix(mtx);
         cameraRig.setNearClippingDistance(aiCam.getClipPlaneNear());
