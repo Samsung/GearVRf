@@ -83,5 +83,27 @@ void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
 void BulletWorld::step(float timeStep) {
     mPhysicsWorld->stepSimulation(timeStep);
 }
+
+void BulletWorld::listCollisions(std::vector<ContactPoint>& contactPoints) {
+    int numManifolds = mPhysicsWorld->getDispatcher()->getNumManifolds();
+
+    for (int i = 0; i < numManifolds; i++)
+    {
+        ContactPoint contactPt;
+
+        btPersistentManifold* contactManifold =  mPhysicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+
+        contactPt.body0 = (BulletRigidBody*)(contactManifold->getBody0()->getUserPointer());
+        contactPt.body1 = (BulletRigidBody*)(contactManifold->getBody1()->getUserPointer());
+        contactPt.normal[0] = contactManifold->getContactPoint(0).m_normalWorldOnB.getX();
+        contactPt.normal[1] = contactManifold->getContactPoint(0).m_normalWorldOnB.getY();
+        contactPt.normal[2] = contactManifold->getContactPoint(0).m_normalWorldOnB.getZ();
+        contactPt.distance = contactManifold->getContactPoint(0).getDistance();
+
+        contactPoints.push_back(contactPt);
+        //TODO more collision atributes
+    }
+
+}
 }
 

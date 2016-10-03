@@ -25,7 +25,11 @@
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 
+#include "glm/glm.hpp"
+
 namespace gvr {
+
+
 class BulletWorld : public Physics3DWorld {
 public:
 	BulletWorld();
@@ -34,6 +38,7 @@ public:
 	void addRigidBody(PhysicsRigidBody *body);
 	void removeRigidBody(PhysicsRigidBody *body);
 	void step(float timeStep);
+	void listCollisions(std::vector<ContactPoint>& contactPoints); //index counts how many iteration it's on list, if <0 should be taken out
 
 private:
 	void initialize();

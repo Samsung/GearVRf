@@ -25,6 +25,13 @@
 
 namespace gvr {
 
+struct ContactPoint{
+	PhysicsRigidBody* body0 = 0;
+	PhysicsRigidBody* body1 = 0;
+	float normal[3] = {0.0f, 0.0f, 0.0f};
+	float distance = 0.0f;
+};
+
 class PhysicsWorld : public Component {
 public:
 	PhysicsWorld() : Component(PhysicsWorld::getComponentType()){}
@@ -38,6 +45,8 @@ public:
 	void removeRigidBody(PhysicsRigidBody *body);
 
 	void step(float timeStep);
+
+	void listCollisions(std::vector<ContactPoint>& contactPoints);
 };
 
 }
