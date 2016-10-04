@@ -1,0 +1,80 @@
+apply plugin: 'com.android.model.application'
+
+System.setProperty("appName", "framework-tests")
+def demoAppDir = "../../../../../../GearVRf-Tests/framework-tests/"
+
+model {
+    android {
+        buildTypes {
+            release {
+                minifyEnabled false
+            }
+        }
+
+        compileSdkVersion 21
+        buildToolsVersion '23.0.3'
+
+        defaultConfig {
+            minSdkVersion.apiLevel 19
+            targetSdkVersion.apiLevel 19
+
+            resValues.with {
+                create() {
+                    type = "string"
+                    name = "app_name"
+                    value = System.getProperty("appName")
+                }
+            }
+        }
+
+        sources {
+            main {
+                java {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/androidTest/java"]
+                    }
+                }
+                assets {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/assets"]
+                    }
+                }
+                res {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/res"]
+                    }
+                }
+                manifest {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/"]
+                        include 'AndroidManifest.xml'
+                    }
+                }
+            }
+        }
+    }
+}
+
+task(copyOculusSignatures, type: Copy) {
+    dependsOn assemble
+    if (rootProject.hasProperty("OCULUS_SIGS_DIRECTORY")) {
+        copy {
+            from rootProject.property("OCULUS_SIGS_DIRECTORY")
+            into demoAppDir + "app/src/main/assets"
+            include 'oculussig_*'
+        }
+    }
+}
+
+
+dependencies {
+    compile project(':framework')
+    compile project(':backend_oculus')
+    compile project(':gvr-unittestutils')
+    androidTestCompile 'com.android.support:support-annotations:23.0.1'
+    androidTestCompile 'com.android.support.test:runner:0.4.1'
+    androidTestCompile 'com.android.support.test:rules:0.4.1'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+    compile 'net.jodah:concurrentunit:0.4.2'
+    compile 'com.android.support.test:rules:0.4.1'
+}

@@ -1,0 +1,64 @@
+apply plugin: 'com.android.model.library'
+
+System.setProperty("appName", "gvr-unittestutils")
+def demoAppDir = "../../../../../../GearVRf-Tests/gvr-unittestutils/"
+
+model {
+    android {
+        buildTypes {
+            release {
+                minifyEnabled false
+            }
+        }
+
+        compileSdkVersion 21
+        buildToolsVersion '23.0.3'
+
+        defaultConfig {
+            minSdkVersion.apiLevel 19
+            targetSdkVersion.apiLevel 19
+
+            resValues.with {
+                create() {
+                    type = "string"
+                    name = "app_name"
+                    value = System.getProperty("appName")
+                }
+            }
+        }
+
+        sources {
+            main {
+                java {
+                    source {
+                        srcDirs = [demoAppDir+"src/main/java"]
+                    }
+                }
+                assets {
+                    source {
+                        srcDirs = [demoAppDir+"src/main/assets"]
+                    }
+                }
+                res {
+                    source {
+                        srcDirs = [demoAppDir+"src/main/res"]
+                    }
+                }
+                manifest {
+                    source {
+                        srcDirs = [demoAppDir+"src/main/"]
+                        include 'AndroidManifest.xml'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+dependencies {
+    compile project(':framework')
+    compile project(':backend_oculus')
+    compile 'net.jodah:concurrentunit:0.4.2'
+}
