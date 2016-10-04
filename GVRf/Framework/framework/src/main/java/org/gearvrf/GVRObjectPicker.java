@@ -14,6 +14,17 @@
  */
 
 package org.gearvrf;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.joml.FrustumCuller;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+
 /**
  * Finds the scene objects that intersect the scene object the
  * picker is attached to.
