@@ -30,3 +30,8 @@ project(':widgetplugin').projectDir = new File('WidgetPlugin/widgetplugin')
 
 include ':GearWearIoDevice'
 project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
+
+if (hasProperty("platformsdk_support")) {
+    include ':platformsdk_support'
+    project(':platformsdk_support').projectDir = new File('platformsdk_support')
+}
