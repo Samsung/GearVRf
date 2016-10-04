@@ -42,7 +42,7 @@
 #include "vulkan_renderer.h"
 #define MAX_INDICES 500
 #define BATCH_SIZE 60
-bool do_batching = false;
+bool do_batching = true;
 
 namespace gvr {
 Renderer* gRenderer = nullptr;

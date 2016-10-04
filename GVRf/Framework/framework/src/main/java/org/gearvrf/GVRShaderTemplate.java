@@ -75,7 +75,7 @@ import android.util.Log;
  */
 public class GVRShaderTemplate
 {
-    private boolean mWriteShadersToDisk = true;
+    private boolean mWriteShadersToDisk = false;
     protected Integer mGLSLVersion = 100;
 
     protected class ShaderVariant
