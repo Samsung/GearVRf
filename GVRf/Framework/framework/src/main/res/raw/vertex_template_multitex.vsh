@@ -1,4 +1,3 @@
-
 #ifdef HAS_MULTIVIEW
 #extension GL_OVR_multiview2 : enable
 layout(num_views = 2) in;
@@ -42,12 +41,37 @@ out vec3 view_direction;
 out vec3 viewspace_position;
 out vec3 viewspace_normal;
 out vec4 local_position;
+
 out vec2 diffuse_coord;
+out vec2 opacity_coord;
 out vec2 ambient_coord;
 out vec2 specular_coord;
 out vec2 emissive_coord;
 out vec2 normal_coord;
 out vec2 lightmap_coord;
+out vec2 diffuse_coord1;
+out vec2 ambient_coord1;
+out vec2 specular_coord1;
+out vec2 emissive_coord1;
+out vec2 normal_coord1;
+
+//
+// The Phong vertex shader supports up to 4 sets of texture coordinates.
+// It also supports blending of two textures to compose ambient,
+// diffuse, specular, emissive or normal components.
+//
+#ifdef HAS_a_texcoord1
+in vec2 a_texcoord1;
+#endif
+
+#ifdef HAS_a_texcoord2
+in vec2 a_texcoord2;
+#endif
+
+#ifdef HAS_a_texcoord3
+in vec2 a_texcoord3;
+#endif
+
 
 struct Vertex
 {
@@ -59,6 +83,10 @@ struct Vertex
 };
 
 #ifdef HAS_LIGHTSOURCES
+//
+// This section contains code to compute
+// vertex contributions to lighting.
+//
 	@LIGHTSOURCES
 #endif
 	
@@ -75,9 +103,18 @@ void main() {
 	@VertexNormalShader
 #endif
 #ifdef HAS_LIGHTSOURCES
+//
+// This section contains code to compute
+// vertex contributions to lighting.
+//
 	LightVertex(vertex);
 #endif
 #ifdef HAS_TEXCOORDS
+//
+// This section contains assignment statements from
+// input vertex attributes to output shader variables
+// generate by GVRShaderTemplate during shader construction.
+//
 	@TEXCOORDS
 #endif
 	viewspace_position = vertex.viewspace_position;

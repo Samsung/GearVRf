@@ -30,6 +30,7 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSpotLight;
+import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimator;
@@ -47,6 +48,7 @@ public class GVRJassimpAdapter {
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
     private static GVRJassimpAdapter sInstance;
     private List<INodeFactory> mNodeFactories;
+    private static final int MAX_TEX_COORDS = 8;
 
     public interface INodeFactory {
         GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
@@ -107,23 +109,24 @@ public class GVRJassimpAdapter {
             mesh.setNormals(normalsArray);
         }
 
-        // TexCoords
-        final int coordIdx = 0;
-        FloatBuffer fbuf = aiMesh.getTexCoordBuffer(coordIdx);
-        if (fbuf != null) {
-            FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
-            if (aiMesh.getNumUVComponents(coordIdx) == 2) {
-                FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(coordIdx);
-                coords.put(coordsSource);
-            } else {
-                for (int i = 0; i < aiMesh.getNumVertices(); ++i) {
-                    float u = aiMesh.getTexCoordU(i, coordIdx);
-                    float v = aiMesh.getTexCoordV(i, coordIdx);
-                    coords.put(u);
-                    coords.put(v);
+        // TexCords
+        for(int texIndex=0; texIndex< MAX_TEX_COORDS; texIndex++) {
+            FloatBuffer fbuf = aiMesh.getTexCoordBuffer(texIndex);
+            if (fbuf != null) {
+                FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
+                if (aiMesh.getNumUVComponents(texIndex) == 2) {
+                    FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(texIndex);
+                    coords.put(coordsSource);
+                } else {
+                    for (int i = 0; i < aiMesh.getNumVertices(); ++i) {
+                        float u = aiMesh.getTexCoordU(i, texIndex);
+                        float v = aiMesh.getTexCoordV(i, texIndex);
+                        coords.put(u);
+                        coords.put(v);
+                    }
                 }
+                mesh.setTexCoords(coords.array(), texIndex);
             }
-            mesh.setTexCoords(coords.array());
         }
 
         // Triangles
@@ -343,14 +346,14 @@ public class GVRJassimpAdapter {
         GVRSceneObject mainCamera = new GVRSceneObject(context);
         GVRCameraRig cameraRig = GVRCameraRig.makeInstance(context);
         AiCamera aiCam = cameras.get(0);
-        AiVector up = (AiVector) aiCam.getUp(Jassimp.BUILTIN);
-        AiVector fwd = (AiVector) aiCam.getLookAt(Jassimp.BUILTIN);
-        AiVector pos = (AiVector) aiCam.getPosition(Jassimp.BUILTIN);
+        float[] up = (float[]) aiCam.getUp(Jassimp.BUILTIN);
+        float[] fwd = (float[]) aiCam.getLookAt(Jassimp.BUILTIN);
+        float[] pos = (float[]) aiCam.getPosition(Jassimp.BUILTIN);
         Matrix4f mtx = new Matrix4f();
 
-        mtx.setLookAt(pos.getX(), pos.getY(), pos.getZ(),
-                pos.getX() + fwd.getX(), pos.getY() + fwd.getY(), pos.getZ() + fwd.getZ(),
-                up.getX(), up.getY(), up.getZ());
+        mtx.setLookAt(pos[0], pos[1], pos[2],
+                pos[0] + fwd[0], pos[1] + fwd[1], pos[2] + fwd[2],
+                up[0], up[1], up[2]);
         mainCamera.setName("MainCamera");
         mainCamera.getTransform().setModelMatrix(mtx);
         cameraRig.setNearClippingDistance(aiCam.getClipPlaneNear());
@@ -510,30 +513,62 @@ public class GVRJassimpAdapter {
     static
     {
         textureMap = new HashMap<AiTextureType, String>();
-        textureMap.put(AiTextureType.DIFFUSE,"diffuseTexture");
-        textureMap.put(AiTextureType.SPECULAR,"specularTexture");
-        textureMap.put(AiTextureType.AMBIENT,"ambientTexture");
-        textureMap.put(AiTextureType.EMISSIVE,"emissiveTexture");
-        textureMap.put(AiTextureType.HEIGHT,"heightTexture");
-        textureMap.put(AiTextureType.NORMALS,"normalTexture");
-        textureMap.put(AiTextureType.SHININESS,"shininessTexture");
-        textureMap.put(AiTextureType.OPACITY,"opacityTexture");
-        textureMap.put(AiTextureType.DISPLACEMENT,"displacementTexture");
-        textureMap.put(AiTextureType.LIGHTMAP,"lightmapTexture");
-        textureMap.put(AiTextureType.REFLECTION,"reflectionTexture");
+        textureMap.put(AiTextureType.DIFFUSE,"diffuse");
+        textureMap.put(AiTextureType.SPECULAR,"specular");
+        textureMap.put(AiTextureType.AMBIENT,"ambient");
+        textureMap.put(AiTextureType.EMISSIVE,"emissive");
+        textureMap.put(AiTextureType.HEIGHT,"height");
+        textureMap.put(AiTextureType.NORMALS,"normal");
+        textureMap.put(AiTextureType.SHININESS,"shininess");
+        textureMap.put(AiTextureType.OPACITY,"opacity");
+        textureMap.put(AiTextureType.DISPLACEMENT,"displacement");
+        textureMap.put(AiTextureType.LIGHTMAP,"lightmap");
+        textureMap.put(AiTextureType.REFLECTION,"reflection");
+    }
+
+    private static final Map<AiTextureMapMode, GVRTextureParameters.TextureWrapType> wrapModeMap;
+    static
+    {
+        wrapModeMap = new HashMap<AiTextureMapMode, GVRTextureParameters.TextureWrapType>();
+        wrapModeMap.put(AiTextureMapMode.WRAP,GVRTextureParameters.TextureWrapType.GL_REPEAT );
+        wrapModeMap.put(AiTextureMapMode.CLAMP,GVRTextureParameters.TextureWrapType.GL_CLAMP_TO_EDGE );
+        wrapModeMap.put(AiTextureMapMode.MIRROR, GVRTextureParameters.TextureWrapType.GL_MIRRORED_REPEAT );
+
     }
 
     private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
         for (final AiTextureType texType : AiTextureType.values())
         {
-            if(texType != AiTextureType.UNKNOWN)
-            {
-                final String texFileName = material.getTextureFile(texType, 0);
-                if (!"".equals(texFileName))
-                {
-                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureMap.get(texType));
-                    assetRequest.loadTexture(texRequest);
+            if (texType == AiTextureType.UNKNOWN) {
+                continue;
+            }
+            for (int i = 0; i < material.getNumTextures(texType); ++i) {
+                final String texFileName = material.getTextureFile(texType, i);
+
+                if ("".equals(texFileName)) {
+                    continue;
                 }
+                int uvIndex = material.getTextureUVIndex(texType, i);
+                int blendop = material.getTextureOp(texType, i).ordinal();
+                Log.e("RC", "tex index " + uvIndex);
+                String typeName = textureMap.get(texType);
+                String textureKey = typeName + "Texture";
+                String texCoordKey = "a_texcoord";
+                String shaderKey = typeName + "_coord";
+                if (uvIndex > 0) {
+                    texCoordKey += uvIndex;
+                }
+                if (i > 0) {
+                    textureKey += i;
+                    shaderKey += i;
+                    meshMaterial.setFloat(textureKey + "_blendop", (float) blendop);
+                }
+                meshMaterial.setTexCoord(textureKey, texCoordKey, shaderKey);
+                GVRTextureParameters texParams = new GVRTextureParameters(context);
+                texParams.setWrapSType(wrapModeMap.get(material.getTextureMapModeU(texType,i)));
+                texParams.setWrapTType(wrapModeMap.get(material.getTextureMapModeV(texType,i)));
+                GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureKey,texParams);
+                assetRequest.loadTexture(texRequest);
             }
         }
     }

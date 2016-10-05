@@ -26,12 +26,12 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-        "attribute vec4 a_tex_coord;\n"
+static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
+        "attribute vec2 a_texcoord;\n"
         "varying vec2 v_tex_coord;\n"
         "void main() {\n"
-        "  v_tex_coord = a_tex_coord.xy;\n"
-        "  gl_Position = a_position;\n"
+        "  v_tex_coord = a_texcoord.xy;\n"
+        "  gl_Position = vec4(a_position.xyz, 1);\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] = "precision highp float;\n"
@@ -53,7 +53,7 @@ ColorBlendPostEffectShader::ColorBlendPostEffectShader() :
 
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
+    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
     u_factor_ = glGetUniformLocation(program_->id(), "u_factor");

@@ -33,7 +33,7 @@ Surface @ShaderName()
 	vec3 viewspaceNormal;
 	
 #ifdef HAS_ambientTexture
-	ambient *= texture(ambientTexture, diffuse_coord.xy);
+	ambient *= texture(ambientTexture, ambient_coord.xy);
 #endif
 #ifdef HAS_diffuseTexture
 	diffuse *= texture(diffuseTexture, diffuse_coord.xy);
@@ -43,21 +43,21 @@ Surface @ShaderName()
 #endif
 diffuse.xyz *= diffuse.w;
 #ifdef HAS_specularTexture
-	specular *= texture(specularTexture, diffuse_coord.xy);
+	specular *= texture(specularTexture, specular_coord.xy);
 #endif
 #ifdef HAS_emissiveTexture
-	emission = texture(emissiveTexture, diffuse_coord.xy);
+	emission = texture(emissiveTexture, emissive_coord.xy);
 #else
 	emission = vec4(0.0, 0.0, 0.0, 0.0);
 #endif
 #ifdef HAS_normalTexture
-	viewspaceNormal = texture(normalTexture, diffuse_coord.xy).xyz * 2.0 - 1.0;
+	viewspaceNormal = texture(normalTexture, normal_coord.xy).xyz * 2.0 - 1.0;
 #else
 	viewspaceNormal = viewspace_normal;
 #endif
 
 #ifdef HAS_lightMapTexture
-	vec2 lmap_coord = (diffuse_coord * u_lightMap_scale) + u_lightMap_offset;
+	vec2 lmap_coord = (lightmap_coord * u_lightMap_scale) + u_lightMap_offset;
 	diffuse *= texture(lightMapTexture, vec2(lmap_coord.x, 1 - lmap_coord.y);
 	return Surface(viewspaceNormal, ambient, vec4(0.0, 0.0, 0.0, 0.0), specular, diffuse);
 #else

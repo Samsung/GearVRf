@@ -128,9 +128,16 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      *            Array containing the packed texture coordinate data.
      */
     public void setTexCoords(float[] texCoords) {
-        checkValidFloatArray("texCoords", texCoords, 2);
-        mAttributeKeys.add("a_texcoord");
-        NativeMesh.setTexCoords(getNative(), texCoords);
+        setTexCoords(texCoords, 0);
+    }
+
+
+    public void setTexCoords(float [] texCoords, int index){
+
+        String key = (index > 0) ? ("a_texcoord" +index) : "a_texcoord";
+        checkValidFloatArray(key, texCoords, 2);
+        mAttributeKeys.add(key);
+        NativeMesh.setVec2Vector(getNative(),key,texCoords);
     }
 
     /**
@@ -483,8 +490,6 @@ class NativeMesh {
     static native void setNormals(long mesh, float[] normals);
 
     static native float[] getTexCoords(long mesh);
-
-    static native void setTexCoords(long mesh, float[] texCoords);
 
     static native char[] getTriangles(long mesh);
 

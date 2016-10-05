@@ -44,7 +44,7 @@ namespace gvr {
 class Mesh: public HybridObject {
 public:
     Mesh() :
-            vertices_(), normals_(), tex_coords_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
+            vertices_(), normals_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
                     have_bounding_volume_(false), vao_dirty_(true), listener_(new Listener()),
                     boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
     {
@@ -59,8 +59,6 @@ public:
         vertices.swap(vertices_);
         std::vector<glm::vec3> normals;
         normals.swap(normals_);
-        std::vector<glm::vec2> tex_coords;
-        tex_coords.swap(tex_coords_);
         std::vector<unsigned short> indices;
         indices.swap(indices_);
 
@@ -126,22 +124,6 @@ public:
 
     void set_normals(std::vector<glm::vec3>&& normals) {
         normals_ = std::move(normals);
-        vao_dirty_ = true;
-        listener_->notify_listeners(true);
-    }
-
-    const std::vector<glm::vec2>& tex_coords() const {
-        return tex_coords_;
-    }
-
-    void set_tex_coords(const std::vector<glm::vec2>& tex_coords) {
-        tex_coords_ = tex_coords;
-        vao_dirty_ = true;
-        listener_->notify_listeners(true);
-    }
-
-    void set_tex_coords(std::vector<glm::vec2>&& tex_coords) {
-        tex_coords_ = std::move(tex_coords);
         vao_dirty_ = true;
         listener_->notify_listeners(true);
     }
@@ -220,8 +202,21 @@ public:
         }
     }
 
+    bool getVec(std::string key, std::vector<glm::vec2>** const ptr)  {
+        auto it = vec2_vectors_.find(key);
+        if (it != vec2_vectors_.end()) {
+            *ptr = &(it->second);
+            return true;
+        } else {
+            LOGE("Mesh::getVec2Vector() : %s not found", key.c_str());
+            return false;
+        }
+    }
+
     void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
         vec2_vectors_[key] = vector;
+        if(strstr((key.c_str()),"a_texcoord"))
+            listener_->notify_listeners(true);
         vao_dirty_ = true;
     }
 
@@ -341,35 +336,7 @@ public:
             deleter_ = getDeleterForThisThread();
         }
     }
-     void getAttribNames(std::set<std::string> &attrib_names){
-    	 if(vertices_.size() > 0)
-    		 attrib_names.insert("a_position");
-
-    	 if(tex_coords_.size() > 0)
-    		 attrib_names.insert("a_texcoord");
-
-    	 if(normals_.size() > 0)
-    		 attrib_names.insert("a_normal");
-
-    	 if(hasBones()){
-    		 attrib_names.insert("a_bone_indices");
-    		 attrib_names.insert("a_bone_weights");
-    	 }
-
-    	 for(auto it : vec2_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-    	 for(auto it : vec3_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-    	 for(auto it : vec4_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-    	 for(auto it : float_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-
-    }
+     void getAttribNames(std::set<std::string> &attrib_names);
 
      void forceShouldReset() { // one time, then false
          vao_dirty_ = true;
@@ -401,7 +368,7 @@ private:
     Listener* listener_;
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
-    std::vector<glm::vec2> tex_coords_;
+
     std::map<std::string, std::vector<float>> float_vectors_;
     std::map<std::string, std::vector<glm::vec2>> vec2_vectors_;
     std::map<std::string, std::vector<glm::vec3>> vec3_vectors_;

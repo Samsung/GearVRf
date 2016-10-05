@@ -63,27 +63,28 @@
 // (http://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping)
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
+static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
         "uniform mat4 u_model;\n"
         "uniform mat4 u_mvp;\n"
         "varying vec3 v_tex_coord;\n"
         "void main() {\n"
-        "  v_tex_coord = normalize((u_model * a_position).xyz);\n"
+        "  vec4 pos = vec4(a_position, 1.0);\n"
+        "  v_tex_coord = normalize((u_model * pos).xyz);\n"
         "  v_tex_coord.z = -v_tex_coord.z;\n"
-        "  gl_Position = u_mvp * a_position;\n"
+        "  gl_Position = u_mvp * pos;\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
         "precision highp float;\n"
-                "uniform samplerCube u_texture;\n"
-                "uniform vec3 u_color;\n"
-                "uniform float u_opacity;\n"
-                "varying vec3 v_tex_coord;\n"
-                "void main()\n"
-                "{\n"
-                "  vec4 color = textureCube(u_texture, v_tex_coord);\n"
-                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
-                "}\n";
+        "uniform samplerCube u_texture;\n"
+        "uniform vec3 u_color;\n"
+        "uniform float u_opacity;\n"
+        "varying vec3 v_tex_coord;\n"
+        "void main()\n"
+        "{\n"
+        "  vec4 color = textureCube(u_texture, v_tex_coord);\n"
+        "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+        "}\n";
 
 CubemapShader::CubemapShader() :
          u_model_(0), u_mvp_(0), u_texture_(0), u_color_(

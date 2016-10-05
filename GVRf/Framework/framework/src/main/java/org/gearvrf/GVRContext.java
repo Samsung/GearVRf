@@ -1027,7 +1027,7 @@ public abstract class GVRContext implements IEventReceiver {
             GVRTextureParameters textureParameters) {
 
         GVRTexture texture = textureCache.get(resource);
-        if (texture == null) {
+        if (texture == null) try {
             Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
                     resource.getStream(), false);
             resource.closeStream();
@@ -1036,6 +1036,9 @@ public abstract class GVRContext implements IEventReceiver {
             if (texture != null) {
                 textureCache.put(resource, texture);
             }
+        }
+        catch (IOException ex) {
+            return null;
         }
         return texture;
     }
@@ -1080,12 +1083,16 @@ public abstract class GVRContext implements IEventReceiver {
         }
 
         Bitmap[] bitmapArray = new Bitmap[6];
-        for (int i = 0; i < 6; i++) {
-            bitmapArray[i] = GVRAsynchronousResourceLoader.decodeStream(
-                    resourceArray[i].getStream(), false);
-            resourceArray[i].closeStream();
+        try {
+            for (int i = 0; i < 6; i++) {
+                bitmapArray[i] = GVRAsynchronousResourceLoader.decodeStream(
+                        resourceArray[i].getStream(), false);
+                resourceArray[i].closeStream();
+            }
         }
-
+        catch (IOException ex) {
+            return null;
+        }
         return new GVRCubemapTexture(this, bitmapArray, textureParameters);
     }
 
@@ -2275,7 +2282,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @return List of atlas information load.
      */
-    public List<GVRAtlasInformation> loadTextureAtlasInformation(GVRAndroidResource resource) {
+    public List<GVRAtlasInformation> loadTextureAtlasInformation(GVRAndroidResource resource) throws IOException {
 
         List<GVRAtlasInformation> atlasInformation
                 = GVRAsynchronousResourceLoader.loadAtlasInformation(resource.getStream());

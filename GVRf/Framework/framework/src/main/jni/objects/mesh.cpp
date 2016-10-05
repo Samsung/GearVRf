@@ -224,31 +224,16 @@ void Mesh::createAttributeMapping(int programId,
                 attrData.size = 3;
                 len = vertices_.size();
                 attrData.data = vertices_.data();
-                //attrData.index = 0;
             }
             else if (strcmp(attrName, "a_normal") == 0)
             {
                 attrData.size = 3;
                 len = normals_.size();
                 attrData.data = normals_.data();
-                //attrData.index = 1;
-            }
-            else if (strcmp(attrName, "a_texcoord") == 0)
-            {
-                attrData.size = 2;
-                len = tex_coords_.size();
-                attrData.data = tex_coords_.data();
-                //attrData.index = 2;
-            }
-            else if (strcmp(attrName, "a_tex_coord") == 0)
-            {
-                attrData.size = 2;
-                len = tex_coords_.size();
-                attrData.data = tex_coords_.data();
-                //attrData.index = 2;
             }
             else
             {
+
                 switch (type)
                 {
                     case GL_FLOAT:
@@ -359,8 +344,7 @@ void Mesh::generateVAO(int programId) {
     }
     obtainDeleter();
 
-    if (vertices_.size() == 0 && normals_.size() == 0
-            && tex_coords_.size() == 0) {
+    if (vertices_.size() == 0 && normals_.size() == 0  && getVec2Vector("a_texcoord").size() ==0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
         throw error;
     }
@@ -430,6 +414,33 @@ void Mesh::generateVAO(int programId) {
     }
     vao_dirty_ = false;
 }
+
+void Mesh::getAttribNames(std::set<std::string> &attrib_names) {
+    	 if(vertices_.size() > 0)
+    		 attrib_names.insert("a_position");
+    	 if(normals_.size() > 0)
+    		 attrib_names.insert("a_normal");
+
+    	 if(hasBones()){
+    		 attrib_names.insert("a_bone_indices");
+    		 attrib_names.insert("a_bone_weights");
+    	 }
+
+    	 for(auto it : vec2_vectors_){
+    		 attrib_names.insert(it.first);
+    		 LOGE("vec2 vector %s",(it.first).c_str());
+    	 }
+    	 for(auto it : vec3_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : vec4_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+    	 for(auto it : float_vectors_){
+    		 attrib_names.insert(it.first);
+    	 }
+
+    }
 
 void Mesh::generateBoneArrayBuffers(GLuint programId) {
     if (!bone_data_dirty_) {

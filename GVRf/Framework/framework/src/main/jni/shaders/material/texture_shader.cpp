@@ -52,7 +52,7 @@ static const char VERTEX_SHADER[] =
 
         "uniform mat4 u_proj;\n"
         "in vec3 a_position;\n"
-        "in vec2 a_tex_coord;\n"
+        "in vec2 a_texcoord;\n"
 
         "#ifdef MULTIVIEW\n"
         "uniform mat4 u_view_[2];\n"
@@ -110,8 +110,7 @@ static const char VERTEX_SHADER[] =
                 "v_viewspace_light_direction = u_light_pos - v_viewspace_position;\n"
                 "v_viewspace_normal = (mv_it * vec4(a_normal, 1.0)).xyz;\n"
             "#endif\n"
-
-            "v_tex_coord = a_tex_coord.xy;\n"
+            "  v_tex_coord = a_texcoord.xy;\n"
             "gl_Position = mvp * vec4(a_position,1.0);\n"
         "}\n";
 

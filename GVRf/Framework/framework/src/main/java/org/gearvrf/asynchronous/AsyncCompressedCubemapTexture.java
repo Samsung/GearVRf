@@ -122,7 +122,7 @@ class AsyncCompressedCubemapTexture {
       }
 
       @Override
-      protected CompressedTexture[] loadResource() {
+      protected CompressedTexture[] loadResource() throws IOException {
         CompressedTexture[] textureArray = new CompressedTexture[6];
         ZipInputStream zipInputStream = new ZipInputStream(resource.getStream());
 
@@ -139,16 +139,11 @@ class AsyncCompressedCubemapTexture {
             textureArray[imageIndex] =
                 CompressedTexture.load(zipInputStream, (int)zipEntry.getSize(), false);
           }
-        } catch (IOException e) {
-          e.printStackTrace();
-        } finally {
-          try {
-            zipInputStream.close();
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
         }
-        resource.closeStream();
+        finally {
+            zipInputStream.close();
+            resource.closeStream();
+        }
         return textureArray;
       }
     }

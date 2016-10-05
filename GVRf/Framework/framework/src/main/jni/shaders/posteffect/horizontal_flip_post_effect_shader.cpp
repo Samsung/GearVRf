@@ -26,12 +26,12 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-        "attribute vec4 a_tex_coord;\n"
+static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
+        "attribute vec2 a_texcoord;\n"
         "varying vec2 v_tex_coord;\n"
         "void main() {\n"
-        "  v_tex_coord = vec2(a_tex_coord.x, 1.0 - a_tex_coord.y);\n"
-        "  gl_Position = a_position;\n"
+        "  v_tex_coord = vec2(a_texcoord.x, 1.0 - a_texcoord.y);\n"
+        "  gl_Position = vec4(a_position, 1);\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] = "precision highp float;\n"
@@ -47,7 +47,7 @@ HorizontalFlipPostEffectShader::HorizontalFlipPostEffectShader() :
 
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
+    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     vaoID_ = 0;
 }

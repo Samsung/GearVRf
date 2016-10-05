@@ -70,11 +70,18 @@ import android.graphics.Color;
  */
 public class GVRMaterial extends GVRHybridObject implements
         GVRShaders<GVRMaterialShaderId> {
+    private static class TextureInfo
+    {
+        public GVRTexture Texture;
+        public String     TexCoordAttr;
+        public String     ShaderVar;
+    };
+
     private static final String TAG = Log.tag(GVRHybridObject.class);
 
     private int mShaderFeatureSet;
     private GVRMaterialShaderId shaderId;
-    final private Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
+    final private Map<String, TextureInfo> textures = new HashMap();
 
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
@@ -174,6 +181,7 @@ public class GVRMaterial extends GVRHybridObject implements
         // TODO: Get rid of this - it does not belong here!
         setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
         setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
+        setFloat("uvIndex", 0);
         setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
         setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
         setSpecularExponent(0.0f);
@@ -193,6 +201,7 @@ public class GVRMaterial extends GVRHybridObject implements
 
     GVRMaterial(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
+        setFloat("uvIndex", 0);
     }
 
     public GVRMaterialShaderId getShaderType() {
@@ -573,13 +582,28 @@ public class GVRMaterial extends GVRHybridObject implements
     }
 
     public GVRTexture getTexture(String key) {
-        return textures.get(key);
+        TextureInfo tinfo = textures.get(key);
+        if (tinfo != null)
+        {
+            return tinfo.Texture;
+        }
+        return null;
     }
 
 
     public void setTexture(String key, GVRTexture texture) {
         checkStringNotNullOrEmpty("key", key);
-        textures.put(key, texture);
+        TextureInfo tinfo = textures.get(key);
+        if (tinfo == null)
+        {
+            tinfo = new TextureInfo();
+            tinfo.Texture = texture;
+            textures.put(key, tinfo);
+        }
+        else
+        {
+            tinfo.Texture = texture;
+        }
         if (texture != null)
             NativeMaterial.setTexture(getNative(), key, texture.getNative());
     }
@@ -631,6 +655,57 @@ public class GVRMaterial extends GVRHybridObject implements
                 });
             }
         }
+    }
+
+    /**
+     *  Designate the vertex attribute and shader variable for the texture coordinates
+     *  associated with the named texture.
+     * @param texName name of texture
+     * @param texCoordAttr name of vertex attribute with texture coordinates.
+     * @param shaderVarName name of shader variable to get texture coordinates.
+     */
+    public void setTexCoord(String texName, String texCoordAttr, String shaderVarName)
+    {
+        TextureInfo tinfo = textures.get(texName);
+        if (tinfo == null)
+        {
+            tinfo = new TextureInfo();
+            textures.put(texName, tinfo);
+        }
+        tinfo.TexCoordAttr = texCoordAttr;
+        tinfo.ShaderVar = shaderVarName;
+    }
+
+    /**
+     * Gets the name of the vertex attribute containing the texture
+     * coordinates for the named texture.
+     * @param texName name of texture
+     * @return name of texture coordinate vertex attribute
+     */
+    public String getTexCoordAttr(String texName)
+    {
+        TextureInfo tinfo = textures.get(texName);
+        if (tinfo != null)
+        {
+            return tinfo.TexCoordAttr;
+        }
+        return null;
+    }
+
+    /**
+     * Gets the name of the shader variable to get the texture
+     * coordinates for the named texture.
+     * @param texName name of texture
+     * @return name of shader variable
+     */
+    public String getTexCoordShaderVar(String texName)
+    {
+        TextureInfo tinfo = textures.get(texName);
+        if (tinfo != null)
+        {
+            return tinfo.ShaderVar;
+        }
+        return null;
     }
 
     /**

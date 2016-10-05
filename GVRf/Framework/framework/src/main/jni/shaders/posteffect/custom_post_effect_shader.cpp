@@ -36,7 +36,7 @@ CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
     program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     checkGlError("glGetAttribLocation");
-    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_tex_coord");
+    a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
     checkGlError("glGetAttribLocation");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     checkGlError("glGetUniformLocation");

@@ -28,13 +28,13 @@
 #include "engine/renderer/renderer.h"
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
-        "attribute vec4 a_tex_coord;\n"
+static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
+        "attribute vec2 a_texcoord;\n"
         "uniform mat4 u_mvp;\n"
         "varying vec2 v_tex_coord;\n"
         "void main() {\n"
-        "  v_tex_coord = a_tex_coord.xy;\n"
-        "  gl_Position = u_mvp * a_position;\n"
+        "  v_tex_coord = a_texcoord.xy;\n"
+        "  gl_Position = u_mvp * vec4(a_position, 1);\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =

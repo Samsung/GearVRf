@@ -344,7 +344,7 @@ class AsyncBitmapTexture {
         }
 
         @Override
-        protected Bitmap loadResource() {
+        protected Bitmap loadResource() throws IOException{
             Bitmap bitmap;
             String resourceName = resource.getResourceFilename();
             if (resourceName.toLowerCase().endsWith("tga")) {

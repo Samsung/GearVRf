@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import static org.gearvrf.utility.Threads.VERBOSE_SCHEDULING;
 import static org.gearvrf.utility.Threads.threadId;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -218,7 +219,7 @@ class Throttler implements Scheduler {
          * @throws InterruptedException
          */
         protected abstract INTERMEDIATE loadResource()
-                throws InterruptedException;
+                throws IOException, InterruptedException;
     }
 
     /**
@@ -322,8 +323,14 @@ class Throttler implements Scheduler {
                     // There is no current request for this resource. Create a
                     // new PendingRequest, using a threadFactory to create the
                     // appropriate AsyncLoader.
-                    request.openStream();
-
+                    try
+                    {
+                        request.openStream();
+                    }
+                    catch (IOException ex)
+                    {
+                        callback.failed(ex, request);
+                    }
                     pending = new PendingRequest<OUTPUT, INTER>(gvrContext,
                             request, callback, priority, outClass);
 

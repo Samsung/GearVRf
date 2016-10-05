@@ -106,6 +106,11 @@ JNIEXPORT jboolean JNICALL Java_org_gearvrf_OvrConfigurationManager_nativeIsHmtC
     return activity->isHmtConnected();
 }
 
+JNIEXPORT jboolean JNICALL Java_org_gearvrf_GVRConfigurationManager_nativeUsingMultiview(JNIEnv* jni, jclass clazz, jlong appPtr) {
+    const GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
+    return activity->usingMultiview();
+}
+
 } //extern "C" {
 
 } //namespace gvr

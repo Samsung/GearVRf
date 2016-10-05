@@ -36,16 +36,28 @@ import org.gearvrf.R;
        private static String vtxShader = null;
        private static String normalShader = null;
        private static String skinShader = null;
+       private boolean useMultitex = true;
 
        public GVRPhongShader(GVRContext gvrcontext)
        {
            super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent", 300);
-           if (fragTemplate == null) {
+           if (fragTemplate == null)
+           {
                Context context = gvrcontext.getContext();
-               fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template);
-               vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template);
-               surfaceShader = TextFile.readTextFile(context, R.raw.phong_surface);
-               vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_tex);
+               if (useMultitex)
+               {
+                   fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template_multitex);
+                   vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template_multitex);
+                   surfaceShader = TextFile.readTextFile(context, R.raw.phong_surface_multitex);
+                   vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_multitex);
+               }
+               else
+               {
+                   fragTemplate = TextFile.readTextFile(context, R.raw.fragment_template);
+                   vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template);
+                   surfaceShader = TextFile.readTextFile(context, R.raw.phong_surface);
+                   vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_tex);
+               }
                normalShader = TextFile.readTextFile(context, R.raw.normalmap);
                skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
                addLight = TextFile.readTextFile(context, R.raw.addlight);
@@ -59,9 +71,10 @@ import org.gearvrf.R;
            setSegment("VertexSkinShader", skinShader);
        }
        
-       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRLightBase[] lights) {
-           HashMap<String, Integer> defines = super.getRenderDefines(rdata, lights);
-           
+       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRScene scene)
+       {
+           GVRLightBase[] lights = (scene != null) ? scene.getLightList() : null;
+           HashMap<String, Integer> defines = super.getRenderDefines(rdata, scene);
            if (!rdata.isLightMapEnabled())
                defines.put("lightMapTexture", 0);
            return defines;

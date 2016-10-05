@@ -69,7 +69,7 @@ Renderer* Renderer::getInstance(const char* type){
     return instance;
 }
 Renderer::Renderer():numberDrawCalls(0), numberTriangles(0), batch_manager(nullptr) {
-    if(do_batching) {
+    if(do_batching && !gRenderer->isVulkanInstace()) {
         batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
     }
 }
@@ -409,9 +409,6 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     // restore defaults. Possibly later we could add a OpenGL state wrapper to avoid redundant api calls.
     restoreRenderStates(render_data);
 }
-
-
-
 
 void Renderer::renderPostEffectData(Camera* camera,
         RenderTexture* render_texture, PostEffectData* post_effect_data,

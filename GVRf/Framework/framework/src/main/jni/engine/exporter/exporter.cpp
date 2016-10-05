@@ -81,7 +81,7 @@ void gvr2aiNode(SceneObject &gvrobj, aiNode &ainode, int i) {
 void gvr2aiMesh(Mesh &gvrmesh, aiMesh &aimesh) {
     const auto &vertices = gvrmesh.vertices();
     const auto &normals = gvrmesh.normals();
-    const auto &uvs = gvrmesh.tex_coords();
+    const auto &uvs = gvrmesh.getVec2Vector("a_texcoord");
 
     aimesh.mMaterialIndex = 0;
     aimesh.mVertices = new aiVector3D[vertices.size()];

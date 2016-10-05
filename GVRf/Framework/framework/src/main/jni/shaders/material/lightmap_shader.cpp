@@ -30,12 +30,12 @@
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
         "attribute vec3 a_normal;\n"
-        "attribute vec2 a_tex_coord;\n"
+        "attribute vec2 a_texcoord;\n"
         "uniform mat4 u_mvp;\n"
         "varying vec2 coord;\n"
         "void main() {\n"
         " vec4 pos = u_mvp * a_position;\n"
-        " coord = a_tex_coord;\n"
+        " coord = a_texcoord;\n"
         " gl_Position = pos;\n"
         "}";
 

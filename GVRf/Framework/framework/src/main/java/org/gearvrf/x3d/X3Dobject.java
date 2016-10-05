@@ -104,30 +104,6 @@ import javax.xml.parsers.SAXParserFactory;
 
 public class X3Dobject
 {
-  static class X3DTextureRequest extends GVRAssetLoader.TextureRequest
-  {
-    private GVRTextureParameters mTexParams;
-
-    public X3DTextureRequest(GVRContext context, String texFile,
-                             final GVRTextureParameters texParams)
-    {
-      super(context, texFile);
-      mTexParams = texParams;
-    }
-
-    public void loaded(GVRTexture texture, GVRAndroidResource ignored)
-    {
-      final GVRTexture t = texture;
-      mContext.runOnGlThread(new Runnable()
-      {
-        public void run()
-        {
-          t.updateTextureParameters(mTexParams);
-        }
-      });
-      super.loaded(texture, ignored);
-    }
-  }
 
   /**
    * Allows developers to access the root of X3D scene graph
@@ -1295,7 +1271,7 @@ public class X3Dobject
             }
 
             final String defValue = attributes.getValue("DEF");
-            X3DTextureRequest request = new X3DTextureRequest(gvrContext,
+            GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(gvrContext,
                     filename, gvrTextureParameters);
             Future<GVRTexture> texture = assetRequest
                     .loadFutureTexture(request);

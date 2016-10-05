@@ -324,15 +324,31 @@ public final class GVRAssetLoader {
     {
         public final String TextureFile;
         protected final GVRContext mContext;
+        protected GVRTextureParameters mTexParams;
+
+        public TextureRequest(GVRContext context, String texFile, final GVRTextureParameters texParams)
+        {
+            mContext = context;
+            TextureFile = texFile;
+            mTexParams = texParams;
+        }
 
         public TextureRequest(GVRContext context, String texFile)
         {
             mContext = context;
             TextureFile = texFile;
+            mTexParams = context.DEFAULT_TEXTURE_PARAMETERS;
         }
 
-        public void loaded(GVRTexture texture, GVRAndroidResource ignored)
+        public void loaded(final GVRTexture texture, GVRAndroidResource ignored)
         {
+            mContext.runOnGlThread(new Runnable()
+            {
+                public void run()
+                {
+                    texture.updateTextureParameters(mTexParams);
+                }
+            });
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
@@ -368,9 +384,10 @@ public final class GVRAssetLoader {
             TextureName = null;
         }
 
-        public MaterialTextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName)
+        public MaterialTextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName,
+                                      final GVRTextureParameters texParams)
         {
-        	super(context, texFile);
+        	super(context, texFile, texParams);
             Material = material;
             TextureName = textureName;
             if (Material != null)
@@ -897,8 +914,58 @@ public final class GVRAssetLoader {
         return new File(outputFilename);
     }
 
+    GVRModelSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
+            EnumSet<GVRImportSettings> settings, boolean cacheEnabled)
+                    throws IOException {
+        GVRModelSceneObject root = new GVRModelSceneObject(mContext);
+        GVRResourceVolume volume = assetRequest.getVolume();
+        InputStream inputStream = null;
+        String fileName = assetRequest.getBaseName();
+        GVRAndroidResource resource = volume.openResource(fileName);
 
-    /**
+        org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);
+        try {
+             ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
+             if (!X3Dobject.UNIVERSAL_LIGHTS) {
+                X3DparseLights x3dParseLights = new X3DparseLights(mContext, root);
+                inputStream = resource.getStream();
+                if (inputStream == null) {
+                	throw new FileNotFoundException(fileName + " not found");
+                }
+                Log.d(TAG, "Parse: " + fileName);
+                x3dParseLights.Parse(inputStream, shaderSettings);
+                inputStream.close();
+              }
+              inputStream = resource.getStream();
+              if (inputStream == null) {
+              	throw new FileNotFoundException(fileName + " not found");
+              }
+              x3dObject.Parse(inputStream, shaderSettings);
+              inputStream.close();
+              mContext.getEventManager().sendEvent(mContext,
+                                                   IAssetEvents.class,
+                                                   "onModelLoaded", new Object[] { mContext, (GVRSceneObject) root, fileName });
+        }
+        catch (FileNotFoundException e) {
+          mContext.getEventManager().sendEvent(mContext,
+                                               IAssetEvents.class,
+                                               "onModelError", new Object[] { mContext, e.getMessage(), fileName });
+        }
+        catch (IOException e1) {
+          mContext.getEventManager().sendEvent(mContext,
+                                               IAssetEvents.class,
+                                               "onModelError", new Object[] { mContext, e1.getMessage(), fileName });
+        }
+        catch (Exception e2) {
+          mContext.getEventManager().sendEvent(mContext,
+                                               IAssetEvents.class,
+                                               "onModelError", new Object[] { mContext, e2.getMessage(), fileName });
+          e2.printStackTrace();
+        }
+        return root;
+    }
+    
+     /**
      * State-less, should be fine having one instance
      */
     private final static GVROldWrapperProvider sWrapperProvider = new GVROldWrapperProvider();
