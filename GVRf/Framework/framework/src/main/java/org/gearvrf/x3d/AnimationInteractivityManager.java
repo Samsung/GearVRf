@@ -205,6 +205,7 @@ public class AnimationInteractivityManager {
         InteractiveObject interactiveObject = new InteractiveObject();
         interactiveObject.setInterpolator(routeFromInterpolator);
         interactiveObject.setDefinedItem(routeToDefinedItem, toField);
+        interactiveObject.setSensor(routeFromSensor, fromField);
         interactiveObjects.add(interactiveObject);
       }
     }  //  end if routeToDefinedItem != null
