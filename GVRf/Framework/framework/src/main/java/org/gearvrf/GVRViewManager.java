@@ -51,10 +51,11 @@ abstract class GVRViewManager extends GVRContext {
         resetOnRestart();
 
         GVRAsynchronousResourceLoader.setup(this);
-
+        VrAppSettings appSettings = activity.getAppSettings();
         mScriptManager = new GVRScriptManager(this);
-        mInputManager = new GVRInputManagerImpl(this, activity.getAppSettings().useGazeCursorController());
         mEventManager = new GVREventManager(this);
+        mInputManager = new GVRInputManagerImpl(this, appSettings.useGazeCursorController(),
+                appSettings.useAndroidWearTouchpad());
     }
 
     void onPause() {}

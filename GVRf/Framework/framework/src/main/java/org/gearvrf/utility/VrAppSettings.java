@@ -15,6 +15,9 @@
 
 package org.gearvrf.utility;
 
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
+
 /**
  * A class that represents overall parameters that we can set with Oculus
  * library.
@@ -577,6 +580,9 @@ public class VrAppSettings {
     // the phone is docked.
     boolean useGazeCursorController;
 
+    // Use this flag to enable the AndroidWearTouchpad in the scene
+    boolean useAndroidWearTouchpad;
+
     // Use multiview feature
     boolean useMultiview;
 
@@ -659,6 +665,25 @@ public class VrAppSettings {
      */
     public void setUseGazeCursorController(boolean useGazeCursorController) {
         this.useGazeCursorController = useGazeCursorController;
+    }
+
+    /**
+     * Check if current app is using the Android Wear Touchpad.
+     *
+     * @return if current app is using the AndroidWearTouchpad
+     */
+    public boolean useAndroidWearTouchpad() {
+        return useAndroidWearTouchpad;
+    }
+
+    /**
+     * Set if current app uses the Android Wear Touchpad
+     *
+     * @param useAndroidWearTouchpad
+     *            if current app is using the AndroidWearTouchpad
+     */
+    public void setUseAndroidWearTouchpad(boolean useAndroidWearTouchpad) {
+        this.useAndroidWearTouchpad = useAndroidWearTouchpad;
     }
 
     /**

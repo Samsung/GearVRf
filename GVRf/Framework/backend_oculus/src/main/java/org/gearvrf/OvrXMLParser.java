@@ -106,6 +106,10 @@ class OvrXMLParser {
                                 settings.setUseGazeCursorController(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));
                             } else if (attributeName
+                                    .equals("useAndroidWearTouchpad")) {
+                                settings.setUseAndroidWearTouchpad(Boolean
+                                        .parseBoolean(xpp.getAttributeValue(i)));
+                            } else if (attributeName
                                     .equals("useSrgbFramebuffer")) {
                                 settings.setUseSrgbFramebuffer(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));

@@ -38,9 +38,9 @@ class GVRInputManagerImpl extends GVRInputManager {
     private GVRScene scene;
     private List<GVRCursorController> controllers;
 
-    GVRInputManagerImpl(GVRContext gvrContext,
-            boolean useGazeCursorController) {
-        super(gvrContext, useGazeCursorController);
+    GVRInputManagerImpl(GVRContext gvrContext, boolean useGazeCursorController,
+                        boolean useAndroidWearTouchpad) {
+        super(gvrContext, useGazeCursorController, useAndroidWearTouchpad);
         sensorManager = SensorManager.getInstance();
 
         controllers = new ArrayList<GVRCursorController>();

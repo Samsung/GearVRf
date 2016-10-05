@@ -18,7 +18,6 @@ package org.gearvrf.io;
 import android.content.Context;
 import android.hardware.input.InputManager;
 import android.hardware.input.InputManager.InputDeviceListener;
-import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -51,6 +50,7 @@ public abstract class GVRInputManager {
     private static final String TAG = GVRInputManager.class.getSimpleName();
     private final InputManager inputManager;
     private final GVRContext context;
+    private GVRAndroidWearTouchpad androidWearTouchpad;
     private boolean useGazeCursorController;
     private GVRGamepadDeviceManager gamepadDeviceManager;
     private GVRMouseDeviceManager mouseDeviceManager;
@@ -80,8 +80,8 @@ public abstract class GVRInputManager {
     // We make use of the vendor and product id to identify a device.
     private final SparseArray<GVRBaseController> cache;
 
-    protected GVRInputManager(GVRContext context,
-                              boolean useGazeCursorController) {
+    protected GVRInputManager(GVRContext context, boolean useGazeCursorController,
+                              boolean useAndroidWearTouchpad) {
         Context androidContext = context.getContext();
         inputManager = (InputManager) androidContext
                 .getSystemService(Context.INPUT_SERVICE);
@@ -94,6 +94,9 @@ public abstract class GVRInputManager {
         gamepadDeviceManager = new GVRGamepadDeviceManager();
         for (int deviceId : inputManager.getInputDeviceIds()) {
             addDevice(deviceId);
+        }
+        if(useAndroidWearTouchpad) {
+            androidWearTouchpad = new GVRAndroidWearTouchpad(context);
         }
     }
 
@@ -119,6 +122,18 @@ public abstract class GVRInputManager {
             result.add(controller);
         }
         return result;
+    }
+
+    /**
+     * Queries the status of the connection to the Android wear watch.
+     * @see IWearTouchpadEvents
+     * @return
+     */
+    public boolean isConnectedToAndroidWearTouchpad() {
+        if(androidWearTouchpad != null) {
+            return androidWearTouchpad.isConnectedToWatch();
+        }
+        return false;
     }
 
     protected void close() {
