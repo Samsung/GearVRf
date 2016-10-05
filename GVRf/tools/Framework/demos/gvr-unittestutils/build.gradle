@@ -1,6 +1,5 @@
 apply plugin: 'com.android.model.library'
 
-System.setProperty("appName", "gvr-unittestutils")
 def demoAppDir = "../../../../../../GearVRf-Tests/gvr-unittestutils/"
 
 model {
@@ -17,14 +16,6 @@ model {
         defaultConfig {
             minSdkVersion.apiLevel 19
             targetSdkVersion.apiLevel 19
-
-            resValues.with {
-                create() {
-                    type = "string"
-                    name = "app_name"
-                    value = System.getProperty("appName")
-                }
-            }
         }
 
         sources {

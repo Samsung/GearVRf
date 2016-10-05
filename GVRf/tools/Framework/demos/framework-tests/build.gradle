@@ -1,6 +1,5 @@
 apply plugin: 'com.android.model.application'
 
-System.setProperty("appName", "framework-tests")
 def demoAppDir = "../../../../../../GearVRf-Tests/framework-tests/"
 
 model {
@@ -11,34 +10,17 @@ model {
             }
         }
 
-        compileSdkVersion 21
-        buildToolsVersion '23.0.3'
+        compileSdkVersion 23
+        buildToolsVersion '24.0.3'
 
         defaultConfig {
             minSdkVersion.apiLevel 19
-            targetSdkVersion.apiLevel 19
-
-            resValues.with {
-                create() {
-                    type = "string"
-                    name = "app_name"
-                    value = System.getProperty("appName")
-                }
-            }
+            targetSdkVersion.apiLevel 23
+            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         }
 
         sources {
             main {
-                java {
-                    source {
-                        srcDirs = [demoAppDir+"app/src/androidTest/java"]
-                    }
-                }
-                assets {
-                    source {
-                        srcDirs = [demoAppDir+"app/src/main/assets"]
-                    }
-                }
                 res {
                     source {
                         srcDirs = [demoAppDir+"app/src/main/res"]
@@ -46,8 +28,30 @@ model {
                 }
                 manifest {
                     source {
-                        srcDirs = [demoAppDir+"app/src/main/"]
+                        srcDirs = [demoAppDir + "app/src/main/"]
                         include 'AndroidManifest.xml'
+                    }
+                }
+                assets {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/assets"]
+                    }
+                }
+            }
+            androidTest {
+                java {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/androidTest/java"]
+                    }
+                }
+                res {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/res"]
+                    }
+                }
+                assets {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/assets"]
                     }
                 }
             }
@@ -72,9 +76,9 @@ dependencies {
     compile project(':backend_oculus')
     compile project(':gvr-unittestutils')
     androidTestCompile 'com.android.support:support-annotations:23.0.1'
-    androidTestCompile 'com.android.support.test:runner:0.4.1'
-    androidTestCompile 'com.android.support.test:rules:0.4.1'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+    androidTestCompile 'com.android.support.test:runner:0.5+'
+    androidTestCompile 'com.android.support.test:rules:0.5+'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2+'
     compile 'net.jodah:concurrentunit:0.4.2'
-    compile 'com.android.support.test:rules:0.4.1'
+    compile 'com.android.support.test:rules:0.5+'
 }
