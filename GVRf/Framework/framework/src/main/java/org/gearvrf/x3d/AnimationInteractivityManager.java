@@ -16,7 +16,11 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRPointLight;
+import org.gearvrf.GVRLight;
+import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
@@ -205,7 +209,7 @@ public class AnimationInteractivityManager {
         InteractiveObject interactiveObject = new InteractiveObject();
         interactiveObject.setInterpolator(routeFromInterpolator);
         interactiveObject.setDefinedItem(routeToDefinedItem, toField);
-        interactiveObject.setSensor(routeFromSensor, fromField);
+        if (routeFromSensor != null) interactiveObject.setSensor(routeFromSensor, fromField);
         interactiveObjects.add(interactiveObject);
       }
     }  //  end if routeToDefinedItem != null
@@ -352,8 +356,41 @@ public class AnimationInteractivityManager {
         else {
           Log.e(TAG, interactiveObject.getDefinedItem().getName() + " possibly not found in the scene.");
         }
-      }
-    }
+      }  // end if at least timer, interpolator and defined object
+      else if ( (interactiveObject.getSensor() != null) &&
+              (interactiveObject.getDefinedItem() != null) ) {
+        // a sensor and defined object
+        final InteractiveObject interactiveObjectFinal = interactiveObject;
+
+        if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
+
+          interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+            //boolean isRunning;
+            @Override
+            public void onSensorEvent(SensorEvent event) {
+              //Setup SensorEvent callback here
+              GVRSceneObject gvrSceneObject = root
+                      .getSceneObjectByName( interactiveObjectFinal.getDefinedItem().getName() );
+              GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+
+              if (event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) {
+              //if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) ||
+              //        (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor
+              //                .IS_ACTIVE))) {
+                //DefinedItem definedItem = interactiveObjectFinal.getDefinedItem();
+                  //definedLight.setEnable(true);
+                  if (gvrComponent != null) gvrComponent.setEnable(true);
+              }
+              else {
+                if (gvrComponent != null) gvrComponent.setEnable(false);
+              }
+            }
+          });
+        }  // end if sensor == TOUCH
+
+      }  //  end sensor and definedItem != null
+
+    }  // end for loop traversing through all interactive objects
   }   //  end initAniamtionsAndInteractivity
 
 }  //  end AnimationInteractivityManager class

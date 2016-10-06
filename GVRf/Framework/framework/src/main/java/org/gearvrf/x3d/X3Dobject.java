@@ -2917,6 +2917,45 @@ public class X3Dobject
         }  //  end <field> node
 
 
+        /********** BooleanToggle **********/
+        else if (qName.equalsIgnoreCase("BooleanToggle")) {
+          String name = "";
+          boolean toggle = false;
+
+          attributeValue = attributes.getValue("DEF");
+          if (attributeValue != null) {
+            name = attributeValue;
+          }
+          attributeValue = attributes.getValue("toggle");
+          if (attributeValue != null) {
+            toggle = parseBooleanString(attributeValue);
+          }
+
+          /*
+
+          GVRSceneObject gvrSensorSceneObject = new GVRSceneObject(gvrContext);
+          gvrSensorSceneObject.setName(name);
+          Sensor sensor = new Sensor(name, Sensor.Type.TOUCH,
+                  gvrSensorSceneObject);
+          sensors.add(sensor);
+          currentSensor = sensor;
+          // attach any existing child objects of the parent to the new
+          // gvrSensorSceneObject
+          for (int i = (currentSceneObject.getChildrenCount() - 1); i >= 0; i--) {
+            // detach the children of the parent and re-attach them to the new
+            // sensor object
+            GVRSceneObject childObject = currentSceneObject.getChildByIndex(i);
+
+            currentSceneObject.removeChildObject(childObject);
+            gvrSensorSceneObject.addChildObject(childObject);
+          }
+          currentSceneObject.addChildObject(gvrSensorSceneObject);
+          currentSceneObject = gvrSensorSceneObject;
+
+           */
+        }  //  end <BooleanToggle> node
+
+
         /********** ElevationGrid **********/
         else if (qName.equalsIgnoreCase("ElevationGrid")) {
           String name = "";
@@ -3719,6 +3758,10 @@ public class X3Dobject
       else if (qName.equalsIgnoreCase("field"))
       {
         ; // embedded inside a <SCRIPT> node
+      }
+      else if (qName.equalsIgnoreCase("BooleanToggle"))
+      {
+        ;
       }
       else if (qName.equalsIgnoreCase("NavigationInfo"))
       {
