@@ -16,9 +16,11 @@
 
 package org.gearvrf;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.KeyEvent;
 
+import com.google.vr.sdk.base.AndroidCompat;
 import com.google.vr.sdk.base.Eye;
 import com.google.vr.sdk.base.GvrView;
 import com.google.vr.sdk.base.HeadTransform;
@@ -98,13 +100,13 @@ class DaydreamViewManager extends GVRViewManager {
     }
 
     private static class GoogleVRView extends GvrView {
-        public GoogleVRView(Context context) {
-            super(context);
+        public GoogleVRView(Activity activity) {
+            super(activity);
         }
 
-        public GoogleVRView(Context context, final DaydreamViewManager viewManager,
+        public GoogleVRView(Activity activity, final DaydreamViewManager viewManager,
                             GoogleVRViewRenderer renderer) {
-            super(context);
+            super(activity);
              setEGLConfigChooser(8, 8, 8, 8, 16, 8);
 
             if (renderer != null) {
@@ -114,13 +116,22 @@ class DaydreamViewManager extends GVRViewManager {
                 setRenderer(new GoogleVRViewRenderer(viewManager));
             }
             setTransitionViewEnabled(true);
-            setOnCardboardBackButtonListener(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            viewManager.getActivity().onBackPressed();
-                        }
-                    });
+
+            /**
+             * Taken from here:
+             * https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt
+             * /src/main/java/com/google/vr/sdk/samples/treasurehunt/TreasureHuntActivity.java
+             *
+             * According to the documentation, this call submits draw calls to an async thread
+             * for rendering and helps maintain performance while using the new
+             * Sustained Performance Mode introduced in Android N.
+             */
+            if (setAsyncReprojectionEnabled(true)) {
+                // Async reprojection decouples the app framerate from the display framerate,
+                // allowing immersive interaction even at the throttled clockrates set by
+                // sustained performance mode.
+                AndroidCompat.setSustainedPerformanceMode(activity, true);
+            }
         }
 
         @Override
