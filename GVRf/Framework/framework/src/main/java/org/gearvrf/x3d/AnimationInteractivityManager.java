@@ -415,16 +415,15 @@ public class AnimationInteractivityManager {
             boolean stateChanged = false;
             @Override
             public void onSensorEvent(SensorEvent event) {
-              if (event.isActive() &&
-                      interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
+              if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) ||
+                      (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor
+                                .IS_ACTIVE))) {
                 if ( !stateChanged ) {
                   stateChanged = true;
-                  Log.e("SensorCS", "Change State: event.isActive = " + event.isActive() + "; stateChanged = " + stateChanged);
                   EventUtility eventUtility = interactiveObjectFinal.getEventUtility();
                   eventUtility.setToggle(!eventUtility.getToggle());
                   for (InteractiveObject interactiveObject : interactiveObjectsFinal) {
                     if (interactiveObject.getEventUtility() == interactiveObjectFinal.getEventUtility()) {
-                      Log.e("SensorCS", "Change State: item = " + interactiveObject.getDefinedItem().getName());
                       GVRSceneObject gvrSceneObject = root
                               .getSceneObjectByName(interactiveObject.getDefinedItem().getName());
                       GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
@@ -433,7 +432,11 @@ public class AnimationInteractivityManager {
                   }
                 }
               }
-              else if ( !event.isActive() ){
+              else if ( !event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE) ){
+                stateChanged = false;
+              }
+              else if ( !event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor
+                      .IS_OVER) ){
                 stateChanged = false;
               }
             }
