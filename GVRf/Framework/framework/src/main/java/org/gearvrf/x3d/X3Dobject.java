@@ -252,6 +252,7 @@ public class X3Dobject
    * such as in the onStep() function
    */
   public Vector<Sensor> sensors = new Vector<Sensor>();
+  public Vector<EventUtility> eventUtilities = new Vector<EventUtility>();
 
 
   private ShaderSettings shaderSettings = null;
@@ -311,7 +312,9 @@ public class X3Dobject
       //this.mAnimations = root.getAnimations();
       lodManager = new LODmanager();
 
-      animationInteractivityManager = new AnimationInteractivityManager(this, gvrContext, root, mDefinedItems, interpolators, sensors, timeSensors);
+      animationInteractivityManager = new AnimationInteractivityManager(
+              this, gvrContext, root, mDefinedItems, interpolators,
+              sensors, timeSensors, eventUtilities);
     }
     catch (Exception e)
     {
@@ -2930,29 +2933,8 @@ public class X3Dobject
           if (attributeValue != null) {
             toggle = parseBooleanString(attributeValue);
           }
-
-          /*
-
-          GVRSceneObject gvrSensorSceneObject = new GVRSceneObject(gvrContext);
-          gvrSensorSceneObject.setName(name);
-          Sensor sensor = new Sensor(name, Sensor.Type.TOUCH,
-                  gvrSensorSceneObject);
-          sensors.add(sensor);
-          currentSensor = sensor;
-          // attach any existing child objects of the parent to the new
-          // gvrSensorSceneObject
-          for (int i = (currentSceneObject.getChildrenCount() - 1); i >= 0; i--) {
-            // detach the children of the parent and re-attach them to the new
-            // sensor object
-            GVRSceneObject childObject = currentSceneObject.getChildByIndex(i);
-
-            currentSceneObject.removeChildObject(childObject);
-            gvrSensorSceneObject.addChildObject(childObject);
-          }
-          currentSceneObject.addChildObject(gvrSensorSceneObject);
-          currentSceneObject = gvrSensorSceneObject;
-
-           */
+          EventUtility eventUtility = new EventUtility(name, EventUtility.DataType.BOOLEAN, EventUtility.Type.TOGGLE, toggle);
+          eventUtilities.add(eventUtility);
         }  //  end <BooleanToggle> node
 
 

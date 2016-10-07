@@ -41,6 +41,9 @@ public class InteractiveObject {
   private Interpolator interpolator = null;
   private String interpolatorFromField; // often value_changed
   private String interpolatorToField; // usually set_fraction
+  private EventUtility eventUtility = null;
+  private String eventUtilityFromField; // often 'toggle_changed'
+  private String eventUtilityToField; // usually 'set_boolean'
   private DefinedItem definedItem = null;
   private String definedItemToField; // can be set_translation, set_rotation, set_position, set_orientation, set_scale
   // TODO: Scripting functionality will eventually be added
@@ -71,6 +74,13 @@ public class InteractiveObject {
   }
   public Interpolator getInterpolator() {
     return this.interpolator;
+  }
+
+  public void setEventUtility(EventUtility eventUtility) {
+    this.eventUtility = eventUtility;
+  }
+  public EventUtility getEventUtility() {
+    return this.eventUtility;
   }
 
   public void setDefinedItem(DefinedItem definedItem, String definedItemToField) {
