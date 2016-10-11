@@ -97,7 +97,7 @@ private:
     void generateRenderTextureEXT(int sample_count,int jdepth_format,GLenum depth_format, int width, int height);
     void generateRenderTexture(int sample_count, int jdepth_format, GLenum depth_format, int width,
             int height, int jcolor_format);
-    void invalidateFrameBuffer(bool is_fbo, const bool color_buffer, const bool depth_buffer);
+    void invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer);
 private:
     static const GLenum TARGET = GL_TEXTURE_2D;
     int width_;

@@ -221,29 +221,29 @@ void RenderTexture::beginRendering() {
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    invalidateFrameBuffer(true, true, true);
+    invalidateFrameBuffer(GL_FRAMEBUFFER, true, true, true);
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void RenderTexture::endRendering() {
     const int width = width_;
     const int height = height_;
-    invalidateFrameBuffer(true, false, true);
+    invalidateFrameBuffer(GL_DRAW_FRAMEBUFFER, true, false, true);
     if (renderTexture_gl_resolve_buffer_ && sample_count_ > 1) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
         glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                 GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        invalidateFrameBuffer(true, true, false);
+        invalidateFrameBuffer(GL_READ_FRAMEBUFFER, true, true, false);
     }
 }
 
-void RenderTexture::invalidateFrameBuffer(bool is_fbo, const bool color_buffer, const bool depth_buffer) {
+void RenderTexture::invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer) {
     const int offset = (int) !color_buffer;
     const int count = (int) color_buffer + ((int) depth_buffer) * 2;
     const GLenum fboAttachments[3] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT };
     const GLenum attachments[3] = { GL_COLOR_EXT, GL_DEPTH_EXT, GL_STENCIL_EXT };
-    glInvalidateFramebuffer(GL_FRAMEBUFFER, count, (is_fbo ? fboAttachments : attachments) + offset);
+    glInvalidateFramebuffer(target, count, (is_fbo ? fboAttachments : attachments) + offset);
 }
 
 void RenderTexture::startReadBack() {
