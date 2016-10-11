@@ -112,4 +112,21 @@ public class GVRObjectPicker extends GVRPicker
         }
         generatePickEvents(picked);
     }
+
+    /**
+     * Determines whether or not two axially aligned bounding boxes in
+     * the same coordinate space intersect.
+     * @param bv1 first bounding volume to test.
+     * @param bv2 second bounding volume to test.
+     * @return true if the boxes intersect, false if not.
+     */
+    protected boolean intersect(GVRSceneObject.BoundingVolume bv1, GVRSceneObject.BoundingVolume bv2)
+    {
+        return  (bv1.maxCorner.x >= bv2.minCorner.x) &&
+                (bv1.maxCorner.y >= bv2.minCorner.y) &&
+                (bv1.maxCorner.z >= bv2.minCorner.z) &&
+                (bv1.minCorner.x <= bv2.maxCorner.x) &&
+                (bv1.minCorner.y <= bv2.maxCorner.y) &&
+                (bv1.minCorner.z <= bv2.maxCorner.z);
+    }
 }
