@@ -200,6 +200,18 @@ public class AnimationInteractivityManager {
       }
       if ( !routeToInterpolatorFound ) {
         // construct a new interactiveObject for this sensor and timeSensor
+        for (InteractiveObject interactiveObject : interactiveObjects) {
+          if (routeFromTimeSensor == interactiveObject.getTimeSensor()) {
+            if (interactiveObject.getInterpolator() == null) {
+              //This timer already exists as part of an interactive Object
+              interactiveObject.setInterpolator(routeToInterpolator);
+              routeToInterpolatorFound = true;
+            }
+          }
+        }
+      }
+      if ( !routeToInterpolatorFound ) {
+        // construct a new interactiveObject for this sensor and timeSensor
         InteractiveObject interactiveObject = new InteractiveObject();
         interactiveObject.setTimeSensor(routeFromTimeSensor);
         interactiveObject.setInterpolator(routeToInterpolator);
