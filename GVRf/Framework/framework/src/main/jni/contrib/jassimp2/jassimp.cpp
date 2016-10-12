@@ -66,7 +66,7 @@ static bool createInstance(JNIEnv *env, const char* className, jobject& newInsta
 }
 
 
-static bool createInstance(JNIEnv *env, const char* className, const char* signature,/* const*/ jvalue* params, jobject& newInstance)
+static bool createInstance(JNIEnv *env, const char* className, const char* signature, jvalue* params, jobject& newInstance)
 {
 	jclass clazz = env->FindClass(className);
 	DeleteLocalRef clazzRef(env, clazz);
@@ -81,7 +81,7 @@ static bool createInstance(JNIEnv *env, const char* className, const char* signa
 
 	if (NULL == ctr_id)
 	{
-		lprintf("could not find no-arg constructor for class %s\n", className);
+		lprintf("could not find constructor for class %s\n", className);
 		return false;
 	}
 
@@ -121,6 +121,13 @@ static bool getField(JNIEnv *env, jobject object, const char* fieldName, const c
 	return true;
 }
 
+static void throwException(JNIEnv *env, const char* message)
+{
+    jclass clazz = env->FindClass("java/lang/Exception");
+    DeleteLocalRef clazzRef(env, clazz);
+
+    env->ThrowNew(clazz, message);
+}
 
 static bool setIntField(JNIEnv *env, jobject object, const char* fieldName, jint value)
 {
@@ -294,6 +301,30 @@ static jobject callj(JNIEnv *env, jobject object, const char* typeName, const ch
     return jReturnValue;
 }
 
+static jobject callj(JNIEnv *env, jobject object, const char* typeName, const char* methodName,
+					 const char* signature)
+{
+	jclass clazz = env->FindClass(typeName);
+	DeleteLocalRef clazzRef(env, clazz);
+
+	if (NULL == clazz)
+	{
+		lprintf("could not find class %s\n", typeName);
+		return NULL;
+	}
+
+	jmethodID mid = env->GetMethodID(clazz, methodName, signature);
+
+	if (NULL == mid)
+	{
+		lprintf("could not find method %s with signature %s in type %s\n", methodName, signature, typeName);
+		return NULL;
+	}
+
+	jobject jReturnValue = env->CallObjectMethod(object, mid);
+	return jReturnValue;
+}
+
 static bool callStaticObject(JNIEnv *env, const char* typeName, const char* methodName,
 	const char* signature,/* const*/ jvalue* params, jobject& returnValue)
 {
@@ -382,7 +413,64 @@ static bool copyBufferArray(JNIEnv *env, jobject jMesh, const char* jBufferName,
 	return true;
 }
 
+static bool loadEmbeddedTextures(JNIEnv *env, const aiScene* cScene, jobject& jScene)
+{
+    for (unsigned int i = 0; i < cScene->mNumTextures; i++)
+    {
+        const aiTexture* cTex = cScene->mTextures[i];
+		jstring          jType = NULL;
+		int              numbytes = cTex->mWidth;
 
+		if (cTex->mHeight == 0)
+		{
+			jType = env->NewStringUTF(cTex->achFormatHint);
+		}
+		else
+		{
+			jType = env->NewStringUTF("argb");
+            numbytes *= cTex->mHeight * 4;
+		}
+		/* create texture */
+		jobject jTex = NULL;
+		DeleteLocalRef refTex(env, jTex);
+		jvalue texparams[3];
+		texparams[0].i = cTex->mWidth;
+		texparams[1].i = cTex->mHeight;
+		texparams[2].l = jType;
+		if (!createInstance(env, "org/gearvrf/jassimp2/AiTexture",
+                            "(IILjava/lang/String;)V", texparams, jTex))
+		{
+			throwException(env, "Cannot find constructor org/gearvrf/jassimp2/AiTexture(int, int, String");
+		}
+
+        /* copy pixels into memory array */
+        jbyteArray jPixels = (jbyteArray) callj(env, jTex, "org/gearvrf/jassimp2/AiTexture", "getByteData", "()[B");
+		if (jPixels == NULL)
+		{
+			throwException(env, "cannot allocate buffer for pixel data");
+		}
+        jbyte* pixels = env->GetByteArrayElements(jPixels, NULL);
+        memcpy(pixels, cTex->pcData, numbytes);
+		env->ReleaseByteArrayElements(jPixels, pixels, 0);
+
+        /* add texture to m_textures java.util.List */
+        jobject jTextures = NULL;
+        DeleteLocalRef refTextures(env, jTextures);
+
+        if (!getField(env, jScene, "m_textures", "Ljava/util/List;", jTextures))
+		{
+            throwException(env, "cannot access m_textures from AiScene");
+        }
+        jvalue addParams[1];
+        addParams[0].l = jTex;
+        if (!call(env, jTextures, "java/util/Collection",
+				  "add", "(Ljava/lang/Object;)Z", addParams))
+		{
+            throwException(env, "cannot add AiTexture to list");
+        }
+    }
+    return true;
+}
 
 static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 {
@@ -1681,7 +1769,11 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 		goto error;
 	}
 	lprintf("jassimp loadMeshes");
-
+    if (!loadEmbeddedTextures(env, cScene, jScene))
+    {
+        goto error;
+    }
+    lprintf("jassimp loadEmbeddedTextures");
 	if (!loadMaterials(env, cScene, jScene))
 	{
 		goto error;

@@ -31,6 +31,7 @@ import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 
+import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.jassimp2.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.Jassimp;
@@ -39,6 +40,7 @@ import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.GVRByteArray;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.x3d.ShaderSettings;
 import org.gearvrf.x3d.X3Dobject;
 import org.gearvrf.x3d.X3DparseLights;
@@ -167,10 +169,11 @@ public final class GVRAssetLoader {
             try
             {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
-                mContext.loadTexture(request, resource);
+                mContext.loadTexture(request, resource, GVRContext.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
             }
             catch (IOException ex)
             {
+                request.loaded(getDefaultTexture(mContext), null);
                 onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
         }
@@ -191,6 +194,7 @@ public final class GVRAssetLoader {
             }
             catch (IOException ex)
             {
+                request.loaded(getDefaultTexture(mContext), null);
                 onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
             return null;
@@ -281,7 +285,7 @@ public final class GVRAssetLoader {
             String errors = !"".equals(mErrors) ? mErrors : null;
             if (mModel != null)
             {
-                if ((errors == null) && (mScene != null) && (mModel.getParent() == null))
+                if ((mScene != null) && (mModel.getParent() == null))
                 {
                     Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
                     if (mReplaceScene)
@@ -349,14 +353,18 @@ public final class GVRAssetLoader {
                     texture.updateTextureParameters(mTexParams);
                 }
             });
-            mContext.getEventManager().sendEvent(mContext,
-                    IAssetEvents.class,
-                    "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
+            if (ignored != null)
+            {
+                mContext.getEventManager().sendEvent(mContext,
+                        IAssetEvents.class,
+                        "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
+            }
         }
 
         @Override
         public void failed(Throwable t, GVRAndroidResource androidResource)
         {
+            loaded(getDefaultTexture(mContext), null);
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onTextureError", new Object[] { mContext, t.getMessage(), TextureFile });
@@ -407,33 +415,69 @@ public final class GVRAssetLoader {
     }
 
     protected GVRContext mContext;
+    protected final ResourceCache<GVRTexture> mTextureCache = new ResourceCache<GVRTexture>();
+    protected static GVRTexture mDefaultTexture = null;
+
+    /**
+     * Construct an instance of the asset loader
+     * @param context GVRContext to get asset load events
+     */
     public GVRAssetLoader(GVRContext context) {
         mContext = context;
     }
 
-    /** @since 1.6.2 */
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
-            GVRAndroidResource resource, EnumSet<GVRImportSettings> settings) {
-        try {
-            byte[] bytes;
-            InputStream stream = resource.getStream();
-            try {
-                bytes = new byte[stream.available()];
-                stream.read(bytes);
-            } finally {
-                resource.closeStream();
-            }
-            String resourceFilename = resource.getResourceFilename();
-            if (resourceFilename == null) {
-                resourceFilename = ""; // Passing null causes JNI exception.
-            }
-            long nativeValue = NativeImporter.readFromByteArray(bytes,
-                    resourceFilename, GVRImportSettings.getAssimpImportFlags(settings));
-            return new GVRAssimpImporter(gvrContext, nativeValue);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    /**
+     * Get the texture cache local to this asset loader
+     * @return resource cache
+     */
+    public ResourceCache<GVRTexture> getTextureCache() { return mTextureCache; }
+
+    /**
+     * Determine if a given texture is cached
+     * @param resource GVRAndroidResource describing the texture
+     * @return GVRTexture if texture has been cached, otherwise null
+     */
+    public GVRTexture findTexture(GVRAndroidResource resource) { return mTextureCache.get(resource); }
+
+    /**
+     * Internal function to put a texture into the texture cache.
+     * This function is not for public consumption - it is used internally
+     * for maintaining the texture cache.
+     *
+     * @param resource GVRAndroidResource describing the texture
+     * @param texture GVRTexture to add to the cache
+     */
+    public void cacheTexture(GVRAndroidResource resource, GVRTexture texture) { mTextureCache.put(resource, texture); }
+
+
+    static GVRTexture getDefaultTexture(GVRContext ctx)
+    {
+        if (mDefaultTexture == null)
+        {
+            GVRAndroidResource r = new GVRAndroidResource(ctx, R.drawable.white_texture);
+            mDefaultTexture = ctx.loadTexture(r);
         }
+        return mDefaultTexture;
+    }
+
+    /** @since 1.6.2 */
+    GVRAssimpImporter readFileFromResources(GVRContext gvrContext, GVRAndroidResource resource,
+                                            EnumSet<GVRImportSettings> settings) throws IOException {
+        byte[] bytes;
+        InputStream stream = resource.getStream();
+        try {
+            bytes = new byte[stream.available()];
+            stream.read(bytes);
+        } finally {
+            resource.closeStream();
+        }
+        String resourceFilename = resource.getResourceFilename();
+        if (resourceFilename == null) {
+            resourceFilename = ""; // Passing null causes JNI exception.
+        }
+        long nativeValue = NativeImporter.readFromByteArray(bytes,
+                resourceFilename, GVRImportSettings.getAssimpImportFlags(settings));
+        return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
     /**
@@ -770,13 +814,14 @@ public final class GVRAssetLoader {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
         String filePath = request.getBaseName();
+        GVRJassimpAdapter jassimpAdapter = new GVRJassimpAdapter(this, filePath);
 
         model.setName(filePath);
         GVRResourceVolume volume = request.getVolume();
         try
         {
             assimpScene = Jassimp.importFileEx(FileNameUtils.getFilename(filePath),
-                    GVRJassimpAdapter.get().toJassimpSettings(settings),
+                    jassimpAdapter.toJassimpSettings(settings),
                     new CachedVolumeIO(new ResourceVolumeIO(volume)));
         }
         catch (IOException ex)
@@ -797,7 +842,7 @@ public final class GVRAssetLoader {
         }
         try
         {
-            GVRJassimpAdapter.get().processScene(request, model, assimpScene, volume);
+            jassimpAdapter.processScene(request, model, assimpScene, volume);
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onModelLoaded", new Object[]{mContext, model, filePath});

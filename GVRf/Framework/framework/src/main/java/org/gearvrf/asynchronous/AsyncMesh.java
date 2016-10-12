@@ -24,6 +24,8 @@ import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
 import org.gearvrf.utility.Log;
 
+import java.io.IOException;
+
 /**
  * Async resource loading: meshes.
  * 
@@ -95,7 +97,7 @@ class AsyncMesh {
         }
 
         @Override
-        protected GVRMesh loadResource() throws InterruptedException {
+        protected GVRMesh loadResource() throws InterruptedException, IOException {
             return gvrContext.loadMesh(resource);
         }
     }

@@ -188,7 +188,29 @@ public final class AiScene {
         return m_cameras;
     }
 
-    
+    /**
+     * Returns the number of embedded textures in the scene.<p>
+     *
+     * This method is provided for completeness reasons. It will return the
+     * same value as <code>getTextures().size()</code>
+     *
+     * @return the number of embedded textures
+     */
+    public int getNumTextures() {
+        return m_textures.size();
+    }
+
+    /**
+     * Returns the list of embedded textures.<p>
+     *
+     * Embedded textures are fully optional, the returned list may be empty
+     *
+     * @return a possibly empty list of embedded textures
+     */
+    public List<AiTexture> getTextures() {
+        return m_textures;
+    }
+
     /**
      * Returns the scene graph root.
      * 
@@ -242,8 +264,12 @@ public final class AiScene {
      * Cameras.
      */
     private final List<AiCamera> m_cameras = new ArrayList<AiCamera>();
-    
-    
+
+    /**
+     * Embedded Textures.
+     */
+    private final List<AiTexture> m_textures = new ArrayList<AiTexture>();
+
     /**
      * Scene graph root.
      */
