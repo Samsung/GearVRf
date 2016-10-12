@@ -81,11 +81,11 @@ float Picker::pickSceneObject(const SceneObject* scene_object,
     if (scene_object->collider() != 0) {
         Collider* collider = scene_object->collider();
         if (collider->enabled()) {
-            glm::mat4 view_matrix = camera_rig->center_camera()->getViewMatrix();
+            glm::mat4 model_matrix = camera_rig->getHeadTransform()->getModelMatrix();
             glm::vec3 rayStart(0, 0, 0);
             glm::vec3 rayDir(0, 0, -1);
 
-            Collider::transformRay(view_matrix, rayStart, rayDir);
+            Collider::transformRay(model_matrix, rayStart, rayDir);
             ColliderData data = collider->isHit(rayStart, rayDir);
             if (data.IsHit) {
                 return data.Distance;
