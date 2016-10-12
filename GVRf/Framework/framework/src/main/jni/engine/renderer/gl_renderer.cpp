@@ -220,6 +220,10 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
 
 	cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects);
 
+    GLint drawFbo = 0, readFbo = 0;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFbo);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFbo);
+
 	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
     glClearColor(0,0,0,1);
@@ -229,6 +233,9 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
             it != render_data_vector.end(); ++it) {
         GL(renderRenderData(rstate, *it));
     }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
 }
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
         ShaderManager* shader_manager,

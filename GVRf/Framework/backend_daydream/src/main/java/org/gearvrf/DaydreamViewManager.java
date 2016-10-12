@@ -100,14 +100,10 @@ class DaydreamViewManager extends GVRViewManager {
     }
 
     private static class GoogleVRView extends GvrView {
-        public GoogleVRView(Activity activity) {
-            super(activity);
-        }
-
         public GoogleVRView(Activity activity, final DaydreamViewManager viewManager,
                             GoogleVRViewRenderer renderer) {
             super(activity);
-             setEGLConfigChooser(8, 8, 8, 8, 16, 8);
+            setEGLConfigChooser(8, 8, 8, 8, 24, 8);
 
             if (renderer != null) {
                 renderer.setViewManager(viewManager);
@@ -115,7 +111,7 @@ class DaydreamViewManager extends GVRViewManager {
             } else {
                 setRenderer(new GoogleVRViewRenderer(viewManager));
             }
-            setTransitionViewEnabled(true);
+            setTransitionViewEnabled(false);
 
             /**
              * Taken from here:
