@@ -3,7 +3,7 @@ Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType verte
 #ifdef HAS_MULTIVIEW
 	vec4 L = u_view_[int(view_id)] * vec4(data.world_direction.xyz, 0.0);
 #else
-     vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
+    vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
 #endif
 	
 	float attenuation = 1.0;
@@ -20,15 +20,15 @@ Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType verte
 	);
     if (data.shadow_map_index >= 0.0)
 	{
-   		vec4 ShadowCoord = vertex.shadow_position;
-   		float bias = 0.0015;
- 		ShadowCoord = ShadowCoord.xyzw / ShadowCoord.w;
-  		for (int i=0;i<4;i++){
-    		vec3 texcoord = vec3(ShadowCoord.x, ShadowCoord.y, data.shadow_map_index);
-  			texcoord.xy = texcoord.xy + poissonDisk[i]/700.0 ;  			
-   			if (texture(u_shadow_maps, texcoord).r < ShadowCoord.z - bias)
-      			attenuation -= 0.2;
-       	}
+        vec4 ShadowCoord = vertex.shadow_position;
+        float bias = 0.0015;
+        vec3 shadowMapPosition = ShadowCoord.xyz / ShadowCoord.w;
+        vec3 texcoord = vec3(shadowMapPosition.x, shadowMapPosition.y, data.shadow_map_index);
+        vec4 depth = texture(u_shadow_maps, texcoord);
+        float distanceFromLight = unpackFloatFromVec4i(depth);
+
+        if (distanceFromLight + bias < shadowMapPosition.z)
+            attenuation = 0.5;
 	}
 #endif
  	return Radiance(data.ambient_intensity.xyz,

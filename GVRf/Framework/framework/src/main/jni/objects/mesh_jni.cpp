@@ -192,7 +192,6 @@ Java_org_gearvrf_NativeMesh_getTexCoords(JNIEnv * env,
         env->SetFloatArrayRegion(juvs, 0, uvs->size() * 2,
                                  reinterpret_cast<const jfloat*>(uvs->data()));
         return juvs;
-
     }
     return NULL;
 }

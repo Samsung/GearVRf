@@ -223,6 +223,7 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
     }
 }
 
+
 void Renderer::addRenderData(RenderData *render_data) {
     if (render_data == 0 || render_data->material(0) == 0 || !render_data->enabled()) {
         return;

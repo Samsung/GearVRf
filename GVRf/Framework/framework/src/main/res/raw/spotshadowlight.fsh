@@ -23,16 +23,18 @@ Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType verte
      float inner_minus_outer = inner - outer;  
      float spot = clamp((cosSpotAngle - outer) / inner_minus_outer , 0.0, 1.0);
 
-#ifdef HAS_SHADOWS	
+#ifdef HAS_SHADOWS
     if (data.shadow_map_index >= 0.0)
 	{
-   		vec4 ShadowCoord = vertex.shadow_position;
-   		float bias = 0.0015;
- 		vec3 temp = ShadowCoord.xyz / ShadowCoord.w;
-  		vec3 texcoord = vec3(temp.x, temp.y, data.shadow_map_index);
-  
-   		if (texture(u_shadow_maps, texcoord).r < (ShadowCoord.z - bias) / ShadowCoord.w)
-      		attenuation *= 0.5;
+        vec4 ShadowCoord = vertex.shadow_position;
+        float bias = 0.0015;
+        vec3 shadowMapPosition = ShadowCoord.xyz / ShadowCoord.w;
+        vec3 texcoord = vec3(shadowMapPosition.x, shadowMapPosition.y, data.shadow_map_index);
+        vec4 depth = texture(u_shadow_maps, texcoord);
+        float distanceFromLight = unpackFloatFromVec4i(depth);
+
+        if (distanceFromLight + bias < shadowMapPosition.z)
+            attenuation = 0.5;
 	}
 #endif
     return Radiance(data.ambient_intensity.xyz,

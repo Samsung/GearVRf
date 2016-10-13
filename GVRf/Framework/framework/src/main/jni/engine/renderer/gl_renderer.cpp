@@ -237,6 +237,7 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
 }
+
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
         ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,

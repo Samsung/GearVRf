@@ -26,6 +26,7 @@
 #include "glm/gtc/matrix_access.hpp"
 #include "engine/renderer/renderer.h"
 #include "objects/components/camera.h"
+#include "gl/gl_program.h"
 
 namespace gvr {
 const int Light::MAX_SHADOW_MAPS = 2;
@@ -55,6 +56,20 @@ public:
         return glm::perspective(glm::radians(100.0f), 1.0f, 0.1f, 1000.0f);
     }
 };
+
+Light::~Light() {
+    cleanup();
+}
+
+void Light::cleanup()
+{
+    if (fboId_ != 0)
+    {
+        glDeleteTextures(1, &fboId_);
+        fboId_ = 0;
+        if (LOG_LIGHT) LOGD("LIGHT: delete shadow framebuffer %s", lightID_.c_str());
+    }
+}
 
 /*
  * Loads the uniforms associated with this light
@@ -168,6 +183,7 @@ void Light::bindShadowMap(int program, int texIndex) {
         }
         glUniform1i(loc, texIndex);
     }
+    checkGLError("Light::bindShadowMap");
 }
 
 void Light::generateFBO() {
@@ -200,18 +216,34 @@ void Light::generateFBO() {
 
     ////////// Release bind for texture and FrameBuffer /////
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    checkGLError("Light::generateFBO");
 }
 
-void Light::createDepthTexture(int width, int height, int depth){
+void Light::createDepthTexture(int width, int height, int depth) {
     depth_texture_ = new GLTexture(GL_TEXTURE_2D_ARRAY);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_R16F, width,height,depth,0,GL_RED, GL_HALF_FLOAT,NULL);  // it does not for S6 edge
-    glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB10_A2, width,height,depth,0,GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV,NULL);
+ //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB10_A2, width,height,depth,0,GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV,NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGBA8, width,height,depth,0,GL_RGBA, GL_UNSIGNED_BYTE,NULL);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    checkGlError("Light::createDepthTexture");
+    if (LOG_LIGHT) LOGD("LIGHT: create shadow map depth texture %d", depth_texture_->id());
 }
+
+void Light::deleteDepthTexture()
+{
+    if (depth_texture_ && depth_texture_->id())
+    {
+        GLuint id = depth_texture_->id();
+        if (LOG_LIGHT) LOGD("LIGHT: delete shadow map depth texture %d", id);
+        glDeleteTextures(1,&id);
+        delete depth_texture_;
+        depth_texture_ = nullptr;
+    }
+}
+
 
 /**
  * Renders the shadow map for this light.
@@ -244,9 +276,19 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     rstate.scene = scene;
     rstate.material_override = shadowMaterial_;
     rstate.shader_manager = shader_manager;
-    rstate.uniforms.u_view = lightcam.getViewMatrix();
     rstate.uniforms.u_proj = lightcam.getProjectionMatrix();
     rstate.render_mask = 1;
+
+    auto it = vec3s_.find(std::string("shadowTrans"));
+    if (it != vec3s_.end()) {
+        glm::mat4 tmp(owner_object()->transform()->getModelMatrix());
+        const glm::vec3& p = it->second;
+        tmp[3] = glm::vec4(p.x, p.y, p.z, 1.0f);
+        rstate.uniforms.u_view = glm::affineInverse(tmp);
+    }
+    else {
+        rstate.uniforms.u_view = lightcam.getViewMatrix();
+    }
     gRenderer = Renderer::getInstance();
     gRenderer->renderShadowMap(rstate, &lightcam, fboId_, scene_objects);
     return true;

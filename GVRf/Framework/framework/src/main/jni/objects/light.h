@@ -51,8 +51,7 @@ public:
 		shadowMapIndex_(-1) {
     }
 
-    ~Light() {
-    }
+    ~Light();
 
     static long long getComponentType() {
         return COMPONENT_TYPE_LIGHT;
@@ -176,6 +175,11 @@ public:
      */
     void static createDepthTexture(int width, int height, int depth);
 
+    /***
+    *  Calls destructor depth texture and delete textures
+    */
+    void static deleteDepthTexture();
+
     std::string getLightID() {
         return lightID_;
     }
@@ -190,11 +194,14 @@ public:
         lightID_ = lightid;
     };
 
+    void cleanup();
+
 private:
     Light(const Light& light);
     Light(Light&& light);
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
+
 
     /*
      * Generate the framebuffer used for shadow map generation

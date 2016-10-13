@@ -124,9 +124,9 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             if (mShadowMaterial == null)
             {
                 mShadowMaterial = new GVRMaterial(context);
-                GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
-                depthShader.bindShader(context, mShadowMaterial);
             }
+            GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
+            depthShader.bindShader(context, mShadowMaterial);
             NativeLight.setCastShadow(getNative(), mShadowMaterial.getNative());
         }
         else

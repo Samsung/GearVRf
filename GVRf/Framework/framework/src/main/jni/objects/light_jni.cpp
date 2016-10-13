@@ -229,7 +229,8 @@ JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeLight_getCastShadow(JNIEnv * env, jobject obj, jlong jlight)
 {
     Light* light = reinterpret_cast<Light*>(jlight);
-    return light->castShadow();
+    unsigned char rc = (unsigned char) light->castShadow();
+    return reinterpret_cast<jboolean>(rc);
 }
 
 JNIEXPORT void JNICALL
