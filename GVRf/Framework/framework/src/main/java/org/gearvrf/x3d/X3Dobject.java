@@ -3195,9 +3195,8 @@ public class X3Dobject
                   && (frontUrl.length > 0) && (leftUrl.length > 0)
                   && (rightUrl.length > 0) && (topUrl.length > 0)) {
 
-            ArrayList<Future<GVRTexture>> futureTextureList = new ArrayList<Future<GVRTexture>>(
-                    6);
-
+            ArrayList<Future<GVRTexture>> futureTextureList = new ArrayList<Future<GVRTexture>>(6);
+            GVRAssetLoader loader = gvrContext.getAssetLoader();
             String urlAttribute = backUrl[0].substring(0,
                     backUrl[0].indexOf("."));
             int assetID = activityContext.getResources()
@@ -3205,7 +3204,7 @@ public class X3Dobject
                             activityContext.getPackageName());
             if (assetID != 0) {
               futureTextureList
-                      .add(gvrContext.loadFutureTexture(new GVRAndroidResource(
+                      .add(loader.loadFutureTexture(new GVRAndroidResource(
                               gvrContext, assetID)));
             }
 
@@ -3215,7 +3214,7 @@ public class X3Dobject
                             activityContext.getPackageName());
             if (assetID != 0) {
               futureTextureList
-                      .add(gvrContext.loadFutureTexture(new GVRAndroidResource(
+                      .add(loader.loadFutureTexture(new GVRAndroidResource(
                               gvrContext, assetID)));
             }
 
@@ -3225,7 +3224,7 @@ public class X3Dobject
                             activityContext.getPackageName());
             if (assetID != 0) {
               futureTextureList
-                      .add(gvrContext.loadFutureTexture(new GVRAndroidResource(
+                      .add(loader.loadFutureTexture(new GVRAndroidResource(
                               gvrContext, assetID)));
             }
 
@@ -3235,7 +3234,7 @@ public class X3Dobject
                             activityContext.getPackageName());
             if (assetID != 0) {
               futureTextureList
-                      .add(gvrContext.loadFutureTexture(new GVRAndroidResource(
+                      .add(loader.loadFutureTexture(new GVRAndroidResource(
                               gvrContext, assetID)));
             }
 
@@ -3245,7 +3244,7 @@ public class X3Dobject
                             activityContext.getPackageName());
             if (assetID != 0) {
               futureTextureList
-                      .add(gvrContext.loadFutureTexture(new GVRAndroidResource(
+                      .add(loader.loadFutureTexture(new GVRAndroidResource(
                               gvrContext, assetID)));
             }
 
@@ -3255,7 +3254,7 @@ public class X3Dobject
                             activityContext.getPackageName());
             if (assetID != 0) {
               futureTextureList
-                      .add(gvrContext.loadFutureTexture(new GVRAndroidResource(
+                      .add(loader.loadFutureTexture(new GVRAndroidResource(
                               gvrContext, assetID)));
             }
 

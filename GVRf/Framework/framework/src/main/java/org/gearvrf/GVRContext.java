@@ -2016,7 +2016,7 @@ public abstract class GVRContext implements IEventReceiver {
      *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource) {
-        return loadFutureTexture(resource, GVRAssetLoader.DEFAULT_PRIORITY);
+        return getAssetLoader().loadFutureTexture(resource);
     }
 
     /**

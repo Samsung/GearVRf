@@ -204,7 +204,7 @@ public final class GVRAssetLoader {
             {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
                 FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(resource);
-                mContext.loadTexture(request, resource);
+                mContext.getAssetLoader().loadTexture(resource, request);
                 return result;
             }
             catch (IOException ex)
@@ -528,6 +528,12 @@ public final class GVRAssetLoader {
         return texture;
     }
 
+    public GVRTexture loadTexture(GVRAndroidResource resource)
+    {
+        return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+
     /**
      * Loads a texture asynchronously.
      *
@@ -659,6 +665,12 @@ public final class GVRAssetLoader {
     {
         return GVRAsynchronousResourceLoader.loadFutureTexture(mContext,
                 mTextureCache, resource, priority, quality);
+    }
+
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource)
+    {
+        return GVRAsynchronousResourceLoader.loadFutureTexture(mContext,
+                mTextureCache, resource, GVRAssetLoader.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
     }
 
     public Future<GVRTexture> loadFutureCubemapTexture(GVRAndroidResource resource)
