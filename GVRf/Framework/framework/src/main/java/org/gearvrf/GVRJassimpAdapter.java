@@ -578,7 +578,7 @@ class GVRJassimpAdapter {
                         GVRTexture texture = mLoader.findTexture(texresource);
                         if (texture == null)
                         {
-                            texture = loadEmbeddedTexture(texresource, texParams);
+                            texture = loadEmbeddedTexture(texFileName, texParams);
                             mLoader.cacheTexture(texresource, texture);
                             mContext.getEventManager().sendEvent(mContext,
                                     IAssetEvents.class,
@@ -607,14 +607,13 @@ class GVRJassimpAdapter {
      * An embedded texture is represented as an AiTexture object in Java.
      * The AiTexture contains the pixel data for the bitmap.
      *
-     * @param resource GVRAndroidResource for the embedded texture reference.
+     * @param fileName filename for the embedded texture reference.
      *                 The filename inside starts with '*' followed
      *                 by an integer texture index into AiScene embedded textures
      * @return GVRTexture made from embedded texture
      */
-    private GVRTexture loadEmbeddedTexture(GVRAndroidResource resource, GVRTextureParameters texParams) throws NumberFormatException, IndexOutOfBoundsException
+    private GVRTexture loadEmbeddedTexture(String fileName, GVRTextureParameters texParams) throws NumberFormatException, IndexOutOfBoundsException
     {
-        String fileName = resource.getResourceFilename();
         int texIndex = parseInt(fileName.substring(1));
         AiTexture tex = mScene.getTextures().get(texIndex);
         Bitmap bmap = null;
