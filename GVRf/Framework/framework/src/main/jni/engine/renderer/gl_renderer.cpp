@@ -228,12 +228,14 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
     glClearColor(0,0,0,1);
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-
+        
     for (auto it = render_data_vector.begin();
-            it != render_data_vector.end(); ++it) {
-        GL(renderRenderData(rstate, *it));
+         it != render_data_vector.end(); ++it) {
+        RenderData* rdata = *it;
+        if (rdata->cast_shadows()) {
+            GL(renderRenderData(rstate, rdata));
+        }
     }
-
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
 }
