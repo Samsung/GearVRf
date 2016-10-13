@@ -1,11 +1,10 @@
-package org.gearvrf.jassimp2;
+package org.gearvrf;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -18,34 +17,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gearvrf.FutureWrapper;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRAssetLoader;
-import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRBone;
-import org.gearvrf.GVRBoneWeight;
-import org.gearvrf.GVRCameraRig;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDirectLight;
-import org.gearvrf.GVRImportSettings;
-import org.gearvrf.GVRLightBase;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRPhongShader;
-import org.gearvrf.GVRPointLight;
-import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRResourceVolume;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRSpotLight;
-import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRTextureParameters;
-import org.gearvrf.IAssetEvents;
-import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.jassimp2.AiAnimBehavior;
+import org.gearvrf.jassimp2.AiAnimation;
+import org.gearvrf.jassimp2.AiBone;
+import org.gearvrf.jassimp2.AiBoneWeight;
+import org.gearvrf.jassimp2.AiCamera;
+import org.gearvrf.jassimp2.AiColor;
+import org.gearvrf.jassimp2.AiLight;
+import org.gearvrf.jassimp2.AiLightType;
+import org.gearvrf.jassimp2.AiMaterial;
+import org.gearvrf.jassimp2.AiMesh;
+import org.gearvrf.jassimp2.AiNode;
+import org.gearvrf.jassimp2.AiNodeAnim;
+import org.gearvrf.jassimp2.AiPostProcessSteps;
+import org.gearvrf.jassimp2.AiScene;
+import org.gearvrf.jassimp2.AiTexture;
+import org.gearvrf.jassimp2.AiTextureMapMode;
+import org.gearvrf.jassimp2.AiTextureType;
+import org.gearvrf.jassimp2.GVRNewWrapperProvider;
+import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -54,7 +49,7 @@ import org.joml.Vector3f;
 
 import static java.lang.Integer.parseInt;
 
-public class GVRJassimpAdapter {
+class GVRJassimpAdapter {
     private static final String TAG = GVRJassimpAdapter.class.getSimpleName();
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
     private GVRAssetLoader  mLoader;
@@ -583,7 +578,7 @@ public class GVRJassimpAdapter {
                         GVRTexture texture = mLoader.findTexture(texresource);
                         if (texture == null)
                         {
-                            texture = loadEmbeddedTexture(texFileName, texParams);
+                            texture = loadEmbeddedTexture(texresource, texParams);
                             mLoader.cacheTexture(texresource, texture);
                             mContext.getEventManager().sendEvent(mContext,
                                     IAssetEvents.class,
@@ -612,12 +607,14 @@ public class GVRJassimpAdapter {
      * An embedded texture is represented as an AiTexture object in Java.
      * The AiTexture contains the pixel data for the bitmap.
      *
-     * @param fileName embedded texture reference. starts with '*' followed
+     * @param resource GVRAndroidResource for the embedded texture reference.
+     *                 The filename inside starts with '*' followed
      *                 by an integer texture index into AiScene embedded textures
      * @return GVRTexture made from embedded texture
      */
-    private GVRTexture loadEmbeddedTexture(String fileName, GVRTextureParameters texParams) throws NumberFormatException, IndexOutOfBoundsException
+    private GVRTexture loadEmbeddedTexture(GVRAndroidResource resource, GVRTextureParameters texParams) throws NumberFormatException, IndexOutOfBoundsException
     {
+        String fileName = resource.getResourceFilename();
         int texIndex = parseInt(fileName.substring(1));
         AiTexture tex = mScene.getTextures().get(texIndex);
         Bitmap bmap = null;

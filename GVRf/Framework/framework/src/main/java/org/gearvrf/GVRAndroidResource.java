@@ -604,13 +604,10 @@ public class GVRAndroidResource {
      * throttling and don't support
      * {@link BitmapTextureCallback#stillWanted(GVRAndroidResource)}
      */
-    public interface CompressedTextureCallback extends Callback<GVRTexture> {
-    }
+    public interface CompressedTextureCallback extends TextureCallback { }
 
     /** Callback for asynchronous bitmap-texture loads. */
-    public interface BitmapTextureCallback extends
-            CancelableCallback<GVRTexture> {
-    }
+    public interface BitmapTextureCallback extends TextureCallback { }
 
     /**
      * Callback for asynchronous texture loads.

@@ -89,7 +89,7 @@ public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase 
     }
 
     private static class CallbackWrapper<T extends GVRHybridObject> implements
-            Callback<T> {
+            CancelableCallback<T> {
 
         protected final ResourceCache<T> cache;
         protected final Callback<T> callback;
@@ -112,6 +112,11 @@ public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase 
         public void failed(Throwable t, GVRAndroidResource androidResource) {
             callback.failed(t, androidResource);
         }
+
+        @Override
+        public boolean stillWanted(GVRAndroidResource androidResource ) {
+            return true;
+        }
     }
 
     private static class CancelableCallbackWrapper<T extends GVRHybridObject>
@@ -131,7 +136,7 @@ public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase 
 
     // Those 'convenience' interfaces are getting to be a real annoyance
     private static class CompressedTextureCallbackWrapper extends
-            CallbackWrapper<GVRTexture> implements CompressedTextureCallback {
+            CancelableCallbackWrapper<GVRTexture> implements CompressedTextureCallback {
 
         CompressedTextureCallbackWrapper(ResourceCache<GVRTexture> cache,
                 CompressedTextureCallback callback) {
