@@ -230,6 +230,7 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
     glClearColor(0,0,0,1);
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
+<<<<<<< HEAD
     for (auto it = render_data_vector.begin();
          it != render_data_vector.end(); ++it) {
         RenderData* rdata = *it;
@@ -237,8 +238,16 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
             GL(renderRenderData(rstate, rdata));
         }
     }
+
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
+    for (auto it = render_data_vector.begin();
+         it != render_data_vector.end(); ++it) {
+        RenderData* rdata = *it;
+        if (rdata->cast_shadows()) {
+            GL(renderRenderData(rstate, rdata));
+        }
+    }
 }
 
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
