@@ -40,3 +40,5 @@ lib.jar
 import-summary.txt
 
 !**/libgdx.so
+
+.externalNativeBuild
