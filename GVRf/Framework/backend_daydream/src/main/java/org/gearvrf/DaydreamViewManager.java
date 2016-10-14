@@ -18,6 +18,7 @@ package org.gearvrf;
 
 import android.app.Activity;
 import android.content.Context;
+import android.opengl.GLES30;
 import android.view.KeyEvent;
 
 import com.google.vr.sdk.base.AndroidCompat;
@@ -58,7 +59,8 @@ class DaydreamViewManager extends GVRViewManager {
     }
 
     private static class GoogleVRViewRenderer implements GvrView.StereoRenderer {
-        private DaydreamViewManager mViewManager = null;
+        private DaydreamViewManager mViewManager;
+        private final boolean[] mBlendEnabled = new boolean[1];
 
         public GoogleVRViewRenderer(DaydreamViewManager viewManager) {
             mViewManager = viewManager;
@@ -84,9 +86,16 @@ class DaydreamViewManager extends GVRViewManager {
 
         @Override
         public void onNewFrame(HeadTransform headTransform) {
+            GLES30.glGetBooleanv(GLES30.GL_BLEND, mBlendEnabled, 0);
+            GLES30.glDisable(GLES30.GL_BLEND);
+
             //todo move onnewframe to impl in viewmgr; run it before before draw
             mViewManager.beforeDrawEyes();
             mViewManager.onNewFrame(headTransform);
+
+            if (mBlendEnabled[0]) {
+                GLES30.glEnable(GLES30.GL_BLEND);
+            }
         }
 
         @Override
