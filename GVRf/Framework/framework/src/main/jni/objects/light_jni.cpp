@@ -223,7 +223,6 @@ Java_org_gearvrf_NativeLight_saveShadowMap(JNIEnv * env, jobject obj, jlong jlig
     light->saveShadowMap(native_filename);
 #endif
     env->ReleaseStringUTFChars(jfilename, char_filename);
-
 }
 
 JNIEXPORT void JNICALL

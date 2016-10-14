@@ -551,5 +551,9 @@ class NativeLight
     
     static native boolean getCastShadow(long light);
 
+<<<<<<< HEAD
     static native void saveShadowMap(long light, String fileName);
+=======
+    static native void readShadowMap(long light, ByteBuffer readbackBuffer);
+>>>>>>> s ave shadow maps to disk, use sloped bias
 }

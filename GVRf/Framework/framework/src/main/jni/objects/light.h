@@ -207,6 +207,7 @@ public:
     };
 
     void cleanup();
+    void readShadowMap(unsigned char* readbackBuffer);
 
 private:
     Light(const Light& light);
