@@ -103,6 +103,7 @@ class DaydreamViewManager extends GVRViewManager {
         public GoogleVRView(Activity activity, final DaydreamViewManager viewManager,
                             GoogleVRViewRenderer renderer) {
             super(activity);
+            setEGLContextClientVersion(3);
             setEGLConfigChooser(8, 8, 8, 8, 24, 8);
 
             if (renderer != null) {
