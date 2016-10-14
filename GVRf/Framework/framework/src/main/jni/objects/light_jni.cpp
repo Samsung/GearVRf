@@ -76,6 +76,9 @@ Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
         jobject obj, jlong jlight, jstring id);
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_readShadowMap(JNIEnv * env, jobject obj, jlong jlight, jobject jreadback_buffe);
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
         jobject obj, jlong jlight, jstring key, jfloatArray matrix);
 
@@ -209,6 +212,13 @@ Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
     env->SetFloatArrayRegion(jmatrix, 0, 16,
             reinterpret_cast<const jfloat*>(glm::value_ptr(cmatrix)));
     env->ReleaseStringUTFChars(key, char_key);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_readShadowMap(JNIEnv * env, jobject obj, jlong jlight, jobject jreadback_buffer) {
+    Light* light = reinterpret_cast<Light*>(jlight);
+    unsigned char* readbackBuffer = (unsigned char*) env->GetDirectBufferAddress(jreadback_buffer);
+    light->readShadowMap(readbackBuffer);
 }
 
 JNIEXPORT void JNICALL

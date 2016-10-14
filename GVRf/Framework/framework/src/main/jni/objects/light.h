@@ -195,6 +195,7 @@ public:
     };
 
     void cleanup();
+    void readShadowMap(unsigned char* readbackBuffer);
 
 private:
     Light(const Light& light);
@@ -247,7 +248,6 @@ private:
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
     static GLTexture* depth_texture_;
-    static GLTexture* color_texture_;
 };
 }
 #endif

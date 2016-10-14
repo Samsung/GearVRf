@@ -17,17 +17,30 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.utility.ImageUtils;
+import org.gearvrf.utility.Threads;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -446,10 +459,50 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Updates the position and direction of this light from the transform of
-     * scene object that owns it.
+     * Reads the shadow map for the given light and optionally
+     * saves it to a file on the SD card.
+     *
+     * @param fileName name of file to get shadow map
+     *                 if null, the shadow map is not saved in a file.
+     * @return byte buffer with shadow map pixels in PNG format
      */
-    
+    public ByteBuffer readShadowMap(String fileName)
+    {
+        final ByteBuffer readbackBuffer = ByteBuffer.allocateDirect(1024 * 1024 * 4);
+        Runnable task = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                readbackBuffer.order(ByteOrder.nativeOrder());
+                NativeLight.readShadowMap(getNative(), readbackBuffer);
+            }
+        };
+        getGVRContext().runOnGlThread(task);
+        if (fileName != null)
+        {
+            try
+            {
+                File sdCard = Environment.getExternalStorageDirectory();
+                File file = new File(sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
+                final Bitmap bmp = ImageUtils.generateBitmapFlipV(readbackBuffer.array(), 1024, 1024);
+                FileOutputStream stream = new FileOutputStream(file);
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            }
+            catch (IOException ex)
+            {
+                Log.e("GVRLightBase", "Cannot write shadow map " + fileName);
+            }
+        }
+        return readbackBuffer;
+    }
+
+
+
+/**
+ * Updates the position and direction of this light from the transform of
+ * scene object that owns it.
+ */
     public void onDrawFrame(float frameTime)
     {     
         if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
@@ -526,4 +579,6 @@ class NativeLight
     static native void setCastShadow(long light, long material);
     
     static native boolean getCastShadow(long light);
+
+    static native void readShadowMap(long light, ByteBuffer readbackBuffer);
 }

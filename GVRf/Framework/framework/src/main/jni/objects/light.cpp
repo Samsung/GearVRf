@@ -29,10 +29,8 @@
 #include "gl/gl_program.h"
 
 namespace gvr {
-const int Light::MAX_SHADOW_MAPS = 2;
 const int Light::SHADOW_MAP_SIZE = 1024;
 GLTexture* Light::depth_texture_ = NULL;
-GLTexture* Light::color_texture_ = NULL;
 
 static const bool LOG_LIGHT = false;
 
@@ -292,5 +290,12 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     gRenderer = Renderer::getInstance();
     gRenderer->renderShadowMap(rstate, &lightcam, fboId_, scene_objects);
     return true;
+}
+
+void Light::readShadowMap(unsigned char* readbackBuffer)
+{
+    glReadPixels(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, GL_RGBA, GL_UNSIGNED_BYTE,
+                 readbackBuffer);
+
 }
 }
