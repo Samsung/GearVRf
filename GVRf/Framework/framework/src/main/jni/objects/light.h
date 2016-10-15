@@ -128,9 +128,6 @@ public:
             setDirty();
         }
     }
-    Material* getShadowMaterial(){
-    	return shadowMaterial_;
-    }
 
     bool castShadow() {
          return shadowMaterial_ != NULL;
@@ -149,6 +146,17 @@ public:
         setDirty();
     }
 
+    /**
+     * Save the shadow map for this light in the given file.
+     * The function returns before the shadow map is saved and
+     * there is no notification as to when the file is available.
+     * After the shadow map is saved, the filename is cleared
+     * so the shadow map does not get repeatedly overwritten.
+     * You must call this function again to start another save.
+     */
+    void saveShadowMap(const std::string& fileName) {
+        ShadowMapFile = fileName;
+    }
 
     /**
      * Internal function called at the start of each shader
@@ -195,7 +203,6 @@ public:
     };
 
     void cleanup();
-    void readShadowMap(unsigned char* readbackBuffer);
 
 private:
     Light(const Light& light);
@@ -232,6 +239,11 @@ private:
         }
         return -1;
     }
+
+    void writeShadowMapToDisk();
+
+public:
+    std::string ShadowMapFile;
 
 private:
     int size_;

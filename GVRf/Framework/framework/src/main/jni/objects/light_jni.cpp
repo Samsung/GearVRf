@@ -76,7 +76,7 @@ Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
         jobject obj, jlong jlight, jstring id);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeLight_readShadowMap(JNIEnv * env, jobject obj, jlong jlight, jobject jreadback_buffe);
+Java_org_gearvrf_NativeLight_saveShadowMap(JNIEnv * env, jobject obj, jlong jlight, jstring filename);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
@@ -215,10 +215,13 @@ Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeLight_readShadowMap(JNIEnv * env, jobject obj, jlong jlight, jobject jreadback_buffer) {
+Java_org_gearvrf_NativeLight_saveShadowMap(JNIEnv * env, jobject obj, jlong jlight, jstring jfilename) {
     Light* light = reinterpret_cast<Light*>(jlight);
-    unsigned char* readbackBuffer = (unsigned char*) env->GetDirectBufferAddress(jreadback_buffer);
-    light->readShadowMap(readbackBuffer);
+    const char* char_filename = env->GetStringUTFChars(jfilename, 0);
+    std::string native_filename = std::string(char_filename);
+    light->saveShadowMap(native_filename);
+    env->ReleaseStringUTFChars(jfilename, char_filename);
+
 }
 
 JNIEXPORT void JNICALL

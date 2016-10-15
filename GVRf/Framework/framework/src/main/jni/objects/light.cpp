@@ -16,17 +16,10 @@
 /***************************************************************************
  * JNI
  ***************************************************************************/
-#include <assert.h>
 #include "light.h"
-#include "util/gvr_gl.h"
-#include "util/gvr_log.h"
-#include <string>
-#include <vector>
+#include "util/gvr_image_capture.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_access.hpp"
-#include "engine/renderer/renderer.h"
-#include "objects/components/camera.h"
-#include "gl/gl_program.h"
 
 namespace gvr {
 const int Light::SHADOW_MAP_SIZE = 1024;
@@ -289,13 +282,19 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     }
     gRenderer = Renderer::getInstance();
     gRenderer->renderShadowMap(rstate, &lightcam, fboId_, scene_objects);
+    if (!ShadowMapFile.empty()) {
+        writeShadowMapToDisk();
+    }
     return true;
 }
 
-void Light::readShadowMap(unsigned char* readbackBuffer)
+void Light::writeShadowMapToDisk()
 {
-    glReadPixels(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, GL_RGBA, GL_UNSIGNED_BYTE,
-                 readbackBuffer);
+    unsigned char* buffer = (unsigned char*) malloc(SHADOW_MAP_SIZE * SHADOW_MAP_SIZE * 4);
+    const char* filename = ShadowMapFile.c_str();
+    glReadPixels(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    write_truecolor_tga((int) SHADOW_MAP_SIZE, (int) SHADOW_MAP_SIZE, buffer, (char*) filename);
+    free(buffer);
+ }
 
-}
 }

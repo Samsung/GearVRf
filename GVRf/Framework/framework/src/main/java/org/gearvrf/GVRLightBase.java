@@ -459,45 +459,16 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Reads the shadow map for the given light and optionally
+     * Reads the shadow map for the given light and
      * saves it to a file on the SD card.
      *
      * @param fileName name of file to get shadow map
-     *                 if null, the shadow map is not saved in a file.
-     * @return byte buffer with shadow map pixels in PNG format
      */
-    public ByteBuffer readShadowMap(String fileName)
+    public void saveShadowMap(String fileName)
     {
-        final ByteBuffer readbackBuffer = ByteBuffer.allocateDirect(1024 * 1024 * 4);
-        Runnable task = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                readbackBuffer.order(ByteOrder.nativeOrder());
-                NativeLight.readShadowMap(getNative(), readbackBuffer);
-            }
-        };
-        getGVRContext().runOnGlThread(task);
-        if (fileName != null)
-        {
-            try
-            {
-                File sdCard = Environment.getExternalStorageDirectory();
-                File file = new File(sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
-                final Bitmap bmp = ImageUtils.generateBitmapFlipV(readbackBuffer.array(), 1024, 1024);
-                FileOutputStream stream = new FileOutputStream(file);
-                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            }
-            catch (IOException ex)
-            {
-                Log.e("GVRLightBase", "Cannot write shadow map " + fileName);
-            }
-        }
-        return readbackBuffer;
+        File sdCard = Environment.getExternalStorageDirectory();
+        NativeLight.saveShadowMap(getNative(), sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
     }
-
-
 
 /**
  * Updates the position and direction of this light from the transform of
@@ -580,5 +551,5 @@ class NativeLight
     
     static native boolean getCastShadow(long light);
 
-    static native void readShadowMap(long light, ByteBuffer readbackBuffer);
+    static native void saveShadowMap(long light, String fileName);
 }

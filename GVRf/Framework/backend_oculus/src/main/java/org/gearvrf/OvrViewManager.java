@@ -250,7 +250,9 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
         Threads.spawn(new Runnable() {
             public void run() {
-                final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
+                //final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
+                final int[] intArray = mReadbackBuffer.asIntBuffer().array();
+                final Bitmap capturedBitmap = Bitmap.createBitmap(intArray, width, height, Bitmap.Config.ARGB_8888);
                 callback.onScreenCaptured(capturedBitmap);
             }
         });

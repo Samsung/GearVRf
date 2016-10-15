@@ -23,39 +23,44 @@
 #include <vector>
 #include <string>
 
-
+namespace gvr {
 /* Saves a buffer with RGBA values as a tga file */
 
-int write_truecolor_tga( int width, int height, GLubyte* valRGBA, char* fileName );
+    int write_truecolor_tga(int width, int height, GLubyte *valRGBA, char *fileName);
+
 
 // Reads back in RGBA format.
 // Images are saved to /sdcard/image-xx.tga
 
-class GVRImageCapture {
-public:
-    GVRImageCapture(uint width = 0, uint height = 0); // Default width and height for PBOs.
-    ~GVRImageCapture();
-    void captureImage(int startX, int startY, uint width, uint height, char* msg = NULL);
-    void captureImage(int startX, int startY, char* msg = NULL);
-    void saveAllImages();
-private:
-    struct PBOINFO
-    {
-        GLuint id;
-        uint width;
-        uint height;
-        int startX;
-        int startY;
-        std::string msg;
+    class GVRImageCapture {
+    public:
+        GVRImageCapture(uint width = 0, uint height = 0); // Default width and height for PBOs.
+        ~GVRImageCapture();
+
+        void captureImage(int startX, int startY, uint width, uint height, char *msg = NULL);
+
+        void captureImage(int startX, int startY, char *msg = NULL);
+
+        void saveAllImages();
+
+    private:
+        struct PBOINFO {
+            GLuint id;
+            uint width;
+            uint height;
+            int startX;
+            int startY;
+            std::string msg;
+        };
+
+        uint mDefaultWidth;
+        uint mDefaultHeight;
+        std::vector<PBOINFO> mPBOData;
+        uint mMaxWidth;
+        uint mMaxHeight;
+
+
     };
 
-    uint mDefaultWidth;
-    uint mDefaultHeight;
-    std::vector<PBOINFO> mPBOData;
-    uint mMaxWidth;
-    uint mMaxHeight;
-
-
-};
-
+}
 #endif // GVR_CPP_STACK_TRACE_H_
