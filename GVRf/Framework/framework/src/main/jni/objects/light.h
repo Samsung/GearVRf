@@ -207,7 +207,6 @@ public:
     };
 
     void cleanup();
-    void readShadowMap(unsigned char* readbackBuffer);
 
 private:
     Light(const Light& light);
@@ -252,6 +251,11 @@ public:
 #ifdef DEBUG_LIGHT
     std::string ShadowMapFile;
 #endif
+
+    void writeShadowMapToDisk();
+
+public:
+    std::string ShadowMapFile;
 
 private:
     int size_;

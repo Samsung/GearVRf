@@ -30,7 +30,6 @@ namespace gvr {
 
     int write_bw_tga(int width, int height, GLubyte *valRGBA, char *fileName);
 
-
 // Reads back in RGBA format.
 // Images are saved to /sdcard/image-xx.tga
 

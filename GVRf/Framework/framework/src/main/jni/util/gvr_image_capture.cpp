@@ -124,7 +124,7 @@ namespace gvr {
             glDeleteBuffers(1, &id);
         }
     }
-
+    
     void GVRImageCapture::captureImage(int startX, int startY, uint width, uint height, char *msg) {
         mMaxWidth = std::max(width, mMaxWidth);
         mMaxHeight = std::max(height, mMaxHeight);

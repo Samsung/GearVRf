@@ -254,6 +254,30 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera,
     renderCamera(scene, camera, curFBO, viewport[0], viewport[1], viewport[2],
             viewport[3], shader_manager, post_effect_shader_manager,
             post_effect_render_texture_a, post_effect_render_texture_b);
+    std::string fname;
+    std::vector<Light*> lightlist = scene->getLightList();
+    for (auto it = lightlist.begin(); it != lightlist.end(); ++it ) {
+        std::string& shadowfile = (*it)->ShadowMapFile;
+        if (!shadowfile.empty()) {
+            const char* filename = strstr(shadowfile.c_str(), "light");
+            if (filename != NULL)
+            {
+                int i = filename - shadowfile.c_str();
+                if (i > 0) {
+                    fname += shadowfile.substr(0, i);
+                }
+                fname += "screen";
+                fname += shadowfile.substr(i + 5);
+                shadowfile.clear();
+            }
+        }
+    }
+    if (!fname.empty())
+    {
+        unsigned char* buffer = (unsigned char*) malloc(viewport[3] * viewport[2] * 4);
+        glReadPixels(0, 0, viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        write_truecolor_tga(viewport[2], viewport[3], buffer, (char*) fname.c_str());
+    }
 }
 
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
