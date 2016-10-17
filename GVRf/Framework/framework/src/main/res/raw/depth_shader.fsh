@@ -10,6 +10,7 @@ vec4 packFloatToVec4i(const float depth)
     return c - c.xxyz * bitMask;
 }
 
+
 void main()
 {
     float depth = proj_position.z / proj_position.w;

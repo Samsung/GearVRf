@@ -35,5 +35,6 @@ void main() {
 	view_id = int(gl_ViewID_OVR);
 #else
 	proj_position = u_mvp * vertex.local_position;
+#endif
 	gl_Position = proj_position;
 }

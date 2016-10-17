@@ -244,18 +244,12 @@ private:
         return -1;
     }
 #ifdef DEBUG_LIGHT
-    void writeShadowMapToDisk();
-#endif
-
 public:
-#ifdef DEBUG_LIGHT
-    std::string ShadowMapFile;
-#endif
-
     void writeShadowMapToDisk();
 
-public:
+private:
     std::string ShadowMapFile;
+#endif
 
 private:
     int size_;

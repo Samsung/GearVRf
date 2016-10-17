@@ -87,6 +87,7 @@ float unpackFloatFromVec4i(const vec4 value)
     return dot(value, unpackFactors);
 }
 
+
 @FragmentSurface
 
 @FragmentAddLight

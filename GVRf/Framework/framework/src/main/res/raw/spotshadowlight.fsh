@@ -20,6 +20,7 @@ Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType verte
      float spot = clamp((cosSpotAngle - outer) / inner_minus_outer, 0.0, 1.0);
      vec4 ShadowCoord = vertex.shadow_position;
 
+#ifdef HAS_SHADOWS
     if ((data.shadow_map_index >= 0.0) && (ShadowCoord.w > 0.0))
 	{
         float nDotL = max(dot(s.viewspaceNormal, lightdir), 0.0);

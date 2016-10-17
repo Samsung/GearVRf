@@ -20,10 +20,6 @@
 #include "util/gvr_image_capture.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_access.hpp"
-<<<<<<< HEAD
-
-=======
->>>>>>> write shadow map and framebuffer to disk
 
 namespace gvr {
 const int Light::SHADOW_MAP_SIZE = 1024;
