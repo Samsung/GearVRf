@@ -68,6 +68,50 @@ namespace gvr {
         return 1;
     }
 
+    int write_bw_tga(int width, int height, GLubyte *val, char *fileName) {
+        FILE *fp = fopen(fileName, "wb");
+        if (fp == NULL) return 0;
+
+
+        // The image header
+        char header[18] = {0}; // char = byte
+        header[2] = 2; // truecolor
+        header[12] = width & 0xFF;
+        header[13] = (width >> 8) & 0xFF;
+        header[14] = height & 0xFF;
+        header[15] = (height >> 8) & 0xFF;
+        header[16] = 24; // bits per pixel
+        fwrite((const char *) &header, 1, sizeof(header), fp);
+
+        // The image data is stored bottom-to-top, left-to-right
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width * 4; x += 4) {
+                int p = y * height * 4 + x;
+                float r = val[p] / (256.0 * 256.0 * 256.0);
+                float g = val[p + 1] / (256.0 * 256.0);
+                float b = val[p + 2] / 256.0;
+                float a = val[p + 3];
+                float v = r + g + b + a;
+                int i = (v * 255.0f);
+                char c = i & 0xFF;
+                putc(c, fp);
+                putc(c, fp);
+                putc(c, fp);
+            }
+        }
+
+        // The file footer
+        static const char footer[26] =
+                "\0\0\0\0" // no extension area
+                "\0\0\0\0" // no developer directory
+                "TRUEVISION-XFILE" // yep, this is a TGA file
+                ".";
+        fwrite((const char *) &footer, 1, sizeof(footer), fp);
+
+        fclose(fp);
+        return 1;
+    }
+
     GVRImageCapture::GVRImageCapture(uint width, uint height) :
             mDefaultWidth(width), mDefaultHeight(height),
             mMaxWidth(0), mMaxHeight(0) {

@@ -293,7 +293,7 @@ void Light::writeShadowMapToDisk()
     unsigned char* buffer = (unsigned char*) malloc(SHADOW_MAP_SIZE * SHADOW_MAP_SIZE * 4);
     const char* filename = ShadowMapFile.c_str();
     glReadPixels(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-    write_truecolor_tga((int) SHADOW_MAP_SIZE, (int) SHADOW_MAP_SIZE, buffer, (char*) filename);
+    write_bw_tga((int) SHADOW_MAP_SIZE, (int) SHADOW_MAP_SIZE, buffer, (char*) filename);
     free(buffer);
  }
 
