@@ -39,6 +39,8 @@ class SceneObject;
 class Scene;
 class ShaderManager;
 
+//#define DEBUG_LIGHT 1
+
 class Light: public Component {
 public:
     static const int MAX_SHADOW_MAPS;
@@ -146,6 +148,7 @@ public:
         setDirty();
     }
 
+#ifdef DEBUG_LIGHT
     /**
      * Save the shadow map for this light in the given file.
      * The function returns before the shadow map is saved and
@@ -157,6 +160,7 @@ public:
     void saveShadowMap(const std::string& fileName) {
         ShadowMapFile = fileName;
     }
+#endif
 
     /**
      * Internal function called at the start of each shader
@@ -239,11 +243,14 @@ private:
         }
         return -1;
     }
-
+#ifdef DEBUG_LIGHT
     void writeShadowMapToDisk();
+#endif
 
 public:
+#ifdef DEBUG_LIGHT
     std::string ShadowMapFile;
+#endif
 
 private:
     int size_;

@@ -190,7 +190,7 @@ public class GVRSpotLight extends GVRPointLight
             float far = rig.getFarClippingDistance();
             float near = rig.getNearClippingDistance();
             float aspect = rig.getCenterCamera().getAspectRatio();
-            float angle = (float) Math.acos(getFloat("outer_cone_angle"));
+            float angle = (float) Math.acos(getFloat("outer_cone_angle")) * 2.0f;
             
             if (biasMatrix == null)
             {

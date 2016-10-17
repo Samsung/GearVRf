@@ -7,15 +7,15 @@ Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType verte
 #endif
 	
 	float attenuation = 1.0;
- 
+    vec4 ShadowCoord = vertex.shadow_position;
+
  #ifdef HAS_SHADOWS
-    if (data.shadow_map_index >= 0.0)
+    if ((data.shadow_map_index >= 0.0) && (ShadowCoord.w > 0.0))
 	{
-	 	float cosTheta = dot(normalize(data.world_direction.xyz), normalize(viewspace_normal.xyz));
+	 	float cosTheta = dot(normalize(viewspace_normal.xyz), normalize(data.world_direction.xyz));
     	float bias = 0.001 * tan(acos(cosTheta));
     	bias = clamp(bias, 0.0, 0.01);
 
-        vec4 ShadowCoord = vertex.shadow_position;
         vec3 shadowMapPosition = ShadowCoord.xyz / ShadowCoord.w;
         vec3 texcoord = vec3(shadowMapPosition.x, shadowMapPosition.y, data.shadow_map_index);
         vec4 depth = texture(u_shadow_maps, texcoord);
