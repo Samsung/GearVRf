@@ -66,6 +66,9 @@ private:
     float radius_ = 0.0f;
     glm::vec3 min_corner_;
     glm::vec3 max_corner_;
+
+    //Used as a scratch matrix while computing the transformed bounding volume
+    glm::mat4 scratch_abs_matrix;
 };
 }
 #endif
