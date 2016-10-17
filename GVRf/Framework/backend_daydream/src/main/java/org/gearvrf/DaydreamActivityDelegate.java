@@ -72,6 +72,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
 
     @Override
     public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
+        new DaydreamXMLParser(assetManager, dataFilename, mActivity.getAppSettings());
     }
 
     @Override
