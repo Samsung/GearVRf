@@ -15,8 +15,6 @@
 
 package org.gearvrf;
 
-import android.util.Log;
-
 import org.joml.Vector3f;
 
 /**
@@ -37,7 +35,65 @@ public class SensorEvent {
     private boolean isOver;
     private GVRSceneObject object;
     private GVRCursorController controller;
+    private EventGroup eventGroup;
 
+    /**
+     * {@link SensorEvent}s can be grouped with other {@link SensorEvent}s according to the
+     * depth of the {@link GVRSceneObject} that the event occurred on. This feature can be enabled
+     * or disabled using {@link GVRBaseSensor#GVRBaseSensor(GVRContext, boolean)} or
+     * {@link GVRBaseSensor#depthOrderEnabled}. For eg. When a {@link GVRCursorController} changes
+     * position and if that position change generated {@link SensorEvent}s on multiple
+     * {@link GVRSceneObject}, the generated {@link SensorEvent}s can be sent in order of the
+     * distance of the {@link GVRSceneObject} from origin, where the {@link SensorEvent}
+     * associated with the {@link GVRSceneObject} closest to the origin is delivered first and
+     * has an {@link EventGroup#MULTI_START} as the {@link EventGroup}. All subsequent
+     * {@link SensorEvent}s in the same group have {@link EventGroup#MULTI} and are delivered in
+     * depth order as described above. The last {@link SensorEvent} in that group has
+     * {@link EventGroup#MULTI_STOP} as the {@link EventGroup} value. {@link SensorEvent}s that
+     * occurred on only a single {@link GVRSceneObject} have {@link EventGroup#SINGLE} set as
+     * their {@link EventGroup}. However when depth order is disabled all {@link SensorEvent}s
+     * have the {@link EventGroup#GROUP_DISABLED} as their {@link EventGroup} value.
+     * The {@link EventGroup} given to {@link SensorEvent}s can be used in apps where there are
+     * multiple overlapping {@link GVRSceneObject}s and the application has to decide which of
+     * the {@link GVRSceneObject}s will handle the {@link SensorEvent}.
+     */
+    public enum EventGroup {
+        /**
+         * {@link SensorEvent} has this {@link EventGroup} when the {@link SensorEvent} occurred
+         * only on one {@link GVRSceneObject} and {@link GVRBaseSensor#isDepthOrderEnabled()} is
+         * true.
+         */
+        SINGLE,
+        /**
+         * {@link SensorEvent} has this {@link EventGroup} when the {@link SensorEvent} occurred
+         * on multiple {@link GVRSceneObject}s and {@link GVRBaseSensor#isDepthOrderEnabled()} is
+         * true. This group indicates that the associated {@link GVRSceneObject} is not the
+         * nearest nor the farthest from the origin among all the {@link GVRSceneObject}s that
+         * the {@link SensorEvent} occurred on.
+         */
+        MULTI,
+        /**
+         * {@link SensorEvent} has this {@link EventGroup} when the {@link SensorEvent} occurred
+         * on multiple {@link GVRSceneObject}s and {@link GVRBaseSensor#isDepthOrderEnabled()} is
+         * true. This group indicates that the associated {@link GVRSceneObject} is the
+         * nearest from the origin among all the {@link GVRSceneObject}s that
+         * the {@link SensorEvent} occurred on.
+         */
+        MULTI_START,
+        /**
+         * {@link SensorEvent} has this {@link EventGroup} when the {@link SensorEvent} occurred
+         * on multiple {@link GVRSceneObject}s and {@link GVRBaseSensor#isDepthOrderEnabled()} is
+         * true. This group indicates that the associated {@link GVRSceneObject} is the
+         * farthest from the origin among all the {@link GVRSceneObject}s that
+         * the {@link SensorEvent} occurred on.
+         */
+        MULTI_STOP,
+        /**
+         * {@link SensorEvent} has this {@link EventGroup} when
+         * {@link GVRBaseSensor#isDepthOrderEnabled()} is false.
+         */
+        GROUP_DISABLED
+    }
     // We take a leaf out of the MotionEvent book to implement linked
     // recycling of objects.
     private static final int MAX_RECYCLED = 10;
@@ -237,5 +293,18 @@ public class SensorEvent {
                 recyclerTop = this;
             }
         }
+    }
+
+    /**
+     * Gets the {@link EventGroup} associated with the {@link SensorEvent}.
+     * See {@link EventGroup}.
+     * @return The {@link EventGroup} of the {@link SensorEvent}
+     */
+    public EventGroup getEventGroup() {
+        return eventGroup;
+    }
+
+    void setEventGroup(EventGroup eventGroup) {
+        this.eventGroup = eventGroup;
     }
 }

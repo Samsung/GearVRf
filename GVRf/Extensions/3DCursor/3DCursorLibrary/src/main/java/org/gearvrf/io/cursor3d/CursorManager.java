@@ -15,8 +15,10 @@
 
 package org.gearvrf.io.cursor3d;
 
+
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPerspectiveCamera;
@@ -24,6 +26,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
+import org.gearvrf.SensorEvent.EventGroup;
 import org.gearvrf.io.cursor3d.CursorInputManager.IoDeviceListener;
 import org.gearvrf.io.cursor3d.settings.SettingsView;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
@@ -64,6 +67,7 @@ import java.util.Map;
 public class CursorManager {
     // Result of XML parsing in a package of all settings that need displaying.
     private static final String TAG = CursorManager.class.getSimpleName();
+    private static final float DEFAULT_CURSOR_SCALE = 15.0f;
     static String SETTINGS_SOURCE = "settings.xml";
 
     private GVRContext context;
@@ -157,6 +161,7 @@ public class CursorManager {
         unusedIoDevices = new ArrayList<IoDevice>();
         selectableBehaviors = new ArrayList<SelectableBehavior>();
         cursorSensor = new CursorSensor(context);
+        cursorScale = DEFAULT_CURSOR_SCALE;
 
         try {
             SettingsParser.parseSettings(context, this);
@@ -726,6 +731,10 @@ public class CursorManager {
         if (null == object) {
             throw new IllegalArgumentException("GVRSceneObject cannot be null");
         }
+        if(object.getSensor() == cursorSensor) {
+            return true;
+        }
+
         addSelectableBehavior(object);
 
         float scale = getDistance(object);
@@ -960,6 +969,42 @@ public class CursorManager {
         }
     };
 
+    public boolean isDepthOrderEnabled() {
+        return cursorSensor.isDepthOrderEnabled();
+    }
+
+    /**
+     * {@link CursorEvent}s can be grouped with other {@link CursorEvent}s according to the
+     * depth of the {@link GVRSceneObject} that the event occurred on. This feature can be enabled
+     * or disabled using {@link CursorManager#setDepthOrderEnabled(boolean)}. For eg. When a
+     * {@link Cursor} changes position or state and if that change generated {@link CursorEvent}s
+     * on multiple {@link GVRSceneObject}s, the generated {@link CursorEvent}s can be sent in
+     * order of the distance of the {@link GVRSceneObject} from origin, where the {@link CursorEvent}
+     * associated with the {@link GVRSceneObject} closest to the origin is delivered first and
+     * has an {@link EventGroup#MULTI_START} as the {@link EventGroup}. All subsequent
+     * {@link CursorEvent}s in the same group have {@link EventGroup#MULTI} and are delivered in
+     * depth order as described above. The last {@link CursorEvent} in that group has
+     * {@link EventGroup#MULTI_STOP} as the {@link EventGroup} value. {@link CursorEvent}s that
+     * occurred on only a single {@link GVRSceneObject} have {@link EventGroup#SINGLE} set as
+     * their {@link EventGroup}. However when depth order is disabled all {@link CursorEvent}s
+     * have the {@link EventGroup#GROUP_DISABLED} as their {@link EventGroup} value.
+     *
+     * Enabling this feature will incur extra cost every time there is a change in the
+     * {@link Cursor} position or state. The {@link CursorEvent}s need to be grouped
+     * and sorted according to the distance of the associated {@link GVRSceneObject}s from the
+     * origin. This feature should only be turned on if needed.
+     *
+     * The {@link EventGroup} given to {@link CursorEvent}s can be used in apps where there are
+     * multiple overlapping {@link GVRSceneObject}s and the application has to decide which of
+     * the {@link GVRSceneObject}s will handle the {@link CursorEvent}.
+     *
+     * @see CursorEvent#getEventGroup()
+     * @param depthOrderEnabled
+     */
+    public void setDepthOrderEnabled(boolean depthOrderEnabled) {
+        cursorSensor.setDepthOrderEnabled(depthOrderEnabled);
+    }
+
     private class CursorSensor extends GVRBaseSensor implements ISensorEvents {
 
         public CursorSensor(GVRContext context) {
@@ -1037,7 +1082,8 @@ public class CursorManager {
         @Override
         public void onEvent(CursorEvent event) {
             GVRSceneObject sceneObject = event.getObject();
-            while (!callEventHandler(sceneObject, event) && sceneObject.getParent() != null) {
+            while (sceneObject != null && !callEventHandler(sceneObject, event) && sceneObject
+                    .getParent() != null) {
                 sceneObject = sceneObject.getParent();
             }
         }

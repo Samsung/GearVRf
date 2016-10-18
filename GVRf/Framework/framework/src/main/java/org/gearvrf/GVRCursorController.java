@@ -577,6 +577,21 @@ public abstract class GVRCursorController {
         this.scene = scene;
     }
 
+    boolean eventHandledBySensor = false;
+
+    /**
+     * Returns whether events generated as a result of the latest change in the
+     * GVRCursorController state, i.e. change in Position, or change in Active/Enable state were
+     * handled by the {@link SensorManager}. This can be used by an application to know whether
+     * there were any {@link SensorEvent}s generated as a result of any change in the
+     * {@link GVRCursorController}.
+     * @return <code>true</code> if event was handled by {@link SensorManager},
+     * <code>false</code> if otherwise.
+     */
+    public boolean isEventHandledBySensorManager() {
+        return eventHandledBySensor;
+    }
+
     /**
      * Process the input data.
      */
@@ -600,13 +615,10 @@ public abstract class GVRCursorController {
 
         previousActive = active;
         position.normalize(ray);
-
+        eventHandledBySensor = sensorManager.processPick(scene, this);
         for (ControllerEventListener listener : controllerEventListeners) {
             listener.onEvent(this);
         }
-
-        sensorManager.processPick(scene, this);
-
         // reset the set key and motion events.
         synchronized (eventLock) {
             processedKeyEvent.clear();

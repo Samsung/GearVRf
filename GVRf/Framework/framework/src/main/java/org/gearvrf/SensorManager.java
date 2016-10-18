@@ -65,7 +65,7 @@ class SensorManager {
      * We could possibly push this functionality to the native layer. But for
      * now we keep it here.
      */
-    void processPick(GVRScene scene, GVRCursorController controller) {
+    boolean processPick(GVRScene scene, GVRCursorController controller) {
         if (scene != null) {
             boolean markActiveNodes = false;
             if (controller.getActiveState() == ActiveState.ACTIVE_PRESSED) {
@@ -83,10 +83,13 @@ class SensorManager {
                     recurseSceneObject(controller, object, null, markActiveNodes);
                 }
             }
+            boolean eventHandled = false;
             for (GVRBaseSensor sensor : sensors.keySet()) {
-                sensor.processList(controller);
+                eventHandled = sensor.processList(controller);
             }
+            return eventHandled;
         }
+        return false;
     }
 
     private boolean isValidRay(Vector3f ray) {

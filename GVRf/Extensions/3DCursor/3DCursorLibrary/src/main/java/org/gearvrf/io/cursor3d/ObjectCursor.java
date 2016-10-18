@@ -17,6 +17,7 @@
 package org.gearvrf.io.cursor3d;
 
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
@@ -26,7 +27,6 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
-import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -42,7 +42,6 @@ class ObjectCursor extends Cursor {
     private Set<GVRSceneObject> intersecting;
     private Set<GVRSceneObject> previousHits;
     private List<GVRSceneObject> newHits;
-    private boolean active;
 
     ObjectCursor(GVRContext context, CursorManager cursorManager) {
         super(context, CursorType.OBJECT, cursorManager);
@@ -54,18 +53,23 @@ class ObjectCursor extends Cursor {
     @Override
     void dispatchSensorEvent(SensorEvent event) {
         GVRSceneObject object = event.getObject();
+        GVRCursorController controller = event.getCursorController();
+        isControllerActive = event.isActive();
+
         if (intersecting.contains(object)) {
             createAndSendCursorEvent(event.getObject(), true, event.getHitX(), event.getHitY(),
-                    event.getHitZ(), true, active, event.getCursorController().getKeyEvent());
+                    event.getHitZ(), true, isControllerActive, controller.getKeyEvent(),
+                    controller.getMotionEvents());
         } else {
             createAndSendCursorEvent(event.getObject(), false, event.getHitX(), event.getHitY(),
-                    event.getHitZ(), event.isOver(), active,
-                    event.getCursorController().getKeyEvent());
+                    event.getHitZ(), event.isOver(), isControllerActive,
+                    controller.getKeyEvent(), controller.getMotionEvents());
         }
     }
 
     private void createAndSendCursorEvent(GVRSceneObject sceneObject, boolean colliding, float
-            hitX, float hitY, float hitZ, boolean isOver, boolean isActive, KeyEvent keyEvent) {
+            hitX, float hitY, float hitZ, boolean isOver, boolean isActive, KeyEvent keyEvent,
+                                          List<MotionEvent> motionEvents) {
         CursorEvent cursorEvent = CursorEvent.obtain();
         cursorEvent.setColliding(colliding);
         cursorEvent.setHitPoint(hitX, hitY, hitZ);
@@ -77,6 +81,7 @@ class ObjectCursor extends Cursor {
         cursorEvent.setActive(isActive);
         cursorEvent.setCursor(this);
         cursorEvent.setKeyEvent(keyEvent);
+        cursorEvent.setMotionEvents(motionEvents);
 
         if (intersecting.isEmpty() == false) {
             if (isActive) {
@@ -107,34 +112,35 @@ class ObjectCursor extends Cursor {
             if (scene == null) {
                 return;
             }
-
-            lookAt();
-
-            KeyEvent keyEvent = controller.getKeyEvent();
-            if (keyEvent != null) {
-                active = (keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-            }
-
+            boolean sentEvent = false;
             newHits.clear();
 
-            for (GVRSceneObject object : scene.getSceneObjects()) {
-                recurseSceneObject(keyEvent, object, null);
+            KeyEvent keyEvent = controller.getKeyEvent();
+            if(!controller.isEventHandledBySensorManager()) {
+                checkControllerActive(controller);
             }
+
+            for (GVRSceneObject object : scene.getSceneObjects()) {
+                sentEvent = sentEvent || recurseSceneObject(keyEvent, object, null);
+            }
+
+            handleControllerEvent(controller, sentEvent);
 
             for (GVRSceneObject object : previousHits) {
                 if (intersecting.contains(object)) {
                     intersecting.remove(object);
                 }
                 createAndSendCursorEvent(object, false, EMPTY_HIT_POINT[0],EMPTY_HIT_POINT[1],
-                        EMPTY_HIT_POINT[2], false, active, keyEvent);
+                        EMPTY_HIT_POINT[2], false, isControllerActive, keyEvent, null);
             }
             previousHits.clear();
             previousHits.addAll(newHits);
         }
     };
 
-    private void recurseSceneObject(KeyEvent keyEvent, GVRSceneObject object, GVRBaseSensor
-            sensor) {
+    private boolean recurseSceneObject(KeyEvent keyEvent, GVRSceneObject object,
+                                       GVRBaseSensor sensor) {
+        boolean sentEvent = false;
         GVRBaseSensor objectSensor = object.getSensor();
         if (objectSensor == null) {
             objectSensor = sensor;
@@ -158,7 +164,9 @@ class ObjectCursor extends Cursor {
                     if (isColliding(object)) {
                         addNewHit(object);
                         createAndSendCursorEvent(object, true, EMPTY_HIT_POINT[0],
-                                EMPTY_HIT_POINT[1], EMPTY_HIT_POINT[2], true, active, keyEvent);
+                                EMPTY_HIT_POINT[1], EMPTY_HIT_POINT[2], true, isControllerActive,
+                                keyEvent, null);
+                        sentEvent = true;
                     }
                 } else {
                     addNewHit(object);
@@ -167,8 +175,9 @@ class ObjectCursor extends Cursor {
         }
 
         for (GVRSceneObject child : object.getChildren()) {
-            recurseSceneObject(keyEvent, child, objectSensor);
+            sentEvent = sentEvent || recurseSceneObject(keyEvent, child, objectSensor);
         }
+        return sentEvent;
     }
 
     private void addNewHit(GVRSceneObject object) {
@@ -186,6 +195,9 @@ class ObjectCursor extends Cursor {
     @Override
     void setScale(float scale) {
         // place the cursor at half the depth scale
+        if(scale > MAX_CURSOR_SCALE) {
+            return;
+        }
         super.setScale(scale / 2);
 
         if (ioDevice != null) {
@@ -197,12 +209,5 @@ class ObjectCursor extends Cursor {
     void setIoDevice(IoDevice ioDevice) {
         super.setIoDevice(ioDevice);
         ioDevice.setNearDepth(POINT_CURSOR_NEAR_DEPTH);
-    }
-
-    void destroyIoDevice(IoDevice ioDevice) {
-        super.destroyIoDevice(ioDevice);
-        if (active) {
-            active = false;
-        }
     }
 }

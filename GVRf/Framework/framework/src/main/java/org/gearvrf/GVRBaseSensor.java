@@ -17,7 +17,12 @@ package org.gearvrf;
 
 import android.util.SparseArray;
 
+import org.gearvrf.SensorEvent.EventGroup;
+import org.joml.Vector3f;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,10 +46,41 @@ public class GVRBaseSensor {
     private SparseArray<ControllerData> controllerData;
     protected GVRContext gvrContext;
     protected IEventReceiver owner;
+    private DepthComparator depthComparator;
+    private boolean depthOrderEnabled;
 
+    /**
+     * Constructor for {@link GVRBaseSensor}. By default the depth order property is set to false
+     * see {@link GVRBaseSensor#GVRBaseSensor(GVRContext, boolean)}
+     * @param gvrContext the {@link GVRContext} associated with the application.
+     */
     public GVRBaseSensor(GVRContext gvrContext) {
+        this(gvrContext,false);
+    }
+
+    /**
+     * Constructor for {@link GVRBaseSensor}. {@link GVRBaseSensor} has an option to group
+     * {@link SensorEvent} according to depth order. See {@link EventGroup} for more details.
+     * Enabling this feature will incur extra cost every time there is a change in the
+     * {@link GVRCursorController} position or state. The {@link SensorEvent}s need to be grouped
+     * and sorted according to the distance of the associated {@link GVRSceneObject}s from the
+     * origin. This feature should only be turned on if needed. The grouping of {@link SensorEvent}s
+     * can be useful to apps that have multiple overlapping {@link GVRSceneObject}s and the
+     * application has to decide which of the {@link GVRSceneObject}s will handle the
+     * {@link SensorEvent}. The depth order sorting can be enabled and disabled using
+     * {@link GVRBaseSensor#setDepthOrderEnabled(boolean)}
+     * @param gvrContext the {@link GVRContext} associated with the application.
+     * @param sendEventsInDepthOrder <code>true</code> if {@link SensorEvent}s are supposed to be
+     *                               grouped and sorted according to the depth of the
+     *                               {@link GVRSceneObject}. <code>false</code> otherwise.
+     */
+    public GVRBaseSensor(GVRContext gvrContext, boolean sendEventsInDepthOrder) {
         this.gvrContext = gvrContext;
         controllerData = new SparseArray<GVRBaseSensor.ControllerData>();
+        this.depthOrderEnabled = sendEventsInDepthOrder;
+        if(sendEventsInDepthOrder) {
+            depthComparator = new DepthComparator();
+        }
     }
 
     void setActive(GVRCursorController controller, boolean active) {
@@ -68,7 +104,7 @@ public class GVRBaseSensor {
         newHits.add(event);
     }
 
-    void processList(GVRCursorController controller) {
+    boolean processList(GVRCursorController controller) {
         final List<SensorEvent> events = new ArrayList<SensorEvent>();
 
         ControllerData data = getControllerData(controller);
@@ -101,14 +137,39 @@ public class GVRBaseSensor {
             }
             newHits.clear();
         }
-
+        boolean eventHandled = false;
         GVREventManager eventManager = gvrContext.getEventManager();
         if (events.isEmpty() == false) {
+            if(events.size() > 1 && depthOrderEnabled) {
+                Collections.sort(events, depthComparator);
+            }
             final IEventReceiver ownerCopy = owner;
-            for (SensorEvent event : events) {
-                eventManager.sendEvent(ownerCopy, ISensorEvents.class, "onSensorEvent", event);
+            for (int i = 0; i < events.size(); i++) {
+                SensorEvent event = events.get(i);
+                event.setEventGroup(getEventGroup(i,events.size()));
+                eventHandled = eventManager.sendEvent(ownerCopy, ISensorEvents.class,
+                        "onSensorEvent", event);
                 event.recycle();
             }
+        }
+        return eventHandled;
+    }
+
+    private EventGroup getEventGroup(int index, int size) {
+        if(depthOrderEnabled) {
+            if(index == 0) {
+                if(size == 1) {
+                    return EventGroup.SINGLE;
+                } else {
+                    return EventGroup.MULTI_START;
+                }
+            } else if(index == size-1) {
+                return EventGroup.MULTI_STOP;
+            } else {
+                return EventGroup.MULTI;
+            }
+        } else {
+           return EventGroup.GROUP_DISABLED;
         }
     }
 
@@ -198,6 +259,54 @@ public class GVRBaseSensor {
 
         public boolean getActive() {
             return active;
+        }
+    }
+
+    /**
+     * Checks if the depth ordering is enabled for the {@link GVRBaseSensor}
+     * @return <code>true</code> is depth ordering is enabled, <code>false</code> otherwise.
+     */
+    public boolean isDepthOrderEnabled() {
+        return depthOrderEnabled;
+    }
+
+    /**
+     * Enable or disable the Depth ordering of {@link SensorEvent}s for {@link GVRBaseSensor}.
+     * Enabling this feature will incur extra cost every time there is a change in the
+     * {@link GVRCursorController} position or state. The {@link SensorEvent}s need to be grouped
+     * and sorted according to the distance of the associated {@link GVRSceneObject}s from the
+     * origin. This feature should only be turned on if needed. The grouping of {@link SensorEvent}s
+     * can be useful to apps that have multiple overlapping {@link GVRSceneObject}s and the
+     * application has to decide which of the {@link GVRSceneObject}s will handle the
+     * {@link SensorEvent}.
+     * @see EventGroup
+     * @see GVRBaseSensor#GVRBaseSensor(GVRContext, boolean)
+     * @param depthOrderEnabled <code>true</code> to enable depth order, <code>false</code> to
+     *                          disable depth order.
+     */
+    public void setDepthOrderEnabled(boolean depthOrderEnabled) {
+        this.depthOrderEnabled = depthOrderEnabled;
+        if(depthOrderEnabled && depthComparator == null) {
+            depthComparator = new DepthComparator();
+        } else if(!depthOrderEnabled && depthComparator != null) {
+            depthComparator = null;
+        }
+    }
+
+    private static class DepthComparator implements Comparator<SensorEvent> {
+        Vector3f originVector;
+        DepthComparator() {
+            originVector = new Vector3f(0,0,0);
+        }
+        @Override
+        public int compare(SensorEvent lhs, SensorEvent rhs) {
+            GVRTransform transform = lhs.getObject().getTransform();
+            float lhsDepth = originVector.distance(transform.getPositionX(),transform
+                    .getPositionY(), transform.getPositionZ());
+            transform = rhs.getObject().getTransform();
+            float rhsDepth = originVector.distance(transform.getPositionX(),transform
+                    .getPositionY(), transform.getPositionZ());
+            return (int)(lhsDepth - rhsDepth);
         }
     }
 }
