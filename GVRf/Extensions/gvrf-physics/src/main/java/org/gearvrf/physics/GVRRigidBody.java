@@ -327,6 +327,12 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
     public void onDetach(GVRSceneObject oldOwner) {
         super.onDetach(oldOwner);
 
+        onRemoveFromScene();
+    }
+
+    @Override
+    public void onRemoveFromScene()
+    {
         if (mIsInitialized) {
             doPhysicsDetach(oldOwner);
         } else {
