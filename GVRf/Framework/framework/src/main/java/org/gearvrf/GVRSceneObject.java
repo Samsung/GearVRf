@@ -767,10 +767,23 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void removeChildObject(GVRSceneObject child) {
+        child.onRemoveFromScene();
         mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
+
+    /**
+     * Called when a scene object is removed from the scene.
+     */
+    private void onRemoveFromScene()
+    {
+        for (GVRComponent comp : mComponents.values())
+        {
+            comp.onRemoveFromScene();
+        }
+    }
+
     /**
      * Add the owner of {@code childComponent} as a child of this object. (owner object of the
      * Adding a child will increase the
