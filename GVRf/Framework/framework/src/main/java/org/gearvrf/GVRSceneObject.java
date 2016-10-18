@@ -756,6 +756,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         mChildren.add(child);
         child.mParent = this;
         NativeSceneObject.addChildObject(getNative(), child.getNative());
+        child.onNewParentObject(this);
         return true;
     }
 
@@ -767,20 +768,31 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void removeChildObject(GVRSceneObject child) {
-        child.onRemoveFromScene();
         mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
+        child.onRemoveParentObject(this);
     }
 
     /**
-     * Called when a scene object is removed from the scene.
+     * Called when the scene object gets a new parent.
+     *
+     * @param parent New parent of this scene object.
      */
-    private void onRemoveFromScene()
-    {
-        for (GVRComponent comp : mComponents.values())
-        {
-            comp.onRemoveFromScene();
+    protected void onNewParentObject(GVRSceneObject parent) {
+        for (GVRComponent comp : mComponents.values()) {
+            comp.onNewOwnersParent(parent);
+        }
+    }
+
+    /**
+     * Called when is removed the parent of the scene object.
+     *
+     * @param parent Old parent of this scene object.
+     */
+    protected void onRemoveParentObject(GVRSceneObject parent) {
+        for (GVRComponent comp : mComponents.values()) {
+            comp.onRemoveOwnersParent(parent);
         }
     }
 
