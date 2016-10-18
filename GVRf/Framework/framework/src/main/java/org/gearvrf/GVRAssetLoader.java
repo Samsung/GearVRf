@@ -430,8 +430,23 @@ public final class GVRAssetLoader {
     }
 
     protected GVRContext mContext;
-    protected static final ResourceCache<GVRTexture> mTextureCache = new ResourceCache<GVRTexture>();
+    protected static ResourceCache<GVRTexture> mTextureCache = new ResourceCache<GVRTexture>();
     protected static GVRTexture mDefaultTexture = null;
+
+    /**
+     * When the application is restarted we recreate the texture cache
+     * since all of the GL textures have been deleted.
+     */
+    static
+    {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                mTextureCache = new ResourceCache<GVRTexture>();
+            }
+        });
+    }
 
     /**
      * Construct an instance of the asset loader
