@@ -620,14 +620,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVRCollider getCollider() {
         return (GVRCollider) getComponent(GVRCollider.getComponentType());
     }
-    
+
     /**
      * Detach the object's current {@link GVRCollider}.
      */
     public void detachCollider() {
         detachComponent(GVRCollider.getComponentType());
     }
-    
+
     /**
      * Attach a default {@link GVREyePointeeHolder} to the object.
      * 
@@ -643,7 +643,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         <em>and</em> you have called either
      *         {@link GVRRenderData#setMesh(GVRMesh)} or
      *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
-     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))       
+     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))
      */
     public boolean attachEyePointeeHolder() {
         GVREyePointeeHolder holder = new GVREyePointeeHolder(getGVRContext());

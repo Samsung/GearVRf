@@ -124,7 +124,11 @@ public class GVRComponent extends GVRHybridObject {
      * @see isEnabled
      */
     public void setEnable(boolean flag) {
+        if (flag == mIsEnabled)
+            return;
+
         mIsEnabled = flag;
+
         if (getNative() != 0)
         {
             NativeComponent.setEnable(getNative(), flag);

@@ -25,6 +25,7 @@
 #include "glm/glm.hpp"
 
 #include "component.h"
+#include "collider_shape_types.h"
 
 namespace gvr {
 class Collider;
@@ -72,6 +73,9 @@ public:
 
     virtual void set_owner_object(SceneObject*);
 
+    virtual long shape_type() {
+        return COLLIDER_SHAPE_UNKNOWN;
+    }
 
     static long long getComponentType() {
         return COMPONENT_TYPE_COLLIDER;
