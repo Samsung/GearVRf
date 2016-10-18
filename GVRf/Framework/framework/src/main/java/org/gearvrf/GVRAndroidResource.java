@@ -156,7 +156,7 @@ public class GVRAndroidResource {
      *            {@code assets/foo/bar.png}
      */
     public GVRAndroidResource(GVRContext gvrContext,
-            String assetRelativeFilename) {
+            String assetRelativeFilename)  throws IOException  {
         this(gvrContext.getContext(), assetRelativeFilename);
     }
 

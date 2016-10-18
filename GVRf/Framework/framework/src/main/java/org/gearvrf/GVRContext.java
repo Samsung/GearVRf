@@ -241,11 +241,11 @@ public abstract class GVRContext implements IEventReceiver {
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @return The file as a GL mesh.
+     * @return The file as a GL mesh or null if mesh cannot be loaded.
      * 
      * @since 1.6.2
      */
-    public GVRMesh loadMesh(GVRAndroidResource androidResource) throws IOException {
+    public GVRMesh loadMesh(GVRAndroidResource androidResource) {
         return loadMesh(androidResource,
                 GVRImportSettings.getRecommendedSettings());
     }
@@ -266,18 +266,23 @@ public abstract class GVRContext implements IEventReceiver {
      *            {@code GVRAndroidResource} here eliminates six overloads.
      * 
      * @param settings
-     *            Additional import {@link GVRImpotSettings settings}.
-     * @return The file as a GL mesh.
+     *            Additional import {@link GVRImportSettings settings}.
+     * @return The file as a GL mesh or null if mesh cannot be loaded.
      * 
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource,
-            EnumSet<GVRImportSettings> settings) throws IOException {
+            EnumSet<GVRImportSettings> settings) {
         GVRMesh mesh = meshCache.get(androidResource);
-        if (mesh == null) {
+        if (mesh == null) try {
             GVRAssimpImporter assimpImporter = mImporter.readFileFromResources(this, androidResource, settings);
             mesh = assimpImporter.getMesh(0);
             meshCache.put(androidResource, mesh);
+        }
+        catch (IOException ex) {
+            getEventManager().sendEvent(this, IAssetEvents.class,
+                    "onModelError", new Object[] { this, ex.getMessage(), androidResource.getResourceFilename() });
+            return null;
         }
         return mesh;
     }
@@ -950,8 +955,15 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public GVRBitmapTexture loadTexture(String fileName,
             GVRTextureParameters textureParameters) {
-        GVRAndroidResource resource = new GVRAndroidResource(this, fileName);
-        return (GVRBitmapTexture) mImporter.loadTexture(resource, textureParameters);
+        try {
+            GVRAndroidResource resource = new GVRAndroidResource(this, fileName);
+            return (GVRBitmapTexture) mImporter.loadTexture(resource, textureParameters);
+        }
+        catch (IOException ex) {
+            // The IOException will never be thrown. GVRAndroidResource says
+            // it throws an exception but it really doesn't
+            return null;
+        }
     }
 
     /**
