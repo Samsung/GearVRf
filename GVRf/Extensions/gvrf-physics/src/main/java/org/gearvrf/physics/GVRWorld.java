@@ -18,8 +18,10 @@ package org.gearvrf.physics;
 import android.util.LongSparseArray;
 
 import org.gearvrf.GVRBehavior;
+import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSceneObject.ComponentVisitor;
 import org.gearvrf.ISceneObjectEvents;
 
 import java.util.Collections;
@@ -31,8 +33,8 @@ import java.util.LinkedList;
  * <p>
  * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
+public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, ComponentVisitor {
 
-public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
     static {
         System.loadLibrary("gvrf-physics");
     }
@@ -49,14 +51,38 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
         return NativePhysics3DWorld.getComponentType();
     }
 
-    public boolean addBody(GVRRigidBody gvrBody) {
-        mRigidBodies.put(gvrBody.getNative(), gvrBody);
-        return NativePhysics3DWorld.addRigidBody(getNative(), gvrBody.getNative());
+    /**
+     * Returns true if the physics world contains the the specified rigid body.
+     *
+     * @param rigidBody Rigid body the to check if it is present in the world.
+     * @return true if the world contains the specified rigid body.
+     */
+    public boolean contains(GVRRigidBody rigidBody) {
+        return mRigidBodies.get(rigidBody.getNative()) != null;
     }
 
+    /**
+     * Add a {@link GVRRigidBody} to this physics world.
+     *
+     * @param gvrBody The {@link GVRRigidBody} to add.
+     */
+    public void addBody(GVRRigidBody gvrBody) {
+        if (!contains(gvrBody)) {
+            NativePhysics3DWorld.addRigidBody(getNative(), gvrBody.getNative());
+            mRigidBodies.put(gvrBody.getNative(), gvrBody);
+        }
+    }
+
+    /**
+     * Remove a {@link GVRRigidBody} from this physics world.
+     *
+     * @param gvrBody the {@link GVRRigidBody} to remove.
+     */
     public void removeBody(GVRRigidBody gvrBody) {
-        mRigidBodies.remove(gvrBody.getNative());
-        NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
+        if (contains(gvrBody)) {
+            NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
+            mRigidBodies.remove(gvrBody.getNative());
+        }
     }
 
     @Override
@@ -104,6 +130,25 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
                 bodyB, bodyA, info.normal, info.distance);
     }
 
+    private void doPhysicsAttach(GVRSceneObject rootSceneObject) {
+        if (!mHasFrameCallback) {
+            rootSceneObject.getEventReceiver().addListener(this);
+        } else if (isEnabled()){
+            startListening();
+        }
+        rootSceneObject.forAllComponents(this, GVRRigidBody.getComponentType());
+    }
+
+    private void doPhysicsDetach(GVRSceneObject rootSceneObject) {
+        if (!mHasFrameCallback) {
+            rootSceneObject.getEventReceiver().removeListener(this);
+        }
+        if (isEnabled()) {
+            stopListening();
+        }
+        rootSceneObject.forAllComponents(this, GVRRigidBody.getComponentType());
+    }
+
     @Override
     public void onAttach(GVRSceneObject newOwner) {
         super.onAttach(newOwner);
@@ -113,18 +158,14 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
             throw new RuntimeException("GVRWold must be attached to the scene's root object!");
         }
 
-        if (!mHasFrameCallback) {
-            newOwner.getEventReceiver().addListener(this);
-        }
+        doPhysicsAttach(newOwner);
     }
 
     @Override
     public void onDetach(GVRSceneObject oldOwner) {
         super.onDetach(oldOwner);
 
-        if (!mHasFrameCallback) {
-            oldOwner.getEventReceiver().removeListener(this);
-        }
+        doPhysicsDetach(oldOwner);
     }
 
     @Override
@@ -153,6 +194,19 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
     @Override
     public void onStep() {
 
+    }
+
+    @Override
+    public boolean visit(GVRComponent gvrComponent) {
+        if (!gvrComponent.isEnabled()) {
+            return false;
+        }
+        if (this.owner != null) {
+            addBody((GVRRigidBody) gvrComponent);
+        } else {
+            removeBody((GVRRigidBody) gvrComponent);
+        }
+        return true;
     }
 }
 

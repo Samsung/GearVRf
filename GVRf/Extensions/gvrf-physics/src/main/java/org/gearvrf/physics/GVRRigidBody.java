@@ -18,7 +18,6 @@ package org.gearvrf.physics;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.ISceneObjectEvents;
 
 /**
  * Represents a rigid body that can be static or dynamic. You can set a mass and apply some
@@ -29,13 +28,14 @@ import org.gearvrf.ISceneObjectEvents;
  * <p>
  * Every {@linkplain org.gearvrf.GVRSceneObject scene object} can represent a rigid body since
  * it has a {@link GVRRigidBody} component attached to.
+ *
+ * You must setup the values of owner's {@link org.gearvrf.GVRTransform}, like initial position,
+ * and the mass value of the rigid body before attach it to its owner.
  */
-public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
+public class GVRRigidBody extends GVRComponent {
     static {
         System.loadLibrary("gvrf-physics");
     }
-
-    private boolean mIsInitialized = false;
 
     public GVRRigidBody(GVRContext gvrContext) {
         this(gvrContext, 0.0f);
@@ -51,10 +51,31 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
         return Native3DRigidBody.getComponentType();
     }
 
+    /**
+     * Returns the {@linkplain GVRWorld physics world} of this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The physics world of this {@link GVRRigidBody}
+     */
+    public GVRWorld getWorld() {
+        return getWorld(getOwnerObject());
+    }
+
+    /**
+     * Returns the {@linkplain GVRWorld physics world} of the {@linkplain org.gearvrf.GVRScene scene}.
+     *
+     * @param owner Owner of the {@link GVRRigidBody}
+     * @return Returns the {@link GVRWorld} of the scene.
+     */
     private static GVRWorld getWorld(GVRSceneObject owner) {
         return getWorldFromAscendant(owner);
     }
 
+    /**
+     * Looks for {@link GVRWorld} component in the ascendants of the scene.
+     *
+     * @param worldOwner Scene object to search for a physics world in the scene.
+     * @return Physics world from the scene.
+     */
     private static GVRWorld getWorldFromAscendant(GVRSceneObject worldOwner) {
         GVRComponent world = null;
 
@@ -320,23 +341,27 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
             throw new RuntimeException("GVRRigidBody depends of a Collider attached to it's SceneObject");
         }
 
-        newOwner.getEventReceiver().addListener(this);
+        doPhysicsAttach(newOwner);
     }
 
     @Override
     public void onDetach(GVRSceneObject oldOwner) {
         super.onDetach(oldOwner);
 
-        onRemoveFromScene();
+        doPhysicsDetach(oldOwner);
     }
 
     @Override
-    public void onRemoveFromScene()
-    {
-        if (mIsInitialized) {
-            doPhysicsDetach(oldOwner);
-        } else {
-            oldOwner.getEventReceiver().removeListener(this);
+    public void onNewOwnersParent(GVRSceneObject newOwnersParent) {
+        if (isEnabled()) {
+            addToWorld(getWorld(newOwnersParent));
+        }
+    }
+
+    @Override
+    public void onRemoveOwnersParent(GVRSceneObject oldOwnersParent) {
+        if (isEnabled()) {
+            removeFromWorld(getWorld(oldOwnersParent));
         }
     }
 
@@ -344,70 +369,39 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
     public void onEnable() {
         super.onEnable();
 
-        if (mIsInitialized) {
-            addToWorld(getOwnerObject());
-        }
+        addToWorld(getWorld());
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
 
-        if (mIsInitialized) {
-            removeFromWorld(getOwnerObject());
-        }
+        removeFromWorld(getWorld());
     }
 
-    @Override
-    public void onInit(GVRContext gvrContext, GVRSceneObject sceneObject) {
-        sceneObject.getEventReceiver().removeListener(this);
-
-        if (!mIsInitialized) {
-            doPhysicsAttach(sceneObject);
-        }
-
-        mIsInitialized = true;
-    }
-
-    @Override
-    public void onLoaded() {
-    }
-
-    @Override
-    public void onAfterInit() {
-    }
-
-    @Override
-    public void onStep() {
-    }
-
-    private void doPhysicsAttach(GVRSceneObject owner) {
+    private void doPhysicsAttach(GVRSceneObject newOwner) {
         Native3DRigidBody.onAttach(getNative());
 
         if (isEnabled()) {
-            addToWorld(owner);
+            addToWorld(getWorld(newOwner));
         }
     }
 
-    private void doPhysicsDetach(GVRSceneObject owner) {
+    private void doPhysicsDetach(GVRSceneObject oldOwner) {
         if (isEnabled()) {
-            removeFromWorld(owner);
+            removeFromWorld(getWorld(oldOwner));
         }
 
         Native3DRigidBody.onDetach(getNative());
     }
 
-    private void addToWorld(GVRSceneObject owner) {
-        GVRWorld world = getWorld(owner);
-
+    private void addToWorld(GVRWorld world) {
         if (world != null) {
             world.addBody(this);
         }
     }
 
-    private void removeFromWorld(GVRSceneObject owner) {
-        GVRWorld world = getWorld(owner);
-
+    private void removeFromWorld(GVRWorld world) {
         if (world != null) {
             world.removeBody(this);
         }
