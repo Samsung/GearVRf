@@ -129,7 +129,13 @@ public:
     Material* material(int pass) const ;
 
     void set_material(Material* material, int pass);
+
+    virtual void onEvent(Event& event) {
+        set_renderdata_dirty(true);
+    }
+
     void set_renderdata_dirty(bool dirty_);
+
     bool renderdata_dirty(){
         return renderdata_dirty_;
     }

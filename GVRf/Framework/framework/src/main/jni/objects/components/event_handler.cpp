@@ -20,8 +20,11 @@
 
 namespace gvr {
 
-void Listener::notify_listeners(bool dirty){
-    for(auto& it: listeners_)
-        it->set_renderdata_dirty(dirty);
+    void Listener::notify_listeners(Event &event)
+    {
+        for (auto &it: listeners_)
+        {
+            it->onEvent(event);
+        }
     }
 }

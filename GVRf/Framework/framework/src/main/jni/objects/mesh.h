@@ -101,7 +101,8 @@ public:
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
@@ -109,7 +110,8 @@ public:
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     const std::vector<glm::vec3>& normals() const {
@@ -119,13 +121,15 @@ public:
     void set_normals(const std::vector<glm::vec3>& normals) {
         normals_ = normals;
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     void set_normals(std::vector<glm::vec3>&& normals) {
         normals_ = std::move(normals);
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     const std::vector<unsigned short>& triangles() const {
@@ -135,13 +139,15 @@ public:
     void set_triangles(const std::vector<unsigned short>& triangles) {
         indices_ = triangles;
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     void set_triangles(std::vector<unsigned short>&& triangles) {
         indices_ = std::move(triangles);
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     const std::vector<unsigned short>& indices() const {
@@ -151,13 +157,15 @@ public:
     void set_indices(const std::vector<unsigned short>& indices) {
         indices_ = indices;
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     void set_indices(std::vector<unsigned short>&& indices) {
         indices_ = std::move(indices);
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
     bool hasAttribute(std::string key) const {
@@ -216,7 +224,10 @@ public:
     void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
         vec2_vectors_[key] = vector;
         if(strstr((key.c_str()),"a_texcoord"))
-            listener_->notify_listeners(true);
+        {
+            Event event(Event::EventCode::OBJECT_CHANGED, this);
+            listeners_.notify_listeners(event);
+        }
         vao_dirty_ = true;
     }
 
@@ -354,8 +365,11 @@ public:
     void remove_listener(RenderData* render_data){
         listener_->remove_listener(render_data);
     }
-    void notify_listener(bool dirty){
-        listener_->notify_listeners(dirty);
+
+    void notify_listener(bool dirty)
+    {
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listeners_.notify_listeners(event);
     }
 
 private:
@@ -365,7 +379,7 @@ private:
 
 
 private:
-    Listener* listener_;
+    Listener listeners_;
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
 

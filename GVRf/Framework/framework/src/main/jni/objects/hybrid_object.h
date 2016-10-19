@@ -22,14 +22,39 @@
 #define HYBRID_OBJECT_H_
 
 namespace gvr {
+class HybridObject;
 
-class HybridObject {
+struct Event
+{
 public:
-    HybridObject() {
-    }
+    enum EventCode
+    {
+        OBJECT_CHANGED,
+        TRANSFORM_CHANGED,
+        TEXTURE_CHANGED,
+        MAXCODE
+    };
 
-    virtual ~HybridObject() {
-    }
+    EventCode Code;
+    HybridObject* Sender;
+
+    Event(Event::EventCode code, HybridObject* sender);
 };
+
+class HybridObject
+{
+public:
+    HybridObject() { }
+
+    virtual ~HybridObject() { }
+
+    virtual void onEvent(Event& event);
+};
+
+
+
+inline void HybridObject::onEvent(Event& event) { }
+
+    inline Event::Event(Event::EventCode code, HybridObject* sender) : Code(code), Sender(sender) { }
 }
 #endif

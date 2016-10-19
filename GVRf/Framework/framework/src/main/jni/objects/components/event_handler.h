@@ -21,30 +21,41 @@
 #include "objects/components/render_data.h"
 #include <unordered_set>
 namespace gvr {
-class RenderData;
-class Listener{
+class HybridObject;
+class Event;
+
+class Listener
+{
 
 public:
-    void add_listener(RenderData* render_data){
-        if(render_data)
-            listeners_.insert(render_data);
+    void add_listener(HybridObject* listener)
+    {
+        if (listener)
+            listeners_.insert(listener);
     }
-    void add_listener(Listener* listener){
+
+    void add_listener(Listener* listener)
+    {
         for(auto& it: listener->listeners_)
             listeners_.insert(it);
     }
-    void remove_listener(RenderData* render_data){
-        if(render_data)
-            listeners_.erase(render_data);
+
+    void remove_listener(HybridObject* listener)
+    {
+        if (listener)
+            listeners_.erase(listener);
     }
-    void remove_listener(Listener* listener){
+
+    void remove_listener(Listener* listener)
+    {
         for(auto& it: listener->listeners_)
             listeners_.erase(it);
     }
-    void notify_listeners(bool dirty);
+
+    void notify_listeners(Event& ev);
 
 private:
-    std::unordered_set<RenderData*>listeners_;
+    std::unordered_set<HybridObject*>listeners_;
 };
 
 
