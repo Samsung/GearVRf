@@ -698,7 +698,7 @@ public final class GVRAssetLoader {
 
     public Future<GVRTexture> loadFutureCompressedCubemapTexture(GVRAndroidResource resource)
     {
-        return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(mContext,
+        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(mContext,
                 mTextureCache, resource, DEFAULT_PRIORITY,
                 GVRCubemapTexture.faceIndexMap);
     }
