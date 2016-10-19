@@ -444,6 +444,7 @@ public final class GVRAssetLoader {
             @Override
             public void run() {
                 mTextureCache = new ResourceCache<GVRTexture>();
+                mDefaultTexture = null;
             }
         });
     }
