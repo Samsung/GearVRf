@@ -464,7 +464,6 @@ public class AnimationInteractivityManager {
         if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
 
           interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
-            //boolean isRunning;
             @Override
             public void onSensorEvent(SensorEvent event) {
               //Setup SensorEvent callback here
@@ -473,11 +472,6 @@ public class AnimationInteractivityManager {
               GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
 
               if (event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) {
-              //if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) ||
-              //        (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor
-              //                .IS_ACTIVE))) {
-                //DefinedItem definedItem = interactiveObjectFinal.getDefinedItem();
-                  //definedLight.setEnable(true);
                   if (gvrComponent != null) gvrComponent.setEnable(true);
               }
               else {
@@ -486,9 +480,7 @@ public class AnimationInteractivityManager {
             }
           });
         }  // end if sensor == TOUCH
-
       }  //  end sensor and definedItem != null
-
     }  // end for loop traversing through all interactive objects
   }   //  end initAniamtionsAndInteractivity
 
