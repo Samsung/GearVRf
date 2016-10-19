@@ -25,7 +25,7 @@
 
 namespace gvr {
 
-struct ContactPoint{
+struct ContactPoint {
 	PhysicsRigidBody* body0 = 0;
 	PhysicsRigidBody* body1 = 0;
 	float normal[3] = {0.0f, 0.0f, 0.0f};
@@ -33,7 +33,7 @@ struct ContactPoint{
 };
 
 class PhysicsWorld : public Component {
-public:
+ public:
 	PhysicsWorld() : Component(PhysicsWorld::getComponentType()){}
 
 	static long long getComponentType() {

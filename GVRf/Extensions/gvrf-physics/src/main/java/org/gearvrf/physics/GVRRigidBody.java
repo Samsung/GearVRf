@@ -23,10 +23,10 @@ import org.gearvrf.ISceneObjectEvents;
 /**
  * Represents a rigid body that can be static or dynamic. You can set a mass and apply some
  * physics forces.
- *
+ * <p>
  * By default it is a static body with infinity mass, value 0, and does not move under simulation.
  * A dynamic body with a mass defined is fully simulated.
- *
+ * <p>
  * Every {@linkplain org.gearvrf.GVRSceneObject scene object} can represent a rigid body since
  * it has a {@link GVRRigidBody} component attached to.
  */
@@ -49,6 +49,21 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
 
     static public long getComponentType() {
         return Native3DRigidBody.getComponentType();
+    }
+
+    private static GVRWorld getWorld(GVRSceneObject owner) {
+        return getWorldFromAscendant(owner);
+    }
+
+    private static GVRWorld getWorldFromAscendant(GVRSceneObject worldOwner) {
+        GVRComponent world = null;
+
+        while (worldOwner != null && world == null) {
+            world = worldOwner.getComponent(GVRWorld.getComponentType());
+            worldOwner = worldOwner.getParent();
+        }
+
+        return (GVRWorld) world;
     }
 
     /**
@@ -98,15 +113,12 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
 
     /**
      * Set absolute position.
+     * <p>
+     * Use {@link #setCenter(float, float, float)} to <em>move</em> the object.
      *
-     * Use {@link #translate(float, float, float)} to <em>move</em> the object.
-     *
-     * @param x
-     *            'X' component of the absolute position.
-     * @param y
-     *            'Y' component of the absolute position.
-     * @param z
-     *            'Z' component of the absolute position.
+     * @param x 'X' component of the absolute position.
+     * @param y 'Y' component of the absolute position.
+     * @param z 'Z' component of the absolute position.
      */
     public void setCenter(float x, float y, float z) {
         Native3DRigidBody.setCenter(getNative(), x, y, z);
@@ -116,7 +128,7 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
      * Get the quaternion 'W' component.
      *
      * @return 'W' component of the transform's rotation, treated as a
-     *         quaternion.
+     * quaternion.
      */
     public float getRotationW() {
         return Native3DRigidBody.getRotationW(getNative());
@@ -126,7 +138,7 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
      * Get the quaternion 'X' component.
      *
      * @return 'X' component of the transform's rotation, treated as a
-     *         quaternion.
+     * quaternion.
      */
     public float getRotationX() {
         return Native3DRigidBody.getRotationX(getNative());
@@ -136,7 +148,7 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
      * Get the quaternion 'Y' component.
      *
      * @return 'Y' component of the transform's rotation, treated as a
-     *         quaternion.
+     * quaternion.
      */
     public float getRotationY() {
         return Native3DRigidBody.getRotationY(getNative());
@@ -146,7 +158,7 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
      * Get the quaternion 'Z' component.
      *
      * @return 'Z' component of the transform's rotation, treated as a
-     *         quaternion.
+     * quaternion.
      */
     public float getRotationZ() {
         return Native3DRigidBody.getRotationZ(getNative());
@@ -154,17 +166,13 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
 
     /**
      * Set rotation, as a quaternion.
-     *
+     * <p>
      * Sets the transform's current rotation in quaternion terms.
      *
-     * @param w
-     *            'W' component of the quaternion.
-     * @param x
-     *            'X' component of the quaternion.
-     * @param y
-     *            'Y' component of the quaternion.
-     * @param z
-     *            'Z' component of the quaternion.
+     * @param w 'W' component of the quaternion.
+     * @param x 'X' component of the quaternion.
+     * @param y 'Y' component of the quaternion.
+     * @param z 'Z' component of the quaternion.
      */
     public void setRotation(float w, float x, float y, float z) {
         Native3DRigidBody.setRotation(getNative(), w, x, y, z);
@@ -200,12 +208,9 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
     /**
      * Set [X, Y, Z] current scale
      *
-     * @param x
-     *            Scaling factor on the 'X' axis.
-     * @param y
-     *            Scaling factor on the 'Y' axis.
-     * @param z
-     *            Scaling factor on the 'Z' axis.
+     * @param x Scaling factor on the 'X' axis.
+     * @param y Scaling factor on the 'Y' axis.
+     * @param z Scaling factor on the 'Z' axis.
      */
     public void setScale(float x, float y, float z) {
         Native3DRigidBody.setScale(getNative(), x, y, z);
@@ -243,24 +248,8 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
         Native3DRigidBody.setLinearFactor(getNative(), x, y, z);
     }
 
-    public void setFriction(float n) {
-        Native3DRigidBody.setFriction(getNative(), n);
-    }
-
-    public void setRestitution(float n) {
-        Native3DRigidBody.setRestitution(getNative(), n);
-    }
-
     public void setSleepingThresholds(float linear, float angular) {
         Native3DRigidBody.setSleepingThresholds(getNative(), linear, angular);
-    }
-
-    public void setCcdMotionThreshold(float n) {
-        Native3DRigidBody.setCcdMotionThreshold(getNative(), n);
-    }
-
-    public void setContactProcessingThreshold(float n) {
-        Native3DRigidBody.setContactProcessingThreshold(getNative(), n);
     }
 
     public void setIgnoreCollisionCheck(GVRRigidBody collisionObject, boolean ignore) {
@@ -291,20 +280,36 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
         return Native3DRigidBody.getDamping(getNative());
     }
 
-    public  float getFriction() {
+    public float getFriction() {
         return Native3DRigidBody.getFriction(getNative());
     }
 
-    public  float getRestitution() {
+    public void setFriction(float n) {
+        Native3DRigidBody.setFriction(getNative(), n);
+    }
+
+    public float getRestitution() {
         return Native3DRigidBody.getRestitution(getNative());
     }
 
-    public  float getCcdMotionThreshold() {
+    public void setRestitution(float n) {
+        Native3DRigidBody.setRestitution(getNative(), n);
+    }
+
+    public float getCcdMotionThreshold() {
         return Native3DRigidBody.getCcdMotionThreshold(getNative());
     }
 
-    public  float getContactProcessingThreshold() {
+    public void setCcdMotionThreshold(float n) {
+        Native3DRigidBody.setCcdMotionThreshold(getNative(), n);
+    }
+
+    public float getContactProcessingThreshold() {
         return Native3DRigidBody.getContactProcessingThreshold(getNative());
+    }
+
+    public void setContactProcessingThreshold(float n) {
+        Native3DRigidBody.setContactProcessingThreshold(getNative(), n);
     }
 
     @Override
@@ -359,13 +364,16 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
     }
 
     @Override
-    public void onLoaded() { }
+    public void onLoaded() {
+    }
 
     @Override
-    public void onAfterInit() { }
+    public void onAfterInit() {
+    }
 
     @Override
-    public void onStep() { }
+    public void onStep() {
+    }
 
     private void doPhysicsAttach(GVRSceneObject owner) {
         Native3DRigidBody.onAttach(getNative());
@@ -398,21 +406,6 @@ public class GVRRigidBody extends GVRComponent implements ISceneObjectEvents {
             world.removeBody(this);
         }
     }
-
-    private static GVRWorld getWorld(GVRSceneObject owner) {
-        return getWorldFromAscendant(owner);
-    }
-
-    private static GVRWorld getWorldFromAscendant(GVRSceneObject worldOwner) {
-        GVRComponent world = null;
-
-        while (worldOwner != null && world == null) {
-            world = worldOwner.getComponent(GVRWorld.getComponentType());
-            worldOwner = worldOwner.getParent();
-        }
-
-        return (GVRWorld) world;
-    }
 }
 
 class Native3DRigidBody {
@@ -438,7 +431,7 @@ class Native3DRigidBody {
 
     static native float getCenterZ(long jrigid_body);
 
-    static native void  setCenter(long jrigid_body, float x, float y, float z);
+    static native void setCenter(long jrigid_body, float x, float y, float z);
 
     static native float getRotationW(long jrigid_body);
 
@@ -480,7 +473,7 @@ class Native3DRigidBody {
 
     static native void setContactProcessingThreshold(long jrigid_body, float n);
 
-    static native void setIgnoreCollisionCheck(long jrigid_body,  long jcollision_object, boolean ignore);
+    static native void setIgnoreCollisionCheck(long jrigid_body, long jcollision_object, boolean ignore);
 
     static native float[] getGravity(long jrigid_body);
 
@@ -494,11 +487,11 @@ class Native3DRigidBody {
 
     static native float[] getDamping(long jrigid_body);
 
-    static native  float getFriction(long jrigid_body);
+    static native float getFriction(long jrigid_body);
 
-    static native  float getRestitution(long jrigid_body);
+    static native float getRestitution(long jrigid_body);
 
-    static native  float getCcdMotionThreshold(long jrigid_body);
+    static native float getCcdMotionThreshold(long jrigid_body);
 
-    static native  float getContactProcessingThreshold(long jrigid_body);
+    static native float getContactProcessingThreshold(long jrigid_body);
 }

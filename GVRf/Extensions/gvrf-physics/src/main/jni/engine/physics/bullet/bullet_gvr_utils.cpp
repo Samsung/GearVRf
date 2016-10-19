@@ -18,6 +18,7 @@
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 namespace gvr {
+
 btCollisionShape *convertCollider2CollisionShape(Collider *collider) {
     btCollisionShape *shape = NULL;
 
@@ -47,8 +48,8 @@ btCollisionShape *convertBoxCollider2CollisionShape(BoxCollider *collider) {
 
     if (collider != NULL) {
         shape = new btBoxShape(btVector3(collider->get_half_extents().x,
-                    collider->get_half_extents().y,
-                    collider->get_half_extents().z));
+                                         collider->get_half_extents().y,
+                                         collider->get_half_extents().z));
     }
 
     return shape;
@@ -78,8 +79,8 @@ btConvexHullShape *createConvexHullShapeFromMesh(Mesh *mesh) {
             vertex_index = mesh->indices()[i];
 
             btVector3 vertex(mesh->vertices()[vertex_index].x,
-                    mesh->vertices()[vertex_index].y,
-                    mesh->vertices()[vertex_index].z);
+                             mesh->vertices()[vertex_index].y,
+                             mesh->vertices()[vertex_index].z);
 
             initial_hull_shape->addPoint(vertex);
         }
@@ -98,8 +99,8 @@ btConvexHullShape *createConvexHullShapeFromMesh(Mesh *mesh) {
     return hull_shape;
 }
 
-btTransform convertTransform2btTransform(const Transform* t) {
-    btQuaternion rotation(t->rotation_x(),t->rotation_y(),t->rotation_z(), t->rotation_w());
+btTransform convertTransform2btTransform(const Transform *t) {
+    btQuaternion rotation(t->rotation_x(), t->rotation_y(), t->rotation_z(), t->rotation_w());
 
     btVector3 position(t->position_x(), t->position_y(), t->position_z());
 
@@ -108,11 +109,12 @@ btTransform convertTransform2btTransform(const Transform* t) {
     return transform;
 }
 
-void convertBtTransform2Transform(btTransform bulletTransform, Transform* transform) {
+void convertBtTransform2Transform(btTransform bulletTransform, Transform *transform) {
     btVector3 pos = bulletTransform.getOrigin();
     btQuaternion rot = bulletTransform.getRotation();
 
-    transform->set_position(pos.getX(),pos.getY(), pos.getZ());
-    transform->set_rotation(rot.getW(),rot.getX(), rot.getY(), rot.getZ());
+    transform->set_position(pos.getX(), pos.getY(), pos.getZ());
+    transform->set_rotation(rot.getW(), rot.getX(), rot.getY(), rot.getZ());
 }
+
 }

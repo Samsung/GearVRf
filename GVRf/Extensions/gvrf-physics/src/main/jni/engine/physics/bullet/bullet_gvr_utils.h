@@ -27,12 +27,18 @@
 
 namespace gvr {
     btCollisionShape *convertCollider2CollisionShape(Collider *collider);
+
     btCollisionShape *convertSphereCollider2CollisionShape(SphereCollider *collider);
+
     btCollisionShape *convertBoxCollider2CollisionShape(BoxCollider *collider);
+
     btCollisionShape *convertMeshCollider2CollisionShape(MeshCollider *collider);
+
     btConvexHullShape *createConvexHullShapeFromMesh(Mesh *mesh);
-    btTransform convertTransform2btTransform(const Transform* t);
-    void convertBtTransform2Transform(btTransform bulletTransform, Transform* transform);
+
+    btTransform convertTransform2btTransform(const Transform *t);
+
+    void convertBtTransform2Transform(btTransform bulletTransform, Transform *transform);
 }
 
 #endif //FRAMEWORK_BULLET_GVR_UTILS_H

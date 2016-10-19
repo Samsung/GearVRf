@@ -15,48 +15,47 @@
 
 package org.gearvrf.physics;
 
+import android.util.LongSparseArray;
+
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISceneObjectEvents;
-import org.gearvrf.utility.Log;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 
 /**
- *  Represents a physics world where all {@link GVRSceneObject} with {@link GVRRigidBody} component
- *  attached to are simulated.
- *
- *  {@link GVRWorld} is a component that must be attached to the scene's root object.
+ * Represents a physics world where all {@link GVRSceneObject} with {@link GVRRigidBody} component
+ * attached to are simulated.
+ * <p>
+ * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
 
 public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
-    private Map<Long, GVRRigidBody> mRigidBodies = new HashMap<Long, GVRRigidBody>();
-    private LinkedList<GVRCollisionInfo> mPreviousCollisions = new LinkedList<GVRCollisionInfo>();
-
     static {
         System.loadLibrary("gvrf-physics");
     }
+
+    private final LongSparseArray<GVRRigidBody> mRigidBodies = new LongSparseArray<GVRRigidBody>();
+    private final LinkedList<GVRCollisionInfo> mPreviousCollisions = new LinkedList<GVRCollisionInfo>();
 
     public GVRWorld(GVRContext gvrContext) {
         super(gvrContext, NativePhysics3DWorld.ctor());
         mHasFrameCallback = false;
     }
 
-    static public long getComponentType() { return NativePhysics3DWorld.getComponentType(); }
+    static public long getComponentType() {
+        return NativePhysics3DWorld.getComponentType();
+    }
 
     public boolean addBody(GVRRigidBody gvrBody) {
-        this.mRigidBodies.put(gvrBody.getNative(), gvrBody);
+        mRigidBodies.put(gvrBody.getNative(), gvrBody);
         return NativePhysics3DWorld.addRigidBody(getNative(), gvrBody.getNative());
     }
 
     public void removeBody(GVRRigidBody gvrBody) {
-        this.mRigidBodies.remove(gvrBody.getNative());
+        mRigidBodies.remove(gvrBody.getNative());
         NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
     }
 
@@ -67,44 +66,42 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents {
         generateCollisionEvents();
     }
 
-    private void generateCollisionEvents(){
+    private void generateCollisionEvents() {
         GVRCollisionInfo collisionInfos[] = NativePhysics3DWorld.listCollisions(getNative());
 
-        if (collisionInfos == null || collisionInfos.length <= 0){
+        if (collisionInfos == null || collisionInfos.length <= 0) {
             return;
         }
 
         String eventName = "onEnter";
-        for ( GVRCollisionInfo info : collisionInfos ){
+        for (GVRCollisionInfo info : collisionInfos) {
 
-            if ( mPreviousCollisions.contains ( info ) ) {
+            if (mPreviousCollisions.contains(info)) {
                 //eventName = "onInside";
-                mPreviousCollisions.remove ( info );
+                mPreviousCollisions.remove(info);
             } else {
-                sendCollisionEvent ( info , eventName );
+                sendCollisionEvent(info, eventName);
             }
         }
 
         eventName = "onExit";
-        for ( GVRCollisionInfo cp : mPreviousCollisions ){
-            sendCollisionEvent ( cp , eventName );
+        for (GVRCollisionInfo cp: mPreviousCollisions) {
+            sendCollisionEvent(cp, eventName);
         }
 
         mPreviousCollisions.clear();
-        for ( GVRCollisionInfo info : collisionInfos ){
-            mPreviousCollisions.add( info );
-        }
+        Collections.addAll(mPreviousCollisions, collisionInfos);
     }
 
     private void sendCollisionEvent(GVRCollisionInfo info, String eventName) {
-        GVRSceneObject bodyA = mRigidBodies.get( info.bodyA ).getOwnerObject();
-        GVRSceneObject bodyB = mRigidBodies.get( info.bodyB ).getOwnerObject();
+        GVRSceneObject bodyA = mRigidBodies.get(info.bodyA).getOwnerObject();
+        GVRSceneObject bodyB = mRigidBodies.get(info.bodyB).getOwnerObject();
 
-        getGVRContext().getEventManager().sendEvent( bodyA , ICollisionEvents.class , eventName ,
-                bodyA , bodyB , info.normal , info.distance );
+        getGVRContext().getEventManager().sendEvent(bodyA, ICollisionEvents.class, eventName,
+                bodyA, bodyB, info.normal, info.distance);
 
-        getGVRContext().getEventManager().sendEvent( bodyB , ICollisionEvents.class , eventName ,
-                bodyB , bodyA , info.normal , info.distance );
+        getGVRContext().getEventManager().sendEvent(bodyB, ICollisionEvents.class, eventName,
+                bodyB, bodyA, info.normal, info.distance);
     }
 
     @Override

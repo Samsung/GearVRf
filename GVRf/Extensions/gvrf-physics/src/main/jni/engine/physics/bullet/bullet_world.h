@@ -29,32 +29,38 @@
 
 namespace gvr {
 
-
 class BulletWorld : public Physics3DWorld {
-public:
-	BulletWorld();
-	~BulletWorld();
+ public:
+    BulletWorld();
 
-	void addRigidBody(PhysicsRigidBody *body);
-	void removeRigidBody(PhysicsRigidBody *body);
-	void step(float timeStep);
-	void listCollisions(std::vector<ContactPoint>& contactPoints); //index counts how many iteration it's on list, if <0 should be taken out
+    ~BulletWorld();
 
-private:
-	void initialize();
-	void finalize();
+    void addRigidBody(PhysicsRigidBody *body);
 
-private:
-	btDynamicsWorld* mPhysicsWorld;
-	btCollisionConfiguration* mCollisionConfiguration;
-	btCollisionDispatcher* mDispatcher;
-	btSequentialImpulseConstraintSolver* mSolver;
-	btBroadphaseInterface* mOverlappingPairCache;
+    void removeRigidBody(PhysicsRigidBody *body);
 
-    btNearCallback* gTmpFilter;
+    void step(float timeStep);
+
+    void listCollisions(
+            std::vector <ContactPoint> &contactPoints); //index counts how many iteration it's on list, if <0 should be taken out
+
+ private:
+    void initialize();
+
+    void finalize();
+
+ private:
+    btDynamicsWorld *mPhysicsWorld;
+    btCollisionConfiguration *mCollisionConfiguration;
+    btCollisionDispatcher *mDispatcher;
+    btSequentialImpulseConstraintSolver *mSolver;
+    btBroadphaseInterface *mOverlappingPairCache;
+
+    btNearCallback *gTmpFilter;
     int gNearCallbackCount = 0;
-    void* gUserData = 0;
+    void *gUserData = 0;
 };
+
 }
 
 #endif /* BULLET_WORLD_H_ */

@@ -25,8 +25,9 @@
 #include "objects/components/transform.h"
 
 namespace gvr {
+
 class PhysicsRigidBody : public Component {
-public:
+ public:
     PhysicsRigidBody() : Component(PhysicsRigidBody::getComponentType()) {}
 
 	static long long getComponentType() {
@@ -85,8 +86,8 @@ public:
 	virtual const float getCcdMotionThreshold() const = 0;
 	virtual const float getCcdSweptSphereRadius() const = 0;
 	virtual const float getContactProcessingThreshold() const = 0;
-
 };
+
 }
 
 #endif /* PHYSICS_RIGIDBODY_H_ */

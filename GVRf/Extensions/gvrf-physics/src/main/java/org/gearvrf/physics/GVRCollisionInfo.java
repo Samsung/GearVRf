@@ -1,14 +1,13 @@
 package org.gearvrf.physics;
 
-
 class GVRCollisionInfo {
 
-    public long bodyA;
-    public long bodyB;
-    public float normal[];
-    public float distance;
+    public final long bodyA;
+    public final long bodyB;
+    public final float[] normal;
+    public final float distance;
 
-    public GVRCollisionInfo(long bodyA, long bodyB, float normal[], float distance){
+    public GVRCollisionInfo(long bodyA, long bodyB, float normal[], float distance) {
         this.bodyA = bodyA;
         this.bodyB = bodyB;
         this.normal = normal;

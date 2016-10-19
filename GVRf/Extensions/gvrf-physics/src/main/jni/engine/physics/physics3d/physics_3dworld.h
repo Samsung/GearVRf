@@ -23,10 +23,12 @@
 #include "../physics_world.h"
 
 namespace gvr {
+
 class Physics3DWorld : public PhysicsWorld {
-public:
+ public:
     ~Physics3DWorld() { }
 };
+
 }
 
 #endif /* PHYSICS_3DWORLD_H_ */

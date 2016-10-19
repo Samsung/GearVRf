@@ -19,11 +19,13 @@
 #include "../physics_rigidbody.h"
 
 namespace gvr {
+
 class Physics3DRigidBody : public PhysicsRigidBody {
-public:
+ public:
     Physics3DRigidBody() : PhysicsRigidBody() {}
     ~Physics3DRigidBody(){}
 };
+
 }
 
 #endif /* PHYSICS_3DRIGIDBODY_H_ */

@@ -22,12 +22,13 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 namespace gvr {
+
 BulletWorld::BulletWorld() {
-	initialize();
+    initialize();
 }
 
 BulletWorld::~BulletWorld() {
-	finalize();
+    finalize();
 }
 
 void BulletWorld::initialize() {
@@ -43,16 +44,17 @@ void BulletWorld::initialize() {
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     mSolver = new btSequentialImpulseConstraintSolver;
 
-    mPhysicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mOverlappingPairCache, mSolver, mCollisionConfiguration);
+    mPhysicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mOverlappingPairCache, mSolver,
+                                                mCollisionConfiguration);
 
     mPhysicsWorld->setGravity(btVector3(0, -10, 0));
 }
 
 void BulletWorld::finalize() {
-    for (int i = mPhysicsWorld->getNumCollisionObjects()-1; i >= 0; i--) {
-        btCollisionObject* obj = mPhysicsWorld->getCollisionObjectArray()[i];
+    for (int i = mPhysicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
+        btCollisionObject *obj = mPhysicsWorld->getCollisionObjectArray()[i];
         if (obj) {
-            mPhysicsWorld->removeCollisionObject( obj );
+            mPhysicsWorld->removeCollisionObject(obj);
             delete obj;
         }
     }
@@ -73,28 +75,28 @@ void BulletWorld::finalize() {
 }
 
 void BulletWorld::addRigidBody(PhysicsRigidBody *body) {
-	mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody*>(body))->getRigidBody());
+    mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody());
 }
 
 void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
-	mPhysicsWorld->removeRigidBody((static_cast<BulletRigidBody*>(body))->getRigidBody());
+    mPhysicsWorld->removeRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody());
 }
 
 void BulletWorld::step(float timeStep) {
     mPhysicsWorld->stepSimulation(timeStep);
 }
 
-void BulletWorld::listCollisions(std::vector<ContactPoint>& contactPoints) {
+void BulletWorld::listCollisions(std::vector <ContactPoint> &contactPoints) {
     int numManifolds = mPhysicsWorld->getDispatcher()->getNumManifolds();
 
-    for (int i = 0; i < numManifolds; i++)
-    {
+    for (int i = 0; i < numManifolds; i++) {
         ContactPoint contactPt;
 
-        btPersistentManifold* contactManifold =  mPhysicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+        btPersistentManifold *contactManifold = mPhysicsWorld->getDispatcher()->getManifoldByIndexInternal(
+                i);
 
-        contactPt.body0 = (BulletRigidBody*)(contactManifold->getBody0()->getUserPointer());
-        contactPt.body1 = (BulletRigidBody*)(contactManifold->getBody1()->getUserPointer());
+        contactPt.body0 = (BulletRigidBody *) (contactManifold->getBody0()->getUserPointer());
+        contactPt.body1 = (BulletRigidBody *) (contactManifold->getBody1()->getUserPointer());
         contactPt.normal[0] = contactManifold->getContactPoint(0).m_normalWorldOnB.getX();
         contactPt.normal[1] = contactManifold->getContactPoint(0).m_normalWorldOnB.getY();
         contactPt.normal[2] = contactManifold->getContactPoint(0).m_normalWorldOnB.getZ();
@@ -103,7 +105,6 @@ void BulletWorld::listCollisions(std::vector<ContactPoint>& contactPoints) {
         contactPoints.push_back(contactPt);
         //TODO more collision atributes
     }
-
 }
 }
 
