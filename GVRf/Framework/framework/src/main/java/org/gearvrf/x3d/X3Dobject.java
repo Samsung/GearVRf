@@ -36,6 +36,7 @@ import java.io.StringReader;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.gearvrf.script.GVRJavascriptScriptFile;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -74,14 +75,12 @@ import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
+import org.gearvrf.script.GVRScriptManager;
 
 import org.joml.Vector3f;
-
-
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -229,6 +228,7 @@ public class X3Dobject
    * such as in the onStep() function
    */
   public Vector<Sensor> sensors = new Vector<Sensor>();
+  public Vector<EventUtility> eventUtilities = new Vector<EventUtility>();
 
 
   private ShaderSettings shaderSettings = null;
@@ -238,6 +238,12 @@ public class X3Dobject
   private GVRCameraRig cameraRigAtRoot = null;
 
   private AnimationInteractivityManager animationInteractivityManager = null;
+
+  // set true in <SCRIPT> tag so SAX XML parser will parse JavaScript
+  //    inside its characters function.
+  private boolean parseJavaScript = false;
+  // holds complete JavaScript code per <SCRIPT> tag
+  private String javaScriptCode = "";
 
 
   /**
@@ -282,7 +288,9 @@ public class X3Dobject
       //this.mAnimations = root.getAnimations();
       lodManager = new LODmanager();
 
-      animationInteractivityManager = new AnimationInteractivityManager(this, gvrContext, root, mDefinedItems, interpolators, sensors, timeSensors);
+      animationInteractivityManager = new AnimationInteractivityManager(
+              this, gvrContext, root, mDefinedItems, interpolators,
+              sensors, timeSensors, eventUtilities);
     }
     catch (Exception e)
     {
@@ -2840,6 +2848,72 @@ public class X3Dobject
         }  //  end <ProximitySensor> node
 
 
+        /********** Script **********/
+        else if (qName.equalsIgnoreCase("Script")) {
+          String name = "";
+
+          // The EcmaScript / JavaScript will be parsed inside
+          // SAX's characters method
+          parseJavaScript = true;
+          //reset.  This will hold complete JavaScript function(s)
+          javaScriptCode = "";
+
+          attributeValue = attributes.getValue("DEF");
+          if (attributeValue != null) {
+            name = attributeValue;
+          }
+        }  //  end <Script> node
+
+
+        /********** field (embedded inside <Script>) **********/
+        else if (qName.equalsIgnoreCase("field")) {
+
+          /*
+          public enum Type
+          {
+            ANCHOR, PROXIMITY, TOUCH, VISIBILITY
+          };
+          */
+
+          String name = "";
+          String accessType = "";
+          String type = "";
+
+          attributeValue = attributes.getValue("accessType");
+          if (attributeValue != null) {
+            if ( (attributeValue.equals("inputOnly")) || (attributeValue.equals("outputOnly")) ) {
+              accessType = attributeValue;
+            }
+          }
+          attributeValue = attributes.getValue("name");
+          if (attributeValue != null) {
+            name = attributeValue;
+          }
+          attributeValue = attributes.getValue("type");
+          if (attributeValue != null) {
+            type = attributeValue;
+          }
+        }  //  end <field> node
+
+
+        /********** BooleanToggle **********/
+        else if (qName.equalsIgnoreCase("BooleanToggle")) {
+          String name = "";
+          boolean toggle = false;
+
+          attributeValue = attributes.getValue("DEF");
+          if (attributeValue != null) {
+            name = attributeValue;
+          }
+          attributeValue = attributes.getValue("toggle");
+          if (attributeValue != null) {
+            toggle = parseBooleanString(attributeValue);
+          }
+          EventUtility eventUtility = new EventUtility(name, EventUtility.DataType.BOOLEAN, EventUtility.Type.TOGGLE, toggle);
+          eventUtilities.add(eventUtility);
+        }  //  end <BooleanToggle> node
+
+
         /********** ElevationGrid **********/
         else if (qName.equalsIgnoreCase("ElevationGrid")) {
           String name = "";
@@ -3624,6 +3698,29 @@ public class X3Dobject
       {
         ;
       }
+      else if (qName.equalsIgnoreCase("Script"))
+      {
+        //GVRScriptManager sm = gvrContext.getScriptManager();
+
+        GVRJavascriptScriptFile gvrJavascriptScriptFile = new GVRJavascriptScriptFile(gvrContext, javaScriptCode);
+        String scriptText = gvrJavascriptScriptFile.getScriptText(); // test to make sure it is correct
+                //sm.attachScriptFile(main, gvrJavascriptScriptFile);
+        GVRScriptManager gvrScriptManager = new GVRScriptManager(gvrContext);
+        //gvrScriptManager.attachScriptFile(this, gvrJavascriptScriptFile);
+        Object[] params = new Object[1];
+        params[0] = true;
+        boolean b = gvrJavascriptScriptFile.invokeFunction("buttonOver", params);
+
+        parseJavaScript = false;
+      }
+      else if (qName.equalsIgnoreCase("field"))
+      {
+        ; // embedded inside a <SCRIPT> node
+      }
+      else if (qName.equalsIgnoreCase("BooleanToggle"))
+      {
+        ;
+      }
       else if (qName.equalsIgnoreCase("NavigationInfo"))
       {
         ;
@@ -3921,7 +4018,29 @@ public class X3Dobject
     @Override
     public void characters(char ch[], int start, int length) throws SAXException
     {
-    }
+      if ( parseJavaScript ) {
+        String js = "";
+        boolean leadingNonprintChars = true;
+        for (int i = start; i < length; i++) {
+          if ( (ch[i] == '\n') || (ch[i] == ' ') || (ch[i] == '\t') ) {
+            if (!leadingNonprintChars && (ch[i] == ' ') ) {
+              js += ch[i];
+            }
+          }
+          else {
+            js += ch[i];
+            leadingNonprintChars = false;
+          }
+        }
+        if (js.length() > 0) {
+          javaScriptCode += js + '\n';
+          Log.e("CharData", "characters js= " + js);
+        }
+        else {
+          Log.e("CharData", "just non-print chars");
+        }
+      }
+    }  //  end characters method
 
   } // end UserHandler
 

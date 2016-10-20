@@ -16,7 +16,11 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRPointLight;
+import org.gearvrf.GVRLight;
+import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
@@ -70,6 +74,7 @@ public class AnimationInteractivityManager {
   private Vector<Interpolator> interpolators = null;
   private Vector<Sensor> sensors = null;
   private Vector<TimeSensor> timeSensors = null;
+  private Vector<EventUtility> eventUtilities = null;
 
   // Append this incremented value to GVRSceneObject names to insure unique
   // GVRSceneObjects when new GVRScene objects are generated to support animation
@@ -81,7 +86,8 @@ public class AnimationInteractivityManager {
                                        Vector<DefinedItem> definedItems,
                                        Vector<Interpolator> interpolators,
                                        Vector<Sensor> sensors,
-                                       Vector<TimeSensor> timeSensors) {
+                                       Vector<TimeSensor> timeSensors,
+                                       Vector<EventUtility> eventUtilities) {
     this.x3dObject = x3dObject;
     this.gvrContext = gvrContext;
     this.root = root; // helps search for GVRSCeneObjects by name
@@ -89,6 +95,7 @@ public class AnimationInteractivityManager {
     this.interpolators = interpolators;
     this.sensors = sensors;
     this.timeSensors = timeSensors;
+    this.eventUtilities = eventUtilities;
   }
 
   /**
@@ -113,6 +120,8 @@ public class AnimationInteractivityManager {
     TimeSensor routeFromTimeSensor = null;
     Interpolator routeToInterpolator = null;
     Interpolator routeFromInterpolator = null;
+    EventUtility routeToEventUtility = null;
+    EventUtility routeFromEventUtility = null;
     DefinedItem routeToDefinedItem = null;
     // TODO: Scripting functionality will eventually be added
     // TODO: ScriptingObject scriptingObject = null;
@@ -139,6 +148,14 @@ public class AnimationInteractivityManager {
         routeToInterpolator = interpolator;
       } else if (interpolator.name.equalsIgnoreCase(fromNode)) {
         routeFromInterpolator = interpolator;
+      }
+    }
+
+    for (EventUtility eventUtility : eventUtilities) {
+      if (eventUtility.getName().equalsIgnoreCase(toNode)) {
+        routeToEventUtility = eventUtility;
+      } else if (eventUtility.getName().equalsIgnoreCase(fromNode)) {
+        routeFromEventUtility = eventUtility;
       }
     }
 
@@ -183,6 +200,18 @@ public class AnimationInteractivityManager {
       }
       if ( !routeToInterpolatorFound ) {
         // construct a new interactiveObject for this sensor and timeSensor
+        for (InteractiveObject interactiveObject : interactiveObjects) {
+          if (routeFromTimeSensor == interactiveObject.getTimeSensor()) {
+            if (interactiveObject.getInterpolator() == null) {
+              //This timer already exists as part of an interactive Object
+              interactiveObject.setInterpolator(routeToInterpolator);
+              routeToInterpolatorFound = true;
+            }
+          }
+        }
+      }
+      if ( !routeToInterpolatorFound ) {
+        // construct a new interactiveObject for this sensor and timeSensor
         InteractiveObject interactiveObject = new InteractiveObject();
         interactiveObject.setTimeSensor(routeFromTimeSensor);
         interactiveObject.setInterpolator(routeToInterpolator);
@@ -190,10 +219,38 @@ public class AnimationInteractivityManager {
       }
     }
 
+    if (routeToEventUtility != null) {
+      boolean routeToEventUtilityFound = false;
+      for (InteractiveObject interactiveObject : interactiveObjects) {
+        if (routeToEventUtility == interactiveObject.getEventUtility()) {
+          if (interactiveObject.getSensor() == null) {
+            //This sensor already exists as part of an interactive Object
+            interactiveObject.setSensor(routeFromSensor, fromField);
+            routeToEventUtilityFound = true;
+          }
+        }
+      }
+      if ( !routeToEventUtilityFound ) {
+        // construct a new interactiveObject for this sensor and timeSensor
+        InteractiveObject interactiveObject = new InteractiveObject();
+        interactiveObject.setSensor(routeFromSensor, fromField);
+        interactiveObject.setEventUtility(routeToEventUtility);
+        interactiveObjects.add(interactiveObject);
+      }
+    }
+
     if (routeToDefinedItem != null) {
       boolean routeToDEFinedItemFound = false;
       for (InteractiveObject interactiveObject : interactiveObjects) {
-        if (routeFromInterpolator == interactiveObject.getInterpolator()) {
+        if ( (routeFromInterpolator == interactiveObject.getInterpolator()) &&
+                (routeFromInterpolator != null) ) {
+          if (interactiveObject.getDefinedItemToField() == null ) {
+            interactiveObject.setDefinedItem(routeToDefinedItem, toField);
+            routeToDEFinedItemFound = true;
+          }
+        }
+        else if ( (routeFromEventUtility == interactiveObject.getEventUtility()) &&
+                (routeFromEventUtility != null)) {
           if (interactiveObject.getDefinedItemToField() == null ) {
             interactiveObject.setDefinedItem(routeToDefinedItem, toField);
             routeToDEFinedItemFound = true;
@@ -205,6 +262,10 @@ public class AnimationInteractivityManager {
         InteractiveObject interactiveObject = new InteractiveObject();
         interactiveObject.setInterpolator(routeFromInterpolator);
         interactiveObject.setDefinedItem(routeToDefinedItem, toField);
+        if (routeFromSensor != null) interactiveObject.setSensor(routeFromSensor, fromField);
+        if (routeFromEventUtility != null) {
+          interactiveObject.setEventUtility(routeFromEventUtility);
+        }
         interactiveObjects.add(interactiveObject);
       }
     }  //  end if routeToDefinedItem != null
@@ -351,8 +412,76 @@ public class AnimationInteractivityManager {
         else {
           Log.e(TAG, interactiveObject.getDefinedItem().getName() + " possibly not found in the scene.");
         }
-      }
-    }
+      }  // end if at least timer, interpolator and defined object
+
+      else if ( (interactiveObject.getSensor() != null) &&
+              (interactiveObject.getEventUtility() != null) &&
+              (interactiveObject.getDefinedItem() != null) ) {
+        // a sensor, eventUtility (such as BooleanToggle) and defined object found
+        final InteractiveObject interactiveObjectFinal = interactiveObject;
+        final Vector<InteractiveObject> interactiveObjectsFinal = interactiveObjects;
+
+        if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
+
+          interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+            boolean stateChanged = false;
+            @Override
+            public void onSensorEvent(SensorEvent event) {
+              if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) ||
+                      (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor
+                                .IS_ACTIVE))) {
+                if ( !stateChanged ) {
+                  stateChanged = true;
+                  EventUtility eventUtility = interactiveObjectFinal.getEventUtility();
+                  eventUtility.setToggle(!eventUtility.getToggle());
+                  for (InteractiveObject interactiveObject : interactiveObjectsFinal) {
+                    if (interactiveObject.getEventUtility() == interactiveObjectFinal.getEventUtility()) {
+                      GVRSceneObject gvrSceneObject = root
+                              .getSceneObjectByName(interactiveObject.getDefinedItem().getName());
+                      GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+                      gvrComponent.setEnable(eventUtility.getToggle());
+                    }
+                  }
+                }
+              }
+              else if ( !event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE) ){
+                stateChanged = false;
+              }
+              else if ( !event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor
+                      .IS_OVER) ){
+                stateChanged = false;
+              }
+            }
+          });
+        }  // end if sensor == TOUCH
+      }  // end if at least sensor, eventUtility and defined object
+
+      else if ( (interactiveObject.getSensor() != null) &&
+              (interactiveObject.getDefinedItem() != null) ) {
+        // a sensor and defined object
+        final InteractiveObject interactiveObjectFinal = interactiveObject;
+
+        if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
+
+          interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+            @Override
+            public void onSensorEvent(SensorEvent event) {
+              //Setup SensorEvent callback here
+              GVRSceneObject gvrSceneObject = root
+                      .getSceneObjectByName( interactiveObjectFinal.getDefinedItem().getName() );
+              GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+
+              if (event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) {
+                  if (gvrComponent != null) gvrComponent.setEnable(true);
+              }
+              else {
+                if (gvrComponent != null) gvrComponent.setEnable(false);
+              }
+            }
+          });
+        }  // end if sensor == TOUCH
+      }  //  end sensor and definedItem != null
+    }  // end for loop traversing through all interactive objects
   }   //  end initAniamtionsAndInteractivity
 
 }  //  end AnimationInteractivityManager class
