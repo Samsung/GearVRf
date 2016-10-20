@@ -23,9 +23,7 @@ varying vec2 v_overlay_coord;
 
 void main() {
   vec4 rendered = texture2D(u_texture, v_scene_coord);
-  vec4 overlay = texture2D(u_overlay, v_overlay_coord); 
+  vec4 overlay = texture2D(u_overlay, v_overlay_coord);
 
-  vec3 sum = rendered.rgb + overlay.rgb;
-
-  gl_FragColor = vec4(sum, rendered.a);
+  gl_FragColor = mix(rendered, overlay, overlay.a);
 }

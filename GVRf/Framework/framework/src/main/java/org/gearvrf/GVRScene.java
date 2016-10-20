@@ -323,9 +323,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         if (mStatsEnabled && mStatsConsole == null) {
             mStatsConsole = new GVRConsole(getGVRContext(),
                     GVRConsole.EyeMode.BOTH_EYES);
-            mStatsConsole.setCanvasWidthHeight(512, 512);
-            mStatsConsole.setXOffset(125.0f);
-            mStatsConsole.setYOffset(125.0f);
+            mStatsConsole.setXOffset(250.0f);
+            mStatsConsole.setYOffset(350.0f);
         }
 
         if (mStatsEnabled && mStatsConsole != null) {

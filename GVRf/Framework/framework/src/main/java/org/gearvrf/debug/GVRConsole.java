@@ -142,7 +142,8 @@ public class GVRConsole extends GVRPostEffect {
         setMainTexture();
 
         setTextColor(DEFAULT_COLOR);
-        setTextSize(1);
+        setTextSize(3);
+        paint.setAntiAlias(true);
     }
 
     /**
@@ -307,7 +308,7 @@ public class GVRConsole extends GVRPostEffect {
      * @param width
      *     width of the new canvas.
      *
-     * @param hegiht
+     * @param height
      *     hegiht of the new canvas.
      *
      */
