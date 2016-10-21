@@ -52,10 +52,10 @@ Light::~Light() {
 
 void Light::cleanup()
 {
-    if (fboId_ != 0)
+    if (fboId_ != -1)
     {
         glDeleteTextures(1, &fboId_);
-        fboId_ = 0;
+        fboId_ = -1;
 #ifdef DEBUG_LIGHT
         LOGD("LIGHT: delete shadow framebuffer %s", lightID_.c_str());
 #endif
