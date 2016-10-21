@@ -72,10 +72,11 @@ static const char VERTEX_SHADER[] =
         "varying vec3 v_viewspace_position;\n"
         "varying vec3 v_viewspace_normal;\n"
         "void main() {\n"
-        "  vec4 viewspace_position = u_mv * vec4(a_position, 1.0);\n"
+        "  vec4 pos = vec4(a_position, 1.0);\n"
+        "  vec4 viewspace_position = u_mv * pos;\n"
         "  v_viewspace_position = viewspace_position.xyz / viewspace_position.w;\n"
-        "  v_viewspace_normal = (u_mv_it * vec4(a_normal, 1.0)).xyz;\n"
-        "  gl_Position = viewspace_position;\n"
+        "  v_viewspace_normal = (u_mv_it * vec4(a_normal, 0.0)).xyz;\n"
+        "  gl_Position = u_mvp * pos;\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
