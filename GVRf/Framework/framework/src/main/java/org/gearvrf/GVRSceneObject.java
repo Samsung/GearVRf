@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
+import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
@@ -224,7 +225,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVRSceneObject(GVRContext gvrContext, GVRAndroidResource mesh,
             GVRAndroidResource texture) {
         this(gvrContext, gvrContext.loadFutureMesh(mesh), gvrContext
-                .loadFutureTexture(texture));
+                .getAssetLoader().loadFutureTexture(texture));
     }
 
     /**

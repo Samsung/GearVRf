@@ -1,5 +1,9 @@
-package org.gearvrf.jassimp2;
+package org.gearvrf;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
@@ -13,56 +17,56 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gearvrf.FutureWrapper;
-import org.gearvrf.GVRAssetLoader;
-import org.gearvrf.GVRBone;
-import org.gearvrf.GVRBoneWeight;
-import org.gearvrf.GVRCameraRig;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDirectLight;
-import org.gearvrf.GVRImportSettings;
-import org.gearvrf.GVRLightBase;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRPhongShader;
-import org.gearvrf.GVRPointLight;
-import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRResourceVolume;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRSpotLight;
-import org.gearvrf.GVRTextureParameters;
-import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.jassimp2.AiAnimBehavior;
+import org.gearvrf.jassimp2.AiAnimation;
+import org.gearvrf.jassimp2.AiBone;
+import org.gearvrf.jassimp2.AiBoneWeight;
+import org.gearvrf.jassimp2.AiCamera;
+import org.gearvrf.jassimp2.AiColor;
+import org.gearvrf.jassimp2.AiLight;
+import org.gearvrf.jassimp2.AiLightType;
+import org.gearvrf.jassimp2.AiMaterial;
+import org.gearvrf.jassimp2.AiMesh;
+import org.gearvrf.jassimp2.AiNode;
+import org.gearvrf.jassimp2.AiNodeAnim;
+import org.gearvrf.jassimp2.AiPostProcessSteps;
+import org.gearvrf.jassimp2.AiScene;
+import org.gearvrf.jassimp2.AiTexture;
+import org.gearvrf.jassimp2.AiTextureMapMode;
+import org.gearvrf.jassimp2.AiTextureType;
+import org.gearvrf.jassimp2.GVRNewWrapperProvider;
+import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-public class GVRJassimpAdapter {
+import static java.lang.Integer.parseInt;
+
+class GVRJassimpAdapter {
     private static final String TAG = GVRJassimpAdapter.class.getSimpleName();
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
-    private static GVRJassimpAdapter sInstance;
+    private GVRAssetLoader  mLoader;
     private List<INodeFactory> mNodeFactories;
+    private AiScene mScene;
+    private GVRContext mContext;
+    private String mFileName;
     private static final int MAX_TEX_COORDS = 8;
 
     public interface INodeFactory {
         GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
     }
 
-    private GVRJassimpAdapter() {
+    public GVRJassimpAdapter(GVRAssetLoader loader, String filename) {
+        mLoader = loader;
+        mFileName = filename;
         mNodeFactories = new ArrayList<INodeFactory>();
-    }
-
-    public synchronized static GVRJassimpAdapter get() {
-        if (sInstance == null) {
-            sInstance = new GVRJassimpAdapter();
-        }
-        return sInstance;
     }
 
     public void addNodeFactory(INodeFactory factory) {
@@ -92,7 +96,7 @@ public class GVRJassimpAdapter {
             tangetsBuffer.get(tangentsArray, 0, tangetsBuffer.capacity());
             mesh.setVec3Vector("a_tangent", tangentsArray);
         }
-        
+
         // Bitangents
         FloatBuffer bitangentsBuffer = aiMesh.getBitangentBuffer();
         if(bitangentsBuffer != null) {
@@ -100,7 +104,7 @@ public class GVRJassimpAdapter {
             bitangentsBuffer.get(bitangentsArray, 0, bitangentsBuffer.capacity());
             mesh.setVec3Vector("a_bitangent", bitangentsArray);
         }
-        
+
         // Normals
         FloatBuffer normalsBuffer = aiMesh.getNormalBuffer();
         if (normalsBuffer != null) {
@@ -298,22 +302,24 @@ public class GVRJassimpAdapter {
     public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume) throws IOException
     {
         List<AiLight> aiLights = scene.getLights();
-        final GVRContext context = model.getGVRContext();
         Hashtable<String, GVRLightBase> lightList = new Hashtable<String, GVRLightBase>();
-        GVRSceneObject camera = makeCamera(context, scene);
+        GVRSceneObject camera;
 
+        mScene = scene;
+        mContext = model.getGVRContext();
+        camera = makeCamera();
         if (camera != null)
         {
             model.addChildObject(camera);
         }
-        importLights(context, aiLights, lightList);
+        importLights(aiLights, lightList);
         if (scene != null)
         {
-            recurseAssimpNodes(request, model, scene, scene.getSceneRoot(sWrapperProvider), lightList);
+            recurseAssimpNodes(request, model, scene.getSceneRoot(sWrapperProvider), lightList);
             List<AiAnimation> animations = scene.getAnimations();
             if (animations.size() > 0)
             {
-                GVRAnimator animator = new GVRAnimator(context);
+                GVRAnimator animator = new GVRAnimator(mContext);
                 model.attachComponent(animator);
                 for (AiAnimation aiAnim : scene.getAnimations())
                 {
@@ -336,15 +342,15 @@ public class GVRJassimpAdapter {
         }
     }
 
-    private GVRSceneObject makeCamera(GVRContext context, AiScene scene)
+    private GVRSceneObject makeCamera()
     {
-        List<AiCamera> cameras = scene.getCameras();
+        List<AiCamera> cameras = mScene.getCameras();
         if (cameras.size() == 0)
         {
             return null;
         }
-        GVRSceneObject mainCamera = new GVRSceneObject(context);
-        GVRCameraRig cameraRig = GVRCameraRig.makeInstance(context);
+        GVRSceneObject mainCamera = new GVRSceneObject(mContext);
+        GVRCameraRig cameraRig = GVRCameraRig.makeInstance(mContext);
         AiCamera aiCam = cameras.get(0);
         float[] up = (float[]) aiCam.getUp(Jassimp.BUILTIN);
         float[] fwd = (float[]) aiCam.getLookAt(Jassimp.BUILTIN);
@@ -365,24 +371,23 @@ public class GVRJassimpAdapter {
     private void recurseAssimpNodes(
         GVRAssetLoader.AssetRequest request,
         GVRSceneObject parentSceneObject,
-        AiScene scene,
         AiNode node,
         Hashtable<String,
         GVRLightBase> lightlist) throws IOException {
         final GVRSceneObject sceneObject;
-        final GVRContext context = parentSceneObject.getGVRContext();
+        final GVRContext context = mContext;
 
         if (node.getNumMeshes() == 0) {
-            sceneObject = createSceneObject(context, node);
+            sceneObject = createSceneObject(mContext, node);
             parentSceneObject.addChildObject(sceneObject);
         } else if (node.getNumMeshes() == 1) {
             // add the scene object to the scene graph
-            sceneObject = createSubSceneObject(request, parentSceneObject, scene, node, 0);
+            sceneObject = createSubSceneObject(request, parentSceneObject, node, 0);
         } else {
-            sceneObject = createSceneObject(context, node);
+            sceneObject = createSceneObject(mContext, node);
             parentSceneObject.addChildObject(sceneObject);
             for (int i = 0; i < node.getNumMeshes(); i++) {
-                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, scene, node, i);
+                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, node, i);
             }
         }
 
@@ -392,7 +397,7 @@ public class GVRJassimpAdapter {
         }
         attachLights(lightlist, sceneObject);
         for (AiNode child : node.getChildren()) {
-            recurseAssimpNodes(request, sceneObject, scene, child, lightlist);
+            recurseAssimpNodes(request, sceneObject, child, lightlist);
         }
 
         context.runOnTheFrameworkThread(new Runnable() {
@@ -448,16 +453,14 @@ public class GVRJassimpAdapter {
     private GVRSceneObject createSubSceneObject(
             GVRAssetLoader.AssetRequest assetRequest,
             GVRSceneObject parent,
-            AiScene scene,
             AiNode node,
             int index)
             throws IOException {
-        final GVRContext context = parent.getGVRContext();
-        AiMesh aiMesh = scene.getMeshes().get(node.getMeshes()[index]);
+        AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[index]);
         FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-                createMesh(parent.getGVRContext(), aiMesh));
-        AiMaterial material = scene.getMaterials().get(aiMesh.getMaterialIndex());
-        final GVRMaterial meshMaterial = new GVRMaterial(context, GVRMaterial.GVRShaderType.BeingGenerated.ID);
+                createMesh(mContext, aiMesh));
+        AiMaterial material = mScene.getMaterials().get(aiMesh.getMaterialIndex());
+        final GVRMaterial meshMaterial = new GVRMaterial(mContext, GVRMaterial.GVRShaderType.BeingGenerated.ID);
 
         /* Diffuse color & Opacity */
         AiColor diffuseColor = material.getDiffuseColor(sWrapperProvider);        /* Opacity */
@@ -494,11 +497,11 @@ public class GVRJassimpAdapter {
         meshMaterial.setSpecularExponent(specularExponent);
 
         /* Diffuse Texture */
-        loadTextures(assetRequest, material, meshMaterial, context);
+        loadTextures(assetRequest, material, meshMaterial);
 
 
-        GVRSceneObject sceneObject = createSceneObject(context, node);
-        GVRRenderData sceneObjectRenderData = new GVRRenderData(context);
+        GVRSceneObject sceneObject = createSceneObject(mContext, node);
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
         sceneObjectRenderData.setMesh(futureMesh);
 
         sceneObjectRenderData.setMaterial(meshMaterial);
@@ -536,7 +539,7 @@ public class GVRJassimpAdapter {
 
     }
 
-    private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial, final GVRContext context) throws IOException{
+    private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial) throws IOException {
         for (final AiTextureType texType : AiTextureType.values())
         {
             if (texType == AiTextureType.UNKNOWN) {
@@ -564,34 +567,90 @@ public class GVRJassimpAdapter {
                     meshMaterial.setFloat(textureKey + "_blendop", (float) blendop);
                 }
                 meshMaterial.setTexCoord(textureKey, texCoordKey, shaderKey);
-                GVRTextureParameters texParams = new GVRTextureParameters(context);
+                GVRTextureParameters texParams = new GVRTextureParameters(mContext);
                 texParams.setWrapSType(wrapModeMap.get(material.getTextureMapModeU(texType,i)));
                 texParams.setWrapTType(wrapModeMap.get(material.getTextureMapModeV(texType,i)));
-                GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureKey,texParams);
-                assetRequest.loadTexture(texRequest);
+                if (texFileName.startsWith("*"))
+                {
+                    try
+                    {
+                        GVRAndroidResource texresource = new GVRAndroidResource(mContext, mFileName + texFileName);
+                        GVRTexture texture = mLoader.findTexture(texresource);
+                        if (texture == null)
+                        {
+                            texture = loadEmbeddedTexture(texFileName, texParams);
+                            mLoader.cacheTexture(texresource, texture);
+                            mContext.getEventManager().sendEvent(mContext,
+                                    IAssetEvents.class,
+                                    "onTextureLoaded", new Object[] { mContext, texture, texFileName });
+                        }
+                        meshMaterial.setTexture(textureKey, texture);
+                    }
+                    catch (NumberFormatException | IndexOutOfBoundsException ex)
+                    {
+                        mContext.getEventManager().sendEvent(mContext,
+                                IAssetEvents.class,
+                                "onTextureError", new Object[] { mContext, ex.getMessage(), texFileName });
+                    }
+                }
+                else
+                {
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureKey, texParams);
+                    assetRequest.loadTexture(texRequest);
+                }
             }
         }
     }
 
-    private void importLights(final GVRContext context, List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){
+    /**
+     * Load an embedded texture from the JASSIMP AiScene.
+     * An embedded texture is represented as an AiTexture object in Java.
+     * The AiTexture contains the pixel data for the bitmap.
+     *
+     * @param fileName filename for the embedded texture reference.
+     *                 The filename inside starts with '*' followed
+     *                 by an integer texture index into AiScene embedded textures
+     * @return GVRTexture made from embedded texture
+     */
+    private GVRTexture loadEmbeddedTexture(String fileName, GVRTextureParameters texParams) throws NumberFormatException, IndexOutOfBoundsException
+    {
+        int texIndex = parseInt(fileName.substring(1));
+        AiTexture tex = mScene.getTextures().get(texIndex);
+        Bitmap bmap = null;
+
+        if (tex.getHeight() == 0)
+        {
+            ByteArrayInputStream input = new ByteArrayInputStream(tex.getByteData());
+            bmap = BitmapFactory.decodeStream(input);
+        }
+        else
+        {
+            bmap = Bitmap.createBitmap(tex.getWidth(), tex.getHeight(), Bitmap.Config.ARGB_8888);
+            bmap.setPixels(tex.getIntData(), 0, tex.getWidth(), 0, 0, tex.getWidth(), tex.getHeight());
+        }
+        GVRBitmapTexture bmapTex = new GVRBitmapTexture(mContext, bmap, texParams);
+        return bmapTex;
+    }
+
+    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){
         for(AiLight light: lights){
             AiLightType type = light.getType();
             if(type == AiLightType.DIRECTIONAL){
-                GVRDirectLight gvrLight = new GVRDirectLight(context);
+                GVRDirectLight gvrLight = new GVRDirectLight(mContext);
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 String name = light.getName();
                 lightlist.put(name, gvrLight);
             }
             if(type == AiLightType.POINT){
-                GVRPointLight gvrLight = new GVRPointLight(context);
+                GVRPointLight gvrLight = new GVRPointLight(mContext);
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 String name = light.getName();
                 lightlist.put(name, gvrLight);
             }
             if(type == AiLightType.SPOT){
-                GVRSpotLight gvrLight = new GVRSpotLight(context);
+                GVRSpotLight gvrLight = new GVRSpotLight(mContext);
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
                 gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));

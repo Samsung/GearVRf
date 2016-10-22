@@ -154,11 +154,9 @@ public class GVRAndroidResource {
      *            can be in a sub-directory of the {@code assets} directory:
      *            {@code "foo/bar.png"} will open the file
      *            {@code assets/foo/bar.png}
-     * @throws IOException
-     *             File does not exist or cannot be read
      */
     public GVRAndroidResource(GVRContext gvrContext,
-            String assetRelativeFilename) throws IOException {
+            String assetRelativeFilename)  throws IOException  {
         this(gvrContext.getContext(), assetRelativeFilename);
     }
 
@@ -172,11 +170,8 @@ public class GVRAndroidResource {
      *            can be in a sub-directory of the {@code assets} directory:
      *            {@code "foo/bar.png"} will open the file
      *            {@code assets/foo/bar.png}
-     * @throws IOException
-     *             File does not exist or cannot be read
      */
-    public GVRAndroidResource(Context context, String assetRelativeFilename)
-            throws IOException {
+    public GVRAndroidResource(Context context, String assetRelativeFilename) {
         this.context = context;    
         streamState = StreamStates.NEW;
 
@@ -193,9 +188,8 @@ public class GVRAndroidResource {
      *
      * @param url
      *            A Java {@link URL} object
-     * @throws IOException
      */
-    public GVRAndroidResource(GVRContext context, URL url) throws IOException {
+    public GVRAndroidResource(GVRContext context, URL url) {
         this(context, url, false);
     }
 
@@ -269,10 +263,9 @@ public class GVRAndroidResource {
      *            An Android Context
      * @param url
      *            A Java {@link URL} object
-     * @throws IOException
      */
     public GVRAndroidResource(GVRContext context, URL url,
-            boolean enableUrlLocalCache) throws IOException {
+            boolean enableUrlLocalCache) {
         this.enableUrlLocalCache = enableUrlLocalCache;
 
         streamState = StreamStates.NEW;
@@ -611,13 +604,10 @@ public class GVRAndroidResource {
      * throttling and don't support
      * {@link BitmapTextureCallback#stillWanted(GVRAndroidResource)}
      */
-    public interface CompressedTextureCallback extends Callback<GVRTexture> {
-    }
+    public interface CompressedTextureCallback extends TextureCallback { }
 
     /** Callback for asynchronous bitmap-texture loads. */
-    public interface BitmapTextureCallback extends
-            CancelableCallback<GVRTexture> {
-    }
+    public interface BitmapTextureCallback extends TextureCallback { }
 
     /**
      * Callback for asynchronous texture loads.

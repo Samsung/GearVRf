@@ -640,8 +640,8 @@ public class GVRMaterial extends GVRHybridObject implements
                 }
             };
 
-                getGVRContext().loadTexture(callback,
-                        ((FutureResource<GVRTexture>) texture).getResource());
+                getGVRContext().getAssetLoader().loadTexture(
+                        ((FutureResource<GVRTexture>) texture).getResource(), callback);
             } else {
                 Threads.spawn(new Runnable() {
                     @Override

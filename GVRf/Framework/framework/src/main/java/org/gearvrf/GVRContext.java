@@ -127,8 +127,9 @@ public abstract class GVRContext implements IEventReceiver {
      * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)}
      * and
      * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
-     * 
+     *
      * @since 1.6.1
+     * @deprecated use GVRAssetLoader.DEFAULT_PRIORITY instead
      */
     public static final int DEFAULT_PRIORITY = 0;
 
@@ -142,7 +143,7 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * The default texture parameter instance for overloading texture methods
-     * 
+     * @deprecated use GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS instead
      */
     public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(
             this);
@@ -240,7 +241,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @return The file as a GL mesh.
+     * @return The file as a GL mesh or null if mesh cannot be loaded.
      * 
      * @since 1.6.2
      */
@@ -265,18 +266,23 @@ public abstract class GVRContext implements IEventReceiver {
      *            {@code GVRAndroidResource} here eliminates six overloads.
      * 
      * @param settings
-     *            Additional import {@link GVRImpotSettings settings}.
-     * @return The file as a GL mesh.
+     *            Additional import {@link GVRImportSettings settings}.
+     * @return The file as a GL mesh or null if mesh cannot be loaded.
      * 
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource,
             EnumSet<GVRImportSettings> settings) {
         GVRMesh mesh = meshCache.get(androidResource);
-        if (mesh == null) {
+        if (mesh == null) try {
             GVRAssimpImporter assimpImporter = mImporter.readFileFromResources(this, androidResource, settings);
             mesh = assimpImporter.getMesh(0);
             meshCache.put(androidResource, mesh);
+        }
+        catch (IOException ex) {
+            getEventManager().sendEvent(this, IAssetEvents.class,
+                    "onModelError", new Object[] { this, ex.getMessage(), androidResource.getResourceFilename() });
+            return null;
         }
         return mesh;
     }
@@ -564,28 +570,28 @@ public abstract class GVRContext implements IEventReceiver {
      * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
-        return loadModelFromSD(externalFile);
+        return mImporter.loadModel("sd:" + externalFile, GVRImportSettings.getRecommendedSettings(), true, null);
     }
 
     /**
      * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return loadModelFromSD(externalFile, settings);
+        return mImporter.loadModel("sd:" + externalFile, settings, true, null);
     }
 
     /**
      * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModel(String assetFile) throws IOException {
-        return loadModel(assetFile);
+        return  mImporter.loadModel(assetFile, GVRImportSettings.getRecommendedSettings(), true, null);
     }
 
     /**
      * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
-        return loadModel(assetFile, settings);
+        return mImporter.loadModel(assetFile, settings, true, null);
     }
 
     /**
@@ -600,9 +606,10 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated Replaced by {@link GVRAssetLoader.loadModel}
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile) throws IOException {
-        return loadModelFromSD(externalFile, GVRImportSettings.getRecommendedSettings());
+        return mImporter.loadModel("sd:" + externalFile, GVRImportSettings.getRecommendedSettings(), true, null);
     }
 
     /**
@@ -640,9 +647,10 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      */
     public GVRModelSceneObject loadModel(String assetFile) throws IOException {
-        return loadModel(assetFile, GVRImportSettings.getRecommendedSettings());
+        return mImporter.loadModel(assetFile, GVRImportSettings.getRecommendedSettings(), true, null);
     }
 
     /**
@@ -666,6 +674,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings, GVRScene scene) throws IOException {
@@ -689,7 +698,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
-     *
+     * @deprecated use GVRAssetLoader.loadModel instead
      */
     public GVRModelSceneObject loadModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return mImporter.loadModel(assetFile, settings, true, null);
@@ -893,7 +902,7 @@ public abstract class GVRContext implements IEventReceiver {
      * 
      */
     public GVRBitmapTexture loadTexture(String fileName) {
-        return loadTexture(fileName, DEFAULT_TEXTURE_PARAMETERS);
+        return loadTexture(fileName, GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS);
     }
 
     /**
@@ -942,18 +951,19 @@ public abstract class GVRContext implements IEventReceiver {
      * @deprecated We will remove this uncached, blocking function during Q3 of
      *             2015. We suggest that you switch to
      *             {@link #loadTexture(GVRAndroidResource)}
-     * 
+     * @deprecated use GVRAssetLoader.loadTexture instead
      */
     public GVRBitmapTexture loadTexture(String fileName,
             GVRTextureParameters textureParameters) {
-
-        if (fileName.endsWith(".png")) { // load png directly to texture
-            return new GVRBitmapTexture(this, fileName);
+        try {
+            GVRAndroidResource resource = new GVRAndroidResource(this, fileName);
+            return (GVRBitmapTexture) mImporter.loadTexture(resource, textureParameters);
         }
-
-        Bitmap bitmap = loadBitmap(fileName);
-        return bitmap == null ? null : new GVRBitmapTexture(this, bitmap,
-                textureParameters);
+        catch (IOException ex) {
+            // The IOException will never be thrown. GVRAndroidResource says
+            // it throws an exception but it really doesn't
+            return null;
+        }
     }
 
     /**
@@ -984,9 +994,10 @@ public abstract class GVRContext implements IEventReceiver {
      *         decoded into a Bitmap.
      * 
      * @since 1.6.5
+     * @deprecated use GVRAssetLoader.loadTexture instead
      */
     public GVRTexture loadTexture(GVRAndroidResource resource) {
-        return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+        return mImporter.loadTexture(resource, GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS);
     }
 
     /**
@@ -1021,29 +1032,12 @@ public abstract class GVRContext implements IEventReceiver {
      *            texture filters and wrap states.
      * @return The file as a texture, or {@code null} if the file can not be
      *         decoded into a Bitmap.
-     * 
+     * @deprecated use GVRAssetLoader.loadTexture instead
      */
     public GVRTexture loadTexture(GVRAndroidResource resource,
             GVRTextureParameters textureParameters) {
-
-        GVRTexture texture = textureCache.get(resource);
-        if (texture == null) try {
-            Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(
-                    resource.getStream(), false);
-            resource.closeStream();
-            texture = bitmap == null ? null : new GVRBitmapTexture(this,
-                    bitmap, textureParameters);
-            if (texture != null) {
-                textureCache.put(resource, texture);
-            }
-        }
-        catch (IOException ex) {
-            return null;
-        }
-        return texture;
+        return mImporter.loadTexture(resource, textureParameters);
     }
-
-    private final ResourceCache<GVRTexture> textureCache = new ResourceCache<GVRTexture>();
 
     /**
      * Loads a cube map texture synchronously.
@@ -1070,7 +1064,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public GVRCubemapTexture loadCubemapTexture(
             GVRAndroidResource[] resourceArray) {
-        return loadCubemapTexture(resourceArray, DEFAULT_TEXTURE_PARAMETERS);
+        return loadCubemapTexture(resourceArray, GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS);
     }
 
     // Texture parameters
@@ -1203,10 +1197,11 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     * @deprecated use GVRAssetloader.loadTexture instead
      */
     public void loadBitmapTexture(BitmapTextureCallback callback,
             GVRAndroidResource resource) {
-        loadBitmapTexture(callback, resource, DEFAULT_PRIORITY);
+        mImporter.loadTexture(resource, callback, null, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1293,12 +1288,12 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     *  @deprecated use GVRAssetloader.loadTexture instead
      */
-    public void loadBitmapTexture(BitmapTextureCallback callback,
+    public void loadBitmapTexture(TextureCallback callback,
             GVRAndroidResource resource, int priority)
             throws IllegalArgumentException {
-        GVRAsynchronousResourceLoader.loadBitmapTexture(this, textureCache,
-                callback, resource, priority);
+        mImporter.loadTexture(resource, callback, null, priority, GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1344,11 +1339,11 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     *  @deprecated use GVRAssetloader.loadTexture instead
      */
     public void loadCompressedTexture(CompressedTextureCallback callback,
             GVRAndroidResource resource) {
-        GVRAsynchronousResourceLoader.loadCompressedTexture(this,
-                textureCache, callback, resource);
+        mImporter.loadTexture(resource, callback);
     }
 
     /**
@@ -1394,11 +1389,11 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     *  @deprecated use GVRAssetloader.loadTexture instead
      */
     public void loadCompressedTexture(CompressedTextureCallback callback,
             GVRAndroidResource resource, int quality) {
-        GVRAsynchronousResourceLoader.loadCompressedTexture(this,
-                textureCache, callback, resource, quality);
+        mImporter.loadTexture(resource, callback, null, GVRAssetLoader.DEFAULT_PRIORITY, quality);
     }
 
     /**
@@ -1482,10 +1477,11 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     *  @deprecated use GVRAssetloader.loadTexture instead
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource) {
-        loadTexture(callback, resource, DEFAULT_PRIORITY);
+        mImporter.loadTexture(resource, callback, null, GVRAssetLoader.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1575,10 +1571,11 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     *  @deprecated use GVRAssetloader.loadTexture instead
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, int priority) {
-        loadTexture(callback, resource, priority, GVRCompressedTexture.BALANCED);
+        mImporter.loadTexture(resource, callback, null, priority, GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1653,9 +1650,9 @@ public abstract class GVRContext implements IEventReceiver {
      *            this (currently) only applies to compressed textures; normal
      *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
      *            quality parameter.
-     * 
+     *
      * @since 1.6.7
-     * 
+     *
      * @throws IllegalArgumentException
      *             If you 'abuse' request consolidation by passing the same
      *             {@link GVRAndroidResource} descriptor to multiple load calls.
@@ -1673,11 +1670,11 @@ public abstract class GVRContext implements IEventReceiver {
      *             earlier one(s) had already completed) the resource will be
      *             reloaded ... but the original descriptor will have been
      *             closed.
+     * @deprecated use GVRAssetloader.loadTexture instead
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, int priority, int quality) {
-        GVRAsynchronousResourceLoader.loadTexture(this, textureCache,
-                callback, resource, priority, quality);
+        mImporter.loadTexture(resource, callback, null, priority, quality);
     }
 
     /**
@@ -1769,7 +1766,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, GVRTextureParameters textureParameters) {
-        loadTexture(callback, resource, textureParameters, DEFAULT_PRIORITY);
+        mImporter.loadTexture(resource, callback, textureParameters, GVRAssetLoader.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1866,7 +1863,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource, GVRTextureParameters textureParameters, int priority) {
-        loadTexture(callback, resource, priority, GVRCompressedTexture.BALANCED);
+        mImporter.loadTexture(resource, callback, null, priority, GVRCompressedTexture.BALANCED);
     }
 
     /**
@@ -1970,9 +1967,7 @@ public abstract class GVRContext implements IEventReceiver {
     public void loadTexture(TextureCallback callback,
             GVRAndroidResource resource,
             GVRTextureParameters textureParameters, int priority, int quality) {
-        GVRAsynchronousResourceLoader.loadTexture(this, textureCache, callback,
-                                                  resource, textureParameters,
-                                                  priority, quality);
+        mImporter.loadTexture(resource, callback, textureParameters, priority, quality);
     }
 
     /**
@@ -2033,7 +2028,7 @@ public abstract class GVRContext implements IEventReceiver {
      *             closed.
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource) {
-        return loadFutureTexture(resource, DEFAULT_PRIORITY);
+        return getAssetLoader().loadFutureTexture(resource);
     }
 
     /**
@@ -2179,8 +2174,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
             int priority, int quality) {
-        return GVRAsynchronousResourceLoader.loadFutureTexture(this,
-                textureCache, resource, priority, quality);
+        return mImporter.loadFutureTexture(resource, priority, quality);
     }
 
     /**
@@ -2220,9 +2214,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public Future<GVRTexture> loadFutureCubemapTexture(
             GVRAndroidResource resource) {
-        return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(this,
-                textureCache, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+        return mImporter.loadFutureCubemapTexture(resource);
     }
 
     /**
@@ -2262,9 +2254,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public Future<GVRTexture> loadFutureCompressedCubemapTexture(
             GVRAndroidResource resource) {
-        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(this,
-                textureCache, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+        return mImporter.loadFutureCompressedCubemapTexture(resource);
     }
 
     /**

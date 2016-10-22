@@ -29,21 +29,26 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimator;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 
+import org.gearvrf.asynchronous.GVRCompressedTexture;
+import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
-import org.gearvrf.jassimp2.GVRJassimpAdapter;
+import org.gearvrf.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.jassimp2.JassimpFileIO;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.GVRByteArray;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.x3d.ShaderSettings;
 import org.gearvrf.x3d.X3Dobject;
 import org.gearvrf.x3d.X3DparseLights;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 
 import org.gearvrf.utility.ResourceCacheBase;
 import org.gearvrf.utility.ResourceReader;
@@ -57,6 +62,18 @@ import org.gearvrf.utility.ResourceReader;
  * card and URLs on the internet that the application has permission to read.
  */
 public final class GVRAssetLoader {
+    /**
+     * The priority used by
+     * {@link #loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback)}
+     */
+    public static final int DEFAULT_PRIORITY = 0;
+
+    /**
+     * The default texture parameter instance for overloading texture methods
+     *
+     */
+    public static GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS;
+
     /**
      * Loads textures and listens for texture load events.
      * Raises the "onAssetLoaded" event after all textures have been loaded.
@@ -167,10 +184,11 @@ public final class GVRAssetLoader {
             try
             {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
-                mContext.loadTexture(request, resource);
+                mContext.loadTexture(request, resource, GVRContext.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
             }
             catch (IOException ex)
             {
+                request.loaded(getDefaultTexture(mContext), null);
                 onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
         }
@@ -186,11 +204,12 @@ public final class GVRAssetLoader {
             {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
                 FutureResource<GVRTexture> result = new FutureResource<GVRTexture>(resource);
-                mContext.loadTexture(request, resource);
+                mContext.getAssetLoader().loadTexture(resource, request);
                 return result;
             }
             catch (IOException ex)
             {
+                request.loaded(getDefaultTexture(mContext), null);
                 onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
             return null;
@@ -281,7 +300,7 @@ public final class GVRAssetLoader {
             String errors = !"".equals(mErrors) ? mErrors : null;
             if (mModel != null)
             {
-                if ((errors == null) && (mScene != null) && (mModel.getParent() == null))
+                if ((mScene != null) && (mModel.getParent() == null))
                 {
                     Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
                     if (mReplaceScene)
@@ -349,14 +368,18 @@ public final class GVRAssetLoader {
                     texture.updateTextureParameters(mTexParams);
                 }
             });
-            mContext.getEventManager().sendEvent(mContext,
-                    IAssetEvents.class,
-                    "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
+            if (ignored != null)
+            {
+                mContext.getEventManager().sendEvent(mContext,
+                        IAssetEvents.class,
+                        "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
+            }
         }
 
         @Override
         public void failed(Throwable t, GVRAndroidResource androidResource)
         {
+            loaded(getDefaultTexture(mContext), null);
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onTextureError", new Object[] { mContext, t.getMessage(), TextureFile });
@@ -407,33 +430,297 @@ public final class GVRAssetLoader {
     }
 
     protected GVRContext mContext;
-    public GVRAssetLoader(GVRContext context) {
+    protected static ResourceCache<GVRTexture> mTextureCache = new ResourceCache<GVRTexture>();
+    protected static GVRTexture mDefaultTexture = null;
+
+    /**
+     * When the application is restarted we recreate the texture cache
+     * since all of the GL textures have been deleted.
+     */
+    static
+    {
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+
+            @Override
+            public void run() {
+                mTextureCache = new ResourceCache<GVRTexture>();
+                mDefaultTexture = null;
+            }
+        });
+    }
+
+    /**
+     * Construct an instance of the asset loader
+     * @param context GVRContext to get asset load events
+     */
+    public GVRAssetLoader(GVRContext context)
+    {
         mContext = context;
+        if (DEFAULT_TEXTURE_PARAMETERS == null)
+        {
+            DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(context);
+        }
+    }
+
+    /**
+     * Determine if a given texture is cached
+     * @param resource GVRAndroidResource describing the texture
+     * @return GVRTexture if texture has been cached, otherwise null
+     */
+    GVRTexture findTexture(GVRAndroidResource resource) { return mTextureCache.get(resource); }
+
+    /**
+     * Internal function to put a texture into the texture cache.
+     * This function is not for public consumption - it is used internally
+     * for maintaining the texture cache.
+     *
+     * @param resource GVRAndroidResource describing the texture
+     * @param texture GVRTexture to add to the cache
+     */
+    void cacheTexture(GVRAndroidResource resource, GVRTexture texture) { mTextureCache.put(resource, texture); }
+
+    private static GVRTexture getDefaultTexture(GVRContext ctx)
+    {
+        if (mDefaultTexture == null)
+        {
+            GVRAndroidResource r = new GVRAndroidResource(ctx, R.drawable.white_texture);
+            mDefaultTexture = ctx.loadTexture(r);
+        }
+        return mDefaultTexture;
+    }
+
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * with the user provided texture parameters.
+     *
+     * <p>
+     * Note that this method may take hundreds of milliseconds to return: unless
+     * the texture is quite tiny, you probably don't want to call this directly
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
+     * once per frame, and a long call will cause you to miss frames. For large
+     * images, you should use
+     * {@link #loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback).
+     * <p>
+     * This method automatically scales large images to fit the GPU's
+     * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
+     * errors.} </ul>
+     *
+     * @param resource
+     *            Basically, a stream containing a bitmap texture. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param textureParameters
+     *            The texture parameter object which has all the values that
+     *            were provided by the user for texture enhancement. The
+     *            {@link GVRTextureParameters} class has methods to set all the
+     *            texture filters and wrap states. If this parameter is nullo,
+     *            default texture parameters are used.
+     * @return The file as a texture, or {@code null} if the file can not be
+     *         decoded into a Bitmap.
+     * @see GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS
+     */
+    public GVRTexture loadTexture(GVRAndroidResource resource,
+                                  GVRTextureParameters textureParameters)
+    {
+        GVRTexture texture = mTextureCache.get(resource);
+        if (texture != null)
+        {
+            return texture;
+        }
+        try
+        {
+            Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(resource.getStream(), false);
+            resource.closeStream();
+            texture = bitmap == null ? null : new GVRBitmapTexture(mContext, bitmap, textureParameters);
+            if (texture != null)
+            {
+                mTextureCache.put(resource, texture);
+            }
+        }
+        catch (IOException ex) {
+            return null;
+        }
+        return texture;
+    }
+
+    public GVRTexture loadTexture(GVRAndroidResource resource)
+    {
+        return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+    }
+
+
+    /**
+     * Loads a texture asynchronously.
+     *
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     *
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     *
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     *
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     *
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     *
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param texparams
+     *            GVRTextureParameters object containing texture sampler attributes.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>. Also, please note priorities only apply to
+     *            uncompressed textures (standard Android bitmap files, which
+     *            can take hundreds of milliseconds to load): compressed
+     *            textures load so quickly that they are not run through the
+     *            request scheduler.
+     * @param quality
+     *            The compressed texture {@link GVRCompressedTexture#mQuality
+     *            quality} parameter: should be one of
+     *            {@link GVRCompressedTexture#SPEED},
+     *            {@link GVRCompressedTexture#BALANCED}, or
+     *            {@link GVRCompressedTexture#QUALITY}, but other values are
+     *            'clamped' to one of the recognized values. Please note that
+     *            this (currently) only applies to compressed textures; normal
+     *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
+     *            quality parameter.
+     */
+    public void loadTexture(GVRAndroidResource resource, TextureCallback callback, GVRTextureParameters texparams, int priority, int quality)
+    {
+        if (texparams == null)
+        {
+            texparams = DEFAULT_TEXTURE_PARAMETERS;
+        }
+        GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
+                callback, resource, texparams, priority, quality);
+    }
+
+    /**
+     * Loads a texture asynchronously with default priority and quality.
+     *
+     * This method can detect whether the resource file holds a compressed
+     * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
+     * applications can add new formats by implementing
+     * {@link GVRCompressedTextureLoader}): if the file is not a compressed
+     * texture, it is loaded as a normal, bitmapped texture. This format
+     * detection adds very little to the cost of loading even a compressed
+     * texture, and it makes your life a lot easier: you can replace, say,
+     * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
+     * having to change any code.
+     *
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     *
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     *
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     *
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     *
+     *            <p>
+     *            Use {@link #loadFutureTexture(GVRAndroidResource)} to avoid
+     *            having to implement a callback.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     */
+    public void loadTexture(GVRAndroidResource resource, TextureCallback callback)
+    {
+        GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
+                callback, resource, DEFAULT_TEXTURE_PARAMETERS, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+    }
+
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
+                                                int priority, int quality)
+    {
+        return GVRAsynchronousResourceLoader.loadFutureTexture(mContext,
+                mTextureCache, resource, priority, quality);
+    }
+
+    public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource)
+    {
+        return GVRAsynchronousResourceLoader.loadFutureTexture(mContext,
+                mTextureCache, resource, GVRAssetLoader.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+    }
+
+    public Future<GVRTexture> loadFutureCubemapTexture(GVRAndroidResource resource)
+    {
+        return GVRAsynchronousResourceLoader.loadFutureCubemapTexture(mContext,
+                mTextureCache, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
+    }
+
+    public Future<GVRTexture> loadFutureCompressedCubemapTexture(GVRAndroidResource resource)
+    {
+        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(mContext,
+                mTextureCache, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
     }
 
     /** @since 1.6.2 */
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext,
-            GVRAndroidResource resource, EnumSet<GVRImportSettings> settings) {
+    GVRAssimpImporter readFileFromResources(GVRContext gvrContext, GVRAndroidResource resource,
+                                            EnumSet<GVRImportSettings> settings) throws IOException {
+        byte[] bytes;
+        InputStream stream = resource.getStream();
         try {
-            byte[] bytes;
-            InputStream stream = resource.getStream();
-            try {
-                bytes = new byte[stream.available()];
-                stream.read(bytes);
-            } finally {
-                resource.closeStream();
-            }
-            String resourceFilename = resource.getResourceFilename();
-            if (resourceFilename == null) {
-                resourceFilename = ""; // Passing null causes JNI exception.
-            }
-            long nativeValue = NativeImporter.readFromByteArray(bytes,
-                    resourceFilename, GVRImportSettings.getAssimpImportFlags(settings));
-            return new GVRAssimpImporter(gvrContext, nativeValue);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            bytes = new byte[stream.available()];
+            stream.read(bytes);
+        } finally {
+            resource.closeStream();
         }
+        String resourceFilename = resource.getResourceFilename();
+        if (resourceFilename == null) {
+            resourceFilename = ""; // Passing null causes JNI exception.
+        }
+        long nativeValue = NativeImporter.readFromByteArray(bytes,
+                resourceFilename, GVRImportSettings.getAssimpImportFlags(settings));
+        return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
     /**
@@ -634,11 +921,13 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads a scene object {@link GVRModelSceneObject} from
+     * Loads a scene object {@link GVRSceneObject} from
      * a 3D model and adds it to the scene (if it is not already there).
      *
      * @param model
-     *            A GVRModelSceneObject that has been initialized with a filename.
+     *            A GVRSceneObject to become the root of the loaded model.
+     * @param filePath
+     *            Filename or URL of the asset to load.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
      *            Otherwise the file is assumed to be relative to the "assets" directory.
@@ -670,7 +959,7 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads a scene object {@link GVRModelSceneObject} from
+     * Loads a scene object {@link GVRSceneObject} from
      * a 3D model and raises asset events to a handler.
      *
      * @param filePath
@@ -703,7 +992,7 @@ public final class GVRAssetLoader {
     
     
     /**
-     * Loads a scene object {@link GVRModelSceneObject} from
+     * Loads a scene object {@link GVRSceneObject} from
      * a 3D model and raises asset events to a handler.
      *
      * @param filePath
@@ -746,7 +1035,7 @@ public final class GVRAssetLoader {
 
 
     /**
-     * Loads a scene object {@link GVRModelSceneObject} from a 3D model.
+     * Loads a scene object {@link GVRSceneObject} from a 3D model.
      *
      * @param filePath
      *            A filename, relative to the root of the volume.
@@ -770,13 +1059,14 @@ public final class GVRAssetLoader {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
         String filePath = request.getBaseName();
+        GVRJassimpAdapter jassimpAdapter = new GVRJassimpAdapter(this, filePath);
 
         model.setName(filePath);
         GVRResourceVolume volume = request.getVolume();
         try
         {
             assimpScene = Jassimp.importFileEx(FileNameUtils.getFilename(filePath),
-                    GVRJassimpAdapter.get().toJassimpSettings(settings),
+                    jassimpAdapter.toJassimpSettings(settings),
                     new CachedVolumeIO(new ResourceVolumeIO(volume)));
         }
         catch (IOException ex)
@@ -797,7 +1087,7 @@ public final class GVRAssetLoader {
         }
         try
         {
-            GVRJassimpAdapter.get().processScene(request, model, assimpScene, volume);
+            jassimpAdapter.processScene(request, model, assimpScene, volume);
             mContext.getEventManager().sendEvent(mContext,
                     IAssetEvents.class,
                     "onModelLoaded", new Object[]{mContext, model, filePath});

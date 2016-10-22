@@ -11,6 +11,8 @@ if (!hasProperty("ARM64")) {
 
 include ':gvr-eyepicking'
 project(':gvr-eyepicking').projectDir = file('demos/gvr-eyepicking')
+include ':gvr-cubemap'
+project(':gvr-cubemap').projectDir = file('demos/gvr-cubemap')
 
 include ':framework-tests'
 project(':framework-tests').projectDir = file('demos/framework-tests')
