@@ -35,6 +35,10 @@ public:
     MeshCollider(bool useMeshBounds);
     ~MeshCollider();
 
+    long shape_type() {
+        return COLLIDER_SHAPE_MESH;
+    }
+
     Mesh* mesh() const {
         return mesh_;
     }

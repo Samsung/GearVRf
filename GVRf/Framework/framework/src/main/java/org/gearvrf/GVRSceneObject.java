@@ -621,14 +621,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVRCollider getCollider() {
         return (GVRCollider) getComponent(GVRCollider.getComponentType());
     }
-    
+
     /**
      * Detach the object's current {@link GVRCollider}.
      */
     public void detachCollider() {
         detachComponent(GVRCollider.getComponentType());
     }
-    
+
     /**
      * Attach a default {@link GVREyePointeeHolder} to the object.
      * 
@@ -644,7 +644,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         <em>and</em> you have called either
      *         {@link GVRRenderData#setMesh(GVRMesh)} or
      *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
-     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))       
+     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))
      */
     public boolean attachEyePointeeHolder() {
         GVREyePointeeHolder holder = new GVREyePointeeHolder(getGVRContext());
@@ -768,10 +768,23 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            object.
      */
     public void removeChildObject(GVRSceneObject child) {
+        child.onRemoveFromScene();
         mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
     }
+
+    /**
+     * Called when a scene object is removed from the scene.
+     */
+    private void onRemoveFromScene()
+    {
+        for (GVRComponent comp : mComponents.values())
+        {
+            comp.onRemoveFromScene();
+        }
+    }
+
     /**
      * Add the owner of {@code childComponent} as a child of this object. (owner object of the
      * Adding a child will increase the

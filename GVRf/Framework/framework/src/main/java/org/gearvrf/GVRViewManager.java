@@ -143,12 +143,16 @@ abstract class GVRViewManager extends GVRContext {
 
     @Override
     public void registerDrawFrameListener(GVRDrawFrameListener frameListener) {
-        mFrameListeners.add(frameListener);
+        if (!mFrameListeners.contains(frameListener)) {
+            mFrameListeners.add(frameListener);
+        }
     }
 
     @Override
     public void unregisterDrawFrameListener(GVRDrawFrameListener frameListener) {
-        mFrameListeners.remove(frameListener);
+        if (mFrameListeners.contains(frameListener)) {
+            mFrameListeners.remove(frameListener);
+        }
     }
 
     /**
