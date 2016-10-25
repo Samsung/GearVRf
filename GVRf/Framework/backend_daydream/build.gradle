@@ -51,6 +51,17 @@ android {
             srcDir 'src/main/libs'
         }
     }
+
+    task uploadToGitHub(type: Exec) {
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../tools/upload_to_github', file('build/outputs/aar/backend_daydream-debug.aar').absolutePath
+    }
+    uploadToGitHub.doFirst {
+        println('uploading to github')
+    }
 }
 
 dependencies {
@@ -96,5 +107,9 @@ assembleDebug {}.doLast {
         from 'build/outputs/aar'
         into gearvrfLibs
         include '*-debug.aar'
-    }   
+    }
+
+    if (System.env['ACCESS_TOKEN'] != null) {
+        uploadToGitHub.execute();
+    }
 }
