@@ -124,7 +124,11 @@ public class GVRComponent extends GVRHybridObject {
      * @see isEnabled
      */
     public void setEnable(boolean flag) {
+        if (flag == mIsEnabled)
+            return;
+
         mIsEnabled = flag;
+
         if (getNative() != 0)
         {
             NativeComponent.setEnable(getNative(), flag);
@@ -206,7 +210,21 @@ public class GVRComponent extends GVRHybridObject {
      * @param oldOwner  GVRSceneObject the component was detached from.
      */
     public void onDetach(GVRSceneObject oldOwner) { }
-    
+
+    /**
+     * Called when the component's owner gets a new parent.
+     *
+     * @param newOwnersParent New parent of the component's owner.
+     */
+    public void onNewOwnersParent(GVRSceneObject newOwnersParent) { }
+
+    /**
+     * Called when is removed the parent of then component's owner.
+     *
+     * @param oldOwnersParent Old parent of the component's owner.
+     */
+    public void onRemoveOwnersParent(GVRSceneObject oldOwnersParent) { }
+
     /**
      * Called when a component is enabled.
      */

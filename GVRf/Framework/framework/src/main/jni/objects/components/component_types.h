@@ -25,6 +25,8 @@ namespace gvr {
     static const long long COMPONENT_TYPE_COLLIDER           = 10007;
     static const long long COMPONENT_TYPE_RENDER_DATA        = 10008;
     static const long long COMPONENT_TYPE_TEXTURE_CAPTURER   = 10009;
+    static const long long COMPONENT_TYPE_PHYSICS_RIGID_BODY = 10010;
+    static const long long COMPONENT_TYPE_PHYSICS_WORLD      = 10011;
 }
 
 #endif

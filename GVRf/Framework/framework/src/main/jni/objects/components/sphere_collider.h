@@ -37,6 +37,10 @@ public:
 
     ~SphereCollider() { }
 
+    long shape_type() {
+        return COLLIDER_SHAPE_SPHERE;
+    }
+
     void set_radius(float r)
     {
         radius_ = r;

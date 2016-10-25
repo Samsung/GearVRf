@@ -621,14 +621,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVRCollider getCollider() {
         return (GVRCollider) getComponent(GVRCollider.getComponentType());
     }
-    
+
     /**
      * Detach the object's current {@link GVRCollider}.
      */
     public void detachCollider() {
         detachComponent(GVRCollider.getComponentType());
     }
-    
+
     /**
      * Attach a default {@link GVREyePointeeHolder} to the object.
      * 
@@ -644,7 +644,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         <em>and</em> you have called either
      *         {@link GVRRenderData#setMesh(GVRMesh)} or
      *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
-     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))       
+     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))
      */
     public boolean attachEyePointeeHolder() {
         GVREyePointeeHolder holder = new GVREyePointeeHolder(getGVRContext());
@@ -757,6 +757,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         mChildren.add(child);
         child.mParent = this;
         NativeSceneObject.addChildObject(getNative(), child.getNative());
+        child.onNewParentObject(this);
         return true;
     }
 
@@ -771,7 +772,31 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         mChildren.remove(child);
         child.mParent = null;
         NativeSceneObject.removeChildObject(getNative(), child.getNative());
+        child.onRemoveParentObject(this);
     }
+
+    /**
+     * Called when the scene object gets a new parent.
+     *
+     * @param parent New parent of this scene object.
+     */
+    protected void onNewParentObject(GVRSceneObject parent) {
+        for (GVRComponent comp : mComponents.values()) {
+            comp.onNewOwnersParent(parent);
+        }
+    }
+
+    /**
+     * Called when is removed the parent of the scene object.
+     *
+     * @param parent Old parent of this scene object.
+     */
+    protected void onRemoveParentObject(GVRSceneObject parent) {
+        for (GVRComponent comp : mComponents.values()) {
+            comp.onRemoveOwnersParent(parent);
+        }
+    }
+
     /**
      * Add the owner of {@code childComponent} as a child of this object. (owner object of the
      * Adding a child will increase the
