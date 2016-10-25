@@ -39,7 +39,22 @@ android {
         }
     }
 
-    task buildNative(type: Exec) {
+    task buildInfo(type:Exec){
+        commandLine 'git log -n 1 --format=%H'.split()
+        def source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
+        standardOutput = new ByteArrayOutputStream()
+
+        doLast {
+            source.text = '#include "util/gvr_log.h"\n'
+            source.text += '#include <jni.h>\n\n'
+            source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
+            source.text += '    LOGI("BACKEND_OCULUS HEAD: '+ standardOutput.toString().trim() + '");\n'
+            source.text += '    return JNI_VERSION_1_6;\n'
+            source.text += '}'
+        }
+    }
+
+    task buildNative(type: Exec, dependsOn: buildInfo) {
         if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
             environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
         } else {

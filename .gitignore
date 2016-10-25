@@ -42,3 +42,5 @@ import-summary.txt
 !**/libgdx.so
 
 .externalNativeBuild
+buildinfo.h
+buildinfo.cpp
