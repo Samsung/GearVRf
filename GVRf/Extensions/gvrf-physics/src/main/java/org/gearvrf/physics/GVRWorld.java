@@ -95,10 +95,6 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     private void generateCollisionEvents() {
         GVRCollisionInfo collisionInfos[] = NativePhysics3DWorld.listCollisions(getNative());
 
-        if (collisionInfos == null || collisionInfos.length <= 0) {
-            return;
-        }
-
         String eventName = "onEnter";
         for (GVRCollisionInfo info : collisionInfos) {
 
