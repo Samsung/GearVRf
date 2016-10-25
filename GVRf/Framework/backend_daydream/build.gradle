@@ -120,7 +120,7 @@ assembleDebug {}.doLast {
     }
 
     if (System.env['ACCESS_TOKEN'] != null) {
-        uploadToGitHub.execute();
         deleteAllFromGitHub.execute();
+        uploadToGitHub.execute();
     }
 }
