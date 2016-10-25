@@ -37,6 +37,8 @@ class BulletWorld : public Physics3DWorld {
 
     void addRigidBody(PhysicsRigidBody *body);
 
+    void addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith);
+
     void removeRigidBody(PhysicsRigidBody *body);
 
     void step(float timeStep);

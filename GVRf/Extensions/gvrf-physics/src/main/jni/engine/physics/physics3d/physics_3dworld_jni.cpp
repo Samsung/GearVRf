@@ -36,6 +36,10 @@ extern "C" {
             jlong jworld, jlong jrigid_body);
 
     JNIEXPORT void JNICALL
+    Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBodyWithMask(JNIEnv * env, jobject obj,
+            jlong jworld, jlong jrigid_body, jlong collisionType, jlong collidesWith);
+
+    JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_NativePhysics3DWorld_removeRigidBody(JNIEnv * env, jobject obj,
             jlong jworld, jlong jrigid_body);
 
@@ -65,6 +69,15 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBody(JNIEnv * env, jobject
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     world->addRigidBody(rigid_body);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBodyWithMask(JNIEnv * env, jobject obj,
+        jlong jworld, jlong jrigid_body, jlong collisionType, jlong collidesWith) {
+    BulletWorld *world = reinterpret_cast<BulletWorld*>(jworld);
+    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+
+    world->addRigidBody(rigid_body, collisionType, collidesWith);
 }
 
 JNIEXPORT void JNICALL

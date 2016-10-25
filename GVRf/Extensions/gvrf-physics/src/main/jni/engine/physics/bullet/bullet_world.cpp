@@ -106,5 +106,10 @@ void BulletWorld::listCollisions(std::vector <ContactPoint> &contactPoints) {
         //TODO more collision atributes
     }
 }
+
+void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
+    mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(), collidesWith, collisiontype);
+}
+
 }
 

@@ -42,6 +42,8 @@ class PhysicsWorld : public Component {
 
 	void addRigidBody(PhysicsRigidBody *body);
 
+	void addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith);
+
 	void removeRigidBody(PhysicsRigidBody *body);
 
 	void step(float timeStep);
