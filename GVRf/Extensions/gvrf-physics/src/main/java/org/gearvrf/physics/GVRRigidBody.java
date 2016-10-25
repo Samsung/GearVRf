@@ -37,14 +37,40 @@ public class GVRRigidBody extends GVRComponent {
         System.loadLibrary("gvrf-physics");
     }
 
+    private final int mCollisionGroup;
+
+    /**
+     * Constructs new instance to simulate a rigid body in {@link GVRWorld}.
+     *
+     * @param gvrContext The context of the app.
+     */
     public GVRRigidBody(GVRContext gvrContext) {
         this(gvrContext, 0.0f);
     }
 
+    /**
+     * Constructs new instance to simulate a rigid body in {@link GVRWorld}.
+     *
+     * @param gvrContext The context of the app.
+     * @param mass The mass of this rigid body.
+     */
     public GVRRigidBody(GVRContext gvrContext, float mass) {
-        super(gvrContext, Native3DRigidBody.ctor());
+        this(gvrContext, mass, -1);
+    }
 
+    /**
+     * Constructs new instance to simulate a rigid body in {@link GVRWorld}.
+     *
+     * @param gvrContext The context of the app.
+     * @param mass The mass of this rigid body.
+     * @param collisionGroup The id of the collision's group that this rigid body belongs to
+     *                       in the {@link GVRCollisionMatrix}. The rigid body collides with
+     *                       everyone if {#collisionGroup} is out of the range 0...15.
+     */
+    public GVRRigidBody(GVRContext gvrContext, float mass, int collisionGroup) {
+        super(gvrContext, Native3DRigidBody.ctor());
         Native3DRigidBody.setMass(getNative(), mass);
+        mCollisionGroup = collisionGroup;
     }
 
     static public long getComponentType() {
@@ -331,6 +357,10 @@ public class GVRRigidBody extends GVRComponent {
 
     public void setContactProcessingThreshold(float n) {
         Native3DRigidBody.setContactProcessingThreshold(getNative(), n);
+    }
+
+    public int getCollisionGroup() {
+        return mCollisionGroup;
     }
 
     @Override
