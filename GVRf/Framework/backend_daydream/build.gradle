@@ -62,6 +62,16 @@ android {
     uploadToGitHub.doFirst {
         println('uploading to github')
     }
+    task deleteAllFromGitHub(type: Exec) {
+        onlyIf {
+            System.env['ACCESS_TOKEN'] != null
+        }
+
+        commandLine '../../tools/delete_all_from_github'
+    }
+    deleteAllFromGitHub.doFirst {
+        println('deleting all assets from github release')
+    }    
 }
 
 dependencies {
@@ -111,5 +121,6 @@ assembleDebug {}.doLast {
 
     if (System.env['ACCESS_TOKEN'] != null) {
         uploadToGitHub.execute();
+        deleteAllFromGitHub.execute();
     }
 }
