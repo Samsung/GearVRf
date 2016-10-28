@@ -39,6 +39,8 @@ class SceneObject;
 class Scene;
 class ShaderManager;
 
+//#define DEBUG_LIGHT 1
+
 class Light: public Component {
 public:
     static const int MAX_SHADOW_MAPS;
@@ -51,8 +53,7 @@ public:
 		shadowMapIndex_(-1) {
     }
 
-    ~Light() {
-    }
+    ~Light();
 
     static long long getComponentType() {
         return COMPONENT_TYPE_LIGHT;
@@ -129,9 +130,6 @@ public:
             setDirty();
         }
     }
-    Material* getShadowMaterial(){
-    	return shadowMaterial_;
-    }
 
     bool castShadow() {
          return shadowMaterial_ != NULL;
@@ -150,6 +148,19 @@ public:
         setDirty();
     }
 
+#ifdef DEBUG_LIGHT
+    /**
+     * Save the shadow map for this light in the given file.
+     * The function returns before the shadow map is saved and
+     * there is no notification as to when the file is available.
+     * After the shadow map is saved, the filename is cleared
+     * so the shadow map does not get repeatedly overwritten.
+     * You must call this function again to start another save.
+     */
+    void saveShadowMap(const std::string& fileName) {
+        ShadowMapFile = fileName;
+    }
+#endif
 
     /**
      * Internal function called at the start of each shader
@@ -176,6 +187,11 @@ public:
      */
     void static createDepthTexture(int width, int height, int depth);
 
+    /***
+    *  Calls destructor depth texture and delete textures
+    */
+    void static deleteDepthTexture();
+
     std::string getLightID() {
         return lightID_;
     }
@@ -190,11 +206,14 @@ public:
         lightID_ = lightid;
     };
 
+    void cleanup();
+
 private:
     Light(const Light& light);
     Light(Light&& light);
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
+
 
     /*
      * Generate the framebuffer used for shadow map generation
@@ -224,6 +243,13 @@ private:
         }
         return -1;
     }
+#ifdef DEBUG_LIGHT
+public:
+    void writeShadowMapToDisk();
+
+private:
+    std::string ShadowMapFile;
+#endif
 
 private:
     int size_;
@@ -240,7 +266,6 @@ private:
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
     static GLTexture* depth_texture_;
-    static GLTexture* color_texture_;
 };
 }
 #endif

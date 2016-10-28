@@ -64,8 +64,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     private StringBuilder mStatMessage = new StringBuilder();
     private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
     private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
-    private GVRMaterial mShadowMaterial = null;
-    private boolean mShadowMapDirty = true;
     private GVRSceneObject mSceneRoot;
     /**
      * Constructs a scene with a camera rig holding left & right cameras in it.

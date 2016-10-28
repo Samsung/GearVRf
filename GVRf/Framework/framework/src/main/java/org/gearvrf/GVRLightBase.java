@@ -17,17 +17,30 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.utility.ImageUtils;
+import org.gearvrf.utility.Threads;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -124,9 +137,9 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
             if (mShadowMaterial == null)
             {
                 mShadowMaterial = new GVRMaterial(context);
-                GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
-                depthShader.bindShader(context, mShadowMaterial);
             }
+            GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
+            depthShader.bindShader(context, mShadowMaterial);
             NativeLight.setCastShadow(getNative(), mShadowMaterial.getNative());
         }
         else
@@ -446,10 +459,21 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Updates the position and direction of this light from the transform of
-     * scene object that owns it.
+     * Reads the shadow map for the given light and
+     * saves it to a file on the SD card.
+     *
+     * @param fileName name of file to get shadow map
      */
-    
+    public void saveShadowMap(String fileName)
+    {
+        File sdCard = Environment.getExternalStorageDirectory();
+        NativeLight.saveShadowMap(getNative(), sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
+    }
+
+/**
+ * Updates the position and direction of this light from the transform of
+ * scene object that owns it.
+ */
     public void onDrawFrame(float frameTime)
     {     
         if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
@@ -526,4 +550,6 @@ class NativeLight
     static native void setCastShadow(long light, long material);
     
     static native boolean getCastShadow(long light);
+
+    static native void saveShadowMap(long light, String fileName);
 }

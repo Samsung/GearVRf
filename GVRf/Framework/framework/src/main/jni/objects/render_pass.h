@@ -23,6 +23,7 @@
 #include "objects/hybrid_object.h"
 #include "objects/components/render_data.h"
 #include "objects/components/event_handler.h"
+
 namespace gvr {
 class Material;
 class RenderData;
@@ -34,7 +35,7 @@ public:
     };
 
     RenderPass() :
-            material_(0), cull_face_(DEFAULT_CULL_FACE), listener_(new Listener) {
+            material_(0), cull_face_(DEFAULT_CULL_FACE) {
     }
 
     Material* material() const {
@@ -49,13 +50,14 @@ public:
 
     void set_cull_face(int cull_face) {
         cull_face_ = cull_face;
-        listener_->notify_listeners(true);
+        Event event(Event::EventCode::OBJECT_CHANGED, this);
+        listener_.notify_listeners(event);
     }
 
     void add_listener(RenderData* render_data);
 
 private:
-    Listener* listener_;
+    Listener listener_;
     static const int DEFAULT_CULL_FACE = CullBack;
     Material* material_;
     int cull_face_;

@@ -181,7 +181,8 @@ protected:
             ShaderManager* shader_manager,
             std::vector<SceneObject*>& scene_objects);
 
-    virtual void renderPostEffectData(Camera* camera,
+    virtual void
+            renderPostEffectData(Camera* camera,
             RenderTexture* render_texture, PostEffectData* post_effect_data,
             PostEffectShaderManager* post_effect_shader_manager);
 
