@@ -51,7 +51,12 @@ void Scene::removeSceneObject(SceneObject* scene_object) {
 
 void Scene::removeAllSceneObjects() {
     scene_root_.clear();
+    for (auto it = lightList.begin(); it != lightList.end(); ++it)
+    {
+        (*it)->cleanup();
+    }
     lightList.clear();
+    Light::deleteDepthTexture();
     clearAllColliders();
 }
 
