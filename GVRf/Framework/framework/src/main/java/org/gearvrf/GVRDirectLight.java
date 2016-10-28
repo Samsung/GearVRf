@@ -94,7 +94,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the ambient reflection.
      * It is multiplied by the material ambient color to derive
      * the hue of the ambient reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code ambient_intensity} to control the intensity of ambient light reflected.
      * 
      * @return The current {@code vec4 ambient_intensity} as a four-element array
@@ -109,7 +109,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the ambient reflection.
      * It is multiplied by the material ambient color to derive
      * the hue of the ambient reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code ambient_intensity} to control the intensity of ambient light reflected.
      * 
      * @param r red component (0 to 1)
@@ -127,7 +127,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the diffuse reflection.
      * It is multiplied by the material diffuse color to derive
      * the hue of the diffuse reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
      * 
      * @return The current {@code vec4 diffuse_intensity} as a four-element
@@ -143,7 +143,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the diffuse reflection.
      * It is multiplied by the material diffuse color to derive
      * the hue of the diffuse reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
      * 
      * @param r red component (0 to 1)
@@ -161,7 +161,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code specular_intensity} to control the specular intensity.
      *
      * @return The current {@code vec4 specular_intensity} as a four-element array
@@ -176,7 +176,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code specular_intensity} to control the specular intensity.
      * 
      * @param r red component (0 to 1)
@@ -187,7 +187,8 @@ public class GVRDirectLight extends GVRLightBase {
     public void setSpecularIntensity(float r, float g, float b, float a) {
         setVec4("specular_intensity", r, g, b, a);
     }
-    
+
+
     /**
      * Updates the position, direction and shadow matrix
      * of this light from the transform of scene object that owns it.
@@ -196,27 +197,25 @@ public class GVRDirectLight extends GVRLightBase {
      */
     public void onDrawFrame(float frameTime)
     {
-        GVRSceneObject parent = owner;
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
         boolean changed = false;
-        Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
+        GVRTransform lightTrans = owner.getTransform();
+        Matrix4f worldmtx = lightTrans.getModelMatrix4f();
+
         olddir.x = odir[0];
         olddir.y = odir[1];
         olddir.z = odir[2];
-        
         oldpos.x = opos[0];
         oldpos.y = opos[1];
         oldpos.z = opos[2];
-
         newdir.x = 0.0f;
         newdir.y = 0.0f;
         newdir.z = -1.0f;
-        
+
+        worldmtx.setTranslation(oldpos);
         lightrot.identity();
-       
         defaultDir.get(lightrot);
-        worldmtx.getTranslation(newpos);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
@@ -224,34 +223,61 @@ public class GVRDirectLight extends GVRLightBase {
             changed = true;
             setVec3("world_direction", newdir.x, newdir.y, newdir.z);
         }
-        if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
+        if (getCastShadow())
         {
-            changed = true;
-            setVec3("world_position", newpos.x, newpos.y, newpos.z);
-        }
-        if (getCastShadow() && changed)
-        {
-            Matrix4f proj = new Matrix4f();
-            Vector4f v = new Vector4f();
-            if (biasMatrix == null)
+            computePosition();
+            if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
             {
-                biasMatrix = new Matrix4f();
-                biasMatrix.scale(0.5f);
-                biasMatrix.setTranslation(0.5f, 0.5f, 0.5f);
+                changed = true;
+                setVec3("world_position", newpos.x, newpos.y, newpos.z);
+                worldmtx = lightTrans.getModelMatrix4f();
+                worldmtx.setTranslation(newpos);
+                setVec3("shadowTrans", newpos.x, newpos.y, newpos.z);
+                worldmtx.mul(lightrot);
             }
-            proj.perspective((float) Math.toRadians(100), 1, 0.1f, 1000);
-            setMat4("projMatrix", proj);
-            biasMatrix.mul(proj, proj);
-            worldmtx.invert();
-            proj.mul(worldmtx);
-            proj.getColumn(0, v);
-            setVec4("sm0", v.x, v.y, v.z, v.w);
-            proj.getColumn(1, v);
-            setVec4("sm1", v.x, v.y, v.z, v.w);
-            proj.getColumn(2, v);
-            setVec4("sm2", v.x, v.y, v.z, v.w);
-            proj.getColumn(3, v);
-            setVec4("sm3", v.x, v.y, v.z, v.w);
+            if (changed || (biasMatrix == null))
+            {
+                Matrix4f proj = new Matrix4f();
+                Vector4f v = new Vector4f();
+                GVRCameraRig rig = getGVRContext().getMainScene().getMainCameraRig();
+                float far = mShadowMaterial.getFloat("shadow_far");
+                float near = mShadowMaterial.getFloat("shadow_near");
+                float fovy = (float) Math.toRadians(rig.getCenterCamera().getFovY());
+                float aspect = rig.getCenterCamera().getAspectRatio();
+                float h = (float) Math.atan(fovy / 2.0f) * far;
+                float w = aspect * h;
+
+                if (biasMatrix == null)
+                {
+                    biasMatrix = new Matrix4f();
+                    biasMatrix.scale(0.5f);
+                    biasMatrix.setTranslation(0.5f, 0.5f, 0.5f);
+                }
+                proj.orthoSymmetric(w, h, near, far);
+                setMat4("projMatrix", proj);
+                worldmtx.invert();
+                proj.mul(worldmtx);
+                biasMatrix.mul(proj, proj);
+                proj.getColumn(0, v);
+                setVec4("sm0", v.x, v.y, v.z, v.w);
+                proj.getColumn(1, v);
+                setVec4("sm1", v.x, v.y, v.z, v.w);
+                proj.getColumn(2, v);
+                setVec4("sm2", v.x, v.y, v.z, v.w);
+                proj.getColumn(3, v);
+                setVec4("sm3", v.x, v.y, v.z, v.w);
+            }
         }
+    }
+
+    private void computePosition()
+    {
+        GVRScene scene = getGVRContext().getMainScene();
+        GVRSceneObject.BoundingVolume bv = scene.getRoot().getBoundingVolume();
+        float far = scene.getMainCameraRig().getFarClippingDistance();
+
+        newpos.x = bv.center.x - far * newdir.x;
+        newpos.y = bv.center.y - far * newdir.y;
+        newpos.z = bv.center.z - far * newdir.z;
     }
 }

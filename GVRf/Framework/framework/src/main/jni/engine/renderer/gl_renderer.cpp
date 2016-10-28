@@ -36,6 +36,7 @@
 #include "gl_renderer.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <gvr_image_capture.h>
 
 namespace gvr {
 void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -230,13 +231,16 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
     for (auto it = render_data_vector.begin();
-            it != render_data_vector.end(); ++it) {
-        GL(renderRenderData(rstate, *it));
+         it != render_data_vector.end(); ++it) {
+        RenderData* rdata = *it;
+        if (rdata->cast_shadows()) {
+            GL(renderRenderData(rstate, rdata));
+        }
     }
-
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
 }
+
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
         ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,

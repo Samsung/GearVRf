@@ -553,7 +553,6 @@ class GVRJassimpAdapter {
                 }
                 int uvIndex = material.getTextureUVIndex(texType, i);
                 int blendop = material.getTextureOp(texType, i).ordinal();
-                Log.e("RC", "tex index " + uvIndex);
                 String typeName = textureMap.get(texType);
                 String textureKey = typeName + "Texture";
                 String texCoordKey = "a_texcoord";
