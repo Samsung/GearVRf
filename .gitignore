@@ -44,3 +44,5 @@ import-summary.txt
 .externalNativeBuild
 buildinfo.h
 buildinfo.cpp
+BuildInfo.java
+OvrBuildInfo.java

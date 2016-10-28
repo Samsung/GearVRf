@@ -152,7 +152,7 @@ public abstract class Cursor {
         cursorTheme = theme;
         audioManager.loadTheme(cursorTheme);
         theme.load(cursorSceneObject);
-        if(scene != null) {
+        if (scene != null) {
             // new objects have been added to the cursorSceneObject
             // force bind shaders
             scene.bindShaders(cursorSceneObject.getMainSceneObject());
@@ -325,6 +325,13 @@ public abstract class Cursor {
         this.name = name;
     }
 
+    /**
+     * This method returns the name of this {@link Cursor} object.
+     *
+     * Note that the name is not necessarily unique.
+     *
+     * @return a String representing the Cursor
+     */
     public String getName() {
         return name;
     }
@@ -532,7 +539,7 @@ public abstract class Cursor {
 
         @Override
         public void onEvent(GVRCursorController gvrCursorController) {
-            if(scene == null){
+            if (scene == null) {
                 return;
             }
 
@@ -697,7 +704,10 @@ public abstract class Cursor {
     }
 
     /**
+     * This method makes sure that the {@link Cursor} is always facing the camera.
+     *
      * Lookat implemented using:
+     *
      * <p/>
      * http://mmmovania.blogspot.com/2014/03/making-opengl-object-look-at-another.html
      */
