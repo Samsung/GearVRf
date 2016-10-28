@@ -54,11 +54,11 @@ public class SelectableBehavior extends GVRBehavior {
          *
          * @param behavior the instance of {@link SelectableBehavior} associated with the
          *                 GVRSceneObject
-         * @param prev    the previous state
+         * @param previous    the previous state
          * @param current current state to be set.
          * @param cursor the instance of {@link Cursor} that caused the state change
          */
-        void onStateChanged(SelectableBehavior behavior, ObjectState prev, ObjectState current,
+        void onStateChanged(SelectableBehavior behavior, ObjectState previous, ObjectState current,
                             Cursor cursor);
     }
 

@@ -41,8 +41,9 @@ public interface CursorActivationListener {
     void onActivated(Cursor cursor);
 
     /**
-     * Notification are received whenever a {@link Cursor} is deactivated. i.e. when there is no
-     * compatible {@link IoDevice} available or cursor has been disabled.
+     * Notifies the application whenever a {@link Cursor} is deactivated. This usually happens
+     * when a {@link Cursor} is disabled or for cases when there are no compatible
+     * {@link IoDevice}s.
      *
      * @param cursor an object representing a {@link Cursor} that has been removed.
      */

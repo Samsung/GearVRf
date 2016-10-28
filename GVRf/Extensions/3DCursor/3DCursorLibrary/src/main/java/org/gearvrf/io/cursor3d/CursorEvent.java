@@ -138,6 +138,18 @@ public class CursorEvent {
         return isOver;
     }
 
+    /**
+     * Returns true if the {@link Cursor} is colliding with the corresponding
+     * {@link GVRSceneObject}.
+     *
+     * Use {@link #getCursor()} to get a reference to the {@link Cursor} and {@link #getObject()}
+     * to get a reference to the {@link GVRSceneObject}.
+     *
+     * Note that in case of a {@link LaserCursor} this call will return the same result as
+     * {@link #isOver()}.
+     *
+     * @return <code>true</code> if the cursor is colliding and <code>false</code> if not.
+     */
     public boolean isColliding() {
         return isColliding;
     }
