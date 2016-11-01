@@ -224,8 +224,10 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
     GLint drawFbo = 0, readFbo = 0;
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFbo);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFbo);
+    const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
 
 	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, 3, attachments));
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
     glClearColor(0,0,0,1);
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
@@ -237,6 +239,7 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
             GL(renderRenderData(rstate, rdata));
         }
     }
+    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, 2, &attachments[1]));
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
 }
