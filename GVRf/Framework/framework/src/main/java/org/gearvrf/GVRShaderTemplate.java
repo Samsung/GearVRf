@@ -359,15 +359,11 @@ public class GVRShaderTemplate
         String shadercode = "";
         for (String name : texnames)
         {
-            GVRTexture tex = mtl.getTexture(name);
-            if (tex != null)
+            String texCoordAttr = mtl.getTexCoordAttr(name);
+            String shaderVar = mtl.getTexCoordShaderVar(name);
+            if (texCoordAttr != null)
             {
-                String texCoordAttr = tex.getVertexTexCoord();
-                String shaderVar = tex.getShaderTexCoord();
-                if (texCoordAttr != null)
-                {
-                    shadercode += "    " + shaderVar + " = " + texCoordAttr + "\n";
-                }
+                shadercode += "    " + shaderVar + " = " + texCoordAttr + ";\n";
             }
         }
         return shadercode;
@@ -815,7 +811,7 @@ public class GVRShaderTemplate
         return desc;
     }
 
-    protected boolean mWriteShadersToDisk = false;
+    protected boolean mWriteShadersToDisk = true;
     protected Map<String, String> mShaderSegments;
     protected Map<String, ShaderVariant> mShaderVariants;
     protected Set<String> mShaderDefines;
