@@ -35,6 +35,9 @@ android {
             source.text += '    JNIEnv* env;\n';
             source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
             source.text += '        jclass java_class = env->FindClass("org/gearvrf/BuildInfo");\n'
+            source.text += '        if (env->ExceptionCheck()) {\n'
+            source.text += '            env->ExceptionClear();\n'
+            source.text += '        }\n'
             source.text += '        if(nullptr != java_class) {\n'
             source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
             source.text += '            env->DeleteLocalRef(java_class);\n'
