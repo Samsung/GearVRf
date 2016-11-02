@@ -16,6 +16,7 @@
 package org.gearvrf;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -36,6 +37,7 @@ import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.GVRJassimpAdapter;
+import org.gearvrf.jassimp2.AiTexture;
 import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.jassimp2.JassimpFileIO;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
@@ -49,9 +51,12 @@ import org.gearvrf.x3d.X3DparseLights;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import org.gearvrf.utility.ResourceCacheBase;
 import org.gearvrf.utility.ResourceReader;
+
+import static java.lang.Integer.parseInt;
 
 /**
  * {@link GVRAssetLoader} provides methods for importing 3D models and making them
@@ -186,7 +191,7 @@ public final class GVRAssetLoader {
             try
             {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
-                mContext.loadTexture(request, resource, GVRContext.DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                mContext.getAssetLoader().loadTexture(resource, request);
             }
             catch (IOException ex)
             {
@@ -216,6 +221,47 @@ public final class GVRAssetLoader {
             }
             return null;
          }
+
+
+        /**
+         * Load an embedded RGBA texture from the JASSIMP AiScene.
+         * An embedded texture is represented as an AiTexture object in Java.
+         * The AiTexture contains the pixel data for the bitmap.
+         *
+         * @param request TextureRequest for the embedded texture reference.
+         *                The filename inside starts with '*' followed
+         *                by an integer texture index into AiScene embedded textures
+         * @param aitex   Assimp texture containing the pixel data
+         * @return GVRTexture made from embedded texture
+         */
+        public GVRTexture loadEmbeddedTexture(TextureRequest request, AiTexture aitex, GVRTextureParameters texParams) throws IOException
+        {
+            Bitmap bmap = null;
+            GVRAndroidResource resource = new GVRAndroidResource(request.TextureFile);
+            GVRTexture texture = mContext.getAssetLoader().findTexture(resource);
+
+            if (texture != null)
+            {
+                return texture;
+            }
+            ++mNumTextures;
+            if (aitex.getHeight() == 0)
+            {
+                ByteArrayInputStream input = new ByteArrayInputStream(aitex.getByteData());
+                bmap = BitmapFactory.decodeStream(input);
+            }
+            else
+            {
+                bmap = Bitmap.createBitmap(aitex.getWidth(), aitex.getHeight(), Bitmap.Config.ARGB_8888);
+                bmap.setPixels(aitex.getIntData(), 0, aitex.getWidth(), 0, 0, aitex.getWidth(), aitex.getHeight());
+            }
+            GVRBitmapTexture bmapTex = new GVRBitmapTexture(mContext, bmap, texParams);
+            mContext.getAssetLoader().cacheTexture(resource, bmapTex);
+            mContext.getEventManager().sendEvent(mContext,
+                    IAssetEvents.class,
+                    "onTextureLoaded", new Object[]{mContext, bmapTex, request.TextureFile});
+            return bmapTex;
+        }
 
         /**
          * Called when a model is successfully loaded.
@@ -280,7 +326,7 @@ public final class GVRAssetLoader {
          * Called when the model and all of its textures have loaded.
          * @param context GVRContext which loaded the texture
          * @param model model that was loaded (will be null if model failed to load)
-         * @param error error messages (will be null if no errors)
+         * @param errors error messages (will be null if no errors)
          * @param modelFile filename of model loaded
          */
         @Override
@@ -350,7 +396,7 @@ public final class GVRAssetLoader {
         {
             mContext = context;
             TextureFile = texFile;
-            mTexParams = context.DEFAULT_TEXTURE_PARAMETERS;
+            mTexParams = GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS;
         }
 
         public void loaded(final GVRTexture texture, GVRAndroidResource ignored)
