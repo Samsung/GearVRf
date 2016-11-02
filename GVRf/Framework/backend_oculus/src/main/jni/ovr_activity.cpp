@@ -151,21 +151,21 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
             mMultisamplesConfiguration = maxSamples;
 
 
+
         bool multiview;
         configurationHelper_.getMultiviewConfiguration(env,multiview);
-        mUsingMultiview = false;
+
         const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
         if(multiview && std::strstr(extensions, "GL_OVR_multiview2")!= NULL){
-            mUsingMultiview = true;
+            use_multiview = true;
         }
-        if(multiview && !mUsingMultiview){
+        if(multiview && !use_multiview){
             std::string error = "Multiview is not supported by your device";
             LOGE(" Multiview is not supported by your device");
-            mUsingMultiview = false;
             throw error;
         }
 
-        for (int eye = 0; eye < (mUsingMultiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+        for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
                     mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
                     mDepthTextureFormatConfiguration);
@@ -207,15 +207,15 @@ void GVRActivity::onDrawFrame() {
     {
         ovrFrameLayerTexture& eyeTexture = parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye];
 
-        eyeTexture.ColorTextureSwapChain = frameBuffer_[mUsingMultiview ? 0 : eye].mColorTextureSwapChain;
-        eyeTexture.DepthTextureSwapChain = frameBuffer_[mUsingMultiview ? 0 : eye].mDepthTextureSwapChain;
-        eyeTexture.TextureSwapChainIndex = frameBuffer_[mUsingMultiview ? 0 : eye].mTextureSwapChainIndex;
+        eyeTexture.ColorTextureSwapChain = frameBuffer_[use_multiview ? 0 : eye].mColorTextureSwapChain;
+        eyeTexture.DepthTextureSwapChain = frameBuffer_[use_multiview ? 0 : eye].mDepthTextureSwapChain;
+        eyeTexture.TextureSwapChainIndex = frameBuffer_[use_multiview ? 0 : eye].mTextureSwapChainIndex;
         eyeTexture.TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
         eyeTexture.HeadPose = updatedTracking.HeadPose;
     }
 
     // Render the eye images.
-    for (int eye = 0; eye < (mUsingMultiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+    for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
 
         beginRenderingEye(eye);
 
@@ -289,7 +289,7 @@ void GVRActivity::leaveVrMode() {
     LOGV("GVRActivity::leaveVrMode");
 
     if (nullptr != oculusMobile_) {
-        for (int eye = 0; eye < (mUsingMultiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+        for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             frameBuffer_[eye].destroy();
         }
 
@@ -308,7 +308,7 @@ bool GVRActivity::isHmtConnected() const {
 }
 
 bool GVRActivity::usingMultiview() const {
-    LOGD("Activity: usingMultview = %d", mUsingMultiview);
-    return mUsingMultiview;
+    LOGD("Activity: usingMultview = %d", use_multiview);
+    return use_multiview;
 }
 }

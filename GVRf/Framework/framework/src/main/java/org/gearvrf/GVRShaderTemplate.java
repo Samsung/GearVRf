@@ -811,7 +811,7 @@ public class GVRShaderTemplate
         return desc;
     }
 
-    protected boolean mWriteShadersToDisk = true;
+    protected boolean mWriteShadersToDisk = false;
     protected Map<String, String> mShaderSegments;
     protected Map<String, ShaderVariant> mShaderVariants;
     protected Set<String> mShaderDefines;

@@ -65,6 +65,7 @@ struct ShaderUniformsPerObject {
     glm::mat4   u_mv_it;        // inverse transpose of ModelView
     glm::mat4   u_mv_it_[2];        // inverse transpose of ModelView
     int         u_right;        // 1 = right eye, 0 = left
+
 };
 
 struct RenderState {
@@ -77,6 +78,7 @@ struct RenderState {
     Material*               material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
+    bool shadow_map;
 };
 
 class Renderer {
