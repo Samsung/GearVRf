@@ -20,6 +20,6 @@ include ':gvr-unittestutils'
 project(':gvr-unittestutils').projectDir = file('demos/gvr-unittestutils')
 
 
-if(file("../../../../extra_settings.gradle").exists()) {
-    apply from: '../../../../extra_settings.gradle'
+if(file("../../../../extra_settings_exp.gradle").exists()) {
+    apply from: '../../../../extra_settings_exp.gradle'
 }
