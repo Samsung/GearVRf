@@ -127,7 +127,7 @@ public final class GVRAssetLoader {
             mNumTextures = 0;
             mFileName = filePath;
             mUserHandler = null;
-            mModel = model;
+            mModel = null;
             mErrors = "";
             mReplaceScene = replaceScene;
             mContext.getEventReceiver().addListener(this);
@@ -300,7 +300,7 @@ public final class GVRAssetLoader {
                     generateLoadEvent();
                 }
             }
-            else
+            else if (mNumTextures > 1)
             {
                 --mNumTextures;
             }
@@ -339,7 +339,7 @@ public final class GVRAssetLoader {
                     generateLoadEvent();
                 }
             }
-            else
+            else if (mNumTextures > 1)
             {
                 --mNumTextures;
             }
