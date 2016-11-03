@@ -18,9 +18,8 @@ package org.gearvrf.utility;
 import android.graphics.Color;
 
 /**
- * RGB <--> GL utilities.
- * 
- * <p>
+ * RGB -- GL utilities.
+ *
  * Please note that the {@code org.gearvrf.utility} package contains low-level
  * utility code used in multiple GVRF packages. We can't keep you from using
  * this code in a GVRF application, but we <em>can</em> urge you not to:

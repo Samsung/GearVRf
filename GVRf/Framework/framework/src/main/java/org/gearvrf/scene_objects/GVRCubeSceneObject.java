@@ -362,7 +362,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
      *            the texture. The six textures are for front, right, back,
      *            left, top, and bottom faces respectively.
      *            
-     * @param segmetnNumber
+     * @param segmentNumber
      *            the segment number along each axis. 
      *            
      */

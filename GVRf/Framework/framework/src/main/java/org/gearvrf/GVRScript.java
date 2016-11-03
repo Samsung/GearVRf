@@ -16,6 +16,7 @@
 package org.gearvrf;
 
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.script.GVRScriptFile;
 import org.gearvrf.script.IScriptable;
 
 import android.graphics.Bitmap;
@@ -54,7 +55,7 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      */
 
     /**
-     * Called before {@link #onInit(GVRContext).
+     * Called before {@link #onInit(GVRContext)}.
      *
      * This is used for initializing plug-ins and other early components.
      */
@@ -95,21 +96,21 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * This is where you do some post-processing of the initial scene graph
      * created in the method {@link #onInit(GVRContext)}, a listener added to
      * {@link GVREventReceiver} or a {@link GVRScriptFile} attached to this {@link
-     * GVRScript} using {@link GVRScriptManager#attachScript}.
+     * GVRScript} using {@link org.gearvrf.script.GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}
      */
     @Override
     public void onAfterInit() {
     }
 
     /**
-     * Called when the script is attached to a target using {@link GVRScriptManager#attachScript}.
+     * Called when the script is attached to a target using {@link org.gearvrf.script.GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}
      */
     @Override
     public void onAttach(IScriptable target) {
     }
 
     /**
-     * Called when the script is detached from the target using {@link GVRScriptManager#detachScript}.
+     * Called when the script is detached from the target using {@link org.gearvrf.script.GVRScriptManager#detachScriptFile(IScriptable)}
      */
     @Override
     public void onDetach(IScriptable target) {
@@ -273,7 +274,7 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
     /**
      * Override this method to supply a custom splash screen shader.
      * 
-     * The default is the built-in {@linkplain GVRMaterial.GVRShaderType.Unlit
+     * The default is the built-in {@linkplain GVRMaterial.GVRShaderType.Texture
      * unlit shader.}
      * 
      * @param gvrContext

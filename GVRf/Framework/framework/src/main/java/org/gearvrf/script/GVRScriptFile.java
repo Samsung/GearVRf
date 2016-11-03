@@ -37,7 +37,7 @@ import org.gearvrf.GVRContext;
  *
  * It can be used in two ways:
  * <ul>
- *   <li> Use {@link GVRScriptManager#loadScript(org.gearvrf.GVRAndroidResource, String)
+ *   <li> Use {@link GVRScriptManager#loadScript(org.gearvrf.GVRAndroidResource, String)}
  *   to load using a {@code GVRAndroidResource} object.</li>
  *   <li> Construct the {@code GVRScriptFile} object and set the script
  *   text using {@link #setScriptText(String)}, or load it from a stream using
@@ -100,11 +100,11 @@ public abstract class GVRScriptFile {
     }
 
     /**
-     * Loads a script into the {@GVRScriptFile} object.
+     * Loads a script into the {@link GVRScriptFile} object.
      *
      * @param inputStream
      *     The input stream from which to load the script.
-     * @throws IOException
+     * @throws IOException if the stream cannot be read.
      */
     public void load(InputStream inputStream) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -132,7 +132,7 @@ public abstract class GVRScriptFile {
     }
 
     /**
-     * Gets the script from the {@GVRScriptFile} object.
+     * Gets the script from the {@link GVRScriptFile} object.
      *
      * @return The script string.
      */

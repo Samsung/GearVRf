@@ -127,7 +127,7 @@ public abstract class GVRInputManager {
     /**
      * Queries the status of the connection to the Android wear watch.
      * @see IWearTouchpadEvents
-     * @return
+     * @return true if android wear touchpad is connected, else false.
      */
     public boolean isConnectedToAndroidWearTouchpad() {
         if(androidWearTouchpad != null) {

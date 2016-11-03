@@ -559,7 +559,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @throws IOException
      *             File does not exist or cannot be read
      *
-     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRSceneObject getAssimpModel(String assetRelativeFilename,
             EnumSet<GVRImportSettings> settings) throws IOException {
@@ -567,28 +567,28 @@ public abstract class GVRContext implements IEventReceiver {
     }
     
     /**
-     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRModelSceneObject loadJassimpModelFromSD(String externalFile) throws IOException {
         return mImporter.loadModel("sd:" + externalFile, GVRImportSettings.getRecommendedSettings(), true, null);
     }
 
     /**
-     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRModelSceneObject loadJassimpModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return mImporter.loadModel("sd:" + externalFile, settings, true, null);
     }
 
     /**
-     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRModelSceneObject loadJassimpModel(String assetFile) throws IOException {
         return  mImporter.loadModel(assetFile, GVRImportSettings.getRecommendedSettings(), true, null);
     }
 
     /**
-     * @deprecated Replaced by {@link #GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRModelSceneObject loadJassimpModel(String assetFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return mImporter.loadModel(assetFile, settings, true, null);
@@ -606,7 +606,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
-     * @deprecated Replaced by {@link GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile) throws IOException {
         return mImporter.loadModel("sd:" + externalFile, GVRImportSettings.getRecommendedSettings(), true, null);
@@ -627,7 +627,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
-     * @deprecated Replaced by {@link GVRAssetLoader.loadModel}
+     * @deprecated Replaced by {@link GVRAssetLoader#loadModel(String)}
      */
     public GVRModelSceneObject loadModelFromSD(String externalFile, EnumSet<GVRImportSettings> settings) throws IOException {
         return mImporter.loadModel("sd:" + externalFile, settings, true, null);
@@ -983,7 +983,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * This method automatically scales large images to fit the GPU's
      * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
-     * errors.} </ul>
+     * errors.}
      * 
      * @param resource
      *            Basically, a stream containing a bitmap texture. The
@@ -1018,7 +1018,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * This method automatically scales large images to fit the GPU's
      * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
-     * errors.} </ul>
+     * errors.}
      * 
      * @param resource
      *            Basically, a stream containing a bitmap texture. The
@@ -2042,8 +2042,8 @@ public abstract class GVRContext implements IEventReceiver {
      * 
      * <p>
      * This method is significantly easier to use than
-     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)
-     * : you don't have to implement a callback; you don't have to pay attention
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)}
+     * You don't have to implement a callback; you don't have to pay attention
      * to the low-level details of
      *{@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
      * {@link GVRRenderData} to your scene object. What's more, you don't even
@@ -2109,8 +2109,8 @@ public abstract class GVRContext implements IEventReceiver {
      * 
      * <p>
      * This method is significantly easier to use than
-     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)
-     * : you don't have to implement a callback; you don't have to pay attention
+     * {@link #loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * You don't have to implement a callback; you don't have to pay attention
      * to the low-level details of
      *{@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
      * {@link GVRRenderData} to your scene object. What's more, you don't even

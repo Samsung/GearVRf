@@ -94,7 +94,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the ambient reflection.
      * It is multiplied by the material ambient color to derive
      * the hue of the ambient reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code ambient_intensity} to control the intensity of ambient light reflected.
      * 
      * @return The current {@code vec4 ambient_intensity} as a four-element array
@@ -109,7 +109,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the ambient reflection.
      * It is multiplied by the material ambient color to derive
      * the hue of the ambient reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code ambient_intensity} to control the intensity of ambient light reflected.
      * 
      * @param r red component (0 to 1)
@@ -127,7 +127,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the diffuse reflection.
      * It is multiplied by the material diffuse color to derive
      * the hue of the diffuse reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
      * 
      * @return The current {@code vec4 diffuse_intensity} as a four-element
@@ -143,7 +143,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the diffuse reflection.
      * It is multiplied by the material diffuse color to derive
      * the hue of the diffuse reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code diffuse_intensity} to control the intensity of diffuse light reflected.
      * 
      * @param r red component (0 to 1)
@@ -161,7 +161,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code specular_intensity} to control the specular intensity.
      *
      * @return The current {@code vec4 specular_intensity} as a four-element array
@@ -176,7 +176,7 @@ public class GVRDirectLight extends GVRLightBase {
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
-     * The built-in phong shader {@link GVRPhongSurface} uses a {@code vec4} uniform named
+     * The built-in phong shader {@link GVRPhongShader} uses a {@code vec4} uniform named
      * {@code specular_intensity} to control the specular intensity.
      * 
      * @param r red component (0 to 1)

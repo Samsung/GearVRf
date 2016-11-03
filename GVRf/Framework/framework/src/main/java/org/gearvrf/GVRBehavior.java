@@ -28,10 +28,9 @@ import java.lang.reflect.Method;
  * - onDetach(GVRSceneObject) called when this behavior is detached from a scene object.
  * 
  * @see GVRComponent
- * @see GVRSceneObject.attachComponent
- * @see GVRSceneObject.getComponent
- * @see GVRSceneObject.attachComponent
- * @see GVRSceneObject.detachComponent
+ * @see GVRSceneObject#attachComponent(GVRComponent)
+ * @see GVRSceneObject#getComponent(long)
+ * @see GVRSceneObject#detachComponent(long)
  */
 public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
 {

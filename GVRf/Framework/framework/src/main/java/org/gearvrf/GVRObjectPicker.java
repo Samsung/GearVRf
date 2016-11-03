@@ -49,9 +49,9 @@ import org.joml.Vector4f;
  *  - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject.attachComponent
+ * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRCollider
- * @see GVRComponent.setEnable
+ * @see GVRComponent#setEnable(boolean)
  * @see GVRPickedObject
  * @see GVRPicker
  */

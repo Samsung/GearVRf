@@ -168,7 +168,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * 
      * @param triangles
      *            Array containing the packed triangle index data.
-     * @deprecated use {@link #setIndices()} instead.
+     * @deprecated use {@link #setIndices(char[])} instead.
      */
     public void setTriangles(char[] triangles) {
         checkDivisibleDataLength("triangles", triangles, 3);

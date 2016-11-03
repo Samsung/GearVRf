@@ -15,7 +15,7 @@ import java.util.List;
 public class Strings {
 
     /**
-     * Fixes case of a word: Str -> str, but URL -> URL.
+     * Fixes case of a word: Str becomes str, but URL stays URL.
      * @param s Word to be fixed
      * @return all-lowercase or all-uppercase word.
      */

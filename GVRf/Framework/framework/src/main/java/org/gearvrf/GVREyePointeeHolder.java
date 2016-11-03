@@ -156,7 +156,7 @@ public class GVREyePointeeHolder extends GVRCollider {
      * Get the x, y, z of the point of where the hit occurred in model space
      * 
      * @return Three floats representing the x, y, z hit point.
-     * @see getHitDistance
+     * @see #getHit()
      */
     public float[] getHit()
     {

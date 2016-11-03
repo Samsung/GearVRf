@@ -49,7 +49,6 @@ public class GVRSkinningController extends GVRAnimationController {
     /**
      * Constructs the skeleton for a list of {@link GVRSceneObject}.
      *
-     * @param gvrContext The GVR context.
      * @param sceneRoot The scene root.
      * @param animation The animation object.
      */

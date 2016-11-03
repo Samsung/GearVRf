@@ -85,7 +85,7 @@ public class GVREventManager {
      *    See {@link GVREventReceiver} for more information.
      *    </li>
      * <li> If the target is bound with scripts, the event is delivered to the scripts.
-     * A script can be attached to the target using {@link GVRScriptManager#attachScriptFile}.</li>
+     * A script can be attached to the target using {@link org.gearvrf.script.GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}.</li>
      * </ol>
      *
      * @param target

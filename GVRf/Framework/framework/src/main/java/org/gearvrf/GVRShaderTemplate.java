@@ -138,7 +138,7 @@ public class GVRShaderTemplate
      * @param name
      *            string name of shader segment
      * @return source code for segment or null if none exists.
-     *         {@link GVRShaderTemplate.setSegment}
+     *         {@link GVRShaderTemplate#getSegment(String)} setSegment}
      */
     public String getSegment(String name)
     {
@@ -185,7 +185,7 @@ public class GVRShaderTemplate
      * are ignored.
      * 
      * @return String with descriptor.
-     *         {@link GVRLightBase.getUniformDescriptor }
+     *         {@link GVRLightBase#getUniformDescriptor()} getUniformDescriptor }
      */
     public String getUniformDescriptor()
     {
@@ -539,7 +539,7 @@ public class GVRShaderTemplate
      * @param scene scene being rendered
      * @return list of symbols to be defined (value 1) or undefined (value 0) in the shader
      * 
-     * @see GVRLightBase.setCastShadow
+     * @see GVRLightBase#setCastShadow(boolean) setCastShadow
      */
     public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRScene scene) {
         HashMap<String, Integer> defines = new HashMap<String, Integer>();
@@ -568,6 +568,8 @@ public class GVRShaderTemplate
      * Makes the material map for the shader.
      * The material map does not change any names, just maps
      * the keys in the material to themselves.
+     * @param material material to make map for
+     * @param map material map to populate
      */
     protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
     {

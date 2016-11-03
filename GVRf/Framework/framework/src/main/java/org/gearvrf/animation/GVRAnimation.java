@@ -287,7 +287,7 @@ public abstract class GVRAnimation {
      * 
      * Changing properties once the animation is running can have unpredictable
      * results.
-     * 
+     * @param engine animation engine to start.
      * <p>
      * This method is exactly equivalent to
      * {@link GVRAnimationEngine#start(GVRAnimation)} and is provided as a

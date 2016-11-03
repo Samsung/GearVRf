@@ -29,7 +29,7 @@ import android.util.LongSparseArray;
  * @see IPickEvents
  * @see GVRSphereCollider
  * @see GVRMeshCollider
- * @see GVRSceneObject.attachComponent
+ * @see GVRSceneObject#attachComponent(GVRComponent)
  */
 public class GVRCollider extends GVRComponent
 {
@@ -53,7 +53,7 @@ public class GVRCollider extends GVRComponent
     /**
      * Save a link between the native C++ pointer and the Java object.
      * @param nativePointer pointer to C++ Collider object
-     * @see GVRCollider.lookup
+     * @see GVRCollider#lookup(long)
      */
     protected void registerNativePointer(long nativePointer) {
         sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));

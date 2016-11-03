@@ -86,7 +86,7 @@ public class FileNameUtils {
      * @param filePath Path of the file.
      * @return The directory string or {@code null} if
      * there is no parent directory.
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if path is bad
      */
     public static String getParentDirectory(String filePath) throws IllegalArgumentException {
         if (Pattern.matches(sPatternUrl, filePath))
@@ -98,9 +98,9 @@ public class FileNameUtils {
     /**
      * Returns the directory of the URL.
      *
-     * @param filePath Path of the file.
+     * @param urlString URL of the file.
      * @return The directory string.
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if URL is malformed
      */
     public static String getURLParentDirectory(String urlString) throws IllegalArgumentException {
         URL url = null;

@@ -101,7 +101,7 @@ public enum GVRImportSettings {
     /**
      * This will convert the provided enum settings to assimp bitwise format.
      * It's highly recommended to use one of the predefined settings fuctions lie {@link #getRecommendedSettings() getRecommendedSettings} or
-     * if you want additional settings use {@link #getRecommendedSettingsWith(EnumSet<GVRImportSettings>) getRecommendedSettingsWith}.
+     * if you want additional settings use {@link #getRecommendedSettingsWith(EnumSet)}.
      * 
      * @param settings EnumSet of all import settings desired
      * @return flag in the assimp import format.
@@ -115,7 +115,7 @@ public enum GVRImportSettings {
     }
     
     /**
-     * Return recommended settings for simple meshes. If you need bumpmapped meshes use {@link #getRecommendedSettingsBumpmap() getRecommendedSettingsBumpMap}
+     * Return recommended settings for simple meshes. If you need bumpmapped meshes use {@link #getRecommendedBumpmapSettings()}
      * @return EnumSet of recommended settings.
      */
     public static EnumSet<GVRImportSettings> getRecommendedSettings() {
@@ -124,7 +124,7 @@ public enum GVRImportSettings {
     
     /**
      * Provides a way to add additional settings to recommended settings so you won't have to create a EnumSet from scratch.
-     * @see getRecommendedSettings()
+     * @see #getRecommendedSettings()
      * @param additionalSettings
      * @return EnumSet of recommendedSettings with additional settings added.
      */

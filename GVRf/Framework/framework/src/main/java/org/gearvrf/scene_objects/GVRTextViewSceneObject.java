@@ -99,11 +99,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * 
      * @param gvrContext
      *            current {@link GVRContext}
-     * @param gvrActivity
-     *            a {@link GVRActivity}
      * @param width
      *            Scene object height, in GVRF scene graph units.
-     * 
      * @param height
      *            Scene object's width, in GVRF scene graph units.
      * @param text
@@ -187,7 +184,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     /**
      * Set the text size.
      * 
-     * @param newSize
+     * @param size
      *            The new text size.
      */
     public void setTextSize(float size) {
@@ -274,9 +271,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Get the view's background {@code Drawable}, if any.
-     * 
-     * @param drawable
-     *            The view's background; may be {@code null}.
      */
     public Drawable getBackGround() {
         return mTextViewContainer.getBackground();

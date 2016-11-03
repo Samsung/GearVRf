@@ -97,8 +97,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -115,8 +115,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -133,8 +133,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -151,8 +151,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -169,8 +169,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -187,8 +187,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -205,8 +205,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -223,8 +223,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -241,8 +241,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param expectedLength
      *            The expected array length
      */
@@ -281,8 +281,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -299,8 +299,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -317,8 +317,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -335,8 +335,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -353,8 +353,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -371,8 +371,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -389,8 +389,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -407,8 +407,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */
@@ -425,8 +425,8 @@ public abstract class Assert {
      * @param parameterName
      *            The name of the user-supplied parameter that we are validating
      *            so that the user can easily find the error in their code.
-     * @param actualLength
-     *            The actual array length
+     * @param array
+     *            The array to check
      * @param minimumLength
      *            The minimum array length
      */

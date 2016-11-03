@@ -17,7 +17,7 @@ import org.joml.Vector3f;
  * 
  * This means all keys are absolute and not relative to the bone default pose.
  * The order in which the transformations are applied is - as usual - 
- * scaling, rotation, translation.<p>
+ * scaling, rotation, translation.
  */
 public final class GVRAnimationChannel implements PrettyPrint {
     private static final String TAG = GVRAnimationChannel.class.getSimpleName();
@@ -281,7 +281,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
      * Defines how the animation behaves before the first key is encountered.
      * <p>
      *
-     * The default value is {@link AiAnimBehavior#DEFAULT} (the original 
+     * The default value is {@link org.gearvrf.jassimp2.AiAnimBehavior#DEFAULT} (the original
      * transformation matrix of the affected node is used).
      * 
      * @return the animation behavior before the first key
@@ -294,7 +294,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
     /** 
      * Defines how the animation behaves after the last key was processed.<p>
      *
-     * The default value is {@link AiAnimBehavior#DEFAULT} (the original
+     * The default value is {@link org.gearvrf.jassimp2.AiAnimBehavior#DEFAULT} (the original
      * transformation matrix of the affected node is taken).
      * 
      * @return the animation behavior before after the last key

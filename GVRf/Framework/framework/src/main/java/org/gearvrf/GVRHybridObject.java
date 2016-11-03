@@ -108,7 +108,7 @@ public abstract class GVRHybridObject {
     /**
      * The actual address of the native object.
      * 
-     * <p>
+     * @return native pointer associated with the object.
      * This is an internal method that may be useful in diagnostic code.
      */
     public long getNative() {

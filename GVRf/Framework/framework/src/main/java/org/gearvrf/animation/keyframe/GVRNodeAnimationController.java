@@ -36,7 +36,6 @@ public class GVRNodeAnimationController extends GVRAnimationController {
     /**
      * Constructs a list of animated {@link GVRSceneObject}.
      *
-     * @param gvrContext The GVR context.
      * @param sceneRoot The scene root.
      * @param animation The animation object.
      */

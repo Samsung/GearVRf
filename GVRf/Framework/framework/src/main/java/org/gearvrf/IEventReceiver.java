@@ -23,7 +23,7 @@ package org.gearvrf;
 public interface IEventReceiver {
     /**
      * Returns the event receiver implementation so that events can be delivered.
-     * @return
+     * @return event receiver
      */
     GVREventReceiver getEventReceiver();
 }
