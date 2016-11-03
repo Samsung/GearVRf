@@ -25,7 +25,7 @@ import org.gearvrf.GVRContext;
  * of the following ways.
  * <ul>
  * <li>
- *   Loaded from a {@link GVRAndroidResource} using {@link GVRScriptManager#loadScript(org.gearvrf.GVRAndroidResource, String)}.
+ *   Loaded from a {@link org.gearvrf.GVRAndroidResource} using {@link GVRScriptManager#loadScript(org.gearvrf.GVRAndroidResource, String)}.
  * </li>
  * <li>
  *   Constructed locally and then set the text using {@link #setScriptText(String)}.
@@ -36,7 +36,7 @@ import org.gearvrf.GVRContext;
  * </ul>
  *
  * Once a script text is set or loaded, you can invoke functions in the
- * script using {@link GVRScriptFile#invokeFunction(String, Object[]),
+ * script using {@link GVRScriptFile#invokeFunction(String, Object[])},
  * or attach it to a scriptable object using {@link GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}
  * to handle events delivered to it.
  */
@@ -48,7 +48,7 @@ public class GVRLuaScriptFile extends GVRScriptFile {
      *     The GVR Context.
      * @param inputStream
      *     The input stream from which the script is loaded.
-     * @throws IOException
+     * @throws IOException if the script cannot be read.
      */
     public GVRLuaScriptFile(GVRContext gvrContext, InputStream inputStream) throws IOException {
         super(gvrContext, GVRScriptManager.LANG_LUA);

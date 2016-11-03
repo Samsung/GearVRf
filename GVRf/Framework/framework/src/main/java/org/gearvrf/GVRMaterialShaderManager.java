@@ -62,7 +62,7 @@ import org.gearvrf.utility.Log;
      * of the shader instances but you may subclass GVRShaderTemplate
      * to create your own shader templates.
      * 
-     * @param template class (subclass of GVRShaderTemplate)
+     * @param templateClass class (subclass of GVRShaderTemplate)
      * @return instance of GVRShaderTemplate or null on error
      * {@link GVRShaderTemplate}
      */

@@ -57,9 +57,9 @@ import org.joml.Vector4f;
  *  - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject.attachComponent
+ * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRCollider
- * @see GVRComponent.setEnable
+ * @see GVRComponent#setEnable(boolean)
  * @see GVRPickedObject
  */
 public class GVRFrustumPicker extends GVRPicker {
@@ -131,7 +131,7 @@ public class GVRFrustumPicker extends GVRPicker {
      * from the viewpoint of it's owner the given projection matrix.
      *
      * @param projMatrix 4x4 projection matrix or null
-     * @see GVRScene.setPickVisible
+     * @see GVRScene#setPickVisible(boolean)
      */
     public void setFrustum(Matrix4f projMatrix)
     {
@@ -173,7 +173,7 @@ public class GVRFrustumPicker extends GVRPicker {
      * manually set the pick ray and call doPick()
      * to generate the pick events.
      * @see IPickEvents
-     * @see GVRFrustumPicker.pickVisible
+     * @see GVRFrustumPicker#pickVisible(GVRScene)
      */
     public void doPick()
     {

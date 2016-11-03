@@ -286,7 +286,7 @@ public final class GVRAssetLoader {
          * Called when the model and all of its textures have loaded.
          * @param context GVRContext which loaded the texture
          * @param model model that was loaded (will be null if model failed to load)
-         * @param error error messages (will be null if no errors)
+         * @param errors error messages (will be null if no errors)
          * @param modelFile filename of model loaded
          */
         @Override
@@ -499,11 +499,11 @@ public final class GVRAssetLoader {
      * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames. For large
      * images, you should use
-     * {@link #loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback).
+     * {@link #loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback)}.
      * <p>
      * This method automatically scales large images to fit the GPU's
      * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
-     * errors.} </ul>
+     * errors.}
      *
      * @param resource
      *            Basically, a stream containing a bitmap texture. The
@@ -518,7 +518,7 @@ public final class GVRAssetLoader {
      *            default texture parameters are used.
      * @return The file as a texture, or {@code null} if the file can not be
      *         decoded into a Bitmap.
-     * @see GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS
+     * @see GVRAssetLoader#DEFAULT_TEXTURE_PARAMETERS
      */
     public GVRTexture loadTexture(GVRAndroidResource resource,
                                   GVRTextureParameters textureParameters)
@@ -806,7 +806,7 @@ public final class GVRAssetLoader {
      * Loads a scene object {@link GVRModelSceneObject} from
      * a 3D model and adds it to the scene.
      *
-     * @param assetFile
+     * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.

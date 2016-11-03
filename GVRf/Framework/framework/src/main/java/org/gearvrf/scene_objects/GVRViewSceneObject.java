@@ -116,7 +116,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
     /**
      * Gets a Android {@link Canvas} for drawing into this {@link GVRViewSceneObject Scene object}.
      * After drawing into the provided Android {@link Canvas}, the caller must invoke {@linkplain
-     * GVRViewSceneObject#unlockCanvasAndPost(Android {@link Canvas}) to post the new contents to the scene
+     * GVRViewSceneObject#unlockCanvasAndPost(Canvas)}  to post the new contents to the scene
      * object. See - Android {@link Surface#lockCanvas(android.graphics.Rect)}
      */
     public Canvas lockCanvas() {

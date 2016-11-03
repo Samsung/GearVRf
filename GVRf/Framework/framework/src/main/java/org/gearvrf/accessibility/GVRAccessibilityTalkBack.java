@@ -49,8 +49,7 @@ public class GVRAccessibilityTalkBack {
     }
 
     /**
-     * @param Android
-     *            context.
+     * @param Context Android context.
      */
     public GVRAccessibilityTalkBack(Context context) {
         mContext = context;

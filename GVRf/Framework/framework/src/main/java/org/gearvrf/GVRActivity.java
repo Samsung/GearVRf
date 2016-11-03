@@ -301,6 +301,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * incorrectly set the clip rectangle to just that view. To fix this,
      * we have to create a full screen android View and invalidate this
      * to restore the clip rectangle.
+     * @return full screen View object
      */
     public View getFullScreenView() {
         if (mFullScreenView != null) {
@@ -376,8 +377,8 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     /**
      * Returns whether a monoscopic view was asked to be forced during
      * {@linkplain #setMain(GVRMain, String) setMain()}.
-     * 
-     * @see setForceMonoscopic
+     * @return true if monoscopic set, false if not.
+     * @see #setForceMonoscopic
      * @deprecated
      */
     @Deprecated

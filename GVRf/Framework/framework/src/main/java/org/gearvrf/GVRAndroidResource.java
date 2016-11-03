@@ -281,7 +281,7 @@ public class GVRAndroidResource {
      * Get the open stream.
      * 
      * Changes the debug state (visible <i>via</i> {@link #toString()}) to
-     * {@linkplain GVRAndroidResource.StreamStates#READING READING}.
+     * {@linkplain GVRAndroidResource.StreamStates#OPEN OPEN}.
      * 
      * @return An open {@link InputStream}.
      * @throws IOException 

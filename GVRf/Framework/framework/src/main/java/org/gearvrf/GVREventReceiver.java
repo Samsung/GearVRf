@@ -35,7 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <li>Add a field containing a {@link GVREventReceiver} object.</li>
  * <li>Implement the method {@link IEventReceiver#getEventReceiver()} to return
  * this {@link GVREventReceiver} object.</li>
- *
+ * </ol>
  * After implementing the above pattern, {@link GVREventManager#sendEvent(Object, Class, String, Object...)}
  * can be used to deliver events to the class.
  */

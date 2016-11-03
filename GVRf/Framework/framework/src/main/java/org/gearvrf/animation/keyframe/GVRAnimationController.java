@@ -11,6 +11,7 @@ public abstract class GVRAnimationController {
     /**
      * Update animation to {@code timeInSeconds}. This function converts
      * time to ticks and invokes {@link #animateImpl}.
+     * @param timeInSeconds new time for animation (in seconds).
      */
     public void animate(float timeInSeconds) {
         float ticksPerSecond;

@@ -201,11 +201,12 @@ public class GVRScriptManager {
     }
 
     /**
-     * Loads a script file using {@GVRAndroidResource}.
+     * Loads a script file using {@link GVRAndroidResource}.
      * @param resource The resource object.
      * @param language The language string.
      * @return A script file object or {@code null} if not found.
-     * @throws IOException
+     * @throws IOException if script file cannot be read.
+     * @throws GVRScriptException if script processing error occurs.
      */
     public GVRScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException, GVRScriptException {
         if (getEngine(language) == null) {
@@ -228,10 +229,6 @@ public class GVRScriptManager {
      * Load a script bundle file. It defines bindings between scripts and GVRf objects
      * (e.g., scene objects and the {@link GVRScript} object).
      *
-     * If {@linkplain GVRScriptEntry script entry} contains a {@code volume} attribute, the
-     * script is loaded from the specified volume. Otherwise, it is loaded from the volume
-     * specified by the {@code volume} parameter.
-     *
      * @param filePath
      *        The path and filename of the script bundle.
      * @param volume
@@ -239,7 +236,7 @@ public class GVRScriptManager {
      * @return
      *         The loaded {@linkplain GVRScriptBundle script bundle}.
      *
-     * @throws IOException
+     * @throws IOException if script bundle file cannot be read.
      */
     public GVRScriptBundle loadScriptBundle(String filePath, GVRResourceVolume volume) throws IOException {
         GVRScriptBundle bundle = GVRScriptBundle.loadFromFile(mGvrContext, filePath, volume);
@@ -255,8 +252,8 @@ public class GVRScriptManager {
      *     The {@link GVRScript} to bind to.
      * @param bindToMainScene
      *     If {@code true}, also bind it to the main scene on the event {@link GVRScript#onAfterInit}.
-     * @throws GVRScriptException
-     * @throws IOException
+     * @throws IOException if script bundle file cannot be read.
+     * @throws GVRScriptException if script processing error occurs.
      */
     public void bindScriptBundle(final GVRScriptBundle scriptBundle, final GVRScript gvrScript, boolean bindToMainScene)
             throws IOException, GVRScriptException {
@@ -296,10 +293,10 @@ public class GVRScriptManager {
      * Binds a script bundle to a scene.
      * @param scriptBundle
      *         The {@code GVRScriptBundle} object containing script binding information.
-     * @param GVRScene
+     * @param scene
      *         The scene to bind to.
-     * @throws GVRScriptException
-     * @throws IOException
+     * @throws IOException if script bundle file cannot be read.
+     * @throws GVRScriptException if script processing error occurs.
      */
     public void bindScriptBundleToScene(GVRScriptBundle scriptBundle, GVRScene scene) throws IOException, GVRScriptException {
         for (GVRSceneObject sceneObject : scene.getSceneObjects()) {
@@ -313,7 +310,8 @@ public class GVRScriptManager {
      *         The {@code GVRScriptBundle} object containing script binding information.
      * @param rootSceneObject
      *         The root of the scene object tree to which the scripts are bound.
-     * @throws IOException
+     * @throws IOException if script bundle file cannot be read.
+     * @throws GVRScriptException if a script processing error occurs.
      */
     public void bindBundleToSceneObject(GVRScriptBundle scriptBundle, GVRSceneObject rootSceneObject)
             throws IOException, GVRScriptException

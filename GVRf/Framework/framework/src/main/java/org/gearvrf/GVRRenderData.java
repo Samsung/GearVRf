@@ -135,10 +135,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     /**
      * @return The {@link GVRMesh mesh} being rendered. If there is
      * a pending future mesh, it is resolved.
-     *
-     * @throws ExecutionException 
-     * @throws InterruptedException 
-     */
+      */
     public GVRMesh getMesh() {
         if (mFutureMesh != null) {
             try

@@ -72,6 +72,8 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
      * Constructor for a script behavior component.
      * @param gvrContext    The current GVRF context
      * @param scriptFile    Path to the script file.
+     * @throws IOException if script file cannot be read.
+     * @throws GVRScriptException if script processing error occurs.
      */
     public GVRScriptBehavior(GVRContext gvrContext, String scriptFile) throws IOException, GVRScriptException
     {
@@ -95,8 +97,8 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
      * Sets the path to the script file to load and loads the script.
      * 
      * @param filePath path to script file
-     * @throws IOException
-     * @throws GVRScriptException
+     * @throws IOException if the script cannot be read.
+     * @throws GVRScriptException if a script processing error occurs.
      */
     public void setFilePath(String filePath) throws IOException, GVRScriptException
     {
@@ -161,7 +163,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
      * This function invokes the script even if the
      * component is not enabled and not attached to
      * a scene object.
-     * @see GVRScriptFile.invoke
+     * @see GVRScriptFile#invoke() invoke
      */
     public void invoke()
     {
@@ -320,9 +322,9 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
      * The function is called even if the component
      * is not enabled and not attached to a scene object.
      * @param funcName name of script function to call.
-     * @param params function parameters as an array of objects.
+     * @param args function parameters as an array of objects.
      * @return true if function was called, false if no such function
-     * @see GVRScriptFile.invokeFunction
+     * @see org.gearvrf.script.GVRScriptFile#invokeFunction(String, Object[]) invokeFunction
      */
     public boolean invokeFunction(String funcName, Object[] args)
     {

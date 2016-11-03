@@ -49,8 +49,8 @@ import android.util.Log;
  * advantage of these shadow maps.
  * 
  * @see GVRShaderTemplate
- * @see GVRRenderData.bindShader
- * @see GVRLightBase.setCastShadow
+ * @see GVRRenderData#bindShader(GVRScene)
+ * @see GVRLightBase#setCastShadow(boolean)
  */
 public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 {
@@ -221,13 +221,13 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      *
      * The shader code defines a function which computes the
      * color contributed by this light. It takes a structure of uniforms and a
-     * <Surface> structure as input and outputs a <Radiance> structure. The
+     * Surface structure as input and outputs a Radiance structure. The
      * contents of the uniform structure is defined by the uniform descriptor. The fragment
      * shader is responsible for computing the surface color and integrating the
      * contribution of each light to the final fragment color. It defines the
-     * format of the <Radiance> and <Surface> structures.
+     * format of the Radiance and Surface structures.
      * @see GVRShaderTemplate
-     * @see GVRLightBase.getUniformDescriptor
+     * @see GVRLightBase#getUniformDescriptor()
      * 
      * @return string with source for light fragment shader
      */
@@ -246,7 +246,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * by the vertex shader descriptor.
      * 
      * @see GVRShaderTemplate
-     * @see GVRLightBase.getVertexDescriptor
+     * @see GVRLightBase#getVertexDescriptor()
      * 
      * @return string with source for light vertex shader
      */
@@ -264,7 +264,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * shader when they are updated.
      * 
      * @see GVRShaderTemplate
-     * @see GVRLightBase.getFragmentShaderSource
+     * @see GVRLightBase#getFragmentShaderSource()
      * 
      * @return String describing light shader uniforms
      */
@@ -294,10 +294,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * @param key
      *            name of uniform to get
      * @return floating point value of uniform
-     * @throws exception
-     *             if uniform name not found
      */
-    @SuppressWarnings("unused")
     public float getFloat(String key)
     {
         return NativeLight.getFloat(getNative(), key);
@@ -308,12 +305,9 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * 
      * @param key
      *            name of uniform to get
-     * @param new
+     * @param value
      *            floating point value of uniform
-     * @throws exception
-     *             if uniform name not found
      */
-    @SuppressWarnings("unused")
     public void setFloat(String key, float value)
     {
         checkStringNotNullOrEmpty("key", key);
@@ -327,8 +321,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * @param key
      *            name of uniform to get
      * @return vec3 value of uniform
-     * @throws exception
-     *             if uniform name not found
      */
     public float[] getVec3(String key)
     {
@@ -340,10 +332,9 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * 
      * @param key
      *            name of uniform to get
-     * @param new
-     *            vec3 value of uniform
-     * @throws exception
-     *             if uniform name not found
+     * @param x     X coordinate of vector
+     * @param y     Y coordinate of vector
+     * @param z     Z coordinate of vector
      */
     public void setVec3(String key, float x, float y, float z)
     {
@@ -357,8 +348,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * @param key
      *            name of uniform to get
      * @return vec4 value of uniform
-     * @throws exception
-     *             if uniform name not found
      */
     public float[] getVec4(String key)
     {
@@ -368,12 +357,11 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Sets the value of a vec4 uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
-     * @param new
-     *            vec4 value of uniform
-     * @throws exception
-     *             if uniform name not found
+     * @param key   name of uniform to get
+     * @param x     X coordinate of vector
+     * @param y     Y coordinate of vector
+     * @param z     Z coordinate of vector
+     * @param w     W coordinate of vector
      */
     public void setVec4(String key, float x, float y, float z, float w)
     {
@@ -386,10 +374,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * 
      * @param key
      *            name of uniform to get
-     * @param new
+     * @param matrix
      *            4x4 matrix value of uniform
-     * @throws exception
-     *             if uniform name not found
      */
     public void setMat4(String key, Matrix4f matrix)
     {
@@ -404,8 +390,6 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * 
      * @param key
      *            name of uniform to get
-     * @throws exception
-     *             if uniform name not found
      */
     public Matrix4f getMat4(String key)
     {

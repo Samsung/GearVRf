@@ -56,9 +56,9 @@ import org.joml.Vector3f;
  *  - onNoPick(GVRPicker)      called once when nothing is picked.
  *
  * @see IPickEvents
- * @see GVRSceneObject.attachCollider
+ * @see GVRSceneObject#attachCollider(GVRCollider)
  * @see GVRCollider
- * @see GVRCollider.setEnable
+ * @see GVRCollider#setEnable(boolean)
  * @see GVRPickedObject
  */
 public class GVRPicker extends GVRBehavior {
@@ -517,7 +517,7 @@ public class GVRPicker extends GVRBehavior {
      *
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
-     * @param transform
+     * @param trans
      *            The {@link GVRTransform} establishing the coordinate system of the ray.
      * @param ox
      *            The x coordinate of the ray origin.
@@ -609,9 +609,8 @@ public class GVRPicker extends GVRBehavior {
      * described as a GVRPickedObject.
      * 
      * @since 1.6.6
-     * @see GVRPicker.pickScene
-     * @see GVRPicker.findObjects
-     * @see GVRPicker.pickObjects
+     * @see GVRPicker#pickObjects(GVRScene, float, float, float, float, float, float)
+     * @see GVRPicker#findObjects(GVRScene)
      */
     public static final class GVRPickedObject {
         public final GVRSceneObject hitObject;
@@ -629,8 +628,7 @@ public class GVRPicker extends GVRBehavior {
          * @param hitLocation
          *            The hit location, as an [x, y, z] array.
          *
-         * @see GVRPicker.pickScene
-         * @see GVRPicker.pickObjects
+         * @see GVRPicker#pickObjects(GVRScene, float, float, float, float, float, float)
          * @see GVRCollider
          */
         public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance) {
@@ -646,7 +644,7 @@ public class GVRPicker extends GVRBehavior {
          * This is the owner of the collider hit.
          *
          * @return scene object hit
-         * @see GVRComponent.getOwnerObject
+         * @see GVRComponent#getOwnerObject()
          */
         public GVRSceneObject getHitObject() {
             return hitObject;

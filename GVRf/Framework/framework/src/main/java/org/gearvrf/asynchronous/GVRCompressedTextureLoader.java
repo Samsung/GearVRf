@@ -79,13 +79,13 @@ public abstract class GVRCompressedTextureLoader {
 
     /**
      * Does this byte array contain an instance of 'my' compressed texture? The
-     * {@link CompressedTexture#load(InputStream) load()} methods will call all
+     * {@link CompressedTexture#load(InputStream, int, boolean)} methods will call all
      * registered Loader's sniffers: if one and only one returns {@code true},
      * the load() method will return a {@code CompressedTexture}.
      * 
      * <p>
      * <em>Note:</em> This routine needs to be very fast! The
-     * {@link CompressedTexture#load(InputStream) load()} routine will call all
+     * {@link CompressedTexture#load(InputStream, int, boolean)} routine will call all
      * registered sniffers, rather than looking at (possibly invalid) file
      * extensions, or asking the user for a (possibly invalid) hint.
      * 

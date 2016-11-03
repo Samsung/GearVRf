@@ -53,8 +53,8 @@ public class GVRScriptBundle {
 
     /**
      * Loads a {@link GVRScriptBundle} from a file.
-     * @param scriptManager
-     *         The script manager.
+     * @param gvrContext
+     *         The GVRContext to use for loading.
      * @param filePath
      *         The file name of the script bundle in JSON format.
      * @param volume
@@ -62,7 +62,7 @@ public class GVRScriptBundle {
      * @return
      *         The {@link GVRScriptBundle} object with contents from the JSON file.
      *
-     * @throws IOException
+     * @throws IOException if the bundle cannot be loaded.
      */
     public static GVRScriptBundle loadFromFile(GVRContext gvrContext, String filePath,
             GVRResourceVolume volume) throws IOException {

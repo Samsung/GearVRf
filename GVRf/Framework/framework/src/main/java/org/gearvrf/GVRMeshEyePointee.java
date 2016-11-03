@@ -19,7 +19,7 @@ package org.gearvrf;
  * An actual eye pointee.
  * 
  * A {@link GVRCollider} is something that is being pointed at by a picking
- * ray. {@linkplain GVRColliders Colliders} are attached to
+ * ray. {@linkplain GVRCollider Colliders} are attached to
  * {@link GVRSceneObject scene objects.} The {@link GVRPicker} will return a
  * {@code GVRCollider[]}: you use
  * {@link GVRCollider#getOwnerObject()} to retrieve the scene object.

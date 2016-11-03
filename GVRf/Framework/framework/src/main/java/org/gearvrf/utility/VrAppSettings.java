@@ -595,7 +595,7 @@ public class VrAppSettings {
     /**
      * Set if user wants to use multiview or not
      * 
-     * @param useMultiview
+     * @param useMultiview true to enable multiview, false to disable it.
      *            
      */
     public void setUseMultiview(boolean useMultiview){

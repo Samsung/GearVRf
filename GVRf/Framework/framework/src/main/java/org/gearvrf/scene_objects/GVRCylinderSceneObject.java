@@ -228,6 +228,9 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            
      * @param sliceNumber
      *            number of quads around to make the cylinder.
+     *
+     * @param facingOut
+     *            true for normals facing out, false for normals facing in.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
             float topRadius, float height, int stackNumber, int sliceNumber,
@@ -284,6 +287,9 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            
      * @param material
      *            the material for the cylinder.
+     *
+     * @param facingOut
+     *            true for normals facing out, false for normals facing in.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
             float topRadius, float height, int stackNumber, int sliceNumber,
@@ -341,6 +347,9 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      * @param futureTextureList
      *            the list of three textures for the cylinder. {@code Future<GVRTexture>} is used here for asynchronously loading
      *            the texture. The six textures are for top, side, and bottom faces respectively.
+     *
+     * @param facingOut
+     *            true for normals facing out, false for normals facing in.
      */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
             float topRadius, float height, int stackNumber, int sliceNumber,
@@ -416,7 +425,10 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            the segment number along horizontal direction (i.e. slices).
      *            Number of slices (i.e. sliceNumber) should be divisible by
      *            sliceSegmentNumber.
-    */
+     *
+     * @param facingOut
+     *            true for normals facing out, false for normals facing in.
+     */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
             float topRadius, float height, int stackNumber, int sliceNumber,
             boolean facingOut, ArrayList<Future<GVRTexture>> futureTextureList, int stackSegmentNumber, int sliceSegmentNumber) {
@@ -502,7 +514,10 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
      *            the segment number along horizontal direction (i.e. slices).
      *            Number of slices (i.e. sliceNumber) should be divisible by
      *            sliceSegmentNumber.
-    */
+     *
+     * @param facingOut
+     *            true for normals facing out, false for normals facing in.
+     */
     public GVRCylinderSceneObject(GVRContext gvrContext, float bottomRadius,
             float topRadius, float height, int stackNumber, int sliceNumber,
             boolean facingOut, GVRMaterial material, int stackSegmentNumber, int sliceSegmentNumber) {

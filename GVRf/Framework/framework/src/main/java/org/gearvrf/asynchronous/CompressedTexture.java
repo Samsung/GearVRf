@@ -35,7 +35,7 @@ import android.opengl.GLES20;
  * <p>
  * Get an instance by calling one of the {@code load()} overloads; register a
  * new loader by calling
- * {@link GVRCompressedTextureLoader#register(GVRCompressedTextureLoader)}.
+ * {@link GVRCompressedTextureLoader#register()}
  * 
  * <p>
  * Note that {@link #toTexture(GVRContext, int)} <em>must</em> be called from

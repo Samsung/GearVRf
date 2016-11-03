@@ -154,7 +154,7 @@ public class GVRFutureOnGlThread<T> implements RunnableFuture<T> {
      *             When this thread is interrupted while waiting.
      * @throws CancellationException
      *             When the callable task got successfully cancelled.
-     * @throws TimeOutExcetipn
+     * @throws TimeOutException
      *             When the execution of the callable call() out of timeout
      *             limitation.
      */

@@ -27,8 +27,8 @@ public interface IScriptEvents extends IEvents {
     /**
      * Called after GVRMain.onInit returns for scripts which
      * have been added during onInit.
-     * @param gvrContext
-     * @throws Throwable
+     * @param gvrContext context to initialize.
+     * @throws Throwable if exception occurs durint initialization.
      */
     void onInit(GVRContext gvrContext) throws Throwable;
 

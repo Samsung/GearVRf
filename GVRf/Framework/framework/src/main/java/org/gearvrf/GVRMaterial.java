@@ -270,7 +270,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * @param key
      *            Prefix name of the uniform at light map shader:
      *            ([key]_texture, [key]_offset and [key]_scale.
-     * @param lightMapInformation
+     * @param atlasInformation
      *            Atlas information object with the offset and scale
      * at UV space necessary to map the light map texture to the mesh.
      */
@@ -338,10 +338,9 @@ public class GVRMaterial extends GVRHybridObject implements
     /**
      * Get the {@code color} uniform.
      * 
-     * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code color}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
-     * shader,} this allows you to add an overlay color on top of the texture.
-     * 
+     * By convention, some of the GVRF shaders can use a {@code vec3} uniform named
+     * {@code color}. With the default {@linkplain GVRShaderType.Texture 'texture'
+     * shader,} this allows you to modulate the texture with a color.
      * @return The current {@code vec3 color} as a three-element array
      */
     public float[] getColor() {
@@ -362,8 +361,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Set the {@code color} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec3} uniform named
-     * {@code color}. With the default {@linkplain GVRShaderType.Unlit 'unlit'
-     * shader,} this allows you to add an overlay color on top of the texture.
+     * {@code color}. With the default {@linkplain GVRShaderType.Texture 'texture'
+     * shader,} this allows you to modulate the texture with a color.
      * Values are between {@code 0.0f} and {@code 1.0f}, inclusive.
      * 
      * @param r
@@ -394,9 +393,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Get the {@code materialAmbientColor} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code materialAmbientColor}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
-     * texture.
+     * {@code materialAmbientColor}. With the default {@linkplain GVRShaderType.Texture 'texture'
+     * shader,} this allows you to modulate the texture with a color.
      * 
      * @return The current {@code vec4 materialAmbientColor} as a four-element
      *         array
@@ -409,8 +407,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Set the {@code materialAmbientColor} uniform for lighting.
      * 
      * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code materialAmbientColor}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay ambient light color on
+     * {@code materialAmbientColor}. With the {@linkplain GVRShaderType.Texture
+     * shader,} this allows you to add an overlay ambient light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
      * inclusive.
      * 
@@ -431,8 +429,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Get the {@code materialDiffuseColor} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code materialDiffuseColor}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * {@code materialDiffuseColor}. With the {@linkplain GVRShaderType.Texture
+     *  shader,} this allows you to add an overlay color on top of the
      * texture.
      * 
      * @return The current {@code vec4 materialDiffuseColor} as a four-element
@@ -446,8 +444,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Set the {@code materialDiffuseColor} uniform for lighting.
      * 
      * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code materialDiffuseColor}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay diffuse light color on
+     * {@code materialDiffuseColor}. With the {@linkplain GVRShaderType.Texture
+     * shader,} this allows you to add an overlay diffuse light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
      * inclusive.
      * 
@@ -468,8 +466,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Get the {@code materialSpecularColor} uniform.
      * 
      * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code materialSpecularColor}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * {@code materialSpecularColor}. With the {@linkplain GVRShaderType.Texture
+     * shader,} this allows you to add an overlay color on top of the
      * texture.
      * 
      * @return The current {@code vec4 materialSpecularColor} as a four-element
@@ -483,8 +481,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Set the {@code materialSpecularColor} uniform for lighting.
      * 
      * By convention, GVRF shaders can use a {@code vec4} uniform named
-     * {@code materialSpecularColor}. With the {@linkplain GVRShaderType.Lit 
-     * 'lit' shader,} this allows you to add an overlay specular light color on
+     * {@code materialSpecularColor}. With the {@linkplain GVRShaderType.Texture
+     * hader,} this allows you to add an overlay specular light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
      * inclusive.
      * 
@@ -505,8 +503,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Get the {@code materialSpecularExponent} uniform.
      * 
      * By convention, GVRF shaders can use a {@code float} uniform named
-     * {@code materialSpecularExponent}. With the {@linkplain GVRShaderType.Lit
-     * 'lit' shader,} this allows you to add an overlay color on top of the
+     * {@code materialSpecularExponent}. With the {@linkplain GVRShaderType.Texture
+     * shader,} this allows you to add an overlay color on top of the
      * texture.
      * 
      * @return The current {@code vec4 materialSpecularExponent} as a float
@@ -520,8 +518,8 @@ public class GVRMaterial extends GVRHybridObject implements
      * Set the {@code materialSpecularExponent} uniform for lighting.
      * 
      * By convention, GVRF shaders can use a {@code float} uniform named
-     * {@code materialSpecularExponent}. With the {@linkplain GVRShaderType.Lit
-     * 'lit' shader,} this allows you to add an overlay specular light color on
+     * {@code materialSpecularExponent}. With the {@linkplain GVRShaderType.Texture
+     * shader,} this allows you to add an overlay specular light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 128.0f},
      * inclusive.
      * 
@@ -569,7 +567,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * Second, technically all this method does is set the {@code opacity}
      * uniform. What this does depends on the actual shader. If you don't
      * specify a shader (or you specify the
-     * {@linkplain GVRMaterial.GVRShaderType.Unlit#ID unlit} shader) setting
+     * {@linkplain GVRMaterial.GVRShaderType.Texture} shader) setting
      * {@code opacity} does exactly what you expect; you only have to worry
      * about the render order. However, it is totally up to a custom shader
      * whether or how it will handle opacity.
@@ -711,7 +709,7 @@ public class GVRMaterial extends GVRHybridObject implements
     /**
      * Gets the line width for line drawing.
      * 
-     * @see GVRRenderData.setDrawMode
+     * @see GVRRenderData#setDrawMode(int)
      */
     public float getLineWidth() {
         return NativeMaterial.getFloat(getNative(), "line_width");
@@ -724,7 +722,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * draw mode is GL_LINES, GL_LINE_STRIP or GL_LINE_LOOP.
      * 
      * @param lineWidth new line width.
-     * @see GVRRenderData.setDrawMode
+     * @see GVRRenderData#setDrawMode(int)
      */
     public void setLineWidth(float lineWidth) {
         NativeMaterial.setFloat(getNative(), "line_width", lineWidth);
