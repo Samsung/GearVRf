@@ -46,7 +46,6 @@ out vec2 diffuse_coord;
 out vec2 ambient_coord;
 out vec2 specular_coord;
 out vec2 emissive_coord;
-out vec2 normal_coord;
 out vec2 lightmap_coord;
 
 struct Vertex

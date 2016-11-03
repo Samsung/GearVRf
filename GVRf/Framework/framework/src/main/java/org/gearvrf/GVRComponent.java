@@ -221,7 +221,7 @@ public class GVRComponent extends GVRHybridObject {
     public void onNewOwnersParent(GVRSceneObject newOwnersParent) { }
 
     /**
-     * Called when is removed the parent of then component's owner.
+     * Called when the component's owner is detached from its parent.
      *
      * @param oldOwnersParent Old parent of the component's owner.
      */

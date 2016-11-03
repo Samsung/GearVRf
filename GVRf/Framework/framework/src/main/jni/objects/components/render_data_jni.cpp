@@ -137,6 +137,14 @@ JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getInvertCoverageMask(JNIEnv * env,
         jobject obj, jlong jrender_data);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setCastShadows(JNIEnv * env,
+    jobject obj, jlong jrender_data, jboolean castShadows);
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeRenderData_getCastShadows(JNIEnv * env,
+        jobject obj, jlong jrender_data);
+
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getDrawMode(
         JNIEnv * env, jobject obj, jlong jrender_data);
@@ -376,4 +384,19 @@ Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
             reinterpret_cast<TextureCapturer*>(jtexture_capturer));
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setCastShadows(JNIEnv * env,
+    jobject obj, jlong jrender_data, jboolean castShadows)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    render_data->set_cast_shadows(castShadows);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeRenderData_getCastShadows(JNIEnv * env,
+        jobject obj, jlong jrender_data)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->cast_shadows();
+}
 }

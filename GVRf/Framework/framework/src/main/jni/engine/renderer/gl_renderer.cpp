@@ -36,6 +36,7 @@
 #include "gl_renderer.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <gvr_image_capture.h>
 
 namespace gvr {
 void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -47,6 +48,7 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     resetStats();
     RenderState rstate;
+    rstate.shadow_map = false;
     rstate.material_override = NULL;
     rstate.viewportX = viewportX;
     rstate.viewportY = viewportY;
@@ -179,6 +181,7 @@ void GLRenderer::restoreRenderStates(RenderData* render_data) {
         GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
     }
 }
+
 /**
  * Generate shadow maps for all the lights that cast shadows.
  * The scene is rendered from the viewpoint of the light using a
@@ -223,20 +226,27 @@ void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint fra
     GLint drawFbo = 0, readFbo = 0;
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFbo);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFbo);
+    const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
 
 	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, 3, attachments));
     GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
     glClearColor(0,0,0,1);
     GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-
+    rstate.shadow_map = true;
     for (auto it = render_data_vector.begin();
-            it != render_data_vector.end(); ++it) {
-        GL(renderRenderData(rstate, *it));
+         it != render_data_vector.end(); ++it) {
+        RenderData* rdata = *it;
+        if (rdata->cast_shadows()) {
+            GL(renderRenderData(rstate, rdata));
+        }
     }
-
+    rstate.shadow_map = false;
+    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, 2, &attachments[1]));
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
 }
+
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
         ShaderManager* shader_manager,
         PostEffectShaderManager* post_effect_shader_manager,
@@ -430,7 +440,7 @@ void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_da
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
 
 
-    if(use_multiview){
+    if(use_multiview && !rstate.shadow_map){
         rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
         rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
         rstate.uniforms.u_mv_[0] = rstate.uniforms.u_view_[0] * rstate.uniforms.u_model;

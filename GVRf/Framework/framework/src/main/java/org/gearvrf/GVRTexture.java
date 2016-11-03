@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 /** Wrapper for a GL texture. */
 public class GVRTexture extends GVRHybridObject {
     private List<GVRAtlasInformation> mAtlasInformation = null;
+    private String mVertexTexCoord = null;
+    private String mShaderTexCoord = null;
 
     protected GVRTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
@@ -215,9 +217,7 @@ public class GVRTexture extends GVRHybridObject {
             }
         }
     }
-
-
-    protected static final String TAG = "GVRTexture";
+     protected static final String TAG = "GVRTexture";
 }
 
 class NativeTexture {

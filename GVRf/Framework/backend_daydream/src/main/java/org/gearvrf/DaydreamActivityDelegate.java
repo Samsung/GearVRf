@@ -60,6 +60,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
             public boolean isHmtConnected() {
                 return false;
             }
+            public boolean usingMultiview() { return false; }
         };
     }
 

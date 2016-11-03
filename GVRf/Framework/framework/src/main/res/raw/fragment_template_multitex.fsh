@@ -81,6 +81,13 @@ struct Radiance
    float attenuation;
 };
 
+float unpackFloatFromVec4i(const vec4 value)
+{
+    const vec4 unpackFactors = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+    return dot(value, unpackFactors);
+}
+
+
 @FragmentSurface
 
 @FragmentAddLight

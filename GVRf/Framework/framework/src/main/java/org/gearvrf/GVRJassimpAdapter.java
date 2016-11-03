@@ -553,7 +553,6 @@ class GVRJassimpAdapter {
                 }
                 int uvIndex = material.getTextureUVIndex(texType, i);
                 int blendop = material.getTextureOp(texType, i).ordinal();
-                Log.e("RC", "tex index " + uvIndex);
                 String typeName = textureMap.get(texType);
                 String textureKey = typeName + "Texture";
                 String texCoordKey = "a_texcoord";
@@ -572,26 +571,20 @@ class GVRJassimpAdapter {
                 texParams.setWrapTType(wrapModeMap.get(material.getTextureMapModeV(texType,i)));
                 if (texFileName.startsWith("*"))
                 {
+                    AiTexture tex = null;
                     try
                     {
-                        GVRAndroidResource texresource = new GVRAndroidResource(mContext, mFileName + texFileName);
-                        GVRTexture texture = mLoader.findTexture(texresource);
-                        if (texture == null)
-                        {
-                            texture = loadEmbeddedTexture(texFileName, texParams);
-                            mLoader.cacheTexture(texresource, texture);
-                            mContext.getEventManager().sendEvent(mContext,
-                                    IAssetEvents.class,
-                                    "onTextureLoaded", new Object[] { mContext, texture, texFileName });
-                        }
-                        meshMaterial.setTexture(textureKey, texture);
+                        int texIndex = parseInt(texFileName.substring(1));
+                        tex = mScene.getTextures().get(texIndex);
                     }
                     catch (NumberFormatException | IndexOutOfBoundsException ex)
                     {
                         mContext.getEventManager().sendEvent(mContext,
                                 IAssetEvents.class,
-                                "onTextureError", new Object[] { mContext, ex.getMessage(), texFileName });
+                                "onModelError", new Object[] { mContext, ex.getMessage(), assetRequest.getFileName() });
                     }
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), mFileName + texFileName, meshMaterial, textureKey, texParams);
+                    assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
                 }
                 else
                 {
@@ -600,36 +593,6 @@ class GVRJassimpAdapter {
                 }
             }
         }
-    }
-
-    /**
-     * Load an embedded texture from the JASSIMP AiScene.
-     * An embedded texture is represented as an AiTexture object in Java.
-     * The AiTexture contains the pixel data for the bitmap.
-     *
-     * @param fileName filename for the embedded texture reference.
-     *                 The filename inside starts with '*' followed
-     *                 by an integer texture index into AiScene embedded textures
-     * @return GVRTexture made from embedded texture
-     */
-    private GVRTexture loadEmbeddedTexture(String fileName, GVRTextureParameters texParams) throws NumberFormatException, IndexOutOfBoundsException
-    {
-        int texIndex = parseInt(fileName.substring(1));
-        AiTexture tex = mScene.getTextures().get(texIndex);
-        Bitmap bmap = null;
-
-        if (tex.getHeight() == 0)
-        {
-            ByteArrayInputStream input = new ByteArrayInputStream(tex.getByteData());
-            bmap = BitmapFactory.decodeStream(input);
-        }
-        else
-        {
-            bmap = Bitmap.createBitmap(tex.getWidth(), tex.getHeight(), Bitmap.Config.ARGB_8888);
-            bmap.setPixels(tex.getIntData(), 0, tex.getWidth(), 0, 0, tex.getWidth(), tex.getHeight());
-        }
-        GVRBitmapTexture bmapTex = new GVRBitmapTexture(mContext, bmap, texParams);
-        return bmapTex;
     }
 
     private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){

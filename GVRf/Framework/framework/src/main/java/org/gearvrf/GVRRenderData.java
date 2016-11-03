@@ -886,6 +886,25 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         }
     }
 
+    /**
+     * Checks if a renderable object can cast shadows.
+     * @returns true if shadows are cast, false if not.
+     * @see GVRRenderData.setCastShadows
+     * @see GVRLightBase.castShadows
+     */
+    public boolean getCastShadows() {
+        return NativeRenderData.getCastShadows(getNative());
+    }
+
+    /**
+     * Indicates whether a renderable object will cast shadows or not.
+     * By default, all objects cast shadows. Transparent objects cast
+     * non-transparent shadows. This function lets you disable shadow-casting.
+     * @param castShadows true to cast shadows, false to not cast shadows
+     */
+    public void setCastShadows(boolean castShadows) {
+        NativeRenderData.setCastShadows(getNative(), castShadows);
+    }
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         GVRMesh mesh = null;
@@ -985,4 +1004,8 @@ class NativeRenderData {
     public static native void setDrawMode(long renderData, int draw_mode);
 
     public static native void setTextureCapturer(long renderData, long texture_capturer);
+
+    public static native void setCastShadows(long renderData, boolean castShadows);
+
+    public static native boolean getCastShadows(long renderData);
 }

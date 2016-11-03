@@ -64,14 +64,14 @@ public:
     };
 
     RenderData() :
-            Component(RenderData::getComponentType()), mesh_(0), light_(0), use_light_(
-                    false), use_lightmap_(false), batching_(true), render_mask_(
-                    DEFAULT_RENDER_MASK), batch_(nullptr), rendering_order_(
-                    DEFAULT_RENDERING_ORDER), hash_code_dirty_(true), offset_(
-                    false), offset_factor_(0.0f), offset_units_(0.0f), depth_test_(
-                    true), alpha_blend_(true), alpha_to_coverage_(false), sample_coverage_(
-                    1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(
-                    GL_TRIANGLES), texture_capturer(0),renderdata_dirty_(true) {
+            Component(RenderData::getComponentType()), mesh_(0), light_(0),
+                    use_light_(false), use_lightmap_(false), batching_(true),
+                    render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
+                    rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
+                    offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
+                    depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
+                    sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES),
+                    texture_capturer(0), cast_shadows_(true), renderdata_dirty_(true) {
     }
 
     void copy(const RenderData& rdata) {
@@ -83,6 +83,7 @@ public:
         use_lightmap_ = rdata.use_lightmap_;
         batching_ = rdata.batching_;
         render_mask_ = rdata.render_mask_;
+        cast_shadows_ = rdata.cast_shadows_;
         batch_ = rdata.batch_;
         for(int i=0;i<rdata.render_pass_list_.size();i++)
             render_pass_list_.push_back((rdata.render_pass_list_)[i]);
@@ -185,6 +186,14 @@ public:
 
     void set_rendering_order(int rendering_order) {
         rendering_order_ = rendering_order;
+    }
+
+    bool cast_shadows() {
+        return cast_shadows_;
+    }
+
+    void set_cast_shadows(bool cast_shadows) {
+        cast_shadows_ = cast_shadows;
     }
 
     Batch* getBatch() {
@@ -364,6 +373,7 @@ private:
     bool depth_test_;
     bool alpha_blend_;
     bool alpha_to_coverage_;
+    bool cast_shadows_;
     float sample_coverage_;
     GLboolean invert_coverage_mask_;
     GLenum draw_mode_;

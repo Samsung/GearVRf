@@ -38,7 +38,8 @@ import org.joml.Vector4f;
  *
  * Spot light uniforms:
  * {@literal
-*   enabled               1 = light is enabled, 0 = light is disabled *   world_position        position of spot light in world coordinates
+ *   enabled               1 = light is enabled, 0 = light is disabled
+ *   world_position        position of spot light in world coordinates
  *                         derived from scene object position
  *   world_direction       direction of spot light in world coordinates
  *                         derived from scene object orientation
@@ -87,8 +88,8 @@ public class GVRSpotLight extends GVRPointLight
         else if (fragmentShader == null)
             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotlight);
         fragmentShaderSource = fragmentShader;
-        setFloat("inner_cone_angle", 90.0f);
-        setFloat("outer_cone_angle", 90.0f);
+        setInnerConeAngle(90.0f);
+        setOuterConeAngle(90.0f);
     }
     
     public GVRSpotLight(GVRContext gvrContext) {
@@ -181,10 +182,13 @@ public class GVRSpotLight extends GVRPointLight
             changed = true;
             setVec3("world_position", newpos.x, newpos.y, newpos.z);
         }
-        if (getCastShadow() && changed)
+        if (getCastShadow() && (changed || (biasMatrix == null)))
         {
             Matrix4f proj = new Matrix4f();
-            float angle = (float) Math.acos(getFloat("outer_cone_angle"));
+            Vector4f v = new Vector4f();
+            float far = mShadowMaterial.getFloat("shadow_far");
+            float near = mShadowMaterial.getFloat("shadow_near");
+            float angle = (float) Math.acos(getFloat("outer_cone_angle")) * 2.0f;
             
             if (biasMatrix == null)
             {
@@ -192,14 +196,11 @@ public class GVRSpotLight extends GVRPointLight
                 biasMatrix.scale(0.5f);
                 biasMatrix.setTranslation(0.5f, 0.5f, 0.5f);
             }
-            Vector4f v = new Vector4f();
-
-            proj.perspective(angle, 1, 0.1f, 1000);
+            proj.perspective(angle, 1.0f, near, far);
             setMat4("projMatrix", proj);
-            biasMatrix.mul(proj, proj);
             worldmtx.invert();
             proj.mul(worldmtx);
-            proj.mul(biasMatrix);
+            biasMatrix.mul(proj, proj);
             proj.getColumn(0, v);
             setVec4("sm0", v.x, v.y, v.z, v.w);
             proj.getColumn(1, v);

@@ -142,6 +142,16 @@ abstract class GVRConfigurationManager {
      */
     public abstract boolean isHmtConnected();
 
+    /**
+     * @return true if using OVR_Multiview extension, false otherwise
+     */
+    private static native boolean nativeUsingMultiview(long ptr);
+
+    public boolean usingMultiview()
+    {
+        return nativeUsingMultiview(mActivity.get().getNative());
+    }
+
     private String getHmtModel() {
         return mHeadsetModel;
     }

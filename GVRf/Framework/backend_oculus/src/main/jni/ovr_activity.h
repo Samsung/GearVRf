@@ -67,7 +67,6 @@ private:
     ovrHeadModelParms oculusHeadModelParms_;
 
     bool mResolveDepthConfiguration = false;
-    bool mUsingMultiview = false;
     int mWidthConfiguration = 0, mHeightConfiguration = 0, mMultisamplesConfiguration = 0;
     ovrTextureFormat mColorTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
     ovrTextureFormat mDepthTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;

@@ -17,17 +17,30 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.utility.ImageUtils;
+import org.gearvrf.utility.Threads;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -119,15 +132,13 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     public void setCastShadow(boolean enableFlag)
     {
         GVRContext context = getGVRContext();
+
         if (enableFlag)
         {
-            if (mShadowMaterial == null)
-            {
-                mShadowMaterial = new GVRMaterial(context);
-                GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
-                depthShader.bindShader(context, mShadowMaterial);
-            }
-            NativeLight.setCastShadow(getNative(), mShadowMaterial.getNative());
+            GVRMaterial mtl = getShadowMaterial(context);
+            GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
+            depthShader.bindShader(context, mtl);
+            NativeLight.setCastShadow(getNative(), mtl.getNative());
         }
         else
         {
@@ -156,6 +167,33 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         else if (owner != null)
             getGVRContext().unregisterDrawFrameListener(this);
         super.setOwnerObject(newOwner);
+    }
+
+    /**
+     * Gets the shadow material used in constructing shadow maps.
+     *
+     * The shadow material has several public attributes which affect the shadow
+     * map construction:
+     *  - shadow_near   near plane of the shadow map camera (default 0.1)
+     *  - shadow_far    far plane of the shadow map camera (default 50)
+     *
+     * The shadow map is constructed using a depth map rendered
+     * from the viewpoint of the light. This global material
+     * contains the shadow map properties. Modifying the near and far
+     * planes change how much of the scene is visible from the light.
+     * The shadow map will be more detailed if this range is small.
+     * It may be blocky if the range is too large.
+     *
+     * @return shadow map material
+     */
+    public static GVRMaterial getShadowMaterial(GVRContext ctx) {
+        if (mShadowMaterial == null)
+        {
+            mShadowMaterial = new GVRMaterial(ctx);
+            mShadowMaterial.setFloat("shadow_near", 0.1f);
+            mShadowMaterial.setFloat("shadow_far", 50);
+        }
+        return mShadowMaterial;
     }
 
     /**
@@ -429,11 +467,11 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         defaultDir = orientation;
     }
 
-    /**
-     * Updates the position and direction of this light from the transform of
-     * scene object that owns it.
-     */
-    
+
+/**
+ * Updates the position and direction of this light from the transform of
+ * scene object that owns it.
+ */
     public void onDrawFrame(float frameTime)
     {     
         if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
