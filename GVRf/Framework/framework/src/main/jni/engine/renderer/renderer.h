@@ -101,10 +101,10 @@ public:
         return numberTriangles;
      }
      int incrementTriangles(int number=1){
-        numberTriangles += number;
+        return numberTriangles += number;
      }
      int incrementDrawCalls(){
-        numberDrawCalls++;
+        return ++numberDrawCalls;
      }
      static Renderer* getInstance(const char* type = " ");
      static void resetInstance(){
@@ -191,6 +191,10 @@ protected:
     std::vector<RenderData*> render_data_vector;
     int numberDrawCalls;
     int numberTriangles;
+
+public:
+    //to be used only on the gl thread
+    const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
 };
 extern Renderer* gRenderer;
 }

@@ -432,7 +432,9 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
                     name_.c_str());
         }
 
-        if (!using_lod_) return 3;
+        if (!using_lod_) {
+            return 3;
+        }
     }
 
     // 2. Skip the empty objects with no render data
@@ -446,18 +448,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
     }
 
     // 3. Check if the object against the Level-of-details
-    // Transform the bounding sphere
-    glm::vec4 transformed_sphere_center(bounding_volume_.center(), 1.0f);
-
-    // Calculate distance from camera
-  //  glm::vec3 camera_position = camera->owner_object()->transform()->position();
-    glm::vec4 position(camera_position, 1.0f);
-    glm::vec4 difference = transformed_sphere_center - position;
-    float distance = glm::dot(difference, difference);
-
-    // this distance will be used when sorting transparent objects
-    render_data()->set_camera_distance(distance);
-
+    const float distance = rdata->camera_distance();
     // if the object is not in the correct LOD level, cull out itself and all its children
     if (!inLODRange(distance)) {
         if (DEBUG_RENDERER) {
@@ -638,4 +629,5 @@ bool SceneObject::checkAABBVsFrustumBasic(const float frustum[6][4],
     }
     return true;
 }
+
 }

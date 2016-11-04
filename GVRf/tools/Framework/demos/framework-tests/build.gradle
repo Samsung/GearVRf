@@ -17,6 +17,20 @@ model {
             minSdkVersion.apiLevel 19
             targetSdkVersion.apiLevel 23
             testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+            externalNativeBuild {
+                cmake {
+                    arguments.add('-DINCLUDE_DIR='+rootProject.projectDir.absolutePath+'/../../Framework/')
+                    arguments.add('-DPATH_TO_LIBGVRF='+projectDir.absolutePath+'/build/intermediates/exploded-aar/Framework/framework/unspecified/jni/')
+                    //difference in sign extension when reinterpret_cast-ing a pointer between
+                    //gcc and clang hence overriding the default toolchain to match the one used
+                    //by the other modules
+                    arguments.add('-DANDROID_TOOLCHAIN=gcc')
+                }
+            }
+        }
+
+        ndk {
+            abiFilters.add('armeabi-v7a')
         }
 
         sources {
@@ -37,6 +51,11 @@ model {
                         srcDirs = [demoAppDir+"app/src/main/assets"]
                     }
                 }
+                jni {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/jni"]
+                    }
+                }
             }
             androidTest {
                 java {
@@ -54,6 +73,16 @@ model {
                         srcDirs = [demoAppDir+"app/src/main/assets"]
                     }
                 }
+                jni {
+                    source {
+                        srcDirs = [demoAppDir+"app/src/main/jni"]
+                    }
+                }
+            }
+        }
+        externalNativeBuild {
+            cmake {
+                path demoAppDir+'app/src/main/cpp/CMakeLists.txt'
             }
         }
     }

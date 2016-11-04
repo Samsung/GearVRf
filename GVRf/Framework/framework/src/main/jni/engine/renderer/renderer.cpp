@@ -87,8 +87,27 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
     if (!object->enabled()) {
         return;
     }
-    if (need_cull) {
 
+    //allows for on demand calculation of the camera distance; usually matters
+    //when transparent objects are in play
+    RenderData* renderData = object->render_data();
+    if (nullptr != renderData) {
+        renderData->setCameraDistanceLambda([object, camera_position]() {
+            // Transform the bounding volume
+            BoundingVolume bounding_volume_ = object->getBoundingVolume();
+            glm::vec4 transformed_sphere_center(bounding_volume_.center(), 1.0f);
+
+            // Calculate distance from camera
+            glm::vec4 position(camera_position, 1.0f);
+            glm::vec4 difference = transformed_sphere_center - position;
+            float distance = glm::dot(difference, difference);
+
+            // this distance will be used when sorting transparent objects
+            return distance;
+        });
+    }
+
+    if (need_cull) {
         cullVal = object->frustumCull(camera_position, frustum, planeMask);
         if (cullVal == 0) {
             object->setCullStatus(true);

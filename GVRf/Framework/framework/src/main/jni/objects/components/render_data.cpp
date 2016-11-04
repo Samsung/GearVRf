@@ -69,6 +69,11 @@ void RenderData::set_material(Material* material, int pass) {
         renderdata_dirty_ = true;
     }
 }
+
+void RenderData::setCameraDistanceLambda(std::function<float()> func) {
+    cameraDistanceLambda_ = func;
+}
+
 bool compareRenderDataByShader(RenderData* i, RenderData* j) {
     // Compare renderData by their material's shader type
     // Note: multi-pass renderData is skipped for now and put to later position,
@@ -84,45 +89,45 @@ bool compareRenderDataByShader(RenderData* i, RenderData* j) {
 
     return i->material(0)->shader_type() < j->material(0)->shader_type();
 }
-bool compareRenderDataByOrderShaderDistance(RenderData* i,
-            RenderData* j) {
+
+bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
     //1. rendering order needs to be sorted first to guarantee specified correct order
     if (i->rendering_order() == j->rendering_order()) {
 
         if (i->material(0)->shader_type() == j->material(0)->shader_type()) {
 
-                int no_passes1 = i->pass_count();
-                int no_passes2 = j->pass_count();
-
-                if(no_passes1 == no_passes2){
-
-                   for(int pass=0; pass < no_passes1; pass++){
-
-                        if (i->material(pass) == j->material(pass)) {
-
-                            if(i->cull_face(pass) == j->cull_face(pass)){
-
-                                if (i->getHashCode().compare(j->getHashCode()) == 0) {
-
-                                      // if it is a transparent object, sort by camera distance from back to front
-                                    if (i->rendering_order() >= RenderData::Transparent
-                                           && i->rendering_order() < RenderData::Overlay) {
-                                        return i->camera_distance() > j->camera_distance();
-                                    }
-                                        // otherwise sort from front to back
-                                    return i->camera_distance() < j->camera_distance();
-                                }
-                                return i->getHashCode() < j->getHashCode();
-                            }
-                            return i->cull_face(pass) < j->cull_face(pass);
-                        }
-                        return i->material(pass) < j->material(pass);
-                    }
-               }
-               return no_passes1 < no_passes2;
+            // if it is a transparent object, sort by camera distance from back to front
+            if (i->rendering_order() >= RenderData::Transparent
+                && i->rendering_order() < RenderData::Overlay) {
+                return i->camera_distance() > j->camera_distance();
             }
-            return i->material(0)->shader_type() < j->material(0)->shader_type();
+
+            int no_passes1 = i->pass_count();
+            int no_passes2 = j->pass_count();
+
+            if (no_passes1 == no_passes2) {
+
+                //@todo what about the other passes
+
+                //this is pointer comparison; assumes batching is on; if the materials are not
+                //the same then comparing the pointers further is an arbitrary decision; hence
+                //falling back to camera distance.
+                if (i->material(0) == j->material(0)) {
+                    if (i->cull_face(0) == j->cull_face(0)) {
+                        if (i->getHashCode().compare(j->getHashCode()) == 0) {
+                            // otherwise sort from front to back
+                            return i->camera_distance() < j->camera_distance();
+                        }
+                        return i->getHashCode() < j->getHashCode();
+                    }
+                    return i->cull_face(0) < j->cull_face(0);
+                }
+                return i->material(0) < j->material(0);
+            }
+            return no_passes1 < no_passes2;
         }
-        return i->rendering_order() < j->rendering_order();
+        return i->material(0)->shader_type() < j->material(0)->shader_type();
     }
+    return i->rendering_order() < j->rendering_order();
+}
 }

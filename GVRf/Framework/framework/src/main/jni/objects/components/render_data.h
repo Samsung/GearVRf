@@ -299,7 +299,11 @@ public:
         camera_distance_ = distance;
     }
 
-    float camera_distance() const {
+    float camera_distance() {
+        if (nullptr != cameraDistanceLambda_) {
+            camera_distance_ = cameraDistanceLambda_();
+            cameraDistanceLambda_ = nullptr;
+        }
         return camera_distance_;
     }
 
@@ -346,6 +350,9 @@ public:
         }
         return hash_code;
     }
+
+    void setCameraDistanceLambda(std::function<float()> func);
+
 private:
     //  RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -379,6 +386,8 @@ private:
     GLenum draw_mode_;
     float camera_distance_;
     TextureCapturer *texture_capturer;
+
+    std::function<float()> cameraDistanceLambda_ = nullptr;
 };
 
 static inline bool compareRenderDataWithFrustumCulling(RenderData* i, RenderData* j) {
