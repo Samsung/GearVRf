@@ -79,6 +79,5 @@ task(copyOculusSignatures, type: Copy) {
 
 dependencies {
     compile project(':framework')
-//    compile project(':backend_oculus')
-    compile project(':backend_daydream')
+    compile project(':backend_oculus')
 }

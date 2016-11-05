@@ -417,6 +417,7 @@ class GVRJassimpAdapter {
         if (light != null) {
             Quaternionf q = new Quaternionf();
             q.rotationX((float) Math.PI / 2.0f);
+            q.normalize();
             light.setDefaultOrientation(q);
             sceneObject.attachLight(light);
         }
@@ -575,7 +576,10 @@ class GVRJassimpAdapter {
                     try
                     {
                         int texIndex = parseInt(texFileName.substring(1));
+
                         tex = mScene.getTextures().get(texIndex);
+                        GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), mFileName + texFileName, meshMaterial, textureKey, texParams);
+                        assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
                     }
                     catch (NumberFormatException | IndexOutOfBoundsException ex)
                     {
@@ -613,11 +617,16 @@ class GVRJassimpAdapter {
                 lightlist.put(name, gvrLight);
             }
             if(type == AiLightType.SPOT){
+                float outerAngleRadians = light.getAngleOuterCone();
+                float innerAngleRadians = light.getAngleInnerCone();
                 GVRSpotLight gvrLight = new GVRSpotLight(mContext);
                 setPhongLightProp(gvrLight,light);
                 setLightProp(gvrLight, light);
-                gvrLight.setFloat("inner_cone_angle", (float)Math.cos(light.getAngleInnerCone()));
-                gvrLight.setFloat("outer_cone_angle",(float)Math.cos(light.getAngleOuterCone()));
+                if (innerAngleRadians == 0.0f) {
+                    innerAngleRadians = outerAngleRadians / 1.5f;
+                }
+                gvrLight.setInnerConeAngle((float) Math.toDegrees(innerAngleRadians));
+                gvrLight.setOuterConeAngle((float) Math.toDegrees(outerAngleRadians));
                 String name = light.getName();
                 lightlist.put(name, gvrLight);
             }
@@ -626,17 +635,21 @@ class GVRJassimpAdapter {
     }
 
     private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
-        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
-        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
-        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
+        //gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
+        //gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
+        //gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
     }
 
     private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
-        org.gearvrf.jassimp2.AiColor ambientCol= assimpLight.getColorAmbient(sWrapperProvider);
-        org.gearvrf.jassimp2.AiColor diffuseCol= assimpLight.getColorDiffuse(sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
+        org.gearvrf.jassimp2.AiColor diffuseCol = assimpLight.getColorDiffuse(sWrapperProvider);
         org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(sWrapperProvider);
-        gvrLight.setVec4("ambient_intensity", ambientCol.getRed(), ambientCol.getGreen(), ambientCol.getBlue(),ambientCol.getAlpha());
-        gvrLight.setVec4("diffuse_intensity", diffuseCol.getRed(), diffuseCol.getGreen(),diffuseCol.getBlue(),diffuseCol.getAlpha());
-        gvrLight.setVec4("specular_intensity", specular.getRed(),specular.getGreen(),specular.getBlue(), specular.getAlpha());
+        float[] c = new float[3];
+        ambientCol.getColor(c);
+        gvrLight.setVec4("ambient_intensity", c[0], c[1], c[2], 1.0f);
+        diffuseCol.getColor(c);
+        gvrLight.setVec4("diffuse_intensity", c[0], c[1], c[2], 1.0f);
+        specular.getColor(c);
+        gvrLight.setVec4("specular_intensity", c[0], c[1], c[2], 1.0f);
     }
 }

@@ -42,6 +42,8 @@ package org.gearvrf.jassimp2;
 
 import java.nio.ByteBuffer;
 
+import static java.lang.Math.max;
+
 
 /**
  * Wrapper for colors.<p>
@@ -60,48 +62,59 @@ public final class AiColor {
         m_buffer = buffer;
         m_offset = offset;
     }
-    
+
+    public void getColor(float[] color)
+    {
+        color[0] = getRed();
+        color[1] = getGreen();
+        color[2] = getBlue();
+        float scale = max(max(color[0], color[1]), color[2]);
+        if (scale > 1)
+        {
+            color[0] /= scale;
+            color[1] /= scale;
+            color[2] /= scale;
+        }
+    }
     
     /**
-     * Returns the red color component.
-     * 
+     * Returns the red color component as a float between 0 and 255.
+     *
      * @return the red component
      */
     public float getRed() {
         return m_buffer.getFloat(m_offset);
     }
-    
-    
+
+
     /**
-     * Returns the green color component.
-     * 
+     * Returns the green color component as a float between 0 and 255..
+     *
      * @return the green component
      */
     public float getGreen() {
         return m_buffer.getFloat(m_offset + 4);
     }
-    
-    
+
+
     /**
-     * Returns the blue color component.
-     * 
+     * Returns the blue color component as a float between 0 and 255.
+     *
      * @return the blue component
      */
     public float getBlue() {
         return m_buffer.getFloat(m_offset + 8);
     }
-    
-    
+
     /**
-     * Returns the alpha color component.
-     * 
+     * Returns the alpha color component as a float between 0 and 255.
+     *
      * @return the alpha component
      */
     public float getAlpha() {
         return m_buffer.getFloat(m_offset + 12);
     }
-    
-    
+
     /**
      * Sets the red color component.
      * 
@@ -110,8 +123,7 @@ public final class AiColor {
     public void setRed(float red) {
         m_buffer.putFloat(m_offset, red);
     }
-    
-    
+
     /**
      * Sets the green color component.
      * 

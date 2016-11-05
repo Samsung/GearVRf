@@ -218,6 +218,7 @@ public class GVRDirectLight extends GVRLightBase {
         defaultDir.get(lightrot);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
+        newdir.normalize();
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
         {
             changed = true;

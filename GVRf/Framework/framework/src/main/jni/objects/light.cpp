@@ -300,23 +300,7 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     }
     gRenderer = Renderer::getInstance();
     gRenderer->renderShadowMap(rstate, &lightcam, framebufferId, scene_objects);
-#ifdef DEBUG_LIGHT
-    if (!ShadowMapFile.empty()) {
-        writeShadowMapToDisk();
-    }
-#endif
     return true;
 }
-
-#ifdef DEBUG_LIGHT
-void Light::writeShadowMapToDisk()
-{
-    unsigned char* buffer = (unsigned char*) malloc(SHADOW_MAP_SIZE * SHADOW_MAP_SIZE * 4);
-    const char* filename = ShadowMapFile.c_str();
-    glReadPixels(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-    write_bw_tga((int) SHADOW_MAP_SIZE, (int) SHADOW_MAP_SIZE, buffer, (char*) filename);
-    free(buffer);
- }
-#endif
 
 }
