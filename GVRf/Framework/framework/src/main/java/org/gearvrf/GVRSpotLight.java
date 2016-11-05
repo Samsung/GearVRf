@@ -172,6 +172,7 @@ public class GVRSpotLight extends GVRPointLight
         worldmtx.getTranslation(newpos);
         worldmtx.mul(lightrot);
         worldmtx.transformDirection(newdir);
+        newdir.normalize();
         if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
         {
             changed = true;
