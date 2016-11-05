@@ -29,8 +29,7 @@ import java.util.HashMap;
  */
 public class SelectableBehavior extends GVRBehavior {
     private static final String TAG = SelectableBehavior.class.getSimpleName();
-    static private long TYPE_SELECTABLE = ((long)SelectableBehavior.class.hashCode() << 32) & (System
-            .currentTimeMillis() & 0xffffffff);
+    static private long TYPE_SELECTABLE = newComponentType(SelectableBehavior.class);
     private static final String DEFAULT_ASSET_NEEDED = "Asset for Default state should be " +
             "specified";
     private GVRSwitch gvrSwitch;
@@ -207,7 +206,7 @@ public class SelectableBehavior extends GVRBehavior {
     /**
      * Gets the current {@link ObjectState} of the {@link SelectableBehavior}
      *
-     * @return
+     * @return the {@link ObjectState} associated with this {@link SelectableBehavior}
      */
     public ObjectState getState() {
         return state;
@@ -439,6 +438,13 @@ public class SelectableBehavior extends GVRBehavior {
         stateChangedListener = listener;
     }
 
+    /**
+     *  Returns a unique long value Associated with the {@link SelectableBehavior} class. Each
+     *  subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
+     *  get the instance of {@link SelectableBehavior} attached to any {@link GVRSceneObject}
+     *  using {@link GVRSceneObject#getComponent(long)}
+     * @return the component type value.
+     */
     public static long getComponentType() {
         return TYPE_SELECTABLE;
     }

@@ -1,5 +1,6 @@
 package org.gearvrf.io.cursor3d;
 
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.Log;
@@ -13,8 +14,7 @@ import org.joml.Vector3f;
  */
 public class MovableBehavior extends SelectableBehavior {
     public static final String TAG = MovableBehavior.class.getSimpleName();
-    static private long TYPE_MOVABLE = ((long)MovableBehavior.class.hashCode() << 32) & (System
-            .currentTimeMillis() & 0xffffffff);;
+    static private long TYPE_MOVABLE = newComponentType(MovableBehavior.class);
     private Vector3f prevCursorPosition;
     private Quaternionf rotation;
     private Vector3f cross;
@@ -216,6 +216,13 @@ public class MovableBehavior extends SelectableBehavior {
         rotation.set(cross.x, cross.y, cross.z, real_part).normalize();
     }
 
+    /**
+     *  Returns a unique long value associated with the {@link MovableBehavior} class. Each
+     *  subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
+     *  get the instance of {@link MovableBehavior} attached to any {@link GVRSceneObject}
+     *  using {@link GVRSceneObject#getComponent(long)}
+     * @return the component type value.
+     */
     public static long getComponentType() {
         return TYPE_MOVABLE;
     }
