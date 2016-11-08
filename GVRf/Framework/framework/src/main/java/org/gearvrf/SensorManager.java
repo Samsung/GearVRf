@@ -78,12 +78,23 @@ class SensorManager {
                 }
             }
 
-            for (GVRSceneObject object : scene.getSceneObjects()) {
-                recurseSceneObject(controller, object, null, markActiveNodes);
+            if(isValidRay(controller.getRay())) {
+                for (GVRSceneObject object : scene.getSceneObjects()) {
+                    recurseSceneObject(controller, object, null, markActiveNodes);
+                }
             }
             for (GVRBaseSensor sensor : sensors.keySet()) {
                 sensor.processList(controller);
             }
+        }
+    }
+
+    private boolean isValidRay(Vector3f ray) {
+        if(ray == null || Float.isNaN(ray.x) || Float.isNaN(ray.y) || Float.isNaN(ray.z) ||
+                (ray.x == 0 && ray.y == 0 && ray.z == 0)) {
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -100,7 +111,6 @@ class SensorManager {
          * the children accordingly.
          */
         Vector3f ray = controller.getRay();
-
         if (!object.intersectsBoundingVolume(ORIGIN[0], ORIGIN[1],
                 ORIGIN[2], ray.x, ray.y, ray.z)) {
             return;

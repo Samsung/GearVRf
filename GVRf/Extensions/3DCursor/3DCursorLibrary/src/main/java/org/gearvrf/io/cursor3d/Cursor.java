@@ -524,6 +524,20 @@ public abstract class Cursor {
         }
     }
 
+    void transferIoDevice(Cursor targetCursor) {
+        IoDevice targetIoDevice = targetCursor.getIoDevice();
+        targetIoDevice.removeControllerEventListener(targetCursor.getControllerEventListener());
+        targetIoDevice.resetSceneObject();
+        if (IoDeviceLoader.isMouseIoDevice(targetIoDevice)) {
+            if (targetCursor.mouseEventListener != null) {
+                targetCursor.ioDevice.removeControllerEventListener(targetCursor
+                        .mouseEventListener);
+            }
+        }
+        ioDevice = targetIoDevice;
+        setupIoDevice(targetIoDevice);
+    }
+
     private enum State {
         FRONT, BACK, LEFT, RIGHT, FRONT_RIGHT, FRONT_LEFT, BACK_RIGHT, BACK_LEFT
     }
