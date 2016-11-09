@@ -24,12 +24,44 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class allows the user to customize the various aspects of the 3D Cursor.
+ * The 3D Cursor library makes use of a {@link CursorTheme} object to describe the look and
+ * behavior of a {@link Cursor} object.
+ *
+ * The library makes use of a "settings.xml" file to define a theme. The
+ * library includes its own "settings.xml"(see the assets folder) with a set of pre defined
+ * themes for all applications to use. The application can define its own theme by creating
+ * a new "settings.xml" file and placing it in its assets folder. This file overwrites the settings
+ * defined by the library. The "settings.xml" included in the library can be used as a reference
+ * while creating a new customized "settings.xml" file.
  * <p/>
- * A {@link CursorTheme} is a collection of {@link CursorAsset}s.
- */
-/* TODO Made public for use in the sample. Will be made private after the settings
- * is implemented.
+ * The following xml(taken from "settings.xml") describes the definition of a theme:
+ * <p/>
+ * <pre>
+ * {@code
+ *   <theme name="Crystal Sphere"
+ *          cursorType="object"
+ *          id="crystal_sphere">
+ *       <asset action="default"
+ *              animated="no"
+ *              soundEnabled="no"
+ *              src="poly_sphere_default"
+ *              type="3D"/>
+ *       <asset action="click"
+ *              animated="no"
+ *              soundEnabled="no"
+ *              src="poly_sphere_click"
+ *              type="3D"/>
+ *       <asset action="intersect"
+ *              animated="no"
+ *              soundEnabled="no"
+ *              src="poly_sphere_collision"
+ *              type="3D"/>
+ *   </theme>
+ * }
+ * </pre>
+ *
+ * As can be seen above {@link CursorTheme} is a collection of {@link CursorAsset}s. Properties of
+ * the theme can be set using the xml.
  */
 public class CursorTheme {
 

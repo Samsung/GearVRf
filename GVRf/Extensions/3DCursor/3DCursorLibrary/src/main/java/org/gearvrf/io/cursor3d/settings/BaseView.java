@@ -126,10 +126,10 @@ abstract class BaseView {
                         sendSwipeEvent(keyEvent);
                         continue;
                     }
-                    sendMotionEvent(event.getHitPoint(), keyEvent.getAction());
+                    sendMotionEvent(event.getHitX(), event.getHitY(), keyEvent.getAction());
                 }
             } else {
-                sendMotionEvent(event.getHitPoint(), MotionEvent.ACTION_MOVE);
+                sendMotionEvent(event.getHitX(), event.getHitY(), MotionEvent.ACTION_MOVE);
             }
         }
     };
@@ -144,9 +144,9 @@ abstract class BaseView {
         });
     }
 
-    private void sendMotionEvent(float[] hitPoint, final int action) {
-        float x = (hitPoint[0] + halfQuadWidth) / quadWidth;
-        float y = -(hitPoint[1] - halfQuadHeight) / quadHeight;
+    private void sendMotionEvent(float hitX, float hitY, final int action) {
+        float x = (hitX + halfQuadWidth) / quadWidth;
+        float y = -(hitY - halfQuadHeight) / quadHeight;
         pointerCoords.x = x * getFrameWidth();
         pointerCoords.y = y * getFrameHeight();
 

@@ -26,9 +26,46 @@ import org.gearvrf.utility.Log;
 import java.io.IOException;
 
 /**
- * This class maps to assets that defines the {@link Cursor} object.
- * The subclasses of this class allow the library or applications to provide different asset types
- * for the cursor objects.
+ * The 3D Cursor library makes use of a {@link CursorTheme} object to describe the look and
+ * behavior of a {@link Cursor} object.
+ *
+ * A {@link CursorTheme} is a collection of {@link CursorAsset}s corresponding to specific
+ * {@link Cursor} behaviors.
+ *
+ * The library makes use of a "settings.xml" file to define the assets. The
+ * library includes its own "settings.xml"(see the assets folder) with a set of pre defined
+ * themes (with included assets) for all applications to use. The application can define its own
+ * theme by creating a new "settings.xml" file and placing it in its assets folder. This file
+ * overwrites the settings defined by the library. The "settings.xml" included in the library can
+ * be used as a reference while creating a new customized "settings.xml" file.
+ * <p/>
+ * The following xml(taken from "settings.xml") describes the definition of a theme:
+ * <p/>
+ * <pre>
+ * {@code
+ *   <theme name="Crystal Sphere"
+ *          cursorType="object"
+ *          id="crystal_sphere">
+ *       <asset action="default"
+ *              animated="no"
+ *              soundEnabled="no"
+ *              src="poly_sphere_default"
+ *              type="3D"/>
+ *       <asset action="click"
+ *              animated="no"
+ *              soundEnabled="no"
+ *              src="poly_sphere_click"
+ *              type="3D"/>
+ *       <asset action="intersect"
+ *              animated="no"
+ *              soundEnabled="no"
+ *              src="poly_sphere_collision"
+ *              type="3D"/>
+ *   </theme>
+ * }
+ * </pre>
+ *
+ * As can be seen above {@link CursorAsset} can be defined using the xml file.
  */
 abstract class CursorAsset {
     private static final String TAG = CursorAsset.class.getSimpleName();

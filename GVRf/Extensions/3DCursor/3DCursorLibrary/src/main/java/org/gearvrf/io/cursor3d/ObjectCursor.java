@@ -55,19 +55,20 @@ class ObjectCursor extends Cursor {
     void dispatchSensorEvent(SensorEvent event) {
         GVRSceneObject object = event.getObject();
         if (intersecting.contains(object)) {
-            createAndSendCursorEvent(event.getObject(), true, event.getHitPoint(), true, active,
-                    event.getCursorController().getKeyEvent());
+            createAndSendCursorEvent(event.getObject(), true, event.getHitX(), event.getHitY(),
+                    event.getHitZ(), true, active, event.getCursorController().getKeyEvent());
         } else {
-            createAndSendCursorEvent(event.getObject(), false, event.getHitPoint(), event.isOver
-                    (), active, event.getCursorController().getKeyEvent());
+            createAndSendCursorEvent(event.getObject(), false, event.getHitX(), event.getHitY(),
+                    event.getHitZ(), event.isOver(), active,
+                    event.getCursorController().getKeyEvent());
         }
     }
 
-    private void createAndSendCursorEvent(GVRSceneObject sceneObject, boolean colliding, float[]
-            hitPoint, boolean isOver, boolean isActive, KeyEvent keyEvent) {
+    private void createAndSendCursorEvent(GVRSceneObject sceneObject, boolean colliding, float
+            hitX, float hitY, float hitZ, boolean isOver, boolean isActive, KeyEvent keyEvent) {
         CursorEvent cursorEvent = CursorEvent.obtain();
         cursorEvent.setColliding(colliding);
-        cursorEvent.setHitPoint(hitPoint);
+        cursorEvent.setHitPoint(hitX, hitY, hitZ);
         cursorEvent.setOver(isOver);
         cursorEvent.setObject(sceneObject);
         cursorEvent.setActive(isActive);
@@ -121,7 +122,8 @@ class ObjectCursor extends Cursor {
                 if (intersecting.contains(object)) {
                     intersecting.remove(object);
                 }
-                createAndSendCursorEvent(object, false, EMPTY_HIT_POINT, false, active, keyEvent);
+                createAndSendCursorEvent(object, false, EMPTY_HIT_POINT[0],EMPTY_HIT_POINT[1],
+                        EMPTY_HIT_POINT[2], false, active, keyEvent);
             }
             previousHits.clear();
             previousHits.addAll(newHits);
@@ -152,8 +154,8 @@ class ObjectCursor extends Cursor {
                         cursorSceneObject.getPositionZ(), cubeMin, cubeMax)) {
                     if (isColliding(object)) {
                         addNewHit(object);
-                        createAndSendCursorEvent(object, true, new float[3], true, active,
-                                keyEvent);
+                        createAndSendCursorEvent(object, true, EMPTY_HIT_POINT[0],
+                                EMPTY_HIT_POINT[1], EMPTY_HIT_POINT[2], true, active, keyEvent);
                     }
                 } else {
                     addNewHit(object);

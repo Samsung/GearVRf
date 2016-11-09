@@ -186,6 +186,11 @@ public class CursorManager {
         unusedIoDevices.addAll(inputManager.getAvailableIoDevices());
         assignIoDevicesToCursors();
 
+        // disable all unused devices
+        for(IoDevice device:unusedIoDevices){
+            device.setEnable(false);
+        }
+
         settingsCursor = new LaserCursor(context, this);
         settingsCursor.setScene(scene);
 
@@ -611,8 +616,12 @@ public class CursorManager {
      * <p/>
      *
      * The listener notifies the application whenever a Cursor is added/removed from the
-     * manager. The {@link CursorActivationListener#onActivated(Cursor)} method is automatically
-     * called for all active {@link Cursor}s when a new {@link CursorActivationListener} is added.
+     * manager.
+     *
+     * Note that this call {@link CursorActivationListener#onActivated(Cursor)} would only return
+     * the future {@link Cursor} objects activated. To know the list of {@link Cursor} objects
+     * activated at the time of this call, make use of the {@link #getActiveCursors()}.
+     *
      *
      * @param listener the {@link CursorActivationListener} to be added.<code>null</code>
      *                 objects are ignored.
@@ -622,9 +631,6 @@ public class CursorManager {
         if (null == listener) {
             // ignore null input
             return;
-        }
-        for (Cursor cursor : cursors) {
-            listener.onActivated(cursor);
         }
         activationListeners.add(listener);
     }
@@ -849,7 +855,10 @@ public class CursorManager {
     }
 
     /**
-     * Close the {@link CursorManager} object.
+     * Called to perform post clean up of the {@link CursorManager}. All devices registered with
+     * the {@link Cursor} objects are cleared and the all device listeners are unregistered.
+     *
+     * Usually called on destroy.
      */
     public void close() {
         // Use this to perform post cleanup.
@@ -934,6 +943,10 @@ public class CursorManager {
             Log.d(TAG, "IoDevice added:" + addedIoDevice.getDeviceId());
             unusedIoDevices.add(addedIoDevice);
             assignIoDevicesToCursors();
+
+            if(unusedIoDevices.contains(addedIoDevice)){
+                addedIoDevice.setEnable(false);
+            }
         }
 
         @Override
@@ -1032,7 +1045,14 @@ public class CursorManager {
                 cursor.addCursorEventListener(cursorEventListener);
             }
         };
+
         addCursorActivationListener(activationListener);
+        // Collect all active cursors and register for all future active cursors.
+        for (Cursor cursor : cursors) {
+            if (cursor.isActive()) {
+                activationListener.onActivated(cursor);
+            }
+        }
     }
 
     private CursorEventListener cursorEventListener = new CursorEventListener() {

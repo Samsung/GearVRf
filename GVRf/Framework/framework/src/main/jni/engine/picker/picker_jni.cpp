@@ -37,10 +37,10 @@ extern "C" {
     JNIEXPORT jfloat JNICALL
     Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
             jobject obj, jlong jscene_object, jlong jcamera_rig);
-    JNIEXPORT jfloatArray JNICALL
+    JNIEXPORT bool JNICALL
     Java_org_gearvrf_NativePicker_pickSceneObjectAgainstBoundingBox(JNIEnv * env,
             jobject obj, jlong jscene_object, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
-            jfloat dy, jfloat dz);
+            jfloat dy, jfloat dz, jobject jreadback_buffer);
     JNIEXPORT jobjectArray JNICALL
     Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
             jobject obj, jlong jscene);
@@ -113,26 +113,29 @@ Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
     return Picker::pickSceneObject(scene_object, camera_rig);
 }
 
-JNIEXPORT jfloatArray JNICALL
+JNIEXPORT bool JNICALL
 Java_org_gearvrf_NativePicker_pickSceneObjectAgainstBoundingBox(JNIEnv * env,
         jobject obj, jlong jscene_object,  jfloat ox, jfloat oy, jfloat oz, jfloat dx,
-        jfloat dy, jfloat dz) {
+        jfloat dy, jfloat dz, jobject jreadback_buffer) {
     SceneObject* scene_object =
             reinterpret_cast<SceneObject*>(jscene_object);
+    float *data = (float *) env->GetDirectBufferAddress(jreadback_buffer);
     glm::vec3 hit =  Picker::pickSceneObjectAgainstBoundingBox(scene_object,
             ox, oy, oz,  dx, dy, dz);
 
     if (hit == glm::vec3(std::numeric_limits<float>::infinity())){
-    	return NULL;
+        return false;
     }
     jsize size = sizeof(hit) / sizeof(jfloat);
     if (size != 3) {
         LOGE("sizeof(hit) / sizeof(jfloat) != 3");
         throw "sizeof(hit) / sizeof(jfloat) != 3";
     }
-    jfloatArray jhit = env->NewFloatArray(size);
-    env->SetFloatArrayRegion(jhit, 0, size, glm::value_ptr(hit));
-    return jhit;
+
+    data[0]=hit.x;
+    data[1]=hit.y;
+    data[2]=hit.z;
+    return true;
 }
 
 JNIEXPORT jobjectArray JNICALL

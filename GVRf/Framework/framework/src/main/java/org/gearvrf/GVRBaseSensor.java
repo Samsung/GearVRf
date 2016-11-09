@@ -52,7 +52,7 @@ public class GVRBaseSensor {
     }
 
     void addSceneObject(GVRCursorController controller, GVRSceneObject object,
-            float[] hitPoint) {
+            float hitX, float hitY, float hitZ) {
         ControllerData data = getControllerData(controller);
         Set<GVRSceneObject> prevHits = data.getPrevHits();
         List<SensorEvent> newHits = data.getNewHits();
@@ -63,7 +63,7 @@ public class GVRBaseSensor {
 
         SensorEvent event = SensorEvent.obtain();
         event.setObject(object);
-        event.setHitPoint(hitPoint);
+        event.setHitPoint(hitX, hitY, hitZ);
         event.setOver(true);
         newHits.add(event);
     }
@@ -83,7 +83,7 @@ public class GVRBaseSensor {
                 event.setCursorController(controller);
                 event.setObject(object);
                 // clear the hit point
-                event.setHitPoint(EMPTY_HIT_POINT);
+                event.setHitPoint(EMPTY_HIT_POINT[0], EMPTY_HIT_POINT[1], EMPTY_HIT_POINT[2]);
                 event.setOver(false);
                 events.add(event);
             }
