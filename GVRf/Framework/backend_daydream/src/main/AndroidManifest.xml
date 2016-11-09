@@ -27,6 +27,26 @@
 
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
 
+    <!-- copied from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
+
+    <!-- Required for vibration feedback when the trigger action is performed. -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Required to read the paired viewer's distortion parameters. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- Required to detect viewer insertion. -->
+    <uses-permission android:name="android.permission.NFC"/>
+
+    <!-- Make accelerometer and gyroscope hard requirements for good head tracking. -->
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true"/>
+
+    <!-- Indicates use of Android's VR-mode, available only on Android N+. -->
+    <uses-feature android:name="android.software.vr.mode" android:required="false"/>
+    <!-- Indicates use of VR features that are available only on Daydream-ready devices. -->
+    <uses-feature android:name="android.hardware.vr.high_performance" android:required="false"/>
+
+    <!-- done copying from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
+
     <application
         android:allowBackup="true">
     </application>
