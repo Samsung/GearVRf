@@ -15,7 +15,6 @@
  #
 LOCAL_PATH := $(call my-dir)
 
-
 include $(CLEAR_VARS)
 
 ifndef OVR_MOBILE_SDK
@@ -67,5 +66,4 @@ LOCAL_LDLIBS += $(PROJECT_ROOT)/backend_oculus/build/intermediates/exploded-aar/
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-add-path, $(OVR_MOBILE_SDK))
-$(call import-module,VrAppSupport/SystemUtils/Projects/AndroidPrebuilt/jni)
 $(call import-module,VrApi/Projects/AndroidPrebuilt/jni)

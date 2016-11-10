@@ -20,7 +20,7 @@ model {
             externalNativeBuild {
                 cmake {
                     arguments.add('-DINCLUDE_DIR='+rootProject.projectDir.absolutePath+'/../../Framework/')
-                    arguments.add('-DPATH_TO_LIBGVRF='+projectDir.absolutePath+'/build/intermediates/exploded-aar/Framework/framework/unspecified/jni/')
+                    arguments.add('-DPATH_TO_LIBGVRF='+projectDir.absolutePath+'/build/intermediates/exploded-aar/Framework/framework/unspecified/jni/armeabi-v7a/')
                     //difference in sign extension when reinterpret_cast-ing a pointer between
                     //gcc and clang hence overriding the default toolchain to match the one used
                     //by the other modules

@@ -2,10 +2,6 @@ apply plugin: 'com.android.model.library'
 
 model {
     android {
-        tasks.withType(JavaCompile) {
-            compileTask -> compileTask.dependsOn copyOculusFiles
-        }
-
         compileSdkVersion 21
         buildToolsVersion '23.0.3'
 
@@ -24,6 +20,7 @@ model {
                     arguments.add('PROJECT_ROOT='+rootProject.projectDir)
                     arguments.add('OVR_MOBILE_SDK='+rootProject.property("OVR_MOBILE_SDK"))
                     arguments.add("NDK_DEBUG=1")
+                    arguments.add("BUILDTYPE=Release")  //vrapi build type
                     arguments.add("-j"+Runtime.runtime.availableProcessors())
                 }
             }
@@ -74,28 +71,6 @@ model {
                 path '../../../Framework/backend_oculus/src/main/jni/Android.mk'
             }
         }
-    }
-}
-
-task copyOculusFiles(type: Copy) {
-    if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-        println "copying oculus binaries"
-
-        def oculusDir = rootProject.property("OVR_MOBILE_SDK")
-        copy {
-            from oculusDir+'/VrApi/Libs/Android/VrApi.jar'
-            into 'src/main/libs'
-        }
-        copy {
-            from oculusDir+'/VrApi/Libs/Android/armeabi-v7a/libvrapi.so'
-            into 'src/main/libs/armeabi-v7a'
-        }
-        copy {
-            from oculusDir+'/VrAppSupport/SystemUtils/Libs/Android/SystemUtils.jar'
-            into 'src/main/libs'
-        }
-    } else {
-        println "WARNING: not copying Oculus files; OVR_MOBILE_SDK not found"
     }
 }
 

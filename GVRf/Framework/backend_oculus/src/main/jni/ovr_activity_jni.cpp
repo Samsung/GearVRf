@@ -81,11 +81,6 @@ JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jc
     activity->onDrawFrame();
 }
 
-JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeShowGlobalMenu(JNIEnv * jni, jclass clazz, jlong appPtr) {
-    GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->showGlobalMenu();
-}
-
 JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeShowConfirmQuit(JNIEnv * jni, jclass clazz, jlong appPtr) {
     GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
     activity->showConfirmQuit();

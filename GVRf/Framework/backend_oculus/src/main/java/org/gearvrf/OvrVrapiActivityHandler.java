@@ -123,8 +123,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public boolean onBackLongPress() {
-        nativeShowGlobalMenu(mPtr);
-        return true;
+        return false;
     }
 
     @Override

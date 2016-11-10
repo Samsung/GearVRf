@@ -89,7 +89,6 @@ public:
     void uninitializeVrApi();
     void leaveVrMode();
 
-    void showGlobalMenu();
     void showConfirmQuit();
 
     bool isHmtConnected() const;

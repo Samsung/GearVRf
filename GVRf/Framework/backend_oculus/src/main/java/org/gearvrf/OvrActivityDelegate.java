@@ -19,7 +19,6 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.view.KeyEvent;
 
-import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
 /**
@@ -161,5 +160,4 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
     private OvrXMLParser mXmlParser;
     private OvrActivityHandler mActivityHandler;
-    private final static String TAG = "OvrActivityDelegate";
 }

@@ -15,13 +15,10 @@
 
 #include "ovr_activity.h"
 #include "../util/jni_utils.h"
-#include "../util/gvr_log.h"
 #include "../eglextension/msaa/msaa.h"
-#include <jni.h>
 #include "VrApi.h"
-#include "VrApi_Types.h"
 #include "VrApi_Helpers.h"
-#include "SystemActivities.h"
+#include "VrApi_SystemUtils.h"
 #include <cstring>
 #include "engine/renderer/renderer.h"
 
@@ -68,14 +65,12 @@ int GVRActivity::initializeVrApi() {
         return mVrapiInitResult;
     }
 
-    SystemActivities_Init(&oculusJavaMainThread_);
     if (VRAPI_INITIALIZE_PERMISSIONS_ERROR == mVrapiInitResult) {
         char const * msg =
                 mVrapiInitResult == VRAPI_INITIALIZE_PERMISSIONS_ERROR ?
                         "Thread priority security exception. Make sure the APK is signed." :
                         "VrApi initialization error.";
-        SystemActivities_DisplayError(&oculusJavaMainThread_, SYSTEM_ACTIVITIES_FATAL_ERROR_OSIG, __FILE__, msg);
-        SystemActivities_Shutdown(&oculusJavaMainThread_);
+        vrapi_ShowFatalError(&oculusJavaMainThread_, nullptr, msg, __FILE__, __LINE__);
     }
 
     return mVrapiInitResult;
@@ -83,20 +78,14 @@ int GVRActivity::initializeVrApi() {
 
 void GVRActivity::uninitializeVrApi() {
     if (VRAPI_INITIALIZE_UNKNOWN_ERROR != mVrapiInitResult) {
-        SystemActivities_Shutdown(&oculusJavaMainThread_);
         vrapi_Shutdown();
     }
     mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
 }
 
-void GVRActivity::showGlobalMenu() {
-    LOGV("GVRActivity::showGlobalMenu");
-    SystemActivities_StartSystemActivity(&oculusJavaMainThread_, PUI_GLOBAL_MENU, NULL);
-}
-
 void GVRActivity::showConfirmQuit() {
     LOGV("GVRActivity::showConfirmQuit");
-    SystemActivities_StartSystemActivity(&oculusJavaMainThread_, PUI_CONFIRM_QUIT, NULL);
+    vrapi_ShowSystemUI(&oculusJavaMainThread_, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
 }
 
 bool GVRActivity::updateSensoredScene() {
