@@ -635,9 +635,9 @@ class GVRJassimpAdapter {
     }
 
     private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
-        //gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
-        //gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
-        //gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
+        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
+        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
+        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
     }
 
     private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
