@@ -1,0 +1,74 @@
+allprojects {
+    repositories {
+        jcenter()
+        flatDir {
+            dirs '../../../gearvrf-libs', '../../../Framework/backend_daydream/src/main/libs/'
+        }
+    }
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "25.0.0"
+
+    buildTypes {
+        debug {
+            resValue 'string', 'app_name', System.getProperty("appName")
+        }
+        release {
+            resValue 'string', 'app_name', System.getProperty("appName")
+        }
+    }
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 19
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(
+                    output.outputFile.parent,
+                    System.getProperty("appName") + ".apk")
+        }
+    }
+
+    // ignore the x86 and arm-v8 files from the google vr libraries
+    packagingOptions {
+        exclude 'lib/x86/libgvrbase.so'
+        exclude 'lib/arm64-v8a/libgvrbase.so'
+    }
+}
+
+task copyOculusSignature(type: Copy) {
+    if (rootProject.hasProperty("OCULUS_SIGS_DIRECTORY")) {
+        copy {
+            from rootProject.property("OCULUS_SIGS_DIRECTORY")
+            into 'src/main/assets'
+            include 'oculussig_*'
+        }
+    }
+}
+
+preBuild {}.dependsOn copyOculusSignature
+
+dependencies {
+    compile(name: 'framework-debug', ext: 'aar')
+
+    if (rootProject.hasProperty("only_daydream")) {
+        compile(name: 'backend_daydream-debug', ext: 'aar')
+        compile(name: 'google-vr-base', ext: 'aar')
+        compile(name: 'google-vr-common', ext: 'aar')
+        compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-7'
+    } else {
+        if (rootProject.hasProperty("no_oculus")) {
+            compile(name: 'backend-debug', ext: 'aar')
+        } else { //default oculus+daydream
+            compile(name: 'backend_oculus-debug', ext: 'aar')
+            compile(name: 'backend_daydream-debug', ext: 'aar')
+            compile(name: 'google-vr-base', ext: 'aar')
+            compile(name: 'google-vr-common', ext: 'aar')
+            compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-7'
+        }
+    }
+}

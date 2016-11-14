@@ -19,11 +19,8 @@ apply plugin: XmlValidator
 
 System.setProperty("appName", "gvr-scene-editor")
 
-if(file("../../common.gradle").exists()) {
-    apply from: '../../common.gradle'
-}
-if(file("../../../../GearVRf-Demos/common.gradle").exists()) {
-    apply from: '../../../../GearVRf-Demos/common.gradle'
+if(file("../common.gradle").exists()) {
+    apply from: '../common.gradle'
 }
 
 android {
