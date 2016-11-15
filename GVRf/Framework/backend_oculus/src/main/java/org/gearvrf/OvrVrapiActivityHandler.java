@@ -28,6 +28,7 @@ import javax.microedition.khronos.opengles.GL10;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
+import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
 import android.opengl.EGL14;
 import android.opengl.GLSurfaceView;
@@ -57,6 +58,16 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     OvrVrapiActivityHandler(final GVRActivity activity, final OvrActivityNative activityNative) throws VrapiNotAvailableException {
         if (null == activity) {
             throw new IllegalArgumentException();
+        }
+        try {
+            activity.getPackageManager().getPackageInfo("com.oculus.systemdriver", PackageManager.GET_SIGNATURES);
+        } catch (final PackageManager.NameNotFoundException e) {
+            try {
+                activity.getPackageManager().getPackageInfo("com.oculus.systemactivities", PackageManager.GET_SIGNATURES);
+            } catch (PackageManager.NameNotFoundException e1) {
+                Log.e(TAG, "oculus packages missing, assuming vrapi will not work");
+                throw new VrapiNotAvailableException();
+            }
         }
         mActivity = activity;
         mPtr = activityNative.getNative();
