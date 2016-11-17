@@ -278,6 +278,8 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
                 frag_shader_string_lengths, 5);
         program_object_map_[feature_set] = prgram;
 
+        if(use_multiview)
+            LOGE("Rendering with multiview");
         initUniforms(feature_set, prgram->id(), uniform_locations);
         uniform_loc[feature_set] = uniform_locations;
     }
@@ -357,19 +359,11 @@ void TextureShader::render(RenderState* rstate,
 void TextureShader::render_batch(const std::vector<glm::mat4>& model_matrix,
         RenderData* render_data,  RenderState& rstate, unsigned int indexCount, int drawcount)
 {
-
     uniforms uniform_locations;
     programInit(&rstate,render_data,rstate.material_override,model_matrix,drawcount,true);
-
-    if(use_multiview)
-        glDrawElementsInstanced(render_data->draw_mode(),indexCount, GL_UNSIGNED_SHORT, NULL, 2 );
-    else
-        GL(glDrawElements(render_data->draw_mode(), indexCount, GL_UNSIGNED_SHORT,
-            0));
-
+    GL(glDrawElements(render_data->draw_mode(), indexCount, GL_UNSIGNED_SHORT, 0));
     GL(glBindVertexArray(0));
     checkGlError(" TextureShader::render_batch");
-
 }
 }
 ;
