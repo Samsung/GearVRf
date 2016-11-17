@@ -1,13 +1,11 @@
-precision highp float;
-precision highp sampler2DArray;
-
 #ifdef HAS_MULTIVIEW
-	flat in int view_id;
+#extension GL_OVR_multiview2 : enable
 	uniform mat4 u_view_[2];
 #else
     uniform mat4 u_view; 
 #endif
-
+precision highp float;
+precision highp sampler2DArray;
 out vec4 fragColor;
 
 uniform mat4 u_model;
