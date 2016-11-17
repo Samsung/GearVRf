@@ -44,10 +44,12 @@ public class InteractiveObject {
   private EventUtility eventUtility = null;
   private String eventUtilityFromField; // often 'toggle_changed'
   private String eventUtilityToField; // usually 'set_boolean'
+  private ScriptObject scriptObject = null;
+
   private DefinedItem definedItem = null;
   private String definedItemToField; // can be set_translation, set_rotation, set_position, set_orientation, set_scale
-  // TODO: Scripting functionality will eventually be added
-  // TODO: ScriptingObject scriptingObject = null;
+  private String definedItemFromField; // used for Scripts, sending data from SceneObj to Script
+
 
   public InteractiveObject() {
   }
@@ -83,9 +85,21 @@ public class InteractiveObject {
     return this.eventUtility;
   }
 
-  public void setDefinedItem(DefinedItem definedItem, String definedItemToField) {
+  public ScriptObject getScriptObject() {
+    return this.scriptObject;
+  }
+  public void setScriptObject(ScriptObject scriptObject) {
+    this.scriptObject = scriptObject;
+  }
+
+
+  public void setDefinedItemToField(DefinedItem definedItem, String definedItemToField) {
     this.definedItem = definedItem;
     this.definedItemToField = definedItemToField;
+  }
+  public void setDefinedItemFromField(DefinedItem definedItem, String definedItemFromField) {
+    this.definedItem = definedItem;
+    this.definedItemFromField = definedItemFromField;
   }
   public DefinedItem getDefinedItem() {
     return this.definedItem;
@@ -93,7 +107,9 @@ public class InteractiveObject {
   public String getDefinedItemToField() {
     return this.definedItemToField;
   }
-
+  public String getDefinedItemFromField() {
+    return this.definedItemFromField;
+  }
 }
 
 

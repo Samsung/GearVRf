@@ -25,6 +25,7 @@ import java.util.concurrent.Future;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
@@ -37,6 +38,8 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.gearvrf.script.GVRJavascriptScriptFile;
+
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -116,6 +119,8 @@ public class X3Dobject
   // Default is true to use Universal lights shader.
   public final static boolean UNIVERSAL_LIGHTS = true;
 
+  private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)";
+
   // Strings appended to GVRScene names when there are multiple
   // animations on the same <Transform> or GVRSceneObject
 
@@ -154,7 +159,6 @@ public class X3Dobject
 
   private GVRSceneObject root = null;
   private GVRSceneObject mainCamera = null;
-  //private List<GVRAnimation> mAnimations;
   /** Array list of DEFined items Clones objects with 'USE' parameter
    * As public, enables implementation of HTML5 DOM's
    * getElementByTagName() method.
@@ -169,9 +173,13 @@ public class X3Dobject
   // the currentSceneObject's parent must be with the original Transform's
   // parent.
   private GVRSceneObject currentSceneObject = null;
+
+  // Since Script Object are made of multiple parts during parsing,
+  // this variable will be the active ScriptObject being built
+  private ScriptObject currentScriptObject = null;
+
   // Since GVRShapeObject contains LOD range, 'shapeLODSceneObj' is used only
   // when it's embedded into a Level-of-Detail
-
   private GVRSceneObject shapeLODSceneObject = null;
 
   // points to a sensor that wraps around other nodes.
@@ -206,6 +214,7 @@ public class X3Dobject
   private Vector<TextureCoordinates> indexedTextureCoord = new Vector<TextureCoordinates>();
   private ArrayList<Integer> texcoordIndices = new ArrayList<Integer>();
   private ArrayList<Integer> normalIndices = new ArrayList<Integer>();
+  private ArrayList<ScriptObject> scriptObjects = new ArrayList<ScriptObject>();
 
   private Vector<Key> keys = new Vector<Key>();
   private Vector<KeyValue> keyValues = new Vector<KeyValue>();
@@ -290,7 +299,8 @@ public class X3Dobject
 
       animationInteractivityManager = new AnimationInteractivityManager(
               this, gvrContext, root, mDefinedItems, interpolators,
-              sensors, timeSensors, eventUtilities);
+              sensors, timeSensors, eventUtilities, scriptObjects
+      );
     }
     catch (Exception e)
     {
@@ -677,58 +687,6 @@ public class X3Dobject
       }
     } // parseNumbersString
 
-
-    // Converts a Vector3f to a Quaternionf
-    // called when parsing direction value in Directional and Spot Lights
-
-    private Quaternionf ConvertDirectionalVectorToQuaternion(float[] direction)
-    {
-      // Vectors3f: D = light direction; s = Side; u = up = re-crossed
-      Vector3f d = new Vector3f(-direction[0], -direction[1], -direction[2]);
-      // check for exception condition
-      Quaternionf q = new Quaternionf();
-      if ((d.x == 0) && (d.z == 0))
-      {
-        // exception condition if direction is (0,y,0):
-
-        // straight up, straight down or all zero's.
-        if (d.y > 0)
-        { // direction straight up
-
-          AxisAngle4f angleAxis = new AxisAngle4f(-(float) Math.PI / 2, 1, 0,
-                  0);
-          q.set(angleAxis);
-        }
-        else if (d.y < 0)
-
-        { // direction straight down
-
-          AxisAngle4f angleAxis = new AxisAngle4f((float) Math.PI / 2, 1, 0, 0);
-          q.set(angleAxis);
-        }
-        else
-        { // All zero's. Just set to identity quaternion
-          q.identity();
-        }
-      }
-      else
-      {
-        d.normalize();
-        Vector3f up = new Vector3f(0, 1, 0);
-        Vector3f s = new Vector3f();
-        d.cross(up, s);
-        s.normalize();
-        Vector3f u = new Vector3f();
-        d.cross(s, u);
-        u.normalize();
-        Matrix4f matrix = new Matrix4f(s.x, s.y, s.z, 0, u.x, u.y, u.z, 0, d.x,
-                d.y, d.z, 0, 0, 0, 0, 1);
-        q.setFromNormalized(matrix);
-      }
-      return q;
-
-    } // end ConvertDirectionalVectorToQuaternion
-
     private void ReplicateGVRSceneObjStructure(String attributeValue)
     {
       // TODO: needs to complete implementation.  May instead
@@ -933,9 +891,7 @@ public class X3Dobject
             // to the DefinedItem's array list in case it's referenced
             // somewhere else in the X3D file.
 
-            DefinedItem definedItem = new DefinedItem(name);
-            definedItem.setGVRSceneObject(currentSceneObject);
-            mDefinedItems.add(definedItem); // Array list of DEFined items
+            // Array list of DEFined items
             // Clones objects with USE
             // This transform may be animated later, which means we must have
             // separate GVRSceneObjects
@@ -1000,6 +956,14 @@ public class X3Dobject
             // Actual object that will have GVRendering and GVRMesh attached
             currentSceneObject = AddGVRSceneObject();
             currentSceneObject.setName(name);
+
+            // save the object for Interactivity, Animation and Scripts
+            // The AxisAngle is saved for Scripts which is how X3D describes
+            // rotations, not quaternions.
+            DefinedItem definedItem = new DefinedItem(name, rotation[3],
+                    rotation[0], rotation[1], rotation[2]);
+            definedItem.setGVRSceneObject(currentSceneObject);
+            mDefinedItems.add(definedItem); // Array list of DEFined items
           } // end if DEF name and thus possible animation / interactivity
         } // not a 'Transform USE="..."' node
 
@@ -1892,12 +1856,13 @@ public class X3Dobject
             GVRSceneObject newDirectionalLightSceneObj = AddGVRSceneObject();
             GVRDirectLight newDirectionalLight = new GVRDirectLight(gvrContext);
             newDirectionalLightSceneObj.attachLight(newDirectionalLight);
+            DefinedItem definedItem = null;
 
             attributeValue = attributes.getValue("DEF");
             if (attributeValue != null)
             {
               newDirectionalLightSceneObj.setName(attributeValue);
-              DefinedItem definedItem = new DefinedItem(attributeValue);
+              definedItem = new DefinedItem(attributeValue);
               definedItem.setGVRSceneObject(newDirectionalLightSceneObj);
               mDefinedItems.add(definedItem); // Array list of DEFined items
               // Clones objects with USE
@@ -1948,7 +1913,10 @@ public class X3Dobject
             else
               newDirectionalLight.disable();
 
-            Quaternionf q = ConvertDirectionalVectorToQuaternion(direction);
+            if (definedItem != null) definedItem.setDirection(direction);
+
+            Quaternionf q = animationInteractivityManager.ConvertDirectionalVectorToQuaternion(
+                    new Vector3f(direction[0],direction[1], direction[2]) );
             // set direction in the Light's GVRScene
             GVRTransform newDirectionalLightSceneObjTransform = newDirectionalLightSceneObj
                     .getTransform();
@@ -2052,11 +2020,13 @@ public class X3Dobject
             GVRSpotLight newSpotLight = new GVRSpotLight(gvrContext);
             newSpotLightSceneObj.attachLight(newSpotLight);
 
+            DefinedItem definedItem = null;
+
             attributeValue = attributes.getValue("DEF");
             if (attributeValue != null)
             {
               newSpotLightSceneObj.setName(attributeValue);
-              DefinedItem definedItem = new DefinedItem(attributeValue);
+              definedItem = new DefinedItem(attributeValue);
               definedItem.setGVRSceneObject(newSpotLightSceneObj);
               mDefinedItems.add(definedItem); // Array list of DEFined items
               // Clones objects with USE
@@ -2152,7 +2122,9 @@ public class X3Dobject
             newSpotLight.setInnerConeAngle(beamWidth * 180 / (float) Math.PI);
             newSpotLight.setOuterConeAngle(cutOffAngle * 180 / (float) Math.PI);
 
-            Quaternionf q = ConvertDirectionalVectorToQuaternion(direction);
+            if (definedItem != null) definedItem.setDirection(direction);
+            Quaternionf q = animationInteractivityManager.ConvertDirectionalVectorToQuaternion(
+                    new Vector3f(direction[0],direction[1], direction[2]) );
             // set position and direction in the SpotLight's GVRScene
             GVRTransform newSpotLightSceneObjTransform = newSpotLightSceneObj
                     .getTransform();
@@ -2595,6 +2567,7 @@ public class X3Dobject
 
 
         /********** FontStyle **********/
+        //TODO: FontStyle not currently implemented
         else if (qName.equalsIgnoreCase("FontStyle")) {
           String name = "";
           String[] family =
@@ -2669,6 +2642,7 @@ public class X3Dobject
         /********** Billboard **********/
         else if (qName.equalsIgnoreCase("Billboard")) {
           Log.e(TAG, "Billboard currently not implemented. ");
+          //TODO: Billboard not currently implemented
           String name = "";
           float[] axisOfRotation =
                   {
@@ -2832,6 +2806,7 @@ public class X3Dobject
         /********** ProximitySensor **********/
         else if (qName.equalsIgnoreCase("ProximitySensor")) {
           Log.e(TAG, "ProximitySensor currently not implemented. ");
+          //TODO Proximity Sensor not currently implemented
           String name = "";
           String description = "";
           String[] parameter;
@@ -2844,13 +2819,15 @@ public class X3Dobject
           if (attributeValue != null) {
             url = parseMFString(attributeValue);
           }
-
         }  //  end <ProximitySensor> node
 
 
         /********** Script **********/
         else if (qName.equalsIgnoreCase("Script")) {
           String name = "";
+          Boolean directOutput = false;
+          Boolean mustEvaluate = false;
+          String[] url = null;
 
           // The EcmaScript / JavaScript will be parsed inside
           // SAX's characters method
@@ -2862,27 +2839,42 @@ public class X3Dobject
           if (attributeValue != null) {
             name = attributeValue;
           }
+          attributeValue = attributes.getValue("url");
+          if (attributeValue != null) {
+            url = parseMFString(attributeValue);
+          }
+          attributeValue = attributes.getValue("directOutput");
+          if (attributeValue != null) {
+            directOutput = parseBooleanString(attributeValue);
+          }
+          attributeValue = attributes.getValue("mustEvaluate");
+          if (attributeValue != null) {
+            mustEvaluate = parseBooleanString(attributeValue);
+          }
+          currentScriptObject = new ScriptObject(name, directOutput, mustEvaluate, url);
         }  //  end <Script> node
 
 
-        /********** field (embedded inside <Script>) **********/
+        /******* field (embedded inside <Script>) node *******/
         else if (qName.equalsIgnoreCase("field")) {
 
-          /*
-          public enum Type
-          {
-            ANCHOR, PROXIMITY, TOUCH, VISIBILITY
-          };
-          */
-
           String name = "";
-          String accessType = "";
+          ScriptObject.AccessType accessType = ScriptObject.AccessType.INPUT_OUTPUT;
           String type = "";
 
           attributeValue = attributes.getValue("accessType");
           if (attributeValue != null) {
-            if ( (attributeValue.equals("inputOnly")) || (attributeValue.equals("outputOnly")) ) {
-              accessType = attributeValue;
+            if ( attributeValue.equals("inputOnly" ) ) {
+              accessType = ScriptObject.AccessType.INPUT_ONLY;
+            }
+            else if ( attributeValue.equals("outputOnly") ) {
+              accessType = ScriptObject.AccessType.OUTPUT_ONLY;
+            }
+            else if ( attributeValue.equals("inputOutput") ) {
+              accessType = ScriptObject.AccessType.INPUT_OUTPUT;
+            }
+            else if ( attributeValue.equals("initializeOnly") ) {
+              accessType = ScriptObject.AccessType.INITIALIZE_ONLY;
             }
           }
           attributeValue = attributes.getValue("name");
@@ -2892,6 +2884,9 @@ public class X3Dobject
           attributeValue = attributes.getValue("type");
           if (attributeValue != null) {
             type = attributeValue;
+          }
+          if (currentScriptObject != null) {
+            currentScriptObject.addField(name, accessType, type);
           }
         }  //  end <field> node
 
@@ -3053,14 +3048,10 @@ public class X3Dobject
               accumNormal.add(polygonNormals[i]);
 
             }
-
             /*********** Calculate vertex normals next"); */
-            // NOT COMPLETED
+            //TODO: ElevationGrid not completed
             // gvrMesh = new GVRMesh(gvrContext);
-
           }
-
-
         } // end <ElevationGrid> node
 
 
@@ -3589,7 +3580,6 @@ public class X3Dobject
         indexedFaceSet.clear(); // clean up this Vector<coordinates> list.
         indexedVertexNormals.clear(); // clean up this Vector<coordinates> list
         indexedTextureCoord.clear(); // clean up this Vector<textureCoordinates>
-        // ist
         texcoordIndices.clear();
         normalIndices.clear();
         vertices.clear();
@@ -3699,18 +3689,14 @@ public class X3Dobject
       }
       else if (qName.equalsIgnoreCase("Script"))
       {
-        //GVRScriptManager sm = gvrContext.getScriptManager();
-
+        javaScriptCode = JAVASCRIPT_IMPORT_PACKAGE + '\n' + javaScriptCode;
+        currentScriptObject.setJavaScriptCode(javaScriptCode);
         GVRJavascriptScriptFile gvrJavascriptScriptFile = new GVRJavascriptScriptFile(gvrContext, javaScriptCode);
-        String scriptText = gvrJavascriptScriptFile.getScriptText(); // test to make sure it is correct
-                //sm.attachScriptFile(main, gvrJavascriptScriptFile);
-        GVRScriptManager gvrScriptManager = new GVRScriptManager(gvrContext);
-        //gvrScriptManager.attachScriptFile(this, gvrJavascriptScriptFile);
-        Object[] params = new Object[1];
-        params[0] = true;
-        boolean b = gvrJavascriptScriptFile.invokeFunction("buttonOver", params);
+        currentScriptObject.setGVRJavascriptScriptFile(gvrJavascriptScriptFile);
+        scriptObjects.add(currentScriptObject);
 
         parseJavaScript = false;
+        currentScriptObject = null;
       }
       else if (qName.equalsIgnoreCase("field"))
       {
@@ -3791,6 +3777,10 @@ public class X3Dobject
         } // end setting based on new camera rig
 
         animationInteractivityManager.initAniamtionsAndInteractivity();
+        // Need to build a JavaScript function that constructs the
+        // X3D data type objects used with a SCRIPT.
+        // Scripts can also have an initialize() method.
+        animationInteractivityManager.InitializeScript();
 
       } // end </scene>
       else if (qName.equalsIgnoreCase("x3d"))
@@ -4018,6 +4008,8 @@ public class X3Dobject
     public void characters(char ch[], int start, int length) throws SAXException
     {
       if ( parseJavaScript ) {
+        // Each JavaScript must start with the importPackage line
+        // to include the X3D Data types like SFColor
         String js = "";
         boolean leadingNonprintChars = true;
         for (int i = start; i < length; i++) {
@@ -4033,10 +4025,6 @@ public class X3Dobject
         }
         if (js.length() > 0) {
           javaScriptCode += js + '\n';
-          Log.e("CharData", "characters js= " + js);
-        }
-        else {
-          Log.e("CharData", "just non-print chars");
         }
       }
     }  //  end characters method

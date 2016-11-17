@@ -29,6 +29,8 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 
 /**
@@ -48,15 +50,20 @@ import org.gearvrf.GVRTexture;
 public class DefinedItem
 {
 
-
   private String name = "";
   private GVRMesh gvrMesh = null;
   private GVRSceneObject gvrSceneObject = null;
   private Future<GVRTexture> gvrTexture = null;
   private GVRRenderData gvrRenderData = null;
-
-
   private GVRMaterial gvrMaterial = null;
+  /**
+   * X3D Transforms use AxisAngle format for rotations,
+   * and float3 for the SpotLight, DirectionalLight direction
+   * Using SCRIPT node need these raw values while GearVR
+   * saves these values as Quaternions
+   */
+  private AxisAngle4f rotationAxisAngle = new AxisAngle4f();
+  private Vector3f direction = new Vector3f();
 
   public DefinedItem()
   {
@@ -67,6 +74,29 @@ public class DefinedItem
     this.name = name;
   }
 
+  // used by directional and spot light
+  public DefinedItem(String name, Vector3f direction)
+  {
+    this.name = name;
+    this.direction.set(direction);
+  }
+  public DefinedItem(String name, float x, float y, float z)
+  {
+    this.name = name;
+    this.direction.set(x, y, z);
+  }
+  // used by rotations
+  public DefinedItem(String name, AxisAngle4f axisAngle)
+  {
+    this.name = name;
+    this.rotationAxisAngle.set(axisAngle);
+  }
+  public DefinedItem(String name, float angle, float x, float y, float z)
+  {
+    this.name = name;
+    this.rotationAxisAngle.set(angle, x, y, z);  // order: angle, x, y, z
+  }
+
   public void setName(String name)
   {
     this.name = name;
@@ -75,6 +105,38 @@ public class DefinedItem
   public String getName()
   {
     return this.name;
+  }
+
+  public void setDirection(Vector3f direction)
+  {
+    this.direction.set(direction);
+  }
+  public void setDirection(float[] direction)
+  {
+    setDirection(direction[0], direction[1], direction[2]);
+  }
+  public void setDirection(float x, float y, float z)
+  {
+    this.direction.set(x, y, z);
+  }
+
+  public void setAxisAngle(AxisAngle4f axisAngle)
+  {
+    this.rotationAxisAngle.set(axisAngle);
+  }
+  public void setAxisAngle(float angle, float x, float y, float z)
+  {
+    this.rotationAxisAngle.set(angle, x, y, z);  // order: angle, x, y, z
+  }
+
+  public Vector3f getDirection()
+  {
+    return this.direction;
+  }
+
+  public AxisAngle4f getAxisAngle()
+  {
+    return this.rotationAxisAngle;
   }
 
   public void setGVRRenderData(GVRRenderData gvrRenderData)
