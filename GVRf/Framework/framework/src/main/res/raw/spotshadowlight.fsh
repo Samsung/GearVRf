@@ -1,8 +1,8 @@
 Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType vertex)
 {
 #ifdef HAS_MULTIVIEW
-	vec4 lightpos = u_view_[view_id] * vec4(data.world_position.xyz, 1.0);
-	vec4 spotDir =  normalize(u_view_[view_id] * vec4(data.world_direction.xyz, 0.0));
+	vec4 lightpos = u_view_[gl_ViewID_OVR] * vec4(data.world_position.xyz, 1.0);
+	vec4 spotDir =  normalize(u_view_[gl_ViewID_OVR] * vec4(data.world_direction.xyz, 0.0));
 #else
     vec4 lightpos = u_view * vec4(data.world_position.xyz, 1.0);
 	vec4 spotDir =  normalize(u_view * vec4(data.world_direction.xyz, 0.0));
