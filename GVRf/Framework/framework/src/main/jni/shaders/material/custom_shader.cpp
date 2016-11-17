@@ -45,6 +45,7 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
             throw error;
         }
         if(use_multiview && !rstate->shadow_map){
+            LOGE("Rendering with multiview");
             u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
             u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
             u_mv_ = glGetUniformLocation(program_->id(), "u_mv_[0]");
