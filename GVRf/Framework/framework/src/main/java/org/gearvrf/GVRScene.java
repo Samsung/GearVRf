@@ -177,9 +177,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @return A read-only list containing all direct children of the root node.
      *
      * @since 2.0.0
-     * @see getRoot
-     * @see addSceneObject
-     * @see removeSceneObject
+     * @see GVRScene#getRoot()
+     * @see GVRScene#addSceneObject(GVRSceneObject)
+     * @see GVRScene#removeSceneObject(GVRSceneObject)
      */
     public List<GVRSceneObject> getSceneObjects() {
         return mSceneRoot.getChildren();
@@ -405,7 +405,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * If new assets are loaded that add lights to the scene after initialization,
      * bindShaders may need to be called again to regenerate the correct shaders
      * for the new lighting conditions.
-     * {@link GVRRenderData.bindShader GVRShaderTemplate }
+     * {@link GVRRenderData#bindShader(GVRScene)}  }
      */
     public void bindShaders() {
         clearLights();
@@ -437,9 +437,9 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * bindShaders may need to be called again to regenerate the correct shaders
      * for the new lighting conditions. This function is called whenever a scene
      * object is added at the root of the scene.
-     * @see GVRRenderData.bindShader
+     * @see GVRRenderData#bindShader(GVRScene)
      * @see GVRShaderTemplate
-     * @see GVRScene.addSceneObject
+     * @see GVRScene#addSceneObject(GVRSceneObject)
      */
     public void bindShaders(GVRSceneObject root) {
         ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.getComponentType());
@@ -467,7 +467,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     /**
      * Add a light to the scene's light list.
      * @param light light to add
-     * @see GVRScene.getLightList
+     * @see GVRScene#getLightList()
      */
     private boolean addLight(GVRLightBase light) {
         synchronized (mLightList)
@@ -510,13 +510,18 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * This list is maintained by GearVRF by gathering the
      * lights attached to the scene objects in the scene.
      * 
-     * @return array of lights
+     * @return array of lights or null if no lights in scene.
      */
     public GVRLightBase[] getLightList()
     {
         synchronized (mLightList)
         {
-            GVRLightBase[] list = new GVRLightBase[mLightList.size()];
+            int n = mLightList.size();
+            if (n == 0)
+            {
+                return null;
+            }
+            GVRLightBase[] list = new GVRLightBase[n];
             mLightList.toArray(list);
             return list;
         }
