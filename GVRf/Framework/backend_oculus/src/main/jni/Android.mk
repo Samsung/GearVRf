@@ -21,7 +21,7 @@ ifndef OVR_MOBILE_SDK
 	OVR_MOBILE_SDK=../../../../../ovr_sdk_mobile
 endif
 
-$(warning OVR_MOBILE_SDK is set to $(OVR_MOBILE_SDK))
+$(info OVR_MOBILE_SDK is set to $(OVR_MOBILE_SDK))
 include $(OVR_MOBILE_SDK)/cflags.mk
 
 LOCAL_MODULE := gvrf-oculus
