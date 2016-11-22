@@ -6,12 +6,14 @@ class GVRCollisionInfo {
     public final long bodyB;
     public final float[] normal;
     public final float distance;
+    public final boolean isHit;
 
-    public GVRCollisionInfo(long bodyA, long bodyB, float normal[], float distance) {
+    public GVRCollisionInfo(long bodyA, long bodyB, float normal[], float distance, boolean isHit) {
         this.bodyA = bodyA;
         this.bodyB = bodyB;
         this.normal = normal;
         this.distance = distance;
+        this.isHit = isHit;
     }
 
     @Override

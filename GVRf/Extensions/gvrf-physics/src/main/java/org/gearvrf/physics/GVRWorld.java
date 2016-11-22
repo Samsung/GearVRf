@@ -40,7 +40,6 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     }
 
     private final LongSparseArray<GVRRigidBody> mRigidBodies = new LongSparseArray<GVRRigidBody>();
-    private final LinkedList<GVRCollisionInfo> mPreviousCollisions = new LinkedList<GVRCollisionInfo>();
     private final GVRCollisionMatrix mCollisionMatrix;
 
     public GVRWorld(GVRContext gvrContext) {
@@ -111,24 +110,17 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     private void generateCollisionEvents() {
         GVRCollisionInfo collisionInfos[] = NativePhysics3DWorld.listCollisions(getNative());
 
-        String eventName = "onEnter";
-        for (GVRCollisionInfo info : collisionInfos) {
+        String onEnter = "onEnter";
+        String onExit = "onExit";
 
-            if (mPreviousCollisions.contains(info)) {
-                //eventName = "onInside";
-                mPreviousCollisions.remove(info);
-            } else {
-                sendCollisionEvent(info, eventName);
+        for (GVRCollisionInfo info : collisionInfos) {
+            if (info.isHit) {
+                sendCollisionEvent(info, onEnter);
+            }
+            else {
+                sendCollisionEvent(info, onExit);
             }
         }
-
-        eventName = "onExit";
-        for (GVRCollisionInfo cp: mPreviousCollisions) {
-            sendCollisionEvent(cp, eventName);
-        }
-
-        mPreviousCollisions.clear();
-        Collections.addAll(mPreviousCollisions, collisionInfos);
     }
 
     private void sendCollisionEvent(GVRCollisionInfo info, String eventName) {

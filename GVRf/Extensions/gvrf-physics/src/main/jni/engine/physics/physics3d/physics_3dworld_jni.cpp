@@ -101,15 +101,15 @@ JNIEXPORT jobjectArray JNICALL
 Java_org_gearvrf_physics_NativePhysics3DWorld_listCollisions(JNIEnv * env, jobject obj, jlong jworld) {
 
     jclass collisionInfoClass = env->FindClass("org/gearvrf/physics/GVRCollisionInfo");
-    jmethodID collisionInfoConstructor = env->GetMethodID(collisionInfoClass, "<init>", "(JJ[FF)V");
+    jmethodID collisionInfoConstructor = env->GetMethodID(collisionInfoClass, "<init>", "(JJ[FFZ)V");
 
     BulletWorld *world = reinterpret_cast <BulletWorld*> (jworld);
-    std::vector <ContactPoint> contactPoints;
+    std::list <ContactPoint> contactPoints;
 
     world->listCollisions(contactPoints);
 
     int size = contactPoints.size();
-    jobjectArray jnewlist = env->NewObjectArray(size, collisionInfoClass, NULL);
+    jobjectArray jNewList = env->NewObjectArray(size, collisionInfoClass, NULL);
 
     int i = 0;
     for (auto it = contactPoints.begin(); it != contactPoints.end(); ++it) {
@@ -120,15 +120,16 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_listCollisions(JNIEnv * env, jobje
 
         jobject contactObject = env->NewObject(collisionInfoClass, collisionInfoConstructor,
                                                (jlong)data.body0, (jlong)data.body1,
-                                               (jfloatArray)normal, (jfloat)data.distance);
+                                               (jfloatArray)normal, (jfloat)data.distance,
+                                               (jboolean)data.isHit);
 
-        env->SetObjectArrayElement(jnewlist, i++, contactObject);
+        env->SetObjectArrayElement(jNewList, i++, contactObject);
         env->DeleteLocalRef(contactObject);
+        env->DeleteLocalRef(normal);
     }
 
     env->DeleteLocalRef(collisionInfoClass);
-
-    return jnewlist;
+    return jNewList;
 }
 
 }

@@ -22,6 +22,7 @@
 
 #include "physics_rigidbody.h"
 #include "../objects/scene_object.h"
+#include <list>
 
 namespace gvr {
 
@@ -30,6 +31,7 @@ struct ContactPoint {
 	PhysicsRigidBody* body1 = 0;
 	float normal[3] = {0.0f, 0.0f, 0.0f};
 	float distance = 0.0f;
+	bool isHit = true;
 };
 
 class PhysicsWorld : public Component {
@@ -48,7 +50,7 @@ class PhysicsWorld : public Component {
 
 	void step(float timeStep);
 
-	void listCollisions(std::vector<ContactPoint>& contactPoints);
+	void listCollisions(std::list<ContactPoint>& contactPoints);
 };
 
 }

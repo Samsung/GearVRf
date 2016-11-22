@@ -86,14 +86,24 @@ void BulletWorld::step(float timeStep) {
     mPhysicsWorld->stepSimulation(timeStep);
 }
 
-void BulletWorld::listCollisions(std::vector <ContactPoint> &contactPoints) {
+/**
+ * Returns by reference the list of new and ceased collisions
+ *  that will be the objects of ONENTER and ONEXIT events.
+ */
+void BulletWorld::listCollisions(std::list <ContactPoint> &contactPoints) {
+
+/*
+ * Creates a list of all the current collisions on the World
+ * */
+    std::map<std::pair<long,long>, ContactPoint> currCollisions;
     int numManifolds = mPhysicsWorld->getDispatcher()->getNumManifolds();
+    btPersistentManifold *contactManifold;
 
     for (int i = 0; i < numManifolds; i++) {
         ContactPoint contactPt;
 
-        btPersistentManifold *contactManifold = mPhysicsWorld->getDispatcher()->getManifoldByIndexInternal(
-                i);
+        contactManifold = mPhysicsWorld->getDispatcher()->
+                getManifoldByIndexInternal(i);
 
         contactPt.body0 = (BulletRigidBody *) (contactManifold->getBody0()->getUserPointer());
         contactPt.body1 = (BulletRigidBody *) (contactManifold->getBody1()->getUserPointer());
@@ -101,10 +111,42 @@ void BulletWorld::listCollisions(std::vector <ContactPoint> &contactPoints) {
         contactPt.normal[1] = contactManifold->getContactPoint(0).m_normalWorldOnB.getY();
         contactPt.normal[2] = contactManifold->getContactPoint(0).m_normalWorldOnB.getZ();
         contactPt.distance = contactManifold->getContactPoint(0).getDistance();
+        contactPt.isHit = true;
 
-        contactPoints.push_back(contactPt);
-        //TODO more collision atributes
+        std::pair<long, long> collisionPair((long)contactPt.body0, (long)contactPt.body1);
+        std::pair<std::pair<long, long>, ContactPoint> newPair(collisionPair, contactPt);
+        currCollisions.insert(newPair);
+
+        /*
+         * If one of these current collisions is not on the list with all the previous
+         * collision, then it should be on the return list, because it is an onEnter event
+         * */
+        auto it = prevCollisions.find(collisionPair);
+        if ( it == prevCollisions.end()) {
+            contactPoints.push_front(contactPt);
+        } 
+        contactManifold = 0;
     }
+
+    /*
+     * After going through all the current list, go through all the previous collisions list,
+     * if one of its collisions is not on the current collision list, then it should be
+     * on the return list, because it is an onExit event
+     * */
+    for (auto it = prevCollisions.begin(); it != prevCollisions.end(); ++it) {
+        if (currCollisions.find(it->first) == currCollisions.end()) {
+            ContactPoint cp = it->second;
+            cp.isHit = false;
+            contactPoints.push_front(cp);
+        }
+    }
+
+/*
+ * Save all the current collisions on the previous collisions list for the next iteration
+ * */
+    prevCollisions.clear();
+    prevCollisions.swap(currCollisions);
+
 }
 
 void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
