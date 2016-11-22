@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimator;
@@ -92,7 +93,7 @@ public final class GVRAssetLoader {
         protected final GVRResourceVolume mVolume;
         protected GVRSceneObject          mModel = null;
         protected String                  mErrors;
-        protected int                     mNumTextures = 0;
+        protected Integer                 mNumTextures;
         protected boolean                 mReplaceScene = false;
 
         /**
@@ -187,17 +188,20 @@ public final class GVRAssetLoader {
          */
         public void loadTexture(TextureRequest request)
         {
-           ++mNumTextures;
-            Log.d(TAG, "ASSET: loadTexture %s %d", request.TextureFile, mNumTextures);
-            try
+            synchronized (mNumTextures)
             {
-                GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
-                mContext.getAssetLoader().loadTexture(resource, request);
-            }
-            catch (IOException ex)
-            {
-                request.loaded(getDefaultTexture(mContext), null);
-                onTextureError(mContext, ex.getMessage(), request.TextureFile);
+                ++mNumTextures;
+                Log.d(TAG, "ASSET: loadTexture %s %d", request.TextureFile, mNumTextures);
+                try
+                {
+                    GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
+                    mContext.getAssetLoader().loadTexture(resource, request);
+                }
+                catch (IOException ex)
+                {
+                    request.loaded(getDefaultTexture(mContext), null);
+                    onTextureError(mContext, ex.getMessage(), request.TextureFile);
+                }
             }
         }
 
@@ -207,8 +211,11 @@ public final class GVRAssetLoader {
          */
         public Future<GVRTexture> loadFutureTexture(TextureRequest request)
         {
-            ++mNumTextures;
-            Log.d(TAG, "ASSET: loadFutureTexture %s %d", request.TextureFile, mNumTextures);
+            synchronized (mNumTextures)
+            {
+                ++mNumTextures;
+                Log.d(TAG, "ASSET: loadFutureTexture %s %d", request.TextureFile, mNumTextures);
+            }
             try
             {
                 GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
@@ -223,7 +230,6 @@ public final class GVRAssetLoader {
             }
             return null;
          }
-
 
         /**
          * Load an embedded RGBA texture from the JASSIMP AiScene.
@@ -246,8 +252,11 @@ public final class GVRAssetLoader {
             {
                 return texture;
             }
-            ++mNumTextures;
-            Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
+            synchronized (mNumTextures)
+            {
+                ++mNumTextures;
+                Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
+            }
             if (aitex.getHeight() == 0)
             {
                 ByteArrayInputStream input = new ByteArrayInputStream(aitex.getByteData());
@@ -291,18 +300,24 @@ public final class GVRAssetLoader {
          */
         public void onTextureLoaded(GVRContext context, GVRTexture texture, String texFile)
         {
-            Log.e(TAG, "ASSET: successfully loaded texture %s %d", texFile, mNumTextures);
-            if (mNumTextures == 1)
+            synchronized (mNumTextures)
             {
-                mNumTextures = 0;
-                if (mModel != null)
+                Log.e(TAG, "ASSET: successfully loaded texture %s %d", texFile, mNumTextures);
+                if (mNumTextures >= 1)
                 {
-                    generateLoadEvent();
+                    --mNumTextures;
+                    if (mNumTextures != 0)
+                    {
+                        return;
+                    }
+                } else
+                {
+                    return;
                 }
             }
-            else if (mNumTextures > 1)
+            if (mModel != null)
             {
-                --mNumTextures;
+                generateLoadEvent();
             }
         }
 
@@ -329,19 +344,24 @@ public final class GVRAssetLoader {
         */
         public void onTextureError(GVRContext context, String error, String texFile)
         {
-            Log.e(TAG, "ASSET: ERROR: texture did %s not load %s %d", texFile, error, mNumTextures);
             mErrors += "Texture " + texFile + " did not load " + error + "\n";
-            if (mNumTextures == 1)
+            synchronized (mNumTextures)
             {
-                mNumTextures = 0;
-                if (mModel != null)
+                if (mNumTextures >= 1)
                 {
-                    generateLoadEvent();
+                    --mNumTextures;
+                    if (mNumTextures != 0)
+                    {
+                        return;
+                    }
+                } else
+                {
+                    return;
                 }
             }
-            else if (mNumTextures > 1)
+            if (mModel != null)
             {
-                --mNumTextures;
+                generateLoadEvent();
             }
         }
 
@@ -1114,8 +1134,8 @@ public final class GVRAssetLoader {
     /**
      * Loads a scene object {@link GVRSceneObject} from a 3D model.
      *
-     * @param filePath
-     *            A filename, relative to the root of the volume.
+     * @param request
+     *            AssetRequest with the filename, relative to the root of the volume.
      * @param model
      *            GVRModelSceneObject that is the root of the loaded asset
      * @param settings

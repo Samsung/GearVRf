@@ -344,7 +344,7 @@ void Mesh::generateVAO(int programId) {
     }
     obtainDeleter();
 
-    if (vertices_.size() == 0 && normals_.size() == 0  && getVec2Vector("a_texcoord").size() ==0) {
+    if (vertices_.size() == 0 && normals_.size() == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
         throw error;
     }
