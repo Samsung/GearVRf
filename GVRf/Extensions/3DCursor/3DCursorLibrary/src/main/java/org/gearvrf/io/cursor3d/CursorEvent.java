@@ -19,6 +19,7 @@ import android.view.KeyEvent;
 
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRSceneObject;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 /**
@@ -41,6 +42,9 @@ public class CursorEvent {
     private Cursor cursor;
     private KeyEvent keyEvent;
 
+    private Vector3f cursorPosition;
+    private Quaternionf cursorRotation;
+
     // We take a leaf out of the MotionEvent book to implement linked
     // recycling of objects.
     private static final int MAX_RECYCLED = 5;
@@ -52,6 +56,8 @@ public class CursorEvent {
 
     CursorEvent(){
         hitPoint = new Vector3f();
+        cursorPosition = new Vector3f();
+        cursorRotation = new Quaternionf();
     }
 
     /**
@@ -86,14 +92,35 @@ public class CursorEvent {
      * Set the coordinates of the intersection between the cursor and the
      * affected object.
      *
-     * This call returns the coordinates of the hit point with respect to the center of the affected object.
-     *
      * @param hitX X co-ordinate of the hit point
      * @param hitY Y co-ordinate of the hit point
      * @param hitZ Z co-ordinate of the hit point
      */
     void setHitPoint(float hitX, float hitY, float hitZ) {
         hitPoint.set(hitX, hitY, hitZ);
+    }
+
+    /**
+     * Save the current position coordinates of the {@link Cursor} that generated this event.
+     *
+     * @param x X co-ordinate of the {@link Cursor}'s position.
+     * @param y Y co-ordinate of the {@link Cursor}'s position.
+     * @param z Z co-ordinate of the {@link Cursor}'s position.
+     */
+    void setCursorPosition(float x, float y, float z) {
+        cursorPosition.set(x, y, z);
+    }
+
+    /**
+     * Save the current rotation quaternion of the {@link Cursor} that generated this event.
+     *
+     * @param w W component of the {@link Cursor}'s rotation quaternion.
+     * @param x X component of the {@link Cursor}'s rotation quaternion.
+     * @param y Y component of the {@link Cursor}'s rotation quaternion.
+     * @param z Z component of the {@link Cursor}'s rotation quaternion.
+     */
+    void setCursorRotation(float w, float x, float y, float z) {
+        cursorRotation.set(x, y, z, w);
     }
 
     /**
@@ -163,6 +190,97 @@ public class CursorEvent {
      */
     public boolean isColliding() {
         return isColliding;
+    }
+
+    /**
+     * Get the 'X' position component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'X' position component of the {@link Cursor} that generated this event.
+     */
+    public float getCursorPositionX() {
+        return cursorPosition.x;
+    }
+
+    /**
+     * Get the 'Y' position component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'Y' position component of the {@link Cursor} that generated this event.
+     */
+    public float getCursorPositionY() {
+        return cursorPosition.y;
+    }
+
+    /**
+     * Get the 'Z' position component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'Z' position component of the {@link Cursor} that generated this event.
+     */
+    public float getCursorPositionZ() {
+        return cursorPosition.z;
+    }
+
+    /**
+     * Get the 'W' rotation component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'W' quaternion component of the {@link Cursor} that generated this event.
+     */
+    float getCursorRotationW() {
+        return cursorRotation.w;
+    }
+
+    /**
+     * Get the 'X' rotation component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'X' quaternion component of the {@link Cursor} that generated this event.
+     */
+    float getCursorRotationX() {
+        return cursorRotation.x;
+    }
+
+    /**
+     * Get the 'Y' rotation component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'Y' quaternion component of the {@link Cursor} that generated this event.
+     */
+    float getCursorRotationY() {
+        return cursorRotation.y;
+    }
+
+    /**
+     * Get the 'Z' rotation component of the {@link Cursor} that generated this event.
+     *
+     * The values returned by this call persist only for the duration of the
+     * {@link CursorEventListener#onEvent(CursorEvent)} call. Make sure to make a copy of this
+     * value if you wish to use it past its lifetime.
+     *
+     * @return 'Z' quaternion component of the {@link Cursor} that generated this event.
+     */
+    float getCursorRotationZ() {
+        return cursorRotation.z;
     }
 
     /**

@@ -69,6 +69,9 @@ class ObjectCursor extends Cursor {
         CursorEvent cursorEvent = CursorEvent.obtain();
         cursorEvent.setColliding(colliding);
         cursorEvent.setHitPoint(hitX, hitY, hitZ);
+        cursorEvent.setCursorPosition(getPositionX(), getPositionY(), getPositionZ());
+        cursorEvent.setCursorRotation(getRotationW(), getRotationX(), getRotationY(),
+                getRotationZ());
         cursorEvent.setOver(isOver);
         cursorEvent.setObject(sceneObject);
         cursorEvent.setActive(isActive);

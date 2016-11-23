@@ -52,16 +52,67 @@ class CursorSceneObject {
         this.id = id;
     }
 
+    /**
+     * Get the x position coordinate of the main scene object that is controlled by the cursor.
+     *
+     * @return the x position coordinate of the main scene object that is controlled by the cursor.
+     */
     float getPositionX() {
         return mainObject.getTransform().getPositionX();
     }
 
+    /**
+     * Get the y position coordinate of the main scene object that is controlled by the cursor.
+     *
+     * @return the y position coordinate of the main scene object that is controlled by the cursor.
+     */
     float getPositionY() {
         return mainObject.getTransform().getPositionY();
     }
 
+    /**
+     * Get the x position coordinate of the main scene object that is controlled by the cursor.
+     *
+     * @return the x position  coordinate of the main scene object that is controlled by the cursor.
+     */
     float getPositionZ() {
         return mainObject.getTransform().getPositionZ();
+    }
+
+    /**
+     * Get the w quaternion component of the main scene object that is controlled by the cursor.
+     *
+     * @return the w quaternion component of the main scene object that is controlled by the cursor.
+     */
+    float getRotationW() {
+        return mainObject.getTransform().getRotationW();
+    }
+
+    /**
+     * Get the x quaternion component of the main scene object that is controlled by the cursor.
+     *
+     * @return the x quaternion component of the main scene object that is controlled by the cursor.
+     */
+    float getRotationX() {
+        return mainObject.getTransform().getRotationX();
+    }
+
+    /**
+     * Get the y quaternion component of the main scene object that is controlled by the cursor.
+     *
+     * @return the y quaternion component of the main scene object that is controlled by the cursor.
+     */
+    float getRotationY() {
+        return mainObject.getTransform().getRotationY();
+    }
+
+    /**
+     * Get the z quaternion component of the main scene object that is controlled by the cursor.
+     *
+     * @return the z quaternion component of the main scene object that is controlled by the cursor.
+     */
+    float getRotationZ() {
+        return mainObject.getTransform().getRotationZ();
     }
 
     GVRSceneObject getMainSceneObject() {
