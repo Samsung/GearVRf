@@ -578,21 +578,19 @@ class GVRJassimpAdapter {
                         int texIndex = parseInt(texFileName.substring(1));
 
                         tex = mScene.getTextures().get(texIndex);
-                        GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), mFileName + texFileName, meshMaterial, textureKey, texParams);
+                        GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, mFileName + texFileName, meshMaterial, textureKey, texParams);
                         assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
                     }
                     catch (NumberFormatException | IndexOutOfBoundsException ex)
                     {
-                        mContext.getEventManager().sendEvent(mContext,
-                                IAssetEvents.class,
-                                "onModelError", new Object[] { mContext, ex.getMessage(), assetRequest.getFileName() });
+                        assetRequest.onModelError(mContext, ex.getMessage(), mFileName);
                     }
-                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), mFileName + texFileName, meshMaterial, textureKey, texParams);
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, mFileName + texFileName, meshMaterial, textureKey, texParams);
                     assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
                 }
                 else
                 {
-                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest.getContext(), texFileName, meshMaterial, textureKey, texParams);
+                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, texFileName, meshMaterial, textureKey, texParams);
                     assetRequest.loadTexture(texRequest);
                 }
             }

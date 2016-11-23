@@ -37,7 +37,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * this {@link GVREventReceiver} object.</li>
  * </ol>
  * After implementing the above pattern, {@link GVREventManager#sendEvent(Object, Class, String, Object...)}
- * can be used to deliver events to the class.
+ * can be used to deliver events to the class. Note that a target object can only have
+ * one listener for each event class. Subsequent listeners for the same target and class
+ * are ignored.
  */
 public class GVREventReceiver {
     protected IEventReceiver mOwner;
