@@ -52,6 +52,9 @@ class LaserCursor extends Cursor {
         cursorEvent.setCursor(this);
         cursorEvent.setObject(event.getObject());
         cursorEvent.setHitPoint(event.getHitX(), event.getHitY(), event.getHitZ());
+        cursorEvent.setCursorPosition(getPositionX(), getPositionY(), getPositionZ());
+        cursorEvent.setCursorRotation(getRotationW(), getRotationX(), getRotationY(),
+                getRotationZ());
         cursorEvent.setKeyEvent(event.getCursorController().getKeyEvent());
 
         if (event.isActive()) {

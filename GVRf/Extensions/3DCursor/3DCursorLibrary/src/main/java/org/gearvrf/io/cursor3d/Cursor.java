@@ -213,7 +213,7 @@ public abstract class Cursor {
     /**
      * Get the current absolute x position of this {@link Cursor}.
      *
-     * @return the current  x position of the {@link Cursor}
+     * @return the current x position of the {@link Cursor}
      */
     public float getPositionX() {
         return cursorSceneObject.getPositionX();
@@ -231,10 +231,46 @@ public abstract class Cursor {
     /**
      * Get the current absolute z position of this {@link Cursor}.
      *
-     * @return the current  z position of the {@link Cursor}
+     * @return the current z position of the {@link Cursor}
      */
     public float getPositionZ() {
         return cursorSceneObject.getPositionZ();
+    }
+
+    /**
+     * Get the current 'w' component of this {@link Cursor}'s rotation quaternion.
+     *
+     * @return the current 'w' component of this {@link Cursor}'s rotation quaternion.
+     */
+    public float getRotationW() {
+        return cursorSceneObject.getRotationW();
+    }
+
+    /**
+     * Get the current 'x' component of this {@link Cursor}'s rotation quaternion.
+     *
+     * @return the current 'x' component of this {@link Cursor}'s rotation quaternion.
+     */
+    public float getRotationX() {
+        return cursorSceneObject.getRotationX();
+    }
+
+    /**
+     * Get the current 'y' component of this {@link Cursor}'s rotation quaternion.
+     *
+     * @return the current 'y' component of this {@link Cursor}'s rotation quaternion.
+     */
+    public float getRotationY() {
+        return cursorSceneObject.getRotationY();
+    }
+
+    /**
+     * Get the current 'z' component of this {@link Cursor}'s rotation quaternion.
+     *
+     * @return the current 'z' component of this {@link Cursor}'s rotation quaternion.
+     */
+    public float getRotationZ() {
+        return cursorSceneObject.getRotationZ();
     }
 
     /**
