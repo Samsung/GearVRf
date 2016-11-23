@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,6 +85,9 @@ public final class GVRAssetLoader {
     /**
      * Loads textures and listens for texture load events.
      * Raises the "onAssetLoaded" event after all textures have been loaded.
+     * This listener is NOT attached to the event manager. It is explicitly
+     * called by GVRAssetLoader to get around the restriction that GVRContext
+     * can only have a single listener for asset events.
      */
     public static class AssetRequest implements IAssetEvents
     {
@@ -109,7 +114,6 @@ public final class GVRAssetLoader {
             mFileName = filePath;
             mUserHandler = null;
             mErrors = "";
-            mContext.getEventReceiver().addListener(this);
             mVolume = new GVRResourceVolume(mContext, filePath);
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
@@ -131,7 +135,6 @@ public final class GVRAssetLoader {
             mModel = null;
             mErrors = "";
             mReplaceScene = replaceScene;
-            mContext.getEventReceiver().addListener(this);
             mVolume = new GVRResourceVolume(mContext, filePath);
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
@@ -142,7 +145,8 @@ public final class GVRAssetLoader {
          * @param filePath path to file
          * @param userHandler user event handler to get asset events.
          */
-        public AssetRequest(GVRSceneObject model, String filePath, IAssetEvents userHandler) {
+        public AssetRequest(GVRSceneObject model, String filePath, IAssetEvents userHandler)
+        {
             mScene = null;
             mContext = model.getGVRContext();;
             mNumTextures = 0;
@@ -150,12 +154,7 @@ public final class GVRAssetLoader {
             mUserHandler = userHandler;
             mModel = null;
             mErrors = "";
-            mContext.getEventReceiver().addListener(this);
             mVolume = new GVRResourceVolume(mContext, filePath);
-            if (userHandler != null)
-            {
-                mContext.getEventReceiver().addListener(userHandler);
-            }
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
 
@@ -242,33 +241,40 @@ public final class GVRAssetLoader {
          * @param aitex   Assimp texture containing the pixel data
          * @return GVRTexture made from embedded texture
          */
-        public GVRTexture loadEmbeddedTexture(TextureRequest request, AiTexture aitex, GVRTextureParameters texParams) throws IOException
+        public GVRTexture loadEmbeddedTexture(final TextureRequest request, final AiTexture aitex, final GVRTextureParameters texParams) throws IOException
         {
-            Bitmap bmap = null;
             GVRAndroidResource resource = new GVRAndroidResource(request.TextureFile);
-            GVRTexture texture = mContext.getAssetLoader().findTexture(resource);
+            GVRBitmapTexture bmapTex;
 
-            if (texture != null)
+            Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
+            Map<String, GVRTexture> texCache = GVRAssetLoader.getEmbeddedTextureCache();
+            synchronized (texCache)
             {
-                return texture;
+                GVRTexture tex = texCache.get(request.TextureFile);
+                if (tex != null)
+                {
+                    Log.d(TAG, "ASSET: loadEmbeddedTexture found %s", resource.getResourceFilename());
+                    return tex;
+                }
+                synchronized (mNumTextures)
+                {
+                    ++mNumTextures;
+                }
+                Bitmap bmap;
+                if (aitex.getHeight() == 0)
+                {
+                    ByteArrayInputStream input = new ByteArrayInputStream(aitex.getByteData());
+                    bmap = BitmapFactory.decodeStream(input);
+                }
+                else
+                {
+                    bmap = Bitmap.createBitmap(aitex.getWidth(), aitex.getHeight(), Bitmap.Config.ARGB_8888);
+                    bmap.setPixels(aitex.getIntData(), 0, aitex.getWidth(), 0, 0, aitex.getWidth(), aitex.getHeight());
+                }
+                bmapTex = new GVRBitmapTexture(mContext, bmap, texParams);
+                Log.d(TAG, "ASSET: loadEmbeddedTexture saved %s", resource.getResourceFilename());
+                texCache.put(request.TextureFile, bmapTex);
             }
-            synchronized (mNumTextures)
-            {
-                ++mNumTextures;
-                Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
-            }
-            if (aitex.getHeight() == 0)
-            {
-                ByteArrayInputStream input = new ByteArrayInputStream(aitex.getByteData());
-                bmap = BitmapFactory.decodeStream(input);
-            }
-            else
-            {
-                bmap = Bitmap.createBitmap(aitex.getWidth(), aitex.getHeight(), Bitmap.Config.ARGB_8888);
-                bmap.setPixels(aitex.getIntData(), 0, aitex.getWidth(), 0, 0, aitex.getWidth(), aitex.getHeight());
-            }
-            GVRBitmapTexture bmapTex = new GVRBitmapTexture(mContext, bmap, texParams);
-            mContext.getAssetLoader().cacheTexture(resource, bmapTex);
             request.loaded(bmapTex, resource);
             return bmapTex;
         }
@@ -282,6 +288,13 @@ public final class GVRAssetLoader {
         public void onModelLoaded(GVRContext context, GVRSceneObject model, String modelFile) {
             mModel = model;
             Log.d(TAG, "ASSET: successfully loaded model %s %d", modelFile, mNumTextures);
+            if (mUserHandler != null)
+            {
+                mUserHandler.onModelLoaded(context, model, modelFile);
+            }
+            mContext.getEventManager().sendEvent(mContext,
+                    IAssetEvents.class,
+                    "onModelLoaded", new Object[]{mContext, model, modelFile});
             if (mNumTextures == 0)
             {
                 generateLoadEvent();
@@ -300,6 +313,12 @@ public final class GVRAssetLoader {
          */
         public void onTextureLoaded(GVRContext context, GVRTexture texture, String texFile)
         {
+            if (mUserHandler != null)
+            {
+                mUserHandler.onTextureLoaded(context, texture, texFile);
+            }
+            mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
+                                                 "onTextureLoaded", new Object[] { mContext, texture, texFile });
             synchronized (mNumTextures)
             {
                 Log.e(TAG, "ASSET: successfully loaded texture %s %d", texFile, mNumTextures);
@@ -330,7 +349,14 @@ public final class GVRAssetLoader {
         public void onModelError(GVRContext context, String error, String modelFile)
         {
             Log.e(TAG, "ASSET: ERROR: model %s did not load %s", modelFile, error);
-            mErrors += "Model " + modelFile + " did not load " + error + "\n";
+            if (mUserHandler != null)
+            {
+                mUserHandler.onModelError(context, error, modelFile);
+            }
+            mContext.getEventManager().sendEvent(mContext,
+                    IAssetEvents.class,
+                    "onModelError", new Object[] { mContext, error, modelFile });
+            mErrors += error + "\n";
             mModel = null;
             mNumTextures = 0;
             generateLoadEvent();
@@ -344,7 +370,13 @@ public final class GVRAssetLoader {
         */
         public void onTextureError(GVRContext context, String error, String texFile)
         {
-            mErrors += "Texture " + texFile + " did not load " + error + "\n";
+            mErrors += error + "\n";
+            if (mUserHandler != null)
+            {
+                mUserHandler.onTextureError(context, error, texFile);
+            }
+            mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
+                                                 "onTextureError", new Object[] { mContext, error, texFile });
             synchronized (mNumTextures)
             {
                 if (mNumTextures >= 1)
@@ -375,7 +407,12 @@ public final class GVRAssetLoader {
         @Override
         public void onAssetLoaded(GVRContext context, GVRSceneObject model, String modelFile, String errors)
         {
-            mContext.getEventReceiver().removeListener(this);
+            if (mUserHandler != null)
+            {
+                mUserHandler.onAssetLoaded(context, model, modelFile, errors);
+            }
+            mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
+                                                 "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
         }
 
         private void generateLoadEvent()
@@ -410,12 +447,7 @@ public final class GVRAssetLoader {
                     mScene.addSceneObject(mModel);
                 }
             }
-            mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
-                    "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
-            if (mUserHandler != null)
-            {
-                mContext.getEventReceiver().removeListener(mUserHandler);
-            }
+            onAssetLoaded(mContext, mModel, mFileName, errors);
         }
      }
 
@@ -425,21 +457,21 @@ public final class GVRAssetLoader {
     public static class TextureRequest implements TextureCallback
     {
         public final String TextureFile;
-        protected final GVRContext mContext;
         protected GVRTextureParameters mTexParams;
+        protected AssetRequest mAssetRequest;
         private boolean loadFinished;
 
-        public TextureRequest(GVRContext context, String texFile, final GVRTextureParameters texParams)
+        public TextureRequest(AssetRequest assetRequest, String texFile, final GVRTextureParameters texParams)
         {
-            mContext = context;
+            mAssetRequest = assetRequest;
             TextureFile = texFile;
             mTexParams = texParams;
             loadFinished = false;
         }
 
-        public TextureRequest(GVRContext context, String texFile)
+        public TextureRequest(AssetRequest assetRequest, String texFile)
         {
-            mContext = context;
+            mAssetRequest = assetRequest;
             TextureFile = texFile;
             mTexParams = GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS;
             loadFinished = false;
@@ -447,7 +479,7 @@ public final class GVRAssetLoader {
 
         public void loaded(final GVRTexture texture, GVRAndroidResource resource)
         {
-            mContext.runOnGlThread(new Runnable()
+            mAssetRequest.getContext().runOnGlThread(new Runnable()
             {
                 public void run()
                 {
@@ -456,9 +488,7 @@ public final class GVRAssetLoader {
             });
             if (!loadFinished)
             {
-                mContext.getEventManager().sendEvent(mContext,
-                        IAssetEvents.class,
-                        "onTextureLoaded", new Object[] { mContext, texture, TextureFile });
+                mAssetRequest.onTextureLoaded(mAssetRequest.getContext(), texture, TextureFile);
             }
             loadFinished = true;
         }
@@ -468,11 +498,9 @@ public final class GVRAssetLoader {
         {
             if (!loadFinished)
             {
-                mContext.getEventManager().sendEvent(mContext,
-                        IAssetEvents.class,
-                        "onTextureError", new Object[]{mContext, t.getMessage(), TextureFile});
+                mAssetRequest.onTextureError(mAssetRequest.getContext(), t.getMessage(), TextureFile);
                 loadFinished = true;
-                loaded(getDefaultTexture(mContext), null);
+                loaded(getDefaultTexture(mAssetRequest.getContext()), null);
             }
         }
 
@@ -491,17 +519,17 @@ public final class GVRAssetLoader {
         public final GVRMaterial Material;
         public final String TextureName;
 
-        public MaterialTextureRequest(GVRContext context, String texFile)
+        public MaterialTextureRequest(AssetRequest assetRequest, String texFile)
         {
-        	super(context, texFile);
+        	super(assetRequest, texFile);
             Material = null;
             TextureName = null;
         }
 
-        public MaterialTextureRequest(GVRContext context, String texFile, GVRMaterial material, String textureName,
+        public MaterialTextureRequest(AssetRequest assetRequest, String texFile, GVRMaterial material, String textureName,
                                       final GVRTextureParameters texParams)
         {
-        	super(context, texFile, texParams);
+        	super(assetRequest, texFile, texParams);
             Material = material;
             TextureName = textureName;
             if (Material != null)
@@ -522,6 +550,8 @@ public final class GVRAssetLoader {
 
     protected GVRContext mContext;
     protected static ResourceCache<GVRTexture> mTextureCache = new ResourceCache<GVRTexture>();
+    protected static HashMap<String, GVRTexture> mEmbeddedCache = new HashMap<String, GVRTexture>();
+
     protected static GVRTexture mDefaultTexture = null;
 
     /**
@@ -535,6 +565,7 @@ public final class GVRAssetLoader {
             @Override
             public void run() {
                 mTextureCache = new ResourceCache<GVRTexture>();
+                mEmbeddedCache = new HashMap<String, GVRTexture>();
                 mDefaultTexture = null;
             }
         });
@@ -554,28 +585,22 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Determine if a given texture is cached
-     * @param resource GVRAndroidResource describing the texture
-     * @return GVRTexture if texture has been cached, otherwise null
+     * Get the embedded texture cache.
+     * This is an internal routine used during asset loading for processing
+     * embedded textures.
+     * @return embedded texture cache
      */
-    GVRTexture findTexture(GVRAndroidResource resource) { return mTextureCache.get(resource); }
-
-    /**
-     * Internal function to put a texture into the texture cache.
-     * This function is not for public consumption - it is used internally
-     * for maintaining the texture cache.
-     *
-     * @param resource GVRAndroidResource describing the texture
-     * @param texture GVRTexture to add to the cache
-     */
-    void cacheTexture(GVRAndroidResource resource, GVRTexture texture) { mTextureCache.put(resource, texture); }
+    static Map<String, GVRTexture> getEmbeddedTextureCache()
+    {
+        return mEmbeddedCache;
+    }
 
     private static GVRTexture getDefaultTexture(GVRContext ctx)
     {
         if (mDefaultTexture == null)
         {
             GVRAndroidResource r = new GVRAndroidResource(ctx, R.drawable.white_texture);
-            mDefaultTexture = ctx.loadTexture(r);
+            mDefaultTexture = ctx.getAssetLoader().loadTexture(r);
         }
         return mDefaultTexture;
     }
@@ -614,25 +639,31 @@ public final class GVRAssetLoader {
     public GVRTexture loadTexture(GVRAndroidResource resource,
                                   GVRTextureParameters textureParameters)
     {
-        GVRTexture texture = mTextureCache.get(resource);
-        if (texture != null)
+        GVRBitmapTexture bmapTex = null;
+        synchronized (mTextureCache)
         {
-            return texture;
+            GVRTexture texture = mTextureCache.get(resource);
+            if (texture != null)
+            {
+                return texture;
+            }
+            bmapTex = new GVRBitmapTexture(mContext, (Bitmap) null, textureParameters);
+            mTextureCache.put(resource, bmapTex);
         }
         try
         {
             Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(resource.getStream(), false);
             resource.closeStream();
-            texture = bitmap == null ? null : new GVRBitmapTexture(mContext, bitmap, textureParameters);
-            if (texture != null)
+            if (bitmap != null)
             {
-                mTextureCache.put(resource, texture);
+                bmapTex.update(bitmap);
             }
         }
-        catch (IOException ex) {
+        catch (IOException ex)
+        {
             return null;
         }
-        return texture;
+        return bmapTex;
     }
 
     public GVRTexture loadTexture(GVRAndroidResource resource)
@@ -1169,33 +1200,26 @@ public final class GVRAssetLoader {
         catch (IOException ex)
         {
             assimpScene = null;
-            mContext.getEventManager().sendEvent(mContext,
-                    IAssetEvents.class,
-                    "onModelError", new Object[] { mContext, ex.getMessage(), filePath });
+            request.onModelError(mContext, ex.getMessage(), filePath);
             throw ex;
-       }
+        }
 
-        if (assimpScene == null) {
+        if (assimpScene == null)
+        {
             String errmsg = "Cannot load model from path " + filePath;
-            mContext.getEventManager().sendEvent(mContext,
-                    IAssetEvents.class,
-                    "onModelError", new Object[] { mContext, errmsg, filePath });
+            request.onModelError(mContext, errmsg, filePath);
             throw new IOException(errmsg);
         }
         try
         {
             jassimpAdapter.processScene(request, model, assimpScene, volume);
-            mContext.getEventManager().sendEvent(mContext,
-                    IAssetEvents.class,
-                    "onModelLoaded", new Object[]{mContext, model, filePath});
+            request.onModelLoaded(mContext, model, filePath);
             return model;
         }
         catch (IOException ex)
         {
             assimpScene = null;
-            mContext.getEventManager().sendEvent(mContext,
-                    IAssetEvents.class,
-                    "onModelError", new Object[] { mContext, ex.getMessage(), filePath });
+            request.onModelError(mContext, ex.getMessage(), filePath);
             throw ex;
         }
     }
@@ -1203,7 +1227,8 @@ public final class GVRAssetLoader {
 
     GVRSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
             GVRSceneObject root, EnumSet<GVRImportSettings> settings,
-            boolean cacheEnabled, GVRScene scene) throws IOException {
+            boolean cacheEnabled, GVRScene scene) throws IOException
+    {
         GVRResourceVolume volume = assetRequest.getVolume();
         InputStream inputStream = null;
         String fileName = assetRequest.getBaseName();
@@ -1211,32 +1236,33 @@ public final class GVRAssetLoader {
 
         root.setName(fileName);
         org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);
-        try {
-             ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
-             if (!X3Dobject.UNIVERSAL_LIGHTS) {
+        try
+        {
+            ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
+            if (!X3Dobject.UNIVERSAL_LIGHTS)
+            {
                 X3DparseLights x3dParseLights = new X3DparseLights(mContext, root);
                 inputStream = resource.getStream();
-                if (inputStream == null) {
-                	throw new FileNotFoundException(fileName + " not found");
+                if (inputStream == null)
+                {
+                    throw new FileNotFoundException(fileName + " not found");
                 }
                 Log.d(TAG, "Parse: " + fileName);
                 x3dParseLights.Parse(inputStream, shaderSettings);
                 inputStream.close();
-              }
-              inputStream = resource.getStream();
-              if (inputStream == null) {
+            }
+            inputStream = resource.getStream();
+            if (inputStream == null)
+            {
               	throw new FileNotFoundException(fileName + " not found");
-              }
-              x3dObject.Parse(inputStream, shaderSettings);
-              inputStream.close();
-              mContext.getEventManager().sendEvent(mContext,
-                                                   IAssetEvents.class,
-                                                   "onModelLoaded", new Object[] { mContext, root, fileName });
+            }
+            x3dObject.Parse(inputStream, shaderSettings);
+            inputStream.close();
+            assetRequest.onModelLoaded(mContext, root, fileName);
         }
-        catch (Exception ex) {
-            mContext.getEventManager().sendEvent(mContext,
-                                               IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, ex.getMessage(), fileName });
+        catch (Exception ex)
+        {
+            assetRequest.onModelError(mContext, ex.getMessage(), fileName);
             throw ex;
         }
         return root;
@@ -1301,57 +1327,6 @@ public final class GVRAssetLoader {
         return new File(outputFilename);
     }
 
-    GVRModelSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
-            EnumSet<GVRImportSettings> settings, boolean cacheEnabled)
-                    throws IOException {
-        GVRModelSceneObject root = new GVRModelSceneObject(mContext);
-        GVRResourceVolume volume = assetRequest.getVolume();
-        InputStream inputStream = null;
-        String fileName = assetRequest.getBaseName();
-        GVRAndroidResource resource = volume.openResource(fileName);
-
-        org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);
-        try {
-             ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
-             if (!X3Dobject.UNIVERSAL_LIGHTS) {
-                X3DparseLights x3dParseLights = new X3DparseLights(mContext, root);
-                inputStream = resource.getStream();
-                if (inputStream == null) {
-                	throw new FileNotFoundException(fileName + " not found");
-                }
-                Log.d(TAG, "Parse: " + fileName);
-                x3dParseLights.Parse(inputStream, shaderSettings);
-                inputStream.close();
-              }
-              inputStream = resource.getStream();
-              if (inputStream == null) {
-              	throw new FileNotFoundException(fileName + " not found");
-              }
-              x3dObject.Parse(inputStream, shaderSettings);
-              inputStream.close();
-              mContext.getEventManager().sendEvent(mContext,
-                                                   IAssetEvents.class,
-                                                   "onModelLoaded", new Object[] { mContext, (GVRSceneObject) root, fileName });
-        }
-        catch (FileNotFoundException e) {
-          mContext.getEventManager().sendEvent(mContext,
-                                               IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, e.getMessage(), fileName });
-        }
-        catch (IOException e1) {
-          mContext.getEventManager().sendEvent(mContext,
-                                               IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, e1.getMessage(), fileName });
-        }
-        catch (Exception e2) {
-          mContext.getEventManager().sendEvent(mContext,
-                                               IAssetEvents.class,
-                                               "onModelError", new Object[] { mContext, e2.getMessage(), fileName });
-          e2.printStackTrace();
-        }
-        return root;
-    }
-    
      /**
      * State-less, should be fine having one instance
      */

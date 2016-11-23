@@ -1279,7 +1279,7 @@ public class X3Dobject
             }
 
             final String defValue = attributes.getValue("DEF");
-            GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(gvrContext,
+            GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest,
                     filename, gvrTextureParameters);
             Future<GVRTexture> texture = assetRequest
                     .loadFutureTexture(request);
