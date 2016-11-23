@@ -106,6 +106,16 @@ abstract class GVRConfigurationManager {
         }
         Log.i(TAG, "set the default fov-y to " + fovY);
 
+        setFovY(fovY);
+    }
+
+    void setFovY(float fovY) {
+        final GVRActivity activity = mActivity.get();
+        if (null == activity) {
+            return;
+        }
+        final GVRViewManager viewManager = activity.getViewManager();
+
         activity.getAppSettings().getEyeBufferParams().setFovY(fovY);
         GVRPerspectiveCamera.setDefaultFovY(fovY);
 
