@@ -240,7 +240,7 @@ public class CursorEvent {
      *
      * @return 'W' quaternion component of the {@link Cursor} that generated this event.
      */
-    float getCursorRotationW() {
+    public float getCursorRotationW() {
         return cursorRotation.w;
     }
 
@@ -253,7 +253,7 @@ public class CursorEvent {
      *
      * @return 'X' quaternion component of the {@link Cursor} that generated this event.
      */
-    float getCursorRotationX() {
+    public float getCursorRotationX() {
         return cursorRotation.x;
     }
 
@@ -266,7 +266,7 @@ public class CursorEvent {
      *
      * @return 'Y' quaternion component of the {@link Cursor} that generated this event.
      */
-    float getCursorRotationY() {
+    public float getCursorRotationY() {
         return cursorRotation.y;
     }
 
@@ -279,7 +279,7 @@ public class CursorEvent {
      *
      * @return 'Z' quaternion component of the {@link Cursor} that generated this event.
      */
-    float getCursorRotationZ() {
+    public float getCursorRotationZ() {
         return cursorRotation.z;
     }
 
