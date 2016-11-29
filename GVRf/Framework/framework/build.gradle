@@ -3,9 +3,14 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.library'
 
 repositories {
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+
     flatDir {
         dirs 'src/main/libs'
     }
+
 }
 
 android {
@@ -129,9 +134,12 @@ android {
     }
 }
 
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    compile "org.joml:joml-android:${jomlVersion}"
 }
 
 clean {}.doLast {

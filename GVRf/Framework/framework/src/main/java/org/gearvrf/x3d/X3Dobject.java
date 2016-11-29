@@ -3824,8 +3824,8 @@ public class X3Dobject
             Vector3f side0 = new Vector3f();
             Vector3f side1 = new Vector3f();;
             for (int i = 0; i < 3; i++) {
-              side0.set(i, (polygonVertex[0].getVertexCoord(i) - polygonVertex[1].getVertexCoord(i)) );
-              side1.set(i, (polygonVertex[1].getVertexCoord(i) - polygonVertex[2].getVertexCoord(i)) );
+              side0.setComponent(i, (polygonVertex[0].getVertexCoord(i) - polygonVertex[1].getVertexCoord(i)) );
+              side1.setComponent(i, (polygonVertex[1].getVertexCoord(i) - polygonVertex[2].getVertexCoord(i)) );
             }
             side0.cross(side1, polygonNormal[f]);
             polygonNormal[f].normalize();

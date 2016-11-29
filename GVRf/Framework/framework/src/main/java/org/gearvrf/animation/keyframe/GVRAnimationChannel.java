@@ -318,18 +318,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
         // Allocation-free
         Matrix4f mat = mCurrentTransform.set(rot);
 
-        mat.m00 *= scale.x;
-        mat.m01 *= scale.x;
-        mat.m02 *= scale.x;
-        mat.m10 *= scale.y;
-        mat.m11 *= scale.y;
-        mat.m12 *= scale.y;
-        mat.m20 *= scale.z;
-        mat.m21 *= scale.z;
-        mat.m22 *= scale.z;
-        mat.m30 = pos.x;
-        mat.m31 = pos.y;
-        mat.m32 = pos.z;
+        mat.scale(scale).setTranslation(pos);
 
         return mat;
     }

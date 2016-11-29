@@ -195,7 +195,7 @@ class GVRGazeCursorController extends GVRBaseController implements
     @Override
     public void onDrawFrame(float frameTime) {
         synchronized (lock) {
-            setPosition.mulPoint(context.getMainScene().getMainCameraRig()
+            setPosition.mulPosition(context.getMainScene().getMainCameraRig()
                     .getHeadTransform().getModelMatrix4f(), gazePosition);
         }
         thread.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
