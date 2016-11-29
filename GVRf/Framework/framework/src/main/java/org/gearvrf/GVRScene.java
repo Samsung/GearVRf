@@ -59,7 +59,7 @@ import java.util.Set;
 public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
     @SuppressWarnings("unused")
     private static final String TAG = Log.tag(GVRScene.class);
-    public static final int MAX_LIGHTS = 16;
+    public static int MAX_LIGHTS = 0;
     private GVRCameraRig mMainCameraRig;
     private StringBuilder mStatMessage = new StringBuilder();
     private Set<GVRLightBase> mLightList = new HashSet<GVRLightBase>();
@@ -73,6 +73,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public GVRScene(GVRContext gvrContext) {
         super(gvrContext, NativeScene.ctor());
+
+        if(MAX_LIGHTS == 0) {
+            MAX_LIGHTS = NativeScene.getMaxLights(getNative());
+        }
+
         mSceneRoot = new GVRSceneObject(gvrContext);
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
@@ -721,4 +726,6 @@ class NativeScene {
     static native void setMainScene(long scene);
     
     static native void setPickVisible(long scene, boolean flag);
+
+    public static native int getMaxLights(long scene);
 }
