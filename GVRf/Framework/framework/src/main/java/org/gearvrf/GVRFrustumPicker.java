@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.joml.FrustumCuller;
+import org.joml.FrustumIntersection;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -63,7 +63,7 @@ import org.joml.Vector4f;
  * @see GVRPickedObject
  */
 public class GVRFrustumPicker extends GVRPicker {
-    protected FrustumCuller mCuller;
+    protected FrustumIntersection mCuller;
     protected float[] mProjMatrix = null;
     protected Matrix4f mProjection = null;
 
@@ -149,7 +149,7 @@ public class GVRFrustumPicker extends GVRPicker {
             }
             else
             {
-                mCuller = new FrustumCuller(projMatrix);
+                mCuller = new FrustumIntersection(projMatrix);
             }
         }
         mProjection = projMatrix;
@@ -210,8 +210,8 @@ public class GVRFrustumPicker extends GVRPicker {
                     p.sub(center, p);
                     p.w = 0;
                     radius = p.length();
-                    boolean pointIn = mCuller.isPointInsideFrustum(center.x, center.y, center.z);
-                    if (!mCuller.isSphereInsideFrustum(center.x, center.y, center.z, radius))
+                    boolean pointIn = mCuller.testPoint(center.x, center.y, center.z);
+                    if (!mCuller.testSphere(center.x, center.y, center.z, radius))
                     {
                         picked[i] = null;
                     }

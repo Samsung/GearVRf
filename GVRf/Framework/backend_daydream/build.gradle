@@ -3,6 +3,10 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.library'
 
 repositories {
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+
     flatDir {
         dirs 'src/main/libs'
     }
@@ -74,12 +78,15 @@ android {
     }    
 }
 
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
     compile(name: 'google-vr-base', ext: 'aar')
     compile(name: 'google-vr-common', ext: 'aar')
     compile project(':framework')
+    compile "org.joml:joml-android:${jomlVersion}"
 }
 
 assembleDebug {}.doLast {
