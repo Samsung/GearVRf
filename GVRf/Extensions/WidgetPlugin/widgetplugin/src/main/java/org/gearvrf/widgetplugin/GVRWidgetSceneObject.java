@@ -29,28 +29,31 @@ import org.gearvrf.scene_objects.view.GVRView;
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
 
+
 /**
  * GVRWidgetSceneObject shows the GVRwidget widgets are created from LibGDX
  * GlSurfaceView which is created by app as follows
- * 
- * 
+ * <pre>
+ *     <code>
  * 0__________300_________600
  * |          |           |
  * |          |           |
- * |          |     2     |  
+ * |          |     2     |
  * |     1    |___________|250
  * |          |           |
- * |          |           |  
+ * |          |           |
  * |          |     3     |
  * |__________|___________|
-   500                   
-   
-    above is parent GLSurfaceView of width 600 pixel and height 500 pixel, which has to be broken up in 3 
-    GVRWidgetSceneObjects as laid out. 
-    the first Scene object would display rectangle created by 1 to 300 pixels horizontally and 1 to 500 pixels vertically
-    the second scene object would display rectangle created by 301 to 600 pixels horizontally and 1 to 250 pixels vertically
-    the third scene object would display rectangle created by 301 to 600 pixels horizontally and 251 to 500 pixels vertically
-    scene objects will be rendered with texture of this view by assigning appropriate texture coordinates.
+ *  500
+ *     </code>
+ * </pre>
+ *  above is parent GLSurfaceView of width 600 pixel and height 500 pixel, which has to be broken
+ *  up in 3 GVRWidgetSceneObjects as laid out. the first Scene object would display rectangle
+ *  created by 1 to 300 pixels horizontally and 1 to 500 pixels vertically the second scene
+ *  object would display rectangle created by 301 to 600 pixels horizontally and 1 to 250 pixels
+ *  vertically the third scene object would display rectangle created by 301 to 600 pixels
+ *  horizontally and 251 to 500 pixels vertically scene objects will be rendered with texture of
+ *  this view by assigning appropriate texture coordinates.
  * 
  */
 public class GVRWidgetSceneObject extends GVRSceneObject {
