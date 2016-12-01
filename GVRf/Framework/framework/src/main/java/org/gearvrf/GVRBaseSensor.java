@@ -17,7 +17,12 @@ package org.gearvrf;
 
 import android.util.SparseArray;
 
+import org.gearvrf.SensorEvent.EventGroup;
+import org.joml.Vector3f;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,10 +46,12 @@ public class GVRBaseSensor {
     private SparseArray<ControllerData> controllerData;
     protected GVRContext gvrContext;
     protected IEventReceiver owner;
+    private DepthComparator depthComparator;
 
     public GVRBaseSensor(GVRContext gvrContext) {
         this.gvrContext = gvrContext;
         controllerData = new SparseArray<GVRBaseSensor.ControllerData>();
+        depthComparator = new DepthComparator();
     }
 
     void setActive(GVRCursorController controller, boolean active) {
@@ -68,7 +75,7 @@ public class GVRBaseSensor {
         newHits.add(event);
     }
 
-    void processList(GVRCursorController controller) {
+    boolean processList(GVRCursorController controller) {
         final List<SensorEvent> events = new ArrayList<SensorEvent>();
 
         ControllerData data = getControllerData(controller);
@@ -101,15 +108,34 @@ public class GVRBaseSensor {
             }
             newHits.clear();
         }
-
+        boolean eventHandled = false;
         GVREventManager eventManager = gvrContext.getEventManager();
         if (events.isEmpty() == false) {
+            Collections.sort(events, depthComparator);
             final IEventReceiver ownerCopy = owner;
-            for (SensorEvent event : events) {
-                eventManager.sendEvent(ownerCopy, ISensorEvents.class, "onSensorEvent", event);
+            if(events.size() > 1) {
+                for(int i=0; i < events.size(); i++) {
+                    SensorEvent event = events.get(i);
+                    if(i==0) {
+                        event.setEventGroup(EventGroup.MULTI_EVENT_START);
+                    } else if(i == events.size()-1) {
+                        event.setEventGroup(EventGroup.MULTI_EVENT_STOP);
+                    } else {
+                        event.setEventGroup(EventGroup.MULTI_EVENT);
+                    }
+                    eventHandled = eventManager.sendEvent(ownerCopy, ISensorEvents.class,
+                            "onSensorEvent", event);
+                    event.recycle();
+                }
+            } else {
+                SensorEvent event = events.get(0);
+                event.setEventGroup(EventGroup.SINGLE);
+                eventHandled = eventManager.sendEvent(ownerCopy, ISensorEvents.class,
+                        "onSensorEvent", event);
                 event.recycle();
             }
         }
+        return eventHandled;
     }
 
     ControllerData getControllerData(GVRCursorController controller) {
@@ -198,6 +224,23 @@ public class GVRBaseSensor {
 
         public boolean getActive() {
             return active;
+        }
+    }
+
+    private static class DepthComparator implements Comparator<SensorEvent> {
+        Vector3f originVector;
+        DepthComparator() {
+            originVector = new Vector3f(0,0,0);
+        }
+        @Override
+        public int compare(SensorEvent lhs, SensorEvent rhs) {
+            GVRTransform transform = lhs.getObject().getTransform();
+            float lhsDepth = originVector.distance(transform.getPositionX(),transform
+                    .getPositionY(), transform.getPositionZ());
+            transform = rhs.getObject().getTransform();
+            float rhsDepth = originVector.distance(transform.getPositionX(),transform
+                    .getPositionY(), transform.getPositionZ());
+            return (int)(lhsDepth - rhsDepth);
         }
     }
 }

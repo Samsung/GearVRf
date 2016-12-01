@@ -54,6 +54,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public abstract class Cursor {
     private static final String TAG = Cursor.class.getSimpleName();
+    protected static final float MAX_CURSOR_SCALE = 1000;
     private GVRContext context;
     protected GVRSceneObject cursor;
     private String name;
@@ -680,6 +681,23 @@ public abstract class Cursor {
             return compatibleIoDevices.get(priorityLevel).getIoDevice();
         } else {
             return null;
+        }
+    }
+
+    protected void handleControllerEvent(GVRCursorController controller, boolean sentEvent) {
+        lookAt();
+        if (!controller.isEventHandledBySensor() && !sentEvent && (controller.getKeyEvent() !=
+                null || controller.getMotionEvents().size() > 0)) {
+            CursorEvent cursorEvent = CursorEvent.obtain();
+            cursorEvent.setOver(false);
+            cursorEvent.setColliding(false);
+            cursorEvent.setActive(isActive());
+            cursorEvent.setCursor(Cursor.this);
+            cursorEvent.setObject(null);
+            cursorEvent.setHitPoint(0,0,0);
+            cursorEvent.setKeyEvent(controller.getKeyEvent());
+            cursorEvent.setMotionEvents(controller.getMotionEvents());
+            dispatchCursorEvent(cursorEvent);
         }
     }
 

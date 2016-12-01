@@ -577,6 +577,12 @@ public abstract class GVRCursorController {
         this.scene = scene;
     }
 
+    boolean eventHandledBySensor = false;
+
+    public boolean isEventHandledBySensor() {
+        return eventHandledBySensor;
+    }
+
     /**
      * Process the input data.
      */
@@ -600,13 +606,10 @@ public abstract class GVRCursorController {
 
         previousActive = active;
         position.normalize(ray);
-
+        eventHandledBySensor = sensorManager.processPick(scene, this);
         for (ControllerEventListener listener : controllerEventListeners) {
             listener.onEvent(this);
         }
-
-        sensorManager.processPick(scene, this);
-
         // reset the set key and motion events.
         synchronized (eventLock) {
             processedKeyEvent.clear();
