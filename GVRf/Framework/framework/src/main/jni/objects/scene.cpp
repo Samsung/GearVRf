@@ -131,22 +131,5 @@ void Scene::clearLights() {
     lightList.clear();
 }
 
-int Scene::getMaxLights(){
-    int maxUniformVS = 0;
-    int maxUniformFS = 0;
-    int maxLights = 0;
-
-    glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxUniformVS);
-    glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniformFS);
-
-    if((maxUniformVS < 1024) || (maxUniformFS < 1024)){
-        maxLights = 13;
-    }
-    else{
-        maxLights = 16;
-    }
-    return maxLights;
-}
-
 }
 

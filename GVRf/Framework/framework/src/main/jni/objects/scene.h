@@ -163,8 +163,6 @@ public:
 
     static void set_main_scene(Scene* scene);
 
-    int getMaxLights();
-
 private:
     Scene(const Scene& scene);
     Scene(Scene&& scene);

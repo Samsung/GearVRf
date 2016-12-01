@@ -86,8 +86,6 @@ extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene);
 
-    JNIEXPORT int JNICALL
-    Java_org_gearvrf_NativeScene_getMaxLights(JNIEnv * env, jobject obj, jlong jscene);
 };
 
 JNIEXPORT jlong JNICALL
@@ -217,12 +215,6 @@ Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene) {
     Scene::set_main_scene(reinterpret_cast<Scene*>(jscene));
-}
-
-JNIEXPORT int JNICALL
-Java_org_gearvrf_NativeScene_getMaxLights(JNIEnv * env, jobject obj, jlong jscene) {
-    Scene* scene = reinterpret_cast<Scene*>(jscene);
-    return scene->getMaxLights();
 }
 
 }

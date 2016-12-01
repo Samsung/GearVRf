@@ -186,6 +186,7 @@ abstract class GVRViewManager extends GVRContext {
 
         mPreviousTimeNanos = GVRTime.getCurrentTime();
         mRenderBundle = makeRenderBundle();
+        getActivity().getConfigurationManager().configureRendering();
         setMainScene(new GVRScene(this));
     }
 

@@ -202,6 +202,17 @@ abstract class GVRConfigurationManager {
         return false;
     }
 
+    public void configureRendering(){
+        NativeConfigurationManager.configureRendering(mActivity.get().getNative());
+    }
+
+    /**
+     * @return max lights supported
+     */
+    public int getMaxLights(){
+        return NativeConfigurationManager.getMaxLights(mActivity.get().getNative());
+    }
+
     DockEventReceiver makeDockEventReceiver(final Activity gvrActivity, final Runnable runOnDock,
                                             final Runnable runOnUndock) {
         return new DockEventReceiver(gvrActivity, runOnDock, runOnUndock);
@@ -216,4 +227,9 @@ abstract class GVRConfigurationManager {
     private String mHeadsetModel;
     static final String DEFAULT_HEADSET_MODEL = "R322";
     private static final String TAG = "GVRConfigurationManager";
+}
+
+class NativeConfigurationManager {
+    public static native int getMaxLights(long jConfigurationManager);
+    public static native void configureRendering(long jConfigurationManager);
 }

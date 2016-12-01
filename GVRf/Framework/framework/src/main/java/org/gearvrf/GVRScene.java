@@ -75,7 +75,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         super(gvrContext, NativeScene.ctor());
 
         if(MAX_LIGHTS == 0) {
-            MAX_LIGHTS = NativeScene.getMaxLights(getNative());
+            MAX_LIGHTS = gvrContext.getActivity().getConfigurationManager().getMaxLights();
         }
 
         mSceneRoot = new GVRSceneObject(gvrContext);
@@ -726,6 +726,4 @@ class NativeScene {
     static native void setMainScene(long scene);
     
     static native void setPickVisible(long scene, boolean flag);
-
-    public static native int getMaxLights(long scene);
 }
