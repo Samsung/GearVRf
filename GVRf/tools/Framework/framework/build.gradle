@@ -71,6 +71,9 @@ model {
 
 }
 
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
 dependencies {
     compile fileTree(dir: '../../../Framework/framework/src/main/libs', include: ['*.jar'])
+    compile "org.joml:joml-android:${jomlVersion}"
 }

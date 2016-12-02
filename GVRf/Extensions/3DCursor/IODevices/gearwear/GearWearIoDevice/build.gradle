@@ -58,7 +58,9 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile(name: 'framework-debug', ext: 'aar')
-    compile project(':3DCursorLibrary')
+    compile (project(':3DCursorLibrary')) {
+        transitive = true
+    }
     compile project(':gearwearlibrary')
 }
 

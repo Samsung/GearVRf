@@ -68,6 +68,8 @@ task(copyOculusSignatures, type: Copy) {
 
 
 dependencies {
-    compile project(':framework')
+    compile (project(':framework')) {
+        transitive = true
+    }
     compile project(':backend_oculus')
 }

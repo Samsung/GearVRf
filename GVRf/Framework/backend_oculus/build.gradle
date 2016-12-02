@@ -3,10 +3,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.library'
 
 repositories {
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-
     flatDir {
         dirs 'src/main/libs'
     }

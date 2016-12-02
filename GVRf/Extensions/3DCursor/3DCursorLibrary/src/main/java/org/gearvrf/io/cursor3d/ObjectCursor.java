@@ -156,8 +156,8 @@ class ObjectCursor extends Cursor {
                 Vector3f cubeMin = new Vector3f(vertices[0], vertices[1], vertices[2]);
                 Vector3f cubeMax = new Vector3f(vertices[length - 3], vertices[length - 2],
                         vertices[length - 1]);
-                cubeMin.mulPoint(matrix4f);
-                cubeMax.mulPoint(matrix4f);
+                cubeMin.mulPosition(matrix4f);
+                cubeMax.mulPosition(matrix4f);
 
                 if (!pointInBox(cursorSceneObject.getPositionX(), cursorSceneObject.getPositionY(),
                         cursorSceneObject.getPositionZ(), cubeMin, cubeMax)) {

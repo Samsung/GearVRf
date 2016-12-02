@@ -220,7 +220,7 @@ class GVRJassimpAdapter {
         int i;
         for (i = 0; i < aiNodeAnim.getNumPosKeys(); ++i) {
             float[] pos = aiNodeAnim.getPosKeyVector(i, sWrapperProvider);
-            node.setPosKeyVector(i, (float)aiNodeAnim.getPosKeyTime(i), new Vector3f(FloatBuffer.wrap(pos)));
+            node.setPosKeyVector(i, (float)aiNodeAnim.getPosKeyTime(i), pos[0], pos[1], pos[2]);
         }
 
         // Rot keys
@@ -232,7 +232,7 @@ class GVRJassimpAdapter {
         // Scale keys
         for (i = 0; i < aiNodeAnim.getNumScaleKeys(); ++i) {
             float[] scale = aiNodeAnim.getScaleKeyVector(i, sWrapperProvider);
-            node.setScaleKeyVector(i, (float)aiNodeAnim.getScaleKeyTime(i), new Vector3f(FloatBuffer.wrap(scale)));
+            node.setScaleKeyVector(i, (float)aiNodeAnim.getScaleKeyTime(i), scale[0], scale[1], scale[2]);
         }
 
         return node;

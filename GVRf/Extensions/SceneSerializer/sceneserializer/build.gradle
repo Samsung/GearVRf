@@ -28,8 +28,11 @@ android {
     }
 }
 
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile "org.joml:joml-android:${jomlVersion}"
     compile(name: 'framework-debug', ext: 'aar')
 }
 

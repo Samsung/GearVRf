@@ -200,8 +200,8 @@ public final class GVRAnimationChannel implements PrettyPrint {
         return mPositionKeys[keyIndex].getValue();
     }
 
-    public void setPosKeyVector(int keyIndex, float time, Vector3f pos) {
-        mPositionKeys[keyIndex] = new GVRPositionKey(time, pos.x, pos.y, pos.z);
+    public void setPosKeyVector(int keyIndex, float time, final float x, final float y, final float z) {
+        mPositionKeys[keyIndex] = new GVRPositionKey(time, x, y, z);
     }
 
     /** 
@@ -273,8 +273,8 @@ public final class GVRAnimationChannel implements PrettyPrint {
         return mScaleKeys[keyIndex].getValue();
     }
 
-    public void setScaleKeyVector(int keyIndex, float time, Vector3f scale) {
-        mScaleKeys[keyIndex] = new GVRScaleKey(time, scale.x, scale.y, scale.z);
+    public void setScaleKeyVector(int keyIndex, float time, final float x, final float y, final float z) {
+        mScaleKeys[keyIndex] = new GVRScaleKey(time, x, y, z);
     }
 
     /** 

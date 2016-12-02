@@ -301,14 +301,13 @@ public class AnimationInteractivityManager {
                     interactiveObject.getInterpolator().key.length, 0, 0,
                     GVRAnimationBehavior.LINEAR, GVRAnimationBehavior.LINEAR);
           for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
-            Vector3f vector3f = new Vector3f(
-                      interactiveObject.getInterpolator().keyValue[j * 3],
-                      interactiveObject.getInterpolator().keyValue[j * 3 + 1],
-                      interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
+            final float x = interactiveObject.getInterpolator().keyValue[j * 3];
+            final float y = interactiveObject.getInterpolator().keyValue[j * 3 + 1];
+            final float z = interactiveObject.getInterpolator().keyValue[j * 3 + 2];
             gvrAnimationChannel.setPosKeyVector(j,
                       interactiveObject.getInterpolator().key[j]
                               * interactiveObject.getTimeSensor().cycleInterval
-                              * FRAMES_PER_SECOND, vector3f);
+                              * FRAMES_PER_SECOND, x, y, z);
           }
         }  //  end translation
 
@@ -345,14 +344,13 @@ public class AnimationInteractivityManager {
                     GVRAnimationBehavior.DEFAULT);
           for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++)
           {
-            Vector3f vector3f = new Vector3f(
-                      interactiveObject.getInterpolator().keyValue[j * 3],
-                      interactiveObject.getInterpolator().keyValue[j * 3 + 1],
-                      interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
+            final float x = interactiveObject.getInterpolator().keyValue[j * 3];
+            final float y = interactiveObject.getInterpolator().keyValue[j * 3 + 1];
+            final float z = interactiveObject.getInterpolator().keyValue[j * 3 + 2];
             gvrAnimationChannel.setScaleKeyVector(j,
                       interactiveObject.getInterpolator().key[j]
                               * interactiveObject.getTimeSensor().cycleInterval
-                              * FRAMES_PER_SECOND, vector3f);
+                              * FRAMES_PER_SECOND, x, y, z);
           }
         }  //  end scale
         else {
