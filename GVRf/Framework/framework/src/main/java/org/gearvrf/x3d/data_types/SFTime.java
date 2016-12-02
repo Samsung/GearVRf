@@ -15,34 +15,33 @@
 package org.gearvrf.x3d.data_types;
 
 /**
- *
- *  Defines the X3D SFTime data type
+ * Defines the X3D SFTime data type
  */
 public class SFTime {
 
-  private double value = 0;
+    private double value = 0;
 
-  public SFTime () {
-  }
+    public SFTime() {
+    }
 
-  public SFTime (double value) {
-    setValue(value);
-  }
+    public SFTime(double value) {
+        setValue(value);
+    }
 
-  public void setValue(double value) {
-    this.value = value;
-  }
+    public void setValue(double value) {
+        this.value = value;
+    }
 
-  public double getValue () {
-    return this.value;
-  }
+    public double getValue() {
+        return this.value;
+    }
 
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder();
-    buf.append(this.value);
-    return buf.toString();
-  }
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append(this.value);
+        return buf.toString();
+    }
 
 }
 

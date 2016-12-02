@@ -181,7 +181,6 @@ public abstract class GVRScriptFile {
 
         String statement = getInvokeStatementCached(funcName, params);
 
-        //Bindings localBindings = null;
         synchronized (mEngineLock) {
             localBindings = mLocalEngine.getBindings(ScriptContext.ENGINE_SCOPE);
             if (localBindings == null) {

@@ -15,34 +15,33 @@
 package org.gearvrf.x3d.data_types;
 
 /**
- *
- *  Defines the X3D SFFloat data type
+ * Defines the X3D SFFloat data type
  */
 public class SFFloat {
 
-  private float value = 0;
+    private float value = 0;
 
-  public SFFloat () {
-  }
+    public SFFloat() {
+    }
 
-  public SFFloat (float value) {
-    setValue(value);
-  }
+    public SFFloat(float value) {
+        setValue(value);
+    }
 
-  public void setValue(float value) {
-    this.value = value;
-  }
+    public void setValue(float value) {
+        this.value = value;
+    }
 
-  public float getValue () {
-    return this.value;
-  }
+    public float getValue() {
+        return this.value;
+    }
 
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder();
-    buf.append(this.value);
-    return buf.toString();
-  }
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append(this.value);
+        return buf.toString();
+    }
 
 }
 

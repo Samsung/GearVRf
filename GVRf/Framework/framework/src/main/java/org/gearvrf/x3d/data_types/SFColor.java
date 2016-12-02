@@ -15,76 +15,79 @@
 package org.gearvrf.x3d.data_types;
 
 /**
- *
- *  Defines the X3D SFColor data type
+ * Defines the X3D SFColor data type
  */
 public class SFColor {
 
-  private float red = 0;
-  private float green = 0;
-  private float blue = 0;
+    private float red = 0;
+    private float green = 0;
+    private float blue = 0;
 
-  public SFColor () {
-  }
+    public SFColor() {
+    }
 
-  public SFColor (float red, float green, float blue) {
-    float[] color = {red, green, blue};
-    setValue(color);
-  }
+    public SFColor(float red, float green, float blue) {
+        float[] color = {red, green, blue};
+        setValue(color);
+    }
 
-  public void setValue(float[] color) {
-    red = color[0];
-    green = color[1];
-    blue = color[2];
-  }
+    public void setValue(float[] color) {
+        red = color[0];
+        green = color[1];
+        blue = color[2];
+    }
 
-  public void setValue(float red, float green, float blue) {
-    this.red = red;
-    this.green = green;
-    this.blue = blue;
-  }
+    public void setValue(float red, float green, float blue) {
+        this.red = red;
+        this.green = green;
+        this.blue = blue;
+    }
 
-  public void setValue(SFColor color) {
-    this.red = color.getRed();
-    this.green = color.getGreen();
-    this.blue = color.getBlue();
-  }
+    public void setValue(SFColor color) {
+        this.red = color.getRed();
+        this.green = color.getGreen();
+        this.blue = color.getBlue();
+    }
 
-  public float[] getValue () {
-    float[] color = {this.red, this.green, this.blue};
-    return color;
-  }
+    public float[] getValue() {
+        float[] color = {this.red, this.green, this.blue};
+        return color;
+    }
 
-  public float getBlue () {
-    return blue;
-  }
-  public float getGreen () {
-    return green;
-  }
-  public float getRed () {
-    return red;
-  }
+    public float getBlue() {
+        return blue;
+    }
 
-  public void setBlue (float blue) {
-    this.blue = blue;
-  }
-  public void setGreen (float green) {
-    this.green = green;
-  }
-  public void setRed (float red) {
-    this.red = red;
-  }
+    public float getGreen() {
+        return green;
+    }
 
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder();
-    buf.append(red);
-    buf.append(' ');
-    buf.append(green);
-    buf.append(' ');
-    buf.append(blue);
-    return buf.toString();
-  }
+    public float getRed() {
+        return red;
+    }
+
+    public void setBlue(float blue) {
+        this.blue = blue;
+    }
+
+    public void setGreen(float green) {
+        this.green = green;
+    }
+
+    public void setRed(float red) {
+        this.red = red;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append(red);
+        buf.append(' ');
+        buf.append(green);
+        buf.append(' ');
+        buf.append(blue);
+        return buf.toString();
+    }
 
 }
 

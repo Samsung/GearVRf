@@ -17,63 +17,66 @@ package org.gearvrf.x3d.data_types;
 import org.joml.Vector3f;
 
 /**
- *
- *  Defines the X3D SFVec3f data type
+ * Defines the X3D SFVec3f data type
  */
 public class SFVec3f extends Vector3f {
 
-  public SFVec3f () {
-    set(0, 0, 0);
-  }
+    public SFVec3f() {
+        set(0, 0, 0);
+    }
 
-  public SFVec3f (float x, float y, float z) {
-    set(x, y, z);
-  }
+    public SFVec3f(float x, float y, float z) {
+        set(x, y, z);
+    }
 
-  public void setValue(float[] vec) {
-    set(vec[0], vec[1], vec[2]);
-  }
+    public void setValue(float[] vec) {
+        set(vec[0], vec[1], vec[2]);
+    }
 
-  public void setValue(float x, float y, float z) {
-    set(x, y, z);
-  }
+    public void setValue(float x, float y, float z) {
+        set(x, y, z);
+    }
 
-  public void setX(float x) {
-    this.x = x;
-  }
-  public void setY(float y) {
-    this.y = y;
-  }
-  public void setZ(float z) {
-    this.z = z;
-  }
+    public void setX(float x) {
+        this.x = x;
+    }
 
-  public float[] getValue() {
-    float[] vec = {x, y, z};
-    return vec;
-  }
+    public void setY(float y) {
+        this.y = y;
+    }
 
-  public float getX() {
-    return this.x;
-  }
-  public float getY() {
-    return this.y;
-  }
-  public float getZ() {
-    return this.z;
-  }
+    public void setZ(float z) {
+        this.z = z;
+    }
+
+    public float[] getValue() {
+        float[] vec = {x, y, z};
+        return vec;
+    }
+
+    public float getX() {
+        return this.x;
+    }
+
+    public float getY() {
+        return this.y;
+    }
+
+    public float getZ() {
+        return this.z;
+    }
 
 
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder();
-    buf.append(this.x);
-    buf.append(' ');
-    buf.append(this.y);
-    buf.append(' ');
-    buf.append(this.z);
-    return buf.toString();
-  }
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append(this.x);
+        buf.append(' ');
+        buf.append(this.y);
+        buf.append(' ');
+        buf.append(this.z);
+        return buf.toString();
+    }
 
 }
 

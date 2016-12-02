@@ -15,34 +15,33 @@
 package org.gearvrf.x3d.data_types;
 
 /**
- *
- *  Defines the X3D SFBool[ean] data type
+ * Defines the X3D SFBool[ean] data type
  */
 public class SFBool {
 
-  private boolean value = false;
+    private boolean value = false;
 
-  public SFBool () {
-  }
+    public SFBool() {
+    }
 
-  public SFBool (boolean value) {
-    setValue(value);
-  }
+    public SFBool(boolean value) {
+        setValue(value);
+    }
 
-  public void setValue(boolean value) {
-    this.value = value;
-  }
+    public void setValue(boolean value) {
+        this.value = value;
+    }
 
-  public boolean getValue () {
-    return this.value;
-  }
+    public boolean getValue() {
+        return this.value;
+    }
 
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder();
-    buf.append(this.value);
-    return buf.toString();
-  }
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append(this.value);
+        return buf.toString();
+    }
 
 }
 
