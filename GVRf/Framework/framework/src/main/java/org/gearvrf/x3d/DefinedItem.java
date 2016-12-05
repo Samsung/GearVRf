@@ -29,102 +29,144 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 
 /**
  * @author m1.williams DefinedItem is an array list of each X3D node that has a
  *         DEF="some_name" between the < > brackets. The name is saved, and a
  *         reference to the GVR structure
- *
+ *         <p/>
  *         For example <IndexedFaceSet DEF="myIFS"> will create a DefinedItem
  *         setting name to "myIFS" and gvrMesh will point to a GVRmesh object.
  *         Later, if an <IndexedFaceSet USE="myIFS">, both IndexedFaceSet will
  *         point to the same GVRmesh.
- * 
+ *         <p/>
  *         This also allows implementation of X3D's working with with HTML5
  *         Document Object Model (DOM) getElementByTagName() method since every
  *         DEF name will be in this array list containing DEFined values.
  */
-public class DefinedItem
-{
+public class DefinedItem {
 
+    private String name = "";
+    private GVRMesh gvrMesh = null;
+    private GVRSceneObject gvrSceneObject = null;
+    private Future<GVRTexture> gvrTexture = null;
+    private GVRRenderData gvrRenderData = null;
+    private GVRMaterial gvrMaterial = null;
+    /**
+     * X3D Transforms use AxisAngle format for rotations,
+     * and float3 for the SpotLight, DirectionalLight direction
+     * Using SCRIPT node need these raw values while GearVR
+     * saves these values as Quaternions
+     */
+    private AxisAngle4f rotationAxisAngle = new AxisAngle4f();
+    private Vector3f direction = new Vector3f();
 
-  private String name = "";
-  private GVRMesh gvrMesh = null;
-  private GVRSceneObject gvrSceneObject = null;
-  private Future<GVRTexture> gvrTexture = null;
-  private GVRRenderData gvrRenderData = null;
+    public DefinedItem() {
+    }
 
+    public DefinedItem(String name) {
+        this.name = name;
+    }
 
-  private GVRMaterial gvrMaterial = null;
+    // used by directional and spot light
+    public DefinedItem(String name, Vector3f direction) {
+        this.name = name;
+        this.direction.set(direction);
+    }
 
-  public DefinedItem()
-  {
-  }
+    public DefinedItem(String name, float x, float y, float z) {
+        this.name = name;
+        this.direction.set(x, y, z);
+    }
 
-  public DefinedItem(String name)
-  {
-    this.name = name;
-  }
+    // used by rotations
+    public DefinedItem(String name, AxisAngle4f axisAngle) {
+        this.name = name;
+        this.rotationAxisAngle.set(axisAngle);
+    }
 
-  public void setName(String name)
-  {
-    this.name = name;
-  }
+    public DefinedItem(String name, float angle, float x, float y, float z) {
+        this.name = name;
+        this.rotationAxisAngle.set(angle, x, y, z);  // order: angle, x, y, z
+    }
 
-  public String getName()
-  {
-    return this.name;
-  }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-  public void setGVRRenderData(GVRRenderData gvrRenderData)
-  {
-    this.gvrRenderData = gvrRenderData;
-  }
+    public String getName() {
+        return this.name;
+    }
 
-  public GVRRenderData getGVRRenderData()
-  {
-    return this.gvrRenderData;
-  }
+    public void setDirection(Vector3f direction) {
+        this.direction.set(direction);
+    }
 
-  public void setGVRTexture(Future<GVRTexture> gvrTexture)
-  {
-    this.gvrTexture = gvrTexture;
-  }
+    public void setDirection(float[] direction) {
+        setDirection(direction[0], direction[1], direction[2]);
+    }
 
-  public Future<GVRTexture> getGVRTexture()
-  {
-    return this.gvrTexture;
-  }
+    public void setDirection(float x, float y, float z) {
+        this.direction.set(x, y, z);
+    }
 
-  public void setGVRMesh(GVRMesh gvrMesh)
-  {
-    this.gvrMesh = gvrMesh;
-  }
+    public void setAxisAngle(AxisAngle4f axisAngle) {
+        this.rotationAxisAngle.set(axisAngle);
+    }
 
-  public GVRMesh getGVRMesh()
-  {
-    return this.gvrMesh;
-  }
+    public void setAxisAngle(float angle, float x, float y, float z) {
+        this.rotationAxisAngle.set(angle, x, y, z);  // order: angle, x, y, z
+    }
 
-  public void setGVRMaterial(GVRMaterial gvrMaterial)
-  {
-    this.gvrMaterial = gvrMaterial;
-  }
+    public Vector3f getDirection() {
+        return this.direction;
+    }
 
-  public GVRMaterial getGVRMaterial()
-  {
-    return this.gvrMaterial;
-  }
+    public AxisAngle4f getAxisAngle() {
+        return this.rotationAxisAngle;
+    }
 
-  public void setGVRSceneObject(GVRSceneObject gvrSceneObject)
-  {
-    this.gvrSceneObject = gvrSceneObject;
-  }
+    public void setGVRRenderData(GVRRenderData gvrRenderData) {
+        this.gvrRenderData = gvrRenderData;
+    }
 
-  public GVRSceneObject getGVRSceneObject()
-  {
-    return this.gvrSceneObject;
-  }
+    public GVRRenderData getGVRRenderData() {
+        return this.gvrRenderData;
+    }
+
+    public void setGVRTexture(Future<GVRTexture> gvrTexture) {
+        this.gvrTexture = gvrTexture;
+    }
+
+    public Future<GVRTexture> getGVRTexture() {
+        return this.gvrTexture;
+    }
+
+    public void setGVRMesh(GVRMesh gvrMesh) {
+        this.gvrMesh = gvrMesh;
+    }
+
+    public GVRMesh getGVRMesh() {
+        return this.gvrMesh;
+    }
+
+    public void setGVRMaterial(GVRMaterial gvrMaterial) {
+        this.gvrMaterial = gvrMaterial;
+    }
+
+    public GVRMaterial getGVRMaterial() {
+        return this.gvrMaterial;
+    }
+
+    public void setGVRSceneObject(GVRSceneObject gvrSceneObject) {
+        this.gvrSceneObject = gvrSceneObject;
+    }
+
+    public GVRSceneObject getGVRSceneObject() {
+        return this.gvrSceneObject;
+    }
 
 }

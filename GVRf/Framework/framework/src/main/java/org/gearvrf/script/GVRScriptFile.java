@@ -64,6 +64,9 @@ public abstract class GVRScriptFile {
     private static String[] sCachedParamName;
     private String mLastError = null;
 
+    private Bindings localBindings = null;
+
+
     static {
         // Generate parameter names, arg0, arg1, ...
         sCachedParamName = new String[sNumOfCachedParamNames];
@@ -178,7 +181,6 @@ public abstract class GVRScriptFile {
 
         String statement = getInvokeStatementCached(funcName, params);
 
-        Bindings localBindings = null;
         synchronized (mEngineLock) {
             localBindings = mLocalEngine.getBindings(ScriptContext.ENGINE_SCOPE);
             if (localBindings == null) {
@@ -201,6 +203,15 @@ public abstract class GVRScriptFile {
         }
 
         return true;
+    }
+
+  /**
+   * Access to values modified during invoking of Script file
+   * Enables X3D to get values script modifies..
+   * @return
+   */
+  public Bindings getLocalBindings() {
+        return localBindings;
     }
 
     private void resetBadFunctions() {
