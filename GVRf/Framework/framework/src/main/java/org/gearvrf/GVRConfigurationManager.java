@@ -34,8 +34,11 @@ abstract class GVRConfigurationManager {
     protected WeakReference<GVRActivity> mActivity;
     private boolean isDockListenerRequired = true;
     private boolean mResetFovY;
+    private final long mPtr;
 
     protected GVRConfigurationManager(GVRActivity activity) {
+        mPtr = NativeConfigurationManager.ctor();
+
         mActivity = new WeakReference<>(activity);
 
         mResetFovY = (0 == Float.compare(0, activity.getAppSettings().getEyeBufferParams().getFovY()));
@@ -203,14 +206,14 @@ abstract class GVRConfigurationManager {
     }
 
     public void configureRendering(){
-        NativeConfigurationManager.configureRendering(mActivity.get().getNative());
+        NativeConfigurationManager.configureRendering(mPtr);
     }
 
     /**
      * @return max lights supported
      */
     public int getMaxLights(){
-        return NativeConfigurationManager.getMaxLights(mActivity.get().getNative());
+        return NativeConfigurationManager.getMaxLights(mPtr);
     }
 
     DockEventReceiver makeDockEventReceiver(final Activity gvrActivity, final Runnable runOnDock,
@@ -224,12 +227,19 @@ abstract class GVRConfigurationManager {
         }
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        NativeConfigurationManager.delete(mPtr);
+    }
+
     private String mHeadsetModel;
     static final String DEFAULT_HEADSET_MODEL = "R322";
     private static final String TAG = "GVRConfigurationManager";
 }
 
 class NativeConfigurationManager {
+    static native long ctor();
     public static native int getMaxLights(long jConfigurationManager);
     public static native void configureRendering(long jConfigurationManager);
+    static native void delete(long jConfigurationManager);
 }
