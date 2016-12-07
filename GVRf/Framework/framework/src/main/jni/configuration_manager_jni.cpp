@@ -23,6 +23,9 @@
 namespace gvr {
     extern "C" {
 
+    JNIEXPORT jlong JNICALL Java_org_gearvrf_NativeConfigurationManager_ctor(JNIEnv *env,
+                                                                             jobject obj);
+
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeConfigurationManager_configureRendering(JNIEnv *env, jobject obj,
                                                                            jlong jConfigurationManager);
@@ -31,6 +34,14 @@ namespace gvr {
     Java_org_gearvrf_NativeConfigurationManager_getMaxLights(JNIEnv *env, jobject obj,
                                                                      jlong jConfigurationManager);
 
+    JNIEXPORT void JNICALL Java_org_gearvrf_NativeConfigurationManager_delete(JNIEnv *env,
+                                                                              jobject obj,
+                                                                              jlong jConfigurationManager);
+
+    JNIEXPORT jlong JNICALL Java_org_gearvrf_NativeConfigurationManager_ctor(JNIEnv *env,
+                                                                             jobject obj) {
+        return reinterpret_cast<jlong>(new ConfigurationManager());
+    }
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeConfigurationManager_configureRendering(JNIEnv *env, jobject obj,
@@ -44,6 +55,12 @@ namespace gvr {
                                                              jlong jConfigurationManager) {
         ConfigurationManager *configuration_manager = reinterpret_cast<ConfigurationManager *>(jConfigurationManager);
         return configuration_manager->getMaxLights();
+    }
+
+    JNIEXPORT void JNICALL Java_org_gearvrf_NativeConfigurationManager_delete(JNIEnv *env,
+                                                                              jobject obj,
+                                                                              jlong jConfigurationManager) {
+        delete reinterpret_cast<ConfigurationManager *>(jConfigurationManager);
     }
 
     }
