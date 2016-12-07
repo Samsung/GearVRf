@@ -16,3 +16,15 @@ allprojects {
         jcenter()
     }
 }
+subprojects {
+    loadExtraProperties("$project.rootDir/maven.properties");
+    apply from: "$project.rootDir/maven_upload.gradle"
+}
+
+def loadExtraProperties(String fileName) {
+    def props = new Properties()
+    props.load(new FileInputStream(fileName))
+    props.each { key, val ->
+        project.ext.set(key, val)
+    }
+}
