@@ -14,32 +14,21 @@
  */
 
 #include "util/gvr_jni.h"
-#include "gl_delete.h"
+#include "context.h"
 
 namespace gvr {
 
 extern "C" {
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeGLDelete_processQueues(JNIEnv * env, jobject obj, jlong deleterPtr) {
-    GlDelete* deleter = reinterpret_cast<GlDelete*>(deleterPtr);
+Java_org_gearvrf_NativeContext_processQueues(JNIEnv * env, jobject obj, jlong deleterPtr) {
+    Context* deleter = reinterpret_cast<Context*>(deleterPtr);
     deleter->processQueues();
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeGLDelete_ctor(JNIEnv * env, jobject obj) {
-    return reinterpret_cast<long>(new GlDelete());
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeGLDelete_dtor(JNIEnv * env, jobject obj, jlong deleterPtr) {
-    GlDelete* deleter = reinterpret_cast<GlDelete*>(deleterPtr);
-    delete deleter;
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeGLDelete_createTlsKey(JNIEnv * env, jobject obj) {
-    GlDelete::createTlsKey();
+Java_org_gearvrf_NativeContext_ctor(JNIEnv *env, jclass type) {
+    return reinterpret_cast<jlong>(new Context());
 }
 
 }   //extern "C"

@@ -36,7 +36,7 @@ std::vector<std::string> Mesh::dynamicAttribute_Names_ = {"a_bone_indices", "a_b
 
 Mesh* Mesh::createBoundingBox() {
 
-    Mesh* mesh = new Mesh();
+    Mesh* mesh = new Mesh(context_);
 
     getBoundingVolume(); // Make sure bounding_volume is valid
 
@@ -342,7 +342,6 @@ void Mesh::generateVAO(int programId) {
     if (!vao_dirty_) {
          return;
     }
-    obtainDeleter();
 
     if (vertices_.size() == 0 && normals_.size() == 0) {
         std::string error = "no vertex data yet, shouldn't call here. ";
@@ -447,10 +446,9 @@ void Mesh::generateBoneArrayBuffers(GLuint programId) {
         return;
     }
 
-
     // delete
     if (boneVboID_ != GVR_INVALID) {
-        deleter_->queueBuffer(boneVboID_);
+        context_.queueBuffer(boneVboID_);
         boneVboID_ = GVR_INVALID;
     }
 

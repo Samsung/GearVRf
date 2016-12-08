@@ -32,9 +32,9 @@ Java_org_gearvrf_NativeFloatTexture_update(JNIEnv * env,
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeFloatTexture_ctor(JNIEnv * env,
-    jobject obj) {
-return reinterpret_cast<jlong>(new FloatTexture());
+Java_org_gearvrf_NativeFloatTexture_ctor(JNIEnv * env, jobject obj, jlong nativeContext) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new FloatTexture(context));
 }
 
 JNIEXPORT jboolean JNICALL

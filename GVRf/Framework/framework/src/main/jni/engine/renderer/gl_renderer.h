@@ -41,7 +41,6 @@
 #include <unordered_map>
 #include "renderer.h"
 
-typedef unsigned long Long;
 namespace gvr {
 class Camera;
 class Scene;
@@ -56,7 +55,7 @@ class Light;
 class GLRenderer: public Renderer {
     friend class Renderer;
 protected:
-    GLRenderer(){}
+    GLRenderer(Context& context) : Renderer(context, true) {}
     virtual ~GLRenderer(){}
 public:
     // pure virtual

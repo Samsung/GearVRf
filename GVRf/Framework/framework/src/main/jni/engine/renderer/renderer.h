@@ -34,7 +34,6 @@
 #include <unordered_map>
 #include "batch_manager.h"
 
-typedef unsigned long Long;
 namespace gvr {
 extern bool use_multiview;
 class Camera;
@@ -46,6 +45,7 @@ class RenderData;
 class RenderTexture;
 class ShaderManager;
 class Light;
+class Context;
 
 /*
  * These uniforms are commonly used in shaders.
@@ -87,8 +87,8 @@ public:
         numberDrawCalls = 0;
         numberTriangles = 0;
     }
-    bool isVulkanInstace(){
-        return isVulkan_;
+    bool isBatching(){
+        return doBatching_;
     }
     void freeBatch(Batch* batch){
         batch_manager->freeBatch(batch);
@@ -106,7 +106,7 @@ public:
      int incrementDrawCalls(){
         return ++numberDrawCalls;
      }
-     static Renderer* getInstance(const char* type = " ");
+     static Renderer* makeInstance(Context& context, const char *type = " ");
      static void resetInstance(){
         delete instance;
      }
@@ -150,7 +150,6 @@ public:
     virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height) = 0;
 
 private:
-    static bool isVulkan_;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
     virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
@@ -165,10 +164,14 @@ private:
     Renderer& operator=(const Renderer& render_engine);
     Renderer& operator=(Renderer&& render_engine);
     BatchManager* batch_manager;
+    Context& context_;
+    bool doBatching_;
+
+public:
     static Renderer* instance;
-    
+
 protected:
-    Renderer();
+    Renderer(Context& context, bool doBatching);
     virtual ~Renderer(){
         delete batch_manager;
     }
@@ -196,6 +199,6 @@ public:
     //to be used only on the gl thread
     const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
 };
-extern Renderer* gRenderer;
+
 }
 #endif

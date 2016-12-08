@@ -32,7 +32,7 @@ public class GVRPostEffectShaderManager extends
     private final Map<GVRCustomPostEffectShaderId, GVRPostEffectMap> posteffects = new HashMap<GVRCustomPostEffectShaderId, GVRPostEffectMap>();
 
     GVRPostEffectShaderManager(GVRContext gvrContext) {
-        super(gvrContext, NativePostEffectShaderManager.ctor());
+        super(gvrContext, NativePostEffectShaderManager.ctor(gvrContext.getNativeContext()));
     }
 
     @Override
@@ -62,7 +62,7 @@ public class GVRPostEffectShaderManager extends
 }
 
 class NativePostEffectShaderManager {
-    static native long ctor();
+    static native long ctor(long nativeContext);
 
     static native long delete(long postEffectShaderManager);
 

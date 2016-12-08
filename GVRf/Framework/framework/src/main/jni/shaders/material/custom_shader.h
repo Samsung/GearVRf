@@ -45,8 +45,7 @@ typedef std::function<void(Material&, GLuint)> UniformVariableBind;
 
 class CustomShader: public ShaderBase {
 public:
-    explicit CustomShader(const std::string& vertex_shader,
-            const std::string& fragment_shader);
+    explicit CustomShader(Context& context, const std::string& vertex_shader, const std::string& fragment_shader);
     virtual ~CustomShader();
 
     void addTextureKey(const std::string& variable_name, const std::string& key);
@@ -128,7 +127,7 @@ private:
 
     std::string vertexShader_;
     std::string fragmentShader_;
-
+    Context& context_;
 };
 
 }

@@ -31,9 +31,9 @@ namespace gvr {
 
 class RenderTexture: public Texture {
 public:
-    explicit RenderTexture(int width, int height);
-    explicit RenderTexture(int width, int height, int sample_count);
-    explicit RenderTexture(int width, int height, int sample_count,
+    explicit RenderTexture(Context& context, int width, int height);
+    explicit RenderTexture(Context& context, int width, int height, int sample_count);
+    explicit RenderTexture(Context& context, int width, int height, int sample_count,
             int jcolor_format, int jdepth_format, bool resolve_depth,
             int* texture_parameters);
 
@@ -111,5 +111,6 @@ private:
                                      // when resolveDepth is on.
     GLuint renderTexture_gl_pbo_ = 0;
     bool readback_started_;          // set by startReadBack()
+    Context& context_;
 };}
 #endif

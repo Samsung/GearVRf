@@ -55,10 +55,10 @@ static const char FRAGMENT_SHADER[] = "precision mediump float;\n"
         " gl_FragColor = color * lightmap_color;\n"
         "}";
 
-LightMapShader::LightMapShader() :
+LightMapShader::LightMapShader(Context& context) :
         u_mvp_(0), u_texture_(0), u_lightmap_texture_(0),
         u_lightmap_offset_(0), u_lightmap_scale_(0) {
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+    program_ = new GLProgram(context, VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
 

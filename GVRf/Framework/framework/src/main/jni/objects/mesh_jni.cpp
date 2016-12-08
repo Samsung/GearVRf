@@ -27,7 +27,7 @@
 namespace gvr {
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj);
+    Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj, jlong nativeContext);
     JNIEXPORT jfloatArray JNICALL
     Java_org_gearvrf_NativeMesh_getVertices(JNIEnv * env,
             jobject obj, jlong jmesh);
@@ -122,8 +122,9 @@ Java_org_gearvrf_NativeMesh_getAttribNames(JNIEnv * env,
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj) {
-    return reinterpret_cast<jlong>(new Mesh());
+Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj, jlong nativeContext) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new Mesh(context));
 }
 
 JNIEXPORT jfloatArray JNICALL

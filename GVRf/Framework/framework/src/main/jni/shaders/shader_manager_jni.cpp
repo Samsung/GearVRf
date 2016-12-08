@@ -24,8 +24,7 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeShaderManager_ctor(JNIEnv * env,
-        jobject obj);
+Java_org_gearvrf_NativeShaderManager_ctor(JNIEnv * env, jobject obj, jlong nativeContext);
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeShaderManager_addCustomShader(
         JNIEnv * env, jobject obj, jlong jshader_manager, jstring vertex_shader,
@@ -36,9 +35,9 @@ Java_org_gearvrf_NativeShaderManager_getCustomShader(
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeShaderManager_ctor(JNIEnv * env,
-    jobject obj) {
-    return reinterpret_cast<jlong>(new ShaderManager());
+Java_org_gearvrf_NativeShaderManager_ctor(JNIEnv * env, jobject obj, jlong nativeContext) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new ShaderManager(context));
 }
 
 JNIEXPORT jint JNICALL

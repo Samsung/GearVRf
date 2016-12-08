@@ -66,19 +66,15 @@ public:
     void clearLights();
 
     void resetStats() {
-        gRenderer = Renderer::getInstance();
-        gRenderer->resetStats();
+        Renderer::instance->resetStats();
+    }
 
-    }
     int getNumberDrawCalls() {
-        if(nullptr!= gRenderer){
-            return gRenderer->getNumberDrawCalls();
-        }
+        return Renderer::instance->getNumberDrawCalls();
     }
+
     int getNumberTriangles() {
-        if(nullptr!= gRenderer) {
-            return gRenderer->getNumberTriangles();
-        }
+        return Renderer::instance->getNumberTriangles();
     }
 
     void exportToFile(std::string filepath);

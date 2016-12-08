@@ -27,7 +27,7 @@ namespace gvr {
 
 class CubemapReflectionShader: public ShaderBase {
 public:
-    CubemapReflectionShader();
+    CubemapReflectionShader(Context& context);
     virtual ~CubemapReflectionShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);

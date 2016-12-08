@@ -39,6 +39,7 @@ class SceneObject;
 class Scene;
 class ShaderManager;
 class GLFrameBuffer;
+class Context;
 
 //#define DEBUG_LIGHT 1
 
@@ -47,11 +48,12 @@ public:
     static const int MAX_SHADOW_MAPS;
     static const int SHADOW_MAP_SIZE;
 
-    explicit Light()
+    explicit Light(Context& context)
     :   Component(Light::getComponentType()),
         shadowMaterial_(nullptr),
  		shadowFB_(NULL),
-		shadowMapIndex_(-1) {
+		shadowMapIndex_(-1),
+                context_(context) {
     }
 
     ~Light();
@@ -173,7 +175,7 @@ public:
     /***
      * Creates the storage for shadow maps
      */
-    void static createDepthTexture(int width, int height, int depth);
+    void static createDepthTexture(Context& context, int width, int height, int depth);
 
     /***
     *  Calls destructor depth texture and delete textures
@@ -255,6 +257,7 @@ private:
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
     static GLTexture* depth_texture_;
+    Context& context_;
 };
 }
 #endif

@@ -11,14 +11,14 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCompressedCubemapTexture_compressedTextureArrayConstructor(JNIEnv * env,
-        jobject obj, jint internalFormat, jint width, jint height, jint imageSize,
+        jobject obj, jlong nativeContext, jint internalFormat, jint width, jint height, jint imageSize,
         jobjectArray textureArray, jintArray joffsetArray, jintArray jtexture_parameters);
 }
 ;
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCompressedCubemapTexture_compressedTextureArrayConstructor(JNIEnv * env,
-    jobject obj, jint internalFormat, jint width, jint height, jint imageSize,
+    jobject obj, jlong nativeContext, jint internalFormat, jint width, jint height, jint imageSize,
     jobjectArray textureArray, jintArray joffsetArray, jintArray jtexture_parameters) {
     if (env->GetArrayLength(textureArray) != 6) {
         std::string error =
@@ -33,7 +33,9 @@ Java_org_gearvrf_NativeCompressedCubemapTexture_compressedTextureArrayConstructo
     try {
         jint* texture_offsets = env->GetIntArrayElements(joffsetArray, 0);
         jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
-        jlong rv = reinterpret_cast<jlong>(new CubemapTexture(env,
+
+        Context& context = *reinterpret_cast<Context*>(nativeContext);
+        jlong rv = reinterpret_cast<jlong>(new CubemapTexture(env, context,
                 internalFormat, width, height, imageSize,
                 textureArray, texture_offsets, texture_parameters));
         env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);

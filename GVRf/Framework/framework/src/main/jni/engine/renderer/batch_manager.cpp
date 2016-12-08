@@ -24,12 +24,12 @@
 #define BATCH_SIZE 60
 namespace gvr {
 
-BatchManager::BatchManager(int batch_size, int max_indices){
+BatchManager::BatchManager(Context& context, int batch_size, int max_indices) : context_(context) {
     batch_size_ = batch_size;
     max_indices_ = max_indices;
 
     for(int i=0; i<BATCH_POOL_SIZE; i++){
-        Batch* new_batch = new Batch(max_indices_, max_indices_);
+        Batch* new_batch = new Batch(context, max_indices_, max_indices_);
         batch_pool_.push_back(new_batch);
     }
 }
@@ -99,7 +99,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
 
             // this check is needed as we are not removing render data from batches
             if(!it3->owner_object()->isCulled() && it3->enabled() && it3->owner_object()->enabled())
-                    gRenderer->renderRenderData(rstate, it3);
+                Renderer::instance->renderRenderData(rstate, it3);
             }
             continue;
         }
@@ -117,7 +117,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
         if(!batch->setupMesh(batch->isBatchDirty()))
             continue;
 
-        gRenderer->setRenderStates(renderdata, rstate);
+        Renderer::instance->setRenderStates(renderdata, rstate);
 
         if(use_multiview){
            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
@@ -127,7 +127,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
         const std::vector<glm::mat4>& matrices = batch->get_matrices();
 
         for(int passIndex =0; passIndex< renderdata->pass_count(); passIndex++){
-            gRenderer->set_face_culling(renderdata->pass(passIndex)->cull_face());
+            Renderer::instance->set_face_culling(renderdata->pass(passIndex)->cull_face());
             rstate.material_override = batch->material(passIndex);
             if(rstate.material_override == nullptr)
                 continue;
@@ -136,7 +136,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
                         renderdata, rstate, batch->getIndexCount(),
                         batch->getNumberOfMeshes());
         }
-        gRenderer->restoreRenderStates(renderdata);
+        Renderer::instance->restoreRenderStates(renderdata);
     }
 }
 
@@ -220,7 +220,7 @@ void BatchManager::getNewBatch(RenderData* rdata, Batch** existing_batch){
 Batch* BatchManager::getNewBatch(){
     if(0 == batch_pool_.size()){
         for(int i=0; i<BATCH_POOL_SIZE; i++){
-            Batch* new_batch = new Batch(max_indices_, max_indices_);
+            Batch* new_batch = new Batch(context_, max_indices_, max_indices_);
             batch_pool_.push_back(new_batch);
         }
      }

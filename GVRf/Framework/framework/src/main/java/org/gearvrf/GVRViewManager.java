@@ -51,11 +51,14 @@ abstract class GVRViewManager extends GVRContext {
         resetOnRestart();
 
         GVRAsynchronousResourceLoader.setup(this);
+
         VrAppSettings appSettings = activity.getAppSettings();
         mScriptManager = new GVRScriptManager(this);
         mEventManager = new GVREventManager(this);
         mInputManager = new GVRInputManagerImpl(this, appSettings.useGazeCursorController(),
                 appSettings.useAndroidWearTouchpad());
+
+        nativeCreateRenderer(getNativeContext());
     }
 
     void onPause() {}
@@ -173,7 +176,6 @@ abstract class GVRViewManager extends GVRContext {
         // we know that the current thread is a GL one, so we store it to
         // prevent non-GL thread from calling GL functions
         mGLThreadID = currentThread.getId();
-        mGlDeleterPtr = NativeGLDelete.ctor();
 
         // Evaluating anisotropic support on GL Thread
         String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
@@ -233,7 +235,7 @@ abstract class GVRViewManager extends GVRContext {
                 }
             }
         }
-        NativeGLDelete.processQueues(mGlDeleterPtr);
+        mNativeContext.processQueues();
 
         return currentTime;
     }
@@ -446,23 +448,6 @@ abstract class GVRViewManager extends GVRContext {
         }
     }
 
-    @Override
-    public void finalize() throws Throwable {
-        try {
-            if (0 != mGlDeleterPtr) {
-                NativeGLDelete.dtor(mGlDeleterPtr);
-            }
-        } catch (final Exception ignored) {
-        } finally {
-            super.finalize();
-        }
-    }
-
-    static {
-        // strictly one-time per process op hence the static block
-        NativeGLDelete.createTlsKey();
-    }
-
     protected void beforeDrawEyes() {
         mFrameHandler.beforeDrawEyes();
 
@@ -577,14 +562,12 @@ abstract class GVRViewManager extends GVRContext {
 
     protected GVRScript mMain;
 
-    protected long mGlDeleterPtr;
-
 
     protected native void renderCamera(long scene, long camera, long shaderManager,
                                        long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
     protected native void cull(long scene, long camera, long shader_manager);
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
-
+    private native void nativeCreateRenderer(long nativeContext);
 
     private static final String TAG = "GVRViewManager";
 }

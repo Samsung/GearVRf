@@ -35,7 +35,7 @@ import org.gearvrf.utility.Log;
     private final Map<GVRCustomMaterialShaderId, GVRMaterialMap> materialMaps = new HashMap<GVRCustomMaterialShaderId, GVRMaterialMap>();
 
     GVRMaterialShaderManager(GVRContext gvrContext) {
-        super(gvrContext, NativeShaderManager.ctor());
+        super(gvrContext, NativeShaderManager.ctor(gvrContext.getNativeContext()));
     }
 
     @Override
@@ -123,7 +123,7 @@ import org.gearvrf.utility.Log;
 }
 
 class NativeShaderManager {
-    static native long ctor();
+    static native long ctor(long nativeContext);
 
     static native int addCustomShader(long shaderManager, String vertexShader,
             String fragmentShader);

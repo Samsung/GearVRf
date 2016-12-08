@@ -26,7 +26,7 @@ namespace gvr {
 
 class LightMapShader: public ShaderBase {
 public:
-    LightMapShader();
+    LightMapShader(Context& context);
     virtual ~LightMapShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);

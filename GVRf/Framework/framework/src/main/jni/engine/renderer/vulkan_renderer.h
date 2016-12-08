@@ -56,7 +56,7 @@ class Light;
 class VulkanRenderer: public Renderer {
     friend class Renderer;
 protected:
-    VulkanRenderer(){}
+    VulkanRenderer(Context& context) : Renderer(context, false) {}
     virtual ~VulkanRenderer(){}
 
 public:

@@ -27,7 +27,7 @@ namespace gvr {
 
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters);
+    Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jlong nativeContext, jintArray jtexture_parameters);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBaseTexture_setJavaOwner(JNIEnv * env, jobject obj, jlong jtexture, jobject owner);
@@ -38,9 +38,10 @@ extern "C" {
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jintArray jtexture_parameters) {
+Java_org_gearvrf_NativeBaseTexture_bareConstructor(JNIEnv * env, jobject obj, jlong nativeContext, jintArray jtexture_parameters) {
     jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
-    jlong result =  reinterpret_cast<jlong>(new BaseTexture(texture_parameters));
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    jlong result =  reinterpret_cast<jlong>(new BaseTexture(context, texture_parameters));
     env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
     return result;
 }

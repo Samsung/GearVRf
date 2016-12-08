@@ -26,7 +26,7 @@ public class GVRExternalTexture extends GVRTexture {
      *            Current gvrContext
      */
     public GVRExternalTexture(GVRContext gvrContext) {
-        super(gvrContext, NativeExternalTexture.ctor());
+        super(gvrContext, NativeExternalTexture.ctor(gvrContext.getNativeContext()));
     }
 
     GVRExternalTexture(GVRContext gvrContext, long ptr) {
@@ -35,5 +35,5 @@ public class GVRExternalTexture extends GVRTexture {
 }
 
 class NativeExternalTexture {
-    static native long ctor();
+    static native long ctor(long nativeContext);
 }

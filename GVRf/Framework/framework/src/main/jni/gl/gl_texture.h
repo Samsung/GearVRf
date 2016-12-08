@@ -31,7 +31,7 @@
 #include "util/gvr_log.h"
 #include <cstdlib>
 
-#include "engine/memory/gl_delete.h"
+#include "engine/context.h"
 #include "objects/gl_pending_task.h"
 
 #define MAX_TEXTURE_PARAM_NUM 10
@@ -39,25 +39,26 @@
 namespace gvr {
 class GLTexture : public GLPendingTask {
 public:
-    explicit GLTexture(GLenum target)
-    : target_(target)
-    , pending_gl_task_(GL_TASK_NONE)
+    explicit GLTexture(Context& context, GLenum target)
+        : target_(target),
+          pending_gl_task_(GL_TASK_NONE),
+          context_(context)
     {
         pending_gl_task_ = GL_TASK_INIT_NO_PARAM;
     }
-    explicit GLTexture(GLenum target, int texture_id) :
-            target_(target) {
+    explicit GLTexture(Context& context, GLenum target, int texture_id) :
+            target_(target), context_(context) {
         id_ = texture_id;
     }
-    explicit GLTexture(GLenum target, int* texture_parameters) :
-            target_(target) {
+    explicit GLTexture(Context& context, GLenum target, int* texture_parameters) :
+            target_(target), context_(context) {
         pending_gl_task_ = GL_TASK_INIT_WITH_PARAM;
         memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
     }
 
     virtual ~GLTexture() {
-        if (0 != id_ && deleter_) {
-            deleter_->queueTexture(id_);
+        if (0 != id_) {
+            context_.queueTexture(id_);
         }
     }
 
@@ -76,9 +77,6 @@ public:
             return;
 
         case GL_TASK_INIT_NO_PARAM: {
-            // The deleter needs to be obtained from the GL thread
-            deleter_= getDeleterForThisThread();
-
             glGenTextures(1, &id_);
             glBindTexture(target_, id_);
             glTexParameteri(target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -91,8 +89,6 @@ public:
         }
 
         case GL_TASK_INIT_WITH_PARAM: {
-            deleter_= getDeleterForThisThread();
-
             // Sets the new MIN FILTER
             GLenum min_filter_type_ = texture_parameters_[0];
 
@@ -136,7 +132,7 @@ private:
 private:
     GLuint id_ = 0;
     GLenum target_;
-    GlDelete* deleter_;
+    Context& context_;
 
     // Enum for pending GL tasks. Keep a comma with each line
     // for easier merging.

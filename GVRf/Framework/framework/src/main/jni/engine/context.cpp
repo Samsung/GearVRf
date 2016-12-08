@@ -14,21 +14,18 @@
  */
 
 #include "util/gvr_log.h"
-#include "gl_delete.h"
-#include "util/gvr_cpp_stack_trace.h"
+#include "context.h"
 
 //#define VERBOSE_LOGGING
 
 namespace gvr {
 
-pthread_key_t deleter_key;
-
-void GlDelete::logInvalidParameter(const char *funcName) {
-    LOGW("GlDelete::%s is called with an invalid parameter", funcName);
+void Context::logInvalidParameter(const char *funcName) {
+    LOGW("Context::%s is called with an invalid parameter", funcName);
     printStackTrace();
 }
 
-void GlDelete::queueBuffer(GLuint buffer) {
+void Context::queueBuffer(GLuint buffer) {
     if (buffer == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -43,7 +40,7 @@ void GlDelete::queueBuffer(GLuint buffer) {
     unlock();
 }
 
-void GlDelete::queueFrameBuffer(GLuint buffer) {
+void Context::queueFrameBuffer(GLuint buffer) {
     if (buffer == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -59,7 +56,7 @@ void GlDelete::queueFrameBuffer(GLuint buffer) {
     unlock();
 }
 
-void GlDelete::queueProgram(GLuint program) {
+void Context::queueProgram(GLuint program) {
     if (program == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -74,7 +71,7 @@ void GlDelete::queueProgram(GLuint program) {
     unlock();
 }
 
-void GlDelete::queueRenderBuffer(GLuint buffer) {
+void Context::queueRenderBuffer(GLuint buffer) {
     if (buffer == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -90,7 +87,7 @@ void GlDelete::queueRenderBuffer(GLuint buffer) {
     unlock();
 }
 
-void GlDelete::queueShader(GLuint shader) {
+void Context::queueShader(GLuint shader) {
     if (shader == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -105,7 +102,7 @@ void GlDelete::queueShader(GLuint shader) {
     unlock();
 }
 
-void GlDelete::queueTexture(GLuint texture) {
+void Context::queueTexture(GLuint texture) {
     if (texture == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -120,7 +117,7 @@ void GlDelete::queueTexture(GLuint texture) {
     unlock();
 }
 
-void GlDelete::queueVertexArray(GLuint vertex_array) {
+void Context::queueVertexArray(GLuint vertex_array) {
     if (vertex_array == GVR_INVALID) {
         logInvalidParameter(__func__);
         return;
@@ -136,7 +133,7 @@ void GlDelete::queueVertexArray(GLuint vertex_array) {
     unlock();
 }
 
-void GlDelete::processQueues() {
+void Context::processQueues() {
     /*
      * Do an unsynchronized check of the dirty flag, so that we don't have to
      * call lock() on each and every frame. The consequences of 'just missing'
@@ -146,7 +143,7 @@ void GlDelete::processQueues() {
     if (dirty) {
         lock();
 #ifdef VERBOSE_LOGGING
-        LOGD("GlDelete::processQueues()");
+        LOGD("Context::processQueues()");
 #endif
         if (buffers_.size() > 0) {
             glDeleteBuffers(buffers_.size(), buffers_.data());
@@ -158,14 +155,14 @@ void GlDelete::processQueues() {
         }
         if (programs_.size() > 0) {
             for (int index = 0, size = programs_.size(); index < size;
-                    ++index) {
+                 ++index) {
                 glDeleteProgram(programs_[index]);
             }
             programs_.clear();
         }
         if (render_buffers_.size() > 0) {
             glDeleteRenderbuffers(render_buffers_.size(),
-                    render_buffers_.data());
+                                  render_buffers_.data());
             render_buffers_.clear();
         }
         if (shaders_.size() > 0) {
@@ -182,9 +179,27 @@ void GlDelete::processQueues() {
             glDeleteVertexArrays(vertex_arrays_.size(), vertex_arrays_.data());
             vertex_arrays_.clear();
         }
+
+        for (auto runnable : runnables_) {
+            runnable->run();
+        }
+        runnables_.clear();
+
         dirty = false;
         unlock();
     }
+}
+
+void Context::runOnGlThread(std::shared_ptr<Runnable> runnable) {
+    lock();
+    runnables_.insert(runnable);
+    unlock();
+}
+
+void Context::cancelRunOnGlThread(std::shared_ptr<Runnable> runnable) {
+    lock();
+    runnables_.erase(runnable);
+    unlock();
 }
 
 }

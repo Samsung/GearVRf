@@ -26,7 +26,7 @@ public class GVRSharedTexture extends GVRTexture {
      *            Current gvrContext
      */
     public GVRSharedTexture(GVRContext gvrContext, int id) {
-        super(gvrContext, NativeSharedTexture.ctor(id));
+        super(gvrContext, NativeSharedTexture.ctor(gvrContext.getNativeContext(), id));
     }
 
     GVRSharedTexture(GVRContext gvrContext, long ptr) {
@@ -35,5 +35,5 @@ public class GVRSharedTexture extends GVRTexture {
 }
 
 class NativeSharedTexture {
-    static native long ctor(int id);
+    static native long ctor(long nativeContext, int id);
 }

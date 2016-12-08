@@ -24,8 +24,8 @@ namespace gvr {
 
 class SharedTexture: public Texture {
 public:
-    SharedTexture(int id) :
-            Texture(new GLTexture(TARGET, id)) {
+    SharedTexture(Context& context, int id) :
+            Texture(new GLTexture(context, TARGET, id)) {
     }
 
     GLenum getTarget() const {

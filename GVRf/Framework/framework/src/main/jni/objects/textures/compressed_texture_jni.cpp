@@ -24,26 +24,27 @@ namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
-        jobject obj, jint target, jint internalFormat,
+        jobject obj, jlong nativeContext, jint target, jint internalFormat,
         jint width, jint height, jint imageSize, jbyteArray bytes, jint dataOffset,
         jintArray jtexture_parameters);
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
-        jobject obj, jint target);
+        jobject obj, jlong nativeContext, jint target);
 }
 
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv * env,
-    jobject obj, jint target, jint internalFormat,
+    jobject obj, jlong nativeContext, jint target, jint internalFormat,
     jint width, jint height, jint imageSize, jbyteArray bytes, jint dataOffset,
     jintArray jtexture_parameters) {
 
     jint* texture_parameters = env->GetIntArrayElements(jtexture_parameters,0);
 
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
     CompressedTexture* texture =
-            new CompressedTexture(env, target, internalFormat, width, height, imageSize,
+            new CompressedTexture(env, context, target, internalFormat, width, height, imageSize,
                                   bytes, dataOffset, texture_parameters);
 
     env->ReleaseIntArrayElements(jtexture_parameters, texture_parameters, 0);
@@ -53,8 +54,9 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
-    jobject obj, jint target) {
-    return reinterpret_cast<jlong>(new CompressedTexture(target));
+    jobject obj, jlong nativeContext, jint target) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new CompressedTexture(context, target));
 }
 
 }

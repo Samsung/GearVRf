@@ -31,7 +31,7 @@
 
 #include "objects/hybrid_object.h"
 #include "objects/components/camera.h"
-#include "engine/memory/gl_delete.h"
+#include "engine/context.h"
 
 namespace gvr {
 class GLProgram;
@@ -40,8 +40,7 @@ class PostEffectData;
 
 class CustomPostEffectShader: public HybridObject {
 public:
-    CustomPostEffectShader(std::string vertex_shader,
-            std::string fragment_shader);
+    CustomPostEffectShader(Context& context, std::string vertex_shader, std::string fragment_shader);
     virtual ~CustomPostEffectShader();
 
     void addTextureKey(std::string variable_name, std::string key);
@@ -84,7 +83,7 @@ private:
 
     // add vertex array object
     GLuint vaoID_;
-    GlDelete* deleter_;
+    Context& context_;
 };
 
 }

@@ -23,10 +23,12 @@
 #include "eglextension/msaa/msaa.h"
 
 namespace gvr {
-RenderTexture::RenderTexture(int width, int height) :
-        Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
-                0), renderTexture_gl_render_buffer_(new GLRenderBuffer()), renderTexture_gl_frame_buffer_ (
-                new GLFrameBuffer()) {
+RenderTexture::RenderTexture(Context& context, int width, int height) :
+        Texture(new GLTexture(context, TARGET)), width_(width), height_(height), sample_count_(0),
+        renderTexture_gl_render_buffer_(new GLRenderBuffer(context)),
+        renderTexture_gl_frame_buffer_ (new GLFrameBuffer(context)),
+        context_(context)
+{
     initialize(width, height);
     glBindTexture(TARGET, gl_texture_->id());
     glTexImage2D(TARGET, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
@@ -46,10 +48,12 @@ RenderTexture::RenderTexture(int width, int height) :
             GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
 }
 
-RenderTexture::RenderTexture(int width, int height, int sample_count) :
-        Texture(new GLTexture(TARGET)), width_(width), height_(height), sample_count_(
-                sample_count), renderTexture_gl_render_buffer_(new GLRenderBuffer()), renderTexture_gl_frame_buffer_(
-                new GLFrameBuffer()) {
+RenderTexture::RenderTexture(Context& context, int width, int height, int sample_count) :
+        Texture(new GLTexture(context, TARGET)), width_(width), height_(height), sample_count_(sample_count),
+        renderTexture_gl_render_buffer_(new GLRenderBuffer(context)),
+        renderTexture_gl_frame_buffer_(new GLFrameBuffer(context)),
+        context_(context)
+{
     initialize(width, height);
     glBindTexture(TARGET, gl_texture_->id());
     glTexImage2D(TARGET, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
@@ -70,11 +74,11 @@ RenderTexture::RenderTexture(int width, int height, int sample_count) :
             GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
 }
 
-RenderTexture::RenderTexture(int width, int height, int sample_count,
-        int jcolor_format, int jdepth_format, bool resolve_depth,
-        int* texture_parameters) :
-        Texture(new GLTexture(TARGET, texture_parameters)), width_(width), height_(
-                height), sample_count_(sample_count), renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
+RenderTexture::RenderTexture(Context& context, int width, int height, int sample_count,
+        int jcolor_format, int jdepth_format, bool resolve_depth, int* texture_parameters) :
+        Texture(new GLTexture(context, TARGET, texture_parameters)), width_(width), height_(height), sample_count_(sample_count),
+        renderTexture_gl_frame_buffer_(new GLFrameBuffer(context)),
+        context_(context) {
     initialize(width, height);
     GLenum depth_format;
     glBindTexture(TARGET, gl_texture_->id());
@@ -135,7 +139,7 @@ RenderTexture::RenderTexture(int width, int height, int sample_count,
 
     if (resolve_depth && sample_count > 1) {
         delete renderTexture_gl_resolve_buffer_;
-        renderTexture_gl_resolve_buffer_ = new GLFrameBuffer();
+        renderTexture_gl_resolve_buffer_ = new GLFrameBuffer(context);
         glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                 GL_TEXTURE_2D, gl_texture_->id(), 0);
@@ -152,7 +156,7 @@ void RenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
         GLenum depth_format, int width, int height) {
     if (jdepth_format != DepthFormat::DEPTH_0) {
         delete renderTexture_gl_render_buffer_;
-        renderTexture_gl_render_buffer_ = new GLRenderBuffer();
+        renderTexture_gl_render_buffer_ = new GLRenderBuffer(context_);
         glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
         glRenderbufferStorage(GL_RENDERBUFFER, depth_format, width, height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -166,7 +170,7 @@ void RenderTexture::generateRenderTextureEXT(int sample_count,
         int jdepth_format, GLenum depth_format, int width, int height) {
     if (jdepth_format != DepthFormat::DEPTH_0) {
         delete renderTexture_gl_render_buffer_;
-        renderTexture_gl_render_buffer_ = new GLRenderBuffer();
+        renderTexture_gl_render_buffer_ = new GLRenderBuffer(context_);
         glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
         MSAA::glRenderbufferStorageMultisampleIMG(GL_RENDERBUFFER, sample_count,
                 depth_format, width, height);
@@ -196,13 +200,13 @@ void RenderTexture::generateRenderTexture(int sample_count, int jdepth_format,
     }
     if (jdepth_format != DepthFormat::DEPTH_0) {
         delete renderTexture_gl_render_buffer_;
-        renderTexture_gl_render_buffer_ = new GLRenderBuffer();
+        renderTexture_gl_render_buffer_ = new GLRenderBuffer(context_);
         glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
         MSAA::glRenderbufferStorageMultisample(GL_RENDERBUFFER,
                 sample_count, depth_format, width, height);
     }
     delete renderTexture_gl_color_buffer_;
-    renderTexture_gl_color_buffer_ = new GLRenderBuffer();
+    renderTexture_gl_color_buffer_ = new GLRenderBuffer(context_);
     glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_color_buffer_->id());
     MSAA::glRenderbufferStorageMultisample(GL_RENDERBUFFER, sample_count,
             color_format, width, height);

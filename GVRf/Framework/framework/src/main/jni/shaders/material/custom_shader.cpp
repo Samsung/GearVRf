@@ -30,13 +30,15 @@
 #include <sys/time.h>
 
 namespace gvr {
-CustomShader::CustomShader(const std::string& vertex_shader, const std::string& fragment_shader)
-    : vertexShader_(vertex_shader), fragmentShader_(fragment_shader) {
+CustomShader::CustomShader(Context& context, const std::string& vertex_shader, const std::string& fragment_shader)
+    : vertexShader_(vertex_shader), fragmentShader_(fragment_shader),
+      context_(context)
+{
 }
 void CustomShader::initializeOnDemand(RenderState* rstate) {
     if (nullptr == program_)
     {
-        program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
+        program_ = new GLProgram(context_, vertexShader_.c_str(), fragmentShader_.c_str());
         if(use_multiview && !(strstr(vertexShader_.c_str(),"gl_ViewID_OVR")
                 && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
                 && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){

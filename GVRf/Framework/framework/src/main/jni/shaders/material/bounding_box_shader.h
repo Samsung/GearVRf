@@ -32,10 +32,11 @@ namespace gvr {
 class GLProgram;
 class RenderData;
 class Material;
+class Context;
 
 class BoundingBoxShader: public HybridObject {
 public:
-    BoundingBoxShader();
+    BoundingBoxShader(Context& context);
     virtual ~BoundingBoxShader();
 
     void render(const glm::mat4& mvp_matrix, RenderData* render_data, Material* material);
@@ -49,6 +50,7 @@ private:
 private:
     GLProgram* program_;
     GLuint u_mvp_;
+    Context& context_;
 };
 
 }

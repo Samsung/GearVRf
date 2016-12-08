@@ -33,7 +33,7 @@ struct RenderState;
 
 class OESHorizontalStereoShader: public ShaderBase {
 public:
-    OESHorizontalStereoShader();
+    OESHorizontalStereoShader(Context& context);
     virtual ~OESHorizontalStereoShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);

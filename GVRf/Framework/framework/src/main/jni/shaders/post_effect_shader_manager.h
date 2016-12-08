@@ -29,9 +29,12 @@
 namespace gvr {
 class PostEffectShaderManager: public HybridObject {
 public:
-    PostEffectShaderManager() :
-            HybridObject(), color_blend_post_effect_shader_(), horizontal_flip_post_effect_shader_(), latest_custom_shader_id_(
-                    INITIAL_CUSTOM_SHADER_INDEX), custom_post_effect_shaders_(), quad_vertices_(), quad_uvs_(), quad_triangles_() {
+    PostEffectShaderManager(Context& context) :
+            HybridObject(), color_blend_post_effect_shader_(), horizontal_flip_post_effect_shader_(),
+            latest_custom_shader_id_(INITIAL_CUSTOM_SHADER_INDEX), custom_post_effect_shaders_(),
+            quad_vertices_(), quad_uvs_(), quad_triangles_(),
+            context_(context)
+    {
         quad_vertices_.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
         quad_vertices_.push_back(glm::vec3(-1.0f, 1.0f, 0.0f));
         quad_vertices_.push_back(glm::vec3(1.0f, -1.0f, 0.0f));
@@ -57,17 +60,16 @@ public:
         // We don't delete the custom shaders, as their Java owner-objects will do that for us.
     }
 
-    ColorBlendPostEffectShader* getColorBlendPostEffectShader() {
+    ColorBlendPostEffectShader* getColorBlendPostEffectShader(Context& context) {
         if (!color_blend_post_effect_shader_) {
-            color_blend_post_effect_shader_ = new ColorBlendPostEffectShader();
+            color_blend_post_effect_shader_ = new ColorBlendPostEffectShader(context);
         }
         return color_blend_post_effect_shader_;
     }
 
-    HorizontalFlipPostEffectShader* getHorizontalFlipPostEffectShader() {
+    HorizontalFlipPostEffectShader* getHorizontalFlipPostEffectShader(Context& context) {
         if (!horizontal_flip_post_effect_shader_) {
-            horizontal_flip_post_effect_shader_ =
-                    new HorizontalFlipPostEffectShader();
+            horizontal_flip_post_effect_shader_ = new HorizontalFlipPostEffectShader(context);
         }
         return horizontal_flip_post_effect_shader_;
     }
@@ -76,7 +78,7 @@ public:
             std::string fragment_shader) {
         int id = latest_custom_shader_id_++;
         CustomPostEffectShader* custom_post_effect_shader =
-                new CustomPostEffectShader(vertex_shader, fragment_shader);
+                new CustomPostEffectShader(context_, vertex_shader, fragment_shader);
         custom_post_effect_shaders_[id] = custom_post_effect_shader;
         return id;
     }
@@ -122,6 +124,7 @@ private:
     std::vector<glm::vec3> quad_vertices_;
     std::vector<glm::vec2> quad_uvs_;
     std::vector<unsigned short> quad_triangles_;
+    Context& context_;
 };
 
 }

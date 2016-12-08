@@ -162,7 +162,7 @@ static const char FRAGMENT_SHADER[] =
         "  out_color = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
         "}\n";
 
-TextureShader::TextureShader() {}
+TextureShader::TextureShader(Context& context) : context_(context) {}
 
 TextureShader::~TextureShader() {
     for(auto it= program_object_map_.begin();it!=program_object_map_.end();it++){
@@ -273,7 +273,7 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
             frag_shader_string_lengths[index] = vertex_shader_string_lengths [index];
             index++;
         }
-        prgram = new GLProgram(vertex_shader_strings,
+        prgram = new GLProgram(context_, vertex_shader_strings,
                 vertex_shader_string_lengths, frag_shader_strings,
                 frag_shader_string_lengths, 5);
         program_object_map_[feature_set] = prgram;

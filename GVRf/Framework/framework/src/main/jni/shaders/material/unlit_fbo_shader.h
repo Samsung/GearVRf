@@ -25,7 +25,7 @@ class RenderData;
 
 class UnlitFboShader: public ShaderBase {
 public:
-    UnlitFboShader();
+    UnlitFboShader(Context& context);
     virtual ~UnlitFboShader();
     void recycle();
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);

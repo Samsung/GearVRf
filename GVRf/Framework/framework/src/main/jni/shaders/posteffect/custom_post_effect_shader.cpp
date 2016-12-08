@@ -28,12 +28,13 @@
 
 
 namespace gvr {
-CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
+CustomPostEffectShader::CustomPostEffectShader(Context& context, std::string vertex_shader,
         std::string fragment_shader) :
-        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(), float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_(), mat4_keys_() {
-    deleter_ = getDeleterForThisThread();
-
-    program_ = new GLProgram(vertex_shader.c_str(), fragment_shader.c_str());
+        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), texture_keys_(),
+        float_keys_(), vec2_keys_(), vec3_keys_(), vec4_keys_(), mat4_keys_(),
+        context_(context)
+{
+    program_ = new GLProgram(context, vertex_shader.c_str(), fragment_shader.c_str());
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     checkGlError("glGetAttribLocation");
     a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
@@ -46,14 +47,13 @@ CustomPostEffectShader::CustomPostEffectShader(std::string vertex_shader,
     checkGlError("glGetUniformLocation");
 
     vaoID_ = 0;
-
 }
 
 CustomPostEffectShader::~CustomPostEffectShader() {
     delete program_;
 
     if (vaoID_ != 0) {
-        deleter_->queueVertexArray(vaoID_);
+        context_.queueVertexArray(vaoID_);
     }
 }
 

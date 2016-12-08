@@ -41,9 +41,11 @@ static const char FRAGMENT_SHADER[] = //
                 "gl_FragColor =  vec4(0.0, 1.0, 0.0, 0.0);\n"
                 "}\n";
 
-BoundingBoxShader::BoundingBoxShader() :
-        program_(0), u_mvp_(0) {
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+BoundingBoxShader::BoundingBoxShader(Context& context) :
+        program_(0), u_mvp_(0),
+        context_(context)
+{
+    program_ = new GLProgram(context, VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
 }
 

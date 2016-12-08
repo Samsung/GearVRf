@@ -21,10 +21,12 @@
 #define BATCH_SIZE 60
 
 namespace gvr {
-Batch::Batch(int no_vertices, int no_indices) :
+Batch::Batch(Context& context, int no_vertices, int no_indices) :
         draw_count_(0), vertex_count_(0), index_count_(0), vertex_limit_(no_vertices),
         indices_limit_(no_indices), renderdata_(nullptr),mesh_init_(false),
-        index_offset_(0), not_batched_(false), batch_dirty_(false) {
+        index_offset_(0), not_batched_(false), batch_dirty_(false),
+        mesh_(context)
+{
 
     vertices_.reserve(no_vertices);
     indices_.reserve(no_indices);
@@ -165,7 +167,7 @@ void Batch::resetBatch(){
     clearData();
     delete renderdata_;
     renderdata_ = nullptr;
-    gRenderer->freeBatch(this);
+    Renderer::instance->freeBatch(this);
 }
 
 void Batch::meshInit(){

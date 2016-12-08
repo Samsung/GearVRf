@@ -30,7 +30,7 @@ class RenderData;
 
 class ErrorShader: public ShaderBase {
 public:
-    ErrorShader();
+    ErrorShader(Context& context);
     virtual ~ErrorShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);

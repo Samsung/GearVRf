@@ -23,6 +23,8 @@
 #include <vector>
 #include <pthread.h>
 #include <unistd.h>
+#include <memory>
+#include <unordered_set>
 #include "gl/gl_headers.h"
 
 
@@ -30,42 +32,26 @@
 
 namespace gvr {
 
-extern pthread_key_t deleter_key;
-
-class GlDelete {
-
+class Runnable {
 public:
-    /**
-     * Before using this class this method must be called once
-     * and only once per-process
-     */
-    static void createTlsKey() {
-        //corresponding pthread_key_delete missing intentionally as this is
-        //needed for as long as the process is alive
-        int err = pthread_key_create(&deleter_key, nullptr);
-        if (0 != err) {
-            LOGE("fatal error: pthread_key_create failed with %d!", err);
-            std::terminate();
-        }
-    }
+    virtual void run() = 0;
+    virtual ~Runnable() {}
+};
 
-    GlDelete() : dirty(false) {
+class Context {
+public:
+
+    Context() : dirty(false) {
         int err = pthread_mutex_init(&mutex, nullptr);
         if (0 != err) {
             LOGE("fatal error: pthread_mutex_init failed with %d!", err);
             std::terminate();
         }
-        err = pthread_setspecific(deleter_key, this);
-        if (0 != err) {
-            LOGE("fatal error: pthread_setspecific failed with %d!", err);
-            std::terminate();
-        }
-
-        LOGV("GlDelete(): %p tid: %d", this, gettid());
+        LOGV("Context(): %p tid: %d", this, gettid());
     }
 
-    ~GlDelete() {
-        LOGV("~GlDelete(): %p tid: %d", this, gettid());
+    ~Context() {
+        LOGV("Context): %p tid: %d", this, gettid());
         int err = pthread_mutex_destroy(&mutex);
         if (0 != err) {
             LOGE("fatal error: pthread_mutex_destroy failed with %d!", err);
@@ -74,14 +60,23 @@ public:
     }
 
     void queueBuffer(GLuint buffer);
+
     void queueFrameBuffer(GLuint buffer);
+
     void queueProgram(GLuint program);
+
     void queueRenderBuffer(GLuint buffer);
+
     void queueShader(GLuint shader);
+
     void queueTexture(GLuint texture);
+
     void queueVertexArray(GLuint vertex_array);
 
     void processQueues();
+
+    void runOnGlThread(std::shared_ptr<Runnable> runnable);
+    void cancelRunOnGlThread(std::shared_ptr<Runnable> runnable);
 
 private:
 
@@ -91,6 +86,7 @@ private:
     void lock() {
         pthread_mutex_lock(&mutex);
     }
+
     void unlock() {
         pthread_mutex_unlock(&mutex);
     }
@@ -104,21 +100,8 @@ private:
     std::vector<GLuint> shaders_;
     std::vector<GLuint> textures_;
     std::vector<GLuint> vertex_arrays_;
+    std::unordered_set<std::shared_ptr<Runnable>> runnables_;
 };
-
-/**
- * The assumption is threads that do know they are supposed to have
- * a deleter may only call this method.
- */
-static GlDelete* getDeleterForThisThread() {
-    GlDelete* deleter = static_cast<GlDelete*>(pthread_getspecific(deleter_key));
-    if (nullptr == deleter) {
-        printStackTrace();
-        LOGE("fatal error: no deleter associated with this thread!");
-        std::terminate();
-    }
-    return deleter;
-}
 
 }
 

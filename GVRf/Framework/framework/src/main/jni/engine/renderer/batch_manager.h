@@ -32,11 +32,14 @@ class RenderData;
 class Material;
 class Mesh;
 class Batch;
+class Context;
 struct RenderState;
+
 extern bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2);
+
 class BatchManager{
 public:
-    BatchManager(int batch_size, int max_indices);
+    BatchManager(Context& context, int batch_size, int max_indices);
     ~BatchManager();
     Batch* getNewBatch();
     void freeBatch(Batch* batch){
@@ -67,6 +70,8 @@ private:
 
     std::vector<int> batch_indices_;
 
+    Context& context_;
 };
+
 }
 #endif // BATCH_MANAGER_H

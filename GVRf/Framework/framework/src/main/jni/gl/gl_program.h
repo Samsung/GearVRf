@@ -22,7 +22,7 @@
 
 #include "gl/gl_headers.h"
 
-#include "engine/memory/gl_delete.h"
+#include "engine/context.h"
 
 #include "util/gvr_log.h"
 #include "util/gvr_gl.h"
@@ -30,10 +30,9 @@
 namespace gvr {
 class GLProgram {
 public:
-    GLProgram(const char* pVertexSourceStrings,
-            const char* pFragmentSourceStrings) {
-        deleter_ = getDeleterForThisThread();
-
+    GLProgram(Context& context, const char* pVertexSourceStrings,
+            const char* pFragmentSourceStrings) : context_(context)
+    {
         GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
                 pVertexSourceStrings) };
         GLint fragment_shader_string_lengths[1] = { (GLint) strlen(
@@ -44,19 +43,19 @@ public:
                 fragment_shader_string_lengths);
     }
 
-    GLProgram(const char** pVertexSourceStrings,
+    GLProgram(Context& context, const char** pVertexSourceStrings,
             const GLint* pVertexSourceStringLengths,
             const char** pFragmentSourceStrings,
             const GLint* pFragmentSourceStringLengths, int count) :
-            id_(
-                    createProgram(count, pVertexSourceStrings,
+            id_(createProgram(count, pVertexSourceStrings,
                             pVertexSourceStringLengths, pFragmentSourceStrings,
-                            pFragmentSourceStringLengths)) {
-        deleter_ = getDeleterForThisThread();
+                            pFragmentSourceStringLengths)),
+            context_(context)
+    {
     }
 
     ~GLProgram() {
-        deleter_->queueProgram(id_);
+        context_.queueProgram(id_);
     }
 
     GLuint id() const {
@@ -88,7 +87,7 @@ public:
                                 buf);
                         free(buf);
                     }
-                    deleter_->queueShader(shader);
+                    context_.queueShader(shader);
                     shader = 0;
                 }
             }
@@ -142,7 +141,7 @@ public:
                         free(buf);
                     }
                 }
-                deleter_->queueProgram(program);
+                context_.queueProgram(program);
                 program = 0;
             }
         }
@@ -151,7 +150,7 @@ public:
 
 private:
     GLuint id_;
-    GlDelete* deleter_;
+    Context& context_;
 };
 
 }

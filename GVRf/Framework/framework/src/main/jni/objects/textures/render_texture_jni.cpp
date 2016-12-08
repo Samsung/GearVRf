@@ -25,14 +25,14 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jint width,
-        jint height);
+        Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv *env, jobject obj, jlong nativeContext,
+                                                  jint width, jint height);
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj,
-        jint width, jint height, jint sample_count);
+        Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv *env, jobject obj, jlong nativeContext,
+                                                      jint width, jint height, jint sample_count);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv * env,
-        jobject obj, jint width, jint height, jint sample_count,
+        jobject obj, jlong nativeContext, jint width, jint height, jint sample_count,
         jint color_format, jint depth_format, jboolean resolve_depth,
         jintArray parameters);
 JNIEXPORT void JNICALL
@@ -51,26 +51,29 @@ Java_org_gearvrf_NativeRenderTexture_bind(JNIEnv * env, jobject obj, jlong ptr);
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jint width,
-        jint height) {
-    return reinterpret_cast<jlong>(new RenderTexture(width, height));
+Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jlong nativeContext,
+                                          jint width, jint height) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new RenderTexture(context, width, height));
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj,
+Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj, jlong nativeContext,
         jint width, jint height, jint sample_count) {
-    return reinterpret_cast<jlong>(new RenderTexture(width, height,
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new RenderTexture(context, width, height,
             sample_count));
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv * env,
-        jobject obj, jint width, jint height, jint sample_count,
+        jobject obj, jlong nativeContext, jint width, jint height, jint sample_count,
         jint color_format, jint depth_format, jboolean resolve_depth,
         jintArray j_parameters) {
     jint* parameters = env->GetIntArrayElements(j_parameters, NULL);
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
     jlong result =
-            reinterpret_cast<jlong>(new RenderTexture(width, height,
+            reinterpret_cast<jlong>(new RenderTexture(context, width, height,
                     sample_count, color_format, depth_format, resolve_depth,
                     parameters));
     env->ReleaseIntArrayElements(j_parameters, parameters, 0);

@@ -47,6 +47,7 @@
 
 namespace gvr {
 class Mesh;
+class Context;
 
 class AssimpImporter: public HybridObject {
 public:
@@ -66,7 +67,7 @@ public:
         return 0;
     }
 
-    Mesh* getMesh(int index);
+    Mesh* getMesh(int index, Context& context);
 
     const aiScene* getAssimpScene() {
         return assimp_importer_->GetScene();

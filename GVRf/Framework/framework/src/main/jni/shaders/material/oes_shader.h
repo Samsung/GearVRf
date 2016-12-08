@@ -30,7 +30,7 @@ struct RenderState;
 
 class OESShader: public ShaderBase {
 public:
-    OESShader();
+    OESShader(Context& context);
     virtual ~OESShader();
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 private:
@@ -39,7 +39,7 @@ private:
     OESShader& operator=(const OESShader& oes_shader) = delete;
     OESShader& operator=(OESShader&& oes_shader) = delete;
 
-    void programInit();
+    void programInit(Context& context);
 
 private:
     GLuint u_mvp_;

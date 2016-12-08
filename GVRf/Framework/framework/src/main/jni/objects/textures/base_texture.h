@@ -33,8 +33,8 @@ static const char* kIdAvailableMethodSignature = "(I)V";
 class BaseTexture: public Texture {
 public:
 
-    explicit BaseTexture(int* texture_parameters) :
-        Texture(new GLTexture(TARGET, texture_parameters)) {
+    explicit BaseTexture(Context& context, int* texture_parameters) :
+        Texture(new GLTexture(context, TARGET, texture_parameters)) {
     }
 
     void setJavaOwner(JNIEnv& env, jobject javaObject) {

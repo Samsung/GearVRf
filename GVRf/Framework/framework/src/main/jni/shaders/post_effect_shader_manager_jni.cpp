@@ -25,8 +25,7 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativePostEffectShaderManager_ctor(
-        JNIEnv * env, jobject obj);
+Java_org_gearvrf_NativePostEffectShaderManager_ctor(JNIEnv * env, jobject obj, jlong nativeContext);
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativePostEffectShaderManager_addCustomPostEffectShader(
         JNIEnv * env, jobject obj, jlong jpost_effect_shader_manager,
@@ -41,9 +40,9 @@ Java_org_gearvrf_NativePostEffectShaderManager_delete(
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativePostEffectShaderManager_ctor(
-        JNIEnv * env, jobject obj) {
-    return reinterpret_cast<jlong>(new PostEffectShaderManager());
+Java_org_gearvrf_NativePostEffectShaderManager_ctor(JNIEnv * env, jobject obj, jlong nativeContext) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new PostEffectShaderManager(context));
 }
 
 JNIEXPORT jint JNICALL

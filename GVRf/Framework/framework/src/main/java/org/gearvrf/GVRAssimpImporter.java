@@ -48,7 +48,7 @@ class GVRAssimpImporter extends GVRHybridObject {
      */
     GVRMesh getMesh(int index) {
         return new GVRMesh(getGVRContext(), NativeAssimpImporter.getMesh(
-                getNative(), index));
+                getNative(), getGVRContext().getNativeContext(), index));
     }
 
     /**
@@ -68,7 +68,7 @@ class GVRAssimpImporter extends GVRHybridObject {
      */
     GVRMesh getNodeMesh(String nodeName, int meshIndex) {
         return new GVRMesh(getGVRContext(), NativeAssimpImporter.getNodeMesh(
-                getNative(), nodeName, meshIndex));
+                getNative(), getGVRContext().getNativeContext(), nodeName, meshIndex));
     }
 
     /**
@@ -85,11 +85,11 @@ class GVRAssimpImporter extends GVRHybridObject {
 class NativeAssimpImporter {
     static native int getNumberOfMeshes(long assimpImporter);
 
-    static native long getMesh(long assimpImporter, int index);
+    static native long getMesh(long assimpImporter, long nativeContext, int index);
 
     static native AiScene getAssimpScene(long assimpImporter);
 
-    static native long getNodeMesh(long assimpImporter, String nodeName,
+    static native long getNodeMesh(long assimpImporter, long nativeContext, String nodeName,
             int meshIndex);
 
     static native AiMaterial getMeshMaterial(long assimpImporter,

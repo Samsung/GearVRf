@@ -7,7 +7,7 @@ public class GVRCompressedCubemapTexture extends GVRTexture
           int height, int imageSize, byte[][] data, int[] dataOffset,
           GVRTextureParameters textureParameters) {
       super(gvrContext, NativeCompressedCubemapTexture.compressedTextureArrayConstructor(
-              internalFormat, width, height, imageSize, data, dataOffset,
+              gvrContext.getNativeContext(), internalFormat, width, height, imageSize, data, dataOffset,
               textureParameters.getCurrentValuesArray()));
   }
 
@@ -19,7 +19,7 @@ public class GVRCompressedCubemapTexture extends GVRTexture
 }
 
 class NativeCompressedCubemapTexture {
-  static native long compressedTextureArrayConstructor(int internalFormat,
+  static native long compressedTextureArrayConstructor(long nativeContext, int internalFormat,
           int width, int height, int imageSize, byte[][] data, int[] dataOffset,
           int[] textureParameterValues);
 }

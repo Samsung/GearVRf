@@ -28,7 +28,7 @@ public class GVRRenderTexture extends GVRTexture {
      *            Height of the frame buffer.
      */
     public GVRRenderTexture(GVRContext gvrContext, int width, int height) {
-        super(gvrContext, NativeRenderTexture.ctor(width, height));
+        super(gvrContext, NativeRenderTexture.ctor(gvrContext.getNativeContext(), width, height));
 
         mWidth = width;
         mHeight = height;
@@ -49,7 +49,7 @@ public class GVRRenderTexture extends GVRTexture {
      */
     public GVRRenderTexture(GVRContext gvrContext, int width, int height,
             int sampleCount) {
-        super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
+        super(gvrContext, NativeRenderTexture.ctorMSAA(gvrContext.getNativeContext(), width, height,
                 sampleCount));
         mWidth = width;
         mHeight = height;
@@ -143,9 +143,9 @@ public class GVRRenderTexture extends GVRTexture {
 }
 
 class NativeRenderTexture {
-    static native long ctor(int width, int height);
+    static native long ctor(long nativeContext, int width, int height);
 
-    static native long ctorMSAA(int width, int height, int sampleCount);
+    static native long ctorMSAA(long nativeContext, int width, int height, int sampleCount);
 
     static native long ctorWithParameters(int width, int height,
             int sampleCount, int colorFormat, int depthFormat,

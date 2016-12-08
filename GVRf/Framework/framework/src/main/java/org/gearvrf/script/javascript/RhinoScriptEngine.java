@@ -79,7 +79,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             protected Context makeContext() {
                 Context cx = super.makeContext();
                 cx.setClassShutter(RhinoClassShutter.getInstance());
-                cx.setWrapFactory(RhinoWrapFactory.getInstance());                
+                cx.setWrapFactory(RhinoWrapFactory.getInstance());
                 return cx;
             }
 

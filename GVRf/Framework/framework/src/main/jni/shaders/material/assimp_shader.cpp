@@ -113,7 +113,7 @@ static const char FRAGMENT_SHADER[] =
                 "#endif\n"
                 "}\n";
 
-AssimpShader::AssimpShader() :
+AssimpShader::AssimpShader(Context& context) :
          u_mvp_(0), u_diffuse_color_(0), u_ambient_color_(
                 0), u_texture_(0), u_color_(0), u_opacity_(
                 0), program_list_(0) {
@@ -183,7 +183,7 @@ AssimpShader::AssimpShader() :
         fragment_shader_string_lengths[counter] = (GLint) strlen(FRAGMENT_SHADER);
         counter++;
 
-        program_list_[i] = new GLProgram(vertex_shader_strings,
+        program_list_[i] = new GLProgram(context, vertex_shader_strings,
                     vertex_shader_string_lengths, fragment_shader_strings,
                     fragment_shader_string_lengths, counter);
     }

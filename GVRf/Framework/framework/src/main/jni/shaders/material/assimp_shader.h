@@ -48,7 +48,7 @@ class GLProgram;
 
 class AssimpShader: public ShaderBase {
 public:
-    AssimpShader();
+    AssimpShader(Context& context);
     virtual ~AssimpShader();
 
     virtual void render(RenderState* rstate,  RenderData* render_data,

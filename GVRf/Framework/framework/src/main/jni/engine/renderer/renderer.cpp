@@ -45,34 +45,40 @@
 bool do_batching = true;
 
 namespace gvr {
-Renderer* gRenderer = nullptr;
+
 bool use_multiview= false;
 Renderer* Renderer::instance = nullptr;
-bool Renderer::isVulkan_ = false;
+
 void Renderer::initializeStats() {
     // TODO: this function will be filled in once we add draw time stats
 }
 /***
     Till we have Vulkan implementation, lets create GLRenderer by-default
 ***/
-Renderer* Renderer::getInstance(const char* type){
+Renderer* Renderer::makeInstance(Context& context, const char *type){
     if(nullptr == instance){
         if(0 == std::strcmp(type,"Vulkan")) {
-            instance = new VulkanRenderer();
-            isVulkan_ = true;
+            instance = new VulkanRenderer(context);
         }
         else {
-            instance = new GLRenderer();
+            instance = new GLRenderer(context);
         }
         std::atexit(resetInstance);      // Destruction of instance registered at runtime exit
     }
     return instance;
 }
-Renderer::Renderer():numberDrawCalls(0), numberTriangles(0), batch_manager(nullptr) {
-    if(do_batching && !gRenderer->isVulkanInstace()) {
-        batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
+
+Renderer::Renderer(Context &context, bool doBatching) :
+        numberDrawCalls(0),
+        numberTriangles(0),
+        batch_manager(nullptr),
+        context_(context),
+        doBatching_(doBatching) {
+    if (do_batching && doBatching) {
+        batch_manager = new BatchManager(context, BATCH_SIZE, MAX_INDICES);
     }
 }
+
 void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
         float frustum[6][4], std::vector<SceneObject*>& scene_objects,
         bool need_cull, int planeMask) {
@@ -193,7 +199,7 @@ void Renderer::cull(Scene *scene, Camera *camera,
     // Note: this needs to be scaled to sort on N states
     state_sort();
 
-    if(do_batching && !gRenderer->isVulkanInstace()){
+    if(do_batching && Renderer::instance->isBatching()){
         batch_manager->batchSetup(render_data_vector);
     }
 }
@@ -232,7 +238,7 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
 
 void Renderer::renderRenderDataVector(RenderState &rstate) {
 
-    if (!do_batching || gRenderer->isVulkanInstace() ) {
+    if (!do_batching || !Renderer::instance->isBatching() ) {
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(rstate, *it));
@@ -435,14 +441,14 @@ void Renderer::renderPostEffectData(Camera* camera,
     try {
         switch (post_effect_data->shader_type()) {
         case PostEffectData::ShaderType::COLOR_BLEND_SHADER:
-            post_effect_shader_manager->getColorBlendPostEffectShader()->render(
+            post_effect_shader_manager->getColorBlendPostEffectShader(context_)->render(
                     render_texture, post_effect_data,
                     post_effect_shader_manager->quad_vertices(),
                     post_effect_shader_manager->quad_uvs(),
                     post_effect_shader_manager->quad_triangles());
             break;
         case PostEffectData::ShaderType::HORIZONTAL_FLIP_SHADER:
-            post_effect_shader_manager->getHorizontalFlipPostEffectShader()->render(
+            post_effect_shader_manager->getHorizontalFlipPostEffectShader(context_)->render(
                     render_texture, post_effect_data,
                     post_effect_shader_manager->quad_vertices(),
                     post_effect_shader_manager->quad_uvs(),

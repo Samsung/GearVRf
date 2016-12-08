@@ -25,7 +25,7 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj);
+Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj, jlong nativeContext);
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeLight_getComponentType(JNIEnv * env, jobject obj);
@@ -86,8 +86,9 @@ Java_org_gearvrf_NativeLight_setMat4(JNIEnv * env,
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj) {
-    return reinterpret_cast<jlong>(new Light());
+Java_org_gearvrf_NativeLight_ctor(JNIEnv * env, jobject obj, jlong nativeContext) {
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(new Light(context));
 }
 
 JNIEXPORT jlong JNICALL

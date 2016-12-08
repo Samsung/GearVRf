@@ -75,7 +75,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
-        super(gvrContext, NativeLight.ctor());
+        super(gvrContext, NativeLight.ctor(gvrContext.getNativeContext()));
         setOwnerObject(parent);
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         vertexDescriptor = null;
@@ -91,7 +91,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
     public GVRLightBase(GVRContext gvrContext)
     {
-        super(gvrContext, NativeLight.ctor());
+        super(gvrContext, NativeLight.ctor(gvrContext.getNativeContext()));
         uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
         vertexDescriptor = null;
         lightrot = new Matrix4f();
@@ -517,7 +517,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
 class NativeLight
 {
-    static native long ctor();
+    static native long ctor(long nativeContext);
 
     static native long getComponentType();
 

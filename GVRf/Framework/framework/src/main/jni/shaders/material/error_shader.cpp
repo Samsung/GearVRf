@@ -40,8 +40,8 @@ static const char FRAGMENT_SHADER[] = "precision highp float;\n"
         "  gl_FragColor = u_color;\n"
         "}\n";
 
-ErrorShader::ErrorShader() {
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+ErrorShader::ErrorShader(Context& context) {
+    program_ = new GLProgram(context, VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
 }

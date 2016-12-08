@@ -28,7 +28,7 @@ class GLProgram;
 
 class TextureShader: public ShaderBase {
 public:
-    TextureShader();
+    TextureShader(Context& context);
     virtual ~TextureShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
@@ -61,7 +61,7 @@ private:
         GLuint u_light_specular_intensity_;
     };
     std::unordered_map<int,uniforms> uniform_loc;
-
+    Context& context_;
 
 public:
     void initUniforms(int, GLuint ,uniforms& );

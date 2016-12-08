@@ -51,10 +51,10 @@ static const char FRAGMENT_SHADER[] =
                 "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
                 "}\n";
 
-UnlitHorizontalStereoShader::UnlitHorizontalStereoShader() :
+UnlitHorizontalStereoShader::UnlitHorizontalStereoShader(Context& context) :
         u_mvp_(0), u_texture_(0), u_color_(
                 0), u_opacity_(0), u_right_(0) {
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+    program_ = new GLProgram(context, VERTEX_SHADER, FRAGMENT_SHADER);
     u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");

@@ -28,7 +28,7 @@
 #include "glm/glm.hpp"
 
 #include "objects/hybrid_object.h"
-#include "engine/memory/gl_delete.h"
+#include "engine/context.h"
 
 namespace gvr {
 class GLProgram;
@@ -37,7 +37,7 @@ class PostEffectData;
 
 class ColorBlendPostEffectShader: public HybridObject {
 public:
-    ColorBlendPostEffectShader();
+    ColorBlendPostEffectShader(Context& context);
     virtual ~ColorBlendPostEffectShader();
 
     void render(RenderTexture* render_texture,
@@ -66,7 +66,7 @@ private:
 
     // add vertex array object
     GLuint vaoID_;
-    GlDelete* deleter_;
+    Context& context_;
 };
 
 }

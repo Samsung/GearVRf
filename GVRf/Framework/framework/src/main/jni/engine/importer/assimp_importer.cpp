@@ -22,8 +22,8 @@
 #include "objects/mesh.h"
 
 namespace gvr {
-Mesh* AssimpImporter::getMesh(int index) {
-    Mesh* mesh = new Mesh();
+Mesh* AssimpImporter::getMesh(int index, Context& context) {
+    Mesh* mesh = new Mesh(context);
 
     if (assimp_importer_->GetScene() == 0) {
         LOGE("_ASSIMP_SCENE_NOT_FOUND_");

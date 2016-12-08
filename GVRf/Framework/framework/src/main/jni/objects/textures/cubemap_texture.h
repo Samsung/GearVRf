@@ -32,9 +32,9 @@
 namespace gvr {
 class CubemapTexture: public Texture {
 public:
-    explicit CubemapTexture(JNIEnv* env, jobjectArray bitmapArray,
+    explicit CubemapTexture(JNIEnv* env, Context& context, jobjectArray bitmapArray,
             int* texture_parameters) :
-            Texture(new GLTexture(TARGET, texture_parameters)) {
+            Texture(new GLTexture(context, TARGET, texture_parameters)) {
         pending_gl_task_ = GL_TASK_INIT_BITMAP;
         if (JNI_OK != env->GetJavaVM(&javaVm_)) {
             FAIL("GetJavaVM failed");
@@ -45,10 +45,10 @@ public:
         }
     }
 
-    explicit CubemapTexture(JNIEnv* env, GLenum internalFormat,
+    explicit CubemapTexture(JNIEnv* env, Context& context, GLenum internalFormat,
             GLsizei width, GLsizei height, GLsizei imageSize,
             jobjectArray textureArray, int* textureOffset, int* texture_parameters) :
-            Texture(new GLTexture(TARGET, texture_parameters)) {
+            Texture(new GLTexture(context, TARGET, texture_parameters)) {
         pending_gl_task_ = GL_TASK_INIT_INTERNAL_FORMAT;
         if (JNI_OK != env->GetJavaVM(&javaVm_)) {
             FAIL("GetJavaVM failed");
@@ -65,8 +65,8 @@ public:
         }
     }
 
-    explicit CubemapTexture() :
-            Texture(new GLTexture(TARGET)) {
+    explicit CubemapTexture(Context& context) :
+            Texture(new GLTexture(context, TARGET)) {
     }
 
     virtual ~CubemapTexture() {

@@ -82,16 +82,16 @@ static const char FRAGMENT_SHADER_MULTIVIEW[] =
                 "}\n";
 
 
-OESShader::OESShader() :
+OESShader::OESShader(Context& context) :
         u_mvp_(0),
         u_texture_(0),
         u_color_(0),
         u_opacity_(0)
 {
-    programInit();
+    programInit(context);
 }
 
-void OESShader::programInit() {
+void OESShader::programInit(Context& context) {
     if (use_multiview) {
         const char* frag_shader_strings[3];
         GLint frag_shader_string_lengths[3];
@@ -123,12 +123,12 @@ void OESShader::programInit() {
             LOGE("GLSL does not support GL_OES_EGL_image_external, try with disabling multiview \n");
         }
 
-        program_ = new GLProgram(vertex_shader_strings, vertex_shader_string_lengths, frag_shader_strings,
+        program_ = new GLProgram(context, vertex_shader_strings, vertex_shader_string_lengths, frag_shader_strings,
                 frag_shader_string_lengths, 3);
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
     } else {
         LOGE("not a multiview");
-        program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+        program_ = new GLProgram(context, VERTEX_SHADER, FRAGMENT_SHADER);
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     }
 

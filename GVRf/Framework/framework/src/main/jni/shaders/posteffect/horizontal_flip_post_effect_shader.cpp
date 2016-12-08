@@ -41,11 +41,11 @@ static const char FRAGMENT_SHADER[] = "precision highp float;\n"
         "  gl_FragColor = texture2D(u_texture, v_tex_coord);\n"
         "}\n";
 
-HorizontalFlipPostEffectShader::HorizontalFlipPostEffectShader() :
-        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0) {
-    deleter_ = getDeleterForThisThread();
-
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+HorizontalFlipPostEffectShader::HorizontalFlipPostEffectShader(Context& context) :
+        program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0),
+        context_(context)
+{
+    program_ = new GLProgram(context, VERTEX_SHADER, FRAGMENT_SHADER);
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
@@ -56,7 +56,7 @@ HorizontalFlipPostEffectShader::~HorizontalFlipPostEffectShader() {
     delete program_;
 
     if (vaoID_ != 0) {
-        deleter_->queueVertexArray(vaoID_);
+        context_.queueVertexArray(vaoID_);
     }
 }
 

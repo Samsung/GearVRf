@@ -39,7 +39,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     private static final String TAG = GVRMesh.class.getSimpleName();
 
     public GVRMesh(GVRContext gvrContext) {
-        this(gvrContext, NativeMesh.ctor());
+        this(gvrContext, NativeMesh.ctor(gvrContext.getNativeContext()));
         mAttributeKeys = new HashSet<String>();
     }
 
@@ -477,7 +477,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 }
 
 class NativeMesh {
-    static native long ctor();
+    static native long ctor(long nativeContext);
     
     static native String[] getAttribNames(long mesh);
     

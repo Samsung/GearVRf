@@ -165,6 +165,7 @@ public abstract class GVRContext implements IEventReceiver {
     GVRContext(GVRActivity context) {
         mContext = context;
         mEventReceiver = new GVREventReceiver(this);
+        mNativeContext = new NativeContext(this);
     }
 
     /**
@@ -2842,4 +2843,9 @@ public abstract class GVRContext implements IEventReceiver {
 
         getAnimationEngine().start(fadeIn);
     }
+
+    public long getNativeContext() {
+        return mNativeContext.getNative();
+    }
+    protected final NativeContext mNativeContext;
 }

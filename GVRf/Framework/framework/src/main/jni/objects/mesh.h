@@ -38,15 +38,17 @@
 #include "objects/bounding_volume.h"
 #include "objects/vertex_bone_data.h"
 
-#include "engine/memory/gl_delete.h"
+#include "engine/context.h"
 #include "objects/components/event_handler.h"
+
 namespace gvr {
 class Mesh: public HybridObject {
 public:
-    Mesh() :
+    Mesh(Context& context) :
             vertices_(), normals_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
                     have_bounding_volume_(false), vao_dirty_(true), listener_(new Listener()),
-                    boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
+                    boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true),
+            context_(context)
     {
     }
 
@@ -71,9 +73,9 @@ public:
         if (it != program_ids_.end())
         {
             GLVaoVboId ids = it->second;
-            deleter_->queueVertexArray(ids.vaoID);
-            deleter_->queueBuffer(ids.static_vboID);
-            deleter_->queueBuffer(ids.triangle_vboID);
+            context_.queueVertexArray(ids.vaoID);
+            context_.queueBuffer(ids.static_vboID);
+            context_.queueBuffer(ids.triangle_vboID);
             program_ids_.erase(it);
         }
     }
@@ -82,9 +84,9 @@ public:
         for (auto it : program_ids_ )
         {
             GLVaoVboId ids = it.second;
-            deleter_->queueVertexArray(ids.vaoID);
-            deleter_->queueBuffer(ids.static_vboID);
-            deleter_->queueBuffer(ids.triangle_vboID);
+            context_.queueVertexArray(ids.vaoID);
+            context_.queueBuffer(ids.static_vboID);
+            context_.queueBuffer(ids.triangle_vboID);
         }
         program_ids_.clear();
         have_bounding_volume_ = false;
@@ -330,22 +332,15 @@ public:
     }
     void generateBoneArrayBuffers(GLuint programId);
 
-    //must be called by the thread on which the mesh cleanup should happen
-    void obtainDeleter() {
-        if (nullptr == deleter_) {
-            deleter_ = getDeleterForThisThread();
-        }
+    void getAttribNames(std::set<std::string> &attrib_names);
+
+    void forceShouldReset() { // one time, then false
+        vao_dirty_ = true;
+        bone_data_dirty_ = true;
     }
-     void getAttribNames(std::set<std::string> &attrib_names);
 
-     void forceShouldReset() { // one time, then false
-         vao_dirty_ = true;
-         bone_data_dirty_ = true;
-     }
-
-     // generate VAO
-     void generateVAO(int programId);
-
+    // generate VAO
+    void generateVAO(int programId);
 
     void add_listener(RenderData* render_data){
         if(render_data)
@@ -420,8 +415,9 @@ private:
 
     GLuint boneVboID_;
     bool bone_data_dirty_;
-    GlDelete* deleter_ = nullptr;
     static std::vector<std::string> dynamicAttribute_Names_;
+
+    Context& context_;
 };
 }
 #endif

@@ -33,7 +33,7 @@ class Mesh;
 class Batch {
 public:
     Batch();
-    Batch(int,int);
+    Batch(Context&, int, int);
     ~Batch();
     bool add(RenderData *render_data);
     bool setupMesh(bool);

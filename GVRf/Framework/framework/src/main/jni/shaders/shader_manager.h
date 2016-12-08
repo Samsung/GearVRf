@@ -43,13 +43,14 @@
 namespace gvr {
 class ShaderManager: public HybridObject {
 public:
-    ShaderManager() :
+    ShaderManager(Context& context) :
             HybridObject(), bounding_box_shader_(),
             unlit_horizontal_stereo_shader_(), unlit_vertical_stereo_shader_(),
             oes_shader_(), oes_horizontal_stereo_shader_(), oes_vertical_stereo_shader_(),
             cubemap_shader_(), cubemap_reflection_shader_(), texture_shader_(), assimp_shader_(),
             lightmap_shader_(), external_renderer_shader_(), error_shader_(),
-            latest_custom_shader_id_(INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_(),unlit_fbo_shader_()  {
+            latest_custom_shader_id_(INITIAL_CUSTOM_SHADER_INDEX), custom_shaders_(),unlit_fbo_shader_(),
+            context_(context) {
     }
     ~ShaderManager() {
         delete unlit_horizontal_stereo_shader_;
@@ -69,55 +70,55 @@ public:
     }
     BoundingBoxShader* getBoundingBoxShader() {
         if (!bounding_box_shader_) {
-            bounding_box_shader_ = new BoundingBoxShader();
+            bounding_box_shader_ = new BoundingBoxShader(context_);
         }
         return bounding_box_shader_;
     }
     UnlitHorizontalStereoShader* getUnlitHorizontalStereoShader() {
         if (!unlit_horizontal_stereo_shader_) {
-            unlit_horizontal_stereo_shader_ = new UnlitHorizontalStereoShader();
+            unlit_horizontal_stereo_shader_ = new UnlitHorizontalStereoShader(context_);
         }
         return unlit_horizontal_stereo_shader_;
     }
     UnlitVerticalStereoShader* getUnlitVerticalStereoShader() {
         if (!unlit_vertical_stereo_shader_) {
-            unlit_vertical_stereo_shader_ = new UnlitVerticalStereoShader();
+            unlit_vertical_stereo_shader_ = new UnlitVerticalStereoShader(context_);
         }
         return unlit_vertical_stereo_shader_;
     }
     OESShader* getOESShader() {
         if (!oes_shader_) {
-            oes_shader_ = new OESShader();
+            oes_shader_ = new OESShader(context_);
         }
         return oes_shader_;
     }
     OESHorizontalStereoShader* getOESHorizontalStereoShader() {
         if (!oes_horizontal_stereo_shader_) {
-            oes_horizontal_stereo_shader_ = new OESHorizontalStereoShader();
+            oes_horizontal_stereo_shader_ = new OESHorizontalStereoShader(context_);
         }
         return oes_horizontal_stereo_shader_;
     }
     OESVerticalStereoShader* getOESVerticalStereoShader() {
         if (!oes_vertical_stereo_shader_) {
-            oes_vertical_stereo_shader_ = new OESVerticalStereoShader();
+            oes_vertical_stereo_shader_ = new OESVerticalStereoShader(context_);
         }
         return oes_vertical_stereo_shader_;
     }
     CubemapShader* getCubemapShader() {
         if (!cubemap_shader_) {
-            cubemap_shader_ = new CubemapShader();
+            cubemap_shader_ = new CubemapShader(context_);
         }
         return cubemap_shader_;
     }
     CubemapReflectionShader* getCubemapReflectionShader() {
         if (!cubemap_reflection_shader_) {
-            cubemap_reflection_shader_ = new CubemapReflectionShader();
+            cubemap_reflection_shader_ = new CubemapReflectionShader(context_);
         }
         return cubemap_reflection_shader_;
     }
     TextureShader* getTextureShader() {
         if (!texture_shader_) {
-            texture_shader_ = new TextureShader();
+            texture_shader_ = new TextureShader(context_);
         }
         return texture_shader_;
     }
@@ -129,35 +130,34 @@ public:
     }
     AssimpShader* getAssimpShader() {
         if (!assimp_shader_) {
-            assimp_shader_ = new AssimpShader();
+            assimp_shader_ = new AssimpShader(context_);
         }
         return assimp_shader_;
     }
 
     LightMapShader* getLightMapShader() {
         if (!lightmap_shader_) {
-            lightmap_shader_ = new LightMapShader();
+            lightmap_shader_ = new LightMapShader(context_);
         }
         return lightmap_shader_;
     }
 
     ErrorShader* getErrorShader() {
         if (!error_shader_) {
-            error_shader_ = new ErrorShader();
+            error_shader_ = new ErrorShader(context_);
         }
         return error_shader_;
     }
     UnlitFboShader* getUnlitFboShader() {
         if (!unlit_fbo_shader_) {
-            unlit_fbo_shader_ = new UnlitFboShader();
+            unlit_fbo_shader_ = new UnlitFboShader(context_);
         }
         return unlit_fbo_shader_;
     }
     int addCustomShader(std::string vertex_shader,
             std::string fragment_shader) {
         int id = latest_custom_shader_id_++;
-        CustomShader* custom_shader(
-                new CustomShader(vertex_shader, fragment_shader));
+        CustomShader* custom_shader(new CustomShader(context_, vertex_shader, fragment_shader));
         custom_shaders_[id] = custom_shader;
         return id;
     }
@@ -199,6 +199,8 @@ private:
     ErrorShader* error_shader_;
     int latest_custom_shader_id_;
     std::map<int, CustomShader*> custom_shaders_;
+
+    Context& context_;
 };
 
 }

@@ -29,13 +29,13 @@ Java_org_gearvrf_NativeAssimpImporter_getNumberOfMeshes(
         JNIEnv * env, jobject obj, jlong jassimp_importer);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMesh(JNIEnv * env,
-        jobject obj, jlong jassimp_importer, jint index);
+        jobject obj, jlong jassimp_importer, jlong nativeContext, jint index);
 JNIEXPORT jobject JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getAssimpScene(JNIEnv * env,
         jobject obj, jlong jassimp_importer);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getNodeMesh(JNIEnv * env,
-        jobject obj, jlong jassimp_importer, jstring jnode_name, jint index);
+        jobject obj, jlong jassimp_importer, jlong nativeContext,jstring jnode_name, jint index);
 JNIEXPORT jobject JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMeshMaterial(JNIEnv * env,
         jobject obj, jlong jassimp_importer, jstring jnode_name, jint index);
@@ -51,10 +51,10 @@ Java_org_gearvrf_NativeAssimpImporter_getNumberOfMeshes(
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getMesh(JNIEnv * env,
-        jobject obj, jlong jassimp_importer, jint index) {
-    AssimpImporter* assimp_importer =
-            reinterpret_cast<AssimpImporter*>(jassimp_importer);
-    return reinterpret_cast<jlong>(assimp_importer->getMesh(index));
+        jobject obj, jlong jassimp_importer, jlong nativeContext, jint index) {
+    AssimpImporter* assimp_importer = reinterpret_cast<AssimpImporter*>(jassimp_importer);
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
+    return reinterpret_cast<jlong>(assimp_importer->getMesh(index, context));
 }
 
 JNIEXPORT jobject JNICALL
@@ -71,14 +71,14 @@ Java_org_gearvrf_NativeAssimpImporter_getAssimpScene(
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeAssimpImporter_getNodeMesh(JNIEnv * env,
-        jobject obj, jlong jassimp_importer, jstring jnode_name, jint index) {
-    AssimpImporter* assimp_importer =
-            reinterpret_cast<AssimpImporter*>(jassimp_importer);
+        jobject obj, jlong jassimp_importer, jlong nativeContext, jstring jnode_name, jint index) {
+    AssimpImporter* assimp_importer = reinterpret_cast<AssimpImporter*>(jassimp_importer);
+    Context& context = *reinterpret_cast<Context*>(nativeContext);
     const char *node_name = env->GetStringUTFChars(jnode_name, 0);
     aiNode* root_node = assimp_importer->getAssimpScene()->mRootNode;
     aiNode* current_node = root_node->FindNode(node_name);
     env->ReleaseStringUTFChars(jnode_name, node_name);
-    return reinterpret_cast<jlong>(assimp_importer->getMesh(current_node->mMeshes[index]));
+    return reinterpret_cast<jlong>(assimp_importer->getMesh(current_node->mMeshes[index], context));
 
 }
 

@@ -26,7 +26,7 @@
 #include "gl/gl_headers.h"
 #include "util/gvr_log.h"
 
-#include "engine/memory/gl_delete.h"
+#include "engine/context.h"
 
 #include "util/gvr_jni.h"
 

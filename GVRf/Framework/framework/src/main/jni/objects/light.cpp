@@ -184,7 +184,7 @@ void Light::bindShadowMap(int program, int texIndex) {
 }
 
 bool Light::generateFBO() {
-    shadowFB_ = new GLFrameBuffer();
+    shadowFB_ = new GLFrameBuffer(context_);
     int fbid = shadowFB_->id();
     if (fbid < 0) {
         return false;
@@ -220,8 +220,8 @@ bool Light::generateFBO() {
     return true;
 }
 
-void Light::createDepthTexture(int width, int height, int depth) {
-    depth_texture_ = new GLTexture(GL_TEXTURE_2D_ARRAY);
+void Light::createDepthTexture(Context& context, int width, int height, int depth) {
+    depth_texture_ = new GLTexture(context, GL_TEXTURE_2D_ARRAY);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
@@ -262,7 +262,7 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     if (shadowMaterial_ == nullptr)
         return false;
     if (nullptr == depth_texture_) {
-        createDepthTexture(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 4);
+        createDepthTexture(context_, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 4);
     }
     if (shadowFB_ == NULL) {
         shadowMapIndex_ = texIndex;
@@ -298,8 +298,8 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     else {
         rstate.uniforms.u_view = lightcam.getViewMatrix();
     }
-    gRenderer = Renderer::getInstance();
-    gRenderer->renderShadowMap(rstate, &lightcam, framebufferId, scene_objects);
+
+    Renderer::instance->renderShadowMap(rstate, &lightcam, shadowFB_->id(), scene_objects);
     return true;
 }
 

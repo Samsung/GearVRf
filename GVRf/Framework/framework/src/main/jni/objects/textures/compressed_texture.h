@@ -30,17 +30,17 @@ class CompressedTexture: public Texture {
 public:
 
     // The constructor to use when loading a mipmap chain, from Java
-    explicit CompressedTexture(GLenum target) :
-            Texture(new GLTexture(target)),
+    explicit CompressedTexture(Context& context, GLenum target) :
+            Texture(new GLTexture(context, target)),
             target(target) {
         pending_gl_task_ = GL_TASK_INIT_PLAIN;
     }
 
     // The constructor to use when loading a single-level texture
-    explicit CompressedTexture(JNIEnv* env, GLenum target, GLenum internalFormat,
+    explicit CompressedTexture(JNIEnv* env, Context& context, GLenum target, GLenum internalFormat,
             GLsizei width, GLsizei height, GLsizei imageSize, jbyteArray bytes,
             int dataOffset, int* texture_parameters) :
-            Texture(new GLTexture(target, texture_parameters)), target(target) {
+            Texture(new GLTexture(context, target, texture_parameters)), target(target) {
         pending_gl_task_ = GL_TASK_INIT_INTERNAL_FORMAT;
         if (JNI_OK != env->GetJavaVM(&javaVm_)) {
             FAIL("GetJavaVM failed");

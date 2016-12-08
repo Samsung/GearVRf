@@ -29,7 +29,7 @@ namespace gvr {
 
 class UnlitVerticalStereoShader: public ShaderBase {
 public:
-    UnlitVerticalStereoShader();
+    UnlitVerticalStereoShader(Context& context);
     virtual ~UnlitVerticalStereoShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);

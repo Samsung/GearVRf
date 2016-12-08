@@ -29,7 +29,7 @@ namespace gvr {
 
 class OESVerticalStereoShader: public ShaderBase {
 public:
-    OESVerticalStereoShader();
+    OESVerticalStereoShader(Context& context);
     virtual ~OESVerticalStereoShader();
 
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
