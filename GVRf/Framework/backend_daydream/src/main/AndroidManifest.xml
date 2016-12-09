@@ -23,9 +23,7 @@
 
     <uses-sdk
         android:minSdkVersion="19"
-        android:targetSdkVersion="24" />
-
-    <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+        android:targetSdkVersion="25" />
 
     <!-- copied from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
 
@@ -46,9 +44,5 @@
     <uses-feature android:name="android.hardware.vr.high_performance" android:required="false"/>
 
     <!-- done copying from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
-
-    <application
-        android:allowBackup="true">
-    </application>
 
 </manifest>

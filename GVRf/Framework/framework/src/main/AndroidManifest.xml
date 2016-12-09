@@ -29,16 +29,12 @@
 
     <uses-sdk
         android:minSdkVersion="19"
-        android:targetSdkVersion="24" />
+        android:targetSdkVersion="25" />
 
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
 
     <application
-        android:largeHeap="true"
-        android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:largeHeap="true">
     </application>
 
 </manifest>
