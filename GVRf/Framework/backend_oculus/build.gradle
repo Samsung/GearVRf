@@ -148,53 +148,56 @@ dependencies {
     compile "org.joml:joml-android:${jomlVersion}"
 }
 
-assembleDebug {}.doLast {
-    task copyAARFiles(type: Copy) {
-        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-            println "copying aar files to the libs_directory"
-            def libsdirPath = projectDir.absolutePath + '/../../../' +
-                    rootProject.property("LIBS_DIRECTORY")
-            def libsDir = new File(libsdirPath);
-            if (libsDir.exists()) {
-                from 'build/outputs/aar'
-                into libsDir
-                include '*-debug.aar'
-            } else {
-                println "Cannot copy aar files, libs directory does not exist!"
-            }
-        }
-    }
-    tasks.copyAARFiles.execute()
-
-    def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-    if (file(testsLibs).exists()) {
-        copy {
+task copyAARFiles(type: Copy) {
+    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
+        println "copying aar files to the libs_directory"
+        def libsdirPath = projectDir.absolutePath + '/../../../' +
+                rootProject.property("LIBS_DIRECTORY")
+        def libsDir = new File(libsdirPath);
+        if (libsDir.exists()) {
             from 'build/outputs/aar'
-            into testsLibs
-            include 'backend_oculus-debug.aar'
+            into libsDir
+            include '*-debug.aar'
+        } else {
+            println "Cannot copy aar files, libs directory does not exist!"
         }
-    }
-
-    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-    if (!file(gearvrfLibs).exists()) {
-        file(gearvrfLibs).mkdir();
-    }
-    copy {
-        from 'build/outputs/aar'
-        into gearvrfLibs
-        include 'backend_oculus-debug.aar'
     }
 }
 
-assembleDebug {}.doLast {
-    if (System.env['ACCESS_TOKEN'] == null) {
-        return
-    }
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task<< {
+            tasks.copyAARFiles.execute()
 
-    println 'removing oculus binaries'
-    exec {
-        commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-debug.aar', 'jni/armeabi-v7a/libvrapi.so']
-    }
+            def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
+            if (file(testsLibs).exists()) {
+                copy {
+                    from 'build/outputs/aar'
+                    into testsLibs
+                    include 'backend_oculus-debug.aar'
+                }
+            }
 
-    uploadToGitHub.execute();
+            def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+            if (!file(gearvrfLibs).exists()) {
+                file(gearvrfLibs).mkdir();
+            }
+            copy {
+                from 'build/outputs/aar'
+                into gearvrfLibs
+                include 'backend_oculus-debug.aar'
+            }
+
+            if (System.env['ACCESS_TOKEN'] == null) {
+                return
+            }
+
+            println 'removing oculus binaries'
+            exec {
+                commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-debug.aar', 'jni/armeabi-v7a/libvrapi.so']
+            }
+
+            uploadToGitHub.execute();
+        }
+    }
 }
