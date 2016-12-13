@@ -146,6 +146,14 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
         return mEventReceiver;
     }
 
+    /**
+     * Handle back key press
+     * @return true if handled by the app
+     */
+    public boolean onBackPress() {
+        return false;
+    }
+
     /*
      * Splash screen support: methods to call or overload to change the default
      * splash screen behavior

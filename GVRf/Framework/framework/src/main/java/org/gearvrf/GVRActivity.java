@@ -367,31 +367,58 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         }
     }
 
+    private long mBackKeyDownTime;
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (mViewManager.dispatchKeyEvent(event)) {
             return true;
         }
-        if (mDelegate.dispatchKeyEvent(event)) {
-            return true;
-        }
 
         final int keyAction = event.getAction();
-        switch (event.getKeyCode()) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-                if(keyAction == KeyEvent.ACTION_DOWN) {
-                    final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-                    audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                            AudioManager.ADJUST_RAISE, 0);
-                    return true;
+        if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
+            if (KeyEvent.ACTION_DOWN == keyAction) {
+                if (0 == mBackKeyDownTime) {
+                    mBackKeyDownTime = event.getDownTime();
                 }
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-                if(keyAction == KeyEvent.ACTION_DOWN) {
-                    final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-                    audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                            AudioManager.ADJUST_LOWER, 0);
-                    return true;
+
+                if (!isPaused()) {
+                    if (event.getEventTime() - mBackKeyDownTime >= 750) {
+                        if (mDelegate.onBackLongPress()) {
+                            return true;
+                        }
+                    }
                 }
+            } else if (KeyEvent.ACTION_UP == keyAction) {
+                final long duration = event.getEventTime() - mBackKeyDownTime;
+                mBackKeyDownTime = 0;
+                if (!isPaused()) {
+                    if (duration < 750) {
+                        if (mGVRMain.onBackPress()) {
+                            return true;
+                        }
+                        if (mDelegate.onBackPress()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } else {
+            switch (event.getKeyCode()) {
+                case KeyEvent.KEYCODE_VOLUME_UP:
+                    if (keyAction == KeyEvent.ACTION_DOWN) {
+                        final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                                AudioManager.ADJUST_RAISE, 0);
+                        return true;
+                    }
+                case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    if (keyAction == KeyEvent.ACTION_DOWN) {
+                        final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                                AudioManager.ADJUST_LOWER, 0);
+                        return true;
+                    }
+            }
         }
 
         return super.dispatchKeyEvent(event);
@@ -647,7 +674,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyDown(int keyCode, KeyEvent event);
         boolean onKeyUp(int keyCode, KeyEvent event);
         boolean onKeyLongPress(int keyCode, KeyEvent event);
-        boolean dispatchKeyEvent(KeyEvent event);
 
         void setMain(GVRMain gvrMain, String dataFileName);
         void setViewManager(GVRViewManager viewManager);
@@ -660,5 +686,8 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         GVRCameraRig makeCameraRig(GVRContext context);
         GVRConfigurationManager makeConfigurationManager(GVRActivity activity);
         void parseXmlSettings(AssetManager assetManager, String dataFilename);
+
+        boolean onBackLongPress();
+        boolean onBackPress();
     }
 }
