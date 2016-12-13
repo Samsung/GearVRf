@@ -156,7 +156,37 @@ clean {}.doLast {
     }
 }
 
+task publishHeaders(type: Zip) {
+    baseName project.name + '-headers'
+
+    from './src/main/jni/'
+    include 'engine/memory/gl_delete.h'
+    include 'engine/picker/picker.h'
+    include 'gl/gl_texture.h'
+    include 'objects/components/camera.h'
+    include 'objects/components/camera_rig.h'
+    include 'objects/components/perspective_camera.h'
+    include 'objects/components/render_data.h'
+    include 'objects/mesh.h'
+    include 'objects/rotation_sensor_data.h'
+    include 'objects/scene.h'
+    include 'objects/textures/base_texture.h'
+    include 'objects/textures/render_texture.h'
+    include 'objects/textures/texture.h'
+    include 'shaders/post_effect_shader_manager.h'
+    include 'shaders/shader_manager.h'
+    include 'shaders/shader_manager.h'
+    include 'util/gvr_gl.h'
+    include 'util/gvr_log.h'
+
+    from './src/main/libs/'
+    include 'armeabi-v7a/libgvrf.so'
+    include 'arm64-v8a/libgvrf.so'
+}
+
 assembleDebug {}.doLast {
+    tasks.publishHeaders.execute()
+
     task copyAARFiles(type: Copy) {
         if (rootProject.hasProperty("LIBS_DIRECTORY")) {
             println "copying aar files to the libs_directory"
@@ -209,9 +239,11 @@ assembleDebug {}.doLast {
         include '*.so'
     }
     packageForPlugins.execute()
+
     copy {
         from 'build/distributions/'
         into gearvrfLibs
         include project.name + '-for-plugins.zip'
+        include project.name + '-headers.zip'
     }
 }
