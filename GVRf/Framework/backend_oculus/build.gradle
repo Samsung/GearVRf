@@ -198,3 +198,7 @@ assembleDebug {}.doLast {
 
     uploadToGitHub.execute();
 }
+
+if(file("../release.gradle").exists()) {
+    apply from: '../release.gradle'
+}
