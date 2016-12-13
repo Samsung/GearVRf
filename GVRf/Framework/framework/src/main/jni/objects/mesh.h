@@ -25,10 +25,11 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <unordered_set>
+
 #include "gl/gl_headers.h"
 
 #include "glm/glm.hpp"
-#include "gl/gl_program.h"
 
 #include "util/gvr_gl.h"
 
@@ -39,14 +40,23 @@
 #include "objects/vertex_bone_data.h"
 
 #include "engine/memory/gl_delete.h"
-#include "objects/components/event_handler.h"
+
 namespace gvr {
 class Mesh: public HybridObject {
 public:
     Mesh() :
-            vertices_(), normals_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
-                    have_bounding_volume_(false), vao_dirty_(true), listener_(new Listener()),
-                    boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true), regenerate_vao_(true)
+            vertices_(),
+            normals_(),
+            indices_(),
+            float_vectors_(),
+            vec2_vectors_(),
+            vec3_vectors_(),
+            vec4_vectors_(),
+            have_bounding_volume_(false),
+            vao_dirty_(true),
+            boneVboID_(GVR_INVALID),
+            vertexBoneData_(this),
+            bone_data_dirty_(true)
     {
     }
 
@@ -101,7 +111,7 @@ public:
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     void set_vertices(std::vector<glm::vec3>&& vertices) {
@@ -109,7 +119,7 @@ public:
         have_bounding_volume_ = false;
         getBoundingVolume(); // calculate bounding volume
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     const std::vector<glm::vec3>& normals() const {
@@ -119,13 +129,13 @@ public:
     void set_normals(const std::vector<glm::vec3>& normals) {
         normals_ = normals;
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     void set_normals(std::vector<glm::vec3>&& normals) {
         normals_ = std::move(normals);
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     const std::vector<unsigned short>& triangles() const {
@@ -135,13 +145,13 @@ public:
     void set_triangles(const std::vector<unsigned short>& triangles) {
         indices_ = triangles;
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     void set_triangles(std::vector<unsigned short>&& triangles) {
         indices_ = std::move(triangles);
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     const std::vector<unsigned short>& indices() const {
@@ -151,13 +161,13 @@ public:
     void set_indices(const std::vector<unsigned short>& indices) {
         indices_ = indices;
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     void set_indices(std::vector<unsigned short>&& indices) {
         indices_ = std::move(indices);
         vao_dirty_ = true;
-        listener_->notify_listeners(true);
+        dirty();
     }
 
     bool hasAttribute(std::string key) const {
@@ -215,8 +225,9 @@ public:
 
     void setVec2Vector(std::string key, const std::vector<glm::vec2>& vector) {
         vec2_vectors_[key] = vector;
-        if(strstr((key.c_str()),"a_texcoord"))
-            listener_->notify_listeners(true);
+        if(strstr((key.c_str()),"a_texcoord")) {
+            dirty();
+        }
         vao_dirty_ = true;
     }
 
@@ -273,40 +284,31 @@ public:
     void setVertexAttribLocF(GLuint location, std::string key) {
         attribute_float_keys_[location] = key;
         vao_dirty_ = true;
-        regenerate_vao_ = true;
         LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV2(GLuint location, std::string key) {
         attribute_vec2_keys_[location] = key;
         vao_dirty_ = true;
-        regenerate_vao_ = true;
         LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV3(GLuint location, std::string key) {
         attribute_vec3_keys_[location] = key;
         vao_dirty_ = true;
-        regenerate_vao_ = true;
         LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
 
     void setVertexAttribLocV4(GLuint location, std::string key) {
         attribute_vec4_keys_[location] = key;
         vao_dirty_ = true;
-        regenerate_vao_ = true;
         LOGD("SHADER: setVertexAttrib %s\n", key.c_str());
     }
-
 
     const GLuint getVAOId(int programId);
 
     GLuint getNumTriangles() {
         return numTriangles_;
-    }
-
-    bool hasBoundingVolume() {
-    	return have_bounding_volume_;
     }
 
     const BoundingVolume& getBoundingVolume();
@@ -319,15 +321,11 @@ public:
         vertexBoneData_.setBones(std::move(bones));
         bone_data_dirty_ = true;
     }
+
     VertexBoneData &getVertexBoneData() {
         return vertexBoneData_;
     }
-    bool isVaoDirty() const {
-    	return regenerate_vao_;
-    }
-    void unSetVaoDirty() {
-    	regenerate_vao_ = false;
-    }
+
     void generateBoneArrayBuffers(GLuint programId);
 
     //must be called by the thread on which the mesh cleanup should happen
@@ -336,27 +334,18 @@ public:
             deleter_ = getDeleterForThisThread();
         }
     }
-     void getAttribNames(std::set<std::string> &attrib_names);
 
-     void forceShouldReset() { // one time, then false
-         vao_dirty_ = true;
-         bone_data_dirty_ = true;
-     }
+    void getAttribNames(std::set<std::string> &attrib_names);
 
-     // generate VAO
-     void generateVAO(int programId);
-
-
-    void add_listener(RenderData* render_data){
-        if(render_data)
-            listener_->add_listener(render_data);
+    void forceShouldReset() { // one time, then false
+        vao_dirty_ = true;
+        bone_data_dirty_ = true;
     }
-    void remove_listener(RenderData* render_data){
-        listener_->remove_listener(render_data);
-    }
-    void notify_listener(bool dirty){
-        listener_->notify_listeners(dirty);
-    }
+
+    void generateVAO(int programId);
+
+    void add_dirty_flag(const std::shared_ptr<bool>& dirty_flag);
+    void dirty();
 
 private:
     Mesh(const Mesh& mesh);
@@ -365,7 +354,6 @@ private:
 
 
 private:
-    Listener* listener_;
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
 
@@ -382,9 +370,6 @@ private:
     std::map<int, std::string> attribute_vec4_keys_;
 
     // add vertex array object and VBO
-
-
-    //GLuint dynamic_vboID_; // Currently handled by boneVboID_
 
     struct GLVaoVboId {
         GLuint vaoID;
@@ -409,7 +394,6 @@ private:
     // triangle information
     GLuint numTriangles_;
     bool vao_dirty_;
-    bool regenerate_vao_;
     bool have_bounding_volume_;
     BoundingVolume bounding_volume;
 
@@ -422,6 +406,8 @@ private:
     bool bone_data_dirty_;
     GlDelete* deleter_ = nullptr;
     static std::vector<std::string> dynamicAttribute_Names_;
+
+    std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
 };
 }
 #endif

@@ -1,7 +1,7 @@
 include ':framework'
-if (!hasProperty("ARM64")) {
-    include ':backend_oculus'
-}
+//if (!hasProperty("ARM64")) {
+//    include ':backend_oculus'
+//}
 //include ':backend_daydream'
 
 //include ':3DCursorLibrary'
@@ -9,11 +9,11 @@ if (!hasProperty("ARM64")) {
 //include ':gvr-3dcursor-simple'
 //project(':gvr-3dcursor-simple').projectDir = file('demos/gvr-3dcursor-simple')
 
-include ':gvr-eyepicking'
-project(':gvr-eyepicking').projectDir = file('demos/gvr-eyepicking')
+//include ':gvr-eyepicking'
+//project(':gvr-eyepicking').projectDir = file('demos/gvr-eyepicking')
 //include ':gvr-cubemap'
 //project(':gvr-cubemap').projectDir = file('demos/gvr-cubemap')
-
+//
 //include ':framework-tests'
 //project(':framework-tests').projectDir = file('demos/framework-tests')
 //include ':gvr-unittestutils'

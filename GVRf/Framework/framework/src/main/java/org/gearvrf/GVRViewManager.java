@@ -490,6 +490,7 @@ abstract class GVRViewManager extends GVRContext {
         }
 
         mFrameHandler.afterDrawEyes();
+        finalizeUnreachableObjects();
     }
 
     protected void renderCamera(GVRScene scene, GVRCamera camera, IRenderBundle

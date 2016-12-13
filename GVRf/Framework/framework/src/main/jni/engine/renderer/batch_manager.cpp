@@ -186,7 +186,7 @@ void BatchManager::createBatch(int start, int end, std::vector<RenderData*>& ren
              2. if mesh is modified
              3. Material is modified
             ***/
-           if(render_data->batching() && (render_data->renderdata_dirty() || render_data->isHashCodeDirty())){
+           if(render_data->batching() && (render_data->isDirty() || render_data->isHashCodeDirty())){
                   current_batch->removeRenderData(render_data);
                   current_batch = nullptr;
                   getNewBatch(render_data, &current_batch);

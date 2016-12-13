@@ -15,12 +15,14 @@
 
 package org.gearvrf;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.concurrent.Future;
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.view.Gravity;
 
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
@@ -44,15 +46,16 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.view.Gravity;
-import android.view.KeyEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Future;
 
 /**
  * Like the Android {@link Context} class, {@code GVRContext} provides core
@@ -2695,17 +2698,6 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public abstract void captureScreen3D(GVRScreenshot3DCallback callback);
 
-    private final GVRContextPrivate mContextPrivate = new GVRContextPrivate();
-
-    final void releaseNative(final GVRHybridObject hybridObject) {
-        mContextPrivate.releaseNative(hybridObject);
-    }
-
-    final void registerHybridObject(final GVRHybridObject hybridObject, final long nativePointer,
-            final List<NativeCleanupHandler> cleanupHandlers) {
-        mContextPrivate.registerHybridObject(hybridObject, nativePointer, cleanupHandlers);
-    }
-
     private Object mTag;
 
     /**
@@ -2841,5 +2833,91 @@ public abstract class GVRContext implements IEventReceiver {
         });
 
         getAnimationEngine().start(fadeIn);
+    }
+
+    /**
+     * Our {@linkplain GVRReference references} are placed on this queue, once
+     * they've been finalized
+     */
+    private final ReferenceQueue<GVRHybridObject> mReferenceQueue = new ReferenceQueue<GVRHybridObject>();
+    /**
+     * We need hard references to {@linkplain GVRReference our references} -
+     * otherwise, the references get garbage collected (usually before their
+     * objects) and never get enqueued.
+     */
+    private final Set<GVRReference> mReferenceSet = new HashSet<GVRReference>();
+
+    protected final void finalizeUnreachableObjects() {
+        GVRReference reference;
+        while (null != (reference = (GVRReference)mReferenceQueue.poll())) {
+            reference.close();
+        }
+    }
+
+    final class GVRReference extends PhantomReference<GVRHybridObject> {
+        private long mNativePointer;
+        private final List<NativeCleanupHandler> mCleanupHandlers;
+
+        private GVRReference(GVRHybridObject object, long nativePointer,
+                List<NativeCleanupHandler> cleanupHandlers) {
+            super(object, mReferenceQueue);
+
+            mNativePointer = nativePointer;
+            mCleanupHandlers = cleanupHandlers;
+        }
+
+        private void close() {
+            close(true);
+        }
+
+        private void close(boolean removeFromSet) {
+            synchronized (mReferenceSet) {
+                if (mNativePointer != 0) {
+                    if (mCleanupHandlers != null) {
+                        for (NativeCleanupHandler handler : mCleanupHandlers) {
+                            handler.nativeCleanup(mNativePointer);
+                        }
+                    }
+                    NativeHybridObject.delete(mNativePointer);
+                    mNativePointer = 0;
+                }
+
+                if (removeFromSet) {
+                    mReferenceSet.remove(this);
+                }
+            }
+        }
+    }
+
+    final void registerHybridObject(GVRHybridObject gvrHybridObject, long nativePointer, List<NativeCleanupHandler> cleanupHandlers) {
+        synchronized (mReferenceSet) {
+            mReferenceSet.add(new GVRReference(gvrHybridObject, nativePointer, cleanupHandlers));
+        }
+    }
+
+    /**
+     * Explicitly close()ing an object is going to be relatively rare - most
+     * native memory will be freed when the owner-objects are garbage collected.
+     * Doing a lookup in these rare cases means that we can avoid giving every @link
+     * {@link GVRHybridObject} a hard reference to its {@link GVRReference}.
+     */
+    final GVRReference findReference(long nativePointer) {
+        for (GVRReference reference : mReferenceSet) {
+            if (reference.mNativePointer == nativePointer) {
+                return reference;
+            }
+        }
+        return null;
+    }
+
+    final void releaseNative(GVRHybridObject hybridObject) {
+        synchronized (mReferenceSet) {
+            if (hybridObject.getNative() != 0L) {
+                GVRReference reference = findReference(hybridObject.getNative());
+                if (reference != null) {
+                    reference.close();
+                }
+            }
+        }
     }
 }

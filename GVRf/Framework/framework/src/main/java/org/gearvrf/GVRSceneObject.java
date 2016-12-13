@@ -270,7 +270,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     protected void finalize() throws Throwable
     {
-        detachAllComponents();
+        try {
+            detachAllComponents();
+        } catch(final Exception exc) {
+            exc.printStackTrace();
+        } finally {
+            super.finalize();
+        }
     }
     
     protected void detachAllComponents()

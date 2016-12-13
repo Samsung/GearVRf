@@ -86,7 +86,7 @@ bool Batch::add(RenderData *render_data) {
         model_matrix = glm::mat4(t->getModelMatrix());
     }
     render_data->getHashCode();
-    render_data->set_renderdata_dirty(false);
+    render_data->setDirty(false);
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;

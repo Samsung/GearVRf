@@ -13,15 +13,30 @@
  * limitations under the License.
  */
 
-#include "objects/hybrid_object.h"
-#include "objects/components/render_data.h"
-#include "objects/components/event_handler.h"
+#ifndef HELPERS_H_
+#define HELPERS_H_
+
+#include <memory>
 #include <unordered_set>
 
 namespace gvr {
 
-void Listener::notify_listeners(bool dirty){
-    for(auto& it: listeners_)
-        it->set_renderdata_dirty(dirty);
+static void dirtyImpl(std::unordered_set<std::shared_ptr<bool>>& dirty_flags) {
+    for (std::unordered_set<std::shared_ptr<bool>>::iterator it = dirty_flags.begin();
+         it != dirty_flags.end(); ++it) {
+        const std::shared_ptr<bool> &flag = *it;
+
+        if (1 == flag.use_count()) {
+            dirty_flags.erase(it);
+            if (it == dirty_flags.end()) {
+                break;
+            }
+        } else {
+            *flag = true;
+        }
     }
 }
+
+}
+
+#endif
