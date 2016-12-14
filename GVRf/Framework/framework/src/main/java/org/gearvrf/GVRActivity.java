@@ -103,6 +103,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
                     break;
                 } catch (final Exception exc) {
+                    mDelegate = null;
                 }
             }
 
