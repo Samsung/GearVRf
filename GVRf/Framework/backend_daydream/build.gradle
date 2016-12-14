@@ -14,12 +14,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 21
     buildToolsVersion '24.0.3'
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 24
+        targetSdkVersion 21
         ndk {
             File curDir = file('./')
             curDir = file(curDir.absolutePath)
