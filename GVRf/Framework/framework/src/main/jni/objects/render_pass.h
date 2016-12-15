@@ -24,7 +24,6 @@
 #include <unordered_set>
 #include "objects/hybrid_object.h"
 #include "objects/helpers.h"
-
 namespace gvr {
 
 class Material;
@@ -37,9 +36,8 @@ public:
     };
 
     RenderPass() :
-            material_(0),
-            cull_face_(DEFAULT_CULL_FACE) {
-    }
+            material_(0), shaderID_(0), cull_face_(DEFAULT_CULL_FACE)
+    { }
 
     Material* material() const {
         return material_;
@@ -56,6 +54,13 @@ public:
         dirty();
     }
 
+    void set_shader(int shaderid)
+    {
+        shaderID_ = shaderid;
+    }
+
+    int get_shader() const { return shaderID_; }
+
     void dirty() {
         dirtyImpl(dirty_flags_);
     }
@@ -65,6 +70,7 @@ public:
 private:
     static const int DEFAULT_CULL_FACE = CullBack;
     Material* material_;
+    int shaderID_;
     int cull_face_;
     std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
 };

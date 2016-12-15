@@ -33,6 +33,7 @@
 #include "objects/material.h"
 #include "../engine/renderer/renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
+
 namespace gvr {
 class Color;
 class SceneObject;
@@ -40,15 +41,15 @@ class Scene;
 class ShaderManager;
 class GLFrameBuffer;
 
-//#define DEBUG_LIGHT 1
+#define DEBUG_LIGHT 1
 
-class Light: public Component {
+class Light: public JavaComponent {
 public:
     static const int MAX_SHADOW_MAPS;
     static const int SHADOW_MAP_SIZE;
 
     explicit Light()
-    :   Component(Light::getComponentType()),
+    :   JavaComponent(Light::getComponentType()),
         shadowMaterial_(nullptr),
  		shadowFB_(NULL),
 		shadowMapIndex_(-1) {
@@ -64,6 +65,7 @@ public:
         enabled_ = enable;
         setDirty();
     }
+    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     float getFloat(std::string key) {
         auto it = floats_.find(key);
@@ -195,6 +197,8 @@ public:
     };
 
     void cleanup();
+    virtual void onAddedToScene(Scene* scene);
+    virtual void onRemovedFromScene(Scene* scene);
 
 private:
     Light(const Light& light);
@@ -231,14 +235,6 @@ private:
         }
         return -1;
     }
-#ifdef DEBUG_LIGHT
-    void writeShadowMapToDisk();
-#endif
-
-public:
-#ifdef DEBUG_LIGHT
-    std::string ShadowMapFile;
-#endif
 
 private:
     int size_;
@@ -247,7 +243,6 @@ private:
     std::string lightID_;
     Material* shadowMaterial_;
     std::map<int, bool> dirty_;
-    glm::mat4 shadow_matrix_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;

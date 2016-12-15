@@ -26,42 +26,41 @@
 namespace gvr {
 
 Transform::Transform() :
-        Component(Transform::getComponentType()), position_(glm::vec3(0.0f, 0.0f, 0.0f)), rotation_(
+        Component(Transform::getComponentType()), position_(glm::vec3(0.0f, 0.0f, 0.0f)),
+        rotation_(
                 glm::quat(1.0f, 0.0f, 0.0f, 0.0f)), scale_(
-                glm::vec3(1.0f, 1.0f, 1.0f)), model_matrix_(
-                Lazy<glm::mat4>(glm::mat4())) {
+        glm::vec3(1.0f, 1.0f, 1.0f)), model_matrix_(
+        Lazy<glm::mat4>(glm::mat4())) {
 }
 
 Transform::~Transform() {
 }
 
+void Transform::invalidate() {
+    SceneObject *owner = owner_object();
+    if (owner) {
+        owner->setTransformDirty();
+    }
+    model_matrix_.invalidate();
+}
+
 void Transform::invalidate(bool rotationUpdated) {
-    owner_object()->setTransformDirty();
-    if (model_matrix_.isValid()) {
-        model_matrix_.invalidate();
-        std::vector<SceneObject*> childrenCopy = owner_object()->children();
-        for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
-            Transform* const t = (*it)->transform();
-            if (nullptr != t) {
-                t->invalidate(false);
-            }
-        }
+    model_matrix_.invalidate();
+    SceneObject* owner = owner_object();
+    if (owner) {
+        owner->onTransformChanged();
     }
     if (rotationUpdated) {
         // scale rotation_ if needed to avoid overflow
         static const float threshold = sqrt(FLT_MAX) / 2.0f;
         static const float scale_factor = 0.5f / sqrt(FLT_MAX);
-        if (rotation_.w > threshold || rotation_.x > threshold
-                || rotation_.y > threshold || rotation_.z > threshold) {
+        if (rotation_.w > threshold || rotation_.x > threshold ||
+            rotation_.y > threshold || rotation_.z > threshold) {
             rotation_.w *= scale_factor;
             rotation_.x *= scale_factor;
             rotation_.y *= scale_factor;
             rotation_.z *= scale_factor;
         }
-    }
-
-    if(owner_object()) {
-        owner_object()->dirtyHierarchicalBoundingVolume();
     }
 }
 
@@ -72,9 +71,9 @@ glm::mat4 Transform::getModelMatrix() {
         glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
 
         glm::mat4 trs_matrix = translation_matrix * rotation_matrix
-                * scale_matrix;
+                               * scale_matrix;
         if (owner_object()->parent() != 0) {
-            Transform* const t = owner_object()->parent()->transform();
+            Transform *const t = owner_object()->parent()->transform();
             if (nullptr != t) {
                 glm::mat4 model_matrix = t->getModelMatrix() * trs_matrix;
                 model_matrix_.validate(model_matrix);
@@ -92,48 +91,48 @@ glm::mat4 Transform::getLocalModelMatrix() {
     glm::mat4 rotation_matrix = glm::mat4_cast(rotation_);
     glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
     glm::mat4 trs_matrix = translation_matrix * rotation_matrix
-            * scale_matrix;
+                           * scale_matrix;
     return trs_matrix;
 }
 
 void Transform::setModelMatrix(glm::mat4 matrix) {
 
-	glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);
+    glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);
 
-    glm::vec3 Xaxis(matrix[0][0],matrix[0][1],matrix[0][2]);
-    glm::vec3 Yaxis(matrix[1][0],matrix[1][1],matrix[1][2]);
-    glm::vec3 Zaxis(matrix[2][0],matrix[2][1],matrix[2][2]);
+    glm::vec3 Xaxis(matrix[0][0], matrix[0][1], matrix[0][2]);
+    glm::vec3 Yaxis(matrix[1][0], matrix[1][1], matrix[1][2]);
+    glm::vec3 Zaxis(matrix[2][0], matrix[2][1], matrix[2][2]);
 
-    double zs=glm::dot(glm::cross(Xaxis,Yaxis),Zaxis);
-    double ys=glm::dot(glm::cross(Zaxis,Xaxis),Yaxis);
-    double xs=glm::dot(glm::cross(Yaxis,Zaxis),Xaxis);
+    double zs = glm::dot(glm::cross(Xaxis, Yaxis), Zaxis);
+    double ys = glm::dot(glm::cross(Zaxis, Xaxis), Yaxis);
+    double xs = glm::dot(glm::cross(Yaxis, Zaxis), Xaxis);
 
 
-    xs=std::signbit(xs);
-    ys=std::signbit(ys);
-    zs=std::signbit(zs);
+    xs = std::signbit(xs);
+    ys = std::signbit(ys);
+    zs = std::signbit(zs);
 
-    xs =(xs > 0.0 ? -1 :1);
-    ys =(ys > 0.0 ? -1 :1);
-    zs =(zs > 0.0 ? -1 :1);
+    xs = (xs > 0.0 ? -1 : 1);
+    ys = (ys > 0.0 ? -1 : 1);
+    zs = (zs > 0.0 ? -1 : 1);
 
     glm::vec3 new_scale;
-    new_scale.x = xs* glm::sqrt(
-                    matrix[0][0] * matrix[0][0] + matrix[0][1] * matrix[0][1]
-                            + matrix[0][2] * matrix[0][2]);
-    new_scale.y = ys* glm::sqrt(
-                    matrix[1][0] * matrix[1][0] + matrix[1][1] * matrix[1][1]
-                            + matrix[1][2] * matrix[1][2]);
-    new_scale.z = zs* glm::sqrt(
-                    matrix[2][0] * matrix[2][0] + matrix[2][1] * matrix[2][1]
-                            + matrix[2][2] * matrix[2][2]);
+    new_scale.x = xs * glm::sqrt(
+            matrix[0][0] * matrix[0][0] + matrix[0][1] * matrix[0][1]
+            + matrix[0][2] * matrix[0][2]);
+    new_scale.y = ys * glm::sqrt(
+            matrix[1][0] * matrix[1][0] + matrix[1][1] * matrix[1][1]
+            + matrix[1][2] * matrix[1][2]);
+    new_scale.z = zs * glm::sqrt(
+            matrix[2][0] * matrix[2][0] + matrix[2][1] * matrix[2][1]
+            + matrix[2][2] * matrix[2][2]);
 
 
     glm::mat3 rotation_mat(matrix[0][0] / new_scale.x,
-            matrix[0][1] / new_scale.y, matrix[0][2] / new_scale.z,
-            matrix[1][0] / new_scale.x, matrix[1][1] / new_scale.y,
-            matrix[1][2] / new_scale.z, matrix[2][0] / new_scale.x,
-            matrix[2][1] / new_scale.y, matrix[2][2] / new_scale.z);
+                           matrix[0][1] / new_scale.y, matrix[0][2] / new_scale.z,
+                           matrix[1][0] / new_scale.x, matrix[1][1] / new_scale.y,
+                           matrix[1][2] / new_scale.z, matrix[2][0] / new_scale.x,
+                           matrix[2][1] / new_scale.y, matrix[2][2] / new_scale.z);
 
     position_ = new_position;
     scale_ = new_scale;
@@ -166,9 +165,10 @@ void Transform::rotateByAxis(float angle, float x, float y, float z) {
 
 // angle in radians
 void Transform::rotateByAxisWithPivot(float angle, float axis_x, float axis_y,
-        float axis_z, float pivot_x, float pivot_y, float pivot_z) {
+                                      float axis_z, float pivot_x, float pivot_y,
+                                      float pivot_z) {
     glm::quat axis_rotation = glm::angleAxis(angle,
-            glm::vec3(axis_x, axis_y, axis_z));
+                                             glm::vec3(axis_x, axis_y, axis_z));
     rotation_ = axis_rotation * rotation_;
     glm::vec3 pivot(pivot_x, pivot_y, pivot_z);
     glm::vec3 relative_position = position_ - pivot;
@@ -178,7 +178,7 @@ void Transform::rotateByAxisWithPivot(float angle, float axis_x, float axis_y,
 }
 
 void Transform::rotateWithPivot(float w, float x, float y, float z,
-        float pivot_x, float pivot_y, float pivot_z) {
+                                float pivot_x, float pivot_y, float pivot_z) {
     glm::quat rotation(w, x, y, z);
     rotation_ = rotation * rotation_;
     glm::vec3 pivot(pivot_x, pivot_y, pivot_z);
@@ -188,4 +188,11 @@ void Transform::rotateWithPivot(float w, float x, float y, float z,
     invalidate(true);
 }
 
+void Transform::onAttach(SceneObject *owner_object) {
+    owner_object->onTransformChanged();
+}
+
+void Transform::onDetach(SceneObject *owner_object) {
+    owner_object->onTransformChanged();
+}
 }

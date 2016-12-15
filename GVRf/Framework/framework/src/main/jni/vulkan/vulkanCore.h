@@ -17,108 +17,219 @@
 #ifndef FRAMEWORK_VULKANCORE_H
 #define FRAMEWORK_VULKANCORE_H
 
+#define VK_USE_PLATFORM_ANDROID_KHR
+
+#include <android/native_window_jni.h>	// for native window JNI
 #include "vulkan/vulkan_wrapper.h"
+#include "vulkanInfoWrapper.h"
+#include <vector>
+#include <string>
+
+#include <objects/components/camera.h>
+#include "glm/glm.hpp"
+#include <unordered_map>
+#include "glm/glm.hpp"
+//#include "vulkanThreadPool.h"
+
 #define GVR_VK_CHECK(X) if (!(X)) { LOGD("VK_CHECK Failure"); assert((X));}
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
+#define SWAP_CHAIN_COUNT 6
 
-struct GVR_VK_SwapchainBuffer
-{
-    VkImage image;
-    VkCommandBuffer cmdBuffer;
-    VkImageView view;
-    VkDeviceSize size;
-    VkDeviceMemory mem;
-};
+namespace gvr {
+    struct uniformDefination{
+        std::string type;
+        int size;
+    };
 
-struct GVR_VK_DepthBuffer {
-    VkFormat format;
-    VkImage image;
-    VkDeviceMemory mem;
-    VkImageView view;
-};
+    enum ShaderType{
+        VERTEX_SHADER,
+        FRAGMENT_SHADER
+    };
 
-struct GVR_VK_Vertices {
-    VkBuffer buf;
-    VkDeviceMemory mem;
-    VkPipelineVertexInputStateCreateInfo vi;
-    VkVertexInputBindingDescription      vi_bindings[1];
-    VkVertexInputAttributeDescription    vi_attrs[2];
-};
+    struct TextureObject{
+        VkSampler m_sampler;
+        VkImage m_image;
+        VkImageView m_view;
+        VkDeviceMemory m_mem;
+        VkFormat m_format;
+        VkImageLayout m_imageLayout;
+        uint32_t m_width;
+        uint32_t m_height;
+        VkImageType m_textureType;
+        VkImageViewType m_textureViewType;
+        uint8_t *m_data;
+    };
+
+    class Scene;
+
+    class RenderData;
+
+    class Camera;
+
+    extern uint8_t *oculusTexData;
 
 
-class VulkanCore {
-public:
-    // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
-    static VulkanCore* getInstance() {
-        if (!theInstance) {
-            theInstance = new VulkanCore;
+    class VulkanCore {
+    public:
+        // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
+        static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
+            if (!theInstance) {
+                theInstance = new VulkanCore(newNativeWindow);
+            }
+            if (theInstance->m_Vulkan_Initialised)
+                return theInstance;
+            return NULL;
         }
-        if (theInstance->m_Vulkan_Initialised)
-            return theInstance;
-        return NULL;
-    }
-private:
-    static VulkanCore* theInstance;
-    VulkanCore() : m_pPhysicalDevices(NULL){
-        m_Vulkan_Initialised = false;
-        initVulkanCore();
-    }
-    bool CreateInstance();
-    bool GetPhysicalDevices();
-    void initVulkanCore();
-    void InitDevice();
-    void InitSwapchain(uint32_t width, uint32_t height);
-    bool GetMemoryTypeFromProperties( uint32_t typeBits, VkFlags requirements_mask, uint32_t* typeIndex);
-    void InitCommandbuffers();
-    void InitVertexBuffers();
-    void InitLayouts();
-    void InitRenderPass();
-    void InitPipeline();
-    void InitFrameBuffers();
-    void InitSync();
-    void BuildCmdBuffer();
+        void InitLayoutRenderData(RenderData *rdata);
 
-    bool m_Vulkan_Initialised;
+        void updateMaterialUniform(Scene *scene, Camera *camera, RenderData *render_data,std::unordered_map<std::string,uniformDefination>& nameTypeMap );
+
+        void UpdateUniforms(Scene *scene, Camera *camera, RenderData *render_data);
+
+        void InitUniformBuffersForRenderData(GVR_Uniform &m_modelViewMatrixUniform);
+
+        void InitDescriptorSetForRenderData(RenderData *rdata);
+
+        void BuildCmdBufferForRenderData(std::vector <VkDescriptorSet> &allDescriptors,
+                                         int &swapChainIndex,
+                                         std::vector<RenderData *> &render_data_vector, Camera*);
+
+        void DrawFrameForRenderData(int &swapChainIndex);
+
+        int AcquireNextImage();
+
+        void InitPipelineForRenderData(GVR_VK_Vertices &m_vertices, RenderData *rdata, std::vector<uint32_t> &vs, std::vector<uint32_t> &fs);
+
+        VkShaderModule CreateShaderModuleAscii(const uint32_t *code, uint32_t size);
 
 
-    VkInstance m_instance;
-    VkPhysicalDevice* m_pPhysicalDevices;
-    VkPhysicalDevice m_physicalDevice;
-    VkPhysicalDeviceProperties m_physicalDeviceProperties;
-    VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
-    VkDevice m_device;
-    uint32_t m_physicalDeviceCount;
-    uint32_t m_queueFamilyIndex;
-    VkQueue m_queue;
-    VkSurfaceKHR m_surface;
-    VkSurfaceFormatKHR m_surfaceFormat;
+        bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
+                                         uint32_t *typeIndex);
 
-    VkSwapchainKHR m_swapchain;
-    GVR_VK_SwapchainBuffer* m_swapchainBuffers;
+        VkDevice &getDevice() {
+            return m_device;
+        }
 
-    uint32_t m_swapchainCurrentIdx;
-    uint32_t m_height;
-    uint32_t m_width;
-    uint32_t m_swapchainImageCount;
-    VkSemaphore m_backBufferSemaphore;
-    VkSemaphore m_renderCompleteSemaphore;
-    VkFramebuffer* m_frameBuffers;
+        const VkQueue &getVkQueue() {
+            return m_queue;
+        }
 
-    VkCommandPool m_commandPool;
-    GVR_VK_DepthBuffer* m_depthBuffers;
-    GVR_VK_Vertices m_vertices;
+        VkCommandBuffer GetTransientCmdBuffer();
 
-    VkDescriptorSetLayout m_descriptorLayout;
-    VkPipelineLayout  m_pipelineLayout;
-    VkRenderPass m_renderPass;
-    VkPipeline m_pipeline;
+        VkCommandPool &getTransientCmdPool() {
+            return m_commandPoolTrans;
+        }
 
-    uint8_t * texDataVulkan;
-};
+        void initVulkanCore();
+        bool swapChainCreated(){
+            return swap_chain_init_;
+        }
+    private:
+        std::vector <VkFence> waitFences;
+        std::vector <VkFence> waitSCBFences;
+        static VulkanCore *theInstance;
+
+        bool swap_chain_init_;
+        VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL),swap_chain_init_(false) {
+            m_Vulkan_Initialised = false;
+            initVulkanDevice(newNativeWindow);
+
+        }
+
+        bool CreateInstance();
+
+        VkShaderModule CreateShaderModule(std::vector <uint32_t> code, uint32_t size);
+     //   void CreateShaderModule(VkShaderModule& module, std::vector <uint32_t> code, uint32_t size);
+        bool GetPhysicalDevices();
 
 
-extern VulkanCore gvrVulkanCore;
+        void initVulkanDevice(ANativeWindow *newNativeWindow);
 
+        bool InitDevice();
+
+        void InitSurface();
+
+        void InitSwapchain(uint32_t width, uint32_t height);
+
+        void InitCommandbuffers();
+
+        void InitTransientCmdPool();
+
+        void InitRenderPass();
+
+        void InitFrameBuffers();
+
+        void InitSync();
+
+        void InitUniformBuffers();
+
+        void createPipelineCache();
+        void InitTexture();
+        VkCommandBuffer textureCmdBuffer;
+
+        bool m_Vulkan_Initialised;
+
+        std::vector <uint32_t> CompileShader(const std::string &shaderName,
+                                             ShaderType shaderTypeID,
+                                             const std::string &shaderContents);
+        void InitShaders(VkPipelineShaderStageCreateInfo shaderStages[], std::string& vertexShader, std::string& fragmentShader);
+        void CreateSampler(TextureObject * &textureObject);
+
+
+        ANativeWindow *m_androidWindow;
+
+        VkInstance m_instance;
+        VkPhysicalDevice *m_pPhysicalDevices;
+        VkPhysicalDevice m_physicalDevice;
+        VkPhysicalDeviceProperties m_physicalDeviceProperties;
+        VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
+        VkDevice m_device;
+        uint32_t m_physicalDeviceCount;
+        uint32_t m_queueFamilyIndex;
+        VkQueue m_queue;
+        VkSurfaceKHR m_surface;
+        VkSurfaceFormatKHR m_surfaceFormat;
+
+        VkSwapchainKHR m_swapchain;
+        GVR_VK_SwapchainBuffer *m_swapchainBuffers;
+        GVR_VK_SwapchainBuffer *outputImage;
+
+        uint32_t m_swapchainCurrentIdx;
+        uint32_t m_height;
+        uint32_t m_width;
+        uint32_t m_swapchainImageCount;
+        VkSemaphore m_backBufferSemaphore;
+        VkSemaphore m_renderCompleteSemaphore;
+        VkFramebuffer *m_frameBuffers;
+
+        VkCommandPool m_commandPool;
+        VkCommandPool m_commandPoolTrans;
+        GVR_VK_DepthBuffer *m_depthBuffers;
+        GVR_VK_Vertices m_vertices;
+
+        VkDescriptorSetLayout m_descriptorLayout;
+        VkPipelineLayout m_pipelineLayout;
+        VkRenderPass m_renderPass;
+        VkPipeline m_pipeline;
+        OutputBuffer *m_outputBuffers;
+        uint8_t *texDataVulkan;
+        int imageIndex = 0;
+        uint8_t *finaloutput;
+        GVR_Uniform m_modelViewMatrixUniform;
+        VkDescriptorPool m_descriptorPool;
+        VkDescriptorSet m_descriptorSet;
+        GVR_VK_Indices m_indices;
+
+        VkPipelineCache m_pipelineCache;
+
+        //uint m_threadCount;
+        //ThreadPool m_threadPool;
+        TextureObject * textureObject;
+    };
+
+
+    extern VulkanCore gvrVulkanCore;
+}
 #endif //FRAMEWORK_VULKANCORE_H

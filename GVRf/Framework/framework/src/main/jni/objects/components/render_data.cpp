@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-
+#include "util/jni_utils.h"
 #include "objects/hybrid_object.h"
+#include "objects/scene.h"
 #include "objects/components/render_data.h"
 
 namespace gvr {
@@ -32,7 +33,6 @@ const RenderPass* RenderData::pass(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass];
     }
-    return nullptr;
 }
 
 void RenderData::set_mesh(Mesh* mesh) {
@@ -49,45 +49,105 @@ bool RenderData::cull_face(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->cull_face();
     }
-    return nullptr;
 }
 
 Material* RenderData::material(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->material();
     }
-    return nullptr;
 }
 
-void RenderData::setCameraDistanceLambda(std::function<float()> func) {
+void RenderData::setCameraDistanceLambda(std::function<float()> func)
+{
     cameraDistanceLambda_ = func;
+}
+
+JNIEnv *RenderData::set_java(jobject javaObj, JavaVM *javaVM)
+{
+    JNIEnv *env = JavaComponent::set_java(javaObj, javaVM);
+    if (env)
+    {
+        jclass renderDataClass = env->GetObjectClass(javaObj);
+        bindShaderMethod_ = env->GetMethodID(renderDataClass, "bindShaderNative",
+                                             "(Lorg/gearvrf/GVRScene;)V");
+        if (bindShaderMethod_ == 0)
+        {
+            LOGE("RenderData::bindShader ERROR cannot find 'GVRRenderData.bindShaderNative()' Java method");
+        }
+    }
+}
+
+
+/**
+ * Called when the shader for a RenderData needs to be generated on the Java side.
+ * This function spawns a Java task on the Framework thread which generates the shader.
+ */
+void RenderData::bindShader(Scene *scene)
+{
+    if ((bindShaderMethod_ == NULL) || (javaObj_ == NULL))
+    {
+        LOGE("SHADER: RenderData::bindShader could not call bindShaderNative");
+    }
+
+    JNIEnv* env = NULL;
+    int rc = scene->get_java_env(&env);
+    if (env && (rc >= 0))
+    {
+        LOGD("SHADER: Calling GVRRenderData.bindShaderNative(%p)", this);
+        env->CallVoidMethod(javaObj_, bindShaderMethod_, scene->getJavaObj());
+        if (rc > 0)
+        {
+            scene->getJavaVM()->DetachCurrentThread();
+        }
+    }
+}
+
+bool compareRenderDataByShader(RenderData *i, RenderData *j)
+{
+    // Compare renderData by their material's shader type
+    // Note: multi-pass renderData is skipped for now and put to later position,
+    // since each of the passes has a separate material (and shader as well).
+    // An advanced sorting may be added later to take multi-pass into account
+    if (j->pass_count() > 1) {
+        return true;
+    }
+
+    if (i->pass_count() > 1) {
+        return false;
+    }
+
+    return i->get_shader(0) < j->get_shader(0);
 }
 
 bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
     //1. rendering order needs to be sorted first to guarantee specified correct order
-    if (i->rendering_order() == j->rendering_order()) {
-
-        if (i->material(0)->shader_type() == j->material(0)->shader_type()) {
-
-            // if it is a transparent object, sort by camera distance from back to front
-            if (i->rendering_order() >= RenderData::Transparent
-                && i->rendering_order() < RenderData::Overlay) {
-                return i->camera_distance() > j->camera_distance();
-            }
-
+    if (i->rendering_order() == j->rendering_order())
+    {
+        if (i->get_shader(0) == j->get_shader(0))
+        {
             int no_passes1 = i->pass_count();
             int no_passes2 = j->pass_count();
 
-            if (no_passes1 == no_passes2) {
+            if (no_passes1 == no_passes2)
+            {
+                // if it is a transparent object, sort by camera distance from back to front
+                if (i->rendering_order() >= RenderData::Transparent
+                    && i->rendering_order() < RenderData::Overlay)
+                {
+                    return i->camera_distance() > j->camera_distance();
+                }
 
                 //@todo what about the other passes
 
                 //this is pointer comparison; assumes batching is on; if the materials are not
                 //the same then comparing the pointers further is an arbitrary decision; hence
                 //falling back to camera distance.
-                if (i->material(0) == j->material(0)) {
-                    if (i->cull_face(0) == j->cull_face(0)) {
-                        if (i->getHashCode().compare(j->getHashCode()) == 0) {
+                if (i->material(0) == j->material(0))
+                {
+                    if (i->cull_face(0) == j->cull_face(0))
+                    {
+                        if (i->getHashCode().compare(j->getHashCode()) == 0)
+                        {
                             // otherwise sort from front to back
                             return i->camera_distance() < j->camera_distance();
                         }
@@ -99,8 +159,9 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
             }
             return no_passes1 < no_passes2;
         }
-        return i->material(0)->shader_type() < j->material(0)->shader_type();
+        return i->get_shader() < j->get_shader();
     }
     return i->rendering_order() < j->rendering_order();
 }
+
 }

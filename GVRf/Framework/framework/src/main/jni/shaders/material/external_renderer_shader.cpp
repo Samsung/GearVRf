@@ -23,7 +23,7 @@ void GVRF_installExternalRenderer(GVRF_ExternalRenderer fct) {
 
 namespace gvr {
 
-void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, Material* mtl_unused) {
+void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, ShaderData* mtl_unused) {
     if (externalRenderer == NULL) {
         LOGE("External renderer not installed");
         return;
@@ -75,11 +75,13 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
     TextureCapturer *capturer(render_data->get_texture_capturer());
     if (!capturer || !capturer->getAndClearPendingCapture()) {
         // Original rendering
+        float opacity = 1.0f;
+        material->getFloat("u_opacity", opacity);
         externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
                          scratchBuffer, 6,
                          glm::value_ptr(rstate->uniforms.u_mvp), 16,
                          glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,
-                         material->getFloat("opacity"));
+                         opacity);
     } else {
         // Capture texture in RenderTexture
         capturer->beginCapture();

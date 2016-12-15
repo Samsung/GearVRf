@@ -29,14 +29,17 @@
 #include "components/camera_rig.h"
 #include "engine/renderer/renderer.h"
 #include "objects/light.h"
+#include "objects/uniform_block.h"
+
 
 namespace gvr {
-class SceneObject;
 
 class Scene: public HybridObject {
 public:
+    const int MAX_LIGHTS = 16;
     Scene();
     virtual ~Scene();
+    void set_java(JavaVM* javaVM, jobject javaScene);
     SceneObject* getRoot() { return &scene_root_; }
     void addSceneObject(SceneObject* scene_object);
     void removeSceneObject(SceneObject* scene_object);
@@ -63,7 +66,23 @@ public:
      * Return true if light was added, false if already there or too many lights.
      */
     bool addLight(Light* light);
+
+    /*
+     * Removes an existing light from the scene.
+     * Return true if light was removed, false if light was not in the scene.
+     */
+    bool removeLight(Light* light);
+
+    /*
+     * Removes all the lights from the scene.
+     */
     void clearLights();
+
+    /*
+     * Spawn a Java task in the framework thread to regenerate all the
+     * shaders which depend on light sources.
+     */
+    void bindShaders();
 
     void resetStats() {
         gRenderer = Renderer::getInstance();
@@ -157,11 +176,34 @@ public:
         collider_mutex_.unlock();
     }
 
+    JavaVM* getJavaVM() const { return javaVM_; }
+
+    jobject getJavaObj() const  { return javaObj_; }
+
+    int get_java_env(JNIEnv** envptr);
+
     static Scene* main_scene() {
         return main_scene_;
     }
 
     static void set_main_scene(Scene* scene);
+    GLUniformBlock* getTransformUbo(){
+        return transform_ubo_;
+    }
+
+    GLUniformBlock* bindUbo(int program_id, int index, const char* name, const char* desc){
+               GLUniformBlock* gl_ubo_ = new GLUniformBlock(desc);
+               gl_ubo_->setGLBindingPoint(index);
+               gl_ubo_->setBlockName(name);
+               gl_ubo_->bindBuffer(program_id);
+               return gl_ubo_;
+     }
+     void bindTransformUbo(int program_id){
+         if(transform_ubo_ == nullptr)
+             transform_ubo_ = bindUbo(program_id,TRANSFORM_UBO_INDEX,"Transform_ubo",uniform_desc_.c_str());
+         else
+             transform_ubo_->bindBuffer(program_id);
+     }
 
 private:
     Scene(const Scene& scene);
@@ -171,8 +213,14 @@ private:
     void gatherColliders();
     void clearAllColliders();
 
+
 private:
+    GLUniformBlock *transform_ubo_;
+    std::string uniform_desc_;
     static Scene* main_scene_;
+    JavaVM* javaVM_;
+    jobject javaObj_;
+    jmethodID bindShadersMethod_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;

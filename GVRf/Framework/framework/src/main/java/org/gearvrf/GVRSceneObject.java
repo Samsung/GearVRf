@@ -127,25 +127,39 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * 
      */
     public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh,
-            GVRTexture texture, GVRMaterialShaderId shaderId) {
+            GVRTexture texture, GVRShaderId shaderId) {
         super(gvrContext, NativeSceneObject.ctor());
-
         attachComponent(new GVRTransform(getGVRContext()));
 
+        if ((mesh == null) && (texture == null)) {
+            return;
+        }
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachComponent(renderData);
         if (mesh != null) {
-            GVRRenderData renderData = new GVRRenderData(gvrContext);
-            attachComponent(renderData);
             renderData.setMesh(mesh);
         }
+        if (shaderId == null) {
+            shaderId = GVRShaderType.Phong.ID;
+        }
+        GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
+        renderData.setMaterial(material);
 
         if (texture != null) {
-            GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
             material.setMainTexture(texture);
-            getRenderData().setMaterial(material);
         }
     }
 
-    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
+    public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh, GVRMaterial material) {
+        super(gvrContext, NativeSceneObject.ctor());
+        attachComponent(new GVRTransform(getGVRContext()));
+
+        GVRRenderData renderData = new GVRRenderData(gvrContext, material);
+        attachComponent(renderData);
+        renderData.setMesh(mesh);
+    }
+
+    private static final GVRShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
 
     /**
      * Constructs a scene object with {@linkplain GVRMesh an arbitrarily complex
@@ -244,7 +258,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            a specific shader Id
      */
     public GVRSceneObject(GVRContext gvrContext, float width, float height,
-            GVRTexture texture, GVRMaterialShaderId shaderId) {
+            GVRTexture texture, GVRShaderId shaderId) {
         this(gvrContext, gvrContext.createQuad(width, height), texture,
                 shaderId);
     }

@@ -15,7 +15,7 @@
 attribute vec3 a_position;
 attribute vec2 a_texcoord;
 
-varying vec2 v_scene_coord;
+varying vec2 diffuse_coord;
 varying vec2 v_overlay_coord;
 
 void main() {

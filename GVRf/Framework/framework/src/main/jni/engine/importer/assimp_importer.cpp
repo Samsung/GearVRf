@@ -23,7 +23,7 @@
 
 namespace gvr {
 Mesh* AssimpImporter::getMesh(int index) {
-    Mesh* mesh = new Mesh();
+    Mesh* mesh = new Mesh("float3 a_position float3 a_normal float2 a_texcoord");
 
     if (assimp_importer_->GetScene() == 0) {
         LOGE("_ASSIMP_SCENE_NOT_FOUND_");

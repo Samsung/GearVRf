@@ -15,35 +15,28 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCustomPostEffectShaderId;
 import org.gearvrf.GVRPostEffectMap;
 import org.gearvrf.GVRPostEffectShaderManager;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.R;
+import org.gearvrf.utility.TextFile;
 
 /**
  * Shader to invert colors by post processing rendered image from cameras.
  */
-final class GVRAccessibilityPostEffectShader {
+final class GVRAccessibilityPostEffectShader  extends GVRShaderTemplate {
+    static String fragmentSource;
+    static String vertexSource;
 
-    private final GVRCustomPostEffectShaderId mShaderId;
-    private GVRPostEffectMap mCustomShader;
-
-    /**
-     * load vertex and fragment shaders from external files.
-     * 
-     * @param gvrContext
-     */
-    public GVRAccessibilityPostEffectShader(GVRContext gvrContext) {
-        final GVRPostEffectShaderManager shaderManager = gvrContext
-                .getPostEffectShaderManager();
-        mShaderId = shaderManager.addShader(org.gearvrf.R.raw.inverted_colors_vertex,
-                org.gearvrf.R.raw.inverted_colors_fragment);
-        mCustomShader = shaderManager.getShaderMap(mShaderId);
-
-    }
-
-    /**
-     * Return shader id. It is needed to apply the shader as post effect to a camera
-     * 
-     * @return
-     */
-    public GVRCustomPostEffectShaderId getShaderId() {
-        return mShaderId;
+    public GVRAccessibilityPostEffectShader(GVRContext context) {
+        super("", "sampler2D u_texture", "float3 a_position float2 a_texcoord");
+        if (vertexSource == null)
+        {
+            vertexSource = TextFile.readTextFile(context.getContext(), R.raw.inverted_colors_vertex);
+        }
+        if (fragmentSource == null)
+        {
+            fragmentSource = TextFile.readTextFile(context.getContext(), R.raw.inverted_colors_fragment);
+        }
+        setSegment("VertexTemplate", vertexSource);
+        setSegment("FragmentTemplate", fragmentSource);
     }
 }

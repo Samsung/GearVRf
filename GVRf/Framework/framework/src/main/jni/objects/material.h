@@ -27,202 +27,70 @@
 
 #include "glm/glm.hpp"
 
-#include "objects/hybrid_object.h"
+#include "objects/shader_data.h"
 #include "objects/textures/texture.h"
 #include "objects/components/render_data.h"
-#include "objects/helpers.h"
+#include "vulkan/vulkanCore.h"
+#include "objects/uniform_block.h"
+#include "vulkan/vulkan_headers.h"
+#include "helpers.h"
 
 namespace gvr {
 
-class Material: public HybridObject {
+class Material: public ShaderData {
 public:
-    enum ShaderType {
-        BEING_GENERATED = -1,
-        UNLIT_HORIZONTAL_STEREO_SHADER = 0,
-        UNLIT_VERTICAL_STEREO_SHADER = 1,
-        OES_SHADER = 2,
-        OES_HORIZONTAL_STEREO_SHADER = 3,
-        OES_VERTICAL_STEREO_SHADER = 4,
-        CUBEMAP_SHADER = 5,
-        CUBEMAP_REFLECTION_SHADER = 6,
-        TEXTURE_SHADER = 7,
-        EXTERNAL_RENDERER_SHADER = 8,
-        ASSIMP_SHADER = 9,
-        BOUNDING_BOX_SHADER = 10,
-        LIGHTMAP_SHADER = 11,
-        DISTORTION_SHADER = 90, // this shader is implemented and loaded in the distorter
+    explicit Material() : ShaderData(), mat_ubo_(nullptr),
+                          uniform_desc_(" "), vk_descriptor(nullptr)
+    { }
 
-        UNLIT_FBO_SHADER = 20,       
-
-        TEXTURE_SHADER_NOLIGHT = 100,
-        BUILTIN_SHADER_SIZE = 101
-    };
-
-    explicit Material(ShaderType shader_type) :
-            shader_type_(shader_type),
-            textures_(),
-            floats_(),
-            vec2s_(),
-            vec3s_(),
-            vec4s_(),
-            shader_feature_set_(0)
+    ~Material()
     {
-        switch (shader_type) {
-        default:
-            vec3s_["color"] = glm::vec3(1.0f, 1.0f, 1.0f);
-            floats_["opacity"] = 1.0f;
-            break;
-        }
+        delete mat_ubo_;
+        delete vk_descriptor;
     }
 
-    ~Material() {
-    }
 
-    ShaderType shader_type() const {
-        return shader_type_;
-    }
-
-    void set_shader_type(ShaderType shader_type) {
-        shader_type_ = shader_type;
-        dirty();
-    }
-
-    Texture* getTexture(const std::string& key) const {
-        auto it = textures_.find(key);
-        if (it != textures_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Material::getTexture() : " + key
-                    + " not found";
-            throw error;
-        }
-    }
-
-    //A new api to return a texture even it is NULL without throwing a error,
-    //otherwise it will be captured abruptly by the error handler
-    Texture* getTextureNoError(const std::string& key) const {
-        auto it = textures_.find(key);
-        if (it != textures_.end()) {
-            return it->second;
-        } else {
-            return NULL;
-        }
-    }
-
-    void setTexture(const std::string& key, Texture* texture) {
-        textures_[key] = texture;
-        //By the time the texture is being set to its attaching material, it is ready
-        //This is guaranteed by upper java layer scheduling
-        texture->setReady(true);
-        if (key == "main_texture") {
+    virtual void setTexture(const std::string& key, Texture* texture)
+    {
+        ShaderData::setTexture(key, texture);
+        if (key == "main_texture")
+        {
             main_texture = texture;
         }
         dirty();
     }
 
-    float getFloat(const std::string& key) {
-        auto it = floats_.find(key);
-        if (it != floats_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Material::getFloat() : " + key + " not found";
-            throw error;
-        }
-    }
-    void setFloat(const std::string& key, float value) {
-        floats_[key] = value;
+    virtual void setFloat(const std::string& key, float value) {
+        ShaderData::setFloat(key, value);
         dirty();
     }
 
-    glm::vec2 getVec2(const std::string& key) {
-        auto it = vec2s_.find(key);
-        if (it != vec2s_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Material::getVec2() : " + key + " not found";
-            throw error;
-        }
-    }
 
-    void setVec2(const std::string& key, glm::vec2 vector) {
-        vec2s_[key] = vector;
+    virtual void setVec2(const std::string& key, glm::vec2 vector) {
+        ShaderData::setVec2(key, vector);
         dirty();
     }
 
-    glm::vec3 getVec3(const std::string& key) {
-        auto it = vec3s_.find(key);
-        if (it != vec3s_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Material::getVec3() : " + key + " not found";
-            throw error;
-        }
-    }
 
-    void setVec3(const std::string& key, glm::vec3 vector) {
-        vec3s_[key] = vector;
+    virtual void setVec3(const std::string& key, glm::vec3 vector) {
+        ShaderData::setVec3(key, vector);
         dirty();
     }
 
-    glm::vec4 getVec4(const std::string& key) {
-        auto it = vec4s_.find(key);
-        if (it != vec4s_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Material::getVec4() : " + key + " not found";
-            throw error;
-        }
-    }
-
-    void setVec4(const std::string& key, glm::vec4 vector) {
-        vec4s_[key] = vector;
+    virtual void setVec4(const std::string& key, glm::vec4 vector) {
+        ShaderData::setVec4(key, vector);
         dirty();
     }
 
-    glm::mat4 getMat4(const std::string& key) {
-        auto it = mat4s_.find(key);
-        if (it != mat4s_.end()) {
-            return it->second;
-        } else {
-            std::string error = "Material::getMat4() : " + key + " not found";
-            throw error;
-        }
+    bool hasTexture() const {
+        return (main_texture != NULL) || (textures_.size() > 0);
     }
 
-    bool hasUniform(const std::string& key) const {
-        if (vec3s_.find(key) != vec3s_.end()) {
-            return true;
-        }
-        if (vec2s_.find(key) != vec2s_.end()) {
-            return true;
-        }
-        if (vec4s_.find(key) != vec4s_.end()) {
-            return true;
-        }
-        if (mat4s_.find(key) != mat4s_.end()) {
-            return true;
-        }
-        if (floats_.find(key) != floats_.end()) {
-            return true;
-        }
-        return false;
-    }
-
-    void setMat4(const std::string& key, glm::mat4 matrix) {
-        mat4s_[key] = matrix;
+    virtual void setMat4(const std::string& key, glm::mat4 matrix) {
+        ShaderData::setMat4(key, matrix);
         dirty();
     }
 
-    int get_shader_feature_set() {
-        return shader_feature_set_;
-    }
-
-    void set_shader_feature_set(int feature_set) {
-        shader_feature_set_ = feature_set;
-    }
-    bool isMainTextureReady() {
-        return (main_texture != NULL) && main_texture->isReady();
-    }
 
     void add_dirty_flag(const std::shared_ptr<bool>& dirty_flag) {
         dirty_flags_.insert(dirty_flag);
@@ -235,25 +103,118 @@ public:
     void dirty() {
         dirtyImpl(dirty_flags_);
     }
+     
+     void createVkMaterialDescriptor(VkDevice &device,VulkanCore* vk)
+     {
+         vk_descriptor->createDescriptor(device,vk,MATERIAL_UBO_INDEX,VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    private:
+     }
+    Descriptor* getDescriptor()
+    {
+        return vk_descriptor;
+    }
+
+    std::string getType(std::string type)
+    {
+        if(type.empty())
+        {
+            LOGE("ERROR: type cannot be empty");
+            return type;
+        }
+
+        if (type.find("int") != std::string::npos)
+            return "int4";
+        if (type.find("float") != std::string::npos)
+            return "float4";
+
+    }
+
+    void convertDescriptor(std::string& uniform_desc)
+    {
+            const char* p = uniform_desc.c_str();
+            const char* type_start;
+            int type_size;
+            const char* name_start;
+            int name_size;
+            while (*p)
+            {
+                while (std::isspace(*p) || *p == ';' || *p == ',')
+                    ++p;
+                type_start = p;
+                if (*p == 0)
+                    break;
+                while (std::isalnum(*p))
+                    ++p;
+                type_size = p - type_start;
+                if (type_size == 0)
+                {
+                    LOGE("UniformBlock: SYNTAX ERROR: expecting data type material\n");
+                    break;
+                }
+                std::string type(type_start, type_size);
+                std::string modified_type;
+                if(type.compare("float4") == 0 || type.compare("int4") == 0 || type.compare("mat4") == 0)
+                    modified_type = type;
+                else
+                    modified_type = getType(type);
+
+                uniform_desc_ = uniform_desc_ + modified_type + " ";
+                while (std::isspace(*p))
+                    ++p;
+                name_start = p;
+                while (std::isalnum(*p) || (*p == '_') || (*p == '[') || (*p == ']'))
+                    ++p;
+
+                name_size = p - name_start;
+                std::string name(name_start, name_size);
+
+                uniform_desc_ = uniform_desc_ + name + "; ";
+            }
+    }
+
+   void setUniformDesc(std::string uniform_desc)
+   {
+        convertDescriptor(uniform_desc);
+        LOGE("setting matertial descriptor %s", uniform_desc_.c_str());
+        vk_descriptor = new Descriptor(uniform_desc_);
+    }
+
+    GLUniformBlock* bindUbo(int program_id, int index, const char* name, const char* desc)
+    {
+                   GLUniformBlock* ubo = new GLUniformBlock(desc);
+                   ubo->setGLBindingPoint(index);
+                   ubo->setBlockName(name);
+                   ubo->bindBuffer(program_id);
+                   return ubo;
+    }
+
+    void bindMaterialUbo(int program_id)
+    {
+         if(mat_ubo_ == nullptr)
+         {
+             mat_ubo_ = bindUbo(program_id,MATERIAL_UBO_INDEX,"Material_ubo",uniform_desc_.c_str() );
+         }
+         else
+             mat_ubo_->bindBuffer(program_id);
+     }
+
+     GLUniformBlock* getMatUbo()
+     {
+        return mat_ubo_;
+     }
+
+private:
+    GLUniformBlock *mat_ubo_;
+    std::string uniform_desc_;
+    std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
     Material(const Material& material);
     Material(Material&& material);
     Material& operator=(const Material& material);
     Material& operator=(Material&& material);
 
 private:
-    ShaderType shader_type_;
-    std::map<std::string, Texture*> textures_;
+    Descriptor* vk_descriptor;
     Texture* main_texture = NULL;
-    std::map<std::string, float> floats_;
-    std::map<std::string, glm::vec2> vec2s_;
-    std::map<std::string, glm::vec3> vec3s_;
-    std::map<std::string, glm::vec4> vec4s_;
-    std::map<std::string, glm::mat4> mat4s_;
-    std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
-
-    unsigned int shader_feature_set_;
 };
 
 }

@@ -163,7 +163,7 @@ public final class GVRAssetLoader {
         public GVRResourceVolume getVolume() { return mVolume; }
         public String getBaseName()
         {
-        	String fname = getFileName();
+            String fname = getFileName();
             int i = fname.lastIndexOf("/");
             if (i > 0)
             {
@@ -171,14 +171,14 @@ public final class GVRAssetLoader {
             }
             return fname;
         }
-        
+
         public String getFileName()
         {
             if (mFileName.startsWith("sd:"))
             {
                 return mFileName.substring(3);
             }
-        	return mFileName;
+            return mFileName;
         }
 
         /**
@@ -228,7 +228,7 @@ public final class GVRAssetLoader {
                 onTextureError(mContext, ex.getMessage(), request.TextureFile);
             }
             return null;
-         }
+        }
 
         /**
          * Load an embedded RGBA texture from the JASSIMP AiScene.
@@ -366,8 +366,8 @@ public final class GVRAssetLoader {
          * Called when a texture cannot be loaded.
          * @param context GVRContext which loaded the texture
          * @param error error message
-          * @param texFile filename of texture loaded
-        */
+         * @param texFile filename of texture loaded
+         */
         public void onTextureError(GVRContext context, String error, String texFile)
         {
             mErrors += error + "\n";
@@ -449,7 +449,7 @@ public final class GVRAssetLoader {
             }
             onAssetLoaded(mContext, mModel, mFileName, errors);
         }
-     }
+    }
 
     /**
      * Texture load callback the generates asset events.
@@ -859,7 +859,7 @@ public final class GVRAssetLoader {
      * @return An instance of {@link GVRAssimpImporter}.
      */
     GVRAssimpImporter readFileFromSDCard(GVRContext gvrContext,
-            String filename, EnumSet<GVRImportSettings> settings) {
+                                         String filename, EnumSet<GVRImportSettings> settings) {
         long nativeValue = NativeImporter.readFileFromSDCard(filename, GVRImportSettings.getAssimpImportFlags(settings));
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
@@ -962,10 +962,10 @@ public final class GVRAssetLoader {
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
      *            loaded and then it will add the model to the scene.
-     *            
+     *
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
-     * @throws IOException 
+     * @throws IOException
      *
      */
     public GVRModelSceneObject loadModel(String filePath, GVRScene scene) throws IOException
@@ -1098,10 +1098,10 @@ public final class GVRAssetLoader {
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
-     *            
+     *
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
-     * @throws IOException 
+     * @throws IOException
      *
      */
     public GVRModelSceneObject loadModel(String filePath, IAssetEvents handler) throws IOException
@@ -1117,8 +1117,8 @@ public final class GVRAssetLoader {
             loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
         return model;
     }
-    
-    
+
+
     /**
      * Loads a scene object {@link GVRSceneObject} from
      * a 3D model and raises asset events to a handler.
@@ -1138,26 +1138,26 @@ public final class GVRAssetLoader {
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
      *            loaded and then adds the model to the scene.
-     *            
+     *
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
-     * @throws IOException 
+     * @throws IOException
      *
      */
     public GVRModelSceneObject loadModel(String filePath,
-            EnumSet<GVRImportSettings> settings,
-            boolean cacheEnabled,
-            GVRScene scene) throws IOException
+                                         EnumSet<GVRImportSettings> settings,
+                                         boolean cacheEnabled,
+                                         GVRScene scene) throws IOException
     {
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
         AssetRequest assetRequest = new AssetRequest(model, filePath, scene, false);
         model.setName(assetRequest.getBaseName());
 
-		if (ext.equals("x3d"))
-		    loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
-		else
-		    loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        if (ext.equals("x3d"))
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        else
+            loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
         return model;
     }
 
@@ -1178,11 +1178,11 @@ public final class GVRAssetLoader {
      *            If not null, replace the current scene with the model.
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
-     * @throws IOException 
+     * @throws IOException
      *
      */
     private GVRSceneObject loadJassimpModel(AssetRequest request, GVRSceneObject model,
-            EnumSet<GVRImportSettings> settings, boolean cacheEnabled, GVRScene scene) throws IOException
+                                            EnumSet<GVRImportSettings> settings, boolean cacheEnabled, GVRScene scene) throws IOException
     {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
         org.gearvrf.jassimp2.AiScene assimpScene = null;
@@ -1223,7 +1223,7 @@ public final class GVRAssetLoader {
             throw ex;
         }
     }
-    
+
 
     GVRSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
             GVRSceneObject root, EnumSet<GVRImportSettings> settings,
@@ -1338,10 +1338,9 @@ public final class GVRAssetLoader {
 
 class NativeImporter {
     static native long readFileFromAssets(AssetManager assetManager,
-            String filename, int settings);
+                                          String filename, int settings);
 
     static native long readFileFromSDCard(String filename, int settings);
 
     static native long readFromByteArray(byte[] bytes, String filename, int settings);
 }
-

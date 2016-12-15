@@ -43,21 +43,14 @@ void Collider::transformRay(const glm::mat4& model_matrix, glm::vec3& rayStart, 
     rayStart = glm::vec3(start);
 }
 
+void Collider::onAddedToScene(Scene* scene)
+{
+    scene->addCollider(this);
+}
 
-void Collider::set_owner_object(SceneObject* obj) {
-    if (obj == owner_object())
-    {
-        return;
-    }
-    if (obj)
-    {
-        Scene::main_scene()->addCollider(this);
-    }
-    else
-    {
-        Scene::main_scene()->removeCollider(this);
-    }
-    Component::set_owner_object(obj);
+void Collider::onRemovedFromScene(Scene* scene)
+{
+    scene->removeCollider(this);
 }
 
 }

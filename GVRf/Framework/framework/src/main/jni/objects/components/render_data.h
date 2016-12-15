@@ -26,12 +26,16 @@
 #include "gl/gl_program.h"
 #include "glm/glm.hpp"
 #include "objects/mesh.h"
-#include "objects/components/component.h"
+#include "java_component.h"
 #include "objects/render_pass.h"
 #include "objects/material.h"
 #include<sstream>
+#include "objects/uniform_block.h"
+#include "vulkan/vulkanCore.h"
+#include "vulkan/vulkan_headers.h"
 typedef unsigned long Long;
 namespace gvr {
+
 class Mesh;
 class Material;
 class Light;
@@ -39,7 +43,9 @@ class Batch;
 class TextureCapturer;
 class RenderPass;
 
-template<typename T> std::string to_string(T value) {
+template<typename T>
+std::string to_string(T value) {
+
     //create an output string stream
     std::ostringstream os;
 
@@ -50,7 +56,54 @@ template<typename T> std::string to_string(T value) {
     return os.str();
 }
 
-class RenderData: public Component {
+class VulkanData {
+
+public:
+    VulkanData():vk_descriptor("mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; mat4 u_right;"){}
+
+    void createTransformDescriptor(VkDevice &device,VulkanCore* vk){
+        vk_descriptor.createDescriptor(device, vk, TRANSFORM_UBO_INDEX, VK_SHADER_STAGE_VERTEX_BIT );
+    }
+
+    VkPipeline& getVKPipeline(){
+        return m_pipeline;
+    }
+    VulkanUniformBlock& getTransformUBO(){
+        return transform_UBO;
+    }
+    Descriptor& getDescriptor(){
+        return vk_descriptor;
+    }
+    VkPipelineLayout& getPipelineLayout(){
+        return m_pipelineLayout;
+    }
+    VkDescriptorSetLayout& getDescriptorLayout(){
+        return m_descriptorLayout;
+    }
+    VkDescriptorPool& getDescriptorPool(){
+        return m_descriptorPool;
+    }
+    VkDescriptorSet& getDescriptorSet(){
+        return m_descriptorSet;
+    }
+
+    VkPipelineLayout  m_pipelineLayout;
+    // Vulkan
+    VulkanUniformBlock transform_UBO;
+    GVR_Uniform m_modelViewMatrixUniform;
+
+    VkPipeline m_pipeline;
+    VkDescriptorSet m_descriptorSet;
+
+private:
+
+    VkDescriptorPool m_descriptorPool;
+    VkDescriptorSetLayout m_descriptorLayout;
+    Descriptor vk_descriptor;
+
+};
+
+class RenderData: public JavaComponent {
 public:
     enum Queue {
         Background = 1000, Geometry = 2000, Transparent = 3000, Overlay = 4000
@@ -65,15 +118,19 @@ public:
     };
 
     RenderData() :
-            Component(RenderData::getComponentType()), mesh_(0), light_(0),
-                    use_light_(false), use_lightmap_(false), batching_(true),
-                    render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
-                    rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
-                    offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
-                    depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
-                    sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES),
-                    texture_capturer(0), cast_shadows_(true), dirty_flag_(std::make_shared<bool>(true)) {
+            JavaComponent(RenderData::getComponentType()), mesh_(0), light_(0),
+                use_light_(false), use_lightmap_(false), batching_(true),
+                render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
+                rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
+                offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
+                depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
+                sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
+                draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
+                uniform_dirty(true),dirty_flag_(std::make_shared<bool>(true))
+    {
     }
+
+    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     void copy(const RenderData& rdata) {
         Component(rdata.getComponentType());
@@ -129,6 +186,14 @@ public:
 
     Material* material(int pass) const ;
 
+    void set_material(Material* material, int pass);
+
+    /**
+     * Select or generate a shader for this render data.
+     * This function executes a Java task on the Framework thread.
+     */
+    void bindShader(Scene* scene);
+    void set_renderdata_dirty(bool dirty_);
     void setDirty(bool dirty);
 
     bool isDirty(){
@@ -317,6 +382,13 @@ public:
         return texture_capturer;
     }
 
+    void set_shader(int pass, int shaderid) {
+        LOGD("SHADER: RenderData:set_shader %d %p", shaderid, this);
+        render_pass_list_[pass]->set_shader(shaderid);
+    }
+
+    int get_shader(int pass =0) const { return render_pass_list_[pass]->get_shader(); }
+
     std::string getHashCode() {
         if (hash_code_dirty_) {
             std::string render_data_string;
@@ -344,6 +416,30 @@ public:
 
     void setCameraDistanceLambda(std::function<float()> func);
 
+    bool uniform_dirty;
+    VulkanData& getVkData(){
+        return vkData;
+    }
+    void createVkTransformUbo(VkDevice &device,VulkanCore* vk){
+        vkData.createTransformDescriptor(device,vk);
+    }
+        GLUniformBlock* bindUbo(int program_id, int index, const char* name, const char* desc){
+                   GLUniformBlock* gl_ubo_ = new GLUniformBlock(desc);
+                   gl_ubo_->setGLBindingPoint(index);
+                   gl_ubo_->setBlockName(name);
+                   gl_ubo_->bindBuffer(program_id);
+                   return gl_ubo_;
+         }
+         void bindBonesUbo(int program_id){
+             if(bones_ubo_ == nullptr)
+                 bones_ubo_ = bindUbo(program_id, BONES_UBO_INDEX, "Bones_ubo", "mat4 u_bone_matrix[60];");
+             else
+                 bones_ubo_->bindBuffer(program_id);
+
+         }
+     GLUniformBlock* getBonesUbo(){
+        return bones_ubo_;
+     }
 private:
     //  RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -351,8 +447,11 @@ private:
     RenderData& operator=(RenderData&& render_data);
 
 private:
+    VulkanData vkData;
+    GLUniformBlock *bones_ubo_;
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
+    jmethodID bindShaderMethod_;
     Mesh* mesh_;
     Batch* batch_;
     bool hash_code_dirty_;

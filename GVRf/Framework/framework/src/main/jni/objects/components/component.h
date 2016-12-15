@@ -21,62 +21,32 @@
 #define COMPONENT_H_
 
 #include <memory>
-
 #include "objects/hybrid_object.h"
 #include "component_types.h"
 
 namespace gvr {
 class SceneObject;
+class Scene;
 
 class Component: public HybridObject {
 public:
-    Component() :
-            HybridObject(), type_(0), owner_object_(0), enabled_(true) {
-    }
+    Component();
+    Component(long long type);
+    Component(SceneObject* owner_object);
+    Component(long long type, SceneObject* owner_object);
+    virtual ~Component();
 
-    Component(long long type) :
-            HybridObject(), type_(type), owner_object_(0), enabled_(true) {
-    }
+    SceneObject* owner_object() const;
 
-    Component(SceneObject* owner_object) :
-            type_(0),
-            enabled_(true),
-            owner_object_(owner_object) {
-    }
+    virtual void set_owner_object(SceneObject* owner_object);
+    virtual void onAddedToScene(Scene* scene) { }
+    virtual void onRemovedFromScene(Scene* scene) { }
+    virtual void onAttach(SceneObject* owner) { }
+    virtual void onDetach(SceneObject* owner) { }
 
-    Component(long long type, SceneObject* owner_object) :
-            type_(type),
-            enabled_(true),
-            owner_object_(owner_object) {
-    }
-
-    virtual ~Component() {
-        set_owner_object(NULL);
-    }
-
-    SceneObject* owner_object() const {
-        return owner_object_;
-    }
-
-    virtual void set_owner_object(SceneObject* owner_object) {
-        owner_object_ = owner_object;
-    }
-
-    void removeOwnerObject() {
-        owner_object_ = 0;
-    }
-
-    long long getType() const {
-        return type_;
-    }
-
-    bool enabled() const {
-        return enabled_;
-    }
-
-    virtual void set_enable(bool enable) {
-        enabled_ = enable;
-    }
+    long long getType() const;
+    bool enabled() const;
+    virtual void set_enable(bool enable);
 
 private:
     Component(const Component& component);
@@ -91,5 +61,6 @@ protected:
 };
 
 }
+
 #endif
 

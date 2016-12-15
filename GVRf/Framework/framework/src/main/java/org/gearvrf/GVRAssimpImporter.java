@@ -47,8 +47,8 @@ class GVRAssimpImporter extends GVRHybridObject {
      * @return The mesh, encapsulated as a {@link GVRMesh}.
      */
     GVRMesh getMesh(int index) {
-        return new GVRMesh(getGVRContext(), NativeAssimpImporter.getMesh(
-                getNative(), index));
+        return new GVRMesh(getGVRContext(), "float3 a_position float3 a_normal float2 a_texcoord",
+                NativeAssimpImporter.getMesh(getNative(), index));
     }
 
     /**
@@ -67,8 +67,8 @@ class GVRAssimpImporter extends GVRHybridObject {
      * @return The mesh, encapsulated as a {@link GVRMesh}.
      */
     GVRMesh getNodeMesh(String nodeName, int meshIndex) {
-        return new GVRMesh(getGVRContext(), NativeAssimpImporter.getNodeMesh(
-                getNative(), nodeName, meshIndex));
+        return new GVRMesh(getGVRContext(),  "float3 a_position float3 a_normal float2 a_texcoord",
+                NativeAssimpImporter.getNodeMesh(getNative(), nodeName, meshIndex));
     }
 
     /**

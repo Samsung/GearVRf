@@ -26,6 +26,7 @@ void Java_org_gearvrf_NativeTextureCapturer_callbackFromNative(
 TextureCapturer::TextureCapturer(ShaderManager *shaderManager)
         : Component(TextureCapturer::getComponentType())
         , mShaderManager(shaderManager)
+        , mMaterial(NULL)
         , mRenderTexture(0)
         , mPendingCapture(false)
         , mHasNewCapture(false)
@@ -34,6 +35,14 @@ TextureCapturer::TextureCapturer(ShaderManager *shaderManager)
         , mJNIEnv(0)
         , mCapturerObject(0)
 {
+    mMaterial = new Material();
+    mMaterial->setTexture("diffuseTexture", mRenderTexture);
+
+    // OpenGL default
+    mMaterial->setVec4("ambient_color", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+    mMaterial->setVec4("diffuse_color", glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+    mMaterial->setVec4("specular_color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    mMaterial->setFloat("specular_exponent", 0.0f);
 }
 
 TextureCapturer::~TextureCapturer() {
@@ -136,25 +145,24 @@ void TextureCapturer::endCapture() {
 void TextureCapturer::render(RenderState* rstate, RenderData* render_data) {
 
     Material* material = render_data->pass(0)->material();
+    float opacity = 1.0f;
+
     if (material == NULL) {
         LOGE("No material");
         return;
     }
 
-    // Create the texture material
-    Material textureMaterial(Material::TEXTURE_SHADER);
-    textureMaterial.setTexture("main_texture", mRenderTexture);
-    textureMaterial.setFloat("opacity", material->getFloat("opacity"));
-
-    // OpenGL default
-    textureMaterial.setVec4("ambient_color", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
-    textureMaterial.setVec4("diffuse_color", glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    textureMaterial.setVec4("specular_color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    textureMaterial.setFloat("specular_exponent", 0.0f);
-
-    TextureShader *textureShader = mShaderManager->getTextureShader();
-
-    textureShader->render(rstate, render_data, &textureMaterial);
+    material->getFloat("opacity", opacity);
+    mMaterial->setFloat("opacity", opacity);
+    int id = render_data->get_shader();
+    if (id > 0)
+    {
+        Shader* shader = mShaderManager->getShader(id);
+        if (shader != NULL)
+        {
+            shader->render(rstate, render_data, mMaterial);
+        }
+    }
 }
 
 glm::mat4 TextureCapturer::getModelViewMatrix() {

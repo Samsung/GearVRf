@@ -35,11 +35,11 @@ Camera::Camera() :
 Camera::~Camera() {
 }
 
-void Camera::addPostEffect(PostEffectData* post_effect) {
+void Camera::addPostEffect(ShaderData* post_effect) {
     post_effect_data_.push_back(post_effect);
 }
 
-void Camera::removePostEffect(PostEffectData* post_effect) {
+void Camera::removePostEffect(ShaderData* post_effect) {
     post_effect_data_.erase(
             std::remove(post_effect_data_.begin(), post_effect_data_.end(),
                     post_effect), post_effect_data_.end());

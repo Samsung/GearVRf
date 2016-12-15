@@ -28,8 +28,7 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-        jobject obj);
+Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj);
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
@@ -160,9 +159,9 @@ Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-    jobject obj) {
-return reinterpret_cast<jlong>(new RenderData());
+Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj)
+{
+    return reinterpret_cast<jlong>(new RenderData());
 }
 
 JNIEXPORT jlong JNICALL
@@ -183,6 +182,7 @@ Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
         jobject obj, jlong jrender_data, jlong jrender_pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     RenderPass* render_pass = reinterpret_cast<RenderPass*>(jrender_pass);
+    LOGD("SHADER: RenderPass: NativeRenderData_addPass(%p[%p])", render_data, render_pass);
     render_data->add_pass(render_pass);
 }
 

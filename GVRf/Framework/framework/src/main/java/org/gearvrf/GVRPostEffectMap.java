@@ -27,6 +27,7 @@ package org.gearvrf;
  * <p>
  * Despite a somewhat narrower API, it fills much the same role as
  * {@link GVRMaterialMap}.
+ * @deprecated GVRMaterialMap and subclasses do absolutely nothing now
  */
 public class GVRPostEffectMap extends GVRHybridObject implements GVRShaderMaps {
     GVRPostEffectMap(GVRContext gvrContext, long ptr) {

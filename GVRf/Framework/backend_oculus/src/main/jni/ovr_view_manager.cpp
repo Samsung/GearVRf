@@ -16,7 +16,7 @@
 #include "../engine/renderer/renderer.h"
 #include "../objects/components/camera.h"
 #include "objects/textures/render_texture.h"
-
+#include "vulkan/vulkanCore.h"
 #include <jni.h>
 
 namespace gvr {

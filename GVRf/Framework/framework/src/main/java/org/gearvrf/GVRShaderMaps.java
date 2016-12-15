@@ -18,7 +18,7 @@ package org.gearvrf;
 /**
  * The API shared by {@link GVRMaterialMap} and {@link GVRPostEffectMap}.
  * 
- * A {@link GVRShaders} implementation specifies a shader <i>via</i> an opaque
+ * A {@link GVRShaderData} implementation specifies a shader <i>via</i> an opaque
  * type, and contains named values. These names are not necessarily the same as
  * the names of the uniforms in the shader program: the methods of this
  * interface let you map names from materials to programs.
@@ -29,30 +29,31 @@ package org.gearvrf;
  * <td>{@link GVRMaterialShaderManager} {@code implements}
  * {@link GVRShaderManagers}</td>
  * <td>{@link GVRMaterialMap} {@code implements} {@link GVRShaderMaps}</td>
- * <td>{@link GVRMaterial} {@code implements} {@link GVRShaders}</td>
+ * <td>{@link GVRMaterial} {@code implements} {@link GVRShaderData}</td>
  * </tr>
  * <tr>
  * <td>{@link GVRPostEffectShaderManager} {@code implements}
  * {@link GVRShaderManagers}</td>
  * <td>{@link GVRPostEffectMap} {@code implements} {@link GVRShaderMaps}</td>
- * <td>{@link GVRPostEffect} {@code implements} {@link GVRShaders}</td>
+ * <td>{@link GVRPostEffect} {@code implements} {@link GVRShaderData}</td>
  * </tr>
  * </table>
  * </p>
+ * @deprecated GVRShaderMaps and subclasses do absolutely nothing now
  */
 public interface GVRShaderMaps {
     /**
-     * Adds a link from a texture in a {@link GVRShaders} to a GL program.
+     * Adds a link from a texture in a {@link GVRShaderData} to a GL program.
      * 
      * @param variableName
      *            The variable name in the GL program.
      * @param key
-     *            The texture's key in the {@link GVRShaders}.
+     *            The texture's key in the {@link GVRShaderData}.
      */
     void addTextureKey(String variableName, String key);
 
     /**
-     * Adds a link from a float in a {@link GVRShaders} to a GL program.
+     * Adds a link from a float in a {@link GVRShaderData} to a GL program.
      * 
      * @param variableName
      *            The variable name in the GL program.
@@ -62,7 +63,7 @@ public interface GVRShaderMaps {
     void addUniformFloatKey(String variableName, String key);
 
     /**
-     * Adds a link from a vec2 in a {@link GVRShaders} to a GL program.
+     * Adds a link from a vec2 in a {@link GVRShaderData} to a GL program.
      * 
      * @param variableName
      *            The variable name in the GL program.
@@ -72,7 +73,7 @@ public interface GVRShaderMaps {
     void addUniformVec2Key(String variableName, String key);
 
     /**
-     * Adds a link from a vec3 in a {@link GVRShaders} to a GL program.
+     * Adds a link from a vec3 in a {@link GVRShaderData} to a GL program.
      * 
      * @param variableName
      *            The variable name in the GL program.
@@ -82,7 +83,7 @@ public interface GVRShaderMaps {
     void addUniformVec3Key(String variableName, String key);
 
     /**
-     * Adds a link from a vec4 in a {@link GVRShaders} to a GL program.
+     * Adds a link from a vec4 in a {@link GVRShaderData} to a GL program.
      * 
      * @param variableName
      *            The variable name in the GL program.

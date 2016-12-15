@@ -24,7 +24,9 @@ namespace gvr {
 Batch::Batch(int no_vertices, int no_indices) :
         draw_count_(0), vertex_count_(0), index_count_(0), vertex_limit_(no_vertices),
         indices_limit_(no_indices), renderdata_(nullptr),mesh_init_(false),
-        index_offset_(0), not_batched_(false), batch_dirty_(false) {
+        index_offset_(0), not_batched_(false), batch_dirty_(false),
+        mesh_(std::string("float3 a_position float3 a_normal float2 a_texcoord"))
+{
 
     vertices_.reserve(no_vertices);
     indices_.reserve(no_indices);
@@ -103,10 +105,10 @@ bool Batch::add(RenderData *render_data) {
     for(int i=0; i<render_data->pass_count();i++)
     {
         Material* mat = render_data->pass(i)->material();
-        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
+//        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
             render_data_set_.insert(render_data);
             return true;
-        }
+//        }
     }
     // if mesh is large, render in normal way
     if (indices.size() == 0 || (indices.size() + index_count_ > indices_limit_)) {

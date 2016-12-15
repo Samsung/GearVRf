@@ -38,29 +38,38 @@
 #include "objects/material.h"
 #include "objects/bounding_volume.h"
 #include "objects/vertex_bone_data.h"
-
+#include "vulkan/vulkanCore.h"
 #include "engine/memory/gl_delete.h"
 
 namespace gvr {
+
+struct bindingInfo{
+    std::string name;
+	int binding;
+	int index;
+	int size;
+	int offset;
+	int stride;
+
+};
 class Mesh: public HybridObject {
 public:
-    Mesh() :
-            vertices_(),
-            normals_(),
-            indices_(),
-            float_vectors_(),
-            vec2_vectors_(),
-            vec3_vectors_(),
-            vec4_vectors_(),
-            have_bounding_volume_(false),
-            vao_dirty_(true),
-            boneVboID_(GVR_INVALID),
-            vertexBoneData_(this),
-            bone_data_dirty_(true)
+    Mesh(const std::string& descriptor) :
+            vertexDescriptor_(descriptor), vertices_(), normals_(), indices_(), float_vectors_(), vec2_vectors_(), vec3_vectors_(), vec4_vectors_(),
+            have_bounding_volume_(false), vao_dirty_(true), vkVertices_(new GVR_VK_Vertices()),
+            boneVboID_(GVR_INVALID), vertexBoneData_(this), bone_data_dirty_(true)
     {
+        m_vertices.vi_bindings = NULL;
+        m_vertices.vi_attrs = NULL;
     }
 
     ~Mesh() {
+        if (m_vertices.vi_bindings) {
+            delete m_vertices.vi_bindings;
+        }
+        if (m_vertices.vi_attrs) {
+            delete m_vertices.vi_attrs;
+        }
         cleanUp();
     }
 
@@ -71,7 +80,7 @@ public:
         normals.swap(normals_);
         std::vector<unsigned short> indices;
         indices.swap(indices_);
-
+        delete vkVertices_;
         deleteVaos();
     }
 
@@ -170,20 +179,9 @@ public:
         dirty();
     }
 
-    bool hasAttribute(std::string key) const {
-        if (vec3_vectors_.find(key) != vec3_vectors_.end()) {
-            return true;
-        }
-        if (vec2_vectors_.find(key) != vec2_vectors_.end()) {
-            return true;
-        }
-        if (vec4_vectors_.find(key) != vec4_vectors_.end()) {
-            return true;
-        }
-        if (float_vectors_.find(key) != float_vectors_.end()) {
-            return true;
-        }
-        return false;
+    bool hasAttribute(const std::string& key) const {
+        size_t found = vertexDescriptor_.find(key);
+        return (found != std::string::npos);
     }
 
     const std::vector<float>& getFloatVector(std::string key) const {
@@ -337,15 +335,19 @@ public:
 
     void getAttribNames(std::set<std::string> &attrib_names);
 
-    void forceShouldReset() { // one time, then false
-        vao_dirty_ = true;
-        bone_data_dirty_ = true;
-    }
-
-    void generateVAO(int programId);
+     // generate VAO
+     void generateVAO(int programId);
+ //   void generateVAO(VkDevice &m_device, VulkanCore*);
 
     void add_dirty_flag(const std::shared_ptr<bool>& dirty_flag);
     void dirty();
+
+   GVR_VK_Vertices& getVkVertices(){
+        return m_vertices;
+    }
+    GVR_VK_Indices& getVkIndices(){
+        return m_indices;
+    }
 
 private:
     Mesh(const Mesh& mesh);
@@ -354,6 +356,10 @@ private:
 
 
 private:
+    GVR_VK_Indices m_indices;
+    GVR_VK_Vertices m_vertices;
+
+    GVR_VK_Vertices* vkVertices_;
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
 
@@ -380,6 +386,7 @@ private:
     std::map<GLuint, GLVaoVboId> program_ids_;
 
     struct GLAttributeMapping {
+        std::string     data_type;
         GLuint          index;
         GLuint          size;
         GLenum          type;
@@ -405,9 +412,14 @@ private:
     GLuint boneVboID_;
     bool bone_data_dirty_;
     GlDelete* deleter_ = nullptr;
+    std::string vertexDescriptor_;
     static std::vector<std::string> dynamicAttribute_Names_;
-
     std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
+
+ public:
+     void getAttribData(std::string& descriptor,std::vector<GLAttributeMapping>& bindings, int& total_size);
+     void generateVKBuffers(std::string descriptor, VkDevice& m_device, VulkanCore* );
+
 };
 }
 #endif

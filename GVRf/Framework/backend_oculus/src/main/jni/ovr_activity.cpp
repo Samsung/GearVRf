@@ -21,7 +21,7 @@
 #include "VrApi_SystemUtils.h"
 #include <cstring>
 #include "engine/renderer/renderer.h"
-
+#include "vulkan/vulkanCore.h"
 
 static const char* activityClassName = "org/gearvrf/GVRActivity";
 static const char* viewManagerClassName = "org/gearvrf/OvrViewManager";
@@ -206,17 +206,45 @@ void GVRActivity::onDrawFrame() {
     // Render the eye images.
     for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
 
-        beginRenderingEye(eye);
+    beginRenderingEye(eye);
 
-        if (!sensoredSceneUpdated_ && headRotationProvider_.receivingUpdates()) {
-            sensoredSceneUpdated_ = updateSensoredScene();
-        }
-        headRotationProvider_.predict(*this, parms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
+    int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
+        const GLuint colorTexture = vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, textureSwapChainIndex);
+
+
+
+    if (!sensoredSceneUpdated_ && headRotationProvider_.receivingUpdates()) {
+        sensoredSceneUpdated_ = updateSensoredScene();
+    }
+    headRotationProvider_.predict(*this, parms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
         oculusJavaGlThread_.Env->CallVoidMethod(viewManager_, onDrawEyeMethodId, eye);
 
-        endRenderingEye(eye);
+    if(0){
+    glBindTexture(GL_TEXTURE_2D,colorTexture);
+
+        // data is stored as R8B8G8A8 format, try to use this format for your vulkan
+
+/*    for (int i = 0; i < (1024*1024)-4; i++) {
+            LOGI("Vulkan OVR side %u, %u %u %u", oculusTexData[i], oculusTexData[i+1], oculusTexData[i+2], oculusTexData[i+3]);
+            i+=3;
+            //break;
+    }
+*/
+    glTexSubImage2D(   GL_TEXTURE_2D,
+                           0,
+                           0,
+                           0,
+                           mWidthConfiguration,
+                           mHeightConfiguration,
+                           GL_RGBA,
+                           GL_UNSIGNED_BYTE,
+                           oculusTexData);
+
+       // GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidthConfiguration, mHeightConfiguration, 0, GL_RGBA, GL_UNSIGNED_BYTE, texDataVulkan));
     }
 
+    endRenderingEye(eye);
+}
     FrameBufferObject::unbind();
     vrapi_SubmitFrame(oculusMobile_, &parms);
 }

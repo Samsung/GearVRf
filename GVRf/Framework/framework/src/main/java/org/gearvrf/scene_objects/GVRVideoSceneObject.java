@@ -24,7 +24,7 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMaterialShaderId;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 
@@ -136,7 +136,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                                final GVRVideoSceneObjectPlayer mediaPlayer, final GVRExternalTexture texture,
                                int videoType) {
         super(gvrContext, mesh);
-        GVRMaterialShaderId materialType;
+        GVRShaderId materialType;
 
         switch (videoType) {
             case GVRVideoType.MONO:

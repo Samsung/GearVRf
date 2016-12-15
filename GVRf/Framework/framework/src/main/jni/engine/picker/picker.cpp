@@ -77,9 +77,8 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
 
 float Picker::pickSceneObject(const SceneObject* scene_object,
         const CameraRig* camera_rig) {
-
-    if (scene_object->collider() != 0) {
-        Collider* collider = scene_object->collider();
+    Collider* collider = (Collider*) scene_object->getComponent(Collider::getComponentType());
+    if (collider) {
         if (collider->enabled()) {
             glm::mat4 model_matrix = camera_rig->getHeadTransform()->getModelMatrix();
             glm::vec3 rayStart(0, 0, 0);

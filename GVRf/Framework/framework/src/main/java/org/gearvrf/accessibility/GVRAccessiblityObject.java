@@ -14,7 +14,7 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMaterialShaderId;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
@@ -23,7 +23,7 @@ public class GVRAccessiblityObject extends GVRSceneObject {
 
     private GVRAccessibilityTalkBack mTalkBack;
 
-    public GVRAccessiblityObject(GVRContext gvrContext, float width, float height, GVRTexture texture, GVRMaterialShaderId shaderId) {
+    public GVRAccessiblityObject(GVRContext gvrContext, float width, float height, GVRTexture texture, GVRShaderId shaderId) {
         super(gvrContext, width, height, texture, shaderId);
 
     }
@@ -48,7 +48,7 @@ public class GVRAccessiblityObject extends GVRSceneObject {
 
     }
 
-    public GVRAccessiblityObject(GVRContext gvrContext, GVRMesh mesh, GVRTexture texture, GVRMaterialShaderId shaderId) {
+    public GVRAccessiblityObject(GVRContext gvrContext, GVRMesh mesh, GVRTexture texture, GVRShaderId shaderId) {
         super(gvrContext, mesh, texture, shaderId);
 
     }

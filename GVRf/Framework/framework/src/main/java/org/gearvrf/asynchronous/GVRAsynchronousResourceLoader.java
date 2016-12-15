@@ -41,7 +41,7 @@ import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRShaders;
+import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.IErrorEvents;
@@ -351,7 +351,7 @@ public class GVRAsynchronousResourceLoader {
      *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
      *            quality parameter.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaders#setMainTexture(Future)}
+     *         {@link GVRShaderData#setMainTexture(Future)}
      */
     public static Future<GVRTexture> loadFutureTexture(GVRContext gvrContext,
             ResourceCache<GVRTexture> textureCache,
@@ -392,7 +392,7 @@ public class GVRAsynchronousResourceLoader {
      *            priorities in the <a href="package-summary.html#async">package
      *            description</a>.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaders#setMainTexture(Future)}
+     *         {@link GVRShaderData#setMainTexture(Future)}
      */
     public static Future<GVRTexture> loadFutureCubemapTexture(
             GVRContext gvrContext, ResourceCache<GVRTexture> textureCache,
@@ -435,7 +435,7 @@ public class GVRAsynchronousResourceLoader {
      *            priorities in the <a href="package-summary.html#async">package
      *            description</a>.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaders#setMainTexture(Future)}
+     *         {@link GVRShaderData#setMainTexture(Future)}
      */
     public static Future<GVRTexture> loadFutureCompressedCubemapTexture(
             GVRContext gvrContext, ResourceCache<GVRTexture> textureCache,

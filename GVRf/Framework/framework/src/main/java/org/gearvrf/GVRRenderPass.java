@@ -16,6 +16,8 @@
 package org.gearvrf;
 
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * A RenderPass let one render the same scene object multiple times with different settings. This is useful to
  * achieve effects like outline in cartoon-ish rendering or computing addictive lights for instance.
@@ -27,11 +29,12 @@ package org.gearvrf;
  * 
  *
  */
-public class GVRRenderPass extends GVRHybridObject {
+public class GVRRenderPass extends GVRHybridObject implements IRenderable {
     
     private GVRMaterial mMaterial;
+    private GVRMesh     mMesh;
     private GVRCullFaceEnum mCullFace;
-    
+
     public enum GVRCullFaceEnum {
         /**
          * Tell Graphics API to discard back faces. This value is assumed by
@@ -80,8 +83,16 @@ public class GVRRenderPass extends GVRHybridObject {
      */
     public GVRRenderPass(GVRContext gvrContext) {
         super(gvrContext, NativeRenderPass.ctor());
-        mMaterial = new GVRMaterial(gvrContext);
+        setMaterial(new GVRMaterial(gvrContext));
         mCullFace = GVRCullFaceEnum.Back;
+        mMesh = null;
+    }
+
+    public GVRRenderPass(GVRContext gvrContext, GVRMaterial material) {
+        super(gvrContext, NativeRenderPass.ctor());
+        setMaterial(material);
+        mCullFace = GVRCullFaceEnum.Back;
+        mMesh = null;
     }
 
     /**
@@ -91,11 +102,46 @@ public class GVRRenderPass extends GVRHybridObject {
      *            The {@link GVRMaterial material} this {@link GVRRenderPass pass}
      *            will be rendered with.
      */
-    public void setMaterial(GVRMaterial material) {
+    public void setMaterial(GVRMaterial material)
+    {
         mMaterial = material;
         NativeRenderPass.setMaterial(getNative(), material.getNative());
     }
-    
+
+    /**
+     * @return The {@link GVRMesh mesh} being rendered.
+     * This will be the mesh associated with the GVRRenderData
+     * this render pass is associated with.
+     */
+    public GVRMesh getMesh() { return mMesh; }
+
+    /**
+     * Sets the mesh to render. Only GVRRenderData should
+     * call this function - it is internal.
+     *
+     * @param mesh
+     */
+    void setMesh(GVRMesh mesh)
+    {
+        mMesh = mesh;
+    }
+
+
+    public boolean isLightEnabled() { return false; }
+
+    /**
+     * Set the native shader for this pass.
+     * Native shaders are identified by unique integer IDs.
+     *
+     * @param shader
+     *            The native shader this {@link GVRRenderPass pass}
+     *            will be rendered with.
+     */
+    public void setShader(int shader)
+    {
+        NativeRenderPass.setShader(getNative(), shader);
+    }
+
     /**
      * @return The {@link GVRMaterial material} this {@link GVRRenderPass pass} will
      *         being rendered with.
@@ -103,7 +149,16 @@ public class GVRRenderPass extends GVRHybridObject {
     public GVRMaterial getMaterial() {
         return mMaterial;
     }
-    
+
+    /**
+     * Get the integer ID for the native shader used by this pass.
+     */
+    int getShader()
+    {
+        return NativeRenderPass.getShader(getNative());
+    }
+
+
     /**
      * Set the {@link GVRCullFaceEnum face} to be culled when rendering this {@link GVRRenderPass pass}
      * 
@@ -129,8 +184,12 @@ public class GVRRenderPass extends GVRHybridObject {
 class NativeRenderPass {
     
     static native long ctor();
-    
+
+    static native int getShader(long renderPass);
+
     static native void setMaterial(long renderPass, long material);
-    
+
+    static native void setShader(long renderPass, int shader);
+
     static native void setCullFace(long renderPass, int cullFace);
 }

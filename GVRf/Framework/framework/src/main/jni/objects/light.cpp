@@ -21,10 +21,15 @@
 #include "gl/gl_frame_buffer.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_access.hpp"
+#include "engine/renderer/renderer.h"
+#include "objects/components/camera.h"
+#include "objects/scene.h"
 
 namespace gvr {
 const int Light::SHADOW_MAP_SIZE = 1024;
 GLTexture* Light::depth_texture_ = NULL;
+
+static const bool LOG_LIGHT = true;
 
 class LightCamera : public Camera
 {
@@ -301,6 +306,20 @@ bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIn
     gRenderer = Renderer::getInstance();
     gRenderer->renderShadowMap(rstate, &lightcam, framebufferId, scene_objects);
     return true;
+}
+
+JNIEnv* Light::set_java(jobject javaObj, JavaVM* javaVM) {
+    JNIEnv* env = JavaComponent::set_java(javaObj, javaVM);
+}
+
+void Light::onAddedToScene(Scene* scene)
+{
+    scene->addLight(this);
+}
+
+void Light::onRemovedFromScene(Scene* scene)
+{
+    scene->removeLight(this);
 }
 
 }

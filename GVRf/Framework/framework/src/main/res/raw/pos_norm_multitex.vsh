@@ -28,6 +28,10 @@ vertex.view_direction = normalize(-vertex.viewspace_position);
    opacity_coord = a_texcoord.xy;
    specular_coord = a_texcoord.xy;
    ambient_coord = a_texcoord.xy;
+#ifdef HAS_normalTexture
    normal_coord = a_texcoord.xy;
+#endif
+#ifdef HAS_lightmapTexture
    lightmap_coord = a_texcoord.xy;
+#endif
 #endif

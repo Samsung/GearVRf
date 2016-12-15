@@ -41,12 +41,13 @@
 #include <unordered_map>
 #include "batch_manager.h"
 #include "renderer.h"
+#include "vulkan/vulkanCore.h"
 namespace gvr {
 
 class Camera;
 class Scene;
 class SceneObject;
-class PostEffectData;
+class ShaderData;
 class PostEffectShaderManager;
 class RenderData;
 class RenderTexture;
@@ -56,7 +57,9 @@ class Light;
 class VulkanRenderer: public Renderer {
     friend class Renderer;
 protected:
-    VulkanRenderer(){}
+    VulkanRenderer() : vulkanCore_(nullptr) {
+        vulkanCore_ = VulkanCore::getInstance();
+    }
     virtual ~VulkanRenderer(){}
 
 public:
@@ -65,7 +68,8 @@ public:
              ShaderManager* shader_manager,
              PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b) { }
+             RenderTexture* post_effect_render_texture_b);
+
    void renderCamera(Scene* scene, Camera* camera, int viewportX,
              int viewportY, int viewportWidth, int viewportHeight,
              ShaderManager* shader_manager,
@@ -90,11 +94,14 @@ public:
     void set_face_culling(int cull_face){}
 
 private:
+    VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}
-    void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material){}
-    void occlusion_cull(Scene* scene,
-                std::vector<SceneObject*>& scene_objects,
-                ShaderManager *shader_manager, glm::mat4 vp_matrix){}
+    void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material, int){}
+    void occlusion_cull(RenderState& rstate,
+                std::vector<SceneObject*>& scene_objects){
+        occlusion_cull_init(rstate.scene, scene_objects);
+
+    }
 
 
 };
