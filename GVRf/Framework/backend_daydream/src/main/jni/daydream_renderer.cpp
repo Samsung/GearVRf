@@ -15,10 +15,7 @@
 
 #include "daydream_renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
-#include <android/log.h>
 #include <assert.h>
-#include <stdlib.h>
-#include <cmath>
 
 namespace {
     static const uint64_t kPredictionTimeWithoutVsyncNanos = 50000000;

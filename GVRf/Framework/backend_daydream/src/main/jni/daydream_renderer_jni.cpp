@@ -13,10 +13,7 @@
  * limitations under the License.
  */
 
-#include <android/log.h>
 #include <jni.h>
-
-#include <memory>
 
 #include "daydream_renderer.h"
 

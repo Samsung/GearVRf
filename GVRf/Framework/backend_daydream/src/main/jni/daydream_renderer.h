@@ -16,12 +16,7 @@
 #ifndef DAYDREAM_RENDERER_H_
 #define DAYDREAM_RENDERER_H_
 
-#include <GLES2/gl2.h>
 #include <jni.h>
-
-#include <memory>
-#include <string>
-#include <vector>
 
 #include "vr/gvr/capi/include/gvr.h"
 #include "vr/gvr/capi/include/gvr_types.h"
