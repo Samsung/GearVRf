@@ -38,17 +38,12 @@ import org.gearvrf.utility.Log;
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     private static final String TAG = GVRMesh.class.getSimpleName();
 
-
     public GVRMesh(GVRContext gvrContext) {
-        this(gvrContext, "float3 a_position float3 a_normal float2 a_texcoord");
-    }
-
-    public GVRMesh(GVRContext gvrContext, String vertexDescriptor) {
-        this(gvrContext, vertexDescriptor, NativeMesh.ctor(vertexDescriptor));
+        this(gvrContext, NativeMesh.ctor());
         mAttributeKeys = new HashSet<String>();
     }
 
-    GVRMesh(GVRContext gvrContext, String vertexDescriptor, long ptr) {
+    GVRMesh(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
         setBones(new ArrayList<GVRBone>());
         mVertexBoneData = new GVRVertexBoneData(gvrContext, this);
@@ -361,7 +356,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return A {@link GVRMesh} of the bounding box.
      */
     public GVRMesh getBoundingBox() {
-        return new GVRMesh(getGVRContext(), "float3 a_position",
+        return new GVRMesh(getGVRContext(),
                 NativeMesh.getBoundingBox(getNative()));
     }
 
@@ -482,7 +477,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 }
 
 class NativeMesh {
-    static native long ctor(String vertexDescriptor);
+    static native long ctor();
     
     static native String[] getAttribNames(long mesh);
     

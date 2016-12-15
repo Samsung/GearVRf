@@ -15,7 +15,6 @@
 
 
 #include "component.h"
-#include "component.inl"
 #include "util/gvr_jni.h"
 
 namespace gvr {

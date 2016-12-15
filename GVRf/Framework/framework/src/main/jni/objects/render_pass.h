@@ -20,14 +20,12 @@
 #ifndef RENDER_PASS_H_
 #define RENDER_PASS_H_
 
-#include <memory>
-#include <unordered_set>
 #include "objects/hybrid_object.h"
-#include "objects/helpers.h"
+#include "objects/components/render_data.h"
+#include "objects/components/event_handler.h"
 namespace gvr {
-
 class Material;
-
+class RenderData;
 class RenderPass : public HybridObject {
 public:
 
@@ -36,8 +34,8 @@ public:
     };
 
     RenderPass() :
-            material_(0), shaderID_(0), cull_face_(DEFAULT_CULL_FACE)
-    { }
+            material_(0), cull_face_(DEFAULT_CULL_FACE), listener_(new Listener) {
+    }
 
     Material* material() const {
         return material_;
@@ -51,28 +49,16 @@ public:
 
     void set_cull_face(int cull_face) {
         cull_face_ = cull_face;
-        dirty();
+        listener_->notify_listeners(true);
     }
 
-    void set_shader(int shaderid)
-    {
-        shaderID_ = shaderid;
-    }
-
-    int get_shader() const { return shaderID_; }
-
-    void dirty() {
-        dirtyImpl(dirty_flags_);
-    }
-
-    void add_dirty_flag(const std::shared_ptr<bool>& dirty_flag);
+    void add_listener(RenderData* render_data);
 
 private:
+    Listener* listener_;
     static const int DEFAULT_CULL_FACE = CullBack;
     Material* material_;
-    int shaderID_;
     int cull_face_;
-    std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
 };
 
 }

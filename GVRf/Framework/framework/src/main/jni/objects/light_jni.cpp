@@ -72,6 +72,10 @@ Java_org_gearvrf_NativeLight_getLightID(JNIEnv * env,
         jobject obj, jlong jlight);
 
 JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
+        jobject obj, jlong jlight, jstring id);
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,
         jobject obj, jlong jlight, jstring key, jfloatArray matrix);
 
@@ -184,6 +188,14 @@ Java_org_gearvrf_NativeLight_getLightID(JNIEnv * env,
     return env->NewStringUTF(lightID.c_str());
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeLight_setLightID(JNIEnv * env,
+        jobject obj, jlong jlight, jstring id) {
+    Light* light = reinterpret_cast<Light*>(jlight);
+    const char* char_id = env->GetStringUTFChars(id, 0);
+    std::string native_id = std::string(char_id);
+    light->setLightID(native_id);
+}
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_getMat4(JNIEnv * env,

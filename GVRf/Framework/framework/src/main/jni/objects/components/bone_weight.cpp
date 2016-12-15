@@ -4,7 +4,6 @@
 
 #include "bone_weight.h"
 
-
 #include "glm/gtc/matrix_inverse.hpp"
 
 #include "util/gvr_log.h"

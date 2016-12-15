@@ -284,7 +284,7 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
      * 
      * @since 1.6.4
      */
-    public GVRShaderId getSplashShader(GVRContext gvrContext) {
+    public GVRMaterialShaderId getSplashShader(GVRContext gvrContext) {
         return GVRMaterial.GVRShaderType.Texture.ID;
     }
 
@@ -322,7 +322,6 @@ public abstract class GVRScript implements IScriptEvents, IScriptable, IEventRec
                 this);
         splashScreen.getRenderData().setRenderingOrder(
                 GVRRenderData.GVRRenderingOrder.OVERLAY);
-        //splashScreen.getRenderData().bindShader(getGVRContext().getMainScene());
         onSplashScreenCreated(splashScreen);
         return splashScreen;
     }

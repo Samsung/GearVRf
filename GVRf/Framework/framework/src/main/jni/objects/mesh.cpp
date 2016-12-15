@@ -19,33 +19,24 @@
 
 #include "mesh.h"
 
+#include <limits>
+
 #include "assimp/Importer.hpp"
+#include "assimp/mesh.h"
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "util/gvr_log.h"
+#include "util/gvr_gl.h"
 #include "glm/gtc/matrix_inverse.hpp"
-#include "objects/helpers.h"
+#include "../gl/gl_program.h"
 
 namespace gvr {
+
 std::vector<std::string> Mesh::dynamicAttribute_Names_ = {"a_bone_indices", "a_bone_weights"};
-    std::vector<std::string> static getTokens(const std::string &input){
-        std::vector <std::string> tokens;
-        int prev = 0;
-        for(uint i = 0; i < input.length(); i++){
-            if(input[i] == '#'){
-                std::string token = input.substr(prev, i-prev);
-                if(token.find("a_texcoord")!=std::string::npos)
-                    tokens.push_back(token);
-                prev = i+1;
-            }
-            else{
-
-            }
-        }
-
-        return tokens;
-    }
 
 Mesh* Mesh::createBoundingBox() {
 
-    Mesh* mesh = new Mesh(std::string("float3 a_position "));
+    Mesh* mesh = new Mesh();
 
     getBoundingVolume(); // Make sure bounding_volume is valid
 
@@ -188,314 +179,7 @@ void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
         }
     }
 }
-int calcSize(std::string type)
-{
-    if (type == "float") return 1;
-    if (type == "vec3") return 3;
-    if (type == "vec4") return 4;
-    if (type == "vec2") return 2;
-    if (type == "float3") return 3;
-    if (type == "float4") return 4;
-    if (type == "float2") return 2;
 
-    if (type == "int") return 1;
-    if (type == "int3") return 4;
-    if (type == "int4") return 4;
-    if (type == "float2") return 2;
-    if (type == "mat4") return 16;
-    if (type == "mat3") return 12;
-    return 0;
-}
-
-    void Mesh::getAttribData( std::string& descriptor,std::vector<GLAttributeMapping>& bindings, int& total_size){
-        GLAttributeMapping binding;
-        int vertices_len = 0;
-        int attrib_index =0;
-        binding.data = vertices_.data();
-        vertices_len = vertices_.size();
-
-        binding.data_type = "vec3";
-        binding.size = calcSize(binding.data_type);
-        binding.offset = total_size * sizeof(float);
-        total_size +=calcSize(binding.data_type) ;
-        binding.index = attrib_index++;
-        bindings.push_back(binding);
-
-        ////
-        const std::vector<glm::vec2>& texcord = getVec2Vector("a_texcoord");
-
-        if(vertices_len && vertices_len != texcord.size()){
-            LOGE("ERROR: length of vector is not same as of vertices");
-        }
-        binding.data_type = "vec2";
-        binding.size = calcSize(binding.data_type);
-        binding.offset = total_size * sizeof(float);
-        total_size +=calcSize(binding.data_type) ;
-        binding.index = attrib_index++;
-        binding.data = texcord.data();
-        bindings.push_back(binding);
-
-
-        if(descriptor.find("a_normal")!=std::string::npos || descriptor.find("normalTexture")!=std::string::npos){
-            if(vertices_len && vertices_len != normals_.size()){
-                LOGE("ERROR: length of tex cords is not same as of vertices");
-            }
-            binding.offset = total_size * sizeof(float);
-            total_size +=calcSize(binding.data_type) ;
-            binding.index = attrib_index++;
-            binding.data = normals_.data();
-            bindings.push_back(binding);
-        }
-        if(descriptor.find("normalTexture")!=std::string::npos) {
-            const std::vector<glm::vec3>& curr = getVec3Vector("a_tangent");
-            if(vertices_len && vertices_len != curr.size()){
-                LOGE("ERROR: length of vector is not same as of vertices");
-            }
-            binding.offset = total_size * sizeof(float);
-            total_size +=calcSize(binding.data_type) ;
-            binding.index = attrib_index++;
-            binding.data = curr.data();
-            bindings.push_back(binding);
-
-            // add bitangent
-            const std::vector<glm::vec3>& curr1 = getVec3Vector("a_bitangent");
-            if(vertices_len && vertices_len != curr1.size()){
-                LOGE("ERROR: length of vector is not same as of vertices");
-            }
-            binding.offset = total_size * sizeof(float);
-            total_size +=calcSize(binding.data_type) ;
-            binding.index = attrib_index++;
-            binding.data = curr1.data();
-            bindings.push_back(binding);
-
-        }
-        std::vector<std::string> tokens = getTokens(descriptor);
-        for(auto& it: tokens) {
-
-            const std::vector<glm::vec2>& texcord = getVec2Vector(it);
-            if(vertices_len && vertices_len != texcord.size()){
-                LOGE("ERROR: length of vector is not same as of vertices");
-            }
-            binding.data_type = "vec2";
-            binding.size = calcSize(binding.data_type);
-            binding.offset = total_size * sizeof(float);
-            total_size +=calcSize(binding.data_type) ;
-            binding.index = attrib_index++;
-            binding.data = texcord.data();
-            bindings.push_back(binding);
-        }
-
-    }
-
-VkFormat getDataType(std::string& type){
-    if(type.compare("float")==0)
-        return VK_FORMAT_R32_SFLOAT;
-
-    if(type.compare("vec2")==0 || type.compare("float2")==0)
-        return VK_FORMAT_R32G32_SFLOAT;
-
-    if(type.compare("float3")==0 || type.compare("vec3")==0)
-        return VK_FORMAT_R32G32B32_SFLOAT;
-
-    if(type.compare("float4")==0 || type.compare("vec4")==0)
-        return VK_FORMAT_R32G32B32A32_SFLOAT;
-
-}
-
-// call this from renderCamera, get attribute descriptor from shader
-void Mesh::generateVKBuffers(std::string descriptor, VkDevice& m_device, VulkanCore* vulkanCore ){
-        if (!vao_dirty_)
-            return;
-        int total_size = 0;
-    getAttribData(descriptor, attrMapping, total_size);
-    std::vector<GLfloat> buffer;
-    createBuffer(buffer, vertices_.size());
-        memset(&m_vertices, 0, sizeof(m_vertices));
-        m_vertices.vi_bindings = new VkVertexInputBindingDescription[attrMapping.size()];
-        m_vertices.vi_attrs = new VkVertexInputAttributeDescription[attrMapping.size()];
-        VkResult   err;
-        bool   pass;
-
-        // Our m_vertices member contains the types required for storing
-        // and defining our vertex buffer within the graphics pipeline
-
-        // Create our buffer object.
-        VkBufferCreateInfo bufferCreateInfo = {};
-        bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferCreateInfo.pNext = nullptr;
-        bufferCreateInfo.size = buffer.size() * sizeof(float) ;//sizeof(vb);//
-        bufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        bufferCreateInfo.flags = 0;
-        //err = vkCreateBuffer(m_device, &bufferCreateInfo, nullptr, &m_vertices.buf);
-        err = vkCreateBuffer(m_device, gvr::BufferCreateInfo(buffer.size() * sizeof(float), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), nullptr, &m_vertices.buf);
-        GVR_VK_CHECK(!err);
-
-        // Obtain the memory requirements for this buffer.
-        VkMemoryRequirements mem_reqs;
-        vkGetBufferMemoryRequirements(m_device, m_vertices.buf, &mem_reqs);
-        GVR_VK_CHECK(!err);
-
-        // And allocate memory according to those requirements.
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.pNext = nullptr;
-        memoryAllocateInfo.allocationSize = 0;
-        memoryAllocateInfo.memoryTypeIndex = 0;
-        memoryAllocateInfo.allocationSize  = mem_reqs.size;
-        pass = vulkanCore->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &memoryAllocateInfo.memoryTypeIndex);
-        GVR_VK_CHECK(pass);
-
-        VkDeviceMemory mem_staging_vert;
-        VkBuffer buf_staging_vert;
-        err = vkCreateBuffer(m_device, gvr::BufferCreateInfo(buffer.size() * sizeof(float), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), nullptr, &buf_staging_vert);
-        GVR_VK_CHECK(!err);
-
-        //err = vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &m_vertices.mem);
-        err = vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &mem_staging_vert);
-        GVR_VK_CHECK(!err);
-
-        // Now we need to map the memory of this new allocation so the CPU can edit it.
-        void *data;
-        //err = vkMapMemory(m_device, m_vertices.mem, 0, memoryAllocateInfo.allocationSize, 0, &data);
-        err = vkMapMemory(m_device, mem_staging_vert, 0, memoryAllocateInfo.allocationSize, 0, &data);
-        GVR_VK_CHECK(!err);
-
-        // Copy our triangle verticies and colors into the mapped memory area.
-        //memcpy(data, vb, sizeof(vb));
-        memcpy(data, buffer.data(), buffer.size()*sizeof(float));
-
-
-        // Unmap the memory back from the CPU.
-        vkUnmapMemory(m_device, mem_staging_vert);
-        //vkUnmapMemory(m_device, m_vertices.mem);
-        err = vkBindBufferMemory(m_device, buf_staging_vert, mem_staging_vert, 0);
-        GVR_VK_CHECK(!err);
-
-        // Create Device memory optimal
-        pass = vulkanCore->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &memoryAllocateInfo.memoryTypeIndex);
-        GVR_VK_CHECK(pass);
-        err = vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &m_vertices.mem);
-        GVR_VK_CHECK(!err);
-        // Bind our buffer to the memory.
-        err = vkBindBufferMemory(m_device, m_vertices.buf, m_vertices.mem, 0);
-        GVR_VK_CHECK(!err);
-
-        VkCommandBuffer trnCmdBuf = vulkanCore->GetTransientCmdBuffer();
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(trnCmdBuf, &beginInfo);
-        VkBufferCopy copyRegion = {};
-        copyRegion.srcOffset = 0; // Optional
-        copyRegion.dstOffset = 0; // Optional
-        copyRegion.size = bufferCreateInfo.size;
-        vkCmdCopyBuffer(trnCmdBuf, buf_staging_vert, m_vertices.buf, 1, &copyRegion);
-        vkEndCommandBuffer(trnCmdBuf);
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &trnCmdBuf;
-
-        vkQueueSubmit(vulkanCore->getVkQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(vulkanCore->getVkQueue());
-        vkFreeCommandBuffers(m_device, vulkanCore->getTransientCmdPool(), 1, &trnCmdBuf);
-
-
-        // The vertices need to be defined so that the pipeline understands how the
-        // data is laid out. This is done by providing a VkPipelineVertexInputStateCreateInfo
-        // structure with the correct information.
-        m_vertices.vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        m_vertices.vi.pNext = nullptr;
-        // check this
-        m_vertices.vi.vertexBindingDescriptionCount = attrMapping.size();
-        m_vertices.vi.pVertexBindingDescriptions = m_vertices.vi_bindings;
-        m_vertices.vi.vertexAttributeDescriptionCount = attrMapping.size();
-        m_vertices.vi.pVertexAttributeDescriptions = m_vertices.vi_attrs;
-        m_vertices.vi_bindings[0].binding = 0;
-        m_vertices.vi_bindings[0].stride = total_size * sizeof(float); //sizeof(vb[0]);//
-        m_vertices.vi_bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        for(int i=0; i< attrMapping.size(); i++){
-           // check this
-
-            m_vertices.vi_attrs[i].binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
-            m_vertices.vi_attrs[i].location = attrMapping[i].index;
-            m_vertices.vi_attrs[i].format = getDataType(attrMapping[i].data_type); //float3
-            m_vertices.vi_attrs[i].offset = attrMapping[i].offset;
-        }
-
-        m_indices.count = static_cast<uint32_t>(indices_.size());
-
-         uint32_t indexBufferSize = m_indices.count *  sizeof(unsigned short);//sizeof(uint32_t);//*
-
-             VkBufferCreateInfo indexbufferInfo = {};
-             indexbufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-             indexbufferInfo.size = indexBufferSize;
-             indexbufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-
-             // Copy index data to a buffer visible to the host
-             //err = vkCreateBuffer(m_device, &indexbufferInfo, nullptr, &m_indices.buffer);
-             err = vkCreateBuffer(m_device, gvr::BufferCreateInfo(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT), nullptr, &m_indices.buffer);
-             GVR_VK_CHECK(!err);
-
-             VkDeviceMemory mem_staging_indi;
-             VkBuffer buf_staging_indi;
-             err = vkCreateBuffer(m_device, gvr::BufferCreateInfo(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT), nullptr, &buf_staging_indi);
-             GVR_VK_CHECK(!err);
-
-
-             vkGetBufferMemoryRequirements(m_device, m_indices.buffer, &mem_reqs);
-             memoryAllocateInfo.allocationSize = mem_reqs.size;
-             pass = vulkanCore->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &memoryAllocateInfo.memoryTypeIndex);
-             GVR_VK_CHECK(pass);
-
-             err = vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &mem_staging_indi);
-             GVR_VK_CHECK(!err);
-             err = vkMapMemory(m_device, mem_staging_indi, 0, indexBufferSize, 0, &data);
-             GVR_VK_CHECK(!err);
-             //memcpy(data, indexBuffer.data(), indexBufferSize);
-             memcpy(data, indices_.data(), indexBufferSize);
-             vkUnmapMemory(m_device, mem_staging_indi);
-
-             //err = vkBindBufferMemory(m_device, m_indices.buffer, m_indices.memory, 0);
-             err = vkBindBufferMemory(m_device, buf_staging_indi, mem_staging_indi, 0);
-             GVR_VK_CHECK(!err);
-
-         // Create Device memory optimal
-             pass = vulkanCore->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &memoryAllocateInfo.memoryTypeIndex);
-             GVR_VK_CHECK(pass);
-             err = vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &m_indices.memory);
-             GVR_VK_CHECK(!err);
-
-     // Bind our buffer to the memory.
-         err = vkBindBufferMemory(m_device, m_indices.buffer, m_indices.memory, 0);
-         GVR_VK_CHECK(!err);
-
-         trnCmdBuf = vulkanCore->GetTransientCmdBuffer();
-         beginInfo = {};
-         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-         vkBeginCommandBuffer(trnCmdBuf, &beginInfo);
-         copyRegion = {};
-         copyRegion.srcOffset = 0; // Optional
-         copyRegion.dstOffset = 0; // Optional
-         copyRegion.size = indexBufferSize;
-         vkCmdCopyBuffer(trnCmdBuf, buf_staging_indi, m_indices.buffer, 1, &copyRegion);
-         vkEndCommandBuffer(trnCmdBuf);
-
-         submitInfo = {};
-         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-         submitInfo.commandBufferCount = 1;
-         submitInfo.pCommandBuffers = &trnCmdBuf;
-
-         vkQueueSubmit(vulkanCore->getVkQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-         vkQueueWaitIdle(vulkanCore->getVkQueue());
-         vkFreeCommandBuffers(m_device, vulkanCore->getTransientCmdPool(), 1, &trnCmdBuf);
-
-        vao_dirty_ = false;
-
-}
 void Mesh::createAttributeMapping(int programId,
         int& totalStride, int& attrLen)
 {
@@ -650,6 +334,7 @@ const GLuint Mesh::getVAOId(int programId) {
     LOGI("!! %p Error in creating VAO  for Prog Id -- %d", this, programId);
     return 0;
 }
+
 // generate vertex array object
 void Mesh::generateVAO(int programId) {
     GLuint tmpID;
@@ -803,14 +488,6 @@ void Mesh::generateBoneArrayBuffers(GLuint programId) {
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void Mesh::add_dirty_flag(const std::shared_ptr<bool>& dirty_flag) {
-    dirty_flags_.insert(dirty_flag);
-}
-
-void Mesh::dirty() {
-    dirtyImpl(dirty_flags_);
 }
 
 }

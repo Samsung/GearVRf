@@ -5,7 +5,6 @@
 #include <algorithm>
 
 #include "objects/components/component.h"
-#include "objects/components/component.inl"
 #include "objects/components/bone.h"
 
 #include "glm/gtc/matrix_inverse.hpp"

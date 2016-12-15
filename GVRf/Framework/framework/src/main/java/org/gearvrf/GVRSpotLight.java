@@ -100,9 +100,7 @@ public class GVRSpotLight extends GVRPointLight
      * Get the inner angle of the spotlight cone in degrees.
      * 
      * Inside the inner cone angle the light is at full intensity.
-     * <p/>
-     * @see #setInnerConeAngle
-     * @see #setOuterConeAngle}
+     * {@link setInnerConeAngle setOuterConeAngle}
      */
     public float getInnerConeAngle() {
         return (float) Math.toDegrees(Math.acos(getFloat("inner_cone_angle")));
@@ -115,9 +113,7 @@ public class GVRSpotLight extends GVRPointLight
      * The underlying uniform "inner_cone_angle" is the cosine
      * of this input angle. If the inner cone angle is larger than the outer cone angle
      * there will be unexpected results.
-     * <p/>
-     * @see #getInnerConeAngle
-     * @see #setOuterConeAngle}
+     * {@link getInnerConeAngle setOuterConeAngle}
      */
     public void setInnerConeAngle(float angle) {
         setFloat("inner_cone_angle", (float) Math.cos(Math.toRadians(angle)));
@@ -127,9 +123,7 @@ public class GVRSpotLight extends GVRPointLight
      * Get the outer angle of the spotlight cone in degrees.
      * 
      * Beyond the outer cone angle there is no illumination.
-     * <p/>
-     * @see #getInnerConeAngle
-     * @see #setOuterConeAngle}
+     * {@link setInnerConeAngle setOuterConeAngle}
      */
     public float getOuterConeAngle() {
         return (float) Math.toDegrees(Math.acos(getFloat("outer_cone_angle")));
@@ -142,9 +136,7 @@ public class GVRSpotLight extends GVRPointLight
      * The underlying uniform "outer_cone_angle" is the cosine
      * of this input angle. If the inner cone angle is larger than the outer cone angle
      * there will be unexpected results.
-     * <p/>
-     * @see #setInnerConeAngle
-     * @see #getOuterConeAngle}
+     * {@link getInnerConeAngle setOuterConeAngle}
      */
     public void setOuterConeAngle(float angle) {
         setFloat("outer_cone_angle", (float) Math.cos(Math.toRadians(angle)));

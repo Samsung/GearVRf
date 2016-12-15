@@ -15,7 +15,7 @@ vec4 AddLight(Surface s, Radiance r)
 		if (cosAngle > 0.0)
 		{
 			kS = s.specular.xyz * clamp(r.specular_intensity, 0.0, 1.0);
-			kS *= pow(cosAngle, specular_exponent.x);
+			kS *= pow(cosAngle, specular_exponent);
 		}
 	}
 	return vec4(kE + r.attenuation * (kA + kD + kS), alpha);

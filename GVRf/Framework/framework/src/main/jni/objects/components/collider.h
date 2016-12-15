@@ -26,7 +26,6 @@
 
 #include "component.h"
 #include "collider_shape_types.h"
-#include "objects/scene_object.h"
 
 namespace gvr {
 class Collider;
@@ -54,7 +53,7 @@ public:
  */
 class Collider: public Component {
 public:
-    Collider() : Component(Collider::getComponentType()), pick_distance_(0) {}
+    Collider() :Component(getComponentType()), pick_distance_(0) {}
     Collider(long long type) : Component(type), pick_distance_(0) {}
 
     virtual ~Collider() {}
@@ -72,6 +71,8 @@ public:
      */
     virtual ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) = 0;
 
+    virtual void set_owner_object(SceneObject*);
+
     virtual long shape_type() {
         return COLLIDER_SHAPE_UNKNOWN;
     }
@@ -88,8 +89,6 @@ public:
         return pick_distance_;
     }
     static void transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::vec3& rayDir);
-    virtual void onAddedToScene(Scene* scene);
-    virtual void onRemovedFromScene(Scene* scene);
 
 protected:
     float pick_distance_;

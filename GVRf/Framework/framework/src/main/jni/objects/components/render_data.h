@@ -26,26 +26,20 @@
 #include "gl/gl_program.h"
 #include "glm/glm.hpp"
 #include "objects/mesh.h"
-#include "java_component.h"
+#include "objects/components/component.h"
 #include "objects/render_pass.h"
 #include "objects/material.h"
 #include<sstream>
-#include "objects/uniform_block.h"
-#include "vulkan/vulkanCore.h"
-#include "vulkan/vulkan_headers.h"
 typedef unsigned long Long;
 namespace gvr {
-
 class Mesh;
 class Material;
 class Light;
 class Batch;
 class TextureCapturer;
 class RenderPass;
-
 template<typename T>
 std::string to_string(T value) {
-
     //create an output string stream
     std::ostringstream os;
 
@@ -55,55 +49,7 @@ std::string to_string(T value) {
     //convert the string stream into a string and return
     return os.str();
 }
-
-class VulkanData {
-
-public:
-    VulkanData():vk_descriptor("mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; mat4 u_right;"){}
-
-    void createTransformDescriptor(VkDevice &device,VulkanCore* vk){
-        vk_descriptor.createDescriptor(device, vk, TRANSFORM_UBO_INDEX, VK_SHADER_STAGE_VERTEX_BIT );
-    }
-
-    VkPipeline& getVKPipeline(){
-        return m_pipeline;
-    }
-    VulkanUniformBlock& getTransformUBO(){
-        return transform_UBO;
-    }
-    Descriptor& getDescriptor(){
-        return vk_descriptor;
-    }
-    VkPipelineLayout& getPipelineLayout(){
-        return m_pipelineLayout;
-    }
-    VkDescriptorSetLayout& getDescriptorLayout(){
-        return m_descriptorLayout;
-    }
-    VkDescriptorPool& getDescriptorPool(){
-        return m_descriptorPool;
-    }
-    VkDescriptorSet& getDescriptorSet(){
-        return m_descriptorSet;
-    }
-
-    VkPipelineLayout  m_pipelineLayout;
-    // Vulkan
-    VulkanUniformBlock transform_UBO;
-    GVR_Uniform m_modelViewMatrixUniform;
-
-    VkPipeline m_pipeline;
-    VkDescriptorSet m_descriptorSet;
-
-private:
-
-    VkDescriptorPool m_descriptorPool;
-    VkDescriptorSetLayout m_descriptorLayout;
-    Descriptor vk_descriptor;
-
-};
-
-class RenderData: public JavaComponent {
+class RenderData: public Component {
 public:
     enum Queue {
         Background = 1000, Geometry = 2000, Transparent = 3000, Overlay = 4000
@@ -118,19 +64,15 @@ public:
     };
 
     RenderData() :
-            JavaComponent(RenderData::getComponentType()), mesh_(0), light_(0),
-                use_light_(false), use_lightmap_(false), batching_(true),
-                render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
-                rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
-                offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
-                depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
-                sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
-                draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
-                uniform_dirty(true),dirty_flag_(std::make_shared<bool>(true))
-    {
+            Component(RenderData::getComponentType()), mesh_(0), light_(0),
+                    use_light_(false), use_lightmap_(false), batching_(true),
+                    render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
+                    rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
+                    offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
+                    depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
+                    sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES),
+                    texture_capturer(0), cast_shadows_(true), renderdata_dirty_(true) {
     }
-
-    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     void copy(const RenderData& rdata) {
         Component(rdata.getComponentType());
@@ -143,9 +85,8 @@ public:
         render_mask_ = rdata.render_mask_;
         cast_shadows_ = rdata.cast_shadows_;
         batch_ = rdata.batch_;
-        for(int i=0;i<rdata.render_pass_list_.size();i++) {
+        for(int i=0;i<rdata.render_pass_list_.size();i++)
             render_pass_list_.push_back((rdata.render_pass_list_)[i]);
-        }
         rendering_order_ = rdata.rendering_order_;
         hash_code_dirty_ = rdata.hash_code_dirty_;
         offset_ = rdata.offset_;
@@ -158,14 +99,15 @@ public:
         invert_coverage_mask_ = rdata.invert_coverage_mask_;
         draw_mode_ = rdata.draw_mode_;
         texture_capturer = rdata.texture_capturer;
-        dirty_flag_ = rdata.dirty_flag_;
     }
 
     RenderData(const RenderData& rdata) {
         copy(rdata);
     }
 
-    ~RenderData();
+    ~RenderData() {
+        render_pass_list_.clear();
+    }
 
     static long long getComponentType() {
         return COMPONENT_TYPE_RENDER_DATA;
@@ -187,19 +129,10 @@ public:
     Material* material(int pass) const ;
 
     void set_material(Material* material, int pass);
-
-    /**
-     * Select or generate a shader for this render data.
-     * This function executes a Java task on the Framework thread.
-     */
-    void bindShader(Scene* scene);
     void set_renderdata_dirty(bool dirty_);
-    void setDirty(bool dirty);
-
-    bool isDirty(){
-        return *dirty_flag_;
+    bool renderdata_dirty(){
+        return renderdata_dirty_;
     }
-
     Light* light() const {
         return light_;
     }
@@ -232,6 +165,10 @@ public:
     void disable_lightmap() {
         use_lightmap_ = false;
         hash_code_dirty_ = true;
+    }
+
+    bool lightmap_enabled() {
+        return use_lightmap_;
     }
 
     int render_mask() const {
@@ -281,6 +218,7 @@ public:
 
     bool cull_face(int pass=0) const ;
 
+    void set_cull_face(int cull_face, int pass);
     bool offset() const {
         return offset_;
     }
@@ -327,7 +265,7 @@ public:
     }
 
     bool alpha_to_coverage() const {
-        return alpha_to_coverage_;
+    	return alpha_to_coverage_;
     }
 
     void set_alpha_to_coverage(bool alpha_to_coverage) {
@@ -341,7 +279,7 @@ public:
     }
    
     float sample_coverage() const {
-        return sample_coverage_;
+    	return sample_coverage_;
     }
 
     void set_invert_coverage_mask(GLboolean invert_coverage_mask) {
@@ -350,11 +288,15 @@ public:
     }
 
     GLboolean invert_coverage_mask() const {
-        return invert_coverage_mask_;
+    	return invert_coverage_mask_;
     }
 
     GLenum draw_mode() const {
         return draw_mode_;
+    }
+
+    void set_camera_distance(float distance) {
+        camera_distance_ = distance;
     }
 
     float camera_distance() {
@@ -373,7 +315,9 @@ public:
     bool isHashCodeDirty()  {
         return hash_code_dirty_;
     }
-
+    void setHashCodeDirty(bool dirty){
+        hash_code_dirty_ = dirty;
+    }
     void set_texture_capturer(TextureCapturer *capturer) {
         texture_capturer = capturer;
     }
@@ -381,13 +325,6 @@ public:
     TextureCapturer *get_texture_capturer() {
         return texture_capturer;
     }
-
-    void set_shader(int pass, int shaderid) {
-        LOGD("SHADER: RenderData:set_shader %d %p", shaderid, this);
-        render_pass_list_[pass]->set_shader(shaderid);
-    }
-
-    int get_shader(int pass =0) const { return render_pass_list_[pass]->get_shader(); }
 
     std::string getHashCode() {
         if (hash_code_dirty_) {
@@ -416,30 +353,6 @@ public:
 
     void setCameraDistanceLambda(std::function<float()> func);
 
-    bool uniform_dirty;
-    VulkanData& getVkData(){
-        return vkData;
-    }
-    void createVkTransformUbo(VkDevice &device,VulkanCore* vk){
-        vkData.createTransformDescriptor(device,vk);
-    }
-        GLUniformBlock* bindUbo(int program_id, int index, const char* name, const char* desc){
-                   GLUniformBlock* gl_ubo_ = new GLUniformBlock(desc);
-                   gl_ubo_->setGLBindingPoint(index);
-                   gl_ubo_->setBlockName(name);
-                   gl_ubo_->bindBuffer(program_id);
-                   return gl_ubo_;
-         }
-         void bindBonesUbo(int program_id){
-             if(bones_ubo_ == nullptr)
-                 bones_ubo_ = bindUbo(program_id, BONES_UBO_INDEX, "Bones_ubo", "mat4 u_bone_matrix[60];");
-             else
-                 bones_ubo_->bindBuffer(program_id);
-
-         }
-     GLUniformBlock* getBonesUbo(){
-        return bones_ubo_;
-     }
 private:
     //  RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -447,18 +360,15 @@ private:
     RenderData& operator=(RenderData&& render_data);
 
 private:
-    VulkanData vkData;
-    GLUniformBlock *bones_ubo_;
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
-    jmethodID bindShaderMethod_;
     Mesh* mesh_;
     Batch* batch_;
     bool hash_code_dirty_;
     std::string hash_code;
     std::vector<RenderPass*> render_pass_list_;
     Light* light_;
-    std::shared_ptr<bool> dirty_flag_;
+    bool renderdata_dirty_;
     bool use_light_;
     bool batching_;
     bool use_lightmap_;
@@ -480,6 +390,42 @@ private:
     std::function<float()> cameraDistanceLambda_ = nullptr;
 };
 
-bool compareRenderDataByOrderShaderDistance(RenderData* i, RenderData* j);
+static inline bool compareRenderDataWithFrustumCulling(RenderData* i, RenderData* j) {
+    // if either i or j is a transparent object or an overlay object
+    if (i->rendering_order() >= RenderData::Transparent
+            || j->rendering_order() >= RenderData::Transparent) {
+        if (i->rendering_order() == j->rendering_order()) {
+            // if both are either transparent or both are overlays
+            // place them in reverse camera order from back to front
+            return i->camera_distance() > j->camera_distance();
+        } else {
+            // if one of them is a transparent or an overlay draw by rendering order
+            return i->rendering_order() < j->rendering_order();
+        }
+    }
+
+    // if both are neither transparent nor overlays, place them in camera order front to back
+    return i->camera_distance() < j->camera_distance();
+}
+
+static inline bool compareRenderDataByOrder(RenderData* i, RenderData* j) {
+    return i->rendering_order() < j->rendering_order();
+}
+
+  bool compareRenderDataByShader(RenderData* i, RenderData* j);
+
+static inline bool compareRenderDataByOrderDistance(RenderData* i, RenderData* j) {
+    // if it is a transparent object, sort by camera distance.
+    if (i->rendering_order() == j->rendering_order()
+            && i->rendering_order() >= RenderData::Transparent
+            && i->rendering_order() < RenderData::Overlay) {
+        return i->camera_distance() > j->camera_distance();
+    }
+
+    return i->rendering_order() < j->rendering_order();
+}
+
+ bool compareRenderDataByOrderShaderDistance(RenderData* i,
+        RenderData* j);
 }
 #endif

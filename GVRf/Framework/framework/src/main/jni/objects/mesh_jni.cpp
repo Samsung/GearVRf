@@ -27,8 +27,7 @@
 namespace gvr {
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj, jstring descriptor);
-
+    Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj);
     JNIEXPORT jfloatArray JNICALL
     Java_org_gearvrf_NativeMesh_getVertices(JNIEnv * env,
             jobject obj, jlong jmesh);
@@ -101,10 +100,6 @@ extern "C" {
     Java_org_gearvrf_NativeMesh_getAttribNames(JNIEnv * env,
             jobject obj, jlong jmesh);
 
-    JNIEXPORT jboolean JNICALL
-    Java_org_gearvrf_NativeMesh_hasAttribute(JNIEnv * env,
-            jobject obj, jlong jmesh, jstring key);
-
 };
 
 JNIEXPORT jobjectArray JNICALL
@@ -127,12 +122,8 @@ Java_org_gearvrf_NativeMesh_getAttribNames(JNIEnv * env,
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj, jstring jdescriptor) {
-    const char* char_desc = env->GetStringUTFChars(jdescriptor, 0);
-    std::string native_desc = std::string(char_desc);
-    jlong newmesh = reinterpret_cast<jlong>(new Mesh(native_desc));
-    env->ReleaseStringUTFChars(jdescriptor, char_desc);
-    return newmesh;
+Java_org_gearvrf_NativeMesh_ctor(JNIEnv* env, jobject obj) {
+    return reinterpret_cast<jlong>(new Mesh());
 }
 
 JNIEXPORT jfloatArray JNICALL
@@ -140,9 +131,8 @@ Java_org_gearvrf_NativeMesh_getVertices(JNIEnv * env,
         jobject obj, jlong jmesh) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     const std::vector<glm::vec3>& vertices = mesh->vertices();
-    int n = vertices.size() * 3;
-    jfloatArray jvertices = env->NewFloatArray(n);
-    env->SetFloatArrayRegion(jvertices, 0, n,
+    jfloatArray jvertices = env->NewFloatArray(vertices.size() * 3);
+    env->SetFloatArrayRegion(jvertices, 0, vertices.size() * 3,
             reinterpret_cast<const jfloat*>(vertices.data()));
     return jvertices;
 }
@@ -152,11 +142,13 @@ Java_org_gearvrf_NativeMesh_setVertices(JNIEnv * env,
         jobject obj, jlong jmesh, jfloatArray vertices) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     jfloat* jvertices_pointer = env->GetFloatArrayElements(vertices, 0);
-    int vertices_length = static_cast<int>(env->GetArrayLength(vertices));
+    glm::vec3* vertices_pointer =
+            reinterpret_cast<glm::vec3*>(jvertices_pointer);
+    int vertices_length = static_cast<int>(env->GetArrayLength(vertices))
+            / (sizeof(glm::vec3) / sizeof(jfloat));
     std::vector<glm::vec3> native_vertices;
-    native_vertices.reserve(vertices_length);
-    for (int i = 0; i < vertices_length; i += 3) {
-        native_vertices.push_back(glm::vec3(jvertices_pointer[i], jvertices_pointer[i + 1], jvertices_pointer[i + 2]));
+    for (int i = 0; i < vertices_length; ++i) {
+        native_vertices.push_back(vertices_pointer[i]);
     }
     mesh->set_vertices(native_vertices);
     env->ReleaseFloatArrayElements(vertices, jvertices_pointer, 0);
@@ -167,9 +159,8 @@ Java_org_gearvrf_NativeMesh_getNormals(JNIEnv * env,
         jobject obj, jlong jmesh) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     const std::vector<glm::vec3>& normals = mesh->normals();
-    int n = normals.size() * 3;
-    jfloatArray jnormals = env->NewFloatArray(n);
-    env->SetFloatArrayRegion(jnormals, 0, n,
+    jfloatArray jnormals = env->NewFloatArray(normals.size() * 3);
+    env->SetFloatArrayRegion(jnormals, 0, normals.size() * 3,
             reinterpret_cast<const jfloat*>(normals.data()));
     return jnormals;
 }
@@ -179,11 +170,12 @@ Java_org_gearvrf_NativeMesh_setNormals(JNIEnv * env,
         jobject obj, jlong jmesh, jfloatArray normals) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     jfloat* jnormals_pointer = env->GetFloatArrayElements(normals, 0);
-    int normals_length = static_cast<int>(env->GetArrayLength(normals));
+    glm::vec3* normals_pointer = reinterpret_cast<glm::vec3*>(jnormals_pointer);
+    int normals_length = static_cast<int>(env->GetArrayLength(normals))
+            / (sizeof(glm::vec3) / sizeof(jfloat));
     std::vector<glm::vec3> native_normals;
-    native_normals.reserve(normals_length * 3);
-    for (int i = 0; i < normals_length; i += 3) {
-        native_normals.push_back(glm::vec3(jnormals_pointer[i], jnormals_pointer[i + 1], jnormals_pointer[i + 2]));
+    for (int i = 0; i < normals_length; ++i) {
+        native_normals.push_back(normals_pointer[i]);
     }
     mesh->set_normals(native_normals);
     env->ReleaseFloatArrayElements(normals, jnormals_pointer, 0);
@@ -196,10 +188,11 @@ Java_org_gearvrf_NativeMesh_getTexCoords(JNIEnv * env,
     std::vector<glm::vec2>* uvs;
     if (mesh->getVec("a_texcoord", &uvs))
     {
-        int n = uvs->size() * 2;
-        jfloatArray juvs = env->NewFloatArray(n);
-        env->SetFloatArrayRegion(juvs, 0, n, reinterpret_cast<const jfloat*>(uvs->data()));
+        jfloatArray juvs = env->NewFloatArray(uvs->size() * 2);
+        env->SetFloatArrayRegion(juvs, 0, uvs->size() * 2,
+                                 reinterpret_cast<const jfloat*>(uvs->data()));
         return juvs;
+
     }
     return NULL;
 }
@@ -299,9 +292,8 @@ Java_org_gearvrf_NativeMesh_getVec2Vector(JNIEnv * env,
     std::vector<glm::vec2>* vec2_vector;
     if (mesh->getVec(native_key, &vec2_vector)) {
         env->ReleaseStringUTFChars(key, char_key);
-        int n = vec2_vector->size() * 2;
-        jfloatArray jvec2_vector = env->NewFloatArray(n);
-        env->SetFloatArrayRegion(jvec2_vector, 0, n,
+        jfloatArray jvec2_vector = env->NewFloatArray(vec2_vector->size() * 2);
+        env->SetFloatArrayRegion(jvec2_vector, 0, vec2_vector->size() * 2,
                                  reinterpret_cast<const jfloat *>(vec2_vector->data()));
         return jvec2_vector;
     }
@@ -313,18 +305,20 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMesh_setVec2Vector(JNIEnv * env,
         jobject obj, jlong jmesh, jstring key, jfloatArray vec2_vector) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-    jfloat* jvector_pointer = env->GetFloatArrayElements(vec2_vector, 0);
-    int n = static_cast<int>(env->GetArrayLength(vec2_vector));
+    jfloat* jvec2_vector_pointer = env->GetFloatArrayElements(vec2_vector, 0);
+    glm::vec2* vec2_vector_pointer =
+            reinterpret_cast<glm::vec2*>(jvec2_vector_pointer);
+    int vec2_vector_length = static_cast<int>(env->GetArrayLength(vec2_vector))
+            / (sizeof(glm::vec2) / sizeof(jfloat));
     std::vector<glm::vec2> native_vec2_vector;
-    native_vec2_vector.reserve(n / 2);
-    for (int i = 0; i < n; i += 2) {
-        native_vec2_vector.push_back(glm::vec2(jvector_pointer[i], jvector_pointer[i + 1]));
+    for (int i = 0; i < vec2_vector_length; ++i) {
+        native_vec2_vector.push_back(vec2_vector_pointer[i]);
     }
     const char* char_key = env->GetStringUTFChars(key, 0);
     std::string native_key = std::string(char_key);
     mesh->setVec2Vector(native_key, native_vec2_vector);
     env->ReleaseStringUTFChars(key, char_key);
-    env->ReleaseFloatArrayElements(vec2_vector, jvector_pointer, 0);
+    env->ReleaseFloatArrayElements(vec2_vector, jvec2_vector_pointer, 0);
 }
 
 JNIEXPORT jfloatArray JNICALL
@@ -435,16 +429,4 @@ Java_org_gearvrf_NativeMesh_getSphereBound(JNIEnv * env,
     sphere[3] = bvol.radius();
     env->SetFloatArrayRegion(jsphere, 0, 4, sphere);
 }
-
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeMesh_hasAttribute(JNIEnv * env, jobject obj, jlong jmesh, jstring key) {
-    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
-    const char* char_key = env->GetStringUTFChars(key, 0);
-    std::string native_key = std::string(char_key);
-    bool rc = mesh->hasAttribute(native_key);
-    env->ReleaseStringUTFChars(key, char_key);
-    return rc;
-}
-
-
 }

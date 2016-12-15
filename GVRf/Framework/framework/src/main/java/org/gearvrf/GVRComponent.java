@@ -119,9 +119,9 @@ public class GVRComponent extends GVRHybridObject {
     /**
      * Enable or disable this component.
      * @param flag true to enable, false to disable.
-     * @see #enable
-     * @see #disable
-     * @see #isEnabled
+     * @see enable
+     * @see disable
+     * @see isEnabled
      */
     public void setEnable(boolean flag) {
         if (flag == mIsEnabled)
@@ -244,3 +244,4 @@ class NativeComponent {
     static native boolean isEnabled(long component);
     static native void setEnable(long component, boolean flag);
 }
+

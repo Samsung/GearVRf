@@ -15,14 +15,12 @@
 
 package org.gearvrf;
 
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.view.Gravity;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
@@ -46,16 +44,15 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.ref.PhantomReference;
-import java.lang.ref.ReferenceQueue;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Future;
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.view.Gravity;
+import android.view.KeyEvent;
 
 /**
  * Like the Android {@link Context} class, {@code GVRContext} provides core
@@ -795,7 +792,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     @SuppressWarnings("deprecation")
     public GVRMesh createQuad(float width, float height) {
-        GVRMesh mesh = new GVRMesh(this, "float3 a_position float3 a_normal float2 a_texcoord");
+        GVRMesh mesh = new GVRMesh(this);
 
         float[] vertices = { width * -0.5f, height * 0.5f, 0.0f, width * -0.5f,
                 height * -0.5f, 0.0f, width * 0.5f, height * 0.5f, 0.0f,
@@ -1975,8 +1972,8 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * Simple, high-level method to load a texture asynchronously, for use with
-     * {@link GVRShaderData#setMainTexture(Future)} and
-     * {@link GVRShaderData#setTexture(String, Future)}.
+     * {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
      * 
      * This method uses a default priority and a default render quality: use
      * {@link #loadFutureTexture(GVRAndroidResource, int)} to specify a priority
@@ -2008,7 +2005,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaderData#setMainTexture(Future)}
+     *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.7
      * 
@@ -2036,8 +2033,8 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * Simple, high-level method to load a texture asynchronously, for use with
-     * {@link GVRShaderData#setMainTexture(Future)} and
-     * {@link GVRShaderData#setTexture(String, Future)}.
+     * {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
      * 
      * This method uses a default render quality:
      * {@link #loadFutureTexture(GVRAndroidResource, int, int)} to specify
@@ -2076,7 +2073,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            textures load so quickly that they are not run through the
      *            request scheduler.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaderData#setMainTexture(Future)}
+     *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.7
      * 
@@ -2106,8 +2103,8 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * Simple, high-level method to load a texture asynchronously, for use with
-     * {@link GVRShaderData#setMainTexture(Future)} and
-     * {@link GVRShaderData#setTexture(String, Future)}.
+     * {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
      * 
      * 
      * <p>
@@ -2153,7 +2150,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
      *            quality parameter.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaderData#setMainTexture(Future)}
+     *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.7
      * 
@@ -2182,8 +2179,8 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * Simple, high-level method to load a cube map texture asynchronously, for
-     * use with {@link GVRShaderData#setMainTexture(Future)} and
-     * {@link GVRShaderData#setTexture(String, Future)}.
+     * use with {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
      * 
      * @param resource
      *            A steam containing a zip file which contains six bitmaps. The
@@ -2193,7 +2190,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            "posz.png", and "negz.png", which can be changed by calling
      *            {@link GVRCubemapTexture#setFaceNames(String[])}.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaderData#setMainTexture(Future)}
+     *         {@link GVRShaders#setMainTexture(Future)}
      * 
      * @since 1.6.9
      * 
@@ -2222,8 +2219,8 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * Simple, high-level method to load a compressed cube map texture asynchronously,
-     * for use with {@link GVRShaderData#setMainTexture(Future)} and
-     * {@link GVRShaderData#setTexture(String, Future)}.
+     * for use with {@link GVRShaders#setMainTexture(Future)} and
+     * {@link GVRShaders#setTexture(String, Future)}.
      *
      * @param resource
      *            A steam containing a zip file which contains six compressed textures.
@@ -2233,7 +2230,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            "posz.pkm", and "negz.pkm", which can be changed by calling
      *            {@link GVRCubemapTexture#setFaceNames(String[])}.
      * @return A {@link Future} that you can pass to methods like
-     *         {@link GVRShaderData#setMainTexture(Future)}
+     *         {@link GVRShaders#setMainTexture(Future)}
      *
      * @since 1.6.9
      *
@@ -2698,6 +2695,17 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public abstract void captureScreen3D(GVRScreenshot3DCallback callback);
 
+    private final GVRContextPrivate mContextPrivate = new GVRContextPrivate();
+
+    final void releaseNative(final GVRHybridObject hybridObject) {
+        mContextPrivate.releaseNative(hybridObject);
+    }
+
+    final void registerHybridObject(final GVRHybridObject hybridObject, final long nativePointer,
+            final List<NativeCleanupHandler> cleanupHandlers) {
+        mContextPrivate.registerHybridObject(hybridObject, nativePointer, cleanupHandlers);
+    }
+
     private Object mTag;
 
     /**
@@ -2833,91 +2841,5 @@ public abstract class GVRContext implements IEventReceiver {
         });
 
         getAnimationEngine().start(fadeIn);
-    }
-
-    /**
-     * Our {@linkplain GVRReference references} are placed on this queue, once
-     * they've been finalized
-     */
-    private final ReferenceQueue<GVRHybridObject> mReferenceQueue = new ReferenceQueue<GVRHybridObject>();
-    /**
-     * We need hard references to {@linkplain GVRReference our references} -
-     * otherwise, the references get garbage collected (usually before their
-     * objects) and never get enqueued.
-     */
-    private final Set<GVRReference> mReferenceSet = new HashSet<GVRReference>();
-
-    protected final void finalizeUnreachableObjects() {
-        GVRReference reference;
-        while (null != (reference = (GVRReference)mReferenceQueue.poll())) {
-            reference.close();
-        }
-    }
-
-    final class GVRReference extends PhantomReference<GVRHybridObject> {
-        private long mNativePointer;
-        private final List<NativeCleanupHandler> mCleanupHandlers;
-
-        private GVRReference(GVRHybridObject object, long nativePointer,
-                List<NativeCleanupHandler> cleanupHandlers) {
-            super(object, mReferenceQueue);
-
-            mNativePointer = nativePointer;
-            mCleanupHandlers = cleanupHandlers;
-        }
-
-        private void close() {
-            close(true);
-        }
-
-        private void close(boolean removeFromSet) {
-            synchronized (mReferenceSet) {
-                if (mNativePointer != 0) {
-                    if (mCleanupHandlers != null) {
-                        for (NativeCleanupHandler handler : mCleanupHandlers) {
-                            handler.nativeCleanup(mNativePointer);
-                        }
-                    }
-                    NativeHybridObject.delete(mNativePointer);
-                    mNativePointer = 0;
-                }
-
-                if (removeFromSet) {
-                    mReferenceSet.remove(this);
-                }
-            }
-        }
-    }
-
-    final void registerHybridObject(GVRHybridObject gvrHybridObject, long nativePointer, List<NativeCleanupHandler> cleanupHandlers) {
-        synchronized (mReferenceSet) {
-            mReferenceSet.add(new GVRReference(gvrHybridObject, nativePointer, cleanupHandlers));
-        }
-    }
-
-    /**
-     * Explicitly close()ing an object is going to be relatively rare - most
-     * native memory will be freed when the owner-objects are garbage collected.
-     * Doing a lookup in these rare cases means that we can avoid giving every @link
-     * {@link GVRHybridObject} a hard reference to its {@link GVRReference}.
-     */
-    final GVRReference findReference(long nativePointer) {
-        for (GVRReference reference : mReferenceSet) {
-            if (reference.mNativePointer == nativePointer) {
-                return reference;
-            }
-        }
-        return null;
-    }
-
-    final void releaseNative(GVRHybridObject hybridObject) {
-        synchronized (mReferenceSet) {
-            if (hybridObject.getNative() != 0L) {
-                GVRReference reference = findReference(hybridObject.getNative());
-                if (reference != null) {
-                    reference.close();
-                }
-            }
-        }
     }
 }

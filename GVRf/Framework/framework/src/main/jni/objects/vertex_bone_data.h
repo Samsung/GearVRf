@@ -49,9 +49,7 @@ public:
     glm::mat4 getFinalBoneTransform(int boneId) {
         return boneMatrices[boneId];
     }
-    std::vector<glm::mat4>& getBoneMatrices(){
-        return boneMatrices;
-    }
+
     void setFinalBoneTransform(int boneId, glm::mat4 &transform) {
         boneMatrices[boneId] = transform;
     }

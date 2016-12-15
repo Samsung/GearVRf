@@ -11,7 +11,6 @@
 #include "glm/glm.hpp"
 #include "objects/lazy.h"
 #include "objects/components/component.h"
-#include "objects/shader_data.h"
 #include "objects/textures/render_texture.h"
 #include "shaders/shader_manager.h"
 
@@ -57,7 +56,6 @@ private:
 private:
     ShaderManager *mShaderManager;
     RenderTexture *mRenderTexture;
-    Material *mMaterial;
     bool mPendingCapture;
     bool mHasNewCapture;
     long long mCaptureIntervalNS;

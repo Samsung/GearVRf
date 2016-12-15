@@ -26,8 +26,6 @@
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 
 #include "glm/glm.hpp"
-#include <utility>
-#include <map>
 
 namespace gvr {
 
@@ -45,7 +43,8 @@ class BulletWorld : public Physics3DWorld {
 
     void step(float timeStep);
 
-    void listCollisions(std::list <ContactPoint> &contactPoints);
+    void listCollisions(
+            std::vector <ContactPoint> &contactPoints); //index counts how many iteration it's on list, if <0 should be taken out
 
  private:
     void initialize();
@@ -53,7 +52,6 @@ class BulletWorld : public Physics3DWorld {
     void finalize();
 
  private:
-    std::map<std::pair <long,long>, ContactPoint> prevCollisions;
     btDynamicsWorld *mPhysicsWorld;
     btCollisionConfiguration *mCollisionConfiguration;
     btCollisionDispatcher *mDispatcher;

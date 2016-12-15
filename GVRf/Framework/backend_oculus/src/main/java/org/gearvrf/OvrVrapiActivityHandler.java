@@ -40,14 +40,12 @@ import android.os.HandlerThread;
 import android.util.DisplayMetrics;
 import android.view.Choreographer;
 import android.view.Choreographer.FrameCallback;
-import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 
 /**
  * Keep Oculus-specifics here
  */
-class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callback {
+class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private final GVRActivity mActivity;
     private long mPtr;
@@ -155,7 +153,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
         mSurfaceView.setEGLWindowSurfaceFactory(mWindowSurfaceFactory);
         mSurfaceView.setRenderer(mRenderer);
         mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
 
         mActivity.setContentView(mSurfaceView);
 
@@ -356,8 +353,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
             mConfig = config;
             nativeOnSurfaceCreated(mPtr);
             mViewManager.onSurfaceCreated();
-
-
         }
 
         @Override
@@ -429,20 +424,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
             mViewManager.onDrawFrame();
         }
     };
-
-    @Override
-    public void surfaceCreated(SurfaceHolder surfaceHolder) {
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-
-    }
 
 
     @SuppressWarnings("serial")

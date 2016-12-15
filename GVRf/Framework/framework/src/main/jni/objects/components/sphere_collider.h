@@ -24,6 +24,7 @@
 #include <memory>
 
 #include "collider.h"
+#include "objects/scene_object.h"
 
 namespace gvr {
 

@@ -6,8 +6,7 @@
 #endif
 
 vertex.viewspace_position = pos.xyz / pos.w;
-
-#if defined(HAS_a_normal) && defined(HAS_LIGHTSOURCES)
+#ifdef HAS_a_normal
    vertex.local_normal = vec4(normalize(a_normal), 0.0);
 #endif
 
@@ -22,10 +21,6 @@ vertex.view_direction = normalize(-vertex.viewspace_position);
    diffuse_coord = a_texcoord.xy;
    specular_coord = a_texcoord.xy;
    ambient_coord = a_texcoord.xy;
-#ifdef HAS_normalTexture
    normal_coord = a_texcoord.xy;
-#endif
-#ifdef HAS_lightmapTexture
    lightmap_coord = a_texcoord.xy;
-#endif
 #endif

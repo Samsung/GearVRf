@@ -42,7 +42,7 @@ import static android.opengl.GLES30.GL_TRIANGLE_STRIP;
  * This includes the {@link GVRMesh mesh} itself, the mesh's {@link GVRMaterial
  * material}, camera association, rendering order, and various other parameters.
  */
-public class GVRRenderData extends GVRJavaComponent implements IRenderable, PrettyPrint {
+public class GVRRenderData extends GVRComponent implements PrettyPrint {
 
     private GVRMesh mMesh;
     private ArrayList<GVRRenderPass> mRenderPassList;
@@ -53,6 +53,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     /** Just for {@link #getMeshEyePointee()} */
     private Future<GVRMesh> mFutureMesh;
     private boolean isLightEnabled;
+    private GVRShaderTemplate mShaderTemplate;
     private HashMap<String, Integer> mShaderFeatures = new HashMap<String, Integer>();
 
     /**
@@ -109,19 +110,19 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      */
     public GVRRenderData(GVRContext gvrContext) {
         super(gvrContext, NativeRenderData.ctor());
+        
         GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
         addPass(basePass);
-        isLightEnabled = true;
+        isLightEnabled = false;
         mLightMapEnabled = false;
+        mShaderTemplate = null;
     }
 
-    public GVRRenderData(GVRContext gvrContext, GVRMaterial material) {
+    public GVRRenderData(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, NativeRenderData.ctor());
         setOwnerObject(owner);
-        GVRRenderPass basePass = new GVRRenderPass(gvrContext, material);
-        isLightEnabled = true;
-        mLightMapEnabled = false;
+        GVRRenderPass basePass = new GVRRenderPass(gvrContext);
         mRenderPassList = new ArrayList<GVRRenderPass>();
         addPass(basePass);
     }
@@ -160,13 +161,8 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         synchronized (this) {
             mMesh = mesh;
             mFutureMesh = null;
-            for (GVRRenderPass pass : mRenderPassList)
-            {
-                pass.setMesh(mesh);
-            }
         }
         NativeRenderData.setMesh(getNative(), mesh.getNative());
-       // bindShader(getGVRContext().getMainScene());
     }
 
     /**
@@ -258,7 +254,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * cheaper - though less accurate - to use the bounding box.
      * 
      * @return Either a {@code Future<GVREyePointee>} or {@code null}.
-     * @deprecated use GVRMeshCollider(context, useBoundingBox) instead
      */
     public Future<GVREyePointee> getMeshEyePointee() {
         return getMeshEyePointee(true);
@@ -287,7 +282,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      *            use the bounding box.
      * 
      * @return Either a {@code Future<GVREyePointee>} or {@code null}.
-     * @deprecated use GVRMeshCollider(context, useBoundingBox) instead
      */
     public Future<GVREyePointee> getMeshEyePointee(boolean useBoundingBox) {
         synchronized (this) {
@@ -354,9 +348,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * @param pass
      */
     public void addPass(GVRRenderPass pass) {
-        GVRMesh mesh = getMesh();
         mRenderPassList.add(pass);
-        pass.setMesh(mesh);
         NativeRenderData.addPass(getNative(), pass.getNative());
     }
     
@@ -387,8 +379,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
      */
-    public GVRMaterial getMaterial(int passIndex)
-    {
+    public GVRMaterial getMaterial(int passIndex) {
         if (passIndex < mRenderPassList.size()) {
             return mRenderPassList.get(passIndex).getMaterial();
         } else {
@@ -416,30 +407,15 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      *            The rendering pass this material will be assigned to.
      * 
      */
-    public void setMaterial(GVRMaterial material, int passIndex)
-    {
-        if (passIndex < mRenderPassList.size())
-        {
+    public void setMaterial(GVRMaterial material, int passIndex) {
+        if (passIndex < mRenderPassList.size()) {
             mRenderPassList.get(passIndex).setMaterial(material);
-        }
-        else
-        {
+        } else {
             Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
         }
+        
     }
-
-    public void setShader(int shader)
-    {
-        GVRRenderPass pass = mRenderPassList.get(0);
-        pass.setShader(shader);
-    }
-
-    int getShader()
-    {
-        GVRRenderPass pass = mRenderPassList.get(0);
-        return pass.getShader();
-    }
-
+    
     /**
      * Set the shader template to use for rendering the mesh.
      * 
@@ -450,13 +426,51 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * 
      * @param templateClass subclass of GVRShaderTemplate describing the
      *        shader to use for rendering the mesh
-     * @see GVRShaderTemplate bindShader
-     * @deprecated does nothing currently, GVRShaderId now contains the shader template
+     * @see GVRShaderTemplate bindShader GVRMaterialShader.retrieveShaderTemplate
      */
     public void setShaderTemplate(Class<? extends GVRShaderTemplate> templateClass) {
+        GVRMaterialShaderManager shadermanager = getGVRContext().getMaterialShaderManager();
+        mShaderTemplate = shadermanager.retrieveShaderTemplate(templateClass);
+        isLightEnabled = true;
     }
 
-     /**
+    /**
+     * Set the shader template to use for rendering the mesh.
+     * 
+     * A shader template generates the vertex and fragment shader
+     * based on the mesh attributes, textures bound to the material
+     * and light sources. The shader is generated by {@linkplain bindShader }
+     * which is called automatically after initialization.
+     * 
+     * This form of the function is for use with scripting where
+     * the Java class is not easily obtainable.
+     * 
+     * @param templateClassName name of GVRShaderTemplate subclass describing the
+     *        shader to use for rendering the mesh
+     */
+    @SuppressWarnings("unchecked")
+    public void setShaderTemplate(String templateClassName) {
+        GVRMaterialShaderManager shadermanager = getGVRContext().getMaterialShaderManager();
+        Class<? extends GVRShaderTemplate> templateClass;
+        try
+        {
+            Class clazz = Class.forName(templateClassName);
+            if (GVRShaderTemplate.class.isAssignableFrom(clazz)) {
+                templateClass = (Class<? extends GVRShaderTemplate>) clazz;
+            }
+            else {
+                throw new IllegalArgumentException("shader template class must derive from GVRShaderTemplate");
+            }
+        }
+        catch (ClassNotFoundException ex)
+        {
+            throw new IllegalArgumentException(templateClassName + " shader template class name not found");            
+        }
+        mShaderTemplate = shadermanager.retrieveShaderTemplate(templateClass);
+        isLightEnabled = true;
+    }
+    
+    /**
      * Selects a specific vertex and fragment shader to use for rendering.
      * 
      * If a shader template has been specified, it is used to generate
@@ -467,55 +481,17 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * of shaders which is quite slow.
      * 
      * @param scene scene being rendered
-     * @see GVRShaderTemplate GVRMaterialShader.getShaderType
+     * @see GVRShaderTemplate setShaderTemplate GVRMaterialShader.retrieveShaderTemplate
      */
-    public void bindShader(GVRScene scene)
-    {
-        GVRRenderPass pass = mRenderPassList.get(0);
-        GVRShaderId shader = pass.getMaterial().getShaderType();
-        GVRShader template = shader.getTemplate(getGVRContext());
-        if (template != null)
-        {
-            template.bindShader(getGVRContext(), this, scene);
-        }
-        for (int i = 1; i < mRenderPassList.size(); ++i)
-        {
-            pass = mRenderPassList.get(i);
-            shader = pass.getMaterial().getShaderType();
-            template = shader.getTemplate(getGVRContext());
-            if (template != null)
-            {
-                template.bindShader(getGVRContext(), this, null);
-            }
-        }
-    }
-
-    private static Runnable sBindShaderFromNative = null;
-
-    /**
-     * Called from the GL thread during rendering when a
-     * RenderData without a valid shader is encountered.
-     */
-    void bindShaderNative(GVRScene scene)
-    {
-        bindShader(scene);
-        /*
-        if (sBindShaderFromNative == null)
-        {
-            sBindShaderFromNative = new Runnable()
-            {
-                public void run()
-                {
-                    bindShader(scene);
-                }
-            };
-        }
-        getGVRContext().runOnTheFrameworkThread(sBindShaderFromNative);
-        */
+    public void bindShader(GVRScene scene) {
+        if (mShaderTemplate != null) {
+            mShaderTemplate.bindShader(scene.getGVRContext(), this, scene);
+         }
     }
 
     /**
-     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is being lit by.
+     * @return The {@link GVRLight light} the {@link GVRMesh mesh} is being lit
+     *         by.
      */
     public GVRLight getLight() {
         return mLight;
@@ -538,16 +514,13 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * GVRLight.enable(). GVRLight.enable turns on a light, while this method
      * enables the lighting effect for the render_data.
      */
-    public void enableLight()
-    {
-        if (!isLightEnabled)
-        {
+    public void enableLight() {
+        if (!isLightEnabled) {
             NativeRenderData.enableLight(getNative());
             isLightEnabled = true;
             bindShader(getGVRContext().getMainScene());
         }
     }
-
 
     /**
      * Disable lighting effect for the render_data.
@@ -555,13 +528,13 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * GVRLight.disable turns off a light, while this method
      * disables the lighting effect for the render_data.
      */
-    public void disableLight()
-    {
-        if (isLightEnabled)
-        {
+    public void disableLight() {
+        if (isLightEnabled) {
             NativeRenderData.disableLight(getNative());
-            bindShader(null);
             isLightEnabled = false;
+            if (mShaderTemplate != null) {
+                mShaderTemplate.bindShader(getGVRContext(),  this,  null);
+            }
         }
     }
 

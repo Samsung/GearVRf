@@ -44,6 +44,7 @@ public:
     };
 
     static long long getComponentType() {
+LOGD("ND: GVRCameraRig.getComponentType = %lld", COMPONENT_TYPE_CAMERA_RIG);
         return COMPONENT_TYPE_CAMERA_RIG;
     }
 

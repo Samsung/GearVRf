@@ -26,11 +26,7 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjnlua.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_STATIC_LIBRARIES := shaderc
 
-include $(CLEAR_VARS)
-
-include $(CLEAR_VARS)
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
@@ -93,7 +89,6 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += assimp
 LOCAL_SHARED_LIBRARIES += jnlua
-LOCAL_STATIC_LIBRARIES += shaderc
 
 ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
 LOCAL_ARM_NEON  := true
@@ -114,4 +109,3 @@ LOCAL_CFLAGS := -Wattributes
 LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 
 include $(BUILD_SHARED_LIBRARY)
-$(call import-module, third_party/shaderc)

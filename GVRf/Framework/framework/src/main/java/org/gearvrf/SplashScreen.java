@@ -29,8 +29,9 @@ class SplashScreen extends GVRSceneObject {
     final long mTimeout;
 
     SplashScreen(GVRContext gvrContext, GVRMesh mesh, GVRTexture texture,
-            GVRShaderId shaderId, GVRScript script) {
+            GVRMaterialShaderId shaderId, GVRScript script) {
         super(gvrContext, mesh, texture, shaderId);
+
         mCloseRequested = false; // unnecessary, but ...
 
         float splashDisplayTime = script.getSplashDisplayTime();
