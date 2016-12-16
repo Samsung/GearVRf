@@ -71,6 +71,7 @@ public class GVRComponent extends GVRHybridObject {
     protected GVRComponent(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> cleanupHandlers) {
         super(gvrContext, nativePointer, cleanupHandlers);
+        mIsEnabled = true;
     }
 
     protected GVRSceneObject owner;
