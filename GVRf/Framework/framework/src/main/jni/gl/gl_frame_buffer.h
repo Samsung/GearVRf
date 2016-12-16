@@ -23,19 +23,16 @@
 
 #include "gl/gl_headers.h"
 
-#include "engine/memory/gl_delete.h"
-
 namespace gvr {
 
 class GLFrameBuffer {
 public:
     GLFrameBuffer() {
-        deleter_ = getDeleterForThisThread();
         glGenFramebuffers(1, &id_);
     }
 
     ~GLFrameBuffer() {
-        deleter_->queueFrameBuffer(id_);
+        GL(glDeleteFramebuffers(1, &id_));
     }
 
     GLuint id() const {
@@ -50,7 +47,6 @@ private:
 
 private:
     GLuint id_;
-    GlDelete* deleter_;
 };
 
 }

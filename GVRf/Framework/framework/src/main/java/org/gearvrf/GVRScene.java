@@ -139,7 +139,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * Remove all scene objects.
      */
     public void removeAllSceneObjects() {
-    	GVRCameraRig rig = getMainCameraRig();
+        GVRCameraRig rig = getMainCameraRig();
         GVRSceneObject head = rig.getOwnerObject();
         rig.removeAllChildren();
 
@@ -154,6 +154,13 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         mSceneRoot = new GVRSceneObject(getGVRContext());
         mSceneRoot.addChildObject(head);
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
+
+        getGVRContext().runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                NativeScene.deleteLightsAndDepthTextureOnRenderThread(getNative());
+            }
+        });
     }
 
     /**
@@ -704,6 +711,8 @@ class NativeScene {
     static native void removeSceneObject(long scene, long sceneObject);
 
     static native void removeAllSceneObjects(long scene);
+
+    static native void deleteLightsAndDepthTextureOnRenderThread(long scene);
 
     public static native void setFrustumCulling(long scene, boolean flag);
 

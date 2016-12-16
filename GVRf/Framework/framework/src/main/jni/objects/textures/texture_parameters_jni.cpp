@@ -24,9 +24,6 @@
 #endif /* GL_EXT_texture_filter_anisotropic */
 
 #include "gl/gl_headers.h"
-#include "util/gvr_log.h"
-
-#include "engine/memory/gl_delete.h"
 
 #include "util/gvr_jni.h"
 

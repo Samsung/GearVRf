@@ -174,7 +174,6 @@ abstract class GVRViewManager extends GVRContext {
         // we know that the current thread is a GL one, so we store it to
         // prevent non-GL thread from calling GL functions
         mGLThreadID = currentThread.getId();
-        mGlDeleterPtr = NativeGLDelete.ctor();
 
         // Evaluating anisotropic support on GL Thread
         String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
@@ -234,7 +233,6 @@ abstract class GVRViewManager extends GVRContext {
                 }
             }
         }
-        NativeGLDelete.processQueues(mGlDeleterPtr);
 
         return currentTime;
     }
@@ -463,23 +461,6 @@ abstract class GVRViewManager extends GVRContext {
         }
     }
 
-    @Override
-    public void finalize() throws Throwable {
-        try {
-            if (0 != mGlDeleterPtr) {
-                NativeGLDelete.dtor(mGlDeleterPtr);
-            }
-        } catch (final Exception ignored) {
-        } finally {
-            super.finalize();
-        }
-    }
-
-    static {
-        // strictly one-time per process op hence the static block
-        NativeGLDelete.createTlsKey();
-    }
-
     protected void beforeDrawEyes() {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
@@ -596,9 +577,6 @@ abstract class GVRViewManager extends GVRContext {
     protected IRenderBundle mRenderBundle;
 
     protected GVRMain mMain;
-
-    protected long mGlDeleterPtr;
-
 
     protected native void renderCamera(long scene, long camera, long shaderManager,
                                        long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);

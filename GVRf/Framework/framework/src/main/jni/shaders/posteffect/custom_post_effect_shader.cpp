@@ -41,7 +41,7 @@ CustomPostEffectShader::~CustomPostEffectShader() {
     delete program_;
 
     if (vaoID_ != 0) {
-        deleter_->queueVertexArray(vaoID_);
+        GL(glDeleteVertexArrays(1, &vaoID_));
     }
 }
 
@@ -87,8 +87,6 @@ void CustomPostEffectShader::render(Camera* camera,
         std::vector<unsigned short>& triangles) {
 
     if (0 == program_) {
-        deleter_ = getDeleterForThisThread();
-
         program_ = new GLProgram(vertex_shader_.c_str(), fragment_shader_.c_str());
         vertex_shader_.empty();
         fragment_shader_.empty();

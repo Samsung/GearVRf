@@ -23,7 +23,6 @@
 #include "gl/gl_program.h"
 #include "objects/post_effect_data.h"
 #include "objects/textures/render_texture.h"
-#include "util/gvr_gl.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
@@ -49,8 +48,6 @@ static const char FRAGMENT_SHADER[] = "precision highp float;\n"
 ColorBlendPostEffectShader::ColorBlendPostEffectShader() :
         program_(0), a_position_(0), a_tex_coord_(0), u_texture_(0), u_color_(
                 0), u_factor_(0) {
-    deleter_ = getDeleterForThisThread();
-
     program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     a_position_ = glGetAttribLocation(program_->id(), "a_position");
     a_tex_coord_ = glGetAttribLocation(program_->id(), "a_texcoord");
@@ -63,7 +60,7 @@ ColorBlendPostEffectShader::ColorBlendPostEffectShader() :
 ColorBlendPostEffectShader::~ColorBlendPostEffectShader() {
     delete program_;
     if (vaoID_ != 0) {
-        deleter_->queueVertexArray(vaoID_);
+        GL(glDeleteVertexArrays(1, &vaoID_));
     }
 }
 

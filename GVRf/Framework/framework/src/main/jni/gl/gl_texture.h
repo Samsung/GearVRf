@@ -31,7 +31,6 @@
 #include "util/gvr_log.h"
 #include <cstdlib>
 
-#include "engine/memory/gl_delete.h"
 #include "objects/gl_pending_task.h"
 
 #define MAX_TEXTURE_PARAM_NUM 10
@@ -56,8 +55,8 @@ public:
     }
 
     virtual ~GLTexture() {
-        if (0 != id_ && deleter_) {
-            deleter_->queueTexture(id_);
+        if (0 != id_) {
+            GL(glDeleteTextures(1, &id_));
         }
     }
 
@@ -76,9 +75,6 @@ public:
             return;
 
         case GL_TASK_INIT_NO_PARAM: {
-            // The deleter needs to be obtained from the GL thread
-            deleter_= getDeleterForThisThread();
-
             glGenTextures(1, &id_);
             glBindTexture(target_, id_);
             glTexParameteri(target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -91,8 +87,6 @@ public:
         }
 
         case GL_TASK_INIT_WITH_PARAM: {
-            deleter_= getDeleterForThisThread();
-
             // Sets the new MIN FILTER
             GLenum min_filter_type_ = texture_parameters_[0];
 
@@ -136,7 +130,6 @@ private:
 private:
     GLuint id_ = 0;
     GLenum target_;
-    GlDelete* deleter_;
 
     // Enum for pending GL tasks. Keep a comma with each line
     // for easier merging.

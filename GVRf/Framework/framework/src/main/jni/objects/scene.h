@@ -41,6 +41,8 @@ public:
     void addSceneObject(SceneObject* scene_object);
     void removeSceneObject(SceneObject* scene_object);
     void removeAllSceneObjects();
+    void deleteLightsAndDepthTextureOnRenderThread();
+
     const CameraRig* main_camera_rig() {
         return main_camera_rig_;
     }

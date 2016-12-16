@@ -39,8 +39,6 @@
 #include "objects/bounding_volume.h"
 #include "objects/vertex_bone_data.h"
 
-#include "engine/memory/gl_delete.h"
-
 namespace gvr {
 class Mesh: public HybridObject {
 public:
@@ -54,7 +52,7 @@ public:
             vec4_vectors_(),
             have_bounding_volume_(false),
             vao_dirty_(true),
-            boneVboID_(GVR_INVALID),
+            boneVboID_(0),
             vertexBoneData_(this),
             bone_data_dirty_(true)
     {
@@ -64,6 +62,9 @@ public:
         cleanUp();
     }
 
+    /**
+     * Must be called on the rendering thread
+     */
     void cleanUp() {
         std::vector<glm::vec3> vertices;
         vertices.swap(vertices_);
@@ -75,26 +76,30 @@ public:
         deleteVaos();
     }
 
+    //would be nice to remove this; one of the backends uses it for something unique.
     void deleteVaoForProgram(int programId)
     {
         auto it = program_ids_.find(programId);
         if (it != program_ids_.end())
         {
             GLVaoVboId ids = it->second;
-            deleter_->queueVertexArray(ids.vaoID);
-            deleter_->queueBuffer(ids.static_vboID);
-            deleter_->queueBuffer(ids.triangle_vboID);
+            GL(glDeleteVertexArrays(1, &ids.vaoID));
+            GL(glDeleteBuffers(1, &ids.static_vboID));
+            GL(glDeleteBuffers(1, &ids.triangle_vboID));
             program_ids_.erase(it);
         }
     }
 
+    /**
+     * Must be called on the rendering thread
+     */
     void deleteVaos() {
         for (auto it : program_ids_ )
         {
             GLVaoVboId ids = it.second;
-            deleter_->queueVertexArray(ids.vaoID);
-            deleter_->queueBuffer(ids.static_vboID);
-            deleter_->queueBuffer(ids.triangle_vboID);
+            GL(glDeleteVertexArrays(1, &ids.vaoID));
+            GL(glDeleteBuffers(1, &ids.static_vboID));
+            GL(glDeleteBuffers(1, &ids.triangle_vboID));
         }
         program_ids_.clear();
         have_bounding_volume_ = false;
@@ -328,13 +333,6 @@ public:
 
     void generateBoneArrayBuffers(GLuint programId);
 
-    //must be called by the thread on which the mesh cleanup should happen
-    void obtainDeleter() {
-        if (nullptr == deleter_) {
-            deleter_ = getDeleterForThisThread();
-        }
-    }
-
     void getAttribNames(std::set<std::string> &attrib_names);
 
     void forceShouldReset() { // one time, then false
@@ -404,7 +402,6 @@ private:
 
     GLuint boneVboID_;
     bool bone_data_dirty_;
-    GlDelete* deleter_ = nullptr;
     static std::vector<std::string> dynamicAttribute_Names_;
 
     std::unordered_set<std::shared_ptr<bool>> dirty_flags_;

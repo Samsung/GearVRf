@@ -86,6 +86,12 @@ extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene);
 
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_deleteLightsAndDepthTextureOnRenderThread(JNIEnv * env,
+                                                       jobject obj, jlong jscene) {
+        Scene* scene = reinterpret_cast<Scene*>(jscene);
+        scene->deleteLightsAndDepthTextureOnRenderThread();
+    }
 };
 
 JNIEXPORT jlong JNICALL

@@ -94,7 +94,6 @@ protected:
     }
 
     GLTexture* gl_texture_;
-    bool gl_texture_bound_;
 
 private:
     Texture(const Texture& texture);
