@@ -325,6 +325,14 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     /**
+     * Uses the default configuration file that comes with the framework.
+     * @see GVRActivity#setMain(GVRMain, String)
+     */
+    public final void setMain(GVRMain gvrMain) {
+        setMain(gvrMain, "_gvr.xml");
+    }
+
+    /**
      * Sets whether to force rendering to be single-eye, monoscopic view.
      * 
      * @param force
