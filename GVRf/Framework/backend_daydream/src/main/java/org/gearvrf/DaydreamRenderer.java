@@ -14,6 +14,7 @@
  */
 package org.gearvrf;
 
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
@@ -34,6 +35,7 @@ class DaydreamRenderer implements GLSurfaceView.Renderer {
     private DaydreamViewManager mViewManager;
     private long nativeDaydreamRenderer;
     private GVRCameraRig cameraRig;
+    private final boolean[] mBlendEnabled = new boolean[1];
 
     public DaydreamRenderer(DaydreamViewManager viewManager, long nativeGvrContext) {
         mViewManager = viewManager;
@@ -56,10 +58,16 @@ class DaydreamRenderer implements GLSurfaceView.Renderer {
         if (cameraRig == null) {
             return;
         }
-
+        GLES30.glGetBooleanv(GLES30.GL_BLEND, mBlendEnabled, 0);
+        GLES30.glDisable(GLES30.GL_BLEND);
         mViewManager.beforeDrawEyes();
+
         nativeDrawFrame(nativeDaydreamRenderer);
+
         mViewManager.afterDrawEyes();
+        if (mBlendEnabled[0]) {
+            GLES30.glEnable(GLES30.GL_BLEND);
+        }
     }
 
     public void setCameraRig(GVRCameraRig cameraRig) {

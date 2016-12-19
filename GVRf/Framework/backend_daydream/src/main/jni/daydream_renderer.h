@@ -62,7 +62,6 @@ private:
 
     gvr::Sizei render_size_;
     gvr::Mat4f head_view_;
-    GLboolean blend_enabled_[1];
 
     jmethodID onDrawEyeMethodId_ = nullptr;
     jobject rendererObject_ = nullptr;

@@ -157,8 +157,7 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
 
 
     gvr::ClockTimePoint target_time = gvr::GvrApi::GetTimePointNow();
-    target_time.monotonic_system_time_nanos +=
-            kPredictionTimeWithoutVsyncNanos;
+    target_time.monotonic_system_time_nanos += kPredictionTimeWithoutVsyncNanos;
 
     head_view_ = gvr_api_->GetHeadSpaceFromStartSpaceRotation(target_time);
     gvr::Mat4f left_eye_matrix = gvr_api_->GetEyeFromHeadMatrix(GVR_LEFT_EYE);
@@ -166,10 +165,6 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
     gvr::Mat4f left_eye_view = MatrixMul(left_eye_matrix, head_view_);
     gvr::Mat4f right_eye_view = MatrixMul(right_eye_matrix, head_view_);
 
-    // save the blend value
-    glGetBooleanv(GL_BLEND, blend_enabled_);
-
-    glDisable(GL_BLEND);
     cameraRig_->getHeadTransform()->setModelMatrix(MatrixToGLMMatrix(head_view_));
 
     // Render the eye images.
@@ -184,10 +179,6 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
     // Submit frame.
     frame.Submit(*viewport_list_, head_view_);
 
-    // restore the blend value
-    if (blend_enabled_[0]) {
-        glEnable(GL_BLEND);
-    }
     CheckGLError("onDrawFrame");
 }
 
