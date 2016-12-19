@@ -19,7 +19,10 @@
 
 namespace {
     static const uint64_t kPredictionTimeWithoutVsyncNanos = 50000000;
-    static const float kZNear = 1.0f;
+
+    // Use the same default clipping distances as the perspective camera
+    // TODO: Change this to read the values from the gvr.xml file
+    static const float kZNear = 0.1f;
     static const float kZFar = 1000.0f;
 
     static glm::mat4 MatrixToGLMMatrix(const gvr::Mat4f &matrix) {
