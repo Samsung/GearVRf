@@ -42,23 +42,16 @@ android {
             ldLibs "GLESv2"
             ldLibs libsDir + "libgvrf.so"
         }
-    }
-
-    task buildNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
+        externalNativeBuild {
+            ndkBuild {
+                arguments = ["-j" + Runtime.runtime.availableProcessors()]
+            }
         }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
+        ndk {
+            moduleName "gvrf-daydream"
+            stl "gnustl_static"
+            abiFilters = ['armeabi-v7a']
         }
-
-        commandLine ndkbuild,
-                '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()
-        //, 'NDK_DEBUG=1'
     }
 
     buildTypes {
@@ -125,7 +118,9 @@ task copyAARFiles(type: Copy) {
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name == 'bundleDebug') {
+    if (task.name == 'externalNativeBuildDebug') {
+        task.dependsOn 'buildInfo'
+    } else if (task.name == 'bundleDebug') {
         task<< {
             tasks.copyAARFiles.execute()
 
