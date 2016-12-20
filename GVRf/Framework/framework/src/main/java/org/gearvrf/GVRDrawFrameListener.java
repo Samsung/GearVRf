@@ -24,14 +24,14 @@ package org.gearvrf;
  * {@link GVRContext#unregisterDrawFrameListener(GVRDrawFrameListener)}.
  * Per-frame callbacks are called after the
  * {@linkplain GVRContext#runOnGlThread(Runnable) 'one shot' queue} has been
- * emptied and before {@link GVRScript#onStep()}.
+ * emptied and before {@link GVRMain#onStep()}.
  */
 public interface GVRDrawFrameListener {
     /**
      * Called each time a frame is drawn. Callbacks are called (from
      * {@link GVRViewManager#onDrawFrame()} in subscription-order, after any
      * {@linkplain GVRContext#runOnGlThread(Runnable) 'one shot' callbacks} and
-     * before {@link GVRScript#onStep()}.
+     * before {@link GVRMain#onStep()}.
      * 
      * @param frameTime
      *            Seconds since the previous frame - see

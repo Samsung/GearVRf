@@ -304,8 +304,8 @@ public abstract class GVRContext implements IEventReceiver {
      * overload that takes a priority} are generally going to be your best
      * choices for loading {@link GVRMesh} resources: mesh loading can take
      * hundreds - and even thousands - of milliseconds, and so should not be
-     * done on the GL thread in either {@link GVRScript#onInit(GVRContext)
-     * onInit()} or {@link GVRScript#onStep() onStep()}.
+     * done on the GL thread in either {@link GVRMain#onInit(GVRContext)}
+     * onInit()} or {@link GVRMain#onStep() onStep()}.
      * 
      * <p>
      * The asynchronous methods improve throughput in three ways. First, by
@@ -826,7 +826,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the bitmap is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames.
      * 
      * <p>
@@ -872,7 +872,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the texture is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames. For large
      * images, you should use either
      * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
@@ -919,7 +919,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the texture is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames. For large
      * images, you should use either
      * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
@@ -979,7 +979,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the texture is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames. For large
      * images, you should use either
      * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
@@ -1014,7 +1014,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the texture is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames. For large
      * images, you should use either
      * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)
@@ -1052,7 +1052,7 @@ public abstract class GVRContext implements IEventReceiver {
      * <p>
      * Note that this method may take hundreds of milliseconds to return: unless
      * the cube map is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRScript#onStep() onStep()} callback as that is called
+     * from your {@link GVRMain#onStep() onStep()} callback as that is called
      * once per frame, and a long call will cause you to miss frames.
      * 
      * @param resourceArray
@@ -1132,7 +1132,7 @@ public abstract class GVRContext implements IEventReceiver {
      * a background thread. Since you <em>can</em> create a
      * {@link GVRSceneObject} without a mesh and texture - and set them later -
      * using the asynchronous API can improve startup speed and/or reduce frame
-     * misses (where an {@link GVRScript#onStep() onStep()} takes too long).
+     * misses (where an {@link GVRMain#onStep() onStep()} takes too long).
      * This API may also use less RAM than {@link #loadTexture(String)}.
      * 
      * <p>
@@ -1220,7 +1220,7 @@ public abstract class GVRContext implements IEventReceiver {
      * a background thread. Since you <em>can</em> create a
      * {@link GVRSceneObject} without a mesh and texture - and set them later -
      * using the asynchronous API can improve startup speed and/or reduce frame
-     * misses, where an {@link GVRScript#onStep() onStep()} takes too long.
+     * misses, where an {@link GVRMain#onStep() onStep()} takes too long.
      * 
      * <p>
      * This API will 'consolidate' requests: If you request a texture like
@@ -2002,7 +2002,7 @@ public abstract class GVRContext implements IEventReceiver {
      * {@link GVRMaterial#setMainTexture(Future)} use an extra thread from the
      * thread pool to wait for the blocking {@link Future#get()} call. For
      * modest numbers of loads, this overhead is acceptable - but thread
-     * creation is not free, and if your {@link GVRScript#onInit(GVRContext)
+     * creation is not free, and if your {@link GVRMain#onInit(GVRContext)
      * onInit()} method fires of dozens of future loads, you may well see an
      * impact.
      * 
@@ -2062,7 +2062,7 @@ public abstract class GVRContext implements IEventReceiver {
      * {@link GVRMaterial#setMainTexture(Future)} use an extra thread from the
      * thread pool to wait for the blocking {@link Future#get()} call. For
      * modest numbers of loads, this overhead is acceptable - but thread
-     * creation is not free, and if your {@link GVRScript#onInit(GVRContext)
+     * creation is not free, and if your {@link GVRMain#onInit(GVRContext)
      * onInit()} method fires of dozens of future loads, you may well see an
      * impact.
      * 
@@ -2129,7 +2129,7 @@ public abstract class GVRContext implements IEventReceiver {
      * {@link GVRMaterial#setMainTexture(Future)} use an extra thread from the
      * thread pool to wait for the blocking {@link Future#get()} call. For
      * modest numbers of loads, this overhead is acceptable - but thread
-     * creation is not free, and if your {@link GVRScript#onInit(GVRContext)
+     * creation is not free, and if your {@link GVRMain#onInit(GVRContext)
      * onInit()} method fires of dozens of future loads, you may well see an
      * impact.
      * 
@@ -2407,7 +2407,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            (as, for example, when the splash screen closes). This
      *            callback lets apps do things like start animations when their
      *            scene becomes visible, instead of in
-     *            {@link GVRScript#onInit(GVRContext) onInit()} when the scene
+     *            {@link GVRMain#onInit(GVRContext) onInit()} when the scene
      *            objects may be hidden by the splash screen.
      * 
      * @since 1.6.4
@@ -2483,7 +2483,7 @@ public abstract class GVRContext implements IEventReceiver {
      * 
      * Each frame listener is called, once per frame, after any pending
      * {@linkplain #runOnGlThread(Runnable) GL callbacks} and before
-     * {@link GVRScript#onStep()}.
+     * {@link GVRMain#onStep()}.
      * 
      * @param frameListener
      *            A callback that will fire once per frame, until it is
@@ -2738,7 +2738,7 @@ public abstract class GVRContext implements IEventReceiver {
     /**
      * Execute on the so called framework thread. For now this is mostly for
      * internal use. To actually enable the use of this framework thread you
-     * should derive from the GVRMain base class instead of GVRScript.
+     * should derive from the GVRMain base class instead of GVRMain.
      */
     public void runOnTheFrameworkThread(final Runnable runnable) {
         mHandler.post(runnable);

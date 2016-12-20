@@ -36,7 +36,7 @@ import android.util.DisplayMetrics;
  * There might be some pros by doing some rendering related stuffs outside the GL thread,
  * but since I thought simplicity of the structure results in efficiency, I didn't do that.
  * 
- * Now it's about the GL thread. It lets the user handle the scene by calling the users GVRScript.onStep().
+ * Now it's about the GL thread. It lets the user handle the scene by calling the users GVRMain.onStep().
  * There are also GVRFrameListeners, GVRAnimationEngine, and Runnables but they aren't that special.
  */
 
@@ -62,7 +62,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
 
     /**
-     * Constructs OvrMonoscopicViewManager object with GVRScript which controls
+     * Constructs OvrMonoscopicViewManager object with GVRMain which controls
      * GL activities
      * 
      * @param gvrActivity

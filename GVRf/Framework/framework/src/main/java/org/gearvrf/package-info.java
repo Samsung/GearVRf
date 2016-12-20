@@ -23,9 +23,9 @@
  * org.gearvrf.GVRActivity}, not directly from {@code Activity}.
  * 
  * <p>Your {@code GVRActivity} descendant <em>must</em> create an instance of a class 
- * that descends from {@link org.gearvrf.GVRScript} and pass
+ * that descends from {@link org.gearvrf.GVRMain} and pass
  * that instance to {@link 
- * org.gearvrf.GVRActivity#setScript(GVRScript, String)} 
+ * org.gearvrf.GVRActivity#setMain(org.gearvrf.GVRMain, java.lang.String)}
  *
  * A {@linkplain org.gearvrf.GVRScene scene graph} contains any 
  * number of {@linkplain org.gearvrf.GVRSceneObject scene 

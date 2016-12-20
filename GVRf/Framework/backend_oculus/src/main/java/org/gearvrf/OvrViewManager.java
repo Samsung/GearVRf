@@ -48,7 +48,7 @@ import java.util.Arrays;
  * There might be some pros by doing some rendering related stuffs outside the GL thread,
  * but since I thought simplicity of the structure results in efficiency, I didn't do that.
  * 
- * Now it's about the GL thread. It lets the user handle the scene by calling the users GVRScript.onStep().
+ * Now it's about the GL thread. It lets the user handle the scene by calling the users GVRMain.onStep().
  * There are also GVRFrameListeners, GVRAnimationEngine, and Runnables but they aren't that special.
  */
 
@@ -89,7 +89,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     private GVRMethodCallTracer mTracerDrawFrameGap;
 
     /**
-     * Constructs OvrViewManager object with GVRScript which controls GL
+     * Constructs OvrViewManager object with GVRMain which controls GL
      * activities
      * 
      * @param gvrActivity
