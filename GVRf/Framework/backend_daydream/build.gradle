@@ -20,36 +20,13 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 21
-        ndk {
-            File curDir = file('./')
-            curDir = file(curDir.absolutePath)
-            String libsDir = curDir.absolutePath +
-                    '/build/intermediates/exploded-aar/Framework/framework/unspecified/jni/armeabi-v7a/'
-
-            moduleName = "gvrf-daydream"
-            abiFilter "armeabi-v7a"
-            cFlags "-fexceptions -std=c++11 " + " -I" + curDir.absolutePath + "/." +
-                    "./framework/src/main/jni/ "
-            cFlags += "-I" + curDir.absolutePath + "/src/main/jni"
-            cFlags += "-I" + curDir.absolutePath + '/../framework/src/main/jni/util '
-            cFlags += "-I" + curDir.absolutePath + '/../framework/src/main/jni/contrib '
-
-            stl "gnustl_shared"
-            ldLibs curDir.absolutePath + "/src/main/jniLibs/armeabi-v7a/libgvr.so"
-
-            ldLibs "log"
-            ldLibs "android"
-            ldLibs "GLESv2"
-            ldLibs libsDir + "libgvrf.so"
-        }
         externalNativeBuild {
-            ndkBuild {
-                arguments = ["-j" + Runtime.runtime.availableProcessors()]
+            cmake {
+                arguments.add('-DANDROID_TOOLCHAIN=gcc')
             }
         }
         ndk {
             moduleName "gvrf-daydream"
-            stl "gnustl_static"
             abiFilters = ['armeabi-v7a']
         }
     }
@@ -62,6 +39,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
         releaseToGitHub {
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
         }
     }
 
@@ -118,9 +101,7 @@ task copyAARFiles(type: Copy) {
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name == 'externalNativeBuildDebug') {
-        task.dependsOn 'buildInfo'
-    } else if (task.name == 'bundleDebug') {
+    if (task.name == 'bundleDebug') {
         task<< {
             tasks.copyAARFiles.execute()
 
