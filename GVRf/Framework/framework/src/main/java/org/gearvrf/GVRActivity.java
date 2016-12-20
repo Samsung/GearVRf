@@ -649,7 +649,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyLongPress(int keyCode, KeyEvent event);
         boolean dispatchKeyEvent(KeyEvent event);
 
-        void setMain(GVRMain gvrScript, String dataFileName);
+        void setMain(GVRMain gvrMain, String dataFileName);
         void setViewManager(GVRViewManager viewManager);
         void onInitAppSettings(VrAppSettings appSettings);
 

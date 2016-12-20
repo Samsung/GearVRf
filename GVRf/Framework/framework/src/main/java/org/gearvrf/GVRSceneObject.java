@@ -174,7 +174,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Note that because of <a href="package-summary.html#async">asynchronous
      * request consolidation</a> you generally don't have to do anything special
      * to create several objects that share the same mesh or texture: if you
-     * create all the objects in {@link GVRScript#onInit(GVRContext) onInit(),}
+     * create all the objects in {@link GVRMain#onInit(GVRContext) onInit(),}
      * the meshes and textures will generally <em>not</em> have loaded before
      * your {@code onInit()} method finishes. Thus, the loading code will see
      * that, say, {@code sceneObject2} and {@code sceneObject3} are using the

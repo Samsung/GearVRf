@@ -432,7 +432,7 @@ abstract class GVRViewManager extends GVRContext {
     // Send onInit and onAfterInit events to main scene when it is ready.
     // When there is a splash screen, it is called after the splash screen has
     // completed.
-    // If there is no splash screen, it is called after GVRScript.onInit()
+    // If there is no splash screen, it is called after GVRMain.onInit()
     // returns.
     private void notifyMainSceneReady() {
         runOnTheFrameworkThread(new Runnable() {

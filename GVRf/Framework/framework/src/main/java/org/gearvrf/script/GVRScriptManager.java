@@ -57,7 +57,7 @@ public class GVRScriptManager {
 
     // For script bundles. All special targets start with @.
     public static final String TARGET_PREFIX = "@";
-    public static final String TARGET_GVRSCRIPT = "@GVRScript";
+    public static final String TARGET_GVRMAIN = "@GVRMain";
     public static final String TARGET_GVRACTIVITY = "@GVRActivity";
 
     interface TargetResolver {
@@ -70,8 +70,8 @@ public class GVRScriptManager {
     static {
         sBuiltinTargetMap = new TreeMap<String, TargetResolver>();
 
-        // Target resolver for "@GVRScript"
-        sBuiltinTargetMap.put(TARGET_GVRSCRIPT, new TargetResolver() {
+        // Target resolver for "@GVRMain"
+        sBuiltinTargetMap.put(TARGET_GVRMAIN, new TargetResolver() {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
                     String name) {
@@ -227,7 +227,7 @@ public class GVRScriptManager {
 
     /**
      * Load a script bundle file. It defines bindings between scripts and GVRf objects
-     * (e.g., scene objects and the {@link GVRScript} object).
+     * (e.g., scene objects and the {@link GVRMain} object).
      *
      * @param filePath
      *        The path and filename of the script bundle.
@@ -248,7 +248,7 @@ public class GVRScriptManager {
      *
      * @param scriptBundle
      *     The script bundle.
-     * @param gvrScript
+     * @param gvrMain
      *     The {@link GVRMain} to bind to.
      * @param bindToMainScene
      *     If {@code true}, also bind it to the main scene on the event {@link GVRMain#onAfterInit}.
@@ -349,7 +349,7 @@ public class GVRScriptManager {
 
                 // Apply mask
                 boolean toBind = false;
-                if ((bindMask & BIND_MASK_GVRSCRIPT) != 0 && targetName.equalsIgnoreCase(TARGET_GVRSCRIPT)) {
+                if ((bindMask & BIND_MASK_GVRSCRIPT) != 0 && targetName.equalsIgnoreCase(TARGET_GVRMAIN)) {
                     toBind = true;
                 }
 

@@ -15,7 +15,7 @@ import org.gearvrf.GVRResourceVolume;
  *      language: "js"
  *   },
  *   {
- *      target: "@GVRScript",
+ *      target: "@GVRMain",
  *      script: "http://mysite/script.lua",
  *      language: "lua",
  *      volumeType: "url"
@@ -26,7 +26,7 @@ import org.gearvrf.GVRResourceVolume;
 public class GVRScriptBindingEntry {
     /**
      * The target to bind the script to. The string can be a name of a scene object,
-     * or a special object beginning with the '@' character, such as the GVRScript
+     * or a special object beginning with the '@' character, such as the GVRMain
      * object represented by "@activity".
      */
     public String target;
