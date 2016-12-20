@@ -25,8 +25,9 @@ import org.gearvrf.utility.VrAppSettings;
 /**
  * {@inheritDoc}
  */
-final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate {
+final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate, IActivityNative {
     private GVRActivity mActivity;
+    private DaydreamViewManager daydreamViewManager;
 
     @Override
     public void onCreate(GVRActivity activity) {
@@ -35,7 +36,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
 
     @Override
     public IActivityNative getActivityNative() {
-        return null;
+        return this;
     }
 
     @Override
@@ -50,7 +51,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
 
     @Override
     public GVRCameraRig makeCameraRig(GVRContext context) {
-        return new GVRCameraRig(context);
+        return new DaydreamCameraRig(context);
     }
 
     @Override
@@ -60,7 +61,10 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
             public boolean isHmtConnected() {
                 return false;
             }
-            public boolean usingMultiview() { return false; }
+
+            public boolean usingMultiview() {
+                return false;
+            }
         };
     }
 
@@ -94,6 +98,7 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
 
     @Override
     public void setViewManager(GVRViewManager viewManager) {
+        daydreamViewManager = (DaydreamViewManager) viewManager;
     }
 
     @Override
@@ -123,5 +128,58 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         return false;
+    }
+
+    @Override
+    public void onDestroy() {
+
+    }
+
+    @Override
+    public void setCameraRig(GVRCameraRig cameraRig) {
+        if (daydreamViewManager != null) {
+            daydreamViewManager.setCameraRig(cameraRig);
+        }
+    }
+
+    @Override
+    public void onUndock() {
+
+    }
+
+    @Override
+    public void onDock() {
+
+    }
+
+    @Override
+    public long getNative() {
+        return 0;
+    }
+
+    /**
+     * The class ignores the perspective camera and attaches a custom left and right camera instead.
+     * Daydream uses the glFrustum call to create the projection matrix. Using the custom camera
+     * allows us to set the projection matrix from the glFrustum call against the custom camera
+     * using the set_projection_matrix call in the native renderer.
+     */
+    static class DaydreamCameraRig extends GVRCameraRig {
+        protected DaydreamCameraRig(GVRContext gvrContext) {
+            super(gvrContext);
+        }
+
+        @Override
+        public void attachLeftCamera(GVRCamera camera) {
+            GVRCamera leftCamera = new GVRCustomCamera(getGVRContext());
+            leftCamera.setRenderMask(GVRRenderData.GVRRenderMaskBit.Left);
+            super.attachLeftCamera(leftCamera);
+        }
+
+        @Override
+        public void attachRightCamera(GVRCamera camera) {
+            GVRCamera rightCamera = new GVRCustomCamera(getGVRContext());
+            rightCamera.setRenderMask(GVRRenderData.GVRRenderMaskBit.Right);
+            super.attachRightCamera(rightCamera);
+        }
     }
 }
