@@ -17,8 +17,8 @@
  * Texture from a (Java-loaded) byte stream containing a compressed texture
  ***************************************************************************/
 
-#ifndef bitmap_texture_H_
-#define bitmap_texture_H_
+#ifndef BITMAP_IMAGE_H
+#define BITMAP_IMAGE_H
 
 #include "objects/textures/texture.h"
 #include "util/gvr_jni.h"
@@ -26,91 +26,72 @@
 #include "util/jni_utils.h"
 
 namespace gvr {
-class BitmapImage : public Image
-{
-public:
-
-    explicit BitmapImage(JNIEnv* env, int width, int height, jbyteArray data) :
-            Image(GL_TEXTURE_2D, width, height, width * height, GL_LUMINANCE, 1),
-            mData(NULL)
+    class BitmapImage : public Image
     {
-        if (JNI_OK != env->GetJavaVM(&mJava))
+    public:
+
+        explicit BitmapImage(JNIEnv* env, int width, int height, jbyteArray data) :
+                Image(GL_TEXTURE_2D, width, height, width * height, GL_LUMINANCE, 1),
+                mData(NULL)
         {
-            FAIL("GetJavaVM failed");
-        }
-        update(env, width, height, data);
-    }
-
-    explicit BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) :
-            Image(target, width, height, imagesize, format, levels)
-    {
-        if (JNI_OK != env->GetJavaVM(&mJava))
-        {
-            FAIL("GetJavaVM failed");
-        }
-    }
-
-    virtual ~BitmapImage()
-    {
-        clearData(getCurrentEnv(mJava));
-    }
-
-    void clearData(JNIEnv* env)
-    {
-        if (mData != NULL)
-        {
-            jobject ref = env->NewLocalRef(mData);
-            if (ref != NULL)
+            if (JNI_OK != env->GetJavaVM(&mJava))
             {
-                env->DeleteWeakGlobalRef(mData);
-                env->DeleteLocalRef(ref);
+                FAIL("GetJavaVM failed");
             }
-            mData = NULL;
+            update(env, width, height, data);
         }
-    }
 
-    void update(JNIEnv* env, int width, int height, jbyteArray data)
-    {
-        clearData(env);
-        mWidth = width;
-        mHeight = height;
-        if (data != NULL)
+        explicit BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) :
+                Image(target, width, height, imagesize, format, levels)
         {
-            mData = static_cast<jbyteArray>(env->NewWeakGlobalRef(data));
-            mPendingUpdate = true;
+            if (JNI_OK != env->GetJavaVM(&mJava))
+            {
+                FAIL("GetJavaVM failed");
+            }
         }
-    }
 
-    virtual void update(int texid)
-    {
-        if (mData != NULL)
+        virtual ~BitmapImage()
         {
-            JNIEnv *env = getCurrentEnv(mJava);
-            jbyteArray array = static_cast<jbyteArray>(env->NewLocalRef(mData));
-            jbyte *data = env->GetByteArrayElements(array, 0);
-            env->ReleaseByteArrayElements(mData, data, 0);
-            glBindTexture(GL_TEXTURE_2D, texid);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, mWidth, mHeight, 0, GL_LUMINANCE,
-                         GL_UNSIGNED_BYTE, mData
-            );
-            glGenerateMipmap(GL_TEXTURE_2D);
-            env->DeleteLocalRef(array);
+            clearData(getCurrentEnv(mJava));
+        }
+
+        void clearData(JNIEnv* env)
+        {
+            if (mData != NULL)
+            {
+                jobject ref = env->NewLocalRef(mData);
+                if (ref != NULL)
+                {
+                    env->DeleteWeakGlobalRef(mData);
+                    env->DeleteLocalRef(ref);
+                }
+                mData = NULL;
+            }
+        }
+
+        void update(JNIEnv* env, int width, int height, jbyteArray data)
+        {
             clearData(env);
+            mWidth = width;
+            mHeight = height;
+            if (data != NULL)
+            {
+                mData = static_cast<jbyteArray>(env->NewWeakGlobalRef(data));
+                mPendingUpdate = true;
+            }
         }
-        mPendingUpdate = false;
-    }
 
-private:
-    BitmapImage(const BitmapImage& texture) = delete;
-    BitmapImage(BitmapImage&& texture) = delete;
-    BitmapImage& operator=(const BitmapImage& texture) = delete;
-    BitmapImage& operator=(BitmapImage&& texture) = delete;
+    private:
+        BitmapImage(const BitmapImage& texture) = delete;
+        BitmapImage(BitmapImage&& texture) = delete;
+        BitmapImage& operator=(const BitmapImage& texture) = delete;
+        BitmapImage& operator=(BitmapImage&& texture) = delete;
 
 
-protected:
-    JavaVM* mJava;
-    jbyteArray mData;
-};
+    protected:
+        JavaVM* mJava;
+        jbyteArray mData;
+    };
 
 }
 #endif

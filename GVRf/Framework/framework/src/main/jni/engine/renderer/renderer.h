@@ -40,9 +40,11 @@ class SceneObject;
 class ShaderData;
 class PostEffectShaderManager;
 class RenderData;
-class RenderTexture;
 class ShaderManager;
 class Light;
+class BitmapImage;
+class CubemapImage;
+class CompressedImage;
 
 /*
  * These uniforms are commonly used in shaders.
@@ -111,6 +113,15 @@ public:
      virtual ShaderData* createMaterial(const std::string& desc) = 0;
      virtual RenderData* createRenderData() = 0;
      virtual UniformBlock* createUniformBlock(const std::string& desc,int) = 0;
+     virtual BitmapImage* createBitmap(JNIEnv* env, int width, int height, jbyteArray data) = 0;
+     virtual BitmapImage* createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) = 0;
+     virtual CubemapImage* createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
+                                       jobjectArray textureArray, int* dataOffsets) = 0;
+     virtual CubemapImage* createCubemap(JNIEnv* env, jobjectArray bitmapArray) = 0;
+     virtual CompressedImage* createCompressedBitmap(JNIEnv *env, int target, int format,
+                                                     int width, int height, jbyteArray bytes,
+                                                     int levels, int *dataOffsets) = 0;
+     virtual Texture* createTexture() = 0;
      virtual void initializeStats();
      virtual void set_face_culling(int cull_face) = 0;
      virtual void renderRenderDataVector(RenderState &rstate);

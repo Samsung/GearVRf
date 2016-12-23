@@ -17,6 +17,7 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "cubemap_image.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_java_stack_trace.h"
@@ -37,15 +38,20 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCubemapImage_bitmapArrayConstructor(JNIEnv * env,
     jobject obj, jobjectArray bitmapArray)
 {
-    if (env->GetArrayLength(bitmapArray) != 6) {
+    if (env->GetArrayLength(bitmapArray) != 6)
+    {
         std::string error =
         "new CubemapImage() failed! Input bitmapList's length is not 6.";
         throw error;
     }
     jlong result = 0;
-    try {
-        result = reinterpret_cast<jlong>(new CubemapImage(env, bitmapArray));
-    } catch (const std::string &err) {
+    try
+    {
+        CubemapImage* image = Renderer::getInstance()->createCubemap(env, bitmapArray);
+        result = reinterpret_cast<jlong>(image);
+    }
+    catch (const std::string &err)
+    {
         printJavaCallStack(env, err);
         throw err;
     }

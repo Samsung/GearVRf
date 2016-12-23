@@ -55,7 +55,7 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
 
     public GVRTexture(GVRContext gvrContext)
     {
-        super(gvrContext, NativeBaseTexture.constructor());
+        super(gvrContext, NativeTexture.constructor());
         mImage = null;
         mLock = new ReentrantLock();
         mCondition = mLock.newCondition();
@@ -73,7 +73,7 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
 
     public GVRTexture(GVRContext gvrContext, GVRTextureParameters texparams)
     {
-        super(gvrContext, NativeBaseTexture.constructor());
+        super(gvrContext, NativeTexture.constructor());
         mImage = null;
         mLock = new ReentrantLock();
         mCondition = mLock.newCondition();
@@ -209,7 +209,7 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
         {
             throw new UnsupportedOperationException("GVRTexture.setImage unsupported image class");
         }
-        NativeBaseTexture.setImage(getNative(), imageData.getNative());
+        NativeTexture.setImage(getNative(), imageData.getNative());
     }
 
     public GVRImage getImage()
@@ -483,14 +483,9 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
 }
 
 class NativeTexture {
-    static native int getId(long texture);
-    static native void updateTextureParameters(long texture,
-            int[] textureParametersValues);
-}
-
-final class NativeBaseTexture {
     static native long constructor();
-    static native void setJavaOwner(long pointer, GVRTexture owner);
+    static native int getId(long texture);
+    static native void updateTextureParameters(long texture, int[] textureParametersValues);
     static native void setImage(long texPointer, long imagePointer);
 }
 

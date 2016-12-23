@@ -28,7 +28,7 @@
 
 #include "objects/components/perspective_camera.h"
 #include "objects/components/camera_rig.h"
-#include "objects/textures/base_texture.h"
+#include "objects/textures/texture.h"
 #include "objects/components/transform.h"
 #include "objects/components/component.h"
 #include "objects/components/camera.h"

@@ -17,7 +17,6 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
-#include "gl/gl_texture.h"
 #include "objects/hybrid_object.h"
 
 namespace gvr {
@@ -25,10 +24,7 @@ namespace gvr {
 class Image: public HybridObject {
 
 public:
-    virtual ~Image()
-    {
-
-    }
+    virtual ~Image() { }
 
     Image(int type, int format) :
             HybridObject(), mType(type), mPendingUpdate(0),
@@ -73,7 +69,7 @@ public:
         return false;
     }
 
-    bool setDataOffsets(int* offsets, int n)
+    bool setDataOffsets(const int* offsets, int n)
     {
         if (n != mLevels)
         {

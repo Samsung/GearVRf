@@ -18,15 +18,8 @@
  ***************************************************************************/
 
 #include "custom_shader.h"
-#include "engine/renderer/renderer.h"
-#include "gl/gl_program.h"
 #include "objects/scene.h"
-#include "objects/mesh.h"
-#include "objects/textures/texture.h"
-#include "objects/components/render_data.h"
-#include "util/gvr_gl.h"
 
-#include <sys/time.h>
 #include <shaderc/shaderc.h>
 #include <shaderc/shaderc.hpp>
 #include <gl/gl_material.h>

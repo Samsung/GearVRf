@@ -18,20 +18,35 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "texture.h"
 
 #include "util/gvr_jni.h"
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
-        jlong jtexture);
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
-        jlong jtexture, jintArray jtexture_parameters);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeTexture_constructor(JNIEnv * env, jobject obj);
+
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj, jlong jtexture);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
+                jlong jtexture, jintArray jtexture_parameters);
+
+    JNIEXPORT void JNICALL
+        Java_org_gearvrf_NativeTexture_setImage(JNIEnv * env, jobject obj,
+                jlong jtexture, jobject jimage);
 }
 ;
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeTexture_constructor(JNIEnv * env, jobject obj)
+{
+    Texture* tex = Renderer::getInstance()->createTexture();
+    return reinterpret_cast<jlong>(tex);
+}
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
@@ -51,4 +66,11 @@ Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj
 
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeTexture_setImage(JNIEnv* env, jobject obj, jlong jtexture, jobject jimage)
+{
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
+    Image* image = reinterpret_cast<Image*>(jimage);
+    texture->setImage(image);
+}
 }

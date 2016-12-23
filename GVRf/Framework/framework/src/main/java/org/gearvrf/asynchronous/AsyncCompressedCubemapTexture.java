@@ -33,7 +33,7 @@ import org.gearvrf.utility.FileNameUtils;
 /**
  * Async resource loading: compressed cube map textures.
  *
- * We directly use CompressedTexture.load() in loadResource() to detect
+ * We directly use CompressedImage.load() in loadResource() to detect
  * the format of and load compressed textures.
  *
  * @since 1.6.9

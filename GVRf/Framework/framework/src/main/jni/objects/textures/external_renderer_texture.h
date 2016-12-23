@@ -13,30 +13,29 @@
 
 namespace gvr {
 
-class ExternalRendererTexture: public Texture {
+class GLExternalRendererTexture: public GLTexture
+{
 public:
-    ExternalRendererTexture() : Texture(0), mData(0) {
+    GLExternalRendererTexture() : GLTexture(0), mData(0)
+    {
+        target_ = GL_TEXTURE_EXTERNAL_OES + 1000;
     }
 
-    GLenum getTarget() const {
-        return TARGET;
-    }
-
-    virtual void setData(long data) {
+    virtual void setData(long data)
+    {
         mData = data;
     }
 
-    virtual long getData() const {
+    virtual long getData() const
+    {
         return mData;
     }
 
-    static const GLenum TARGET = GL_TEXTURE_EXTERNAL_OES + 1000;
-
 private:
-    ExternalRendererTexture(const ExternalRendererTexture& render_texture);
-    ExternalRendererTexture(ExternalRendererTexture&& render_texture);
-    ExternalRendererTexture& operator=(const ExternalRendererTexture& render_texture);
-    ExternalRendererTexture& operator=(ExternalRendererTexture&& render_texture);
+    GLExternalRendererTexture(const GLExternalRendererTexture& render_texture);
+    GLExternalRendererTexture(GLExternalRendererTexture&& render_texture);
+    GLExternalRendererTexture& operator=(const GLExternalRendererTexture& render_texture);
+    GLExternalRendererTexture& operator=(GLExternalRendererTexture&& render_texture);
 
 private:
     long mData;

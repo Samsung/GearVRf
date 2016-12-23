@@ -26,116 +26,86 @@
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 #endif /* GL_EXT_texture_filter_anisotropic */
 
-#include "gl/gl_headers.h"
-
-#include "util/gvr_log.h"
 #include <cstdlib>
-
+#include "objects/textures/image.h"
+#include "objects/textures/texture.h"
+#include "gl/gl_headers.h"
+#include "util/gvr_log.h"
 #include "engine/memory/gl_delete.h"
-#include "objects/gl_pending_task.h"
-
-#define MAX_TEXTURE_PARAM_NUM 10
 
 namespace gvr {
-class GLTexture : public GLPendingTask {
+class GLTexture : public Texture
+{
 public:
-    explicit GLTexture(GLenum target)
-    : target_(target)
-    , pending_gl_task_(GL_TASK_NONE)
-    {
-        pending_gl_task_ = GL_TASK_INIT_NO_PARAM;
-    }
-    explicit GLTexture(GLenum target, int texture_id) :
-            target_(target) {
-        id_ = texture_id;
-    }
-    explicit GLTexture(GLenum target, int* texture_parameters) :
-            target_(target) {
-        set_texture_parameters(texture_parameters);
+    explicit GLTexture()  {
     }
 
-    virtual ~GLTexture() {
-        if (0 != id_ && deleter_) {
+    explicit GLTexture(int texture_id) :
+            id_(texture_id) { }
+
+    virtual ~GLTexture()
+    {
+        if (0 != id_ && deleter_)
+        {
             deleter_->queueTexture(id_);
         }
     }
 
-    GLuint id() {
-        if (target_) {
-            runPendingGL();
+    virtual bool isReady()
+    {
+        int target = getTarget();
+        if (!target)
+        {
+            return false;
         }
+        update();
+        if (mImage && id_ && mImage->checkForUpdate(id_))
+        {
+            setReady(true);
+            return true;
+        }
+        return Texture::isReady();
+    }
+
+    GLuint id()
+    {
         return id_;
     }
 
-    GLenum target() const {
-        return target_;
-    }
-
-    void set_target(GLenum target) {
-        target_ = target;
-    }
-
-    void set_texture_parameters(int* texparams)
+    virtual bool update()
     {
-        pending_gl_task_ = GL_TASK_INIT_WITH_PARAM;
-        memcpy(texture_parameters_, texparams, sizeof(int) * 5);
-    }
-
-    virtual void runPendingGL() {
-        switch (pending_gl_task_) {
-        case GL_TASK_NONE:
-            return;
-
-        case GL_TASK_INIT_NO_PARAM: {
-            // The deleter needs to be obtained from the GL thread
-            deleter_= getDeleterForThisThread();
-
-            glGenTextures(1, &id_);
-            glBindTexture(target_, id_);
-            glTexParameteri(target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(target_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(target_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            glTexParameteri(target_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(target_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glBindTexture(target_, 0);
-            break;
-        }
-
-        case GL_TASK_INIT_WITH_PARAM: {
-            deleter_= getDeleterForThisThread();
+        if  (mPendingTask == Texture::TASK_INIT_PARAMS)
+        {
+            int target = getTarget();
+            deleter_ = getDeleterForThisThread();
 
             // Sets the new MIN FILTER
-            GLenum min_filter_type_ = texture_parameters_[0];
+            GLenum min_filter_type_ = mTexParams[0];
 
             // Sets the MAG FILTER
-            GLenum mag_filter_type_ = texture_parameters_[1];
+            GLenum mag_filter_type_ = mTexParams[1];
 
             // Sets the wrap parameter for texture coordinate S
-            GLenum wrap_s_type_ = texture_parameters_[3];
+            GLenum wrap_s_type_ = mTexParams[3];
 
             // Sets the wrap parameter for texture coordinate S
-            GLenum wrap_t_type_ = texture_parameters_[4];
+            GLenum wrap_t_type_ = mTexParams[4];
 
             glGenTextures(1, &id_);
-            glBindTexture(target_, id_);
+            glBindTexture(target, id_);
 
             // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
-            if (texture_parameters_[2] > 1.0f) {
-                glTexParameterf(target_, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                        (float) texture_parameters_[2]);
+            if (mTexParams[2] > 1.0f)
+            {
+                glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float) mTexParams[2]);
             }
-
-            glTexParameteri(target_, GL_TEXTURE_WRAP_S, wrap_s_type_);
-            glTexParameteri(target_, GL_TEXTURE_WRAP_T, wrap_t_type_);
-            glTexParameteri(target_, GL_TEXTURE_MIN_FILTER, min_filter_type_);
-            glTexParameteri(target_, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
-            glBindTexture(target_, 0);
-            break;
-        }
-
+            glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
+            glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
         } // switch
-
-        pending_gl_task_ = GL_TASK_NONE;
+        mPendingTask = 0;
+        return true;
     }
 
 private:
@@ -144,21 +114,10 @@ private:
     GLTexture& operator=(const GLTexture& gl_texture);
     GLTexture& operator=(GLTexture&& gl_texture);
 
-private:
+protected:
     GLuint id_ = 0;
-    GLenum target_;
     GlDelete* deleter_;
 
-    // Enum for pending GL tasks. Keep a comma with each line
-    // for easier merging.
-    enum {
-        GL_TASK_NONE = 0,
-        GL_TASK_INIT_NO_PARAM,
-        GL_TASK_INIT_WITH_PARAM,
-    };
-    int pending_gl_task_;
-
-    int texture_parameters_[MAX_TEXTURE_PARAM_NUM];
 };
 
 }

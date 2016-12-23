@@ -18,7 +18,7 @@
  * JNI
  ***************************************************************************/
 
-#include "external_texture.h"
+#include "gl/gl_external_texture.h"
 
 #include "util/gvr_jni.h"
 

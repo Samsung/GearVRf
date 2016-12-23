@@ -17,6 +17,7 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "bitmap_image.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_java_stack_trace.h"
@@ -38,8 +39,9 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv * env, jobject obj,
                 jint width, jint height, jbyteArray data)
-{
-    jlong result =  reinterpret_cast<jlong>(new BitmapImage(env, width, height, data));
+{;
+    BitmapImage* image = Renderer::getInstance()->createBitmap(env, width, height, data);
+    jlong result =  reinterpret_cast<jlong>(image);
     return result;
 }
 

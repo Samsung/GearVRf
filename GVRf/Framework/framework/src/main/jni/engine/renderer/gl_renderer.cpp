@@ -18,25 +18,19 @@
  ***************************************************************************/
 
 #include "renderer.h"
-#include "gl/gl_program.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
-#include "eglextension/tiledrendering/tiled_rendering_enhancer.h"
 #include "gl/gl_material.h"
 #include "gl/gl_render_data.h"
+#include "gl/gl_bitmap_image.h"
+#include "gl/gl_cubemap_image.h"
+#include "gl_renderer.h"
+
 #include "objects/scene.h"
-#include "objects/scene_object.h"
-#include "objects/components/camera.h"
-#include "objects/components/render_data.h"
-#include "objects/textures/render_texture.h"
 #include "shaders/shader_manager.h"
 #include "shaders/post_effect_shader_manager.h"
-#include "util/gvr_gl.h"
-#include "util/gvr_log.h"
-#include "gl_renderer.h"
-#include <unordered_map>
-#include <unordered_set>
-#include <gvr_image_capture.h>
+#include "objects/textures/render_texture.h"
+
 
 namespace gvr {
 ShaderData* GLRenderer::createMaterial(const std::string& desc)
@@ -52,6 +46,39 @@ RenderData* GLRenderer::createRenderData()
 UniformBlock* GLRenderer::createUniformBlock(const std::string& desc, int index)
 {
     return new GLUniformBlock(desc, index);
+}
+
+BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int width, int height, jbyteArray data)
+{
+    return new GLBitmapImage(env, width, height, data);
+}
+
+BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels)
+{
+    return new GLBitmapImage(env, target, width, height, imagesize, format, levels);
+}
+
+CubemapImage* GLRenderer::createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
+                                        jobjectArray textureArray, const int* dataOffsets)
+{
+    return new GLCubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets);
+}
+
+CubemapImage* GLRenderer::createCubemap(JNIEnv* env, jobjectArray bitmapArray)
+{
+    return new GLCubemapImage(env, bitmapArray);
+}
+
+CompressedImage* GLRenderer::createCompressedBitmap(JNIEnv *env, int target, int format,
+                                                    int width, int height, jbyteArray bytes,
+                                                    int levels, const int *dataOffsets)
+{
+    return new CompressedImage(env, target, format, width, height, bytes, levels, dataOffsets);
+}
+
+Texture* GLRenderer::createTexture()
+{
+    return new GLTexture();
 }
 
 GLRenderer::GLRenderer() : transform_ubo_(nullptr)

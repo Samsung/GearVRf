@@ -20,93 +20,80 @@
 #ifndef TEXTURE_H_
 #define TEXTURE_H_
 
-#include "gl/gl_texture.h"
+#include "gl/gl_headers.h"
 #include "objects/hybrid_object.h"
-#include "objects/gl_pending_task.h"
 #include "image.h"
+#define MAX_TEXTURE_PARAM_NUM 10
 
 namespace gvr {
 
-class Texture: public HybridObject, GLPendingTask {
+class Texture : public HybridObject
+{
 public:
-    virtual ~Texture() {
-        delete gl_texture_;
+    //
+    // Enum for pending update tasks.
+    //
+    enum
+    {
+        TASK_NONE = 0,
+        TASK_INIT_PARAMS = 1,
+    };
+
+    Texture() : HybridObject(),
+                mImage(NULL),
+                mTarget(0),
+                mPendingTask(TASK_NONE),
+                mIsReady(false)
+    {
+        mTexParams[0] = GL_LINEAR;
+        mTexParams[1] = GL_LINEAR;
+        mTexParams[2] = 1.0f;
+        mTexParams[3] = GL_CLAMP_TO_EDGE;
+        mTexParams[4] = GL_CLAMP_TO_EDGE;
     }
 
-    // Should be called in GL context.
-    virtual GLuint getId() {
-        if (gl_texture_ == 0) {
-            // must be recycled already. The caller will handle error.
-            return 0;
-        }
-        // Before returning the ID makes sure nothing is pending
-        runPendingGL();
-        return gl_texture_->id();
-    }
+    virtual ~Texture() { }
 
     virtual void setImage(Image* image)
     {
         mImage = image;
-        if (gl_texture_)
-        {
-            GLenum target = (GLenum) mImage->getType();
-            gl_texture_->set_target(target);
-        }
+        mTarget = image->getType();
     }
 
-    void updateTextureParameters(int* texture_parameters, int n)
+    void updateTextureParameters(const int* texture_parameters, int n)
     {
-       gl_texture_->set_texture_parameters(texture_parameters);
+        memcpy(mTexParams, texture_parameters, sizeof(int) * 5);
+        mPendingTask = TASK_INIT_PARAMS;
     }
 
-    virtual GLenum getTarget() const
+    virtual int getTarget() const
     {
-        if (mImage)
-        {
-            return mImage->getType();
-        }
-        return 0;
+        return mTarget;
     }
 
-    virtual void runPendingGL()
+
+    virtual bool isReady()
     {
-        int texid = gl_texture_->id();
-        if (mImage && texid)
-        {
-            if (mImage->checkForUpdate(texid))
-            {
-                setReady(true);
-            }
-        }
-        gl_texture_->runPendingGL();
+        return mIsReady;
     }
 
-    bool isReady() {
-        return ready;
-    }
-
-    void setReady(bool ready) {
-        this->ready = ready;
+    void setReady(bool ready)
+    {
+        mIsReady = ready;
     }
 
 protected:
-    Texture(GLTexture* gl_texture) : HybridObject() {
-        gl_texture_ = gl_texture;
-        mImage = NULL;
-    }
-
-    GLTexture*  gl_texture_;
-    Image*      mImage;
+    Image*  mImage;
+    int     mTexParams[MAX_TEXTURE_PARAM_NUM];
+    int     mTarget;
+    int     mPendingTask;
+    bool    mIsReady;
 
 private:
     Texture(const Texture& texture);
     Texture(Texture&& texture);
     Texture& operator=(const Texture& texture);
     Texture& operator=(Texture&& texture);
-
-private:
-    static const GLenum target = GL_TEXTURE_2D;
-    bool ready = false;
 };
 
 }

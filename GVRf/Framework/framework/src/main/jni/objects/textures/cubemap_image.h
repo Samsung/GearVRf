@@ -17,8 +17,8 @@
  * Cube map texture made by six bitmaps.
  ***************************************************************************/
 
-#ifndef CUBEMAP_TEXTURE_H_
-#define CUBEMAP_TEXTURE_H_
+#ifndef CUBEMAP_IMAGE_H_
+#define CUBEMAP_IMAGE_H_
 
 #include <string>
 
@@ -48,7 +48,7 @@ public:
     }
 
     explicit CubemapImage(JNIEnv* env, int format, int width, int height, int imageSize,
-            jobjectArray textureArray, int* dataOffsets) :
+            jobjectArray textureArray, const int* dataOffsets) :
             Image(GL_TEXTURE_CUBE_MAP, width, height, imageSize, format, 6),
             mBitmaps(NULL), mTextures(NULL)
     {
@@ -106,6 +106,7 @@ private:
     CubemapImage& operator=(const CubemapImage& base_texture);
     CubemapImage& operator=(CubemapImage&& base_texture);
 
+protected:
     void clearData(JNIEnv* env)
     {
         if (mBitmaps != NULL)
@@ -216,7 +217,7 @@ private:
         }
     }
 
-private:
+protected:
     JavaVM* mJava;
     jobject mBitmaps;
     jobject mTextures;
