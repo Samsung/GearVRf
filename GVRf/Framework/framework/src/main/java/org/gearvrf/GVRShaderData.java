@@ -69,7 +69,7 @@ public class GVRShaderData extends GVRHybridObject
     {
         super(gvrContext, NativeShaderData.ctor(shaderId.getUniformDescriptor(gvrContext)));
         GVRShader shader = shaderId.getTemplate(gvrContext);
-        GVRPostEffectShaderManager shaderManager = gvrContext.getPostEffectShaderManager();
+        GVRShaderManager shaderManager = gvrContext.getMaterialShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
@@ -82,7 +82,7 @@ public class GVRShaderData extends GVRHybridObject
     {
         super(gvrContext, constructor);
         GVRShader shader = shaderId.getTemplate(gvrContext);
-        GVRPostEffectShaderManager shaderManager = gvrContext.getPostEffectShaderManager();
+        GVRShaderManager shaderManager = gvrContext.getMaterialShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();

@@ -22,9 +22,7 @@
 
 #include "objects/scene.h"
 #include "objects/textures/render_texture.h"
-#include "shaders/shader_manager.h"
-#include "shaders/post_effect_shader_manager.h"
-#include "util/gvr_log.h"
+#include "shaders/material/custom_shader.h"
 #include "vulkan_renderer.h"
 #include "vulkan/vulkan_material.h"
 #include "vulkan/vulkan_render_data.h"
@@ -44,6 +42,45 @@ namespace gvr {
     UniformBlock* VulkanRenderer::createUniformBlock(const std::string& desc,int  index)
     {
         return new VulkanUniformBlock(desc,index);
+    }
+    BitmapImage* VulkanRenderer::createBitmap(JNIEnv* env, int width, int height, jbyteArray data)
+    {
+        return NULL;
+    }
+
+    BitmapImage* VulkanRenderer::createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels)
+    {
+        return NULL;
+    }
+
+    CubemapImage* VulkanRenderer::createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
+                                        jobjectArray textureArray, const int* dataOffsets)
+    {
+        return NULL;
+    }
+
+    CubemapImage* VulkanRenderer::createCubemap(JNIEnv* env, jobjectArray bitmapArray)
+    {
+        return NULL;
+    }
+
+    CompressedImage* VulkanRenderer::createCompressedBitmap(JNIEnv *env, int target, int format,
+                                                    int width, int height, jbyteArray bytes,
+                                                    int levels, const int *dataOffsets)
+    {
+        return NULL;
+    }
+
+    Texture* VulkanRenderer::createTexture(int target)
+    {
+        return NULL;
+    }
+
+    RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
+                                                   int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                   const int* texture_parameters)
+    {
+        return NULL;
     }
 
     void VulkanRenderer::updateTransforms(VulkanUniformBlock* transform_ubo, Transform* modelTrans, Camera* camera)

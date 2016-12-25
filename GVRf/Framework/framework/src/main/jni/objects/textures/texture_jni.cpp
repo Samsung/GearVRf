@@ -28,12 +28,15 @@ extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeTexture_constructor(JNIEnv * env, jobject obj);
 
-    JNIEXPORT jint JNICALL
-    Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj, jlong jtexture);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeTexture_isReady(JNIEnv * env, jobject obj, jlong jtexture);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,
                 jlong jtexture, jintArray jtexture_parameters);
+
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj, jlong jtexture);
 
     JNIEXPORT void JNICALL
         Java_org_gearvrf_NativeTexture_setImage(JNIEnv * env, jobject obj,
@@ -49,11 +52,19 @@ Java_org_gearvrf_NativeTexture_constructor(JNIEnv * env, jobject obj)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj,
-        jlong jtexture) {
+Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj, jlong jtexture)
+{
     Texture* texture = reinterpret_cast<Texture*>(jtexture);
     return texture->getId();
 }
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeTexture_isReady(JNIEnv * env, jobject obj, jlong jtexture)
+{
+    Texture* texture = reinterpret_cast<Texture*>(jtexture);
+    return texture->isReady();
+}
+
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj,

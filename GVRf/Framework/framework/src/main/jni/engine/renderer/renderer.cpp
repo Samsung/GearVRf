@@ -18,13 +18,9 @@
  ***************************************************************************/
 
 #include "renderer.h"
-#include "glm/gtc/matrix_inverse.hpp"
-
 #include "objects/scene.h"
 #include "objects/textures/render_texture.h"
-#include "shaders/shader_manager.h"
-#include "shaders/post_effect_shader_manager.h"
-
+#include "shaders/material/custom_shader.h"
 
 #define MAX_INDICES 500
 #define BATCH_SIZE 60
@@ -384,23 +380,66 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
 }
 
 void Renderer::renderPostEffectData(RenderState& rstate,
-        RenderTexture* render_texture, ShaderData* post_effect_data) {
-    try {
-        PostEffectShaderManager* shader_manager = reinterpret_cast<PostEffectShaderManager*>(rstate.shader_manager);
+        Texture* render_texture, ShaderData* post_effect_data)
+{
+    try
+    {
+        ShaderManager* shader_manager = rstate.shader_manager;
         Shader* shader = shader_manager->getShader(post_effect_data->get_shader());
         if (shader != NULL)
         {
             post_effect_data->setTexture("u_texture", render_texture);
-            RenderData* rdata = shader_manager->get_render_data();
+            RenderData* rdata = post_effect_render_data();
             rdata->set_shader(0, post_effect_data->get_shader());
             shader->render(&rstate, rdata, post_effect_data);
         }
         else {
             LOGE("SHADER: post effect shader %d not found", post_effect_data->get_shader());
         }
-    } catch (const std::string& error) {
+    }
+    catch (const std::string& error)
+    {
         LOGE("Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
     }
+}
+
+RenderData* Renderer::post_effect_render_data()
+{
+    if (post_effect_render_data_)
+    {
+        return post_effect_render_data_;
+    }
+    std::vector<glm::vec3> quad_vertices;
+    std::vector<glm::vec2> quad_uvs;
+    std::vector<unsigned short> quad_triangles;
+
+    quad_vertices.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
+    quad_vertices.push_back(glm::vec3(-1.0f, 1.0f, 0.0f));
+    quad_vertices.push_back(glm::vec3(1.0f, -1.0f, 0.0f));
+    quad_vertices.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
+
+    quad_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    quad_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    quad_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    quad_uvs.push_back(glm::vec2(1.0f, 1.0f));
+
+    quad_triangles.push_back(0);
+    quad_triangles.push_back(1);
+    quad_triangles.push_back(2);
+
+    quad_triangles.push_back(1);
+    quad_triangles.push_back(3);
+    quad_triangles.push_back(2);
+    Mesh* mesh = new Mesh(std::string("float3 a_position float2 a_texcoord"));
+    mesh->set_vertices(quad_vertices);
+    mesh->setVec2Vector("a_texcoord",quad_uvs);
+    mesh->set_triangles(quad_triangles);
+
+    RenderPass* pass = new RenderPass();
+    post_effect_render_data_ = new RenderData();
+    post_effect_render_data_->set_mesh(mesh);
+    post_effect_render_data_->add_pass(pass);
+    return post_effect_render_data_;
 }
 
 }

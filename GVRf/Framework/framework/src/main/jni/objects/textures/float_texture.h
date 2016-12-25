@@ -20,25 +20,22 @@
 #ifndef FLOAT_TEXTURE_H_
 #define FLOAT_TEXTURE_H_
 
-#include "objects/textures/texture.h"
+#include "gl/gl_texture.h"
 #include "util/gvr_log.h"
 
 namespace gvr {
-class FloatTexture: public Texture {
+class FloatTexture: public GLTexture {
 public:
-    explicit FloatTexture() :
-            Texture(new GLTexture(TARGET)) {
+    explicit FloatTexture() : GLTexture(GL_TEXTURE_2D)
+    {
     }
 
-    bool update(int width, int height, float* data) {
-        glBindTexture(GL_TEXTURE_2D, gl_texture_->id());
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0,
+    bool update(int width, int height, float* data)
+    {
+        glBindTexture(mTarget, id());
+        glTexImage2D(mTarget, 0, GL_RG32F, width, height, 0,
                 GL_RG, GL_FLOAT, data);
         return (glGetError() == 0) ? 1 : 0;
-    }
-
-    GLenum getTarget() const {
-        return TARGET;
     }
 
 private:
@@ -46,9 +43,6 @@ private:
     FloatTexture(FloatTexture&& float_texture);
     FloatTexture& operator=(const FloatTexture& float_texture);
     FloatTexture& operator=(FloatTexture&& float_texture);
-
-private:
-    static const GLenum TARGET = GL_TEXTURE_2D;
 };
 
 }

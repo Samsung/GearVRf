@@ -14,13 +14,9 @@
  */
 #include "batch.h"
 #include "objects/scene_object.h"
-#include "objects/components/render_data.h"
-#include "batch_manager.h"
-#include "renderer.h"
-#include "shaders/shader_manager.h"
 #include "objects/scene.h"
-#include "objects/scene_object.h"
-#include "objects/components/camera.h"
+#include "shaders/material/custom_shader.h"
+
 #define BATCH_SIZE 60
 namespace gvr {
 

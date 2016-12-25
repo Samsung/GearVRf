@@ -57,7 +57,7 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_constructor(JNIEnv * env,
 {
     jint* dataOffsets = env->GetIntArrayElements(jDataOffsets,0);
 
-    CompressedImage* texture = Renderer::getInstance()->createCompressedImage(env, target, internalFormat,
+    CompressedImage* texture = Renderer::getInstance()->createCompressedBitmap(env, target, internalFormat,
                                                        width, height, bytes,
                                                        env->GetArrayLength(jDataOffsets), dataOffsets);
     env->ReleaseIntArrayElements(jDataOffsets, dataOffsets, 0);

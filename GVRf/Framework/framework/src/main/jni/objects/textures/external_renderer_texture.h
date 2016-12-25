@@ -2,10 +2,7 @@
 #ifndef EXTERNAL_RENDERER_TEXTURE_H_
 #define EXTERNAL_RENDERER_TEXTURE_H_
 
-#include "gl/gl_headers.h"
-
-#include "objects/textures/base_texture.h"
-#include "objects/components/texture_capturer.h"
+#include "objects/textures/texture.h"
 
 // this is the texture to be used with an external renderer
 // the data field can be used to pass data between the gvrf application
@@ -13,13 +10,11 @@
 
 namespace gvr {
 
-class GLExternalRendererTexture: public GLTexture
+class ExternalRendererTexture
 {
 public:
-    GLExternalRendererTexture() : GLTexture(0), mData(0)
-    {
-        target_ = GL_TEXTURE_EXTERNAL_OES + 1000;
-    }
+    ExternalRendererTexture() : mData(0)
+    { }
 
     virtual void setData(long data)
     {
@@ -30,12 +25,13 @@ public:
     {
         return mData;
     }
+    const static int TARGET = GL_TEXTURE_EXTERNAL_OES + 1000;
 
 private:
-    GLExternalRendererTexture(const GLExternalRendererTexture& render_texture);
-    GLExternalRendererTexture(GLExternalRendererTexture&& render_texture);
-    GLExternalRendererTexture& operator=(const GLExternalRendererTexture& render_texture);
-    GLExternalRendererTexture& operator=(GLExternalRendererTexture&& render_texture);
+    ExternalRendererTexture(const ExternalRendererTexture& render_texture);
+    ExternalRendererTexture(ExternalRendererTexture&& render_texture);
+    ExternalRendererTexture& operator=(const ExternalRendererTexture& render_texture);
+    ExternalRendererTexture& operator=(ExternalRendererTexture&& render_texture);
 
 private:
     long mData;

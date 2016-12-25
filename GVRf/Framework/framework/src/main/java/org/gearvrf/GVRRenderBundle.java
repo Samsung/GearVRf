@@ -20,14 +20,12 @@ import org.gearvrf.utility.VrAppSettings;
 final class GVRRenderBundle implements IRenderBundle {
     private final GVRContext mGVRContext;
     private final GVRMaterialShaderManager mMaterialShaderManager;
-    private final GVRPostEffectShaderManager mPostEffectShaderManager;
     private final GVRRenderTexture mPostEffectRenderTextureA;
     private final GVRRenderTexture mPostEffectRenderTextureB;
 
     GVRRenderBundle(GVRContext gvrContext, final int width, final int height) {
         mGVRContext = gvrContext;
         mMaterialShaderManager = new GVRMaterialShaderManager(gvrContext);
-        mPostEffectShaderManager = new GVRPostEffectShaderManager(gvrContext);
 
         final VrAppSettings appSettings = mGVRContext.getActivity().getAppSettings();
         int sampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
@@ -53,7 +51,7 @@ final class GVRRenderBundle implements IRenderBundle {
     }
 
     public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return mPostEffectShaderManager;
+        return null;
     }
 
     public GVRRenderTexture getPostEffectRenderTextureA() {

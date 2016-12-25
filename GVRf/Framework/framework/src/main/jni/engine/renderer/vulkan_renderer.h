@@ -48,11 +48,12 @@ class Camera;
 class Scene;
 class SceneObject;
 class ShaderData;
-class PostEffectShaderManager;
 class RenderData;
 class RenderTexture;
-class ShaderManager;
 class Light;
+class BitmapImage;
+class CubemapImage;
+class CompressedImage;
 
 class VulkanRenderer: public Renderer {
     friend class Renderer;
@@ -97,15 +98,18 @@ public:
     virtual ShaderData* createMaterial(const std::string& desc);
     virtual RenderData* createRenderData();
     virtual UniformBlock* createUniformBlock(const std::string& desc, int);
-    virtual BitmapImage* createBitmapImage(JNIEnv* env, int width, int height, jbyteArray data);
-    virtual BitmapImage* createBitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels);
+    virtual BitmapImage* createBitmap(JNIEnv* env, int width, int height, jbyteArray data);
+    virtual BitmapImage* createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels);
     virtual CubemapImage* createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
                                         jobjectArray textureArray, const int* dataOffsets);
     virtual CubemapImage* createCubemap(JNIEnv* env, jobjectArray bitmapArray);
     virtual CompressedImage* createCompressedBitmap(JNIEnv *env, int target, int format,
                                                     int width, int height, jbyteArray bytes,
-                                                    int levels, const int*  *dataOffsets);
-    virtual Texture* createTexture();
+                                                    int levels, const int *dataOffsets);
+    virtual Texture* createTexture(int target = GL_TEXTURE_2D);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const int* texture_parameters);
     void updateTransforms(VulkanUniformBlock* transform_ubo, Transform* modelTrans, Camera* camera);
 
 private:

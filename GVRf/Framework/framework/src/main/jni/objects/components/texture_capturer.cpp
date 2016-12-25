@@ -9,9 +9,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "objects/components/render_data.h"
 #include "objects/components/texture_capturer.h"
-#include "objects/shader_data.h"
-#include "objects/mesh.h"
-#include "util/gvr_log.h"
+#include "shaders/material/custom_shader.h"
 #include "util/gvr_time.h"
 
 #define TOL 1e-8
@@ -37,7 +35,7 @@ TextureCapturer::TextureCapturer(ShaderManager *shaderManager)
 {
     Renderer* renderer = Renderer::getInstance();
     mMaterial = renderer->createMaterial("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent");
-    mMaterial->setTexture("diffuseTexture", mRenderTexture);
+    mMaterial->setTexture("diffuseTexture", mRenderTexture->asTexture());
 
     // OpenGL default
     mMaterial->setVec4("ambient_color", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));

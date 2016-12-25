@@ -37,7 +37,7 @@ Renderer* Renderer::getInstance(std::string type){
         else {
             instance = new GLRenderer();
         }
-        std::atexit(resetInstance);      // Destruction of instance registered at runtime exit
+        atexit(resetInstance);      // Destruction of instance registered at runtime exit
     }
     return instance;
 }

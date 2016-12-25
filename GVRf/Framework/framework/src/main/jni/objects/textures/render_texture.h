@@ -22,17 +22,17 @@
 #define RENDER_TEXTURE_H_
 
 #include "util/gvr_parameters.h"
+#include "objects/textures/texture.h"
 
 namespace gvr {
 
 class RenderTexture
 {
 public:
-    explicit RenderTexture(int width, int height) : width_(width), height_(height), sample_count_(0) { }
-    explicit RenderTexture(int width, int height, int sample_count) : width_(width), height_(height), sample_count_(sample_count) { }
+    explicit RenderTexture(int width, int height, int sample_count = 0) : width_(width), height_(height), sample_count_(sample_count) { }
     explicit RenderTexture(int width, int height, int sample_count,
             int jcolor_format, int jdepth_format, bool resolve_depth,
-            int* texture_parameters) : width_(width), height_(height), sample_count_(sample_count) { }
+            const int* texture_parameters) : width_(width), height_(height), sample_count_(sample_count) { }
 
     virtual ~RenderTexture() { }
 
@@ -43,6 +43,8 @@ public:
         readback_started_ = false;
     }
 
+    virtual Texture* asTexture() { return NULL; }
+    virtual const Texture* asTexture() const { return NULL; }
     virtual unsigned int getFrameBufferId() const = 0;
     virtual void bind() = 0;
     int width() const { return width_; }

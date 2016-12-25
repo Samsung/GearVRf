@@ -20,9 +20,7 @@
 #ifndef COMPRESSED_IMAGE_H
 #define COMPRESSED_IMAGE_H
 
-#include "util/gvr_jni.h"
-#include "util/gvr_log.h"
-#include "util/jni_utils.h"
+
 #include "bitmap_image.h"
 
 namespace gvr

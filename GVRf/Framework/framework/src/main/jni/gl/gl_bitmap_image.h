@@ -37,21 +37,68 @@ public:
 
     virtual void update(int texid)
     {
-        if (mData != NULL)
+        if (mBitmap != NULL)
         {
-            JNIEnv *env = getCurrentEnv(mJava);
-            jbyteArray array = static_cast<jbyteArray>(env->NewLocalRef(mData));
-            jbyte *data = env->GetByteArrayElements(array, 0);
-            env->ReleaseByteArrayElements(mData, data, 0);
-            glBindTexture(GL_TEXTURE_2D, texid);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, mWidth, mHeight, 0, GL_LUMINANCE,
-                         GL_UNSIGNED_BYTE, mData
-            );
-            glGenerateMipmap(GL_TEXTURE_2D);
-            env->DeleteLocalRef(array);
-            clearData(env);
+            updateFromBitmap(texid);
         }
+        else if (mData != NULL)
+        {
+            updateFromMemory(texid);
+        }
+        else
+        {
+            return;
+        }
+        clearData(getCurrentEnv(mJava));
         mPendingUpdate = false;
+    }
+
+    void updateFromMemory(int texid)
+    {
+        JNIEnv *env = getCurrentEnv(mJava);
+        jbyteArray array = static_cast<jbyteArray>(env->NewLocalRef(mData));
+        jbyte *data = env->GetByteArrayElements(array, 0);
+        env->ReleaseByteArrayElements(mData, data, 0);
+        glBindTexture(mType, texid);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, mWidth, mHeight, 0, GL_LUMINANCE,
+                     GL_UNSIGNED_BYTE, mData);
+        glGenerateMipmap(mType);
+        env->DeleteLocalRef(array);
+        clearData(env);
+    }
+
+    void updateFromBitmap(int texid)
+    {
+        JNIEnv *env = getCurrentEnv(mJava);
+        jobject bitmap = env->NewLocalRef(mBitmap);
+        glBindTexture(mType, texid);
+        AndroidBitmapInfo info;
+        void *pixels;
+        int ret;
+
+        if (bitmap == NULL)
+        {
+           LOGE("BitmapImage::updateFromBitmap bitmap is NULL");
+        }
+        else if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0)
+        {
+            LOGE("BitmapImage::updateFromBitmap AndroidBitmap_getInfo() failed! error = %d", ret);
+        }
+        else if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0)
+        {
+            LOGE("BitmapImage::updateFromBitmap AndroidBitmap_lockPixels() failed! error = %d", ret);
+        }
+        else
+        {
+            mWidth = info.width;
+            mHeight = info.height;
+            mImageSize = info.height * info.stride;
+            glTexImage2D(mType, 0, GL_RGBA,
+                         info.width, info.height,
+                         0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            AndroidBitmap_unlockPixels(env, bitmap);
+        }
+        env->DeleteLocalRef(bitmap);
     }
 };
 

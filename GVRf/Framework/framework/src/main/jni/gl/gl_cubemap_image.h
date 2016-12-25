@@ -20,13 +20,7 @@
 #ifndef GL_CUBEMAP_IMAGE_H_
 #define GL_CUBEMAP_IMAGE_H_
 
-#include <string>
-#include <android/bitmap.h>
-
 #include "objects/textures/cubemap_image.h"
-#include "util/gvr_log.h"
-#include "util/scope_exit.h"
-#include "util/jni_utils.h"
 
 namespace gvr {
 class GLCubemapImage : public CubemapImage
@@ -36,7 +30,7 @@ public:
             CubemapImage(env, bitmapArray)
     { }
 
-    explicit CubemapImage(JNIEnv* env, int format, int width, int height, int imageSize,
+    explicit GLCubemapImage(JNIEnv* env, int format, int width, int height, int imageSize,
             jobjectArray textureArray, const int* dataOffsets) :
             CubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets)
     { }

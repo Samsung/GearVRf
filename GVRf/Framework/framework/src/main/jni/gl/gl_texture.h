@@ -30,7 +30,6 @@
 #include "objects/textures/image.h"
 #include "objects/textures/texture.h"
 #include "gl/gl_headers.h"
-#include "util/gvr_log.h"
 #include "engine/memory/gl_delete.h"
 
 namespace gvr {
@@ -65,6 +64,15 @@ public:
             return true;
         }
         return Texture::isReady();
+    }
+
+    virtual int getId()
+    {
+        if (isReady())
+        {
+            return id();
+        }
+        return 0;
     }
 
     GLuint id()

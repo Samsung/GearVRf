@@ -249,7 +249,7 @@ private:
     std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
     std::map<std::string, Texture*> textures_;
-    static GLTexture* depth_texture_;
+    static Texture* depth_texture_;
 };
 }
 #endif

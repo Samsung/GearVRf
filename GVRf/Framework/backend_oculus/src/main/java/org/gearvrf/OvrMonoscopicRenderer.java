@@ -36,7 +36,7 @@ abstract class OvrMonoscopicRenderer {
      * @param renderBundle
      *            Options and data for the renderer's use.
      * @param listPostEffectData
-     *            Data for {@link GVRPostEffectMap custom} post-effect shaders.
+     *            Data for post-effect shaders.
      */
     static void renderCamera(GVRScene scene, GVRCamera camera, int viewportX,
             int viewportY, int viewportWidth, int viewportHeight,
@@ -44,11 +44,10 @@ abstract class OvrMonoscopicRenderer {
 
         OvrNativeMonoscopicRenderer.renderCamera(scene.getNative(), camera
                 .getNative(), viewportX, viewportY, viewportWidth,
-                viewportHeight, renderBundle.getMaterialShaderManager()
-                        .getNative(), renderBundle.getPostEffectShaderManager()
-                        .getNative(), renderBundle
-                        .getPostEffectRenderTextureA().getNative(),
-                renderBundle.getPostEffectRenderTextureB().getNative());
+                viewportHeight, renderBundle.getMaterialShaderManager().getNative(),
+                        0,
+                        renderBundle.getPostEffectRenderTextureA().getNative(),
+                        renderBundle.getPostEffectRenderTextureB().getNative());
     }
 
     static void cull(GVRScene scene, GVRCamera camera, IRenderBundle renderBundle) {

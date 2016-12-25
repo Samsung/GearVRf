@@ -20,8 +20,7 @@
 #ifndef TEXTURE_H_
 #define TEXTURE_H_
 
-#include "gl/gl_headers.h"
-#include "objects/hybrid_object.h"
+#include <memory>
 #include "image.h"
 #define MAX_TEXTURE_PARAM_NUM 10
 
@@ -50,6 +49,7 @@ public:
         mTexParams[2] = 1.0f;
         mTexParams[3] = GL_CLAMP_TO_EDGE;
         mTexParams[4] = GL_CLAMP_TO_EDGE;
+        mPendingTask = TASK_INIT_PARAMS;
     }
 
     virtual ~Texture() { }
@@ -71,11 +71,12 @@ public:
         return mTarget;
     }
 
-
     virtual bool isReady()
     {
         return mIsReady;
     }
+
+    virtual int getId() = 0;
 
     void setReady(bool ready)
     {

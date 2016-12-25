@@ -25,6 +25,7 @@
 #include <gl/gl_material.h>
 #include <gl/gl_render_data.h>
 #include <engine/renderer/gl_renderer.h>
+#include <gl/gl_texture.h>
 
 
 namespace gvr {
@@ -90,12 +91,12 @@ namespace gvr {
             }
             shader_->setLocation(key, loc);
         }
-        Texture* texture = material_->getTexture(key);
+        GLTexture* texture = reinterpret_cast<GLTexture*>(material_->getTexture(key));
         if (texture != NULL)
         {
             LOGE("texture is not null");
             glActiveTexture(GL_TEXTURE0 + TextureIndex);
-            glBindTexture(texture->getTarget(), texture->getId());
+            glBindTexture(texture->getTarget(), texture->id());
             glUniform1i(loc, TextureIndex++);
         }
         else

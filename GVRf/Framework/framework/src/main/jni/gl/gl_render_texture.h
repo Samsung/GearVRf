@@ -30,7 +30,7 @@
 
 namespace gvr {
 
-class GLRenderTexture: public GLTexture, RenderTexture
+class GLRenderTexture: public GLTexture, public RenderTexture
 {
 public:
     explicit GLRenderTexture(int width, int height);
@@ -51,6 +51,9 @@ public:
             glDeleteBuffers(1, &renderTexture_gl_pbo_);
         }
     }
+
+    virtual Texture* asTexture() { return reinterpret_cast<Texture*>(this); }
+    virtual const Texture* asTexture() const { return reinterpret_cast<const Texture*>(this); }
     virtual bool isReady();
     virtual void initialize(int width, int height);
 

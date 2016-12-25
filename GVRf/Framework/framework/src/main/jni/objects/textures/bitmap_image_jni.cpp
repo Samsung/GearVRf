@@ -32,8 +32,12 @@ extern "C" {
             jint width, jint height, jbyteArray data);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeBitmapImage_update(JNIEnv * env, jobject obj,
+    Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv * env, jobject obj,
             jlong jtexture, jint width, jint height, jbyteArray jdata);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv * env, jobject obj,
+             jlong jtexture, jobject jbitmap);
 }
 
 JNIEXPORT jlong JNICALL
@@ -46,11 +50,20 @@ Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv * env, jobject obj,
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBitmapImage_update(JNIEnv * env, jobject obj,
+Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv * env, jobject obj,
         jlong jtexture, jint width, jint height, jbyteArray jdata)
 {
     BitmapImage* texture = reinterpret_cast<BitmapImage*>(jtexture);
     texture->update(env, width, height, jdata);
 }
 
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv * env, jobject obj,
+         jlong jtexture, jobject jbitmap)
+{
+    BitmapImage* texture = reinterpret_cast<BitmapImage*>(jtexture);
+    texture->update(env, jbitmap);
+
+}
 }

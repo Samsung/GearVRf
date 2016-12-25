@@ -29,18 +29,19 @@
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
+#include "shaders/shader_manager.h"
 #include "batch_manager.h"
 
 typedef unsigned long Long;
+
 namespace gvr {
 extern bool use_multiview;
 class Camera;
 class Scene;
 class SceneObject;
 class ShaderData;
-class PostEffectShaderManager;
 class RenderData;
-class ShaderManager;
+class RenderTexture;
 class Light;
 class BitmapImage;
 class CubemapImage;
@@ -56,13 +57,13 @@ struct ShaderUniformsPerObject {
     glm::mat4   u_proj;         // projection matrix
     glm::mat4   u_view_[2];     // for multiview
     glm::mat4   u_view_inv;     // inverse of View matrix
-    glm::mat4   u_view_inv_[2];     // inverse of View matrix
+    glm::mat4   u_view_inv_[2]; // inverse of View matrix
     glm::mat4   u_mv;           // ModelView matrix
-    glm::mat4   u_mv_[2];           // ModelView matrix
+    glm::mat4   u_mv_[2];       // ModelView matrix
     glm::mat4   u_mvp;          // ModelViewProjection matrix
-    glm::mat4   u_mvp_[2];          // ModelViewProjection matrix
+    glm::mat4   u_mvp_[2];      // ModelViewProjection matrix
     glm::mat4   u_mv_it;        // inverse transpose of ModelView
-    glm::mat4   u_mv_it_[2];        // inverse transpose of ModelView
+    glm::mat4   u_mv_it_[2];    // inverse transpose of ModelView
     int         u_right;        // 1 = right eye, 0 = left
 
 };
@@ -78,7 +79,7 @@ struct RenderState {
     ShaderData*             material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
-    bool shadow_map;
+    bool                    shadow_map;
 };
 
 class Renderer {
@@ -116,12 +117,15 @@ public:
      virtual BitmapImage* createBitmap(JNIEnv* env, int width, int height, jbyteArray data) = 0;
      virtual BitmapImage* createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) = 0;
      virtual CubemapImage* createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
-                                       jobjectArray textureArray, int* dataOffsets) = 0;
+                                       jobjectArray textureArray, const int* dataOffsets) = 0;
      virtual CubemapImage* createCubemap(JNIEnv* env, jobjectArray bitmapArray) = 0;
      virtual CompressedImage* createCompressedBitmap(JNIEnv *env, int target, int format,
                                                      int width, int height, jbyteArray bytes,
-                                                     int levels, int *dataOffsets) = 0;
-     virtual Texture* createTexture() = 0;
+                                                     int levels, const int *dataOffsets) = 0;
+     virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
+     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                                int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                const int* texture_parameters) = 0;
      virtual void initializeStats();
      virtual void set_face_culling(int cull_face) = 0;
      virtual void renderRenderDataVector(RenderState &rstate);
@@ -192,16 +196,18 @@ protected:
             std::vector<SceneObject*>& scene_objects);
 
     virtual void renderPostEffectData(RenderState& rstate,
-            RenderTexture* render_texture, ShaderData* post_effect_data);
+            Texture* render_texture, ShaderData* post_effect_data);
+    RenderData* post_effect_render_data();
 
     std::vector<RenderData*> render_data_vector;
     int numberDrawCalls;
     int numberTriangles;
 
 public:
-    //to be used only on the gl thread
+    //to be used only on the rendering thread
     const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
     int numLights;
+    RenderData* post_effect_render_data_;
 };
 extern Renderer* gRenderer;
 }

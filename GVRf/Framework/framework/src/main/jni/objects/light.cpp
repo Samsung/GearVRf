@@ -16,18 +16,15 @@
 /***************************************************************************
  * JNI
  ***************************************************************************/
+#include "gl/gl_texture.h"
 #include "light.h"
-#include "util/gvr_image_capture.h"
 #include "gl/gl_frame_buffer.h"
-#include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_access.hpp"
-#include "engine/renderer/renderer.h"
-#include "objects/components/camera.h"
 #include "objects/scene.h"
 
 namespace gvr {
 const int Light::SHADOW_MAP_SIZE = 1024;
-GLTexture* Light::depth_texture_ = NULL;
+Texture* Light::depth_texture_ = NULL;
 
 static const bool LOG_LIGHT = true;
 
@@ -169,7 +166,7 @@ void Light::render(int program, int texIndex) {
  * set the shadow_map_index with the index of the map.
  */
 void Light::bindShadowMap(int program, int texIndex) {
-    GLTexture* shadowmap = depth_texture_;
+    GLTexture* shadowmap = reinterpret_cast<GLTexture*>(depth_texture_);
     int loc = glGetUniformLocation(program, "u_shadow_maps");
 
     if ((loc >= 0) && depth_texture_) {
@@ -180,7 +177,7 @@ void Light::bindShadowMap(int program, int texIndex) {
         }
         else {
             glActiveTexture(GL_TEXTURE0 + texIndex);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+            glBindTexture(GL_TEXTURE_2D_ARRAY, shadowmap->id());
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
         }
         glUniform1i(loc, texIndex);
@@ -196,7 +193,7 @@ bool Light::generateFBO() {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, fbid);
     glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                depth_texture_->id(), 0, shadowMapIndex_);
+                reinterpret_cast<GLTexture*>(depth_texture_)->id(), 0, shadowMapIndex_);
     ////////// Check FrameBuffer was created with success ///
     int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
@@ -226,8 +223,10 @@ bool Light::generateFBO() {
 }
 
 void Light::createDepthTexture(int width, int height, int depth) {
-    depth_texture_ = new GLTexture(GL_TEXTURE_2D_ARRAY);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, depth_texture_->id());
+    GLTexture* depthtex = new GLTexture(GL_TEXTURE_2D_ARRAY);
+    GLint id = depthtex->id();
+    depth_texture_ = depthtex;
+    glBindTexture(GL_TEXTURE_2D_ARRAY, id);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB8, width,height,depth,0,GL_RGB, GL_UNSIGNED_BYTE,NULL);
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_R16F, width,height,depth,0,GL_RED, GL_HALF_FLOAT,NULL);  // it does not for S6 edge
@@ -236,19 +235,22 @@ void Light::createDepthTexture(int width, int height, int depth) {
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     checkGlError("Light::createDepthTexture");
 #ifdef DEBUG_LIGHT
-    LOGD("LIGHT: create shadow map depth texture %d", depth_texture_->id());
+    LOGD("LIGHT: create shadow map depth texture %d", id);
 #endif
 }
 
 void Light::deleteDepthTexture()
 {
-    if (depth_texture_ && depth_texture_->id())
+    if (depth_texture_)
     {
-        GLuint id = depth_texture_->id();
+        GLuint id = reinterpret_cast<GLTexture*>(depth_texture_)->id();
+        if (id)
+        {
 #ifdef DEBUG_LIGHT
-        LOGD("LIGHT: delete shadow map depth texture %d", id);
+            LOGD("LIGHT: delete shadow map depth texture %d", id);
 #endif
-        glDeleteTextures(1,&id);
+            glDeleteTextures(1, &id);
+        }
         delete depth_texture_;
         depth_texture_ = nullptr;
     }

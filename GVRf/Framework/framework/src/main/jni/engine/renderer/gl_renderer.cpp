@@ -17,19 +17,19 @@
  * Renders a scene, a screen.
  ***************************************************************************/
 
-#include "renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
 #include "gl/gl_material.h"
 #include "gl/gl_render_data.h"
 #include "gl/gl_bitmap_image.h"
 #include "gl/gl_cubemap_image.h"
+#include "gl/gl_compressed_image.h"
+#include "gl/gl_render_texture.h"
+#include "gl/gl_external_texture.h"
 #include "gl_renderer.h"
 
 #include "objects/scene.h"
-#include "shaders/shader_manager.h"
-#include "shaders/post_effect_shader_manager.h"
-#include "objects/textures/render_texture.h"
+#include "shaders/material/custom_shader.h"
 
 
 namespace gvr {
@@ -76,9 +76,20 @@ CompressedImage* GLRenderer::createCompressedBitmap(JNIEnv *env, int target, int
     return new CompressedImage(env, target, format, width, height, bytes, levels, dataOffsets);
 }
 
-Texture* GLRenderer::createTexture()
+Texture* GLRenderer::createTexture(int target)
 {
-    return new GLTexture();
+    if (target == GLExternalRendererTexture::TARGET)
+    {
+        return new GLExternalRendererTexture();
+    }
+    return new GLTexture(target);
+}
+
+RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const int* texture_parameters)
+{
+    return new GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters);
 }
 
 GLRenderer::GLRenderer() : transform_ubo_(nullptr)
@@ -86,7 +97,7 @@ GLRenderer::GLRenderer() : transform_ubo_(nullptr)
     std::string desc;
 
     if(use_multiview)
-       desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; mat4 u_right; ";
+        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; mat4 u_right; ";
     else
         desc = " mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; mat4 u_right;";
     transform_ubo_ = reinterpret_cast<GLUniformBlock*>(createUniformBlock(desc,TRANSFORM_UBO_INDEX));
@@ -139,8 +150,8 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
         renderRenderDataVector(rstate);
     } else {
-        RenderTexture* texture_render_texture = post_effect_render_texture_a;
-        RenderTexture* target_render_texture;
+        GLRenderTexture* texture_render_texture = reinterpret_cast<GLRenderTexture*>(post_effect_render_texture_a);
+        GLRenderTexture* target_render_texture;
 
         GL(glBindFramebuffer(GL_FRAMEBUFFER,
                 texture_render_texture->getFrameBufferId()));
@@ -161,11 +172,11 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         rstate.shader_manager = post_effect_shader_manager;
         for (int i = 0; i < post_effects.size() - 1; ++i) {
             if (i % 2 == 0) {
-                texture_render_texture = post_effect_render_texture_a;
-                target_render_texture = post_effect_render_texture_b;
+                texture_render_texture = reinterpret_cast<GLRenderTexture*>(post_effect_render_texture_a);
+                target_render_texture = reinterpret_cast<GLRenderTexture*>(post_effect_render_texture_b);
             } else {
-                texture_render_texture = post_effect_render_texture_b;
-                target_render_texture = post_effect_render_texture_a;
+                texture_render_texture = reinterpret_cast<GLRenderTexture*>(post_effect_render_texture_b);
+                target_render_texture = reinterpret_cast<GLRenderTexture*>(post_effect_render_texture_a);
             }
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
             GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));

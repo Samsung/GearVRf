@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "shader_manager.h"
-
+#include "material/custom_shader.h"
 #include "util/gvr_jni.h"
 
 namespace gvr {

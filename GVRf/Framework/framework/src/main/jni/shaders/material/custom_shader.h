@@ -36,6 +36,7 @@
 #include "objects/light.h"
 #include "objects/mesh.h"
 #include "objects/uniform_block.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 

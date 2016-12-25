@@ -9,6 +9,8 @@
 #include <memory>
 
 #include "glm/glm.hpp"
+#include "util/gvr_jni.h"
+#include "util/jni_utils.h"
 #include "objects/lazy.h"
 #include "objects/components/component.h"
 #include "objects/shader_data.h"

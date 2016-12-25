@@ -20,7 +20,7 @@
 #ifndef BITMAP_IMAGE_H
 #define BITMAP_IMAGE_H
 
-#include "objects/textures/texture.h"
+#include "image.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_log.h"
 #include "util/jni_utils.h"
@@ -29,57 +29,15 @@ namespace gvr {
     class BitmapImage : public Image
     {
     public:
+        explicit BitmapImage(JNIEnv* env, jobject bitmap);
+        explicit BitmapImage(JNIEnv* env, int width, int height, jbyteArray data);
+        explicit BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels);
+        virtual ~BitmapImage();
+        void update(JNIEnv* env, int width, int height, jbyteArray data);
+        void update(JNIEnv* env, jobject bitmap);
 
-        explicit BitmapImage(JNIEnv* env, int width, int height, jbyteArray data) :
-                Image(GL_TEXTURE_2D, width, height, width * height, GL_LUMINANCE, 1),
-                mData(NULL)
-        {
-            if (JNI_OK != env->GetJavaVM(&mJava))
-            {
-                FAIL("GetJavaVM failed");
-            }
-            update(env, width, height, data);
-        }
-
-        explicit BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) :
-                Image(target, width, height, imagesize, format, levels)
-        {
-            if (JNI_OK != env->GetJavaVM(&mJava))
-            {
-                FAIL("GetJavaVM failed");
-            }
-        }
-
-        virtual ~BitmapImage()
-        {
-            clearData(getCurrentEnv(mJava));
-        }
-
-        void clearData(JNIEnv* env)
-        {
-            if (mData != NULL)
-            {
-                jobject ref = env->NewLocalRef(mData);
-                if (ref != NULL)
-                {
-                    env->DeleteWeakGlobalRef(mData);
-                    env->DeleteLocalRef(ref);
-                }
-                mData = NULL;
-            }
-        }
-
-        void update(JNIEnv* env, int width, int height, jbyteArray data)
-        {
-            clearData(env);
-            mWidth = width;
-            mHeight = height;
-            if (data != NULL)
-            {
-                mData = static_cast<jbyteArray>(env->NewWeakGlobalRef(data));
-                mPendingUpdate = true;
-            }
-        }
+    protected:
+        void clearData(JNIEnv* env);
 
     private:
         BitmapImage(const BitmapImage& texture) = delete;
@@ -91,6 +49,7 @@ namespace gvr {
     protected:
         JavaVM* mJava;
         jbyteArray mData;
+        jobject mBitmap;
     };
 
 }

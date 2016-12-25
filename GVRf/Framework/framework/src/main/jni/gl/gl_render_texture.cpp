@@ -25,12 +25,13 @@ GLRenderTexture::GLRenderTexture(int width, int height) : GLTexture(), RenderTex
         renderTexture_gl_render_buffer_(new GLRenderBuffer()),
         renderTexture_gl_frame_buffer_ (new GLFrameBuffer())
 {
-    mTarget = GL_TEXTURE_2D;
+    int target = GL_TEXTURE_2D;
+    GLTexture::mTarget = target;
     initialize(width, height);
-    glBindTexture(mTarget, id());
-    glTexImage2D(mTarget, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+    glBindTexture(target, id());
+    glTexImage2D(target, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, 0);
-    glBindTexture(mTarget, 0);
+    glBindTexture(target, 0);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
@@ -38,7 +39,7 @@ GLRenderTexture::GLRenderTexture(int width, int height) : GLTexture(), RenderTex
 
     glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, mTarget, id(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, id(), 0);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
             GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
@@ -50,8 +51,8 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count) :
         renderTexture_gl_frame_buffer_(new GLFrameBuffer())
 {
     initialize(width, height);
-    glBindTexture(mTarget, id());
-    glTexImage2D(mTarget, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+    glBindTexture(GLTexture::mTarget, id());
+    glTexImage2D(GLTexture::mTarget, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -63,7 +64,7 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count) :
     glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
 
     MSAA::glFramebufferTexture2DMultisample(GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0, mTarget, id(), 0, sample_count);
+            GL_COLOR_ATTACHMENT0, GLTexture::mTarget, id(), 0, sample_count);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
             GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
@@ -78,26 +79,26 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
     updateTextureParameters(texture_parameters, 5);
     initialize(width, height);
     GLenum depth_format;
-    glBindTexture(mTarget, id());
+    glBindTexture(GLTexture::mTarget, id());
     switch (jcolor_format) {
     case ColorFormat::COLOR_565:
-        glTexImage2D(mTarget, 0, GL_RGB, width_, height_, 0, GL_RGB,
+        glTexImage2D(GLTexture::mTarget, 0, GL_RGB, width_, height_, 0, GL_RGB,
                 GL_UNSIGNED_SHORT_5_6_5, 0);
         break;
     case ColorFormat::COLOR_5551:
-        glTexImage2D(mTarget, 0, GL_RGB5_A1, width_, height_, 0, GL_RGBA,
+        glTexImage2D(GLTexture::mTarget, 0, GL_RGB5_A1, width_, height_, 0, GL_RGBA,
                 GL_UNSIGNED_SHORT_5_5_5_1, 0);
         break;
     case ColorFormat::COLOR_4444:
-        glTexImage2D(mTarget, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+        glTexImage2D(GLTexture::mTarget, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
                 GL_UNSIGNED_SHORT_4_4_4_4, 0);
         break;
     case ColorFormat::COLOR_8888:
-        glTexImage2D(mTarget, 0, GL_RGBA8, width_, height_, 0, GL_RGBA,
+        glTexImage2D(GLTexture::mTarget, 0, GL_RGBA8, width_, height_, 0, GL_RGBA,
                 GL_UNSIGNED_BYTE, 0);
         break;
     case ColorFormat::COLOR_8888_sRGB:
-        glTexImage2D(mTarget, 0, GL_SRGB8_ALPHA8, width_, height_, 0, GL_RGBA,
+        glTexImage2D(GLTexture::mTarget, 0, GL_SRGB8_ALPHA8, width_, height_, 0, GL_RGBA,
                 GL_UNSIGNED_BYTE, 0);
         break;
     default:
@@ -161,10 +162,10 @@ void GLRenderTexture::initialize(int width, int height)
 
 bool GLRenderTexture::isReady()
 {
-    if (!mIsReady)
+    if (!GLTexture::mIsReady)
     {
-        update();
-        setReady(true);
+        GLTexture::update();
+        GLTexture::setReady(true);
     }
     return true;
 }

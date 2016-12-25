@@ -18,6 +18,7 @@
 #define IMAGE_H_
 
 #include "objects/hybrid_object.h"
+#include "gl/gl_headers.h"  // for GL_TEXTURE_xxx
 
 namespace gvr {
 

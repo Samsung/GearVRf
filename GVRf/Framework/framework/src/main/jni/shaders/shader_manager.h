@@ -22,11 +22,11 @@
 
 #include <mutex>
 #include <map>
-
 #include "objects/hybrid_object.h"
-#include "shaders/material/custom_shader.h"
 
 namespace gvr {
+class Shader;
+
 /**
  * Keeps track of a set of native shaders.
  * A shader can be referenced by the ID given to it by the
@@ -102,5 +102,6 @@ private:
     std::mutex lock_;
 };
 
+typedef ShaderManager PostEffectShaderManager;
 }
 #endif

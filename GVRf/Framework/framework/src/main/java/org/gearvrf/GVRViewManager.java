@@ -497,7 +497,7 @@ abstract class GVRViewManager extends GVRContext {
             renderBundle) {
         renderCamera(scene.getNative(), camera.getNative(),
                 renderBundle.getMaterialShaderManager().getNative(),
-                renderBundle.getPostEffectShaderManager().getNative(),
+                0,
                 renderBundle.getPostEffectRenderTextureA().getNative(),
                 renderBundle.getPostEffectRenderTextureB().getNative());
     }
@@ -514,7 +514,7 @@ abstract class GVRViewManager extends GVRContext {
 
     @Override
     public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return mRenderBundle.getPostEffectShaderManager();
+        return null;
     }
 
     protected GVRScreenshotCallback mScreenshotCenterCallback;

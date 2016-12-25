@@ -31,10 +31,10 @@ public:
     // The constructor to use when loading a single-level texture
     explicit GLCompressedImage(JNIEnv *env, int target, int format,
                                int width, int height, jbyteArray bytes,
-                               int levels, int *dataOffsets) :
+                               int levels, const int *dataOffsets) :
             CompressedImage(env, target, format, width, height, bytes, levels, dataOffsets)
     {
-        update(env, width, height, bytes, levels, dataOffsets);
+        CompressedImage::update(env, width, height, bytes, levels, dataOffsets);
     }
 
 
@@ -43,10 +43,12 @@ public:
         JNIEnv *env = getCurrentEnv(mJava);
         jbyte *data = env->GetByteArrayElements(mData, 0);
         glBindTexture(mType, texid);
-        if (mLevels > 1) {
+        if (mLevels > 1)
+        {
             loadCompressedMipMaps(data);
         }
-        else {
+        else
+        {
             glCompressedTexImage2D(mType, 0, mFormat, mWidth, mHeight, 0,
                                    mImageSize, data + getDataOffset(0));
             glGenerateMipmap(GL_TEXTURE_2D);

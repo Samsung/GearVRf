@@ -1,7 +1,7 @@
 #include "util/gvr_log.h"
 
 #include "shaders/shader_manager.h"
-
+#include "shaders/material/custom_shader.h"
 namespace gvr {
     ShaderManager::~ShaderManager()
     {
