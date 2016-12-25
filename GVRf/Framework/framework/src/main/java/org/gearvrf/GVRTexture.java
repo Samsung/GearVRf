@@ -205,7 +205,11 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
         {
             throw new UnsupportedOperationException("GVRTexture.setImage unsupported image class");
         }
-        NativeTexture.setImage(getNative(), imageData.getNative());
+        mImage = imageData;
+        if (imageData != null)
+            NativeTexture.setImage(getNative(), imageData, imageData.getNative());
+        else
+            NativeTexture.setImage(getNative(), null, 0);
     }
 
     public GVRImage getImage()
@@ -249,34 +253,13 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
             nativePtr = NativeBitmapImage.constructor(width, height, grayscale);
             bitmapImage.setNative(nativePtr);
         }
-        if (getGVRContext().isCurrentThreadGLThread())
+        if (bitmap != null)
         {
-            if (bitmap != null)
-            {
-                NativeBitmapImage.updateFromBitmap(nativePtr, bitmap);
-            }
-            else if (grayscale != null)
-            {
-                NativeBitmapImage.updateFromMemory(nativePtr, width, height, grayscale);
-            }
+            NativeBitmapImage.updateFromBitmap(nativePtr, bitmap);
         }
-        else
+        else if (grayscale != null)
         {
-            Runnable updateTask = new Runnable()
-            {
-                public void run()
-                {
-                if (bitmap != null)
-                {
-                    NativeBitmapImage.updateFromBitmap(bitmapImage.getNative(), bitmap);
-                }
-                else if (grayscale != null)
-                {
-                    NativeBitmapImage.updateFromMemory(bitmapImage.getNative(), width, height, grayscale);
-                }
-                }
-            };
-            getGVRContext().runOnGlThread(updateTask);
+            NativeBitmapImage.updateFromMemory(nativePtr, width, height, grayscale);
         }
     }
 
@@ -333,7 +316,7 @@ class NativeTexture {
     static native int getId(long texture);
     static native boolean isReady(long texture);
     static native void updateTextureParameters(long texture, int[] textureParametersValues);
-    static native void setImage(long texPointer, long imagePointer);
+    static native void setImage(long texPointer, GVRImage javeImage, long nativeImage);
 }
 
 class NativeCubemapImage

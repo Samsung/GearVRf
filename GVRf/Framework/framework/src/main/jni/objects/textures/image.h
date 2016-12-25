@@ -22,7 +22,7 @@
 
 namespace gvr {
 
-class Image: public HybridObject {
+class Image : public HybridObject {
 
 public:
     virtual ~Image() { }

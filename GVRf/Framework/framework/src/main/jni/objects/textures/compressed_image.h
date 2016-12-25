@@ -28,7 +28,6 @@ namespace gvr
 class CompressedImage : public BitmapImage
 {
 public:
-
     // The constructor to use when loading a single-level texture
     explicit CompressedImage(JNIEnv *env, int target, int format,
                                int width, int height, jbyteArray bytes,
@@ -51,50 +50,11 @@ public:
         mPendingUpdate = true;
     }
 
-    virtual void update(int texid)
-    {
-        JNIEnv *env = getCurrentEnv(mJava);
-        jbyte *data = env->GetByteArrayElements(mData, 0);
-        glBindTexture(mType, texid);
-        if (mLevels > 1)
-        {
-            loadCompressedMipMaps(data);
-        }
-        else
-        {
-            glCompressedTexImage2D(mType, 0, mFormat, mWidth, mHeight, 0,
-                                   mImageSize, data + getDataOffset(0));
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        env->ReleaseByteArrayElements(mData, data, 0);
-        env->DeleteGlobalRef(mData);
-        mPendingUpdate = false;
-    }
-
 private:
     CompressedImage(const CompressedImage &compressed_texture) = delete;
-
     CompressedImage(CompressedImage &&compressed_texture) = delete;
-
     CompressedImage &operator=(const CompressedImage &compressed_texture) = delete;
-
     CompressedImage &operator=(CompressedImage &&compressed_texture) = delete;
-
-
-    void loadCompressedMipMaps(jbyte *data)
-    {
-        for (int level = 0; level < mLevels; ++level)
-        {
-            int levelOffset = getDataOffset(level);
-            int levelSize = getDataOffset(level + 1) - levelOffset;
-            int width = mWidth >> level;
-            int height = mHeight >> level;
-            if (width < 1) width = 1;
-            if (height < 1) height = 1;
-            glCompressedTexImage2D(mType, level, mFormat, width, height, levelOffset, levelSize,
-                                   data);
-        }
-    }
 };
 }
 #endif

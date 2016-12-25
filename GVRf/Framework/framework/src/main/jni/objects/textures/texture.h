@@ -20,8 +20,9 @@
 #ifndef TEXTURE_H_
 #define TEXTURE_H_
 
-#include <memory>
 #include "image.h"
+#include "util/gvr_jni.h"
+
 #define MAX_TEXTURE_PARAM_NUM 10
 
 namespace gvr {
@@ -38,33 +39,13 @@ public:
         TASK_INIT_PARAMS = 1,
     };
 
-    Texture() : HybridObject(),
-                mImage(NULL),
-                mTarget(0),
-                mPendingTask(TASK_NONE),
-                mIsReady(false)
-    {
-        mTexParams[0] = GL_LINEAR;
-        mTexParams[1] = GL_LINEAR;
-        mTexParams[2] = 1.0f;
-        mTexParams[3] = GL_CLAMP_TO_EDGE;
-        mTexParams[4] = GL_CLAMP_TO_EDGE;
-        mPendingTask = TASK_INIT_PARAMS;
-    }
-
-    virtual ~Texture() { }
-
-    virtual void setImage(Image* image)
-    {
-        mImage = image;
-        mTarget = image->getType();
-    }
-
-    void updateTextureParameters(const int* texture_parameters, int n)
-    {
-        memcpy(mTexParams, texture_parameters, sizeof(int) * 5);
-        mPendingTask = TASK_INIT_PARAMS;
-    }
+    Texture();
+    Texture(int target);
+    virtual ~Texture();
+    virtual void clearData(JNIEnv* env);
+    virtual void setImage(Image* image);
+    virtual void setImage(JNIEnv* env, jobject javaImage, Image* image);
+    void updateTextureParameters(const int* texture_parameters, int n);
 
     virtual int getTarget() const
     {
@@ -84,6 +65,8 @@ public:
     }
 
 protected:
+    JavaVM* mJava;
+    jobject mJavaImage;
     Image*  mImage;
     int     mTexParams[MAX_TEXTURE_PARAM_NUM];
     int     mTarget;

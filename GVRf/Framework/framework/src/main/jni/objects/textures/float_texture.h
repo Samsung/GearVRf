@@ -26,7 +26,7 @@
 namespace gvr {
 class FloatTexture: public GLTexture {
 public:
-    explicit FloatTexture() : GLTexture(GL_TEXTURE_2D)
+    explicit FloatTexture() : GLTexture()
     {
     }
 

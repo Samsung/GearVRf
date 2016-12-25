@@ -39,8 +39,8 @@ extern "C" {
     Java_org_gearvrf_NativeTexture_getId(JNIEnv * env, jobject obj, jlong jtexture);
 
     JNIEXPORT void JNICALL
-        Java_org_gearvrf_NativeTexture_setImage(JNIEnv * env, jobject obj,
-                jlong jtexture, jobject jimage);
+    Java_org_gearvrf_NativeTexture_setImage(JNIEnv * env, jobject obj,
+                jlong jtexture, jobject javaImage, jlong nativeImage);
 }
 ;
 
@@ -78,10 +78,11 @@ Java_org_gearvrf_NativeTexture_updateTextureParameters(JNIEnv * env, jobject obj
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeTexture_setImage(JNIEnv* env, jobject obj, jlong jtexture, jobject jimage)
+Java_org_gearvrf_NativeTexture_setImage(JNIEnv* env, jobject obj, jlong jtexture,
+                                        jobject javaImage, jlong nativeImage)
 {
     Texture* texture = reinterpret_cast<Texture*>(jtexture);
-    Image* image = reinterpret_cast<Image*>(jimage);
-    texture->setImage(image);
+    Image* image = reinterpret_cast<Image*>(nativeImage);
+    texture->setImage(env, javaImage, image);
 }
 }

@@ -64,7 +64,6 @@ private:
     GLCompressedImage &operator=(const GLCompressedImage&) = delete;
     GLCompressedImage &operator=(GLCompressedImage&&) = delete;
 
-
     void loadCompressedMipMaps(jbyte *data)
     {
         for (int level = 0; level < mLevels; ++level) {

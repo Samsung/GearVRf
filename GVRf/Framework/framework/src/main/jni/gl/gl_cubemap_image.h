@@ -35,20 +35,7 @@ public:
             CubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets)
     { }
 
-
-    virtual void update(int texid)
-    {
-        if (mBitmaps != NULL)
-        {
-            updateFromBitmap(texid);
-            mPendingUpdate = false;
-        }
-        else if (mTextures != NULL)
-        {
-            updateFromMemory(texid);
-            mPendingUpdate = false;
-        }
-    }
+    virtual void update(int texid);
 
 private:
     GLCubemapImage(const GLCubemapImage&);
@@ -56,88 +43,8 @@ private:
     GLCubemapImage& operator=(const GLCubemapImage&);
     GLCubemapImage& operator=(GLCubemapImage&&);
 
-    void updateFromBitmap(int texid)
-    {
-        JNIEnv *env = getCurrentEnv(mJava);
-        jobjectArray bmapArray = static_cast<jobjectArray>(env->NewLocalRef(mBitmaps));
-        if (bmapArray == NULL)
-        {
-            LOGE("CubemapImage::updateFromBitmap bitmap array NULL");
-            return;
-        }
-        // Clean up upon scope exit. The SCOPE_EXIT utility is used
-        // to avoid duplicated code in the throw case and normal
-        // case.
-        SCOPE_EXIT( clearData(env); env->DeleteLocalRef(bmapArray));
-        glBindTexture(mType, texid);
-        for (int i = 0; i < 6; i++)
-        {
-            jobject bitmap = env->NewLocalRef(env->GetObjectArrayElement(bmapArray, i));
-            AndroidBitmapInfo info;
-            void *pixels;
-            int ret;
-
-            if (bitmap == NULL)
-            {
-                LOGE("CubemapImage::updateFromBitmap bitmap %d is NULL", i);
-            }
-            else if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0)
-            {
-                LOGE("CubemapImage::updateFromBitmap AndroidBitmap_getInfo() failed! error = %d", ret);
-            }
-            else if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0)
-            {
-                LOGE("CubemapImage::updateFromBitmap AndroidBitmap_lockPixels() failed! error = %d", ret);
-            }
-            else
-            {
-                if (i == 0)
-                {
-                    mWidth = info.width;
-                    mHeight = info.height;
-                    mImageSize = info.height * info.stride;
-                }
-                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA,
-                             info.width, info.height,
-                             0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                AndroidBitmap_unlockPixels(env, bitmap);
-            }
-            env->DeleteLocalRef(bitmap);
-        }
-    }
-
-    void updateFromMemory(int texid)
-    {
-        JNIEnv *env = getCurrentEnv(mJava);
-        jobjectArray texArray = static_cast<jobjectArray>(env->NewLocalRef(mTextures));
-        if (texArray == NULL)
-        {
-            LOGE("CubemapImage::updateFromMemory texture array NULL");
-            return;
-        }
-
-        // Clean up upon scope exit
-        SCOPE_EXIT( clearData(env); env->DeleteLocalRef(texArray); );
-
-        glBindTexture(mType, texid);
-        for (int i = 0; i < 6; i++)
-        {
-            jbyteArray byteArray = static_cast<jbyteArray>(env->NewLocalRef(texArray));
-            jbyte *textureData = env->GetByteArrayElements(byteArray, 0);
-
-            if (byteArray == NULL)
-            {
-                LOGE("CubemapImage::updateFromMemory texture %d is NULL", i);
-            }
-            else
-            {
-                glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, mFormat, mWidth,
-                                       mWidth, 0, mImageSize, textureData + getDataOffset(i));
-                env->ReleaseByteArrayElements(byteArray, textureData, 0);
-            }
-            env->DeleteLocalRef(byteArray);
-        }
-    }
+    void updateFromBitmap(int texid);
+    void updateFromMemory(int texid);
 };
 
 }

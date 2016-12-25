@@ -36,84 +36,28 @@ namespace gvr {
 class GLTexture : public Texture
 {
 public:
-    explicit GLTexture()  {
-    }
+    explicit GLTexture() : Texture(GL_TEXTURE_2D),
+                           id_(0),
+                           deleter_(NULL) { }
 
-    explicit GLTexture(int texture_id) :
-            id_(texture_id) { }
+    explicit GLTexture(int texture_type) :
+            Texture(texture_type),
+            id_(0),
+            deleter_(NULL) { }
 
-    virtual ~GLTexture()
-    {
-        if (0 != id_ && deleter_)
-        {
-            deleter_->queueTexture(id_);
-        }
-    }
-
-    virtual bool isReady()
-    {
-        int target = getTarget();
-        if (!target)
-        {
-            return false;
-        }
-        update();
-        if (mImage && id_ && mImage->checkForUpdate(id_))
-        {
-            setReady(true);
-            return true;
-        }
-        return Texture::isReady();
-    }
+    virtual ~GLTexture();
+    virtual bool isReady();
+    virtual bool update();
 
     virtual int getId()
     {
-        if (isReady())
-        {
-            return id();
-        }
-        return 0;
+        isReady();
+        return id();
     }
 
     GLuint id()
     {
         return id_;
-    }
-
-    virtual bool update()
-    {
-        if  (mPendingTask == Texture::TASK_INIT_PARAMS)
-        {
-            int target = getTarget();
-            deleter_ = getDeleterForThisThread();
-
-            // Sets the new MIN FILTER
-            GLenum min_filter_type_ = mTexParams[0];
-
-            // Sets the MAG FILTER
-            GLenum mag_filter_type_ = mTexParams[1];
-
-            // Sets the wrap parameter for texture coordinate S
-            GLenum wrap_s_type_ = mTexParams[3];
-
-            // Sets the wrap parameter for texture coordinate S
-            GLenum wrap_t_type_ = mTexParams[4];
-
-            glGenTextures(1, &id_);
-            glBindTexture(target, id_);
-
-            // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
-            if (mTexParams[2] > 1.0f)
-            {
-                glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float) mTexParams[2]);
-            }
-            glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
-            glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
-            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
-            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
-        } // switch
-        mPendingTask = 0;
-        return true;
     }
 
 private:
@@ -123,9 +67,8 @@ private:
     GLTexture& operator=(GLTexture&& gl_texture);
 
 protected:
-    GLuint id_ = 0;
+    GLuint id_;
     GlDelete* deleter_;
-
 };
 
 }
