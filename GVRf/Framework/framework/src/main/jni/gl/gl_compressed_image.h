@@ -32,12 +32,12 @@ public:
     explicit GLCompressedImage(JNIEnv *env, int target, int format,
                                int width, int height, jbyteArray bytes,
                                int levels, const int *dataOffsets) :
-            CompressedImage(env, target, format, width, height, bytes, levels, dataOffsets)
+            CompressedImage(env, target, format, levels, width, height)
     {
         CompressedImage::update(env, width, height, bytes, levels, dataOffsets);
     }
 
-
+protected:
     virtual void update(int texid)
     {
         JNIEnv *env = getCurrentEnv(mJava);

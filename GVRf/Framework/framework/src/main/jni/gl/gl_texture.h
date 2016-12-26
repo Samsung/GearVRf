@@ -47,7 +47,7 @@ public:
 
     virtual ~GLTexture();
     virtual bool isReady();
-    virtual bool update();
+    virtual bool updateGPU();
 
     virtual int getId()
     {

@@ -32,7 +32,7 @@ in vec3 view_direction;
 in vec2 diffuse_coord;
 
 #ifdef HAS_SHADOWS
-uniform sampler2DArray u_shadow_maps;
+uniform lowp sampler2DArray u_shadow_maps;
 #endif
 
 struct Radiance

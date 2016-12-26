@@ -14,19 +14,20 @@
  */
 
 package org.gearvrf;
+import android.opengl.GLES30;
 
 /**
- * A specialized texture, for doing computation on the GPU.
+ * A specialized image, for doing computation on the GPU.
  * 
- * Loads an array of float pairs into a texture; you can access the individual
+ * Image is an array of float pairs; you can access the individual
  * components of each 'pixel' as the {@code .r} and {code .g} swizzles.
  * 
  * @since 1.6.3
  */
-public class GVRFloatTexture extends GVRTexture {
-
+public class GVRFloatTexture extends GVRImage
+{
     /**
-     * Create a float-point texture.
+     * Create a floating-point image.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
@@ -43,10 +44,15 @@ public class GVRFloatTexture extends GVRTexture {
      * 
      * @since 1.6.3
      */
-    public GVRFloatTexture(GVRContext gvrContext, int width, int height,
-            float[] data) throws IllegalArgumentException {
-        super(gvrContext, NativeFloatTexture.ctor());
-        update(width, height, data);
+    public GVRFloatTexture(GVRContext gvrContext, int width, int height, float[] data)
+            throws IllegalArgumentException
+    {
+        super(gvrContext, NativeFloatTexture.constructor(width, height, data));
+    }
+
+    public GVRFloatTexture(GVRContext gvrContext)
+    {
+        super(gvrContext, NativeFloatTexture.constructor(0, 0, null));
     }
 
     /**
@@ -66,7 +72,7 @@ public class GVRFloatTexture extends GVRTexture {
      *            Texture height, in pixels
      * @param data
      *            A linear array of float pairs.
-     * @return {@code true} if the update succeeded, and {@code false} if it
+     * @return {@code true} if the updateGPU succeeded, and {@code false} if it
      *         failed. Updating a texture requires that the new data parameter
      *         has the exact same {@code width} and {@code height} and pixel
      *         format as the original data.
@@ -76,18 +82,20 @@ public class GVRFloatTexture extends GVRTexture {
      *             {@code data.length < height * width * 2}
      */
     public boolean update(int width, int height, float[] data)
-            throws IllegalArgumentException {
-        if (width <= 0 || height <= 0 || data == null
-                || data.length < height * width * 2) {
+            throws IllegalArgumentException
+    {
+        if ((width <= 0) || (height <= 0) ||
+            (data == null) || (data.length < height * width * 2))
+        {
             throw new IllegalArgumentException();
         }
         return NativeFloatTexture.update(getNative(), width, height, data);
     }
 }
 
-class NativeFloatTexture {
-    static native long ctor();
 
-    static native boolean update(long pointer, int width, int height,
-            float[] data);
+class NativeFloatTexture {
+    static native long constructor(int width, int height, float[] data);
+
+    static native boolean update(long pointer, int width, int height, float[] data);
 }

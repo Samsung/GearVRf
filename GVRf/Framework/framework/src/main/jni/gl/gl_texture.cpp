@@ -37,7 +37,7 @@ bool GLTexture::isReady()
     {
         return false;
     }
-    update();
+    updateGPU();
     bool didUpdate = false;
     if (mImage && id_)
     {
@@ -62,9 +62,9 @@ bool GLTexture::isReady()
 }
 
 
-bool GLTexture::update()
+bool GLTexture::updateGPU()
 {
-    if  (mPendingTask == Texture::TASK_INIT_PARAMS)
+    if (mPendingTask == Texture::TASK_INIT_PARAMS)
     {
         int target = getTarget();
         deleter_ = getDeleterForThisThread();

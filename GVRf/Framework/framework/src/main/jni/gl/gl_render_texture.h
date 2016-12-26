@@ -89,7 +89,6 @@ private:
     void invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer);
 
 private:
-    GLenum texture_filter;
     GLRenderBuffer* renderTexture_gl_render_buffer_ = nullptr;// This is actually depth buffer.
     GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
     GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;

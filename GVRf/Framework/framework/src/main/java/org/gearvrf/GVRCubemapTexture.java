@@ -23,8 +23,6 @@ import android.graphics.Bitmap;
 /** Cube map texture. */
 public class GVRCubemapTexture extends GVRImage
 {
-    protected Bitmap[] mFaceBitmaps;
-
     /**
      * Constructs a cube map texture using six pre-existing {@link Bitmap}s and
      * the user defined filters {@link GVRTextureParameters}.
@@ -41,11 +39,13 @@ public class GVRCubemapTexture extends GVRImage
      */
     public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray)
     {
-        super(gvrContext);
-        mFaceBitmaps = bitmapArray;
+        super(gvrContext, NativeCubemapImage.bitmapArrayConstructor(bitmapArray));
     }
 
-    Bitmap[] getFaceBitmaps()   { return mFaceBitmaps; }
+    public void update(Bitmap[] bitmapArray)
+    {
+        NativeCubemapImage.update(getNative(), bitmapArray);
+    }
 
     /**
      * Set the names of six images in the zip file. The default names of the six
@@ -85,4 +85,10 @@ public class GVRCubemapTexture extends GVRImage
         faceIndexMap.put("posz", 4);
         faceIndexMap.put("negz", 5);
     }
+}
+
+class NativeCubemapImage
+{
+    static native long bitmapArrayConstructor(Bitmap[] bitmapArray);
+    static native void update(long pointer, Bitmap[] bitmapArray);
 }

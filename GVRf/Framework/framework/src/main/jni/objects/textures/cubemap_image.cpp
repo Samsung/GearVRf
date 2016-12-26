@@ -55,25 +55,31 @@ CubemapImage::CubemapImage(JNIEnv* env, int format, int width, int height, int i
 
 void CubemapImage::update(JNIEnv* env, jobjectArray bitmapArray)
 {
+    mUpdateLock.lock();
     clearData(env);
     mBitmaps = env->NewWeakGlobalRef(bitmapArray);
     mPendingUpdate = true;
+    mUpdateLock.unlock();
 }
 
 void CubemapImage::update(JNIEnv* env, int imageSize,
             jobjectArray textureArray, const int* textureOffset)
 {
+    mUpdateLock.lock();
     mImageSize = imageSize;
     setDataOffsets(textureOffset, 6);
     clearData(env);
     mTextures = env->NewWeakGlobalRef(textureArray);
     mPendingUpdate = true;
+    mUpdateLock.unlock();
 }
 
 CubemapImage::~CubemapImage()
 {
+    mUpdateLock.lock();
     JNIEnv* env = getCurrentEnv(mJava);
     clearData(env);
+    mUpdateLock.unlock();
 }
 
 void CubemapImage::update(int texid)

@@ -36,8 +36,8 @@ BitmapImage::BitmapImage(JNIEnv* env, int target, int width, int height, int ima
     }
 }
 
-BitmapImage::BitmapImage(JNIEnv* env, jobject bitmap) :
-        Image(GL_TEXTURE_2D, 0, 0, 0, GL_LUMINANCE, 1),
+BitmapImage::BitmapImage(JNIEnv* env, int format, jobject bitmap) :
+        Image(GL_TEXTURE_2D, 0, 0, 0, format, 1),
         mData(NULL), mBitmap(NULL)
 {
     if (JNI_OK != env->GetJavaVM(&mJava))
@@ -49,11 +49,14 @@ BitmapImage::BitmapImage(JNIEnv* env, jobject bitmap) :
 
 BitmapImage::~BitmapImage()
 {
+    mUpdateLock.lock();
     clearData(getCurrentEnv(mJava));
+    mUpdateLock.unlock();
 }
 
 void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
 {
+    mUpdateLock.lock();
     clearData(env);
     mWidth = width;
     mHeight = height;
@@ -62,16 +65,19 @@ void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
         mData = static_cast<jbyteArray>(env->NewWeakGlobalRef(data));
         mPendingUpdate = true;
     }
+    mUpdateLock.unlock();
 }
 
 void BitmapImage::update(JNIEnv* env, jobject bitmap)
 {
+    mUpdateLock.lock();
     clearData(env);
     if (bitmap != NULL)
     {
         mBitmap = static_cast<jbyteArray>(env->NewWeakGlobalRef(bitmap));
         mPendingUpdate = true;
     }
+    mUpdateLock.unlock();
 }
 
 void BitmapImage::clearData(JNIEnv* env)

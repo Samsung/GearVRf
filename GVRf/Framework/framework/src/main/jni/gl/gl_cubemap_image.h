@@ -35,6 +35,7 @@ public:
             CubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets)
     { }
 
+protected:
     virtual void update(int texid);
 
 private:

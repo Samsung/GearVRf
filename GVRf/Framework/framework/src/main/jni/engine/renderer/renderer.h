@@ -46,6 +46,7 @@ class Light;
 class BitmapImage;
 class CubemapImage;
 class CompressedImage;
+class FloatImage;
 
 /*
  * These uniforms are commonly used in shaders.
@@ -115,14 +116,15 @@ public:
      virtual RenderData* createRenderData() = 0;
      virtual UniformBlock* createUniformBlock(const std::string& desc,int) = 0;
      virtual BitmapImage* createBitmap(JNIEnv* env, int width, int height, jbyteArray data) = 0;
-     virtual BitmapImage* createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) = 0;
+     virtual BitmapImage* createBitmap(JNIEnv* env, int format, jobject bitmap) = 0;
      virtual CubemapImage* createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
                                        jobjectArray textureArray, const int* dataOffsets) = 0;
      virtual CubemapImage* createCubemap(JNIEnv* env, jobjectArray bitmapArray) = 0;
      virtual CompressedImage* createCompressedBitmap(JNIEnv *env, int target, int format,
-                                                     int width, int height, jbyteArray bytes,
-                                                     int levels, const int *dataOffsets) = 0;
+                                                     int width, int height, int levels) = 0;
      virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
+     virtual FloatImage* createFloatImage(JNIEnv* env, int width, int height, jfloatArray floatData) = 0;
+
      virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                 int jcolor_format, int jdepth_format, bool resolve_depth,
                                                 const int* texture_parameters) = 0;

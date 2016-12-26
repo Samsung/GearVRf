@@ -119,7 +119,7 @@ public class CompressedTexture {
 
     GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
         GVRCompressedTexture tex = new GVRCompressedTexture(gvrContext, width,
-                height, internalformat, getArray(), imageSize, levels, quality);
+                height, internalformat, getArray(), levels, quality);
         tex.setDataOffsets(new int[] { dataOffset });
         return tex;
     }
@@ -128,7 +128,7 @@ public class CompressedTexture {
     GVRCompressedTexture toTexture(GVRContext gvrContext, int quality,
             GVRTextureParameters textureParameters) {
         GVRCompressedTexture tex = new GVRCompressedTexture(gvrContext, width,
-                height, internalformat, getArray(), imageSize, levels, quality);
+                height, internalformat, getArray(), levels, quality);
         tex.setDataOffsets(new int[] { dataOffset });
         return tex;
     }

@@ -17,6 +17,7 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
+#include <mutex>
 #include "objects/hybrid_object.h"
 #include "gl/gl_headers.h"  // for GL_TEXTURE_xxx
 
@@ -76,26 +77,31 @@ public:
         {
             return false;
         }
+        mUpdateLock.lock();
         for (int i = 0; i < n; ++i)
         {
             mDataOffsets[i] = offsets[i];
         }
+        mUpdateLock.unlock();
     }
 
     bool checkForUpdate(int texid)
     {
         if (mPendingUpdate)
         {
+            mUpdateLock.lock();
             update(texid);
             mPendingUpdate = false;
+            mUpdateLock.unlock();
             return true;
         }
         return false;
     }
 
+protected:
     virtual void update(int texid) { }
 
-protected:
+    std::mutex mUpdateLock;
     int     mType;
     int     mWidth;
     int     mHeight;

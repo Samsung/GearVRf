@@ -23,13 +23,12 @@
 
 namespace gvr {
 extern "C" {
+
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_asynchronous_NativeCompressedTexture_constructor(JNIEnv *env,
               jobject obj, jint target,
-              jint internalFormat,
-              jint width, jint height,
-              jbyteArray bytes,
-              jintArray dataOffsets);
+              jint format, jint width,
+              jint height, jint levels);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_asynchronous_NativeCompressedTexture_update(JNIEnv *env,
@@ -52,15 +51,12 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_update(JNIEnv * env,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_constructor(JNIEnv * env,
-                                                                  jobject obj, jint target, jint internalFormat,
-                                                                  jint width, jint height, jbyteArray bytes, jintArray jDataOffsets)
+          jobject obj, jint target,
+          jint format, jint width,
+          jint height, jint levels)
 {
-    jint* dataOffsets = env->GetIntArrayElements(jDataOffsets,0);
-
-    CompressedImage* texture = Renderer::getInstance()->createCompressedBitmap(env, target, internalFormat,
-                                                       width, height, bytes,
-                                                       env->GetArrayLength(jDataOffsets), dataOffsets);
-    env->ReleaseIntArrayElements(jDataOffsets, dataOffsets, 0);
+    CompressedImage* texture = Renderer::getInstance()->createCompressedBitmap(env, target, format,
+                                                       width, height, levels);
     return reinterpret_cast<jlong>(texture);
 }
 }

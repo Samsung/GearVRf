@@ -1,3 +1,4 @@
+precision highp float;
 #ifdef HAS_MULTIVIEW
 #extension GL_OVR_multiview2 : enable
 layout(num_views = 2) in;

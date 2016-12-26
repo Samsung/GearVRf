@@ -28,18 +28,17 @@ namespace gvr
 class CompressedImage : public BitmapImage
 {
 public:
-    // The constructor to use when loading a single-level texture
     explicit CompressedImage(JNIEnv *env, int target, int format,
-                               int width, int height, jbyteArray bytes,
-                               int levels, const int *dataOffsets) :
-            BitmapImage(env, target, width, height, env->GetArrayLength(bytes), format, levels)
+                             int levels, int width, int height) :
+            BitmapImage(env, target, width, height, 0, format, levels)
     {
-        update(env, width, height, bytes, levels, dataOffsets);
+        mData = NULL;
     }
 
     void update(JNIEnv *env, int width, int height, jbyteArray bytes, int levels,
                 const int* dataOffsets)
     {
+        mUpdateLock.lock();
         env->DeleteGlobalRef(mData);
         mWidth = width;
         mHeight = height;
@@ -48,6 +47,7 @@ public:
         mData = static_cast<jbyteArray>(env->NewGlobalRef(bytes));
         setDataOffsets(dataOffsets, mLevels);
         mPendingUpdate = true;
+        mUpdateLock.unlock();
     }
 
 private:

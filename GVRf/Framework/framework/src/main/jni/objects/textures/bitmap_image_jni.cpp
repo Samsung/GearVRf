@@ -28,8 +28,12 @@ namespace gvr {
 
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv * env, jobject obj,
+    Java_org_gearvrf_NativeBitmapImage_constructFromMemory(JNIEnv * env, jobject obj,
             jint width, jint height, jbyteArray data);
+
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeBitmapImage_constructFromBitmap(JNIEnv * env, jobject obj,
+            int format, jobject bitmap);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv * env, jobject obj,
@@ -41,10 +45,18 @@ extern "C" {
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv * env, jobject obj,
+Java_org_gearvrf_NativeBitmapImage_constructFromMemory(JNIEnv * env, jobject obj,
                 jint width, jint height, jbyteArray data)
-{;
+{
     BitmapImage* image = Renderer::getInstance()->createBitmap(env, width, height, data);
+    jlong result =  reinterpret_cast<jlong>(image);
+    return result;
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeBitmapImage_constructFromBitmap(JNIEnv * env, jobject obj, int format, jobject bitmap)
+{
+    BitmapImage* image = Renderer::getInstance()->createBitmap(env, format, bitmap);
     jlong result =  reinterpret_cast<jlong>(image);
     return result;
 }

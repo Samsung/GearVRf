@@ -1,5 +1,4 @@
 precision highp float;
-
 layout (std140) uniform Transform_ubo
 {
  #ifdef HAS_MULTIVIEW
@@ -44,7 +43,7 @@ out vec2 normal_coord;
 #endif
 
 #ifdef HAS_SHADOWS
-uniform sampler2DArray u_shadow_maps;
+uniform lowp sampler2DArray u_shadow_maps;
 
 float unpackFloatFromVec4i(const vec4 value)
 {

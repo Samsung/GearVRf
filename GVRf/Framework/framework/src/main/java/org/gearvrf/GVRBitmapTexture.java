@@ -43,16 +43,13 @@ public class GVRBitmapTexture extends GVRImage
      */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap)
     {
-        super(gvrContext, bitmap.getWidth(), bitmap.getHeight(), bitmap.hasAlpha() ? GL_RGBA : GL_RGB);
-        mBitmap = bitmap;
-        mGrayscaleData = null;
+        super(gvrContext, NativeBitmapImage.constructFromBitmap(bitmap.hasAlpha() ? GL_RGBA : GL_RGB, bitmap));
+        setBitmap(bitmap);
     }
 
     public GVRBitmapTexture(GVRContext gvrContext)
     {
-        super(gvrContext, 0, 0, GL_RGB);
-        mBitmap = null;
-        mGrayscaleData = null;
+        super(gvrContext, NativeBitmapImage.constructFromMemory(0, 0, null));
     }
 
     /**
@@ -92,24 +89,46 @@ public class GVRBitmapTexture extends GVRImage
     public GVRBitmapTexture(GVRContext gvrContext, int width, int height, byte[] grayscaleData)
             throws IllegalArgumentException
     {
-        super(gvrContext, width, height, GL_LUMINANCE);
-        mBitmap = null;
-        mGrayscaleData = grayscaleData;
+        super(gvrContext, NativeBitmapImage.constructFromMemory(width, height, grayscaleData));
     }
 
-    Bitmap  getBitmap()         { return mBitmap; }
-    byte[]  getGrayscale()      { return mGrayscaleData; }
-
+    /**
+     * Copy a new {@link Bitmap} to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
+     * totally trivial operation: it does involve some memory management and
+     * some GL hardware handshaking. Reusing the texture reduces this overhead
+     * (primarily by delaying garbage collection). Do be aware that updating a
+     * texture will affect any and all {@linkplain GVRMaterial materials}
+     * (and/or post effects that use the texture!
+     *
+     * @param bmap  An Android Bitmap.
+     *
+     * @since 1.6.3
+     */
     public void setBitmap(Bitmap bmap)
     {
-        mBitmap = bmap;
-        mWidth = bmap.getWidth();
-        mHeight = bmap.getHeight();
-        mFormat = GL_RGB;
-        if (bmap.hasAlpha())
-        {
-            mFormat = GL_RGBA;
-        }
+        NativeBitmapImage.updateFromBitmap(getNative(), bmap);
+    }
+
+    /**
+     * Copy new grayscale data to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Be aware that updating a texture will affect any and all
+     * {@linkplain GVRMaterial materials} and/or post effects that use the texture!
+     * @param width     width of grayscale image
+     * @param height    height of grayscale image
+     * @param grayscaleData  A byte array containing grayscale data
+     *
+     * @since 1.6.3
+     */
+    public void update(int width, int height, byte[] grayscaleData)
+    {
+        NativeBitmapImage.updateFromMemory(getNative(), width, height, grayscaleData);
     }
 
     private static Bitmap loadBitmap(GVRContext gvrContext, String pngAssetFilename)
@@ -126,8 +145,12 @@ public class GVRBitmapTexture extends GVRImage
         return null;
     }
 
-    private Bitmap mBitmap;
-    private byte[] mGrayscaleData;
     private final static String TAG = "GVRBitmapTexture";
 }
 
+class NativeBitmapImage {
+    static native long constructFromMemory(int width, int height, byte[] data);
+    static native long constructFromBitmap(int format, Bitmap bitmap);
+    static native void updateFromMemory(long pointer, int width, int height, byte[] data);
+    static native void updateFromBitmap(long pointer, Bitmap bitmap);
+}

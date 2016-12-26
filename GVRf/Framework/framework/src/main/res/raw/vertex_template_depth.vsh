@@ -1,3 +1,4 @@
+
 uniform mat4 u_bone_matrix[60];
 uniform mat4 u_model;
 uniform mat4 shadow_matrix;

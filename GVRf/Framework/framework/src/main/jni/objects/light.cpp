@@ -224,7 +224,7 @@ bool Light::generateFBO() {
 
 void Light::createDepthTexture(int width, int height, int depth) {
     GLTexture* depthtex = new GLTexture(GL_TEXTURE_2D_ARRAY);
-    GLint id = depthtex->id();
+    GLint id = depthtex->getId();
     depth_texture_ = depthtex;
     glBindTexture(GL_TEXTURE_2D_ARRAY, id);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

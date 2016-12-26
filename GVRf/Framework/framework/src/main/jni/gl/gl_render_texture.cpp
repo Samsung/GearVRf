@@ -166,7 +166,7 @@ bool GLRenderTexture::isReady()
 {
     if (!GLTexture::mIsReady)
     {
-        GLTexture::update();
+        GLTexture::updateGPU();
         GLTexture::setReady(true);
     }
     return true;

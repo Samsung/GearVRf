@@ -185,26 +185,6 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
      */
     public void setImage(final GVRImage imageData)
     {
-        if (imageData instanceof GVRBitmapTexture)
-        {
-            update((GVRBitmapTexture) imageData);
-        }
-        else if (imageData instanceof GVRCompressedTexture)
-        {
-            update((GVRCompressedTexture) imageData);
-        }
-        else if (imageData instanceof GVRCubemapTexture)
-        {
-            update((GVRCubemapTexture) imageData);
-        }
-        else if (imageData instanceof GVRCompressedCubemapTexture)
-        {
-            update((GVRCompressedCubemapTexture) imageData);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("GVRTexture.setImage unsupported image class");
-        }
         mImage = imageData;
         if (imageData != null)
             NativeTexture.setImage(getNative(), imageData, imageData.getNative());
@@ -217,98 +197,6 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
         return mImage;
     }
 
-    /**
-     * Copy a new {@link Bitmap} to the GL texture. This one is also safe even
-     * in a non-GL thread. An update request on a non-GL thread will
-     * be forwarded to the GL thread and be executed before main rendering happens.
-     *
-     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
-     * totally trivial operation: it does involve some memory management and
-     * some GL hardware handshaking. Reusing the texture reduces this overhead
-     * (primarily by delaying garbage collection). Do be aware that updating a
-     * texture will affect any and all {@linkplain GVRMaterial materials}
-     * (and/or post effects that use the texture!
-     *
-     * @param bitmapImage
-     *            A GVRBitmapTexture containing an Android Bitmap or grayscale data.
-     *
-     * @since 1.6.3
-     */
-    public void update(final GVRBitmapTexture bitmapImage)
-    {
-        final Bitmap bitmap = bitmapImage.getBitmap();
-        final int width = bitmapImage.getWidth();
-        final int height = bitmapImage.getHeight();
-        final int format = bitmapImage.getFormat();
-        final byte[] grayscale = bitmapImage.getGrayscale();
-
-        if ((width <= 0) || (height <= 0) ||
-            ((grayscale != null) && (grayscale.length < height * width)))
-        {
-            throw new IllegalArgumentException();
-        }
-        long nativePtr = bitmapImage.getNative();
-        if (nativePtr == 0)
-        {
-            nativePtr = NativeBitmapImage.constructor(width, height, grayscale);
-            bitmapImage.setNative(nativePtr);
-        }
-        if (bitmap != null)
-        {
-            NativeBitmapImage.updateFromBitmap(nativePtr, bitmap);
-        }
-        else if (grayscale != null)
-        {
-            NativeBitmapImage.updateFromMemory(nativePtr, width, height, grayscale);
-        }
-    }
-
-    void update(final GVRCubemapTexture cubemap)
-    {
-        long nativePtr = cubemap.getNative();
-        Bitmap[] bitmapArray = cubemap.getFaceBitmaps();
-        if (nativePtr == 0)
-        {
-            nativePtr = NativeCubemapImage.bitmapArrayConstructor(bitmapArray);
-            cubemap.setNative(nativePtr);
-        }
-        else
-        {
-            NativeCubemapImage.update(nativePtr, bitmapArray);
-        }
-    }
-
-    void update(final GVRCompressedCubemapTexture cubemap)
-    {
-        long nativePtr = cubemap.getNative();
-        if (nativePtr == 0)
-        {
-            nativePtr = NativeCompressedCubemapTexture.constructor(
-                    cubemap.getFormat(), cubemap.getWidth(), cubemap.getHeight(),
-                    cubemap.getImageSize(), cubemap.getData(), cubemap.getDataOffsets());
-            cubemap.setNative(nativePtr);
-        }
-        else
-        {
-            NativeCompressedCubemapTexture.update(nativePtr, cubemap.getData(), cubemap.getDataOffsets());
-        }
-    }
-
-    void update(final GVRCompressedTexture texture)
-    {
-        long nativePtr = texture.getNative();
-        int levels = texture.getLevels();
-        if (nativePtr == 0)
-        {
-            nativePtr = NativeCompressedTexture.constructor(texture.getTarget(), texture.getFormat(),
-                    texture.getWidth(), texture.getHeight(),
-                    texture.getData(), texture.getDataOffsets());
-            texture.setNative(nativePtr);
-            return;
-        }
-        NativeCompressedTexture.update(nativePtr, texture.getWidth(), texture.getHeight(),
-                texture.getData(), texture.getDataOffsets());
-    }
 }
 
 class NativeTexture {
@@ -317,30 +205,4 @@ class NativeTexture {
     static native boolean isReady(long texture);
     static native void updateTextureParameters(long texture, int[] textureParametersValues);
     static native void setImage(long texPointer, GVRImage javeImage, long nativeImage);
-}
-
-class NativeCubemapImage
-{
-    static native long bitmapArrayConstructor(Bitmap[] bitmapArray);
-    static native void update(long pointer, Bitmap[] bitmapArray);
-}
-
-class NativeCompressedCubemapTexture {
-    static native long constructor(int internalFormat,
-                                   int width, int height, int imageSize, byte[][] data, int[] dataOffsets);
-    static native void update(long pointer, byte[][] data, int[] dataOffsets);
-}
-
-class NativeCompressedTexture {
-    static native long constructor(int target, int format,
-                                   int width, int height, byte[] data, int[] dataOffsets);
-
-    static native void update(long pointer, int width, int height, byte[] data, int[] dataOffsets);
-}
-
-class NativeBitmapImage {
-    static native long constructor(int width, int height, byte[] data);
-
-    static native void updateFromMemory(long pointer, int width, int height, byte[] data);
-    static native void updateFromBitmap(long pointer, Bitmap bitmap);
 }

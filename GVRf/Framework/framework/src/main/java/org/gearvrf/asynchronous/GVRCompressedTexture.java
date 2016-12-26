@@ -33,15 +33,7 @@ import org.gearvrf.utility.Log;
  */
 public class GVRCompressedTexture extends GVRImage
 {
-
-    static final int GL_TARGET = GL_TEXTURE_2D;
-
     private static final String TAG = Log.tag(GVRCompressedTexture.class);
-
-    /*
-     * Texture field(s) and constructors
-     */
-
 
     /**
      * The speed/quality parameter passed to
@@ -52,52 +44,51 @@ public class GVRCompressedTexture extends GVRImage
      * {@linkplain GVRCompressedTexture#SPEED public constants} in
      * {@link GVRCompressedTexture}.
      */
-    protected final int mQuality;
-    protected final byte[] mData;
-    protected final int mTarget;
+    protected int mQuality;
+    private byte[] mData;
+    private int mWidth;
+    private int mHeight;
+    private int mLevels;
 
     // Texture parameters
-    GVRCompressedTexture(GVRContext gvrContext, int width,
-            int height, int internalFormat, byte[] data,
-            int imageSize, int levels, int quality)
+    GVRCompressedTexture(GVRContext gvrContext, int width, int height, int format, byte[] data, int levels, int quality)
     {
-        super(gvrContext, width, height, internalFormat, 1);
-        mData = data;
-        mTarget = GVRCompressedTexture.GL_TARGET;
-        setImageSize(imageSize);
+        super(gvrContext, NativeCompressedTexture.constructor(GL_TEXTURE_2D, format, levels, width, height));
         mQuality = GVRCompressedTexture.clamp(quality);
+        mData = data;
+        mWidth = width;
+        mHeight = height;
+        mLevels = levels;
     }
 
     GVRCompressedTexture(GVRContext gvrContext, int width, int height, byte[] data, int levels, int quality)
     {
-        super(gvrContext, width, height, levels);
+        super(gvrContext, NativeCompressedTexture.constructor(GL_TEXTURE_2D, GL_RGB, levels, width, height));
         mQuality = GVRCompressedTexture.clamp(quality);
         mData = data;
-        mTarget = GVRCompressedTexture.GL_TARGET;
+        mWidth = width;
+        mHeight = height;
+        mLevels = levels;
     }
 
     public void setDataOffsets(int[] offsets)
     {
         assert(mLevels == offsets.length);
-        for (int i = 0; i < mLevels; ++i)
-        {
-            mDataOffsets[i] = offsets[i];
-        }
+        NativeCompressedTexture.update(getNative(), mWidth, mHeight, mData, offsets);
+        mData = null;
     }
 
-    public int getTarget()          { return mTarget; }
-    public byte[] getData()         { return mData; }
     public int getQuality()         { return mQuality; }
 
      /*
      * Quality tradeoff constants
      */
 
-    /** Optimize for render speed */
+    /** Optimize for updateGPU speed */
     public static final int SPEED = -1;
     /** Strike a balance between speed and quality */
     public static final int BALANCED = 0;
-    /** Optimize for render quality */
+    /** Optimize for updateGPU quality */
     public static final int QUALITY = 1;
 
     protected static final int DEFAULT_QUALITY = SPEED;
@@ -111,4 +102,11 @@ public class GVRCompressedTexture extends GVRImage
             return BALANCED;
         }
     }
+}
+
+
+class NativeCompressedTexture {
+    static native long constructor(int target, int format, int width, int height, int levels);
+
+    static native void update(long pointer, int width, int height, byte[] data, int[] dataOffsets);
 }

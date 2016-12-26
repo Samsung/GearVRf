@@ -31,10 +31,11 @@ public:
             BitmapImage(env, width, height, data)
     { }
 
-    explicit GLBitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) :
-            BitmapImage(env, target, width, height, imagesize, format, levels)
+    explicit GLBitmapImage(JNIEnv* env, int format, jobject bitmap) :
+            BitmapImage(env, format, bitmap)
     { }
 
+protected:
     virtual void update(int texid)
     {
         if (mBitmap != NULL)
@@ -57,12 +58,12 @@ public:
     {
         JNIEnv *env = getCurrentEnv(mJava);
         jbyteArray array = static_cast<jbyteArray>(env->NewLocalRef(mData));
-        jbyte *data = env->GetByteArrayElements(array, 0);
-        env->ReleaseByteArrayElements(mData, data, 0);
+        jbyte* pixels = env->GetByteArrayElements(array, 0);
         glBindTexture(mType, texid);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, mWidth, mHeight, 0, GL_LUMINANCE,
-                     GL_UNSIGNED_BYTE, mData);
+        glTexImage2D(mType, 0, GL_LUMINANCE, mWidth, mHeight, 0, GL_LUMINANCE,
+                     GL_UNSIGNED_BYTE, pixels);
         glGenerateMipmap(mType);
+        env->ReleaseByteArrayElements(array, pixels, 0);
         env->DeleteLocalRef(array);
         clearData(env);
     }
@@ -93,9 +94,31 @@ public:
             mWidth = info.width;
             mHeight = info.height;
             mImageSize = info.height * info.stride;
-            glTexImage2D(mType, 0, GL_RGBA,
+            int dataFormat = GL_UNSIGNED_BYTE;
+            int pixelFormat = GL_RGBA;
+            int internalFormat = GL_RGBA;
+            switch (info.format)
+            {
+                case ANDROID_BITMAP_FORMAT_RGB_565:
+                    internalFormat = GL_RGB565;
+                    dataFormat = GL_UNSIGNED_SHORT_5_6_5;
+                    pixelFormat = GL_RGB;
+                    break;
+
+                case ANDROID_BITMAP_FORMAT_RGBA_4444:
+                    internalFormat = GL_RGBA4;
+                    dataFormat = GL_UNSIGNED_SHORT_4_4_4_4;
+                    break;
+
+                case ANDROID_BITMAP_FORMAT_A_8:
+                    dataFormat = GL_R8;
+                    pixelFormat = GL_RED;
+                    break;
+            }
+            mFormat = dataFormat;
+            glTexImage2D(mType, 0, internalFormat,
                          info.width, info.height,
-                         0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                         0, pixelFormat, dataFormat, pixels);
             AndroidBitmap_unlockPixels(env, bitmap);
         }
         env->DeleteLocalRef(bitmap);

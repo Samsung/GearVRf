@@ -1,26 +1,36 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.gearvrf;
 
 public class GVRCompressedCubemapTexture extends GVRImage
 {
-    protected byte[][] mData;
-
-  public GVRCompressedCubemapTexture(GVRContext gvrContext, int internalFormat, int width,
-          int height, int imageSize, byte[][] data, int[] dataOffsets)
-  {
-      super(gvrContext, width, height, internalFormat, dataOffsets.length);
-      setImageSize(imageSize);
-      setDataOffsets(dataOffsets);
-      mData = data;
-  }
-
-    public void setDataOffsets(int[] offsets)
+    public GVRCompressedCubemapTexture(GVRContext gvrContext, int internalFormat, int width,
+                                        int height, int imageSize, byte[][] data, int[] dataOffsets)
     {
-        assert(mLevels == offsets.length);
-        for (int i = 0; i < mLevels; ++i)
-        {
-            mDataOffsets[i] = offsets[i];
-        }
+        super(gvrContext, NativeCompressedCubemapTexture.constructor(internalFormat, width, height, imageSize, data, dataOffsets));
     }
 
-    public byte[][] getData() { return mData; }
+    public void update(byte[][] data, int[] dataOffsets)
+    {
+        NativeCompressedCubemapTexture.update(getNative(), data, dataOffsets);
+    }
+}
+
+class NativeCompressedCubemapTexture {
+    static native long constructor(int internalFormat,
+                                   int width, int height, int imageSize, byte[][] data, int[] dataOffsets);
+    static native void update(long pointer, byte[][] data, int[] dataOffsets);
 }

@@ -17,32 +17,29 @@
  * Textures generated from float point arrays
  ***************************************************************************/
 
-#ifndef FLOAT_IMAGE_H_
-#define FLOAT_IMAGE_H_
+#ifndef GL_FLOAT_IMAGE_H_
+#define GL_FLOAT_IMAGE_H_
 
-#include "gl/gl_texture.h"
-#include "util/gvr_log.h"
+#include "objects/textures/float_image.h"
 
 namespace gvr {
-class GLFloatImage: public Image
+class GLFloatImage : public FloatImage
 {
 public:
-    explicit GLFloatImage() : Image(GL_TEXTURE_2D, GL_FLOAT), mData(NULL)
-    {
-    }
+    explicit GLFloatImage(JNIEnv* env, int width, int height, jfloatArray data) : FloatImage(env, width, height, data) { }
+    explicit GLFloatImage() : FloatImage() { }
 
-    bool update(int width, int height, float* data)
-    {
-        mWidth = width;
-        mHeight = height;
-        mData = data;
-    }
-
+protected:
     virtual void update(int texid)
     {
-        glBindTexture(GL_TEXTURE_2D, texid);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, mWidth, mHeight, 0, GL_RG, GL_FLOAT, mData);
-        mData = NULL;
+        JNIEnv *env = getCurrentEnv(mJava);
+        float* pixels = env->GetFloatArrayElements(array, 0);
+        glBindTexture(mType, texid);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, mWidth, mHeight, 0, GL_RG, GL_FLOAT, pixels);
+        glGenerateMipmap(mType);
+        env->ReleaseFloatArrayElements(array, pixels, 0);
+        env->DeleteLocalRef(array);
+        clearData(env);
         mPendingUpdate = false;
     }
 
@@ -51,8 +48,6 @@ private:
     GLFloatImage(GLFloatImage&&);
     GLFloatImage& operator=(const GLFloatImage&);
     GLFloatImage& operator=(GLFloatImage&&);
-
-    float* mData;
 };
 
 }

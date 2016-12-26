@@ -29,7 +29,7 @@ namespace gvr {
     class BitmapImage : public Image
     {
     public:
-        explicit BitmapImage(JNIEnv* env, jobject bitmap);
+        explicit BitmapImage(JNIEnv* env, int format, jobject bitmap);
         explicit BitmapImage(JNIEnv* env, int width, int height, jbyteArray data);
         explicit BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels);
         virtual ~BitmapImage();

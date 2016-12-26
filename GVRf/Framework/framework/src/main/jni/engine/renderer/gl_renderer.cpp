@@ -26,6 +26,7 @@
 #include "gl/gl_compressed_image.h"
 #include "gl/gl_render_texture.h"
 #include "gl/gl_external_texture.h"
+#include "gl/gl_float_image.h"
 #include "gl_renderer.h"
 
 #include "objects/scene.h"
@@ -53,9 +54,9 @@ BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int width, int height, jbyteA
     return new GLBitmapImage(env, width, height, data);
 }
 
-BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels)
+BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int format, jobject bitmap)
 {
-    return new GLBitmapImage(env, target, width, height, imagesize, format, levels);
+    return new GLBitmapImage(env, format, bitmap);
 }
 
 CubemapImage* GLRenderer::createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
@@ -70,10 +71,9 @@ CubemapImage* GLRenderer::createCubemap(JNIEnv* env, jobjectArray bitmapArray)
 }
 
 CompressedImage* GLRenderer::createCompressedBitmap(JNIEnv *env, int target, int format,
-                                                    int width, int height, jbyteArray bytes,
-                                                    int levels, const int *dataOffsets)
+                                                    int width, int height, int levels)
 {
-    return new CompressedImage(env, target, format, width, height, bytes, levels, dataOffsets);
+    return new CompressedImage(env, target, format, width, height, levels);
 }
 
 Texture* GLRenderer::createTexture(int target)
@@ -90,6 +90,11 @@ RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample
                                                const int* texture_parameters)
 {
     return new GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters);
+}
+
+FloatImage* GLRenderer::createFloatImage(JNIEnv* env, int width, int height, jfloatArray floatData)
+{
+    return new GLFloatImage(env, width, height, floatData);
 }
 
 GLRenderer::GLRenderer() : transform_ubo_(nullptr)
