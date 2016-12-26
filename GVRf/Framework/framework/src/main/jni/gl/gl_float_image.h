@@ -33,6 +33,7 @@ protected:
     virtual void update(int texid)
     {
         JNIEnv *env = getCurrentEnv(mJava);
+        jfloatArray array = static_cast<jfloatArray>(env->NewLocalRef(mData));
         float* pixels = env->GetFloatArrayElements(array, 0);
         glBindTexture(mType, texid);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, mWidth, mHeight, 0, GL_RG, GL_FLOAT, pixels);
