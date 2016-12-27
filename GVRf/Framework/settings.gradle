@@ -1,7 +1,22 @@
 include ':framework'
-if (!hasProperty("ARM64")) {
+/*if (!hasProperty("ARM64")) {
     include ':backend_oculus'
     include ':backend_daydream'
+}*/
+
+include ':backend_pure'
+project(':backend_pure').projectDir=new File('../../../Gear-VR-Framework/GVRf/Framework/backend_pure')
+
+// define KSENSOR_SRC_PATH in gradle.properties
+if (hasProperty("ksensor")) {
+	println("Using KSensor_SRC_PATH = " + KSENSOR_SRC_PATH)
+	if (hasProperty("savr")) {
+        include ':ksensor_savr'
+        project(':ksensor_savr').projectDir=new File(KSENSOR_SRC_PATH)
+	} else {
+        include ':ksensor'
+        project(':ksensor').projectDir=new File(KSENSOR_SRC_PATH)
+	}
 }
 
 if(file("../../../extra_settings.gradle").exists()) {
