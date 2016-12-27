@@ -16,35 +16,10 @@
 #include "bitmap_image.h"
 
 namespace gvr {
-BitmapImage::BitmapImage(JNIEnv* env, int width, int height, jbyteArray data) :
-            Image(GL_TEXTURE_2D, width, height, width * height, GL_LUMINANCE, 1),
+BitmapImage::BitmapImage(int type, int format) :
+            Image(GL_TEXTURE_2D, GL_RGBA),
             mData(NULL), mBitmap(NULL)
 {
-    if (JNI_OK != env->GetJavaVM(&mJava))
-    {
-        FAIL("GetJavaVM failed");
-    }
-    update(env, width, height, data);
-}
-
-BitmapImage::BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels) :
-            Image(target, width, height, imagesize, format, levels)
-{
-    if (JNI_OK != env->GetJavaVM(&mJava))
-    {
-        FAIL("GetJavaVM failed");
-    }
-}
-
-BitmapImage::BitmapImage(JNIEnv* env, int format, jobject bitmap) :
-        Image(GL_TEXTURE_2D, 0, 0, 0, format, 1),
-        mData(NULL), mBitmap(NULL)
-{
-    if (JNI_OK != env->GetJavaVM(&mJava))
-    {
-        FAIL("GetJavaVM failed");
-    }
-    update(env, bitmap);
 }
 
 BitmapImage::~BitmapImage()
@@ -57,9 +32,11 @@ BitmapImage::~BitmapImage()
 void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
 {
     mUpdateLock.lock();
+    env->GetJavaVM(&mJava);
     clearData(env);
     mWidth = width;
     mHeight = height;
+    mFormat = GL_RGBA; // PixelFormat::A8;
     if (data != NULL)
     {
         mData = static_cast<jbyteArray>(env->NewWeakGlobalRef(data));
@@ -71,6 +48,7 @@ void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
 void BitmapImage::update(JNIEnv* env, jobject bitmap)
 {
     mUpdateLock.lock();
+    env->GetJavaVM(&mJava);
     clearData(env);
     if (bitmap != NULL)
     {

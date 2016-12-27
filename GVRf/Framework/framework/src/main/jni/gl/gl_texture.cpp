@@ -32,70 +32,79 @@ GLTexture::~GLTexture()
 
 bool GLTexture::isReady()
 {
-    int target = getTarget();
-    if (!target)
+    if (mPendingTask)
     {
-        return false;
-    }
-    updateGPU();
-    bool didUpdate = false;
-    if (mImage && id_)
-    {
-        if (mJava && mJavaImage)
+        if (getTarget() || (mImage != NULL))
         {
-            JNIEnv* env = getCurrentEnv(mJava);
-            jobject imageRef =  env->NewLocalRef(mJavaImage);
-            didUpdate = mImage->checkForUpdate(id_);
-            env->DeleteLocalRef(imageRef);
+            if (updateGPU())
+            {
+                setReady(true);
+            }
         }
-        else
-        {
-            didUpdate = mImage->checkForUpdate(id_);
-        }
-    }
-    if (didUpdate)
-    {
-        setReady(true);
-        return true;
     }
     return Texture::isReady();
 }
 
-
 bool GLTexture::updateGPU()
 {
-    if (mPendingTask == Texture::TASK_INIT_PARAMS)
+    if (mPendingTask & Texture::TASK_INIT_PARAMS)
     {
-        int target = getTarget();
-        deleter_ = getDeleterForThisThread();
+        updateTexParams();
+        mPendingTask &= ~Texture::TASK_INIT_PARAMS;
+    }
+    if ((mPendingTask & Texture::TASK_UPDATE_IMAGE) && id_)
+    {
+        updateImage();
+        mPendingTask &= ~Texture::TASK_UPDATE_IMAGE;
+    }
+    return (mPendingTask == 0);
+}
 
-        // Sets the new MIN FILTER
-        GLenum min_filter_type_ = mTexParams[0];
+bool GLTexture::updateImage()
+{
+    if (mJava && mJavaImage)
+    {
+        JNIEnv *env = getCurrentEnv(mJava);
+        jobject imageRef = env->NewLocalRef(mJavaImage);
+        bool didUpdate = mImage->checkForUpdate(id_);
+        env->DeleteLocalRef(imageRef);
+        return didUpdate;
+    }
+    else
+    {
+        return mImage->checkForUpdate(id_);
+    }
+}
 
-        // Sets the MAG FILTER
-        GLenum mag_filter_type_ = mTexParams[1];
+void GLTexture::updateTexParams()
+{
+    int target = getTarget();
+    deleter_ = getDeleterForThisThread();
 
-        // Sets the wrap parameter for texture coordinate S
-        GLenum wrap_s_type_ = mTexParams[3];
+    // Sets the new MIN FILTER
+    GLenum min_filter_type_ = mTexParams[0];
 
-        // Sets the wrap parameter for texture coordinate S
-        GLenum wrap_t_type_ = mTexParams[4];
+    // Sets the MAG FILTER
+    GLenum mag_filter_type_ = mTexParams[1];
 
-        glGenTextures(1, &id_);
-        glBindTexture(target, id_);
+    // Sets the wrap parameter for texture coordinate S
+    GLenum wrap_s_type_ = mTexParams[3];
 
-        // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
-        if (mTexParams[2] > 1.0f)
-        {
-            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float) mTexParams[2]);
-        }
-        glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
-        glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
-        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
-    } // switch
-    mPendingTask = 0;
-    return true;
+    // Sets the wrap parameter for texture coordinate S
+    GLenum wrap_t_type_ = mTexParams[4];
+
+    glGenTextures(1, &id_);
+    glBindTexture(target, id_);
+
+    // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
+    if (mTexParams[2] > 1.0f)
+    {
+        glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float) mTexParams[2]);
+    }
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
 }
 
 }

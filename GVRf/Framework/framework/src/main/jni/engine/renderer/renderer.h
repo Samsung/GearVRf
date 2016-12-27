@@ -115,8 +115,7 @@ public:
      virtual ShaderData* createMaterial(const std::string& desc) = 0;
      virtual RenderData* createRenderData() = 0;
      virtual UniformBlock* createUniformBlock(const std::string& desc,int) = 0;
-     virtual BitmapImage* createBitmap(JNIEnv* env, int width, int height, jbyteArray data) = 0;
-     virtual BitmapImage* createBitmap(JNIEnv* env, int format, jobject bitmap) = 0;
+     virtual Image* createImage(int type, int format) = 0;
      virtual CubemapImage* createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
                                        jobjectArray textureArray, const int* dataOffsets) = 0;
      virtual CubemapImage* createCubemap(JNIEnv* env, jobjectArray bitmapArray) = 0;

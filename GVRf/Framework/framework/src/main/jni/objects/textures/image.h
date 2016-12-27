@@ -51,6 +51,7 @@ public:
     int getHeight() const { return mHeight; }
     int getLevels() const { return mLevels; }
     int getType() const { return mType; }
+    int getTarget() const { return mTarget; }
     int getFormat() const { return mFormat; }
     int getDataOffset(int level)
     {
@@ -108,6 +109,7 @@ protected:
     int     mImageSize;
     int     mFormat;
     int     mLevels;
+    int     mTarget;
     int*    mDataOffsets;
     bool    mPendingUpdate;
 

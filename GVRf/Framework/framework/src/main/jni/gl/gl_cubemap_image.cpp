@@ -47,7 +47,8 @@ void GLCubemapImage::updateFromBitmap(int texid)
     // to avoid duplicated code in the throw case and normal
     // case.
     SCOPE_EXIT( clearData(env); env->DeleteLocalRef(bmapArray));
-    glBindTexture(mType, texid);
+    int t = getTarget();
+    glBindTexture(t, texid);
     for (int i = 0; i < 6; i++)
     {
         jobject bitmap = env->NewLocalRef(env->GetObjectArrayElement(bmapArray, i));
@@ -96,8 +97,9 @@ void GLCubemapImage::updateFromMemory(int texid)
 
     // Clean up upon scope exit
     SCOPE_EXIT( clearData(env); env->DeleteLocalRef(texArray); );
+    int t = getTarget();
 
-    glBindTexture(mType, texid);
+    glBindTexture(t, texid);
     for (int i = 0; i < 6; i++)
     {
         jbyteArray byteArray = static_cast<jbyteArray>(env->NewLocalRef(texArray));

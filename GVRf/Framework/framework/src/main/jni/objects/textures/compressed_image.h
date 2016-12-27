@@ -30,8 +30,11 @@ class CompressedImage : public BitmapImage
 public:
     explicit CompressedImage(JNIEnv *env, int target, int format,
                              int levels, int width, int height) :
-            BitmapImage(env, target, width, height, 0, format, levels)
+            BitmapImage(target, format)
     {
+        mWidth = width;
+        mHeight = height;
+        mLevels = levels;
         mData = NULL;
     }
 

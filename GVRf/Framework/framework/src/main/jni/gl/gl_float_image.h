@@ -26,8 +26,15 @@ namespace gvr {
 class GLFloatImage : public FloatImage
 {
 public:
-    explicit GLFloatImage(JNIEnv* env, int width, int height, jfloatArray data) : FloatImage(env, width, height, data) { }
-    explicit GLFloatImage() : FloatImage() { }
+    explicit GLFloatImage(JNIEnv* env, int width, int height, jfloatArray data) : FloatImage(env, width, height, data)
+    {
+        mTarget = GL_TEXTURE_2D;
+    }
+
+    explicit GLFloatImage() : FloatImage()
+    {
+        mTarget = GL_TEXTURE_2D;
+    }
 
 protected:
     virtual void update(int texid)

@@ -49,15 +49,11 @@ UniformBlock* GLRenderer::createUniformBlock(const std::string& desc, int index)
     return new GLUniformBlock(desc, index);
 }
 
-BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int width, int height, jbyteArray data)
+Image* GLRenderer::createImage(int type, int format)
 {
-    return new GLBitmapImage(env, width, height, data);
+    return new GLBitmapImage(type, format);
 }
 
-BitmapImage* GLRenderer::createBitmap(JNIEnv* env, int format, jobject bitmap)
-{
-    return new GLBitmapImage(env, format, bitmap);
-}
 
 CubemapImage* GLRenderer::createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
                                         jobjectArray textureArray, const int* dataOffsets)

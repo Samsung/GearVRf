@@ -36,7 +36,7 @@ namespace gvr {
 class GLTexture : public Texture
 {
 public:
-    explicit GLTexture() : Texture(GL_TEXTURE_2D),
+    explicit GLTexture() : Texture(),
                            id_(0),
                            deleter_(NULL) { }
 
@@ -55,7 +55,7 @@ public:
         return id();
     }
 
-    GLuint id()
+    GLuint id() const
     {
         return id_;
     }
@@ -65,6 +65,9 @@ private:
     GLTexture(GLTexture&& gl_texture);
     GLTexture& operator=(const GLTexture& gl_texture);
     GLTexture& operator=(GLTexture&& gl_texture);
+
+    void updateTexParams();
+    bool updateImage();
 
 protected:
     GLuint id_;

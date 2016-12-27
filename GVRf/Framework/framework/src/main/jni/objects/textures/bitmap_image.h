@@ -26,12 +26,14 @@
 #include "util/jni_utils.h"
 
 namespace gvr {
+    /*
+     * Represents an image described by a 2D array of pixels.
+     * The BitmapImage is uncompressed raw pixel data.
+     */
     class BitmapImage : public Image
     {
     public:
-        explicit BitmapImage(JNIEnv* env, int format, jobject bitmap);
-        explicit BitmapImage(JNIEnv* env, int width, int height, jbyteArray data);
-        explicit BitmapImage(JNIEnv* env, int target, int width, int height, int imagesize, int format, int levels);
+        explicit BitmapImage(int type, int format);
         virtual ~BitmapImage();
         void update(JNIEnv* env, int width, int height, jbyteArray data);
         void update(JNIEnv* env, jobject bitmap);

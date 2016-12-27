@@ -43,12 +43,8 @@ namespace gvr {
     {
         return new VulkanUniformBlock(desc,index);
     }
-    BitmapImage* VulkanRenderer::createBitmap(JNIEnv* env, int width, int height, jbyteArray data)
-    {
-        return NULL;
-    }
 
-    BitmapImage* VulkanRenderer::createBitmap(JNIEnv* env, int format, jobject bitmap)
+    Image* VulkanRenderer::createImage(int type, int format)
     {
         return NULL;
     }

@@ -34,6 +34,7 @@ public:
                                int levels, const int *dataOffsets) :
             CompressedImage(env, target, format, levels, width, height)
     {
+        mTarget = GL_TEXTURE_2D;
         CompressedImage::update(env, width, height, bytes, levels, dataOffsets);
     }
 
@@ -42,14 +43,16 @@ protected:
     {
         JNIEnv *env = getCurrentEnv(mJava);
         jbyte *data = env->GetByteArrayElements(mData, 0);
-        glBindTexture(mType, texid);
+        int t = getTarget();
+
+        glBindTexture(t, texid);
         if (mLevels > 1)
         {
             loadCompressedMipMaps(data);
         }
         else
         {
-            glCompressedTexImage2D(mType, 0, mFormat, mWidth, mHeight, 0,
+            glCompressedTexImage2D(t, 0, mFormat, mWidth, mHeight, 0,
                                    mImageSize, data + getDataOffset(0));
             glGenerateMipmap(GL_TEXTURE_2D);
         }

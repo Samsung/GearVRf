@@ -27,7 +27,7 @@ Texture::Texture() : HybridObject(),
         mJava(NULL),
         mJavaImage(NULL),
         mTarget(0),
-        mPendingTask(TASK_NONE),
+        mPendingTask(TASK_INIT_PARAMS),
         mIsReady(false)
 {
     mTexParams[0] = GL_LINEAR;
@@ -35,7 +35,6 @@ Texture::Texture() : HybridObject(),
     mTexParams[2] = 1.0f;
     mTexParams[3] = GL_CLAMP_TO_EDGE;
     mTexParams[4] = GL_CLAMP_TO_EDGE;
-    mPendingTask = TASK_INIT_PARAMS;
 }
 
 Texture::Texture(int target) : HybridObject(),
@@ -43,7 +42,7 @@ Texture::Texture(int target) : HybridObject(),
         mJava(NULL),
         mTarget(target),
         mJavaImage(NULL),
-        mPendingTask(TASK_NONE),
+        mPendingTask(TASK_INIT_PARAMS),
         mIsReady(false)
 {
     mTexParams[0] = GL_LINEAR;
@@ -51,7 +50,6 @@ Texture::Texture(int target) : HybridObject(),
     mTexParams[2] = 1.0f;
     mTexParams[3] = GL_CLAMP_TO_EDGE;
     mTexParams[4] = GL_CLAMP_TO_EDGE;
-    mPendingTask = TASK_INIT_PARAMS;
 }
 
 Texture::~Texture()
@@ -86,7 +84,8 @@ void Texture::setImage(Image* image)
     mImage = image;
     if (image)
     {
-        mTarget = image->getType();
+        mTarget = image->getTarget();
+        mPendingTask |= TASK_UPDATE_IMAGE;
     }
 }
 
@@ -102,7 +101,8 @@ void Texture::setImage(JNIEnv* env, jobject javaImage, Image* image)
     mImage = image;
     if (image)
     {
-        mTarget = image->getType();
+        mTarget = image->getTarget();
+        mPendingTask |= TASK_UPDATE_IMAGE;
     }
 }
 
@@ -111,7 +111,7 @@ void Texture::updateTextureParameters(const int* texture_parameters, int n)
     if (texture_parameters)
     {
         memcpy(mTexParams, texture_parameters, sizeof(int) * 5);
-        mPendingTask = TASK_INIT_PARAMS;
+        mPendingTask |= TASK_INIT_PARAMS;
     }
 }
 

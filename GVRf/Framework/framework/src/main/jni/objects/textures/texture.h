@@ -30,13 +30,26 @@ namespace gvr {
 class Texture : public HybridObject
 {
 public:
-    //
-    // Enum for pending update tasks.
-    //
+    /*
+     * Texture types correspond to different subclasses of Texture.
+     */
+    enum TextureType
+    {
+        TEXTURE_2D = 1,
+        TEXTURE_ARRAY,
+        TEXTURE_EXTERNAL,
+        TEXTURE_RENDER,
+        TEXTURE_EXTERNAL_RENDERER
+    };
+
+    /*
+     * Enum for pending update tasks.
+     */
     enum
     {
         TASK_NONE = 0,
         TASK_INIT_PARAMS = 1,
+        TASK_UPDATE_IMAGE = 2,
     };
 
     Texture();

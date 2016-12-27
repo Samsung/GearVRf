@@ -21,6 +21,7 @@
 #define GL_CUBEMAP_IMAGE_H_
 
 #include "objects/textures/cubemap_image.h"
+#include "gl/gl_headers.h"
 
 namespace gvr {
 class GLCubemapImage : public CubemapImage
@@ -28,12 +29,16 @@ class GLCubemapImage : public CubemapImage
 public:
     explicit GLCubemapImage(JNIEnv* env, jobjectArray bitmapArray) :
             CubemapImage(env, bitmapArray)
-    { }
+    {
+        mTarget = GL_TEXTURE_CUBE_MAP;
+    }
 
     explicit GLCubemapImage(JNIEnv* env, int format, int width, int height, int imageSize,
             jobjectArray textureArray, const int* dataOffsets) :
             CubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets)
-    { }
+    {
+        mTarget = GL_TEXTURE_CUBE_MAP;
+    }
 
 protected:
     virtual void update(int texid);
