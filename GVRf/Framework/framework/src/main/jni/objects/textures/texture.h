@@ -52,7 +52,7 @@ public:
         TASK_UPDATE_IMAGE = 2,
     };
 
-    enum TextureParameters
+    enum TexParamValues
     {
         REPEAT = 1,
         CLAMP = 0,
@@ -64,17 +64,34 @@ public:
         LINEART_MIPMAP_LINEAR = 5,
     };
 
-    union TexParams
+    /*
+     * Packed representation of texture parameters.
+     * Integer values for filtering and wrapping are
+     * packed into a single byte. Maximum anisotropy,
+     * a floating point value, is separate.
+     * Texture parameters are supplied as an array
+     * of values on input and converted to this
+     * internal format.
+     */
+    struct NativeTexParams
     {
-        struct
+        NativeTexParams() : MaxAnisotropy(1.0f)
         {
-            unsigned int MinFilter : 2;
-            unsigned int MagFilter : 2;
-            unsigned int WrapU : 1;
-            unsigned int WrapV : 1;
-            unsigned int Anisotropic : 1;
+            Params.HashCode = 0;
+        }
+        union
+        {
+            struct
+            {
+                unsigned int MinFilter : 2;
+                unsigned int MagFilter : 2;
+                unsigned int WrapU : 1;
+                unsigned int WrapV : 1;
+                unsigned int IsAnisotropic : 1;
+            } BitFields;
+            unsigned char HashCode;
         } Params;
-        int SingleValue;
+        float MaxAnisotropy;
     };
 
     Texture();
