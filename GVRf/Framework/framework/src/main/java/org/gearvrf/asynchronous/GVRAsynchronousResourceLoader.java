@@ -26,7 +26,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.gearvrf.FutureWrapper;
+import org.gearvrf.GVRCompressedTexture;
 import org.gearvrf.GVRImage;
 import org.gearvrf.IAssetEvents;
 import org.gearvrf.GVRAndroidResource;
@@ -101,7 +101,7 @@ public class GVRAsynchronousResourceLoader {
             final CompressedTextureCallback callback,
             final GVRAndroidResource resource) throws IllegalArgumentException {
         loadCompressedTexture(gvrContext, textureCache, callback, resource,
-                GVRCompressedTexture.DEFAULT_QUALITY);
+                              GVRCompressedTexture.DEFAULT_QUALITY);
     }
 
     /**

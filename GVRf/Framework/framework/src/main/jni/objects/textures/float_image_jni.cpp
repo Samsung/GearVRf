@@ -20,31 +20,20 @@
 #include "float_image.h"
 
 namespace gvr {
-extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeFloatImage_constructor(JNIEnv * env, jobject obj,
-        int width, int height, jfloatArray jdata);
+    extern "C" {
+    JNIEXPORT void JNICALL
+            Java_org_gearvrf_NativeFloatImage_update(JNIEnv * env,
+                                                     jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata);
+    }
+    ;
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeFloatImage_update(JNIEnv * env,
-        jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata);
-}
-;
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeFloatImage_constructor(JNIEnv * env, jobject obj,
-          int width, int height, jfloatArray jdata)
-{
-    return reinterpret_cast<jlong>(new FloatImage(env, width, height, jdata));
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeFloatImage_update(JNIEnv * env,
-    jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata) {
-    FloatImage* texture = reinterpret_cast<FloatImage*>(jtexture);
-    jfloat* data = env->GetFloatArrayElements(jdata, 0);
-    texture->update(env, width, height, jdata);
-    env->ReleaseFloatArrayElements(jdata, data, 0);
-}
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeFloatImage_update(JNIEnv * env,
+                                             jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata) {
+        FloatImage* texture = reinterpret_cast<FloatImage*>(jtexture);
+        jfloat* data = env->GetFloatArrayElements(jdata, 0);
+        texture->update(env, width, height, jdata);
+        env->ReleaseFloatArrayElements(jdata, data, 0);
+    }
 
 }

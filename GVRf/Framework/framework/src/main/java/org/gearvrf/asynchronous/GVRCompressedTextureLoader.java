@@ -23,6 +23,8 @@ import java.util.List;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 
+import org.gearvrf.GVRCompressedTexture;
+
 /**
  * Implement this class to use compressed texture formats that GVRF does not
  * support.

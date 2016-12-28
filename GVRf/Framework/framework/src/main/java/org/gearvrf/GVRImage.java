@@ -32,10 +32,8 @@ public class GVRImage extends GVRHybridObject
     public enum ImageType
     {
         BITMAP(1),
-        COMPRESSED_BITMAP(2),
-        CUBEMAP(3),
-        COMPRESSED_CUBEMAP(4),
-        FLOAT_BITMAP(5);
+        CUBEMAP(2),
+        FLOAT_BITMAP(3);
 
         public int Value;
         ImageType(int v) { Value = v; }
@@ -54,8 +52,6 @@ public class GVRImage extends GVRHybridObject
         PixelFormat(int v) { Value = v; }
     };
 
-    private List<GVRAtlasInformation> mAtlasInformation = null;
-
     protected GVRImage(GVRContext gvrContext, long ptr)
     {
         super(gvrContext, ptr);
@@ -64,42 +60,6 @@ public class GVRImage extends GVRHybridObject
     protected GVRImage(GVRContext gvrContext)
     {
         super(gvrContext, 0);
-    }
-
-    /**
-     * Returns the list of atlas information necessary to map
-     * the texture atlas to each scene object.
-     *
-     * @return List of atlas information.
-     */
-    public List<GVRAtlasInformation> getAtlasInformation() {
-        return mAtlasInformation;
-    }
-
-    /**
-     * Set the list of {@link GVRAtlasInformation} to map the texture atlas
-     * to each object of the scene.
-     *
-     * @param atlasInformation Atlas information to map the texture atlas to each
-     *        scene object.
-     */
-    public void setAtlasInformation(List<GVRAtlasInformation> atlasInformation)
-    {
-        mAtlasInformation = atlasInformation;
-    }
-
-    /**
-     * Inform if the texture is a large image containing "atlas" of sub-images
-     * with a list of {@link GVRAtlasInformation} necessary to map it to the
-     * scene objects.
-     *
-     * @return True if the texture is a large image containing "atlas",
-     *         otherwise it returns false.
-     */
-    public boolean isAtlasedTexture()
-    {
-        return mAtlasInformation != null
-                && !mAtlasInformation.isEmpty();
     }
 
     protected static final String TAG = "GVRImage";

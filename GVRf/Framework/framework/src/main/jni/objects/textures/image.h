@@ -26,20 +26,50 @@ namespace gvr {
 class Image : public HybridObject {
 
 public:
+    /*
+     * Indicates the type of the image.
+     * Usually the type corresponds to a different
+     * subclass of Image.
+     * @see BitmapImage
+     * @see CubemapImage
+     * @see FloatImage
+     */
+    enum ImageType
+    {
+        BITMAP = 1,
+        CUBEMAP,
+        FLOAT_BITMAP
+    };
+
+    /*
+     * Indicates the format of a single pixel
+     * in the image.
+     */
+    enum PixelFormat
+    {
+        ALPHA = 1,          // indicates presence of alpha channel
+        A8 = 1,             // 8 bits alpha (8 bpp)
+        RGB_8 = 2,          // 8 bits red, green, blue (24 bpp)
+        RGBA_8 = 3,         // 8 bits red, green, blue, alpha (32 bpp)
+        RGB_5 = 4,          // 5 bits red, green, blue (16 bpp)
+        RGBA_4 = 5,         // 4 bits red, green, blue, alpha (16 bpp)
+        FLOAT_PAIR = 6,     // 2 floats 32 bits each (64 bpp)
+    };
+
     virtual ~Image() { }
 
     Image(int type, int format) :
             HybridObject(), mType(type), mPendingUpdate(0),
-            mWidth(0), mHeight(0), mImageSize(0),
-            mFormat(format), mLevels(0), mDataOffsets(NULL)
+            mWidth(0), mHeight(0), mImageSize(0), mUpdateLock(),
+            mFormat(format), mLevels(0), mDataOffsets(NULL), mTarget(0)
     {
 
     }
 
     Image(int type, int width, int height, int imagesize, int format, int levels) :
-            HybridObject(), mType(type), mPendingUpdate(0),
+            HybridObject(), mType(type), mPendingUpdate(0), mUpdateLock(),
             mWidth(width), mHeight(height), mImageSize(imagesize),
-            mFormat(format), mLevels(levels), mDataOffsets(NULL)
+            mFormat(format), mLevels(levels), mDataOffsets(NULL), mTarget(0)
     {
         if (levels > 1)
         {

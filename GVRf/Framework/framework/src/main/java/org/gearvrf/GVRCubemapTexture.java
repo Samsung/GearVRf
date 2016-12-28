@@ -20,6 +20,8 @@ import java.util.Map;
 
 import android.graphics.Bitmap;
 
+import static android.opengl.GLES20.GL_TEXTURE_CUBE_MAP;
+
 /** Cube map texture. */
 public class GVRCubemapTexture extends GVRImage
 {
@@ -39,7 +41,8 @@ public class GVRCubemapTexture extends GVRImage
      */
     public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray)
     {
-        super(gvrContext, NativeCubemapImage.bitmapArrayConstructor(bitmapArray));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.CUBEMAP.Value, 0));
+        update(bitmapArray);
     }
 
     public void update(Bitmap[] bitmapArray)
@@ -89,6 +92,6 @@ public class GVRCubemapTexture extends GVRImage
 
 class NativeCubemapImage
 {
-    static native long bitmapArrayConstructor(Bitmap[] bitmapArray);
     static native void update(long pointer, Bitmap[] bitmapArray);
+    static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[][] data, int[] dataOffsets);
 }

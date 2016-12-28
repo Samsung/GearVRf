@@ -43,13 +43,13 @@ public class GVRBitmapTexture extends GVRImage
      */
     public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap)
     {
-        super(gvrContext, NativeBitmapImage.constructor(GL_TEXTURE_2D, bitmap.hasAlpha() ? GL_RGBA : GL_RGB));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, bitmap.hasAlpha() ? GL_RGBA : GL_RGB));
         setBitmap(bitmap);
     }
 
     public GVRBitmapTexture(GVRContext gvrContext)
     {
-        super(gvrContext, NativeBitmapImage.constructor(GL_TEXTURE_2D, GL_RGBA));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_RGBA));
     }
 
     /**
@@ -89,7 +89,7 @@ public class GVRBitmapTexture extends GVRImage
     public GVRBitmapTexture(GVRContext gvrContext, int width, int height, byte[] grayscaleData)
             throws IllegalArgumentException
     {
-        super(gvrContext, NativeBitmapImage.constructor(GL_TEXTURE_2D, GL_LUMINANCE));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_LUMINANCE));
         NativeBitmapImage.updateFromMemory(getNative(), width, height, grayscaleData);
     }
 
@@ -153,4 +153,6 @@ class NativeBitmapImage {
     static native long constructor(int type, int format);
     static native void updateFromMemory(long pointer, int width, int height, byte[] data);
     static native void updateFromBitmap(long pointer, Bitmap bitmap);
+    static native void updateCompressed(long pointer, int width, int height, byte[] data, int levels, int[] offsets);
+
 }

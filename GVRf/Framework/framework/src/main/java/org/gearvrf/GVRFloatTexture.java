@@ -12,23 +12,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.gearvrf;
 import android.opengl.GLES30;
 
 /**
  * A specialized image, for doing computation on the GPU.
- * 
+ *
  * Image is an array of float pairs; you can access the individual
  * components of each 'pixel' as the {@code .r} and {code .g} swizzles.
- * 
+ *
  * @since 1.6.3
  */
 public class GVRFloatTexture extends GVRImage
 {
     /**
      * Create a floating-point image.
-     * 
+     *
      * @param gvrContext
      *            Current {@link GVRContext}
      * @param width
@@ -41,23 +55,24 @@ public class GVRFloatTexture extends GVRImage
      *             If {@code width} or {@code height} is {@literal <= 0,} or if
      *             {@code data} is {@code null}, or if
      *             {@code data.length < height * width * 2}
-     * 
+     *
      * @since 1.6.3
      */
     public GVRFloatTexture(GVRContext gvrContext, int width, int height, float[] data)
             throws IllegalArgumentException
     {
-        super(gvrContext, NativeFloatTexture.constructor(width, height, data));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, PixelFormat.FLOAT_PAIR.Value));
+        NativeFloatTexture.update(getNative(), width, height, data);
     }
 
     public GVRFloatTexture(GVRContext gvrContext)
     {
-        super(gvrContext, NativeFloatTexture.constructor(0, 0, null));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, PixelFormat.FLOAT_PAIR.Value));
     }
 
     /**
      * Copy new data to an existing float-point texture.
-     * 
+     *
      * Creating a new {@link GVRFloatTexture} is pretty cheap, but it's still
      * not a totally trivial operation: it does involve some memory management
      * and some GL hardware handshaking. Reusing the texture reduces this
@@ -65,7 +80,7 @@ public class GVRFloatTexture extends GVRImage
      * updating a texture will affect any and all {@linkplain GVRMaterial
      * materials} (and/or post effects that use the
      * texture!
-     * 
+     *
      * @param width
      *            Texture width, in pixels
      * @param height
@@ -93,9 +108,6 @@ public class GVRFloatTexture extends GVRImage
     }
 }
 
-
 class NativeFloatTexture {
-    static native long constructor(int width, int height, float[] data);
-
     static native boolean update(long pointer, int width, int height, float[] data);
 }

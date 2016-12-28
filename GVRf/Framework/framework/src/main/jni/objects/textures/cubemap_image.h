@@ -28,35 +28,37 @@
 #include "util/jni_utils.h"
 
 namespace gvr {
-class CubemapImage: public Image
-{
-public:
-    explicit CubemapImage(JNIEnv* env, jobjectArray bitmapArray);
-    explicit CubemapImage(JNIEnv* env, int format, int width, int height, int imageSize,
-            jobjectArray textureArray, const int* dataOffsets);
-    virtual ~CubemapImage();
+/*
+ * Represents an cubemap described by six separate 2D pixel arrays.
+ * The image data for each cube face be either raw pixel data or
+ * each face may be compressed.
+ */
+    class CubemapImage: public Image
+    {
+    public:
+        explicit CubemapImage(int format);
+        virtual ~CubemapImage();
 
-    void update(JNIEnv* env, jobjectArray bitmapArray);
-    void update(JNIEnv* env, int imageSize,
-                jobjectArray textureArray, const int* textureOffset);
-    virtual void update(int texid);
+        void update(JNIEnv* env, jobjectArray bitmapArray);
+        void update(JNIEnv* env, int width, int height, int imageSize,
+                    jobjectArray textureArray, const int* textureOffset);
 
-private:
-    CubemapImage(const CubemapImage& base_texture);
-    CubemapImage(CubemapImage&& base_texture);
-    CubemapImage& operator=(const CubemapImage& base_texture);
-    CubemapImage& operator=(CubemapImage&& base_texture);
+    private:
+        CubemapImage(const CubemapImage& base_texture);
+        CubemapImage(CubemapImage&& base_texture);
+        CubemapImage& operator=(const CubemapImage& base_texture);
+        CubemapImage& operator=(CubemapImage&& base_texture);
 
-protected:
-    void clearData(JNIEnv* env);
-    void updateFromBitmap(int texid);
-    void updateFromMemory(int texid);
+    protected:
+        void clearData(JNIEnv* env);
+        void updateFromBitmap(int texid);
+        void updateFromMemory(int texid);
 
-protected:
-    JavaVM* mJava;
-    jobject mBitmaps;
-    jobject mTextures;
-};
+    protected:
+        JavaVM* mJava;
+        jobject mBitmaps;
+        jobject mTextures;
+    };
 
 }
 #endif

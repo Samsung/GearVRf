@@ -19,7 +19,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
 
-import org.gearvrf.asynchronous.GVRCompressedTexture;
+import org.gearvrf.GVRCompressedTexture;
 import org.gearvrf.utility.Log;
 
 import java.nio.ByteBuffer;
@@ -142,11 +142,11 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
      */
     public List<GVRAtlasInformation> getAtlasInformation()
     {
-        if  (mImage == null)
+        if ((mImage != null) && (mImage instanceof GVRImageAtlas))
         {
-            return null;
+            return ((GVRImageAtlas) mImage).getAtlasInformation();
         }
-        return mImage.getAtlasInformation();
+        return null;
     }
 
     /**
@@ -158,9 +158,9 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
      */
     public void setAtlasInformation(List<GVRAtlasInformation> atlasInformation)
     {
-        if (mImage != null)
+        if ((mImage != null) && (mImage instanceof GVRImageAtlas))
         {
-            mImage.setAtlasInformation(atlasInformation);
+            ((GVRImageAtlas) mImage).setAtlasInformation(atlasInformation);
         }
      }
 
@@ -174,7 +174,9 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
      */
     public boolean isAtlasedTexture()
     {
-        return (mImage != null) && mImage.isAtlasedTexture();
+        return (mImage != null) &&
+                (mImage instanceof GVRImageAtlas) &&
+                ((GVRImageAtlas) mImage).isAtlasedTexture();
     }
 
     /**

@@ -27,15 +27,8 @@ namespace gvr {
 class GLCubemapImage : public CubemapImage
 {
 public:
-    explicit GLCubemapImage(JNIEnv* env, jobjectArray bitmapArray) :
-            CubemapImage(env, bitmapArray)
-    {
-        mTarget = GL_TEXTURE_CUBE_MAP;
-    }
-
-    explicit GLCubemapImage(JNIEnv* env, int format, int width, int height, int imageSize,
-            jobjectArray textureArray, const int* dataOffsets) :
-            CubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets)
+    explicit GLCubemapImage(int format) :
+            CubemapImage(format)
     {
         mTarget = GL_TEXTURE_CUBE_MAP;
     }

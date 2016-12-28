@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import org.gearvrf.GVRCompressedTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.RuntimeAssertion;

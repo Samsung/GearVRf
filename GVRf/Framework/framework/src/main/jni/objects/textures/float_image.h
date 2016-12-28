@@ -22,11 +22,13 @@
 #include "util/jni_utils.h"
 
 namespace gvr {
+/*
+ * Represents an image whose pixels are floating point pairs.
+ */
     class FloatImage : public Image
     {
     public:
-        explicit FloatImage(JNIEnv* env, int width, int height, jfloatArray data);
-        explicit FloatImage();
+        FloatImage();
         virtual ~FloatImage();
         void update(JNIEnv* env, int width, int height, jfloatArray data);
 
@@ -46,3 +48,4 @@ namespace gvr {
 
 }
 #endif
+

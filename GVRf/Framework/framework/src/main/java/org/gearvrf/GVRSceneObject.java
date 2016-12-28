@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
-import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;

@@ -99,13 +99,7 @@ public:
     virtual RenderData* createRenderData();
     virtual UniformBlock* createUniformBlock(const std::string& desc, int);
     Image* createImage(int type, int format);
-    virtual CubemapImage* createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
-                                        jobjectArray textureArray, const int* dataOffsets);
-    virtual CubemapImage* createCubemap(JNIEnv* env, jobjectArray bitmapArray);
-    virtual CompressedImage* createCompressedBitmap(JNIEnv *env, int target, int format,
-                                                    int width, int height, int levels);
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
-    virtual FloatImage* createFloatImage(JNIEnv* env, int width, int height, jfloatArray floatData);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const int* texture_parameters);

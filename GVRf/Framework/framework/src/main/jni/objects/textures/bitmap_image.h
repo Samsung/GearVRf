@@ -33,11 +33,12 @@ namespace gvr {
     class BitmapImage : public Image
     {
     public:
-        explicit BitmapImage(int type, int format);
+        explicit BitmapImage(int format);
         virtual ~BitmapImage();
         void update(JNIEnv* env, int width, int height, jbyteArray data);
         void update(JNIEnv* env, jobject bitmap);
-
+        void update(JNIEnv *env, int width, int height, jbyteArray bytes,
+                    int levels, const int* dataOffsets);
     protected:
         void clearData(JNIEnv* env);
 
@@ -52,6 +53,7 @@ namespace gvr {
         JavaVM* mJava;
         jbyteArray mData;
         jobject mBitmap;
+        bool mIsCompressed;
     };
 
 }

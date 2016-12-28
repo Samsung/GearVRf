@@ -21,7 +21,7 @@
 #include "gl/gl_render_texture.h"
 
 namespace gvr {
-GLRenderTexture::GLRenderTexture(int width, int height) : GLTexture(),
+GLRenderTexture::GLRenderTexture(int width, int height) : GLTexture(GL_TEXTURE_2D),
         RenderTexture(width, height, 0),
         renderTexture_gl_render_buffer_(new GLRenderBuffer()),
         renderTexture_gl_frame_buffer_ (new GLFrameBuffer())
@@ -46,7 +46,7 @@ GLRenderTexture::GLRenderTexture(int width, int height) : GLTexture(),
 }
 
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count) :
-        GLTexture(), RenderTexture(width, height, sample_count),
+        GLTexture(GL_TEXTURE_2D), RenderTexture(width, height, sample_count),
         renderTexture_gl_render_buffer_(new GLRenderBuffer()),
         renderTexture_gl_frame_buffer_(new GLFrameBuffer())
 {
@@ -74,7 +74,7 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count) :
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
         int jcolor_format, int jdepth_format, bool resolve_depth,
         const int* texture_parameters) :
-        GLTexture(), RenderTexture(width, height, sample_count),
+        GLTexture(GL_TEXTURE_2D), RenderTexture(width, height, sample_count),
         renderTexture_gl_frame_buffer_(new GLFrameBuffer())
 {
     GLenum target = GLTexture::getTarget();

@@ -17,20 +17,22 @@ package org.gearvrf;
 
 public class GVRCompressedCubemapTexture extends GVRImage
 {
+    protected int mWidth;
+    protected int mHeight;
+    protected int mImageSize;
+
     public GVRCompressedCubemapTexture(GVRContext gvrContext, int internalFormat, int width,
                                         int height, int imageSize, byte[][] data, int[] dataOffsets)
     {
-        super(gvrContext, NativeCompressedCubemapTexture.constructor(internalFormat, width, height, imageSize, data, dataOffsets));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.CUBEMAP.Value, internalFormat));
+        mWidth = width;
+        mHeight = height;
+        mImageSize = imageSize;
+        NativeCubemapImage.updateCompressed(getNative(), width, height, imageSize, data, dataOffsets);
     }
 
     public void update(byte[][] data, int[] dataOffsets)
     {
-        NativeCompressedCubemapTexture.update(getNative(), data, dataOffsets);
+        NativeCubemapImage.updateCompressed(getNative(), mWidth, mHeight, mImageSize, data, dataOffsets);
     }
-}
-
-class NativeCompressedCubemapTexture {
-    static native long constructor(int internalFormat,
-                                   int width, int height, int imageSize, byte[][] data, int[] dataOffsets);
-    static native void update(long pointer, byte[][] data, int[] dataOffsets);
 }

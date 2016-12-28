@@ -25,45 +25,39 @@
 
 
 namespace gvr {
-extern "C" {
-    JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeCubemapImage_bitmapArrayConstructor(JNIEnv * env,
-            jobject obj, jobjectArray bitmapArray);
+    extern "C" {
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeCubemapImage_update(JNIEnv * env,
-             jobject obj, jobject jcubemap, jobjectArray bitmapArray);
-}
+    Java_org_gearvrf_NativeCubemapImage_update(JNIEnv * env, jobject obj, jlong jcubemap, jobjectArray bitmapArray);
 
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCubemapImage_bitmapArrayConstructor(JNIEnv * env,
-    jobject obj, jobjectArray bitmapArray)
-{
-    if (env->GetArrayLength(bitmapArray) != 6)
-    {
-        std::string error =
-        "new CubemapImage() failed! Input bitmapList's length is not 6.";
-        throw error;
-    }
-    jlong result = 0;
-    try
-    {
-        CubemapImage* image = Renderer::getInstance()->createCubemap(env, bitmapArray);
-        result = reinterpret_cast<jlong>(image);
-    }
-    catch (const std::string &err)
-    {
-        printJavaCallStack(env, err);
-        throw err;
-    }
-    return result;
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeCubemapImage_updateCompressed(JNIEnv * env, jobject obj, jobject jTexture,
+                                               jint width, jint height, jobjectArray textureArray, jintArray joffsetArray);
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCubemapImage_update(JNIEnv * env,
-    jobject obj, jobject jcubemap, jobjectArray bitmapArray)
+                                           jobject obj, jlong jcubemap, jobjectArray bitmapArray)
 {
     CubemapImage* cubemap = reinterpret_cast<CubemapImage*>(jcubemap);
     cubemap->update(env, bitmapArray);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCubemapImage_updateCompressed(JNIEnv* env,
+                                           jobject obj, jobject jTexture,
+                                           jint width, jint height, jint imageSize,
+                                           jobjectArray textureArray, jintArray joffsetArray)
+{
+    if (env->GetArrayLength(joffsetArray) != 6)
+    {
+        std::string error =
+                "new CubemapImage() failed! Texture offset list's length is not 6.";
+        throw error;
+    }
+    jint* offsets = env->GetIntArrayElements(joffsetArray, 0);
+    CubemapImage* cubemap = reinterpret_cast<CubemapImage*>(jTexture);
+    cubemap->update(env, width, height, imageSize, textureArray, offsets);
+    env->ReleaseIntArrayElements(joffsetArray, offsets, 0);
 }
 
 }

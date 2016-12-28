@@ -28,18 +28,13 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 
-import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.jassimp.GVROldWrapperProvider;
-import org.gearvrf.GVRJassimpAdapter;
 import org.gearvrf.jassimp2.AiTexture;
 import org.gearvrf.jassimp2.Jassimp;
 import org.gearvrf.jassimp2.JassimpFileIO;

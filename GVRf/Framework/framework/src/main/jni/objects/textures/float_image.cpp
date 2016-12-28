@@ -16,57 +16,48 @@
 #include "float_image.h"
 
 namespace gvr {
-FloatImage::FloatImage(JNIEnv* env, int width, int height, jfloatArray data) :
-            Image(GL_TEXTURE_2D, width, height, width * height, GL_RG, 1),
-            mData(NULL)
-{
-    if (JNI_OK != env->GetJavaVM(&mJava))
+    FloatImage::FloatImage() : Image(ImageType::FLOAT_BITMAP, PixelFormat::FLOAT_PAIR),
+                               mJava(NULL), mData(NULL)
     {
-        FAIL("GetJavaVM failed");
+        mTarget = GL_TEXTURE_2D;
     }
-    update(env, width, height, data);
-}
-
-FloatImage::FloatImage() : Image(GL_TEXTURE_2D, GL_RG), mJava(NULL), mData(NULL)
-{
-}
 
 
-FloatImage::~FloatImage()
-{
-    mUpdateLock.lock();
-    clearData(getCurrentEnv(mJava));
-    mUpdateLock.unlock();
-}
-
-void FloatImage::update(JNIEnv* env, int width, int height, jfloatArray data)
-{
-    mUpdateLock.lock();
-    clearData(env);
-    mWidth = width;
-    mHeight = height;
-    if (data != NULL)
+    FloatImage::~FloatImage()
     {
-        mData = static_cast<jfloatArray>(env->NewWeakGlobalRef(data));
-        mPendingUpdate = true;
+        mUpdateLock.lock();
+        clearData(getCurrentEnv(mJava));
+        mUpdateLock.unlock();
     }
-    mUpdateLock.unlock();
-}
 
-
-void FloatImage::clearData(JNIEnv* env)
-{
-    if (mData != NULL)
+    void FloatImage::update(JNIEnv* env, int width, int height, jfloatArray data)
     {
-        jobject ref = env->NewLocalRef(mData);
-        if (ref != NULL)
+        mUpdateLock.lock();
+        env->GetJavaVM(&mJava);
+        clearData(env);
+        mWidth = width;
+        mHeight = height;
+        if (data != NULL)
         {
-            env->DeleteWeakGlobalRef(mData);
-            env->DeleteLocalRef(ref);
+            mData = static_cast<jfloatArray>(env->NewGlobalRef(data));
+            mPendingUpdate = true;
         }
-        mData = NULL;
+        mUpdateLock.unlock();
     }
-}
+
+
+    void FloatImage::clearData(JNIEnv* env)
+    {
+        if (mData != NULL)
+        {
+            jobject ref = env->NewLocalRef(mData);
+            if (ref != NULL)
+            {
+                env->DeleteGlobalRef(mData);
+                env->DeleteLocalRef(ref);
+            }
+            mData = NULL;
+        }
+    }
 
 }
-

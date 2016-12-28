@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-package org.gearvrf.asynchronous;
+package org.gearvrf;
 
 import static android.opengl.GLES20.*;
 
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRImage;
 import org.gearvrf.utility.Log;
 
 /**
  * A GL compressed texture; you get it from
- * {@linkplain GVRContext#loadCompressedTexture(org.gearvrf.GVRAndroidResource.CompressedTextureCallback, org.gearvrf.GVRAndroidResource)
+ * {@linkplain GVRAssetLoader#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, org.gearvrf.GVRAndroidResource)
  * GVRContext.loadCompressedTexture()}.
  * 
  * This is mostly an internal, implementation class: You <em>may</em> find
@@ -37,7 +35,7 @@ public class GVRCompressedTexture extends GVRImage
 
     /**
      * The speed/quality parameter passed to
-     * {@link GVRContext#loadCompressedTexture(org.gearvrf.GVRAndroidResource.CompressedTextureCallback, org.gearvrf.GVRAndroidResource, int)
+     * {@link GVRAssetLoader#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, org.gearvrf.GVRAndroidResource, int)
      * GVRContext.loadCompressedTexture()}.
      * 
      * This copy has been 'clamped' to one of the
@@ -51,9 +49,9 @@ public class GVRCompressedTexture extends GVRImage
     private int mLevels;
 
     // Texture parameters
-    GVRCompressedTexture(GVRContext gvrContext, int width, int height, int format, byte[] data, int levels, int quality)
+    public GVRCompressedTexture(GVRContext gvrContext, int width, int height, int format, byte[] data, int levels, int quality)
     {
-        super(gvrContext, NativeCompressedTexture.constructor(GL_TEXTURE_2D, format, levels, width, height));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, format));
         mQuality = GVRCompressedTexture.clamp(quality);
         mData = data;
         mWidth = width;
@@ -61,9 +59,9 @@ public class GVRCompressedTexture extends GVRImage
         mLevels = levels;
     }
 
-    GVRCompressedTexture(GVRContext gvrContext, int width, int height, byte[] data, int levels, int quality)
+    public GVRCompressedTexture(GVRContext gvrContext, int width, int height, byte[] data, int levels, int quality)
     {
-        super(gvrContext, NativeCompressedTexture.constructor(GL_TEXTURE_2D, GL_RGB, levels, width, height));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_RGBA));
         mQuality = GVRCompressedTexture.clamp(quality);
         mData = data;
         mWidth = width;
@@ -74,7 +72,7 @@ public class GVRCompressedTexture extends GVRImage
     public void setDataOffsets(int[] offsets)
     {
         assert(mLevels == offsets.length);
-        NativeCompressedTexture.update(getNative(), mWidth, mHeight, mData, offsets);
+        NativeBitmapImage.updateCompressed(getNative(), mWidth, mHeight, mData, mLevels, offsets);
         mData = null;
     }
 
@@ -91,7 +89,7 @@ public class GVRCompressedTexture extends GVRImage
     /** Optimize for updateGPU quality */
     public static final int QUALITY = 1;
 
-    protected static final int DEFAULT_QUALITY = SPEED;
+    public static final int DEFAULT_QUALITY = SPEED;
 
     private static int clamp(int quality) {
         if (quality < 0) {
@@ -102,11 +100,4 @@ public class GVRCompressedTexture extends GVRImage
             return BALANCED;
         }
     }
-}
-
-
-class NativeCompressedTexture {
-    static native long constructor(int target, int format, int width, int height, int levels);
-
-    static native void update(long pointer, int width, int height, byte[] data, int[] dataOffsets);
 }

@@ -49,23 +49,6 @@ namespace gvr {
         return NULL;
     }
 
-    CubemapImage* VulkanRenderer::createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
-                                        jobjectArray textureArray, const int* dataOffsets)
-    {
-        return NULL;
-    }
-
-    CubemapImage* VulkanRenderer::createCubemap(JNIEnv* env, jobjectArray bitmapArray)
-    {
-        return NULL;
-    }
-
-    CompressedImage* VulkanRenderer::createCompressedBitmap(JNIEnv *env, int target, int format,
-                                                    int width, int height, int levels)
-    {
-        return NULL;
-    }
-
     Texture* VulkanRenderer::createTexture(int target)
     {
         return NULL;
@@ -74,11 +57,6 @@ namespace gvr {
     RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const int* texture_parameters)
-    {
-        return NULL;
-    }
-
-    FloatImage* VulkanRenderer::createFloatImage(JNIEnv* env, int width, int height, jfloatArray floatData)
     {
         return NULL;
     }

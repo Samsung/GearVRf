@@ -29,18 +29,19 @@ namespace gvr {
     public:
         static int MapFormat[];
 
-        explicit GLBitmapImage(int type, int format) :
-                BitmapImage(type, format)
+        explicit GLBitmapImage(int format) :
+                BitmapImage(format)
         {
             mTarget = GL_TEXTURE_2D;
         }
 
-        static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap, int texid);
+        static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap);
 
     protected:
         virtual void update(int texid);
         void updateFromMemory(int texid);
         void updateFromBitmap(int texid);
+        void loadCompressedMipMaps(jbyte *data, int format);
     };
 
 }

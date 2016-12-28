@@ -23,7 +23,6 @@
 #include "gl/gl_render_data.h"
 #include "gl/gl_bitmap_image.h"
 #include "gl/gl_cubemap_image.h"
-#include "gl/gl_compressed_image.h"
 #include "gl/gl_render_texture.h"
 #include "gl/gl_external_texture.h"
 #include "gl/gl_float_image.h"
@@ -51,25 +50,13 @@ UniformBlock* GLRenderer::createUniformBlock(const std::string& desc, int index)
 
 Image* GLRenderer::createImage(int type, int format)
 {
-    return new GLBitmapImage(type, format);
-}
-
-
-CubemapImage* GLRenderer::createCubemap(JNIEnv* env, int format, int width, int height, int imageSize,
-                                        jobjectArray textureArray, const int* dataOffsets)
-{
-    return new GLCubemapImage(env, format, width, height, imageSize, textureArray, dataOffsets);
-}
-
-CubemapImage* GLRenderer::createCubemap(JNIEnv* env, jobjectArray bitmapArray)
-{
-    return new GLCubemapImage(env, bitmapArray);
-}
-
-CompressedImage* GLRenderer::createCompressedBitmap(JNIEnv *env, int target, int format,
-                                                    int width, int height, int levels)
-{
-    return new CompressedImage(env, target, format, width, height, levels);
+    switch (type)
+    {
+        case Image::ImageType::BITMAP: return new GLBitmapImage(format);
+        case Image::ImageType::CUBEMAP: return new GLCubemapImage(format);
+        case Image::ImageType::FLOAT_BITMAP: return new GLFloatImage();
+    }
+    return NULL;
 }
 
 Texture* GLRenderer::createTexture(int target)
@@ -86,11 +73,6 @@ RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample
                                                const int* texture_parameters)
 {
     return new GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters);
-}
-
-FloatImage* GLRenderer::createFloatImage(JNIEnv* env, int width, int height, jfloatArray floatData)
-{
-    return new GLFloatImage(env, width, height, floatData);
 }
 
 GLRenderer::GLRenderer() : transform_ubo_(nullptr)

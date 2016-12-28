@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
+import org.gearvrf.GVRCompressedTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader.Reader;

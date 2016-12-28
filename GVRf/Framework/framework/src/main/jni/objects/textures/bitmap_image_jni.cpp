@@ -24,45 +24,64 @@
 #include "android/asset_manager_jni.h"
 
 
-namespace gvr {
-
+namespace gvr
+{
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv * env, jobject obj,
-                                                 int imageType, int pixelFormat);
+    Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv *env, jobject obj,
+             int imageType, int pixelFormat);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv * env, jobject obj,
-            jlong jtexture, jint width, jint height, jbyteArray jdata);
+    Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv *env, jobject obj,
+              jlong jtexture, jint width,
+              jint height, jbyteArray jdata);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv * env, jobject obj,
+    Java_org_gearvrf_NativeBitmapImage_updateCompressed(JNIEnv *env, jobject obj,
+             jlong jtexture, jint width, int height,
+             jbyteArray jdata, jint levels, jintArray offset);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
              jlong jtexture, jobject jbitmap);
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv * env, jobject obj, jint type, jint format)
+Java_org_gearvrf_NativeBitmapImage_constructor(JNIEnv *env, jobject obj, jint type, jint format)
 {
-    Image* image = Renderer::getInstance()->createImage(type, format);
-    jlong result =  reinterpret_cast<jlong>(image);
+    Image *image = Renderer::getInstance()->createImage(type, format);
+    jlong result = reinterpret_cast<jlong>(image);
     return result;
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv * env, jobject obj,
-        jlong jtexture, jint width, jint height, jbyteArray jdata)
+Java_org_gearvrf_NativeBitmapImage_updateFromMemory(JNIEnv *env, jobject obj,
+                                                    jlong jtexture, jint width, jint height,
+                                                    jbyteArray jdata)
 {
-    BitmapImage* texture = reinterpret_cast<BitmapImage*>(jtexture);
+    BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
     texture->update(env, width, height, jdata);
 }
 
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv * env, jobject obj,
-         jlong jtexture, jobject jbitmap)
+Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
+                                                    jlong jtexture, jobject jbitmap)
 {
-    BitmapImage* texture = reinterpret_cast<BitmapImage*>(jtexture);
+    BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
     texture->update(env, jbitmap);
 
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeBitmapImage_updateCompressed(JNIEnv *env, jobject obj,
+                                                    jlong jtexture, jint width, jint height,
+                                                    jbyteArray jdata, jint levels, jintArray joffsets)
+{
+    BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
+    jintArray array = static_cast<jintArray>(env->NewLocalRef(joffsets));
+    int* offsets = env->GetIntArrayElements(array, 0);
+    texture->update(env, width, height, jdata, levels, offsets);
+    env->ReleaseIntArrayElements(array, offsets, 0);
 }
 }

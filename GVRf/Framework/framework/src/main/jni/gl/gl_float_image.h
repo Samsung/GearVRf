@@ -23,40 +23,35 @@
 #include "objects/textures/float_image.h"
 
 namespace gvr {
-class GLFloatImage : public FloatImage
-{
-public:
-    explicit GLFloatImage(JNIEnv* env, int width, int height, jfloatArray data) : FloatImage(env, width, height, data)
+    class GLFloatImage : public FloatImage
     {
-        mTarget = GL_TEXTURE_2D;
-    }
+    public:
+        GLFloatImage() : FloatImage()
+        {
+            mTarget = GL_TEXTURE_2D;
+        }
 
-    explicit GLFloatImage() : FloatImage()
-    {
-        mTarget = GL_TEXTURE_2D;
-    }
+    protected:
+        virtual void update(int texid)
+        {
+            JNIEnv *env = getCurrentEnv(mJava);
+            jfloatArray array = static_cast<jfloatArray>(env->NewLocalRef(mData));
+            float* pixels = env->GetFloatArrayElements(array, 0);
+            glBindTexture(mType, texid);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, mWidth, mHeight, 0, GL_RG, GL_FLOAT, pixels);
+            glGenerateMipmap(mType);
+            env->ReleaseFloatArrayElements(array, pixels, 0);
+            env->DeleteLocalRef(array);
+            clearData(env);
+            mPendingUpdate = false;
+        }
 
-protected:
-    virtual void update(int texid)
-    {
-        JNIEnv *env = getCurrentEnv(mJava);
-        jfloatArray array = static_cast<jfloatArray>(env->NewLocalRef(mData));
-        float* pixels = env->GetFloatArrayElements(array, 0);
-        glBindTexture(mType, texid);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, mWidth, mHeight, 0, GL_RG, GL_FLOAT, pixels);
-        glGenerateMipmap(mType);
-        env->ReleaseFloatArrayElements(array, pixels, 0);
-        env->DeleteLocalRef(array);
-        clearData(env);
-        mPendingUpdate = false;
-    }
-
-private:
-    GLFloatImage(const GLFloatImage&);
-    GLFloatImage(GLFloatImage&&);
-    GLFloatImage& operator=(const GLFloatImage&);
-    GLFloatImage& operator=(GLFloatImage&&);
-};
+    private:
+        GLFloatImage(const GLFloatImage&);
+        GLFloatImage(GLFloatImage&&);
+        GLFloatImage& operator=(const GLFloatImage&);
+        GLFloatImage& operator=(GLFloatImage&&);
+    };
 
 }
 #endif
