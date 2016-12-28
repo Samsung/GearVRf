@@ -16,6 +16,7 @@
 apply plugin: 'com.android.library'
 
 repositories {
+    jcenter()
     flatDir {
         dirs '../../3DCursorLibrary/build/outputs/aar/',
                 '../../../../Framework/framework/build/outputs/aar/'
@@ -53,7 +54,12 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile(name:'3DCursorLibrary-debug', ext:'aar')
-    compile(name: 'framework-debug', ext: 'aar')
+    if(rootProject.useLocalDependencies) {
+        compile(name: 'framework-debug', ext: 'aar')
+        compile(name: '3DCursorLibrary-debug', ext: 'aar')
+    } else {
+        compile 'org.gearvrf:framework:3.1.0'
+        compile 'org.gearvrf:3DCursorLibrary:3.1.0'
+    }
 }
 
