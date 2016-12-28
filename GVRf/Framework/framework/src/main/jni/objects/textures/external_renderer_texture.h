@@ -26,8 +26,6 @@ public:
         return mData;
     }
 
-    const static int TARGET = GL_TEXTURE_EXTERNAL_OES + 1000;
-
 private:
     ExternalRendererTexture(const ExternalRendererTexture& render_texture);
     ExternalRendererTexture(ExternalRendererTexture&& render_texture);

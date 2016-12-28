@@ -36,7 +36,7 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
     }
 
     Texture *texture = material->getTexture("main_texture");
-    if (texture->getTarget() != ExternalRendererTexture::TARGET) {
+    if (texture->getTarget() != GL_TEXTURE_EXTERNAL_OES) {
         LOGE("External renderer only takes external renderer textures");
         return;
     }

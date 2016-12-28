@@ -24,8 +24,9 @@ namespace gvr {
 class GLExternalRendererTexture: public GLTexture, public ExternalRendererTexture
 {
 public:
-    GLExternalRendererTexture() : GLTexture(GL_TEXTURE_2D)
+    GLExternalRendererTexture() : GLTexture(GL_TEXTURE_EXTERNAL_OES)
     {
+        mTarget = GL_TEXTURE_EXTERNAL_OES;
     }
 
 private:

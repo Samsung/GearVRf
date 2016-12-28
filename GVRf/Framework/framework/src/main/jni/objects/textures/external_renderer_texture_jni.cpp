@@ -2,6 +2,7 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "external_renderer_texture.h"
 
 #include "util/gvr_jni.h"
@@ -22,7 +23,7 @@ Java_org_gearvrf_NativeExternalRendererTexture_getData(JNIEnv * env,
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeExternalRendererTexture_ctor(JNIEnv * env, jobject obj) {
-    return reinterpret_cast<jlong>(new ExternalRendererTexture());
+    return reinterpret_cast<jlong>(Renderer::getInstance()->createTexture(Texture::TextureType::TEXTURE_EXTERNAL_RENDERER));
 }
 
 JNIEXPORT void JNICALL

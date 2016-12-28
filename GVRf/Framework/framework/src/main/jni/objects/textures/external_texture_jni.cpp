@@ -32,7 +32,7 @@ Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(Renderer::getInstance()->createTexture(GL_TEXTURE_EXTERNAL_OES));
+    return reinterpret_cast<jlong>(Renderer::getInstance()->createTexture(Texture::TextureType::TEXTURE_EXTERNAL));
 }
 
 }

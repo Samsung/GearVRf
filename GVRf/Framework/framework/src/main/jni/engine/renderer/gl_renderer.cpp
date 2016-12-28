@@ -59,13 +59,16 @@ Image* GLRenderer::createImage(int type, int format)
     return NULL;
 }
 
-Texture* GLRenderer::createTexture(int target)
+Texture* GLRenderer::createTexture(int type)
 {
-    if (target == GLExternalRendererTexture::TARGET)
+    switch (type)
     {
-        return new GLExternalRendererTexture();
+        case Texture::TextureType::TEXTURE_2D: return new GLTexture(GL_TEXTURE_2D);
+        case Texture::TextureType::TEXTURE_ARRAY: return new GLTexture(GL_TEXTURE_2D_ARRAY);
+        case Texture::TextureType::TEXTURE_EXTERNAL: return new GLTexture(GL_TEXTURE_EXTERNAL_OES);
+        case Texture::TextureType::TEXTURE_EXTERNAL_RENDERER: return new GLExternalRendererTexture();
     }
-    return new GLTexture(target);
+    return new GLTexture(type);
 }
 
 RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count,

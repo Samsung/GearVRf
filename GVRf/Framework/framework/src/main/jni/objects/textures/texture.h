@@ -52,6 +52,31 @@ public:
         TASK_UPDATE_IMAGE = 2,
     };
 
+    enum TextureParameters
+    {
+        REPEAT = 1,
+        CLAMP = 0,
+        NEAREST = 0,
+        LINEAR = 1,
+        NEAREST_MIPMAP_NEAREST = 2,
+        NEAREST_MIPMAP_LINEAR = 3,
+        LINEAR_MIPMAP_NEAREST = 4,
+        LINEART_MIPMAP_LINEAR = 5,
+    };
+
+    union TexParams
+    {
+        struct
+        {
+            unsigned int MinFilter : 2;
+            unsigned int MagFilter : 2;
+            unsigned int WrapU : 1;
+            unsigned int WrapV : 1;
+            unsigned int Anisotropic : 1;
+        } Params;
+        int SingleValue;
+    };
+
     Texture();
     Texture(int target);
     virtual ~Texture();
