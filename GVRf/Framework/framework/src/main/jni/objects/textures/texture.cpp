@@ -29,13 +29,7 @@ Texture::Texture() : HybridObject(),
         mTarget(0),
         mPendingTask(TASK_INIT_PARAMS),
         mIsReady(false)
-{
-    mTexParams[0] = GL_LINEAR;
-    mTexParams[1] = GL_LINEAR;
-    mTexParams[2] = 1.0f;
-    mTexParams[3] = GL_CLAMP_TO_EDGE;
-    mTexParams[4] = GL_CLAMP_TO_EDGE;
-}
+{ }
 
 Texture::Texture(int target) : HybridObject(),
         mImage(NULL),
@@ -44,13 +38,7 @@ Texture::Texture(int target) : HybridObject(),
         mJavaImage(NULL),
         mPendingTask(TASK_INIT_PARAMS),
         mIsReady(false)
-{
-    mTexParams[0] = GL_LINEAR;
-    mTexParams[1] = GL_LINEAR;
-    mTexParams[2] = 1.0f;
-    mTexParams[3] = GL_CLAMP_TO_EDGE;
-    mTexParams[4] = GL_CLAMP_TO_EDGE;
-}
+{ }
 
 Texture::~Texture()
 {
@@ -110,7 +98,7 @@ void Texture::updateTextureParameters(const int* texture_parameters, int n)
 {
     if (texture_parameters)
     {
-        memcpy(mTexParams, texture_parameters, sizeof(int) * 5);
+        mTexParams =texture_parameters;
         mPendingTask |= TASK_INIT_PARAMS;
     }
 }

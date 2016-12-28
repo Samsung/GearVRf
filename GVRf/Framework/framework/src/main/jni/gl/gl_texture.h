@@ -70,6 +70,8 @@ private:
     bool updateImage();
 
 protected:
+    static GLenum MapWrap[];
+    static GLenum MapFilter[];
     GLuint id_;
     GlDelete* deleter_;
 };

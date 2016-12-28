@@ -27,6 +27,81 @@
 
 namespace gvr {
 
+/*
+ * Packed representation of texture parameters.
+ * Integer values for filtering and wrapping are
+ * packed into a single byte. Maximum anisotropy,
+ * a floating point value, is separate.
+ * Texture parameters are supplied as an array
+ * of values on input and converted to this
+ * internal format.
+ */
+class TextureParameters
+{
+public:
+    enum
+    {
+        CLAMP = 0,
+        REPEAT = 1,
+        MIRROR = 2,
+
+        NEAREST = 0,
+        LINEAR = 1,
+        NEAREST_MIPMAP_NEAREST = 2,
+        NEAREST_MIPMAP_LINEAR = 3,
+        LINEAR_MIPMAP_NEAREST = 4,
+        LINEAR_MIPMAP_LINEAR = 5,
+    };
+
+    TextureParameters() : MaxAnisotropy(1.0f)
+    {
+        Params.HashCode = 0;
+    }
+
+    TextureParameters(const int* params)
+    {
+        setMinFilter(params[0]);
+        setMagFilter(params[1]);
+        setMaxAnisotropy((float) params[2]);
+        setWrapU(params[3]);
+        setWrapV(params[4]);
+    }
+
+    TextureParameters& operator=(const int* params)
+    {
+        setMinFilter(params[0]);
+        setMagFilter(params[1]);
+        setMaxAnisotropy((float) params[2]);
+        setWrapU(params[3]);
+        setWrapV(params[4]);
+    }
+
+    int getMinFilter() const { return Params.BitFields.MinFilter; }
+    int getMagFilter() const { return Params.BitFields.MagFilter; }
+    int getWrapU() const { return Params.BitFields.WrapU; }
+    int getWrapV() const { return Params.BitFields.WrapV; }
+    float getMaxAnisotropy() const { return MaxAnisotropy; }
+    void setMinFilter(int f) { Params.BitFields.MinFilter = f; }
+    void setMagFilter(int f) { Params.BitFields.MagFilter = f; }
+    void setWrapU(int wrap) { Params.BitFields.WrapU = wrap; }
+    void setWrapV(int wrap) { Params.BitFields.WrapV = wrap; }
+    void setMaxAnisotropy(float v) { MaxAnisotropy = v; }
+
+protected:
+    union
+    {
+        struct
+        {
+            unsigned int MinFilter : 2;
+            unsigned int MagFilter : 2;
+            unsigned int WrapU : 2;
+            unsigned int WrapV : 2;
+        } BitFields;
+        unsigned char HashCode;
+    } Params;
+    float MaxAnisotropy;
+};
+
 class Texture : public HybridObject
 {
 public:
@@ -50,48 +125,6 @@ public:
         TASK_NONE = 0,
         TASK_INIT_PARAMS = 1,
         TASK_UPDATE_IMAGE = 2,
-    };
-
-    enum TexParamValues
-    {
-        REPEAT = 1,
-        CLAMP = 0,
-        NEAREST = 0,
-        LINEAR = 1,
-        NEAREST_MIPMAP_NEAREST = 2,
-        NEAREST_MIPMAP_LINEAR = 3,
-        LINEAR_MIPMAP_NEAREST = 4,
-        LINEART_MIPMAP_LINEAR = 5,
-    };
-
-    /*
-     * Packed representation of texture parameters.
-     * Integer values for filtering and wrapping are
-     * packed into a single byte. Maximum anisotropy,
-     * a floating point value, is separate.
-     * Texture parameters are supplied as an array
-     * of values on input and converted to this
-     * internal format.
-     */
-    struct NativeTexParams
-    {
-        NativeTexParams() : MaxAnisotropy(1.0f)
-        {
-            Params.HashCode = 0;
-        }
-        union
-        {
-            struct
-            {
-                unsigned int MinFilter : 2;
-                unsigned int MagFilter : 2;
-                unsigned int WrapU : 1;
-                unsigned int WrapV : 1;
-                unsigned int IsAnisotropic : 1;
-            } BitFields;
-            unsigned char HashCode;
-        } Params;
-        float MaxAnisotropy;
     };
 
     Texture();
@@ -123,10 +156,10 @@ protected:
     JavaVM* mJava;
     jobject mJavaImage;
     Image*  mImage;
-    int     mTexParams[MAX_TEXTURE_PARAM_NUM];
     int     mTarget;
     int     mPendingTask;
     bool    mIsReady;
+    TextureParameters   mTexParams;
 
 private:
     Texture(const Texture& texture);
