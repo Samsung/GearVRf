@@ -157,7 +157,7 @@ task packageForPlugins(type: Zip) {
     from './src/main/libs/'
     include '*.jar'
 
-    from './src/main/libs/armeabi-v7a/'
+    from './build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/'
     include '*.so'
 }
 
