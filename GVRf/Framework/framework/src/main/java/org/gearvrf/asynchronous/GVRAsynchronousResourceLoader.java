@@ -43,7 +43,6 @@ import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
@@ -99,7 +98,7 @@ public class GVRAsynchronousResourceLoader {
     public static void loadCompressedTexture(final GVRContext gvrContext,
             ResourceCache<GVRImage> textureCache,
             final CompressedTextureCallback callback,
-            final GVRAndroidResource resource) throws IllegalArgumentException {
+            final GVRAndroidResource resource) {
         loadCompressedTexture(gvrContext, textureCache, callback, resource,
                               GVRCompressedTexture.DEFAULT_QUALITY);
     }
@@ -261,20 +260,11 @@ public class GVRAsynchronousResourceLoader {
      *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
      *             parameters are {@code null}.
      */
-    public static void loadTexture(final GVRContext gvrContext,
-            final ResourceCache<GVRImage> textureCache,
-            final CancelableCallback<GVRImage> callback,
-            final GVRAndroidResource resource, final int priority,
-            final int quality) {
-        loadTexture(gvrContext, textureCache, callback, resource, null,
-                    priority, quality);
-    }
-
-    public static void loadTexture(final GVRContext gvrContext,
+        public static void loadTexture(final GVRContext gvrContext,
             final ResourceCache<GVRImage> textureCache,
             final CancelableCallback<GVRImage> callback,
             final GVRAndroidResource resource,
-            final GVRTextureParameters textureParams, final int priority,
+            final int priority,
             final int quality) {
         Threads.spawn(new Runnable() {
             @Override

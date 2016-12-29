@@ -35,14 +35,11 @@ GLTexture::~GLTexture()
 
 bool GLTexture::isReady()
 {
-    if (mPendingTask)
+    if ((getTarget() && mPendingTask) || (mImage != NULL))
     {
-        if (getTarget() || (mImage != NULL))
+        if (updateGPU())
         {
-            if (updateGPU())
-            {
-                setReady(true);
-            }
+            setReady(true);
         }
     }
     return Texture::isReady();
