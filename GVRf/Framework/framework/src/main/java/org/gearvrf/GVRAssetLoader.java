@@ -842,6 +842,7 @@ public final class GVRAssetLoader {
      *            {@code GVRAndroidResource} here eliminates six overloads.
      */
     public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
+
     {
         GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
         TextureRequest request = new TextureRequest(resource, texture, callback);
