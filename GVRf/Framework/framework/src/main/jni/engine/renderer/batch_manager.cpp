@@ -132,7 +132,8 @@ void BatchManager::renderBatches(RenderState& rstate) {
             Shader *shader = rstate.shader_manager->getShader(currentShaderType);
             if (shader != NULL)
             {
-                shader->programInit(&rstate, renderdata, rstate.material_override, matrices, batch->getNumberOfMeshes(), true);
+                //TODO: implement this
+                //shader->programInit(&rstate, renderdata, rstate.material_override, matrices, batch->getNumberOfMeshes(), true);
                 render_batch(matrices, renderdata, batch->getIndexCount());
             }
         }

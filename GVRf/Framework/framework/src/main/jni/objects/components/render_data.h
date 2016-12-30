@@ -335,7 +335,7 @@ public:
 
     void set_shader(int pass, int shaderid)
     {
-        LOGD("SHADER: RenderData:set_shader %d %p", shaderid, this);
+        LOGD("SHADER: RenderData:setNativeShader %d %p", shaderid, this);
         render_pass_list_[pass]->set_shader(shaderid);
     }
 

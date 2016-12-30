@@ -21,6 +21,8 @@
 #include "glm/glm.hpp"
 #include "util/gvr_log.h"
 #include "gl/gl_uniform_block.h"
+#include "gl_texture.h"
+#include "shaders/material/custom_shader.h"
 
 namespace gvr {
 /**
@@ -35,8 +37,65 @@ namespace gvr {
         virtual const UniformBlock& uniforms() const { return uniforms_; }
         GLUniformBlock& getGLUniforms() { return uniforms_; }
 
+        int render(Shader* shader)
+        {
+            std::lock_guard<std::mutex> lock(lock_);
+            int texIndex = updateTextures(shader);
+            if (texIndex >= 0)
+            {
+                if (dirty_)
+                {
+                    updateUniforms(shader->getProgramId());
+                    dirty_ = false;
+                }
+                return texIndex;
+            }
+            return -1;
+        }
+
     protected:
         GLUniformBlock uniforms_;
+        std::mutex lock_;
+
+        void updateUniforms(int programID)
+        {
+            uniforms_.bindBuffer(programID);
+            std::string s = uniforms_.toString();
+            LOGD("SHADER: Material UBO");
+            LOGD("SHADER: %s", s.c_str());
+            uniforms_.render(programID);
+        }
+
+        bool updateTextures(Shader* shader)
+        {
+            int texIndex = 0;
+            bool allOK = true;
+            GLuint programID = shader->getProgramId();
+
+            for (auto it = textures_.begin(); it != textures_.end(); ++it)
+            {
+                int loc = shader->getLocation(it->first);
+                if (loc < 0)
+                {
+                    loc = glGetUniformLocation(programID, it->first.c_str());
+                    if (loc < 0)
+                    {
+                        allOK = false;
+                        continue;
+                    }
+                }
+                GLTexture* tex = reinterpret_cast<GLTexture*>(it->second);
+                if (tex && tex->bindTexture(texIndex, loc))
+                {
+                    ++texIndex;
+                }
+                else
+                {
+                    allOK = false;
+                }
+            }
+            return allOK;
+        }
     };
 }
 

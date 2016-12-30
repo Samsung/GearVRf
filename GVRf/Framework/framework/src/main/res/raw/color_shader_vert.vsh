@@ -1,6 +1,6 @@
 precision mediump float;
 in vec3 a_position;
-layout (std140, binding = 0) uniform Transform_ubo
+layout (std140) uniform Transform_ubo
 {
  #ifdef HAS_MULTIVIEW
      mat4 u_view_[2];
