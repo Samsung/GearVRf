@@ -1,6 +1,6 @@
 precision mediump float;
 
-layout (std140, binding = 1) uniform Material_ubo
+layout (std140) uniform Material_ubo
 {
     vec3 u_color;
 };

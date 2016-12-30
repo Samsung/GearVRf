@@ -65,7 +65,19 @@ public:
     VulkanRenderer() : vulkanCore_(nullptr) {
         vulkanCore_ = VulkanCore::getInstance();
     }
-
+    VkDevice& getDevice(){
+        return vulkanCore_->getDevice();
+    }
+    bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
+                                     uint32_t *typeIndex){
+        return vulkanCore_->GetMemoryTypeFromProperties(typeBits,requirements_mask,typeIndex);
+    }
+    void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer){
+        vulkanCore_->initCmdBuffer(level,cmdBuffer);
+    }
+    VkQueue& getQueue(){
+        vulkanCore_->getVkQueue();
+    }
     // pure virtual
      void renderCamera(Scene* scene, Camera* camera,
              ShaderManager* shader_manager,

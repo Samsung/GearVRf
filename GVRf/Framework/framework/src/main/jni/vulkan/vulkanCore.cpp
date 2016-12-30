@@ -1,6 +1,6 @@
 /* Copyright 2015 Samsung Electronics Co., LTD
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");x
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -20,7 +20,8 @@
 #include "gvr_time.h"
 #include "vulkan_render_data.h"
 #include "vulkan_material.h"
-
+#include "vulkan/vk_texture.h"
+//#define ENABLE_TEXTURE
 #define UINT64_MAX 99999
 
 #define QUEUE_INDEX_MAX 99999
@@ -592,8 +593,19 @@ namespace gvr {
 
         GVR_VK_CHECK(!ret);
     }
+    void VulkanCore::initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer){
 
+        VkResult ret = VK_SUCCESS;
+        ret = vkAllocateCommandBuffers(
+                m_device,
+                gvr::CmdBufferCreateInfo(level, m_commandPool),
+                &cmdBuffer
+        );
 
+        GVR_VK_CHECK(!ret);
+    }
+
+#ifndef ENABLE_TEXTURE
     void VulkanCore::InitLayoutRenderData(VulkanRenderData *rdata) {
         VkResult ret = VK_SUCCESS;
         VulkanDescriptor &transform = rdata->getVkData().getDescriptor();
@@ -634,6 +646,52 @@ namespace gvr {
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
     }
+#else
+    void VulkanCore::InitLayoutRenderData(VulkanRenderData *rdata) {
+        VkResult ret = VK_SUCCESS;
+        VulkanDescriptor &transform = rdata->getVkData().getDescriptor();
+        VkDescriptorSetLayoutBinding &transform_uniformBinding = transform.getLayoutBinding();
+        VulkanMaterial* vkMtl = reinterpret_cast<VulkanMaterial*>(rdata->material(0));
+        VkDescriptorSetLayoutBinding uniformAndSamplerBinding[3] = {};
+        // Our MVP matrix
+        uniformAndSamplerBinding[0].binding = 0;
+        uniformAndSamplerBinding[0].descriptorCount = 1;
+        uniformAndSamplerBinding[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        uniformAndSamplerBinding[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uniformAndSamplerBinding[0].pImmutableSamplers = nullptr;
+        uniformAndSamplerBinding[0] = transform_uniformBinding;
+        VulkanDescriptor *material_descriptor = vkMtl->getVulkanUniforms().getDescriptor();
+        VkDescriptorSetLayoutBinding &material_uniformBinding = material_descriptor->getLayoutBinding();
+
+        material_uniformBinding.binding = 2;
+        uniformAndSamplerBinding[2] = material_uniformBinding;
+
+        // Texture
+        uniformAndSamplerBinding[1].binding = 1;
+        uniformAndSamplerBinding[1].descriptorCount = 1;
+        uniformAndSamplerBinding[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        uniformAndSamplerBinding[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        uniformAndSamplerBinding[1].pImmutableSamplers = nullptr;
+
+
+        VkDescriptorSetLayout &descriptorLayout = rdata->getVkData().getDescriptorLayout();
+
+        ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0, 3,
+                                                                                       &uniformAndSamplerBinding[0]),
+                                          nullptr,
+                                          &descriptorLayout);
+        GVR_VK_CHECK(!ret);
+
+        VkPipelineLayout &pipelineLayout = rdata->getVkData().getPipelineLayout();
+        ret = vkCreatePipelineLayout(m_device,
+                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0, 0),
+                                     nullptr, &pipelineLayout);
+        GVR_VK_CHECK(!ret);
+    }
+
+
+
+#endif
 
     void VulkanCore::InitUniformBuffers() {
         uint32_t memoryTypeIndex;
@@ -702,73 +760,6 @@ namespace gvr {
         m_modelViewMatrixUniform.bufferInfo.range = sizeof(glm::mat4);
     }
 
-
-    void VulkanCore::InitUniformBuffersForRenderData(GVR_Uniform &m_modelViewMatrixUniform) {
-        // the uniform in this example is a matrix in the vertex stage
-        uint32_t memoryTypeIndex;
-        memset(&m_modelViewMatrixUniform, 0, sizeof(m_modelViewMatrixUniform));
-
-        VkResult err = VK_SUCCESS;
-
-        // Create our buffer object
-        VkBufferCreateInfo bufferCreateInfo;
-        bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferCreateInfo.pNext = NULL;
-        bufferCreateInfo.size = sizeof(glm::mat4);;//sizeof(float)*4;
-        bufferCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        bufferCreateInfo.flags = 0;
-
-        err = vkCreateBuffer(m_device, gvr::BufferCreateInfo(sizeof(glm::mat4),
-                                                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT),
-                             NULL, &m_modelViewMatrixUniform.buf);
-        assert(!err);
-
-        // Obtain the requirements on memory for this buffer
-        VkMemoryRequirements mem_reqs;
-        vkGetBufferMemoryRequirements(m_device, m_modelViewMatrixUniform.buf, &mem_reqs);
-        assert(!err);
-
-        bool pass = GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                                &memoryTypeIndex);
-        assert(pass);
-
-        // We keep the size of the allocation for remapping it later when we update contents
-        m_modelViewMatrixUniform.allocSize = mem_reqs.size;
-
-        err = vkAllocateMemory(m_device, gvr::MemoryAllocateInfo(memoryTypeIndex, mem_reqs.size),
-                               NULL, &m_modelViewMatrixUniform.mem);
-        assert(!err);
-
-        // Create our initial MVP matrix
-        float aaa[16] = {1, 0, 0, 0,
-                         0, 1, 0, 0,
-                         0, 0, 1, 0,
-                         0, 0, 0, 1};
-        glm::mat4 mvp = glm::make_mat4(aaa);;
-
-        // Now we need to map the memory of this new allocation so the CPU can edit it.
-        void *data;
-        err = vkMapMemory(m_device, m_modelViewMatrixUniform.mem, 0,
-                          m_modelViewMatrixUniform.allocSize, 0, &data);
-        assert(!err);
-
-        float tempColor[4] = {0, 1, 0, 1};
-        // Copy our triangle verticies and colors into the mapped memory area
-        memcpy(data, &mvp, sizeof(mvp));
-
-        // Unmap the memory back from the CPU
-        vkUnmapMemory(m_device, m_modelViewMatrixUniform.mem);
-
-        // Bind our buffer to the memory
-        err = vkBindBufferMemory(m_device, m_modelViewMatrixUniform.buf,
-                                 m_modelViewMatrixUniform.mem, 0);
-        assert(!err);
-
-        m_modelViewMatrixUniform.bufferInfo.buffer = m_modelViewMatrixUniform.buf;
-        m_modelViewMatrixUniform.bufferInfo.offset = 0;
-        m_modelViewMatrixUniform.bufferInfo.range = sizeof(glm::mat4);
-    }
 
     void VulkanCore::InitRenderPass() {
         // The renderpass defines the attachments to the framebuffer object that gets
@@ -959,15 +950,15 @@ namespace gvr {
         scissor.extent.height = m_height;
         scissor.offset.x = 0;
         scissor.offset.y = 0;
-/*
+#ifdef ENABLE_TEXTURE
         std::vector<uint32_t> result_vert = CompileShader("VulkanVS", VERTEX_SHADER,
                                                           vertexShaderData);//vs;//
         std::vector<uint32_t> result_frag = CompileShader("VulkanFS", FRAGMENT_SHADER,
                                                           data_frag);//fs;//
- */
+#else
         std::vector<uint32_t> result_vert = vs;
         std::vector<uint32_t> result_frag = fs;
-
+#endif
         // We define two shader stages: our vertex and fragment shader.
         // they are embedded as SPIR-V into a header file for ease of deployment.
         VkPipelineShaderStageCreateInfo shaderStages[2] = {};
@@ -1326,7 +1317,7 @@ namespace gvr {
     void VulkanCore::UpdateUniforms(VulkanUniformBlock* block) {
         block->updateBuffer(m_device, this);
     }
-
+#ifndef ENABLE_TEXTURE
     void VulkanCore::InitDescriptorSetForRenderData(
             VulkanRenderData *rdata) { //VkDescriptorSet &m_descriptorSet) {
         //Create a pool with the amount of descriptors we require
@@ -1395,7 +1386,91 @@ namespace gvr {
         vkUpdateDescriptorSets(m_device, 2, &writes[0], 0, nullptr);
         LOGI("Vulkan after update descriptor");
     }
+#else
+    void VulkanCore::InitDescriptorSetForRenderData(
+            VulkanRenderData *rdata) { //VkDescriptorSet &m_descriptorSet) {
+        //Create a pool with the amount of descriptors we require
+        VkDescriptorPoolSize poolSize[2] = {};
+        poolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize[0].descriptorCount = 1;
 
+        poolSize[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize[2].descriptorCount = 1;
+
+        poolSize[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSize[1].descriptorCount = 1;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.pNext = nullptr;
+        descriptorPoolCreateInfo.maxSets = 1;
+        descriptorPoolCreateInfo.poolSizeCount = 3;
+        descriptorPoolCreateInfo.pPoolSizes = poolSize;
+
+        VkResult err;
+        VkDescriptorPool &descriptorPool = rdata->getVkData().getDescriptorPool();
+        err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
+        GVR_VK_CHECK(!err);
+        VkDescriptorSetLayout &descriptorLayout = rdata->getVkData().getDescriptorLayout();
+
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.pNext = nullptr;
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
+
+        VkDescriptorSet &descriptorSet = rdata->getVkData().getDescriptorSet();
+        err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+        GVR_VK_CHECK(!err);
+
+        VkWriteDescriptorSet &transform_desc = rdata->getTransformUbo().getDescriptorSet();
+
+        VulkanMaterial* vkMtl = reinterpret_cast<VulkanMaterial*>(rdata->material(0));
+        transform_desc.dstSet = descriptorSet;
+        VkWriteDescriptorSet& mat_desc = vkMtl->getVulkanUniforms().getDescriptorSet();
+        //VkWriteDescriptorSet &write1 = mat_desc->getDescriptorSet();
+        mat_desc.dstSet = descriptorSet;
+        VkWriteDescriptorSet writes[3] = {};
+        writes[0] = transform_desc;
+        mat_desc.dstBinding = 2;
+        writes[2] = mat_desc;
+
+
+        ShaderData* shaderData= rdata->pass(0)->material();
+
+        if(!shaderData->areTexturesReady()){
+            LOGE("SHADER: textures not ready %s", rdata->owner_object()->name().c_str());
+            return;
+        }
+        VkTexture* texture = reinterpret_cast<VkTexture*>(shaderData->getTexture("u_texture"));
+        if(texture == NULL){
+            LOGE("texture is NULL");
+        }
+        // Texture
+        VkDescriptorImageInfo descriptorImageInfo = {};
+        descriptorImageInfo.sampler = texture->getVkSampler();
+        descriptorImageInfo.imageView = texture->getVkImageView();
+    //     descriptorImageInfo.sampler = textureObject->m_sampler;
+    //     descriptorImageInfo.imageView = textureObject->m_view;
+
+        descriptorImageInfo.imageLayout = textureObject->m_imageLayout;
+
+
+        writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[1].dstBinding = 1;
+        writes[1].dstSet = descriptorSet;
+        writes[1].descriptorCount = 1;
+        writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writes[1].pImageInfo = &descriptorImageInfo;
+
+        LOGI("Vulkan before update descriptor");
+        vkUpdateDescriptorSets(m_device, 3, &writes[0], 0, nullptr);
+        LOGI("Vulkan after update descriptor");
+    }
+
+
+#endif
     void VulkanCore::createPipelineCache() {
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
@@ -1570,7 +1645,7 @@ namespace gvr {
         err = vkQueueWaitIdle(m_queue);
         assert(!err);
 
-        err = vkCreateSampler(m_device, gvr::SamplerCreateInfo(VK_FILTER_LINEAR, VK_FILTER_LINEAR,
+        err = vkCreateSampler(m_device, gvr::SamplerCreateInfo(VK_FILTER_NEAREST, VK_FILTER_NEAREST,
                                                                VK_SAMPLER_MIPMAP_MODE_LINEAR,
                                                                VK_SAMPLER_ADDRESS_MODE_REPEAT,
                                                                VK_SAMPLER_ADDRESS_MODE_REPEAT,
@@ -1603,12 +1678,23 @@ namespace gvr {
         textureObject->m_textureViewType = VK_IMAGE_VIEW_TYPE_2D;
 
         textureObject->m_data = new uint8_t[((textureObject->m_width) * (textureObject->m_height) * 4)];
-
+        int flag = 0;
         for (int i = 0; i < ((textureObject->m_width) * (textureObject->m_height) * 4); i++) {
-            textureObject->m_data[i] = 244;
-            textureObject->m_data[i + 1] = 0;
-            textureObject->m_data[i + 2] = 0;
-            textureObject->m_data[i + 3] = 244;
+            if(flag%2) {
+                textureObject->m_data[i] = 244;
+
+                textureObject->m_data[i + 1] = 0;
+                textureObject->m_data[i + 2] = 0;
+                textureObject->m_data[i + 3] = 244;
+            }
+            else{
+                textureObject->m_data[i] = 244;
+
+                textureObject->m_data[i + 1] = 255;
+                textureObject->m_data[i + 2] = 244;
+                textureObject->m_data[i + 3] = 244;
+            }
+            flag++;
             i += 3;
         }
 

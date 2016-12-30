@@ -26,7 +26,7 @@
 #include "vulkan_renderer.h"
 #include "vulkan/vulkan_material.h"
 #include "vulkan/vulkan_render_data.h"
-
+#include "vulkan/vk_texture.h"
 
 namespace gvr {
     ShaderData* VulkanRenderer::createMaterial(const std::string& desc)
@@ -46,12 +46,19 @@ namespace gvr {
 
     Image* VulkanRenderer::createImage(int type, int format)
     {
+        switch (type)
+        {
+            case Image::ImageType::BITMAP: return new VkBitmapImage(format);
+       //     case Image::ImageType::CUBEMAP: return new GLCubemapImage(format);
+        //    case Image::ImageType::FLOAT_BITMAP: return new GLFloatImage();
+        }
         return NULL;
     }
 
     Texture* VulkanRenderer::createTexture(int target)
     {
-        return NULL;
+        // TODO: where to send the target
+        return new VkTexture(static_cast<int>(VK_IMAGE_TYPE_2D));
     }
 
     RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
@@ -81,8 +88,8 @@ namespace gvr {
         if(!vulkanCore_->swapChainCreated())
             vulkanCore_->initVulkanCore();
 
-        if(render_data_vector.size() == 1)
-            return;
+    //    if(render_data_vector.size() == 1)
+   //         return;
 
         std::vector<VkDescriptorSet> allDescriptors;
 
@@ -93,6 +100,8 @@ namespace gvr {
 
             // Creating and initializing Uniform Buffer for Each Render Data
             if (vkRdata->uniform_dirty) {
+
+
                 VulkanUniformBlock& matUBO = reinterpret_cast<VulkanMaterial*>(vkRdata->material(0))->getVulkanUniforms();
                 vkRdata->createVkTransformUbo(vulkanCore_->getDevice(), vulkanCore_);
                 matUBO.createVkMaterialDescriptor(vulkanCore_->getDevice(), vulkanCore_);

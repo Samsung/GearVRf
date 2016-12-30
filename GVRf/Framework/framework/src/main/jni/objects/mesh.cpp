@@ -22,7 +22,7 @@
 #include "assimp/Importer.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
 #include "objects/helpers.h"
-
+//#define ENABLE_TEXTURE
 namespace gvr {
 std::vector<std::string> Mesh::dynamicAttribute_Names_ = {"a_bone_indices", "a_bone_weights"};
     std::vector<std::string> static getTokens(const std::string &input){
@@ -222,8 +222,19 @@ int calcSize(std::string type)
         bindings.push_back(binding);
 
         ////
-
-
+#ifdef ENABLE_TEXTURE
+        const std::vector<glm::vec2>& texcord = getVec2Vector("a_texcoord");
+        if(vertices_len && vertices_len != texcord.size()){
+            LOGE("ERROR: length of vector is not same as of vertices");
+        }
+        binding.data_type = "vec2";
+        binding.size = calcSize(binding.data_type);
+        binding.offset = total_size * sizeof(float);
+        total_size +=calcSize(binding.data_type) ;
+        binding.index = attrib_index++;
+        binding.data = texcord.data();
+        bindings.push_back(binding);
+#endif
         if(descriptor.find("a_normal")!=std::string::npos || descriptor.find("normalTexture")!=std::string::npos){
             if(vertices_len && vertices_len != normals_.size()){
                 LOGE("ERROR: length of tex cords is not same as of vertices");
@@ -234,6 +245,8 @@ int calcSize(std::string type)
             binding.data = normals_.data();
             bindings.push_back(binding);
         }
+
+
         if(descriptor.find("normalTexture")!=std::string::npos) {
             const std::vector<glm::vec3>& curr = getVec3Vector("a_tangent");
             if(vertices_len && vertices_len != curr.size()){
@@ -259,7 +272,7 @@ int calcSize(std::string type)
         }
         std::vector<std::string> tokens = getTokens(descriptor);
         for(auto& it: tokens) {
-
+            LOGE("texCord %s", it.c_str());
             const std::vector<glm::vec2>& texcord = getVec2Vector(it);
             if(vertices_len && vertices_len != texcord.size()){
                 LOGE("ERROR: length of vector is not same as of vertices");
@@ -299,7 +312,7 @@ void Mesh::generateVKBuffers(std::string descriptor, VkDevice& m_device, VulkanC
     std::vector<GLfloat> buffer;
     createBuffer(buffer, vertices_.size());
         memset(&m_vertices, 0, sizeof(m_vertices));
-        m_vertices.vi_bindings = new VkVertexInputBindingDescription[attrMapping.size()];
+        m_vertices.vi_bindings = new VkVertexInputBindingDescription[1];
         m_vertices.vi_attrs = new VkVertexInputAttributeDescription[attrMapping.size()];
         VkResult   err;
         bool   pass;
@@ -396,19 +409,20 @@ void Mesh::generateVKBuffers(std::string descriptor, VkDevice& m_device, VulkanC
         m_vertices.vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         m_vertices.vi.pNext = nullptr;
         // check this
-        m_vertices.vi.vertexBindingDescriptionCount = attrMapping.size();
+        m_vertices.vi.vertexBindingDescriptionCount = 1;
         m_vertices.vi.pVertexBindingDescriptions = m_vertices.vi_bindings;
         m_vertices.vi.vertexAttributeDescriptionCount = attrMapping.size();
         m_vertices.vi.pVertexAttributeDescriptions = m_vertices.vi_attrs;
         m_vertices.vi_bindings[0].binding = 0;
         m_vertices.vi_bindings[0].stride = total_size * sizeof(float); //sizeof(vb[0]);//
         m_vertices.vi_bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
+        LOGE("attrMapping.size() %d, total_size= %d", attrMapping.size(),total_size);
         for(int i=0; i< attrMapping.size(); i++){
            // check this
 
             m_vertices.vi_attrs[i].binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
             m_vertices.vi_attrs[i].location = attrMapping[i].index;
+            LOGE("location %d attrMapping[i].offset %d",  attrMapping[i].index, attrMapping[i].offset);
             m_vertices.vi_attrs[i].format = getDataType(attrMapping[i].data_type); //float3
             m_vertices.vi_attrs[i].offset = attrMapping[i].offset;
         }

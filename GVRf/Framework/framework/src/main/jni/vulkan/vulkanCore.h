@@ -83,7 +83,7 @@ namespace gvr {
 
         void UpdateUniforms(VulkanUniformBlock* block);
 
-        void InitUniformBuffersForRenderData(GVR_Uniform &m_modelViewMatrixUniform);
+        void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
         void InitDescriptorSetForRenderData(VulkanRenderData *rdata);
 
@@ -134,7 +134,9 @@ namespace gvr {
         }
 
         bool CreateInstance();
-
+        VkQueue& getQueue(){
+            return m_queue;
+        }
         VkShaderModule CreateShaderModule(std::vector <uint32_t> code, uint32_t size);
      //   void CreateShaderModule(VkShaderModule& module, std::vector <uint32_t> code, uint32_t size);
         bool GetPhysicalDevices();
