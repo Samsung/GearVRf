@@ -39,19 +39,6 @@ public class GVRImage extends GVRHybridObject
         ImageType(int v) { Value = v; }
     };
 
-    public enum PixelFormat
-    {
-        A8(1),             // 8 bits alpha (8 bpp)
-        RGB_8(2),          // 8 bits red, green, blue (24 bpp)
-        RGBA_8(3),         // 8 bits red, green, blue, alpha (32 bpp)
-        RGB_5(4),          // 5 bits red, green, blue (16 bpp)
-        RGBA_4(5),         // 4 bits red, green, blue, alpha (16 bpp)
-        FLOAT_PAIR(6);     // 2 floats 32 bits each (64 bpp)
-
-        public int Value;
-        PixelFormat(int v) { Value = v; }
-    };
-
     protected GVRImage(GVRContext gvrContext, long ptr)
     {
         super(gvrContext, ptr);
