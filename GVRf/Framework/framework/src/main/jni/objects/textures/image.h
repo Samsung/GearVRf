@@ -59,9 +59,9 @@ public:
     virtual ~Image() { }
 
     Image(int type, int format) :
-            HybridObject(), mType(type), mPendingUpdate(0),
+            HybridObject(), mType(type), mFormat(format), mPendingUpdate(0),
             mWidth(0), mHeight(0), mImageSize(0), mUpdateLock(),
-            mFormat(format), mLevels(0), mDataOffsets(NULL), mTarget(0)
+             mLevels(0), mDataOffsets(NULL), mTarget(0)
     {
 
     }

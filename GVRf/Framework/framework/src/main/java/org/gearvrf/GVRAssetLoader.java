@@ -841,11 +841,24 @@ public final class GVRAssetLoader {
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
      */
+    public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
+    {
+        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        TextureRequest request = new TextureRequest(resource, texture, callback);
+        GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
+                mTextureCache, request, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
+        return texture;
+    }
+
     public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource)
     {
-        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(mContext,
-                mTextureCache, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        TextureRequest request = new TextureRequest(resource, texture);
+        GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
+                                                                   mTextureCache, request, resource, DEFAULT_PRIORITY,
+                                                                   GVRCubemapTexture.faceIndexMap);
+        return texture;
     }
 
     /** @since 1.6.2 */

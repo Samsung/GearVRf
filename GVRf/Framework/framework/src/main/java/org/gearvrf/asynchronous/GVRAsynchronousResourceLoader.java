@@ -465,49 +465,58 @@ public class GVRAsynchronousResourceLoader {
         }
     }
 
-        /**
-         * Load a compressed cube map texture asynchronously.
-         *
-         * This is the implementation of
-         * {@link GVRContext#loadFutureCompressedCubemapTexture(GVRAndroidResource)} -
-         * it will usually be more convenient (and more efficient) to call that directly.
-         *
-         * @param gvrContext
-         *            The GVRF context
-         * @param textureCache
-         *            Texture cache - may be {@code null}
-         * @param resource
-         *            A steam containing a zip file which contains six bitmaps. The
-         *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
-         *            the cube map texture respectively. The default names of the
-         *            six images are "posx.pkm", "negx.pkm", "posy.pkm", "negx.pkm",
-         *            "posz.pkm", and "negz.pkm", which can be changed by calling
-         *            {@link GVRCubemapTexture#setFaceNames(String[])}.
-         * @param priority
-         *            This request's priority. Please see the notes on asynchronous
-         *            priorities in the <a href="package-summary.html#async">package
-         *            description</a>.
-         * @return A {@link Future} that you can pass to methods like
-         *         {@link GVRShaders#setMainTexture(Future)}
-         */
-    public static GVRTexture loadFutureCompressedCubemapTexture(
-            GVRContext context, ResourceCache<GVRImage> textureCache,
-            GVRAndroidResource resource, int priority,
-            Map<String, Integer> faceIndexMap)
+    /**
+     * Load a cubemap texture asynchronously.
+     *
+     * This is the implementation of
+     * {@link GVRAssetLoader#loadCompressedCubemapTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource, int)}
+     * - it will usually be more convenient (and more efficient) to call that
+     * directly.
+     *
+     * @param gvrContext
+     *            The GVRF context
+     * @param textureCache
+     *            Texture cache - may be {@code null}
+     * @param callback
+     *            Asynchronous notifications
+     * @param resource
+     *            Basically, a stream containing a compressed texture. Taking a
+     *            {@link GVRAndroidResource} parameter eliminates six overloads.
+     * @param priority
+     *            This request's priority. Please see the notes on asynchronous
+     *            priorities in the <a href="package-summary.html#async">package
+     *            description</a>.
+     */
+    public static void loadCompressedCubemapTexture(final GVRContext context,
+                                          ResourceCache<GVRImage> textureCache,
+                                          final TextureCallback callback,
+                                          final GVRAndroidResource resource, int priority,
+                                          Map<String, Integer> faceIndexMap)
+            throws IllegalArgumentException
     {
-        GVRTexture texture = new GVRTexture(context);
-        GVRImage cached = textureCache.get(resource);
+        validatePriorityCallbackParameters(context, callback, resource,
+                                           priority);
+        final GVRImage cached = textureCache == null
+                ? null
+                : (GVRImage) textureCache.get(resource);
         if (cached != null)
         {
-            texture.setImage(cached);
+            context.runOnGlThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    callback.loaded(cached, resource);
+                }
+            });
         }
         else
         {
-            AsyncCompressedCubemapTexture.get().loadTexture(context,
-                    CancelableCallbackWrapper.wrap(GVRCompressedCubemapTexture.class, texture),
-                    resource, priority, faceIndexMap);
+            TextureCallback actualCallback = (textureCache == null) ? callback
+                    : ResourceCache.wrapCallback(textureCache, callback);
+            AsyncCompressedCubemapTexture.loadTexture(context, CancelableCallbackWrapper.wrap(GVRCompressedCubemapTexture.class, actualCallback),
+                                            resource, priority, faceIndexMap);
         }
-        return texture;
     }
 
     /**
