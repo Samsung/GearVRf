@@ -55,10 +55,13 @@ namespace gvr {
 
     CubemapImage::~CubemapImage()
     {
-        mUpdateLock.lock();
-        JNIEnv* env = getCurrentEnv(mJava);
-        clearData(env);
-        mUpdateLock.unlock();
+        if (mJava != NULL)
+        {
+            mUpdateLock.lock();
+            JNIEnv *env = getCurrentEnv(mJava);
+            clearData(env);
+            mUpdateLock.unlock();
+        }
     }
 
 

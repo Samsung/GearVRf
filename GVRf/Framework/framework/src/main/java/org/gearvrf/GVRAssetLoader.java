@@ -189,7 +189,9 @@ public final class GVRAssetLoader {
                 try
                 {
                     GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
-                    mContext.getAssetLoader().loadTexture(resource, request);
+                    GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
+                                                              request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+
                 }
                 catch (IOException ex)
                 {
@@ -644,7 +646,7 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                request, resource, DEFAULT_TEXTURE_PARAMETERS, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
         return texture;
     }
 
@@ -717,14 +719,14 @@ public final class GVRAssetLoader {
             texparams = DEFAULT_TEXTURE_PARAMETERS;
         }
         GVRTexture texture = new GVRTexture(mContext, texparams);
-        TextureRequest request = new TextureRequest(resource, texture);
+        TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                request, resource, texparams, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                request, resource, priority, quality);
         return texture;
     }
 
     /**
-     * Loads a texture asynchronously with default priority and quality.
+     * Loads a bitmap texture asynchronously with default priority and quality.
      *
      * This method can detect whether the resource file holds a compressed
      * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
@@ -767,16 +769,50 @@ public final class GVRAssetLoader {
     public GVRTexture loadTexture(GVRAndroidResource resource, TextureCallback callback)
     {
         GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
-        TextureRequest request = new TextureRequest(resource, texture);
+        TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                request, resource, DEFAULT_TEXTURE_PARAMETERS, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
         return texture;
     }
 
+    /**
+     * Loads a cubemap texture asynchronously with default priority and quality.
+     *
+     * This method can only load uncompressed cubemaps. To load a compressed
+     * cubemap you can use {@link #loadCompressedCubemapTexture(GVRAndroidResource)}.
+     *
+     * @param callback
+     *            Before loading, GVRF may call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} several times (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     *
+     *            Successful loads will call
+     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
+     *            loaded()} on the GL thread;
+     *
+     *            any errors will call
+     *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
+     *            failed()}, with no promises about threading.
+     *
+     *            <p>
+     *            This method uses a throttler to avoid overloading the system.
+     *            If the throttler has threads available, it will run this
+     *            request immediately. Otherwise, it will enqueue the request,
+     *            and call
+     *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
+     *            stillWanted()} at least once (on a background thread) to give
+     *            you a chance to abort a 'stale' load.
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     */
     public GVRTexture loadCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
     {
         GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
-        TextureRequest request = new TextureRequest(resource, texture);
+        TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
                 mTextureCache, request, resource, DEFAULT_PRIORITY,
                 GVRCubemapTexture.faceIndexMap);
@@ -793,11 +829,36 @@ public final class GVRAssetLoader {
         return texture;
     }
 
+    /**
+     * Loads a compressed cubemap texture asynchronously with default priority and quality.
+     *
+     * This method can only load compressed cubemaps. To load an un-compressed
+     * cubemap you can use {@link #loadCubemapTexture(GVRAndroidResource)}.
+     *
+     * @param resource
+     *            Basically, a stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     */
+    public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
+    {
+        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        TextureRequest request = new TextureRequest(resource, texture, callback);
+        GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
+                mTextureCache, request, resource, DEFAULT_PRIORITY,
+                GVRCubemapTexture.faceIndexMap);
+        return texture;
+    }
+
     public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource)
     {
-        return GVRAsynchronousResourceLoader.loadFutureCompressedCubemapTexture(mContext,
-                mTextureCache, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        TextureRequest request = new TextureRequest(resource, texture);
+        GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
+                                                                   mTextureCache, request, resource, DEFAULT_PRIORITY,
+                                                                   GVRCubemapTexture.faceIndexMap);
+        return texture;
     }
 
     /** @since 1.6.2 */

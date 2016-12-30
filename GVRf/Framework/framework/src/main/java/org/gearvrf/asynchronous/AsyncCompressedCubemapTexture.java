@@ -24,6 +24,7 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRCompressedCubemapTexture;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;

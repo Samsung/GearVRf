@@ -119,7 +119,7 @@ Java_org_gearvrf_NativeShaderData_getNativeShader(
         JNIEnv * env, jobject obj, jlong jshader_data)
 {
     ShaderData* shader_data = reinterpret_cast<ShaderData*>(jshader_data);
-    return static_cast<jint>(shader_data->get_shader());
+    return static_cast<jint>(shader_data->getNativeShader());
 }
 
 JNIEXPORT void JNICALL
@@ -127,7 +127,7 @@ Java_org_gearvrf_NativeShaderData_setNativeShader(JNIEnv *env, jobject obj,
         jlong jshader_data, jint shader)
 {
     ShaderData* shader_data = reinterpret_cast<ShaderData*>(jshader_data);
-    shader_data->set_shader(shader);
+    shader_data->setNativeShader(shader);
 }
 
 JNIEXPORT void JNICALL

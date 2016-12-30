@@ -18,6 +18,7 @@
 #ifndef GL_UNIFORMBLOCK_H_
 #define GL_UNIFORMBLOCK_H_
 
+#include <engine/memory/gl_delete.h>
 #include "objects/uniform_block.h"
 
 namespace gvr {
@@ -33,10 +34,7 @@ class GLUniformBlock : public UniformBlock
 {
 public:
     GLUniformBlock(const std::string& descriptor, int);
-
-    virtual ~GLUniformBlock()
-    {
-    }
+    virtual ~GLUniformBlock();
 
     /**
      * Copy the data from the uniform block into OpenGL.
@@ -79,6 +77,7 @@ protected:
     GLint       GLBlockIndex;
     GLuint      GLBuffer;
     GLuint      GLOffset;
+    GlDelete*   Deleter;
 };
 
 }

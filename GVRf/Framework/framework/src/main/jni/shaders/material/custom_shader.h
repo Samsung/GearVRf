@@ -40,14 +40,6 @@
 
 namespace gvr {
 
-struct ShaderUniformsPerObject;
-    /*struct uniformDefination{
-        std::string type;
-        int size;
-    };*/
-typedef std::function<void(Mesh&, GLuint)> AttributeVariableBind;
-typedef std::function<void(ShaderData&, GLuint)> UniformVariableBind;
-
 /**
  * Contains information about the vertex attributes, textures and
  * uniforms used by the shader source and the sources for the
@@ -154,12 +146,6 @@ public:
     std::string& getVertexDescriptor(){
         return vertexDescriptor_;
     }
-    /*
-     * TODO: This is for batching. Roshan should implement it.
-     */
-    void programInit(RenderState* rstate, RenderData* render_data, ShaderData* material,
-                     const std::vector<glm::mat4>& model_matrix, int drawcount, bool batching) { }
-
 
     std::vector<uint32_t>& getVkVertexShader(){
         if(!compiledVS.size()){
@@ -241,15 +227,7 @@ private:
     GLProgram* program_;
     std::string signature_;
     int id_;
-    GLuint u_mvp_;
-    GLuint u_mv_;
-    GLuint u_view_;
-    GLuint u_mv_it_;
-    GLuint u_right_;
-    GLuint u_model_;
-    std::mutex textureVariablesLock_;
     std::mutex attributeVariablesLock_;
-    std::mutex uniformVariablesLock_;
     std::string vertexShader_;
     std::string fragmentShader_;
     std::string vertexDescriptor_;
