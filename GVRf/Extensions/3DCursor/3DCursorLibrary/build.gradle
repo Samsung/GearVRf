@@ -18,6 +18,9 @@ apply plugin: 'com.android.library'
 apply plugin: XmlValidator
 
 repositories {
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
     flatDir {
         dirs '../../../Framework/framework/src/main/libs/',
         '../../../Framework/framework/build/outputs/aar/'

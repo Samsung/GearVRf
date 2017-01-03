@@ -18,7 +18,7 @@ package org.gearvrf;
 import android.opengl.GLSurfaceView;
 
 /**
- * Allows non-GL threads to synchronize with {@link GVRScript#onStep()}.
+ * Allows non-GL threads to synchronize with {@link GVRMain#onStep()}.
  * 
  * You might have code that you want to run every frame, but that does not need
  * to run in the GL thread. Using this class gives you access to timing signals,
@@ -46,7 +46,7 @@ public final class GVRNotifications {
      * This method will block until the GL thread receives the next
      * {@link GLSurfaceView.Renderer#onDrawFrame(javax.microedition.khronos.opengles.GL10)
      * onDrawFrame()} call. Since your thread(s) will wake up shortly before
-     * {@link GVRScript#onStep()}, you should only use this method if you need
+     * {@link GVRMain#onStep()}, you should only use this method if you need
      * the tightest possible synchronization with the GL thread. That is, you
      * should use {@link #waitAfterStep()} if you can: This method can not
      * guarantee immediate wake-up ... and, if you do get immediate wake-up, you

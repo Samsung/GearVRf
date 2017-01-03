@@ -44,12 +44,12 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
     @Override
     public GVRViewManager makeViewManager() {
-        return new OvrViewManager(mActivity, mActivity.getScript(), mXmlParser);
+        return new OvrViewManager(mActivity, mActivity.getMain(), mXmlParser);
     }
 
     @Override
     public OvrMonoscopicViewManager makeMonoscopicViewManager() {
-        return new OvrMonoscopicViewManager(mActivity, mActivity.getScript(), mXmlParser);
+        return new OvrMonoscopicViewManager(mActivity, mActivity.getMain(), mXmlParser);
     }
 
     @Override
@@ -86,7 +86,7 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
-    public void setScript(GVRScript gvrScript, String dataFileName) {
+    public void setMain(GVRMain gvrMain, String dataFileName) {
         if (null != mActivityHandler) {
             mActivityHandler.onSetScript();
         }

@@ -15,6 +15,21 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 24
+
+        externalNativeBuild {
+            ndkBuild {
+                arguments = ["-j" + Runtime.runtime.availableProcessors()]
+                arguments += ['OVR_MOBILE_SDK=' + rootProject.property("OVR_MOBILE_SDK")]
+                arguments += ['PROJECT_ROOT='+rootProject.projectDir]
+                arguments += ['BUILDTYPE=Release']      // for oculus
+            }
+        }
+
+        ndk {
+            moduleName "gvrf-oculus"
+            stl "gnustl_static"
+            abiFilters = ['armeabi-v7a']
+        }
     }
 
     task buildInfo(type:Exec){
@@ -53,34 +68,6 @@ android {
         }
     }
 
-    task buildNative(type: Exec, dependsOn: buildInfo) {
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
-        } else {
-            println "WARNING: relying on hard-coded paths and environment variables; OVR_MOBILE_SDK not found"
-        }
-
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
-        }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
-        }
-
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
-        }
-
-        environment "BUILDTYPE", "Release"
-        environment 'PROJECT_ROOT', rootProject.projectDir
-
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
-    }
-
     buildTypes {
         debug {
         }
@@ -99,32 +86,10 @@ android {
         }
     }
 
-    task cleanNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
         }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
-        }
-
-        if (rootProject.hasProperty("OVR_MOBILE_SDK")) {
-            environment 'OVR_MOBILE_SDK', rootProject.property("OVR_MOBILE_SDK")
-        }
-
-        environment "BUILDTYPE", "Release"
-        environment 'PROJECT_ROOT', rootProject.projectDir
-
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
-    }
-
-    clean.dependsOn 'cleanNative'
-
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative
     }
 
     task uploadToGitHub(type: Exec) {
@@ -165,7 +130,9 @@ task copyAARFiles(type: Copy) {
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name == 'bundleDebug') {
+    if (task.name == 'externalNativeBuildDebug') {
+        task.dependsOn 'buildInfo'
+    } else if (task.name == 'bundleDebug') {
         task<< {
             tasks.copyAARFiles.execute()
 

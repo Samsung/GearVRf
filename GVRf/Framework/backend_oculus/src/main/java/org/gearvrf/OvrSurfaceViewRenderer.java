@@ -25,13 +25,13 @@ import android.opengl.GLSurfaceView.Renderer;
  * management.
  * 
  * Most applications can do all their initialization in
- * {@link GVRScript#onInit(GVRContext)}. If you need explicit access to the
+ * {@link GVRMain#onInit(GVRContext)}. If you need explicit access to the
  * {@link EGLConfig}, or the difference between
  * {@link Renderer#onSurfaceCreated(GL10, EGLConfig)} and
  * {@link Renderer#onSurfaceChanged(GL10, int, int)} really matters to you,
  * declare a class which {@code extends OvrSurfaceViewRenderer} and pass an
  * instance to
- * {@link GVRActivity#setScript(GVRScript, String, OvrSurfaceViewRenderer)} .
+ * {@link GVRActivity#setMain(GVRMain, String)}.
  */
 class OvrSurfaceViewRenderer implements GLSurfaceView.Renderer {
     private OvrMonoscopicViewManager mViewManager = null;
@@ -67,7 +67,7 @@ class OvrSurfaceViewRenderer implements GLSurfaceView.Renderer {
     /**
      * Generally, you should <em>not</em> override this.
      * 
-     * Your {@link GVRScript#onStep()} method will be called every frame, and
+     * Your {@link GVRMain#onStep()} method will be called every frame, and
      * GVRF provides mechanisms to dynamically add and subtract per-frame
      * callbacks. You can install
      * {@linkplain GVRContext#runOnGlThread(Runnable) 'one-shot' callbacks} and
