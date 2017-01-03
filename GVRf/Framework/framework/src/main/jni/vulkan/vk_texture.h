@@ -15,14 +15,10 @@ namespace gvr {
     class VkTexture : public Texture
     {
     public:
-        explicit VkTexture() : Texture(),
-                               id_(0) { }
+        explicit VkTexture() : Texture() { }
 
         explicit VkTexture(int texture_type) :
-                Texture(texture_type),
-                id_(0) {
-            LOGE("vulkan creating texture ");
-        }
+                Texture(texture_type){ }
 
         virtual ~VkTexture();
         virtual bool isReady();

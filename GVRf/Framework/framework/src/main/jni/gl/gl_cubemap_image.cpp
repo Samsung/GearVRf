@@ -22,6 +22,10 @@
 namespace gvr {
 void GLCubemapImage::update(int texid)
 {
+    if (mJava == NULL)
+    {
+        return;
+    }
     if (mBitmaps != NULL)
     {
         updateFromBitmap(texid);
@@ -102,8 +106,8 @@ void GLCubemapImage::updateFromMemory(int texid)
     glBindTexture(t, texid);
     for (int i = 0; i < 6; i++)
     {
-        jbyteArray byteArray = static_cast<jbyteArray>(env->NewLocalRef(texArray));
-        jbyte *textureData = env->GetByteArrayElements(byteArray, 0);
+        jbyteArray byteArray = static_cast<jbyteArray>(env->GetObjectArrayElement(texArray, i));
+        jbyte* pixels = env->GetByteArrayElements(byteArray, 0);
 
         if (byteArray == NULL)
         {
@@ -112,8 +116,8 @@ void GLCubemapImage::updateFromMemory(int texid)
         else
         {
             glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, mFormat, mWidth,
-                                   mWidth, 0, mImageSize, textureData + getDataOffset(i));
-            env->ReleaseByteArrayElements(byteArray, textureData, 0);
+                                   mHeight, 0, mImageSize, pixels + getDataOffset(i));
+            env->ReleaseByteArrayElements(byteArray, pixels, 0);
         }
         env->DeleteLocalRef(byteArray);
     }

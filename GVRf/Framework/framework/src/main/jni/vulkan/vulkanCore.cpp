@@ -21,7 +21,7 @@
 #include "vulkan_render_data.h"
 #include "vulkan_material.h"
 #include "vulkan/vk_texture.h"
-//#define ENABLE_TEXTURE
+#define ENABLE_TEXTURE
 #define UINT64_MAX 99999
 
 #define QUEUE_INDEX_MAX 99999
@@ -106,6 +106,56 @@ namespace gvr {
         return writeDescriptorSet;
     }
 */
+
+  void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange)
+  {
+      // update image barrier for image layouts
+      imageMemoryBarrier.oldLayout = oldImageLayout;
+      imageMemoryBarrier.newLayout = newImageLayout;
+      imageMemoryBarrier.image = image;
+      imageMemoryBarrier.subresourceRange = subresourceRange;
+
+      switch (oldImageLayout)
+      {
+          case VK_IMAGE_LAYOUT_UNDEFINED:
+              imageMemoryBarrier.srcAccessMask = 0;
+              break;
+          case VK_IMAGE_LAYOUT_PREINITIALIZED:
+              imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+              break;
+          case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+              imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+              break;
+      }
+
+      switch (newImageLayout)
+      {
+          case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+              imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+              break;
+          case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+              imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+              break;
+          case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+              imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+              break;
+      }
+
+
+      VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+      vkCmdPipelineBarrier(
+              cmdBuffer,
+              srcStageFlags,
+              destStageFlags,
+              0,
+              0, nullptr,
+              0, nullptr,
+              1, &imageMemoryBarrier);
+  }
+
+
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
@@ -397,7 +447,7 @@ namespace gvr {
                                          m_height, 1, 1, 1,
                                          VK_IMAGE_TILING_LINEAR,
                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_SAMPLE_COUNT_1_BIT,
+                                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0, VK_SAMPLE_COUNT_1_BIT,
                                          VK_IMAGE_LAYOUT_UNDEFINED),
                     nullptr, &m_swapchainBuffers[i].image
             );
@@ -483,7 +533,7 @@ namespace gvr {
                     m_device,
                     gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, m_width, m_height,
                                          1, 1, 1, VK_IMAGE_TILING_OPTIMAL,
-                                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,0,
                                          VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_UNDEFINED),
                     nullptr, &m_depthBuffers[i].image
             );
@@ -1521,7 +1571,7 @@ namespace gvr {
                                                            textureObject->m_width,
                                                            textureObject->m_height, 1, 1, 1,
                                                            VK_IMAGE_TILING_LINEAR,
-                                                           VK_IMAGE_USAGE_SAMPLED_BIT,
+                                                           VK_IMAGE_USAGE_SAMPLED_BIT,0,
                                                            VK_SAMPLE_COUNT_1_BIT,
                                                            VK_IMAGE_LAYOUT_UNDEFINED), NULL,
                             &textureObject->m_image);

@@ -60,6 +60,13 @@ public:
         return id_;
     }
 
+    bool bindTexture(int texIndex, int loc)
+    {
+        glActiveTexture(GL_TEXTURE0 + texIndex);
+        glBindTexture(getTarget(), id());
+        glUniform1i(loc, texIndex);
+    }
+
 private:
     GLTexture(const GLTexture& gl_texture);
     GLTexture(GLTexture&& gl_texture);

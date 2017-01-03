@@ -41,16 +41,16 @@ class ShaderData : public HybridObject
 {
 public:
     ShaderData(const std::string& descriptor) :
-            native_shader_(0), textures_() { }
+            native_shader_(0), textures_(), lock_(), dirty_(true) { }
 
     virtual ~ShaderData() { }
 
-    int get_shader()
+    int getNativeShader()
     {
         return native_shader_;
     }
 
-    void set_shader(int shader)
+    void setNativeShader(int shader)
     {
         native_shader_ = shader;
     }
@@ -67,6 +67,7 @@ public:
 
     void setTexture(const std::string& key, Texture* texture)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         textures_[key] = texture;
         //By the time the texture is being set to its attaching material, it is ready
         //This is guaranteed by upper java layer scheduling
@@ -100,24 +101,28 @@ public:
 
     bool  setInt(const std::string& name, int val)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         dirty();
         return uniforms().setInt(name, val);
     }
 
     bool  setFloat(const std::string& name, float val)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         dirty();
         return uniforms().setFloat(name, val);
     }
 
     bool  setIntVec(const std::string& name, const int* val, int n)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         dirty();
         return uniforms().setIntVec(name, val, n);
     }
 
     bool  setFloatVec(const std::string& name, const float* val, int n)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         dirty();
         return uniforms().setFloatVec(name, val, n);
     }
@@ -134,21 +139,25 @@ public:
 
     bool  setVec2(const std::string& name, const glm::vec2& v)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         return uniforms().setVec2(name, v);
     }
 
     bool  setVec3(const std::string& name, const glm::vec3& v)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         return uniforms().setVec3(name, v);
     }
 
     bool  setVec4(const std::string& name, const glm::vec4& v)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         return uniforms().setVec4(name, v);
     }
 
     bool  setMat4(const std::string& name, const glm::mat4& m)
     {
+        std::lock_guard<std::mutex> lock(lock_);
         return uniforms().setMat4(name, m);
     }
 
@@ -169,6 +178,7 @@ public:
 
     void dirty()
     {
+        dirty_ = true;
         dirtyImpl(dirty_flags_);
     }
 
@@ -185,6 +195,7 @@ public:
 
     bool areTexturesReady()
     {
+        std::lock_guard<std::mutex> lock(lock_);
         for (auto it = textures_.begin(); it != textures_.end(); ++it)
         {
             Texture* tex = it->second;
@@ -208,6 +219,8 @@ private:
 protected:
     int native_shader_;
     std::map<std::string, Texture*> textures_;
+    std::mutex lock_;
+    bool dirty_;
     std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
 };
 

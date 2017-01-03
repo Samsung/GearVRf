@@ -13,20 +13,20 @@ namespace gvr {
     class VkBitmapImage : public BitmapImage
     {
     public:
-        static VkImageViewType MapFormat[];
+      //  static VkImageViewType MapFormat[];
 
         explicit VkBitmapImage (int format) :
                 BitmapImage(format)
         {
-            LOGE("vulkan creating VkBitmapImage ");
-            mTarget = static_cast<int>(VK_IMAGE_TYPE_2D);
+            mTarget = static_cast<int>(VK_IMAGE_VIEW_TYPE_2D);
         }
 
         VkImageView& getVkImageView(){
             return imageView;
         }
-        int updateFromBitmap(JNIEnv *env, VkImageType target, jobject bitmap);
-
+        int updateFromBitmap(JNIEnv *env, VkImageViewType target, jobject bitmap);
+    private:
+        int updateVkImage(VkImageViewType target, VkFormat internal_format, int width, int height, void*);
     protected:
         VkImage image;
         VkDeviceMemory dev_memory;

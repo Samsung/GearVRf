@@ -385,16 +385,16 @@ void Renderer::renderPostEffectData(RenderState& rstate,
     try
     {
         ShaderManager* shader_manager = rstate.shader_manager;
-        Shader* shader = shader_manager->getShader(post_effect_data->get_shader());
+        Shader* shader = shader_manager->getShader(post_effect_data->getNativeShader());
         if (shader != NULL)
         {
             post_effect_data->setTexture("u_texture", render_texture);
             RenderData* rdata = post_effect_render_data();
-            rdata->set_shader(0, post_effect_data->get_shader());
+            rdata->set_shader(0, post_effect_data->getNativeShader());
             shader->render(&rstate, rdata, post_effect_data);
         }
         else {
-            LOGE("SHADER: post effect shader %d not found", post_effect_data->get_shader());
+            LOGE("SHADER: post effect shader %d not found", post_effect_data->getNativeShader());
         }
     }
     catch (const std::string& error)

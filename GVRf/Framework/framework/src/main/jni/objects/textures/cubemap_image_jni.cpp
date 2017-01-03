@@ -30,8 +30,8 @@ namespace gvr {
     Java_org_gearvrf_NativeCubemapImage_update(JNIEnv * env, jobject obj, jlong jcubemap, jobjectArray bitmapArray);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeCubemapImage_updateCompressed(JNIEnv * env, jobject obj, jobject jTexture,
-                                               jint width, jint height, jobjectArray textureArray, jintArray joffsetArray);
+    Java_org_gearvrf_NativeCubemapImage_updateCompressed(JNIEnv * env, jobject obj, jlong jcubemap,
+                                               jint width, jint height, jint imageSize, jobjectArray textureArray, jintArray joffsetArray);
 }
 
 JNIEXPORT void JNICALL
@@ -44,18 +44,17 @@ Java_org_gearvrf_NativeCubemapImage_update(JNIEnv * env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCubemapImage_updateCompressed(JNIEnv* env,
-                                           jobject obj, jobject jTexture,
+                                           jobject obj, jlong jcubemap,
                                            jint width, jint height, jint imageSize,
                                            jobjectArray textureArray, jintArray joffsetArray)
 {
     if (env->GetArrayLength(joffsetArray) != 6)
     {
-        std::string error =
-                "new CubemapImage() failed! Texture offset list's length is not 6.";
-        throw error;
+        LOGE("CubeMapImage: cannot create: Texture offset list's length is not 6.");
+        return;
     }
     jint* offsets = env->GetIntArrayElements(joffsetArray, 0);
-    CubemapImage* cubemap = reinterpret_cast<CubemapImage*>(jTexture);
+    CubemapImage* cubemap = reinterpret_cast<CubemapImage*>(jcubemap);
     cubemap->update(env, width, height, imageSize, textureArray, offsets);
     env->ReleaseIntArrayElements(joffsetArray, offsets, 0);
 }

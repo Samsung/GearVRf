@@ -25,9 +25,12 @@ namespace gvr {
 
     FloatImage::~FloatImage()
     {
-        mUpdateLock.lock();
-        clearData(getCurrentEnv(mJava));
-        mUpdateLock.unlock();
+        if (mJava != NULL)
+        {
+            mUpdateLock.lock();
+            clearData(getCurrentEnv(mJava));
+            mUpdateLock.unlock();
+        }
     }
 
     void FloatImage::update(JNIEnv* env, int width, int height, jfloatArray data)

@@ -29,28 +29,6 @@
 
 
 namespace gvr {
-    class TextureLocation : public Shader::ShaderVisitor
-    {
-    private:
-        ShaderData* material_;
-
-    public:
-        TextureLocation(Shader* shader) : ShaderVisitor(shader), material_(NULL) { }
-        void visit(const std::string& key, const std::string& type, int size);
-    };
-
-    class TextureUpdate : public Shader::ShaderVisitor
-    {
-    private:
-        ShaderData* material_;
-
-    public:
-        int     TextureIndex;
-        bool    AllTexturesAvailable = true;
-        TextureUpdate(Shader* shader, ShaderData* material) : ShaderVisitor(shader), material_(material), TextureIndex(0) { }
-        void visit(const std::string& key, const std::string& type, int size);
-    };
-
     class AttributeLocation : public Shader::ShaderVisitor
     {
     private:
@@ -59,52 +37,6 @@ namespace gvr {
         AttributeLocation(Shader* shader, Mesh* mesh) : ShaderVisitor(shader), mesh_(mesh) { }
         void visit(const std::string& key, const std::string& type, int size);
     };
-
-    void TextureLocation::visit(const std::string& key, const std::string& type, int size)
-    {
-        int loc = shader_->getLocation(key);
-        if (loc < 0)
-        {
-            GLuint programID = shader_->getProgramId();
-            loc = glGetUniformLocation(programID, key.c_str());
-            if (loc >= 0)
-            {
-                shader_->setLocation(key, loc);
-                if (Shader::LOG_SHADER) LOGE("SHADER::uniform:location: %s location: %d", key.c_str(), loc);
-            }
-        }
-    }
-
-    void TextureUpdate::visit(const std::string& key, const std::string& type, int size)
-    {
-        int loc = shader_->getLocation(key);
-        LOGE("in visit %s", key.c_str());
-        if (loc < 0)
-        {
-            GLuint programID = shader_->getProgramId();
-            loc = glGetUniformLocation(programID, key.c_str());
-            if (loc < 0)
-            {
-                if (Shader::LOG_SHADER) LOGE("SHADER::texture: %s location not found", key.c_str());
-                AllTexturesAvailable = false;
-                return;
-            }
-            shader_->setLocation(key, loc);
-        }
-        GLTexture* texture = reinterpret_cast<GLTexture*>(material_->getTexture(key));
-        if (texture != NULL)
-        {
-            LOGE("texture is not null");
-            glActiveTexture(GL_TEXTURE0 + TextureIndex);
-            glBindTexture(texture->getTarget(), texture->id());
-            glUniform1i(loc, TextureIndex++);
-        }
-        else
-        {
-            LOGE("texture is null");
-            AllTexturesAvailable = false;
-        }
-    }
 
     void AttributeLocation::visit(const std::string& key, const std::string& type, int size)
     {
@@ -195,35 +127,11 @@ void Shader::initializeOnDemand(RenderState* rstate, Mesh* mesh) {
             LOGE("Your shaders are not multiview");
             throw error;
         }
-        if (use_multiview && !rstate->shadow_map)
-        {
-            LOGE("Rendering with multiview");
-            u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
-            u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
-            u_mv_ = glGetUniformLocation(program_->id(), "u_mv_[0]");
-            u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it_[0]");
-        }
-        else
-        {
-            u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
-            u_view_ = glGetUniformLocation(program_->id(), "u_view");
-            u_mv_ = glGetUniformLocation(program_->id(), "u_mv");
-            u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it");
-        }
-        u_right_ = glGetUniformLocation(program_->id(), "u_right");
-        u_model_ = glGetUniformLocation(program_->id(), "u_model");
         vertexShader_.clear();
         fragmentShader_.clear();
 
         if (getProgramId() != 0)
         {
-            if (LOG_SHADER) LOGD("SHADER: Custom shader added program %d", program_->id());
-            if (LOG_SHADER) LOGD("SHADER: getting texture locations");
-            TextureLocation tvisit(this);
-            {
-                std::lock_guard<std::mutex> lock(textureVariablesLock_);
-                forEach(textureDescriptor_, tvisit);
-            }
             if (LOG_SHADER) LOGD("SHADER: getting attribute locations");
             {
                 std::lock_guard<std::mutex> lock(attributeVariablesLock_);
@@ -293,14 +201,14 @@ Shader::~Shader() {
 }
 
 
-void Shader::render(RenderState* rstate, RenderData* render_data, ShaderData* material) {
+void Shader::render(RenderState* rstate, RenderData* render_data, ShaderData* shaderData) {
 
-    if (!material->areTexturesReady())
+    if (!shaderData->areTexturesReady())
     {
         if (LOG_SHADER) LOGE("textures are not ready for %s", render_data->owner_object()->name().c_str());
         return;
     }
-
+    GLMaterial* material = reinterpret_cast<GLMaterial*>(shaderData);
     Mesh* mesh = render_data->mesh();
     initializeOnDemand(rstate, mesh);
 
@@ -313,20 +221,14 @@ void Shader::render(RenderState* rstate, RenderData* render_data, ShaderData* ma
     glUseProgram(programID);
 
     /*
-     * Bind textures
+     * Bind textures and update uniforms
      */
-    int texIndex = 0;
+    LOGE("texture desc %s", textureDescriptor_.c_str());
+    int texIndex = material->render(this);
+    if (texIndex < 0)
     {
-        std::lock_guard<std::mutex> lock(textureVariablesLock_);
-        TextureUpdate tvisit(this, material);
-        forEach(textureDescriptor_, tvisit);
-        LOGE("texture desc %s", textureDescriptor_.c_str());
-        texIndex = tvisit.TextureIndex;
-        if (!tvisit.AllTexturesAvailable)
-        {
-            LOGE("textures are not ready for %s", render_data->owner_object()->name().c_str());
-            return;
-        }
+        LOGE("textures are not ready for %s", render_data->owner_object()->name().c_str());
+        return;
     }
     /*
      * Update values of uniform variables
@@ -340,18 +242,6 @@ void Shader::render(RenderState* rstate, RenderData* render_data, ShaderData* ma
 
     if (Shader::LOG_SHADER) LOGV("SHADER: binding vertex arrays to program %d %p", programID, render_data);
     glBindVertexArray(vaoID);
-    /*
-     * Update material uniforms
-     */
-    if (!uniformDescriptor_.empty())
-    {
-        GLUniformBlock& glUniforms = reinterpret_cast<GLMaterial*>(material)->getGLUniforms();
-        glUniforms.bindBuffer(programID);
-        std::string s = glUniforms.toString();
-        LOGD("SHADER: Material UBO");
-        LOGD("SHADER: %s", s.c_str());
-        glUniforms.render(programID);
-    }
 
     /*
      * Update the uniforms for the lights

@@ -176,7 +176,7 @@ class ImageCreateInfo final
 
         ImageCreateInfo(VkImageType aImageType, VkFormat aFormat,
             int32_t aWidth, int32_t aHeight, int32_t aDepth, uint32_t aMipLevels,
-            uint32_t aArraySize, VkImageTiling aTiling, VkImageUsageFlags aUsage,
+            uint32_t aArraySize, VkImageTiling aTiling, VkImageUsageFlags aUsage, VkImageCreateFlags,
             VkSampleCountFlagBits aSamples = VK_SAMPLE_COUNT_1_BIT,
             VkImageLayout aLayout = VK_IMAGE_LAYOUT_UNDEFINED);
 

@@ -37,7 +37,7 @@ namespace gvr {
         std::string type;
         int size;
     };
-
+    extern  void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange);
     enum ShaderType{
         VERTEX_SHADER,
         FRAGMENT_SHADER

@@ -26,6 +26,8 @@ namespace gvr {
 
     VkSamplerAddressMode VkTexture::MapWrap[3] = { VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT };
     VkFilter VkTexture::MapFilter[] = { VK_FILTER_NEAREST, VK_FILTER_LINEAR};
+
+    // TODO: Vulkan does not have capability to generate mipmaps on its own, we need to implement this for vulkan
     VkSamplerMipmapMode VkTexture::mipmapMode[] = { VK_SAMPLER_MIPMAP_MODE_NEAREST, VK_SAMPLER_MIPMAP_MODE_LINEAR};
     VkTexture::~VkTexture()
     {
@@ -53,7 +55,6 @@ namespace gvr {
         LOGE("Vulkan: updateGPU");
         if (mPendingTask & Texture::TASK_INIT_PARAMS)
         {
-            LOGE("Vulkan: calling updateTexParams");
             updateTexParams();
             mPendingTask &= ~Texture::TASK_INIT_PARAMS;
         }
@@ -84,8 +85,7 @@ namespace gvr {
         }
     }
 
-    void VkTexture::updateTexParams()
-    {
+    void VkTexture::updateTexParams() {
         LOGE("vulkan: in updateTexParams ");
         // Sets the new MIN FILTER
         VkFilter min_filter_type_ = MapFilter[mTexParams.getMinFilter()];
@@ -99,24 +99,26 @@ namespace gvr {
         // Sets the wrap parameter for texture coordinate S
         VkSamplerAddressMode wrap_t_type_ = MapWrap[mTexParams.getWrapV()];
 
-        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+        VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
 
         VkResult err;
 
-
-                              err = vkCreateSampler(vk_renderer->getDevice(), gvr::SamplerCreateInfo(min_filter_type_,
-                                                                                                     mag_filter_type_,
-                                                               VK_SAMPLER_MIPMAP_MODE_LINEAR,
-                                                                                                     wrap_s_type_,
-                                                                                                     wrap_t_type_,
-                                                               VK_SAMPLER_ADDRESS_MODE_REPEAT, 0.0f,
-                                                               VK_FALSE, 0, VK_FALSE,
-                                                               VK_COMPARE_OP_NEVER,
-                                                               0.0f, 0.0f,
-                                                               VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
-                                                               VK_FALSE), NULL,
+        err = vkCreateSampler(vk_renderer->getDevice(), gvr::SamplerCreateInfo(min_filter_type_,
+                                                                               mag_filter_type_,
+                                                                               VK_SAMPLER_MIPMAP_MODE_LINEAR,
+                                                                               wrap_s_type_,
+                                                                               wrap_t_type_,
+                                                                               VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                                                                               0.0f,
+                                                                               VK_FALSE, 0,
+                                                                               VK_FALSE,
+                                                                               VK_COMPARE_OP_NEVER,
+                                                                               0.0f, 0.0f,
+                                                                               VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+                                                                               VK_FALSE), NULL,
                               &m_sampler);
-        LOGE("min = %d max= %d, Wrap U =%d, WrapV = %d",mTexParams.getMinFilter(), mTexParams.getMagFilter(), mTexParams.getWrapU(), mTexParams.getWrapV());
+        LOGE("min = %d max= %d, Wrap U =%d, WrapV = %d", mTexParams.getMinFilter(),
+             mTexParams.getMagFilter(), mTexParams.getWrapU(), mTexParams.getWrapV());
         assert(!err);
 
     }

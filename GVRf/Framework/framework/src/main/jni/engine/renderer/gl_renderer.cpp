@@ -176,7 +176,6 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
         renderPostEffectData(rstate, texture_render_texture, post_effects.back());
     }
-
     GL(glDisable(GL_DEPTH_TEST));
     GL(glDisable(GL_CULL_FACE));
     GL(glDisable(GL_BLEND));

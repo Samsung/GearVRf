@@ -23,8 +23,17 @@ namespace gvr {
             BlockName("Material_ubo"),
             GLBlockIndex(-1),
             GLOffset(0),
-            GLBuffer(0)
+            GLBuffer(0),
+            Deleter(NULL)
     {
+    }
+
+    GLUniformBlock::~GLUniformBlock()
+    {
+        if (Deleter && GLBuffer)
+        {
+            Deleter->queueBuffer(GLBuffer);
+        }
     }
 
     void GLUniformBlock::bindBuffer(GLuint programId)
@@ -33,6 +42,7 @@ namespace gvr {
             return;
         if (GLBlockIndex < 0)
         {
+            Deleter = getDeleterForThisThread();
             GLBlockIndex = glGetUniformBlockIndex(programId, getBlockName().c_str());
             if (GLBlockIndex < 0)
             {
@@ -48,7 +58,8 @@ namespace gvr {
             checkGlError("bindUBO ");
             LOGV("SHADER: UniformBlock: %s bound to #%d at index %d buffer = %d\n", getBlockName().c_str(), bindingPoint_, GLBlockIndex, GLBuffer);
         }
-        else {
+        else
+        {
             glBindBuffer(GL_UNIFORM_BUFFER, GLBuffer);
             glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint_, GLBuffer);
         }
@@ -57,7 +68,9 @@ namespace gvr {
     void GLUniformBlock::render(GLuint programId)
     {
         if (GLBuffer == 0)
+        {
             bindBuffer(programId);
+        }
         if (GLBuffer >= 0)
         {
             glBindBuffer(GL_UNIFORM_BUFFER, GLBuffer);
