@@ -155,15 +155,10 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
 
     gvr::Frame frame = swapchain_->AcquireFrame();
 
-
     gvr::ClockTimePoint target_time = gvr::GvrApi::GetTimePointNow();
     target_time.monotonic_system_time_nanos += kPredictionTimeWithoutVsyncNanos;
 
     head_view_ = gvr_api_->GetHeadSpaceFromStartSpaceRotation(target_time);
-    gvr::Mat4f left_eye_matrix = gvr_api_->GetEyeFromHeadMatrix(GVR_LEFT_EYE);
-    gvr::Mat4f right_eye_matrix = gvr_api_->GetEyeFromHeadMatrix(GVR_RIGHT_EYE);
-    gvr::Mat4f left_eye_view = MatrixMul(left_eye_matrix, head_view_);
-    gvr::Mat4f right_eye_view = MatrixMul(right_eye_matrix, head_view_);
 
     cameraRig_->getHeadTransform()->setModelMatrix(MatrixToGLMMatrix(head_view_));
 
