@@ -18,6 +18,9 @@ android {
 
         externalNativeBuild {
             ndkBuild {
+                if(rootProject.hasProperty("buildGvrfAndDemos")) {
+                    arguments.add("NDK_DEBUG=1")
+                }
                 arguments = ["-j" + Runtime.runtime.availableProcessors()]
                 arguments += ['OVR_MOBILE_SDK=' + rootProject.property("OVR_MOBILE_SDK")]
                 arguments += ['PROJECT_ROOT='+rootProject.projectDir]
