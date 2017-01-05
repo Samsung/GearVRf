@@ -381,7 +381,8 @@ void Mesh::generateVKBuffers(std::string descriptor, VkDevice& m_device, VulkanC
         err = vkBindBufferMemory(m_device, m_vertices.buf, m_vertices.mem, 0);
         GVR_VK_CHECK(!err);
 
-        VkCommandBuffer trnCmdBuf = vulkanCore->GetTransientCmdBuffer();
+        VkCommandBuffer trnCmdBuf;
+        vulkanCore->createTransientCmdBuffer(trnCmdBuf);
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -474,7 +475,8 @@ void Mesh::generateVKBuffers(std::string descriptor, VkDevice& m_device, VulkanC
          err = vkBindBufferMemory(m_device, m_indices.buffer, m_indices.memory, 0);
          GVR_VK_CHECK(!err);
 
-         trnCmdBuf = vulkanCore->GetTransientCmdBuffer();
+
+         vulkanCore->createTransientCmdBuffer(trnCmdBuf);
          beginInfo = {};
          beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
          beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;

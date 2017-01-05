@@ -85,15 +85,14 @@ namespace gvr {
                                       RenderTexture *post_effect_render_texture_b) {
 
 
+
         if(!vulkanCore_->swapChainCreated())
             vulkanCore_->initVulkanCore();
-
-    //    if(render_data_vector.size() == 1)
-   //         return;
 
         std::vector<VkDescriptorSet> allDescriptors;
 
         int swapChainIndex = vulkanCore_->AcquireNextImage();
+
 
         for (auto &rdata : render_data_vector) {
             VulkanRenderData* vkRdata = reinterpret_cast<VulkanRenderData*>(rdata);

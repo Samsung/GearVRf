@@ -21,6 +21,7 @@
 #include "vulkan_render_data.h"
 #include "vulkan_material.h"
 #include "vulkan/vk_texture.h"
+
 #define ENABLE_TEXTURE
 #define UINT64_MAX 99999
 
@@ -598,16 +599,14 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
     }
 
-    VkCommandBuffer VulkanCore::GetTransientCmdBuffer() {
+    void VulkanCore::createTransientCmdBuffer(VkCommandBuffer& cmdBuff) {
         VkResult ret = VK_SUCCESS;
-        VkCommandBuffer cmdBuff;
         ret = vkAllocateCommandBuffers(
                 m_device,
                 gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPoolTrans),
                 &cmdBuff
         );
         GVR_VK_CHECK(!ret);
-        return cmdBuff;
     }
 
     void VulkanCore::InitCommandbuffers() {
@@ -1293,7 +1292,7 @@ namespace gvr {
         GVR_VK_CHECK(!err);
 
         err = vkGetFenceStatus(m_device, waitFences[m_swapchainCurrentIdx]);
-        int swapChainIndx;
+        int swapChainIndx = swapChainIndex;
         bool found = false;
         VkResult status;
         // check the status of current fence, if not ready take the previous one, we are incrementing with 2 for left and right frames.
@@ -1313,7 +1312,8 @@ namespace gvr {
             }
         }
 
-        VkCommandBuffer trnCmdBuf = GetTransientCmdBuffer();
+        VkCommandBuffer trnCmdBuf;
+        createTransientCmdBuffer(trnCmdBuf);
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;

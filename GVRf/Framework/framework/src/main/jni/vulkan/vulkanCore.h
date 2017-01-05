@@ -17,12 +17,12 @@
 #ifndef FRAMEWORK_VULKANCORE_H
 #define FRAMEWORK_VULKANCORE_H
 
-
+#include "util/gvr_log.h"
 #include <android/native_window_jni.h>	// for native window JNI
 #include <string>
 #include <unordered_map>
 #include "objects/components/camera.h"
-//#include "vulkanThreadPool.h"
+
 
 #define GVR_VK_CHECK(X) if (!(X)) { LOGD("VK_CHECK Failure"); assert((X));}
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
@@ -107,11 +107,11 @@ namespace gvr {
             return m_device;
         }
 
-        const VkQueue &getVkQueue() {
+        VkQueue &getVkQueue() {
             return m_queue;
         }
 
-        VkCommandBuffer GetTransientCmdBuffer();
+        void createTransientCmdBuffer(VkCommandBuffer&);
 
         VkCommandPool &getTransientCmdPool() {
             return m_commandPoolTrans;
