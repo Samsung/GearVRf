@@ -2218,6 +2218,13 @@ public class X3Dobject {
                             currentSceneObject);
                     viewpoints.add(viewpoint);
 
+                    if ( !name.equals("") ) {
+                        DefinedItem definedItem = new DefinedItem(name);
+                        definedItem.setViewpoint(viewpoint);
+                        mDefinedItems.add(definedItem); // Array list of DEFined items
+                    }
+
+
                 } // end <Viewpoint> node
 
 
@@ -3370,7 +3377,7 @@ public class X3Dobject {
                     } // <Viewpoint> node existed
                 } // end setting based on new camera rig
 
-                animationInteractivityManager.initAniamtionsAndInteractivity();
+                animationInteractivityManager.initAnimationsAndInteractivity();
                 // Need to build a JavaScript function that constructs the
                 // X3D data type objects used with a SCRIPT.
                 // Scripts can also have an initialize() method.

@@ -15,47 +15,41 @@
 package org.gearvrf.x3d.data_types;
 
 /**
- * Defines the X3D SFBool[ean] data type
+ * Defines the X3D MFVec3f data type
  */
-public class SFBool {
+public class MFVec3f {
 
-    private boolean value = false;
+    private float[] vals = null;
 
-    public SFBool() {
+    public MFVec3f() {
     }
 
-    public SFBool(boolean value) {
-        setValue(value);
-    }
-    public SFBool(int intValue) {
-        setValue(intValue);
-    }
-    public SFBool(String stringValue) {
-        setValue(stringValue);
+    public MFVec3f(float[] newVals) {
+        this.vals = new float[newVals.length];
+        setValue(newVals);
     }
 
-    public void setValue(boolean value) {
-        this.value = value;
+    public int getValueCount() {
+        return this.vals.length;
     }
 
-    public void setValue(int intValue) {
-        if (intValue == 0) setValue( false );
-        else setValue( true );
+    public float[] getValueData() {
+        return vals;
     }
 
-    public void setValue(String stringValue) {
-        if ( stringValue.equalsIgnoreCase("false")) setValue( false );
-        else setValue( true );
-    }
-
-    public boolean getValue() {
-        return this.value;
+    public void setValue(float[] newVals) {
+        for (int i = 0; i < this.vals.length; i++) {
+            this.vals[i] = newVals[i];
+        }
     }
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append(this.value);
+        for (int i = 0; i < this.vals.length; i++) {
+            buf.append(this.vals[i]);
+            buf.append(' ');
+        }
         return buf.toString();
     }
 
