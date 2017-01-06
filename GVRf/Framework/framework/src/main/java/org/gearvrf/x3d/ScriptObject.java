@@ -20,6 +20,8 @@ import org.gearvrf.utility.Log;
 
 import java.util.ArrayList;
 
+import static org.gearvrf.x3d.AnimationInteractivityManager.*;
+
 /**
  * @author m1.williams
  *         Class of an array list of Script objects
@@ -49,8 +51,11 @@ public class ScriptObject {
         private String type = "";
         private DefinedItem toDefinedItem = null;
         private DefinedItem fromDefinedItem = null;
-        private String toDefinedItemField = ""; // fields from ROUTE's
-        private String fromDefinedItemField = "";
+        private EventUtility toEventUtility = null;
+        private EventUtility fromEventUtility = null;
+        private TimeSensor fromTimeSensor = null;
+        private String toItemField = ""; // fields to and from ROUTE's
+        private String fromItemField = "";
     }
 
     ;
@@ -66,6 +71,8 @@ public class ScriptObject {
     private String javaScriptCode = null;
     private GVRJavascriptScriptFile gvrJavascriptScriptFile = null;
     private String gearVRinitJavaScript;  // A text function to construct X3D data types
+    // some JavaScript functions have a timeStamp and thus pass 2 parameters
+    private boolean timeStampParameter = false;
 
     public ScriptObject() {
     }
@@ -113,6 +120,9 @@ public class ScriptObject {
         return field.type;
     }
 
+    // Defined Items which include "DEF=..." in the node such as
+    // <MATERIAl DEF='myMaterial' /> including: Transform, Viewpoint, Lights, etc.
+
     public DefinedItem getToDefinedItem(Field field) {
         return field.toDefinedItem;
     }
@@ -122,22 +132,63 @@ public class ScriptObject {
     }
 
     public String getToDefinedItemField(Field field) {
-        return field.toDefinedItemField;
+        return field.toItemField;
     }
 
     public String getFromDefinedItemField(Field field) {
-        return field.fromDefinedItemField;
+        return field.fromItemField;
     }
 
     public void setToDefinedItem(Field field, DefinedItem definedItem, String toField) {
         field.toDefinedItem = definedItem;
-        field.toDefinedItemField = toField;
+        field.toItemField = toField;
     }
 
     public void setFromDefinedItem(Field field, DefinedItem definedItem, String fromField) {
         field.fromDefinedItem = definedItem;
-        field.fromDefinedItemField = fromField;
+        field.fromItemField = fromField;
     }
+
+
+    // Event Utility which include "DEF=..." in the node such as
+    // <BooleanToggle DEF='myBooleanToggle' />
+
+    public EventUtility getToEventUtility(Field field) {
+        return field.toEventUtility;
+    }
+
+    public EventUtility getFromEventUtility(Field field) {
+        return field.fromEventUtility;
+    }
+
+    public String getToEventUtilityField(Field field) {
+        return field.toItemField;
+    }
+
+    public String getFromEventUtilityField(Field field) {
+        return field.fromItemField;
+    }
+
+    public void setToEventUtility(Field field, EventUtility eventUtility, String toField) {
+        field.toEventUtility = eventUtility;
+        field.toItemField = toField;
+    }
+
+    public void setFromEventUtility(Field field, EventUtility eventUtility, String fromField) {
+        field.fromEventUtility = eventUtility;
+        field.fromItemField = fromField;
+    }
+
+    public TimeSensor getFromTimeSensor(Field field) {
+        return field.fromTimeSensor;
+    }
+
+    public void setFromTimeSensor(Field field, TimeSensor timeSensor, String fromField) {
+        field.fromTimeSensor = timeSensor;
+        field.fromItemField = fromField;
+    }
+
+    // Methods related to the JavaScript code
 
     public GVRJavascriptScriptFile getGVRJavascriptScriptFile() {
         return this.gvrJavascriptScriptFile;
@@ -163,6 +214,13 @@ public class ScriptObject {
         this.gearVRinitJavaScript = gearVRinitJavaScript;
     }
 
+    public void setTimeStampParameter(boolean timeStampParameter) {
+        this.timeStampParameter = timeStampParameter;
+    }
+
+    public boolean getTimeStampParameter() {
+        return this.timeStampParameter;
+    }
 
 }
 

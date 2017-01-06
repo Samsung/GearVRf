@@ -55,6 +55,7 @@ public class DefinedItem {
     private Future<GVRTexture> gvrTexture = null;
     private GVRRenderData gvrRenderData = null;
     private GVRMaterial gvrMaterial = null;
+    private Viewpoint viewpoint = null;
     /**
      * X3D Transforms use AxisAngle format for rotations,
      * and float3 for the SpotLight, DirectionalLight direction
@@ -167,6 +168,15 @@ public class DefinedItem {
 
     public GVRSceneObject getGVRSceneObject() {
         return this.gvrSceneObject;
+    }
+
+
+    public void setViewpoint(Viewpoint viewpoint) {
+        this.viewpoint = viewpoint;
+    }
+
+    public Viewpoint getViewpoint() {
+        return this.viewpoint;
     }
 
 }

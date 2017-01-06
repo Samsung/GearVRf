@@ -27,9 +27,25 @@ public class SFBool {
     public SFBool(boolean value) {
         setValue(value);
     }
+    public SFBool(int intValue) {
+        setValue(intValue);
+    }
+    public SFBool(String stringValue) {
+        setValue(stringValue);
+    }
 
     public void setValue(boolean value) {
         this.value = value;
+    }
+
+    public void setValue(int intValue) {
+        if (intValue == 0) setValue( false );
+        else setValue( true );
+    }
+
+    public void setValue(String stringValue) {
+        if ( stringValue.equalsIgnoreCase("false")) setValue( false );
+        else setValue( true );
     }
 
     public boolean getValue() {
