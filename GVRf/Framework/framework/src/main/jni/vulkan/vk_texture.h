@@ -10,7 +10,7 @@
 #include "vulkan/vulkanInfoWrapper.h"
 #include "../objects/textures/texture.h"
 #include "vk_bitamp_image.h"
-
+#include "vk_cubemap_image.h"
 namespace gvr {
     class VkTexture : public Texture
     {
@@ -34,9 +34,21 @@ namespace gvr {
         {
             return id_;
         }
-        VkImageView& getVkImageView(){
-            VkBitmapImage* image = static_cast<VkBitmapImage*>(mImage);
-            return image->getVkImageView();
+        const VkImageView& getVkImageView(){
+
+            VkCubemapImage* cubemapImage;
+            VkBitmapImage* bitmapImage;
+            switch(mImage->getType()){
+
+                case Image::ImageType::CUBEMAP:
+
+                    cubemapImage= static_cast<VkCubemapImage*>(mImage);
+                    return cubemapImage->getVkImageView();
+
+                case Image::ImageType::BITMAP:
+                    bitmapImage = static_cast<VkBitmapImage*>(mImage);
+                    return bitmapImage->getVkImageView();
+            }
         }
         VkSampler& getVkSampler(){
             return m_sampler;

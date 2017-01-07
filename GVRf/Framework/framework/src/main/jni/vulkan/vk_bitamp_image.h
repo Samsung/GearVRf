@@ -19,7 +19,7 @@
 
 #include "objects/textures/bitmap_image.h"
 #include "vulkan/vulkan.h"
-//#include "vk_image.h"
+#include "vk_image.h"
 
 namespace gvr {
     class VkBitmapImage : public BitmapImage
@@ -31,24 +31,13 @@ namespace gvr {
         {
             mTarget = static_cast<int>(VK_IMAGE_VIEW_TYPE_2D);
         }
-
-        VkImageView& getVkImageView(){
-          //  return mVkImage.getVkImageView();
-            return imageView;
+        const VkImageView& getVkImageView(){
+            return mVkImage.getVkImageView();
         }
         int updateFromBitmap(JNIEnv *env, VkImageViewType target, jobject bitmap);
-    private:
-        int updateVkImage(size_t texSize, std::vector<void*>& pixels,std::vector<AndroidBitmapInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat);
-
-        int updateVkImage(VkImageViewType target, VkFormat internal_format, int width, int height, void*);
     protected:
-        //vkImage mVkImage;
-        VkImage image;
-        VkDeviceMemory dev_memory;
-        VkImageLayout imageLayout;
-        VkImageView imageView;
-
-      virtual void update(int texid);
+        vkImage mVkImage;
+        virtual void update(int texid);
         void updateFromMemory(int texid);
         void updateFromBitmap(int texid);
         void loadCompressedMipMaps(jbyte *data, int format);

@@ -49,7 +49,7 @@ namespace gvr {
         switch (type)
         {
             case Image::ImageType::BITMAP: return new VkBitmapImage(format);
-       //     case Image::ImageType::CUBEMAP: return new GLCubemapImage(format);
+            case Image::ImageType::CUBEMAP: return new VkCubemapImage(format);
         //    case Image::ImageType::FLOAT_BITMAP: return new GLFloatImage();
         }
         return NULL;
@@ -57,6 +57,15 @@ namespace gvr {
 
     Texture* VulkanRenderer::createTexture(int target)
     {
+    /*    switch (type)
+        {
+            case Texture::TextureType::TEXTURE_2D: return new GLTexture(GL_TEXTURE_2D);
+            case Texture::TextureType::TEXTURE_ARRAY: return new GLTexture(GL_TEXTURE_2D_ARRAY);
+            case Texture::TextureType::TEXTURE_EXTERNAL: return new GLTexture(GL_TEXTURE_EXTERNAL_OES);
+            case Texture::TextureType::TEXTURE_EXTERNAL_RENDERER: return new GLExternalRendererTexture();
+        }
+        return new GLTexture(type);
+      */
         // TODO: where to send the target
         return new VkTexture(static_cast<int>(VK_IMAGE_TYPE_2D));
     }
@@ -70,12 +79,29 @@ namespace gvr {
 
     void VulkanRenderer::updateTransforms(VulkanUniformBlock* transform_ubo, Transform* modelTrans, Camera* camera)
     {
+
+        if (modelTrans == nullptr)
+        {
+            LOGE("Transform is NULL");
+            return;
+        }
+
         glm::mat4 model = modelTrans->getModelMatrix();
         glm::mat4 view = camera->getViewMatrix();
         glm::mat4 proj = camera->getProjectionMatrix();
-        glm::mat4 modelViewProjection = proj * view * model;
+        glm::mat4 mv = view * model;
+        glm::mat4 modelViewProjection = proj * mv;
+        glm::mat4 u_view_i = glm::inverse(view);
+        glm::mat4 u_mv_it = glm::inverseTranspose(mv);
 
+        transform_ubo->setMat4("u_view", view);
         transform_ubo->setMat4("u_mvp", modelViewProjection);
+        transform_ubo->setMat4("u_mv", mv);
+        transform_ubo->setMat4("u_mv_it",u_mv_it);
+        transform_ubo->setMat4("u_model", model);
+        transform_ubo->setMat4("u_view_i",u_view_i );
+        transform_ubo->setMat4("u_view_i",u_view_i );
+        transform_ubo->setFloat("u_right", camera->render_mask() & RenderData::RenderMaskBit::Right);
     }
 
     void VulkanRenderer::renderCamera(Scene *scene, Camera *camera,
@@ -97,6 +123,10 @@ namespace gvr {
         for (auto &rdata : render_data_vector) {
             VulkanRenderData* vkRdata = reinterpret_cast<VulkanRenderData*>(rdata);
 
+            Shader *shader = shader_manager->getShader(vkRdata->get_shader());
+            std::string shader_sig = shader->signature();
+     //       if(shader_sig.find("u_texture")!=std::string::npos)
+      //          return;
             // Creating and initializing Uniform Buffer for Each Render Data
             if (vkRdata->uniform_dirty) {
 
@@ -106,9 +136,8 @@ namespace gvr {
                 matUBO.createVkMaterialDescriptor(vulkanCore_->getDevice(), vulkanCore_);
 
                 vulkanCore_->InitLayoutRenderData(vkRdata);
-                Shader *shader = shader_manager->getShader(vkRdata->get_shader());
 
-                vkRdata->mesh()->generateVKBuffers(shader->signature(), vulkanCore_->getDevice(), vulkanCore_);
+                vkRdata->mesh()->generateVKBuffers(shader_sig, vulkanCore_->getDevice(), vulkanCore_);
 
                 GVR_VK_Vertices &vert = vkRdata->mesh()->getVkVertices();
 
