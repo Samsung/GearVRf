@@ -80,11 +80,6 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
     }
 
     @Override
-    public boolean onBackLongPress() {
-        return false;
-    }
-
-    @Override
     public boolean onBackPress() {
         return false;
     }

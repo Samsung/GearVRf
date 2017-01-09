@@ -436,8 +436,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private static native void nativeLeaveVrMode(long ptr);
 
-    private static native void nativeShowGlobalMenu(long appPtr);
-
     private static native void nativeShowConfirmQuit(long appPtr);
 
     private static native int nativeInitializeVrApi(long ptr);

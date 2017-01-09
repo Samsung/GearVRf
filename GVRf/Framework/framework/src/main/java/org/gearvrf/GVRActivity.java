@@ -388,28 +388,18 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 if (0 == mBackKeyDownTime) {
                     mBackKeyDownTime = event.getDownTime();
                 }
-
-                if (!isPaused()) {
-                    if (event.getEventTime() - mBackKeyDownTime >= 750) {
-                        if (mDelegate.onBackLongPress()) {
-                            return true;
-                        }
-                    }
-                }
             } else if (KeyEvent.ACTION_UP == keyAction) {
                 final long duration = event.getEventTime() - mBackKeyDownTime;
                 mBackKeyDownTime = 0;
                 if (!isPaused()) {
-                    if (duration < 750) {
-                        if (mGVRMain.onBackPress()) {
-                            return true;
-                        }
-                        if (mDelegate.onBackPress()) {
-                            return true;
+                    if (duration < 250) {
+                        if (!mGVRMain.onBackPress()) {
+                            mDelegate.onBackPress();
                         }
                     }
                 }
             }
+            return true;
         } else {
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_VOLUME_UP:
@@ -695,7 +685,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         GVRConfigurationManager makeConfigurationManager(GVRActivity activity);
         void parseXmlSettings(AssetManager assetManager, String dataFilename);
 
-        boolean onBackLongPress();
         boolean onBackPress();
     }
 }

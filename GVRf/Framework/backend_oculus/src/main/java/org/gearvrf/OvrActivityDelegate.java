@@ -68,14 +68,6 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
-    public boolean onBackLongPress() {
-        if (null != mActivityHandler) {
-            return mActivityHandler.onBackLongPress();
-        }
-        return false;
-    }
-
-    @Override
     public boolean onBackPress() {
         if (null != mActivityHandler) {
             return mActivityHandler.onBack();
