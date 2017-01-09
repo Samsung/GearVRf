@@ -53,11 +53,7 @@ namespace gvr {
         void *pixels;
         int ret;
         int imageFormat = 0;
-        std::vector<void *> texData;
-        size_t tex_size = 0;
-        std::vector<VkBufferImageCopy> bufferCopyRegions;
-        std::vector<jobject> bitmaps;
-        std::vector<ImageInfo> imageInfos;
+
         if (bitmap == NULL) {
             LOGE("BitmapImage::updateFromBitmap bitmap is NULL");
         }
@@ -84,28 +80,9 @@ namespace gvr {
                     internalFormat = VK_FORMAT_R8_UNORM;
                     break;
             }
+            mLevels = static_cast<int>(floor(log2(std::max(info.width, info.height))) + 1);
+            mVkImage.updateMipVkImage(info.width, info.height, pixels, target, internalFormat);
 
-            VkBufferImageCopy bufferCopyRegion = {};
-            ImageInfo imageInfo = {};
-            bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            bufferCopyRegion.imageSubresource.mipLevel = 0;
-            bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
-            bufferCopyRegion.imageSubresource.layerCount = 1;
-            bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(info.width);
-            bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(info.height);
-            bufferCopyRegion.imageExtent.depth = 1;
-            bufferCopyRegion.bufferOffset = 0;
-            bufferCopyRegions.push_back(bufferCopyRegion);
-            imageInfo.width = bufferCopyRegion.imageExtent.width;
-            imageInfo.height = bufferCopyRegion.imageExtent.height;
-            imageInfo.size = info.height * info.stride;
-            imageInfo.isCompressed = false;
-            imageInfo.mipLevel = 0;
-            tex_size = info.height * info.stride;
-            texData.push_back(pixels);
-            imageInfos.push_back(imageInfo);
-            mVkImage.updateVkImage(tex_size, texData, imageInfos, bufferCopyRegions, target,
-                                   internalFormat);
             AndroidBitmap_unlockPixels(env, bitmap);
             return internalFormat;
         }

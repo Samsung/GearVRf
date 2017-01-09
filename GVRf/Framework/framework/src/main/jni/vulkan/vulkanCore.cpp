@@ -113,7 +113,7 @@ namespace gvr {
 
     void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer,
                         VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout,
-                        VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange) {
+                        VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange, VkPipelineStageFlags srcStageFlags, VkPipelineStageFlags destStageFlags) {
         // update image barrier for image layouts
         imageMemoryBarrier.oldLayout = oldImageLayout;
         imageMemoryBarrier.newLayout = newImageLayout;
@@ -143,10 +143,6 @@ namespace gvr {
                 imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
                 break;
         }
-
-
-        VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
         vkCmdPipelineBarrier(
                 cmdBuffer,

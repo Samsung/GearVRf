@@ -55,7 +55,6 @@ namespace gvr {
         LOGE("Vulkan: updateGPU");
         if (mPendingTask & Texture::TASK_INIT_PARAMS)
         {
-            updateTexParams();
             mPendingTask &= ~Texture::TASK_INIT_PARAMS;
         }
         if ((mPendingTask & Texture::TASK_UPDATE_IMAGE))
@@ -76,17 +75,21 @@ namespace gvr {
             JNIEnv *env = getCurrentEnv(mJava);
             jobject imageRef = env->NewLocalRef(mJavaImage);
             bool didUpdate = mImage->checkForUpdate(id_);
+            createSampler(mImage->getLevels());
             env->DeleteLocalRef(imageRef);
             return didUpdate;
         }
         else
         {
-            return mImage->checkForUpdate(id_);
+            bool status = mImage->checkForUpdate(id_);
+            createSampler(mImage->getLevels());
+            return status;
         }
     }
 
-    void VkTexture::updateTexParams() {
-        LOGE("vulkan: in updateTexParams ");
+    void VkTexture::createSampler(int maxLod) {
+
+        LOGE("MAX LOD is %d", maxLod);
         // Sets the new MIN FILTER
         VkFilter min_filter_type_ = MapFilter[mTexParams.getMinFilter()];
 
@@ -113,12 +116,11 @@ namespace gvr {
                                                                                VK_FALSE, 0,
                                                                                VK_FALSE,
                                                                                VK_COMPARE_OP_NEVER,
-                                                                               0.0f, 0.0f,
+                                                                               0.0f, (float) maxLod,
                                                                                VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
                                                                                VK_FALSE), NULL,
                               &m_sampler);
-        LOGE("min = %d max= %d, Wrap U =%d, WrapV = %d", mTexParams.getMinFilter(),
-             mTexParams.getMagFilter(), mTexParams.getWrapU(), mTexParams.getWrapV());
+
         assert(!err);
 
     }

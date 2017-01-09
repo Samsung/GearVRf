@@ -21,6 +21,7 @@
 #include "vulkan_headers.h"
 
 namespace gvr{
+    size_t getSize(VkFormat format, int width, int height);
     struct ImageInfo{
         int width;
         int height;
@@ -32,7 +33,8 @@ namespace gvr{
     public:
         vkImage(){}
         virtual ~vkImage(){ }
-        int updateVkImage(size_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat,VkImageCreateFlags flags=0);
+        void updateMipVkImage(int width, int height, void* pixels, VkImageViewType target, VkFormat internalFormat);
+        int updateVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, bool isCubemap = false, int mipLevels =1,VkImageCreateFlags flags=0);
         const VkImage& getVkImage(){
             return image;
         }

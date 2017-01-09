@@ -37,7 +37,8 @@ namespace gvr {
         std::string type;
         int size;
     };
-    extern  void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange);
+    extern  void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange,
+                                VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     enum ShaderType{
         VERTEX_SHADER,
         FRAGMENT_SHADER
@@ -106,7 +107,9 @@ namespace gvr {
         VkDevice &getDevice() {
             return m_device;
         }
-
+        VkPhysicalDevice& getPhysicalDevice(){
+            return m_physicalDevice;
+        }
         VkQueue &getVkQueue() {
             return m_queue;
         }

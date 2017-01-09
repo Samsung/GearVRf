@@ -78,6 +78,9 @@ public:
     VkQueue& getQueue(){
         return vulkanCore_->getVkQueue();
     }
+    VkPhysicalDevice& getPhysicalDevice(){
+        return vulkanCore_->getPhysicalDevice();
+    }
     // pure virtual
      void renderCamera(Scene* scene, Camera* camera,
              ShaderManager* shader_manager,
