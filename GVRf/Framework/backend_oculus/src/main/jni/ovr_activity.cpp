@@ -203,15 +203,26 @@ void GVRActivity::onDrawFrame() {
         eyeTexture.HeadPose = updatedTracking.HeadPose;
     }
 
+    if (docked_) {
+        const ovrQuatf& orientation = updatedTracking.HeadPose.Pose.Orientation;
+        const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
+        const glm::quat quat = glm::conjugate(glm::inverse(tmp));
+        cameraRig_->setRotation(quat);
+    } else if (nullptr != cameraRig_) {
+        cameraRig_->updateRotation();
+    } else {
+        cameraRig_->setRotation(glm::quat());
+    }
+
+    if (!sensoredSceneUpdated_ && docked_) {
+        sensoredSceneUpdated_ = updateSensoredScene();
+    }
+
     // Render the eye images.
     for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
 
         beginRenderingEye(eye);
 
-        if (!sensoredSceneUpdated_ && headRotationProvider_.receivingUpdates()) {
-            sensoredSceneUpdated_ = updateSensoredScene();
-        }
-        headRotationProvider_.predict(*this, parms, (1 == eye ? 4.0f : 3.5f) / 60.0f);
         oculusJavaGlThread_.Env->CallVoidMethod(viewManager_, onDrawEyeMethodId, eye);
 
         endRenderingEye(eye);

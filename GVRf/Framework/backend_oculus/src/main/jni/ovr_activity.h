@@ -21,7 +21,6 @@
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
 #include "util/ovr_configuration_helper.h"
-#include "ovr_head_rotation_provider.h"
 #include "VrApi_Types.h"
 
 namespace gvr {
@@ -40,7 +39,6 @@ public:
 
     CameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
     bool sensoredSceneUpdated_ = false;
-    HeadRotationProvider headRotationProvider_;
 
 private:
     JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
@@ -52,7 +50,6 @@ private:
     jmethodID updateSensoredSceneMethodId = nullptr;
 
     jobject activity_;
-    jobject activityRenderingCallbacks_;
 
     ConfigurationHelper configurationHelper_;
 
@@ -80,6 +77,7 @@ private:
     void endRenderingEye(const int eye);
 
     jobject viewManager_ = nullptr;
+    bool docked_ = false;
 
 public:
     void onSurfaceCreated(JNIEnv& env);
@@ -93,8 +91,9 @@ public:
 
     bool isHmtConnected() const;
     bool usingMultiview() const;
-    ovrMobile* getOculusContext() { return oculusMobile_; }
-    ovrHeadModelParms* getOculusHeadModelParms() { return &oculusHeadModelParms_; }
+
+    void onDock() { docked_ = true; }
+    void onUndock() { docked_ = false; }
 };
 
 }

@@ -45,12 +45,12 @@ JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_setViewManager(JNIEnv 
 
 JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDock(JNIEnv * jni, jclass clazz, jlong appPtr) {
     GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->headRotationProvider_.onDock();
+    activity->onDock();
 }
 
 JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onUndock(JNIEnv * jni, jclass clazz, jlong appPtr) {
     GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->headRotationProvider_.onUndock();
+    activity->onUndock();
 }
 
 // -------------------- //
