@@ -33,8 +33,10 @@ namespace gvr{
     public:
         vkImage(){}
         virtual ~vkImage(){ }
-        void updateMipVkImage(int width, int height, void* pixels, VkImageViewType target, VkFormat internalFormat);
+       // void updateMipVkImage(int width, int height, void* pixels, VkImageViewType target, VkFormat internalFormat);
         int updateVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, bool isCubemap = false, int mipLevels =1,VkImageCreateFlags flags=0);
+        int updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
+
         const VkImage& getVkImage(){
             return image;
         }

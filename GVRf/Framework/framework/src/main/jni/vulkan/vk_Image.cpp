@@ -40,9 +40,15 @@ namespace gvr {
                 return 0;
         }
     }
-
+    int vkImage::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
+                               std::vector<ImageInfo> &bitmapInfos,
+                               std::vector<VkBufferImageCopy> &bufferCopyRegions,
+                               VkImageViewType target, VkFormat internalFormat,
+                               int mipLevels,
+                               VkImageCreateFlags flags)
+    /*
     void vkImage::updateMipVkImage(int width, int height, void *pixels, VkImageViewType target,
-                                   VkFormat internalFormat) {
+                                   VkFormat internalFormat)*/ {
 
         VkResult err;
         bool pass;
@@ -56,7 +62,7 @@ namespace gvr {
 
 
         VkBuffer texBuffer;
-        size_t texSize = getSize(internalFormat, width, height);
+
         VkDeviceMemory texMemory;
         VkBufferCreateInfo bufferCreateInfo = {};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -76,7 +82,7 @@ namespace gvr {
                              gvr::BufferCreateInfo(bufferCreateInfo.size,
                                                    VK_BUFFER_USAGE_TRANSFER_DST_BIT),
                              nullptr, &texBuffer);
-        int mipLevels = static_cast<int>(floor(log2(std::max(width, height))) + 1);
+
 
 
         GVR_VK_CHECK(!err);
@@ -100,7 +106,12 @@ namespace gvr {
         err = vkMapMemory(device, texMemory, 0,
                           memoryAllocateInfo.allocationSize, 0, (void **) &texData);
         assert(!err);
-        memcpy(texData, pixels, texSize);
+        int i = 0;
+        for (auto &buffer_copy_region: bufferCopyRegions) {
+            memcpy(texData + buffer_copy_region.bufferOffset, pixels[i],
+                   bitmapInfos[i].size);
+            i++;
+        }
         vkUnmapMemory(device, texMemory);
 
         // Bind our buffer to the memory
@@ -109,13 +120,13 @@ namespace gvr {
 
         err = vkCreateImage(device, gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D,
                                                          internalFormat,
-                                                         width,
-                                                         height, 1, mipLevels, 1,
+                                                         bitmapInfos[0].width,
+                                                         bitmapInfos[0].height, 1, mipLevels, pixels.size(),
                                                          VK_IMAGE_TILING_OPTIMAL,
                                                          VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                                                          VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                                                          VK_IMAGE_USAGE_SAMPLED_BIT,
-                                                         0,
+                                                         flags,
                                                          VK_SAMPLE_COUNT_1_BIT,
                                                          VK_IMAGE_LAYOUT_UNDEFINED), NULL,
                             &image);
@@ -170,7 +181,7 @@ namespace gvr {
         imageMemoryBarrier.subresourceRange.baseMipLevel = 0;
         imageMemoryBarrier.subresourceRange.levelCount = 1;
         imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-        imageMemoryBarrier.subresourceRange.layerCount = 1;
+        imageMemoryBarrier.subresourceRange.layerCount = pixels.size();
         imageMemoryBarrier.srcAccessMask = 0;
         imageMemoryBarrier.dstAccessMask =
                 VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
@@ -181,18 +192,14 @@ namespace gvr {
                        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                        imageMemoryBarrier.subresourceRange);
 
-        // Copy the first mip of the chain, remaining mips will be generated
-        VkBufferImageCopy bufferCopyRegion = {};
-        bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        bufferCopyRegion.imageSubresource.mipLevel = 0;
-        bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
-        bufferCopyRegion.imageSubresource.layerCount = 1;
-        bufferCopyRegion.imageExtent.width = static_cast<u_int32_t >(width);
-        bufferCopyRegion.imageExtent.height = static_cast<u_int32_t >(height);
-        bufferCopyRegion.imageExtent.depth = 1;
+        vkCmdCopyBufferToImage(
+                textureCmdBuffer,
+                texBuffer,
+                image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                static_cast<uint32_t>(bufferCopyRegions.size()),
+                bufferCopyRegions.data());
 
-        vkCmdCopyBufferToImage(textureCmdBuffer, texBuffer, image,
-                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
         // Transition first mip level to transfer source for read during blit
 
         imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -236,24 +243,28 @@ namespace gvr {
         vkBeginCommandBuffer(blitCmd, &setupCmdsBeginInfo);
 
         // Copy down mips from n-1 to n
-        for (int32_t i = 1; i < mipLevels; i++)
+        for(int j=0; j< bufferCopyRegions.size(); j++) {
+
+            for (int32_t i = 1; i < mipLevels; i++)
         {
+
             VkImageBlit imageBlit{};
 
             // Source
             imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageBlit.srcSubresource.layerCount = 1;
             imageBlit.srcSubresource.mipLevel = i-1;
-            imageBlit.srcOffsets[1].x = int32_t(width >> (i - 1));
-            imageBlit.srcOffsets[1].y = int32_t(height >> (i - 1));
+            imageBlit.srcOffsets[1].x = int32_t(bitmapInfos[j].width >> (i - 1));
+            imageBlit.srcOffsets[1].y = int32_t(bitmapInfos[j].height >> (i - 1));
+
             imageBlit.srcOffsets[1].z = 1;
 
             // Destination
             imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageBlit.dstSubresource.layerCount = 1;
             imageBlit.dstSubresource.mipLevel = i;
-            imageBlit.dstOffsets[1].x = int32_t(width >> i);
-            imageBlit.dstOffsets[1].y = int32_t(height >> i);
+            imageBlit.dstOffsets[1].x = int32_t(bitmapInfos[j].width >> i);
+            imageBlit.dstOffsets[1].y = int32_t(bitmapInfos[j].height >> i);
             imageBlit.dstOffsets[1].z = 1;
 
             VkImageMemoryBarrier imageMemoryBarrier = {};
@@ -262,7 +273,7 @@ namespace gvr {
             imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageMemoryBarrier.subresourceRange.baseMipLevel = i;
             imageMemoryBarrier.subresourceRange.levelCount = 1;
-            imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+            imageMemoryBarrier.subresourceRange.baseArrayLayer = j;
             imageMemoryBarrier.subresourceRange.layerCount = 1;
             setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -298,6 +309,7 @@ namespace gvr {
                     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, imageMemoryBarrier.subresourceRange,
                     VK_PIPELINE_STAGE_HOST_BIT,
                     VK_PIPELINE_STAGE_TRANSFER_BIT);
+            }
         }
 
         // After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
@@ -325,7 +337,7 @@ namespace gvr {
         err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
                                                                  target,
                                                                  internalFormat, mipLevels,
-                                                                 1,
+                                                                 pixels.size(),
                                                                  VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                                 &imageView);
         assert(!err);
