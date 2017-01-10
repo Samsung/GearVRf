@@ -68,6 +68,22 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
+    public boolean onBackLongPress() {
+        if (null != mActivityHandler) {
+            return mActivityHandler.onBackLongPress();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onBackPress() {
+        if (null != mActivityHandler) {
+            return mActivityHandler.onBack();
+        }
+        return false;
+    }
+
+    @Override
     public void onPause() {
         if (null != mActivityHandler) {
             mActivityHandler.onPause();
@@ -120,41 +136,6 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
 
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    private long mBackKeyDownTime;
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
-            if (KeyEvent.ACTION_DOWN == event.getAction()) {
-                boolean result = false;
-
-                if (0 == mBackKeyDownTime) {
-                    mBackKeyDownTime = event.getDownTime();
-                }
-
-                if (!mActivity.isPaused() && null != mActivityHandler) {
-                    if (event.getEventTime() - mBackKeyDownTime >= 750) {
-                        result = mActivityHandler.onBackLongPress();
-                    }
-                }
-
-                return result;
-            } else if (KeyEvent.ACTION_UP == event.getAction()) {
-                boolean result = false;
-
-                if (!mActivity.isPaused() && null != mActivityHandler) {
-                    if (event.getEventTime() - mBackKeyDownTime < 750) {
-                        result = mActivityHandler.onBack();
-                    }
-                }
-
-                mBackKeyDownTime = 0;
-                return result;
-            }
-        }
-
         return false;
     }
 
