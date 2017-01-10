@@ -49,11 +49,13 @@ bool GLTexture::updateGPU()
 {
     if (mPendingTask & Texture::TASK_INIT_PARAMS)
     {
+        LOGE("GLTexture::updateGPU ");
         updateTexParams();
         mPendingTask &= ~Texture::TASK_INIT_PARAMS;
     }
     if ((mPendingTask & Texture::TASK_UPDATE_IMAGE) && id_)
     {
+        LOGE("GLTexture::updateGPU 2");
         updateImage();
         mPendingTask &= ~Texture::TASK_UPDATE_IMAGE;
     }
@@ -79,7 +81,7 @@ bool GLTexture::updateImage()
 void GLTexture::updateTexParams()
 {
     int target = getTarget();
-    deleter_ = getDeleterForThisThread();
+
 
     // Sets the new MIN FILTER
     GLenum min_filter_type_ = MapFilter[mTexParams.getMinFilter()];
@@ -93,9 +95,11 @@ void GLTexture::updateTexParams()
     // Sets the wrap parameter for texture coordinate S
     GLenum wrap_t_type_ = MapWrap[mTexParams.getWrapV()];
 
-    glGenTextures(1, &id_);
+    if(id_ == 0) {
+        deleter_ = getDeleterForThisThread();
+        glGenTextures(1, &id_);
+    }
     glBindTexture(target, id_);
-
     // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
     if (mTexParams.getMaxAnisotropy() > 1.0f)
     {
@@ -105,6 +109,8 @@ void GLTexture::updateTexParams()
     glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
+
+    LOGE("texture id created is %d", id_);
 }
 
 }

@@ -40,6 +40,7 @@ void GLCubemapImage::update(int texid)
 
 void GLCubemapImage::updateFromBitmap(int texid)
 {
+    LOGE("in cubemap compressed updateFromBitmap %d ",mImageSize);
     JNIEnv *env = getCurrentEnv(mJava);
     jobjectArray bmapArray = static_cast<jobjectArray>(env->NewLocalRef(mBitmaps));
     if (bmapArray == NULL)
@@ -91,6 +92,8 @@ void GLCubemapImage::updateFromBitmap(int texid)
 
 void GLCubemapImage::updateFromMemory(int texid)
 {
+    LOGE("in cubemap compressed %d ",mImageSize);
+
     JNIEnv *env = getCurrentEnv(mJava);
     jobjectArray texArray = static_cast<jobjectArray>(env->NewLocalRef(mTextures));
     if (texArray == NULL)

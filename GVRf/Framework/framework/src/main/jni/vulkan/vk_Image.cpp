@@ -45,10 +45,7 @@ namespace gvr {
                                std::vector<VkBufferImageCopy> &bufferCopyRegions,
                                VkImageViewType target, VkFormat internalFormat,
                                int mipLevels,
-                               VkImageCreateFlags flags)
-    /*
-    void vkImage::updateMipVkImage(int width, int height, void *pixels, VkImageViewType target,
-                                   VkFormat internalFormat)*/ {
+                               VkImageCreateFlags flags) {
 
         VkResult err;
         bool pass;
@@ -82,7 +79,6 @@ namespace gvr {
                              gvr::BufferCreateInfo(bufferCreateInfo.size,
                                                    VK_BUFFER_USAGE_TRANSFER_DST_BIT),
                              nullptr, &texBuffer);
-
 
 
         GVR_VK_CHECK(!err);
@@ -149,7 +145,6 @@ namespace gvr {
         err = vkBindImageMemory(device, image, dev_memory, 0);
         assert(!err);
 
-        // We use a shared command buffer for setup operations to change layout.
         // Reset the setup command buffer
         VkCommandBuffer textureCmdBuffer;
         vk_renderer->initCmdBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, textureCmdBuffer);
@@ -199,8 +194,6 @@ namespace gvr {
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 static_cast<uint32_t>(bufferCopyRegions.size()),
                 bufferCopyRegions.data());
-
-        // Transition first mip level to transfer source for read during blit
 
         imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -279,7 +272,7 @@ namespace gvr {
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                            imageMemoryBarrier.subresourceRange);
 
-            // Transiton current mip level to transfer dest
+            // change layout of current mip level to transfer dest
             setImageLayout(imageMemoryBarrier,
                     blitCmd,
                     image,
@@ -289,7 +282,7 @@ namespace gvr {
                     VK_PIPELINE_STAGE_TRANSFER_BIT,
                     VK_PIPELINE_STAGE_HOST_BIT);
 
-            // Blit from previous level
+            // Do blit operation from previous mip level
             vkCmdBlitImage(
                     blitCmd,
                     image,
@@ -300,7 +293,7 @@ namespace gvr {
                     &imageBlit,
                     VK_FILTER_LINEAR);
 
-            // Transiton current mip level to transfer source for read in next iteration
+            // change layout of current mip level to source for next iteration
             setImageLayout(imageMemoryBarrier,
                     blitCmd,
                     image,
@@ -311,8 +304,7 @@ namespace gvr {
                     VK_PIPELINE_STAGE_TRANSFER_BIT);
             }
         }
-
-        // After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
+        // Change layout of all mip levels to shader read
         imageMemoryBarrier.subresourceRange.levelCount = mipLevels;
         setImageLayout(imageMemoryBarrier,
                 blitCmd,

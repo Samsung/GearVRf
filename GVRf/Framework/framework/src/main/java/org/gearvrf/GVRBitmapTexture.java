@@ -153,6 +153,6 @@ class NativeBitmapImage {
     static native long constructor(int type, int format);
     static native void updateFromMemory(long pointer, int width, int height, byte[] data);
     static native void updateFromBitmap(long pointer, Bitmap bitmap);
-    static native void updateCompressed(long pointer, int width, int height, byte[] data, int levels, int[] offsets);
+    static native void updateCompressed(long pointer, int width, int height, int image_size, byte[] data, int levels, int[] offsets);
 
 }

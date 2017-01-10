@@ -38,7 +38,7 @@ extern "C" {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBitmapImage_updateCompressed(JNIEnv *env, jobject obj,
-             jlong jtexture, jint width, int height,
+             jlong jtexture, jint width, jint height, jint image_size,
              jbyteArray jdata, jint levels, jintArray offset);
 
     JNIEXPORT void JNICALL
@@ -75,13 +75,13 @@ Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeBitmapImage_updateCompressed(JNIEnv *env, jobject obj,
-                                                    jlong jtexture, jint width, jint height,
+                                                    jlong jtexture, jint width, jint height, jint image_size,
                                                     jbyteArray jdata, jint levels, jintArray joffsets)
 {
     BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
     jintArray array = static_cast<jintArray>(env->NewLocalRef(joffsets));
     int* offsets = env->GetIntArrayElements(array, 0);
-    texture->update(env, width, height, jdata, levels, offsets);
+    texture->update(env, width, height, image_size, jdata, levels, offsets);
     env->ReleaseIntArrayElements(array, offsets, 0);
 }
 }

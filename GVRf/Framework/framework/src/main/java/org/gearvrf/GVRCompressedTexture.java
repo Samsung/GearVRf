@@ -47,9 +47,10 @@ public class GVRCompressedTexture extends GVRImage
     private int mWidth;
     private int mHeight;
     private int mLevels;
+    private int mImageSize;
 
     // Texture parameters
-    public GVRCompressedTexture(GVRContext gvrContext, int width, int height, int format, byte[] data, int levels, int quality)
+    public GVRCompressedTexture(GVRContext gvrContext, int width, int height, int imageSize, int format, byte[] data, int levels, int quality)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, format));
         mQuality = GVRCompressedTexture.clamp(quality);
@@ -57,9 +58,10 @@ public class GVRCompressedTexture extends GVRImage
         mWidth = width;
         mHeight = height;
         mLevels = levels;
+        mImageSize = imageSize;
     }
 
-    public GVRCompressedTexture(GVRContext gvrContext, int width, int height, byte[] data, int levels, int quality)
+    public GVRCompressedTexture(GVRContext gvrContext, int width, int height,int imageSize, byte[] data, int levels, int quality)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_RGBA));
         mQuality = GVRCompressedTexture.clamp(quality);
@@ -67,12 +69,13 @@ public class GVRCompressedTexture extends GVRImage
         mWidth = width;
         mHeight = height;
         mLevels = levels;
+        mImageSize = imageSize;
     }
 
     public void setDataOffsets(int[] offsets)
     {
         assert(mLevels == offsets.length);
-        NativeBitmapImage.updateCompressed(getNative(), mWidth, mHeight, mData, mLevels, offsets);
+        NativeBitmapImage.updateCompressed(getNative(), mWidth, mHeight, mImageSize, mData, mLevels, offsets);
         mData = null;
     }
 
