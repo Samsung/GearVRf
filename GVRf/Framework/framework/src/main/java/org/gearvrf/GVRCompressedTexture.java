@@ -61,6 +61,7 @@ public class GVRCompressedTexture extends GVRImage
         mImageSize = imageSize;
     }
 
+
     public void setDataOffsets(int[] offsets)
     {
         assert(mLevels == offsets.length);
