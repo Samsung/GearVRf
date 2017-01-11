@@ -178,7 +178,7 @@ class KTX extends GVRCompressedTextureLoader {
                 data.position(data.position() + imageSize + imagePadding);
             }
             GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
-                    width, height, imageSize, data.array(), levels, quality);
+                    width, height, imageSize, internalformat, data.array(), levels, quality);
             result.setDataOffsets(outOffsets);
 /*
             GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,

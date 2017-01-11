@@ -28,7 +28,6 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
     AndroidBitmapInfo info;
     void *pixels;
     int ret;
-    int imageFormat = 0;
 
     if (bitmap == NULL)
     {
@@ -54,19 +53,16 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
                 internalFormat = GL_RGB565;
                 dataFormat = GL_UNSIGNED_SHORT_5_6_5;
                 pixelFormat = GL_RGB;
-                imageFormat = Image::PixelFormat::RGB_5;
                 break;
 
             case ANDROID_BITMAP_FORMAT_RGBA_4444:
                 internalFormat = GL_RGBA4;
                 dataFormat = GL_UNSIGNED_SHORT_4_4_4_4;
-                imageFormat = Image::PixelFormat::RGBA_4;
                 break;
 
             case ANDROID_BITMAP_FORMAT_A_8:
                 dataFormat = GL_R8;
                 pixelFormat = GL_RED;
-                imageFormat = Image::PixelFormat::A8;
                 break;
         }
         glTexImage2D(target, 0, internalFormat,
@@ -75,7 +71,7 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
         AndroidBitmap_unlockPixels(env, bitmap);
         return internalFormat;
     }
-    return imageFormat;
+    return 0;
 }
 
 
@@ -107,13 +103,13 @@ void GLBitmapImage::update(int texid)
 void GLBitmapImage::updateFromMemory(int texid)
 {
     JNIEnv *env = getCurrentEnv(mJava);
-    jbyteArray array = static_cast<jbyteArray>(env->NewLocalRef(mData));
-    if (array == NULL)
+
+    if (mData == NULL)
     {
         LOGE("BitmapImage::updateFromMemory array is null");
         return;
     }
-    jbyte* pixels = env->GetByteArrayElements(array, 0);
+    jbyte* pixels = env->GetByteArrayElements(mData, 0);
     int t = getTarget();
     glBindTexture(t, texid);
     LOGE("image size is %d ", mImageSize);
@@ -136,24 +132,22 @@ void GLBitmapImage::updateFromMemory(int texid)
                      GL_UNSIGNED_BYTE, pixels);
         glGenerateMipmap(t);
     }
-    env->ReleaseByteArrayElements(array, pixels, 0);
-    env->DeleteLocalRef(array);
+    env->ReleaseByteArrayElements(mData, pixels, 0);
     clearData(env);
 }
 
 void GLBitmapImage::updateFromBitmap(int texid)
 {
     JNIEnv *env = getCurrentEnv(mJava);
-    jobject bitmap = env->NewLocalRef(mBitmap);
-    if (bitmap == NULL)
+
+    if (mBitmap == NULL)
     {
         LOGE("BitmapImage::updateFromBitmap bitmap is null");
         return;
     }
     int t = getTarget();
     glBindTexture(t, texid);
-    mFormat = updateFromBitmap(env, t, bitmap);
-    env->DeleteLocalRef(bitmap);
+    mFormat = updateFromBitmap(env, t, mBitmap);
 }
 
 void GLBitmapImage::loadCompressedMipMaps(jbyte *data, int format)

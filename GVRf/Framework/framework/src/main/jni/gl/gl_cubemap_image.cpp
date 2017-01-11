@@ -42,7 +42,7 @@ void GLCubemapImage::updateFromBitmap(int texid)
 {
     LOGE("in cubemap compressed updateFromBitmap %d ",mImageSize);
     JNIEnv *env = getCurrentEnv(mJava);
-    jobjectArray bmapArray = static_cast<jobjectArray>(env->NewLocalRef(mBitmaps));
+    jobjectArray bmapArray = static_cast<jobjectArray>(mBitmaps);
     if (bmapArray == NULL)
     {
         LOGE("CubemapImage::updateFromBitmap bitmap array NULL");
@@ -51,7 +51,7 @@ void GLCubemapImage::updateFromBitmap(int texid)
     // Clean up upon scope exit. The SCOPE_EXIT utility is used
     // to avoid duplicated code in the throw case and normal
     // case.
-    SCOPE_EXIT( clearData(env); env->DeleteLocalRef(bmapArray));
+    SCOPE_EXIT( clearData(env); );
     int t = getTarget();
     glBindTexture(t, texid);
     for (int i = 0; i < 6; i++)
@@ -95,7 +95,7 @@ void GLCubemapImage::updateFromMemory(int texid)
     LOGE("in cubemap compressed %d ",mImageSize);
 
     JNIEnv *env = getCurrentEnv(mJava);
-    jobjectArray texArray = static_cast<jobjectArray>(env->NewLocalRef(mTextures));
+    jobjectArray texArray = static_cast<jobjectArray>(mTextures);
     if (texArray == NULL)
     {
         LOGE("CubemapImage::updateFromMemory texture array NULL");
@@ -103,7 +103,7 @@ void GLCubemapImage::updateFromMemory(int texid)
     }
 
     // Clean up upon scope exit
-    SCOPE_EXIT( clearData(env); env->DeleteLocalRef(texArray); );
+    SCOPE_EXIT( clearData(env); );
     int t = getTarget();
 
     glBindTexture(t, texid);

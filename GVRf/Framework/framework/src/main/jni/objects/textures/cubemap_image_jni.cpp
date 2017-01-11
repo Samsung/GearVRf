@@ -38,8 +38,10 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCubemapImage_update(JNIEnv * env,
                                            jobject obj, jlong jcubemap, jobjectArray bitmapArray)
 {
+    jobject keep = env->NewLocalRef(bitmapArray);
     CubemapImage* cubemap = reinterpret_cast<CubemapImage*>(jcubemap);
     cubemap->update(env, bitmapArray);
+    env->DeleteLocalRef(keep);
 }
 
 JNIEXPORT void JNICALL
@@ -48,15 +50,20 @@ Java_org_gearvrf_NativeCubemapImage_updateCompressed(JNIEnv* env,
                                            jint width, jint height, jint imageSize,
                                            jobjectArray textureArray, jintArray joffsetArray)
 {
+    jobject keep2 = env->NewLocalRef(joffsetArray);
     if (env->GetArrayLength(joffsetArray) != 6)
     {
         LOGE("CubeMapImage: cannot create: Texture offset list's length is not 6.");
+        env->DeleteLocalRef(keep2);
         return;
     }
+    jobject keep1 = env->NewLocalRef(textureArray);
     jint* offsets = env->GetIntArrayElements(joffsetArray, 0);
     CubemapImage* cubemap = reinterpret_cast<CubemapImage*>(jcubemap);
     cubemap->update(env, width, height, imageSize, textureArray, offsets);
     env->ReleaseIntArrayElements(joffsetArray, offsets, 0);
+    env->DeleteLocalRef(keep1);
+    env->DeleteLocalRef(keep2);
 }
 
 }
