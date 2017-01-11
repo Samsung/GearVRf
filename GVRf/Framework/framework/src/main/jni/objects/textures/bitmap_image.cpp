@@ -62,8 +62,8 @@ void BitmapImage::update(JNIEnv* env, jobject bitmap)
     mUpdateLock.unlock();
 }
 
-void BitmapImage::update(JNIEnv *env, int width, int height, jbyteArray data,
-                         int levels, const int* dataOffsets)
+void BitmapImage::update(JNIEnv *env, int width, int height, int imageSize,
+                         jbyteArray data, int levels, const int* dataOffsets)
 {
     mUpdateLock.lock();
     env->GetJavaVM(&mJava);
@@ -73,6 +73,7 @@ void BitmapImage::update(JNIEnv *env, int width, int height, jbyteArray data,
     mLevels = levels;
     mFormat = GL_RGBA;
     mIsCompressed = true;
+    mImageSize = imageSize;
     setDataOffsets(dataOffsets, levels);
     if (data != NULL)
     {
@@ -86,22 +87,12 @@ void BitmapImage::clearData(JNIEnv* env)
 {
     if (mData != NULL)
     {
-        jobject ref = env->NewLocalRef(mData);
-        if (ref != NULL)
-        {
-            env->DeleteGlobalRef(mData);
-            env->DeleteLocalRef(ref);
-        }
+        env->DeleteGlobalRef(mData);
         mData = NULL;
     }
     if (mBitmap != NULL)
     {
-        jobject ref = env->NewLocalRef(mBitmap);
-        if (ref != NULL)
-        {
-            env->DeleteGlobalRef(mBitmap);
-            env->DeleteLocalRef(ref);
-        }
+        env->DeleteGlobalRef(mBitmap);
         mBitmap = NULL;
     }
     mIsCompressed = false;
