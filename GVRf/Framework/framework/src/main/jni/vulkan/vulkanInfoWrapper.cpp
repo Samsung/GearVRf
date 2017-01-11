@@ -112,13 +112,13 @@ ImageCreateInfo::ImageCreateInfo(VkImageType aImageType, VkFormat aFormat,
 ImageCreateInfo::ImageCreateInfo(VkImageType aImageType, VkFormat aFormat, int32_t aWidth,
     int32_t aHeight, int32_t aDepth, uint32_t aArraySize, VkImageTiling aTiling,
     VkImageUsageFlags aUsage, VkImageLayout aLayout)
-    : ImageCreateInfo(aImageType, aFormat, aWidth, aHeight, aDepth, 1, 1, aTiling, aUsage, VK_SAMPLE_COUNT_1_BIT, aLayout)
+    : ImageCreateInfo(aImageType, aFormat, aWidth, aHeight, aDepth, 1, 1, aTiling, aUsage, 0 , VK_SAMPLE_COUNT_1_BIT, aLayout)
 {
 }
 
 ImageCreateInfo::ImageCreateInfo(VkImageType aImageType, VkFormat aFormat,
     int32_t aWidth, int32_t aHeight, int32_t aDepth, uint32_t aMipLevels,
-    uint32_t aArraySize, VkImageTiling aTiling, VkImageUsageFlags aUsage,
+    uint32_t aArraySize, VkImageTiling aTiling, VkImageUsageFlags aUsage, VkImageCreateFlags  flags,
     VkSampleCountFlagBits aSamples,
     VkImageLayout aLayout) :
     mInfo{}
@@ -134,6 +134,7 @@ ImageCreateInfo::ImageCreateInfo(VkImageType aImageType, VkFormat aFormat,
     mInfo.samples = aSamples;
     mInfo.tiling = aTiling;
     mInfo.usage = aUsage;
+    mInfo.flags = flags;
     mInfo.initialLayout = aLayout;
     mInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 }

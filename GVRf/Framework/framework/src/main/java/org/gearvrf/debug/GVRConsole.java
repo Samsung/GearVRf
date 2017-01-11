@@ -27,7 +27,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRImage;
 import org.gearvrf.GVRPostEffectShaderManager;
 import org.gearvrf.GVRScene;
-import org.gearvrf.GVRScript;
 import org.gearvrf.GVRShader;
 import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRShaderId;
@@ -148,7 +147,7 @@ public class GVRConsole extends GVRShaderData
      * 
      * This overload is useful when you are using
      * {@link GVRContext#getNextMainScene()} and creating your debug console in
-     * {@link GVRScript#onInit(GVRContext)}.
+     * {@link org.gearvrf.GVRMain#onInit(GVRContext)}.
      * 
      * @param gvrContext
      *            The GVR context.

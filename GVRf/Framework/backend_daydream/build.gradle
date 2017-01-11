@@ -6,30 +6,29 @@ repositories {
     flatDir {
         dirs 'src/main/libs'
     }
+    // For GVR components, the official source of the .aars is the Google
+    // repository.
+    maven {
+        url "http://google.bintray.com/googlevr"
+    }
 }
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 21
     buildToolsVersion '24.0.3'
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 24
-    }
-
-    task buildNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
+        targetSdkVersion 21
+        externalNativeBuild {
+            cmake {
+                arguments.add('-DANDROID_TOOLCHAIN=gcc')
+            }
         }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
+        ndk {
+            moduleName "gvrf-daydream"
+            abiFilters = ['armeabi-v7a']
         }
-
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
     }
 
     buildTypes {
@@ -43,12 +42,9 @@ android {
         }
     }
 
-    sourceSets.main {
-        java.srcDirs = ['src/main/java']
-        jni.srcDirs = [] // no auto generation of Android.mk
-        // pre-compiled libraries
-        jniLibs {
-            srcDir 'src/main/libs'
+    externalNativeBuild {
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
         }
     }
 
@@ -71,7 +67,11 @@ android {
     }
     deleteAllFromGitHub.doFirst {
         println('deleting all assets from github release')
-    }    
+    }
+
+    packagingOptions {
+        exclude 'lib/armeabi-v7a/libgvr.so'
+    }
 }
 
 project.ext.jomlVersion = "1.9.1-SNAPSHOT"
@@ -79,8 +79,7 @@ project.ext.jomlVersion = "1.9.1-SNAPSHOT"
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile(name: 'google-vr-base', ext: 'aar')
-    compile(name: 'google-vr-common', ext: 'aar')
+    compile 'com.google.vr:sdk-base:1.10.0'
     compile project(':framework')
     compile "org.joml:joml-android:${jomlVersion}"
 }

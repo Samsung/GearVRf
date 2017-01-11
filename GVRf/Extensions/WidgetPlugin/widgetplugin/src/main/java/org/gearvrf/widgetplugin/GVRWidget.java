@@ -15,8 +15,6 @@
 
 package org.gearvrf.widgetplugin;
 
-import org.gearvrf.GVRScript;
-
 import com.badlogic.gdx.ApplicationAdapter;
 
 /**
@@ -60,7 +58,6 @@ public abstract class GVRWidget extends ApplicationAdapter {
 
     @Override
     public void notifyCreation(int id) {
-        // TODO Auto-generated method stub
         mIsInitialised = true;
         mTexid = id;
         synchronized (mSync) {

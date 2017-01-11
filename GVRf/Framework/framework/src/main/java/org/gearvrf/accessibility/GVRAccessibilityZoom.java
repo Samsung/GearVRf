@@ -20,25 +20,53 @@ public class GVRAccessibilityZoom {
     private static final float MIN_ZOOM = 90f;
     private static final float ZOOM_FACTOR = 5f;
 
+    /**
+     * Use this call to zoom into {@link GVRScene}s
+     *
+     * @param gvrScenes the scenes to zoom into
+     *
+     * @throws UnsupportedOperationException returns an exception when the camera rig attached to
+     * the scene does not support this operation
+     */
     public void zoomIn(GVRScene... gvrScenes) {
         for (GVRScene gvrScene : gvrScenes) {
-            GVRPerspectiveCamera leftCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getLeftCamera());
-            GVRPerspectiveCamera rightCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getRightCamera());
-            if (leftCameraMainScene.getFovY() > MAX_ZOOM) {
-                leftCameraMainScene.setFovY(leftCameraMainScene.getFovY() - ZOOM_FACTOR);
-                rightCameraMainScene.setFovY(rightCameraMainScene.getFovY() - ZOOM_FACTOR);
+            try {
+                GVRPerspectiveCamera leftCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getLeftCamera());
+                GVRPerspectiveCamera rightCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getRightCamera());
+                if (leftCameraMainScene.getFovY() > MAX_ZOOM) {
+                    leftCameraMainScene.setFovY(leftCameraMainScene.getFovY() - ZOOM_FACTOR);
+                    rightCameraMainScene.setFovY(rightCameraMainScene.getFovY() - ZOOM_FACTOR);
+                }
+            } catch (ClassCastException e){
+                throw new UnsupportedOperationException("Operation unsupported for this camera " +
+                        "type");
             }
+
         }
     }
 
+    /**
+     * Use this call to zoom out of {@link GVRScene}s
+     *
+     * @param gvrScenes the scenes to zoom out of
+     *
+     * @throws UnsupportedOperationException returns an exception when the camera rig attached to
+     * the scene does not support this operation
+     */
     public void zoomOut(GVRScene... gvrScenes) {
         for (GVRScene gvrScene : gvrScenes) {
-            GVRPerspectiveCamera leftCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getLeftCamera());
-            GVRPerspectiveCamera rightCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getRightCamera());
-            if (leftCameraMainScene.getFovY() < MIN_ZOOM) {
-                leftCameraMainScene.setFovY(leftCameraMainScene.getFovY() + ZOOM_FACTOR);
-                rightCameraMainScene.setFovY(rightCameraMainScene.getFovY() + ZOOM_FACTOR);
+            try{
+                GVRPerspectiveCamera leftCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getLeftCamera());
+                GVRPerspectiveCamera rightCameraMainScene = ((GVRPerspectiveCamera) gvrScene.getMainCameraRig().getRightCamera());
+                if (leftCameraMainScene.getFovY() < MIN_ZOOM) {
+                    leftCameraMainScene.setFovY(leftCameraMainScene.getFovY() + ZOOM_FACTOR);
+                    rightCameraMainScene.setFovY(rightCameraMainScene.getFovY() + ZOOM_FACTOR);
+                }
+            } catch (ClassCastException e){
+                throw new UnsupportedOperationException("Operation unsupported for this camera " +
+                        "type");
             }
+
         }
     }
 

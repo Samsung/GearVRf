@@ -6,11 +6,12 @@
 #define FRAMEWORK_VULKAN_HEADERS_H
 #define VK_USE_PLATFORM_ANDROID_KHR
 
-#include "vulkan/vulkan_wrapper.h"
+#include "vulkan_wrapper.h"
 #include "vulkanInfoWrapper.h"
 #include <vector>
 #include "glm/glm.hpp"
-#include "vulkan/vulkanCore.h"
-#include "vulkan_uniform_block.h"
+#include "vulkanCore.h"
 
+#include "vulkan_uniform_block.h"
+#include "vulkan.h"
 #endif //FRAMEWORK_VULKAN_HEADERS_H

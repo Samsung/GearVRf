@@ -121,7 +121,7 @@ public class DebugServer implements Runnable {
     /**
      * Constructor.
      *
-     * To start a debug server, add the following line to your {@link org.gearvrf.GVRScript#onInit(GVRContext)} method:
+     * To start a debug server, add the following line to your {@link org.gearvrf.GVRMain#onInit(GVRContext)} method:
      *
      * <pre>
      *     Threads.spawn(new DebugServer(gvrContext));

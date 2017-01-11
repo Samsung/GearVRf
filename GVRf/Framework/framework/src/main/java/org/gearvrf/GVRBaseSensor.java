@@ -18,11 +18,13 @@ package org.gearvrf;
 import android.util.SparseArray;
 
 import org.gearvrf.SensorEvent.EventGroup;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -141,7 +143,9 @@ public class GVRBaseSensor {
         GVREventManager eventManager = gvrContext.getEventManager();
         if (events.isEmpty() == false) {
             if(events.size() > 1 && depthOrderEnabled) {
+                depthComparator.updateDepthCache(events);
                 Collections.sort(events, depthComparator);
+                depthComparator.clearDepthCache();
             }
             final IEventReceiver ownerCopy = owner;
             for (int i = 0; i < events.size(); i++) {
@@ -154,6 +158,7 @@ public class GVRBaseSensor {
         }
         return eventHandled;
     }
+
 
     private EventGroup getEventGroup(int index, int size) {
         if(depthOrderEnabled) {
@@ -294,19 +299,41 @@ public class GVRBaseSensor {
     }
 
     private static class DepthComparator implements Comparator<SensorEvent> {
-        Vector3f originVector;
+        private Vector3f hitPoint;
+        private Matrix4f modelMatrix;
+        private HashMap<SensorEvent, Float> depthCache;
+
         DepthComparator() {
-            originVector = new Vector3f(0,0,0);
+            hitPoint = new Vector3f(0,0,0);
+            modelMatrix = new Matrix4f();
+            depthCache = new HashMap<SensorEvent, Float>();
         }
+
         @Override
         public int compare(SensorEvent lhs, SensorEvent rhs) {
-            GVRTransform transform = lhs.getObject().getTransform();
-            float lhsDepth = originVector.distance(transform.getPositionX(),transform
-                    .getPositionY(), transform.getPositionZ());
-            transform = rhs.getObject().getTransform();
-            float rhsDepth = originVector.distance(transform.getPositionX(),transform
-                    .getPositionY(), transform.getPositionZ());
-            return (int)(lhsDepth - rhsDepth);
+            float lhsDepth = depthCache.get(lhs);
+            float rhsDepth = depthCache.get(rhs);
+            if(lhsDepth < rhsDepth) {
+                return -1;
+            } else if(lhsDepth > rhsDepth) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        void updateDepthCache(List<SensorEvent> events) {
+            for(SensorEvent sensorEvent: events) {
+                modelMatrix.set(sensorEvent.getObject().getTransform().getModelMatrix());
+                hitPoint.set(sensorEvent.getHitX(), sensorEvent.getHitY(), sensorEvent.getHitZ());
+                hitPoint.mulPosition(modelMatrix);
+                float depth = hitPoint.distance(0,0,0);
+                depthCache.put(sensorEvent, depth);
+            }
+        }
+
+        void clearDepthCache() {
+            depthCache.clear();
         }
     }
 }

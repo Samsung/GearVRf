@@ -154,6 +154,10 @@ public abstract class GVRContext implements IEventReceiver {
     GVRContext(GVRActivity context) {
         mContext = context;
         mEventReceiver = new GVREventReceiver(this);
+
+        mHandlerThread = new HandlerThread("gvrf-main");
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
     }
 
     /**
@@ -180,7 +184,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @return The {@link GVRActivity} which launched your GVRF app. The
      *         {@link GVRActivity} class doesn't actually add much useful
      *         functionality besides
-     *         {@link GVRActivity#setScript(GVRScript, String)}, but returning
+     *         {@link GVRActivity#setMain(GVRMain, String)}, but returning
      *         the most-derived class here may prevent someone from having to
      *         write {@code (GVRActivity) gvrContext.getActivity();}.
      * 
@@ -286,8 +290,8 @@ public abstract class GVRContext implements IEventReceiver {
      * overload that takes a priority} are generally going to be your best
      * choices for loading {@link GVRMesh} resources: mesh loading can take
      * hundreds - and even thousands - of milliseconds, and so should not be
-     * done on the GL thread in either {@link GVRScript#onInit(GVRContext)
-     * onInit()} or {@link GVRScript#onStep() onStep()}.
+     * done on the GL thread in either {@link GVRMain#onInit(GVRContext)}
+     * onInit()} or {@link GVRMain#onStep() onStep()}.
      * 
      * <p>
      * The asynchronous methods improve throughput in three ways. First, by
@@ -353,8 +357,8 @@ public abstract class GVRContext implements IEventReceiver {
      * overload that supplies a default priority} are generally going to be your
      * best choices for loading {@link GVRMesh} resources: mesh loading can take
      * hundreds - and even thousands - of milliseconds, and so should not be
-     * done on the GL thread in either {@link GVRScript#onInit(GVRContext)
-     * onInit()} or {@link GVRScript#onStep() onStep()}.
+     * done on the GL thread in either {@link GVRMain#onInit(GVRContext)
+     * onInit()} or {@link GVRMain#onStep() onStep()}.
      * 
      * <p>
      * The asynchronous methods improve throughput in three ways. First, by
@@ -712,7 +716,7 @@ public abstract class GVRContext implements IEventReceiver {
      *            (as, for example, when the splash screen closes). This
      *            callback lets apps do things like start animations when their
      *            scene becomes visible, instead of in
-     *            {@link GVRScript#onInit(GVRContext) onInit()} when the scene
+     *            {@link GVRMain#onInit(GVRContext) onInit()} when the scene
      *            objects may be hidden by the splash screen.
      * 
      * @since 1.6.4
@@ -788,7 +792,7 @@ public abstract class GVRContext implements IEventReceiver {
      * 
      * Each frame listener is called, once per frame, after any pending
      * {@linkplain #runOnGlThread(Runnable) GL callbacks} and before
-     * {@link GVRScript#onStep()}.
+     * {@link GVRMain#onStep()}.
      * 
      * @param frameListener
      *            A callback that will fire once per frame, until it is
@@ -1037,31 +1041,16 @@ public abstract class GVRContext implements IEventReceiver {
         return mTag;
     }
 
-    private boolean mUseTheFrameworkThread;
-    void setUseTheFrameworkThread(boolean useTheFrameworkThread) {
-        if (null != mHandlerThread) {
-            throw new IllegalStateException();
-        }
-        mUseTheFrameworkThread = useTheFrameworkThread;
-        mHandlerThread = new HandlerThread("gvrf-main");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
-    }
-
-    private HandlerThread mHandlerThread;
-    private Handler mHandler;
+    private final HandlerThread mHandlerThread;
+    private final Handler mHandler;
 
     /**
      * Execute on the so called framework thread. For now this is mostly for
      * internal use. To actually enable the use of this framework thread you
-     * should derive from the GVRMain base class instead of GVRScript.
+     * should derive from the GVRMain base class instead of GVRMain.
      */
     public void runOnTheFrameworkThread(final Runnable runnable) {
-        if (mUseTheFrameworkThread) {
-            mHandler.post(runnable);
-        } else {
-            runnable.run();
-        }
+        mHandler.post(runnable);
     }
 
     @Override

@@ -76,7 +76,7 @@ public:
         vulkanCore_->initCmdBuffer(level,cmdBuffer);
     }
     VkQueue& getQueue(){
-        vulkanCore_->getVkQueue();
+        return vulkanCore_->getVkQueue();
     }
     // pure virtual
      void renderCamera(Scene* scene, Camera* camera,

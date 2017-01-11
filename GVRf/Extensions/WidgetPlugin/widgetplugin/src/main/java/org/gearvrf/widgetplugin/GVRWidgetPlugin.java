@@ -1,18 +1,5 @@
 package org.gearvrf.widgetplugin;
 
-import java.lang.reflect.Method;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLContext;
-
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScript;
-import org.gearvrf.IActivityEvents;
-import org.gearvrf.IScriptEvents;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -52,6 +39,19 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Clipboard;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 
+import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventListeners;
+import org.gearvrf.GVRMain;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.IActivityEvents;
+import org.gearvrf.IScriptEvents;
+
+import java.lang.reflect.Method;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
+
 /**
  * This provides GVR (libGDX) widget lifecycle and context management and brings
  * it together with GVR activity context. Base activity for GVR apps which use
@@ -74,7 +74,7 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
     protected AndroidAudio mAudio;
     protected AndroidFiles mFiles;
     protected AndroidNet mNet;
-    protected GVRScript mScript;
+    protected GVRMain mMain;
     protected GVRWidget mWidget;
 
     protected ApplicationListener mListener;
@@ -123,8 +123,8 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         }
 
         @Override
-        public void onSetScript(GVRScript script) {
-            script.getEventReceiver().addListener(mScriptEventsListener);
+        public void onSetMain(GVRMain main) {
+            main.getEventReceiver().addListener(mScriptEventsListener);
         }
 
         @Override
@@ -172,53 +172,6 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
     public GVRWidgetPlugin(GVRActivity activity) {
         mActivity = activity;
         activity.getEventReceiver().addListener(mActivityEventsListener);
-    }
-
-    /**
-     * This method has to be called in the {@link Activity#onCreate(Bundle)}
-     * method. It sets up all the things necessary to get input, render via
-     * OpenGL and so on. Uses a default {@link AndroidApplicationConfiguration}.
-     * 
-     * @param listener
-     *            the {@link ApplicationListener} implementing the program logic
-     **/
-    public void initialize(ApplicationListener listener) {
-        AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
-        initialize(listener, config, null);
-    }
-
-    /**
-     * This method has to be called in the {@link Activity#onCreate(Bundle)}
-     * method. It sets up all the things necessary to get input, render via
-     * OpenGL and so on. You can configure other aspects of the application with
-     * the rest of the fields in the {@link AndroidApplicationConfiguration}
-     * instance.
-     * 
-     * @param listener
-     *            the {@link ApplicationListener} implementing the program logic
-     * @param config
-     *            the {@link AndroidApplicationConfiguration}, defining various
-     *            settings of the application (use accelerometer, etc.).
-     */
-    public void initialize(ApplicationListener listener,
-            AndroidApplicationConfiguration config, EGLContext sharedcontext) {
-        init(listener, config, false, sharedcontext);
-    }
-
-    /**
-     * This method has to be called in the {@link Activity#onCreate(Bundle)}
-     * method. It sets up all the things necessary to get input, render via
-     * OpenGL and so on. Uses a default {@link AndroidApplicationConfiguration}.
-     * <p>
-     * Note: you have to add the returned view to your layout!
-     * 
-     * @param listener
-     *            the {@link ApplicationListener} implementing the program logic
-     * @return the GLSurfaceView of the application
-     */
-    public View initializeForView(ApplicationListener listener) {
-        AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
-        return initializeForView(listener, config, null);
     }
 
     /**
@@ -487,26 +440,6 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         }
     }
 
-    /**
-     * Adds an event listener for Android specific event such as
-     * onActivityResult(...).
-     */
-    public void addAndroidEventListener(AndroidEventListener listener) {
-        synchronized (mAndroidEventListeners) {
-            mAndroidEventListeners.add(listener);
-        }
-    }
-
-    /**
-     * Removes an event listener for Android specific event such as
-     * onActivityResult(...).
-     */
-    public void removeAndroidEventListener(AndroidEventListener listener) {
-        synchronized (mAndroidEventListeners) {
-            mAndroidEventListeners.removeValue(listener, true);
-        }
-    }
-
     @Override
     public Context getContext() {
         return mActivity;
@@ -538,11 +471,16 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
     }
 
     protected void initWidget() {
-        mEGLContext = ((EGL10) EGLContext.getEGL()).eglGetCurrentContext();
-        syncNotify();
-        while (!isInitialised()) {
-           syncWait();
-        }
+        mMain.getGVRContext().runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                mEGLContext = ((EGL10) EGLContext.getEGL()).eglGetCurrentContext();
+                syncNotify();
+                while (!isInitialised()) {
+                    syncWait();
+                }
+            }
+        });
     }
 
     public View getWidgetView() {
@@ -561,24 +499,16 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         return mWidget.isInitialised();
     }
 
-    public GVRScript getScript() {
-        return mScript;
-    }
-
     public int getTextureId() {
         return mWidget.getTexId();
     }
 
-    public void setCurrentScript(GVRScript script) {
-        mScript = script;
+    public void setMain(GVRMain main) {
+        mMain = main;
     }
 
     public void setPickedObject(GVRSceneObject obj) {
         mInputDispatcher.setPickedObject(obj);
-    }
-
-    public GVRSceneObject getPickedObject() {
-        return mInputDispatcher.getPickedObject();
     }
 
     public void initializeWidget(GVRWidget widget) {
@@ -606,7 +536,6 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         };
 
         thread.start();
-
     }
 
     private void doResume(GVRWidget widget) {
@@ -640,19 +569,16 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
     }
 
     protected void syncNotify() {
-        // TODO Auto-generated method stub
         synchronized (mSync) {
             mSync.notifyAll();
         }
     }
 
     protected void syncWait() {
-        // TODO Auto-generated method stub
         synchronized (mSync) {
             try {
                 mSync.wait();
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -660,49 +586,35 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
 
     @Override
     public void debug(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void debug(String arg0, String arg1, Throwable arg2) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void error(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void error(String arg0, String arg1, Throwable arg2) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public int getLogLevel() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public void log(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void log(String arg0, String arg1, Throwable arg2) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void setLogLevel(int arg0) {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -720,15 +632,9 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         mActivity.startActivity(arg0);
     }
 
-    public GVRActivity getGVRActivity() {
-        return mActivity;
-    }
-    
     public boolean dispatchTouchEvent(MotionEvent event) {
-    	return  mInputDispatcher.dispatchEvent(event, mWidgetView) ? true:
-    	 mActivity.onTouchEvent(event);
-    	
+        return mInputDispatcher.dispatchEvent(event, mWidgetView) ? true :
+                mActivity.onTouchEvent(event);
+
     }
-    
-   
 }

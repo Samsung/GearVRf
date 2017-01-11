@@ -17,10 +17,15 @@
  * Textures.
  ***************************************************************************/
 
+
 #include "texture.h"
 #include "util/jni_utils.h"
+#include "gl/gl_cubemap_image.h"
+#include "gl/gl_bitmap_image.h"
 
 namespace gvr {
+class VkBitmapImage;
+    class VkCubemapImage;
 
 Texture::Texture() : HybridObject(),
         mImage(NULL),
@@ -62,7 +67,6 @@ void Texture::clearData(JNIEnv* env)
     }
     mImage = NULL;
 }
-
 void Texture::setImage(Image* image)
 {
     if (mJava)
@@ -76,7 +80,6 @@ void Texture::setImage(Image* image)
         mPendingTask |= TASK_UPDATE_IMAGE;
     }
 }
-
 void Texture::setImage(JNIEnv* env, jobject javaImage, Image* image)
 {
     if (JNI_OK != env->GetJavaVM(&mJava))

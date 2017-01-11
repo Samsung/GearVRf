@@ -21,7 +21,8 @@
 #include "vulkan_render_data.h"
 #include "vulkan_material.h"
 #include "vulkan/vk_texture.h"
-//#define ENABLE_TEXTURE
+
+#define ENABLE_TEXTURE
 #define UINT64_MAX 99999
 
 #define QUEUE_INDEX_MAX 99999
@@ -63,7 +64,10 @@ std::string vertexShaderData = std::string("") +
                                "layout(location = 1)in vec2 a_texcoord; \n" +
                                "layout(location = 1)out vec2 o_texcoord; \n" +
                                "void main() { \n" +
-                               "o_texcoord = a_texcoord; \n" +
+                               "  vec4 pos1 = vec4(pos, 1.0);\n"
+                                       //"o_texcoord = normalize((u_model * pos1).xyz); \n" +
+                                       //   "o_texcoord.z = -o_texcoord.z; \n" +
+                                       "o_texcoord = a_texcoord; \n" +
                                "  gl_Position = u_mvp * vec4(pos.x, pos.y, pos.z,1.0); \n" +
                                "}";
 namespace gvr {
@@ -71,14 +75,14 @@ namespace gvr {
     uint8_t *oculusTexData;
     uint8_t *oculus_data[SWAP_CHAIN_COUNT];
 
- /*   void VulkanDescriptor::createBuffer(VkDevice &device, VulkanCore *vk, VulkanUniformBlock* ubo,int index) {
-        ubo->createBuffer(device, vk);
-        VkDescriptorSet desc;
-        ubo->createDescriptorWriteInfo(index, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, desc);
-    }
-*/
+    /*   void VulkanDescriptor::createBuffer(VkDevice &device, VulkanCore *vk, VulkanUniformBlock* ubo,int index) {
+           ubo->createBuffer(device, vk);
+           VkDescriptorSet desc;
+           ubo->createDescriptorWriteInfo(index, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, desc);
+       }
+   */
     void VulkanDescriptor::createDescriptor(VkDevice &device, VulkanCore *vk, int index,
-                                      VkShaderStageFlagBits shaderStageFlagBits) {
+                                            VkShaderStageFlagBits shaderStageFlagBits) {
         //createBuffer(device, vk, ubo, index);
         createLayoutBinding(index, shaderStageFlagBits);
 
@@ -89,23 +93,72 @@ namespace gvr {
                                                    : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
 
         gvr::DescriptorLayout layout(binding_index, 1, descriptorType,
-                                                             stageFlags, 0);
+                                     stageFlags, 0);
         layout_binding = *layout;
     }
 
 
-  /*  VulkanUniformBlock* VulkanDescriptor::getUBO() {
-        return ubo;
-    }
-*/
-    VkDescriptorSetLayoutBinding& VulkanDescriptor::getLayoutBinding() {
+    /*  VulkanUniformBlock* VulkanDescriptor::getUBO() {
+          return ubo;
+      }
+  */
+    VkDescriptorSetLayoutBinding &VulkanDescriptor::getLayoutBinding() {
         return layout_binding;
     }
 
-  /*  VkWriteDescriptorSet& VulkanDescriptor::getDescriptorSet() {
-        return writeDescriptorSet;
+    /*  VkWriteDescriptorSet& VulkanDescriptor::getDescriptorSet() {
+          return writeDescriptorSet;
+      }
+  */
+
+    void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer,
+                        VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout,
+                        VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange) {
+        // update image barrier for image layouts
+        imageMemoryBarrier.oldLayout = oldImageLayout;
+        imageMemoryBarrier.newLayout = newImageLayout;
+        imageMemoryBarrier.image = image;
+        imageMemoryBarrier.subresourceRange = subresourceRange;
+
+        switch (oldImageLayout) {
+            case VK_IMAGE_LAYOUT_UNDEFINED:
+                imageMemoryBarrier.srcAccessMask = 0;
+                break;
+            case VK_IMAGE_LAYOUT_PREINITIALIZED:
+                imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+                break;
+            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                break;
+        }
+
+        switch (newImageLayout) {
+            case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                break;
+            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                break;
+            case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+                imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                break;
+        }
+
+
+        VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+        vkCmdPipelineBarrier(
+                cmdBuffer,
+                srcStageFlags,
+                destStageFlags,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &imageMemoryBarrier);
     }
-*/
+
+
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
@@ -397,7 +450,7 @@ namespace gvr {
                                          m_height, 1, 1, 1,
                                          VK_IMAGE_TILING_LINEAR,
                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_SAMPLE_COUNT_1_BIT,
+                                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0, VK_SAMPLE_COUNT_1_BIT,
                                          VK_IMAGE_LAYOUT_UNDEFINED),
                     nullptr, &m_swapchainBuffers[i].image
             );
@@ -483,7 +536,7 @@ namespace gvr {
                     m_device,
                     gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, m_width, m_height,
                                          1, 1, 1, VK_IMAGE_TILING_OPTIMAL,
-                                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0,
                                          VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_UNDEFINED),
                     nullptr, &m_depthBuffers[i].image
             );
@@ -548,16 +601,14 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
     }
 
-    VkCommandBuffer VulkanCore::GetTransientCmdBuffer() {
+    void VulkanCore::createTransientCmdBuffer(VkCommandBuffer &cmdBuff) {
         VkResult ret = VK_SUCCESS;
-        VkCommandBuffer cmdBuff;
         ret = vkAllocateCommandBuffers(
                 m_device,
                 gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPoolTrans),
                 &cmdBuff
         );
         GVR_VK_CHECK(!ret);
-        return cmdBuff;
     }
 
     void VulkanCore::InitCommandbuffers() {
@@ -593,7 +644,8 @@ namespace gvr {
 
         GVR_VK_CHECK(!ret);
     }
-    void VulkanCore::initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer){
+
+    void VulkanCore::initCmdBuffer(VkCommandBufferLevel level, VkCommandBuffer &cmdBuffer) {
 
         VkResult ret = VK_SUCCESS;
         ret = vkAllocateCommandBuffers(
@@ -647,11 +699,12 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
     }
 #else
+
     void VulkanCore::InitLayoutRenderData(VulkanRenderData *rdata) {
         VkResult ret = VK_SUCCESS;
         VulkanDescriptor &transform = rdata->getVkData().getDescriptor();
         VkDescriptorSetLayoutBinding &transform_uniformBinding = transform.getLayoutBinding();
-        VulkanMaterial* vkMtl = reinterpret_cast<VulkanMaterial*>(rdata->material(0));
+        VulkanMaterial *vkMtl = reinterpret_cast<VulkanMaterial *>(rdata->material(0));
         VkDescriptorSetLayoutBinding uniformAndSamplerBinding[3] = {};
         // Our MVP matrix
         uniformAndSamplerBinding[0].binding = 0;
@@ -688,7 +741,6 @@ namespace gvr {
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
     }
-
 
 
 #endif
@@ -1165,7 +1217,7 @@ namespace gvr {
         vkCmdBeginRenderPass(cmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 
         for (int j = 0; j < allDescriptors.size(); j++) {
-            VulkanRenderData* rdata = reinterpret_cast<VulkanRenderData*>(render_data_vector[j]);
+            VulkanRenderData *rdata = reinterpret_cast<VulkanRenderData *>(render_data_vector[j]);
             // Set our pipeline. This holds all major state
             // the pipeline defines, for example, that the vertex buffer is a triangle list.
             vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -1243,7 +1295,7 @@ namespace gvr {
         GVR_VK_CHECK(!err);
 
         err = vkGetFenceStatus(m_device, waitFences[m_swapchainCurrentIdx]);
-        int swapChainIndx;
+        int swapChainIndx = swapChainIndex;
         bool found = false;
         VkResult status;
         // check the status of current fence, if not ready take the previous one, we are incrementing with 2 for left and right frames.
@@ -1263,7 +1315,8 @@ namespace gvr {
             }
         }
 
-        VkCommandBuffer trnCmdBuf = GetTransientCmdBuffer();
+        VkCommandBuffer trnCmdBuf;
+        createTransientCmdBuffer(trnCmdBuf);
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -1310,13 +1363,14 @@ namespace gvr {
 
     void VulkanCore::updateMaterialUniform(Scene *scene, Camera *camera, RenderData *render_data,
                                            std::unordered_map<std::string, uniformDefination> &nameTypeMap) {
-        VulkanMaterial *mat = (VulkanMaterial*) render_data->material(0);
+        VulkanMaterial *mat = (VulkanMaterial *) render_data->material(0);
         mat->getVulkanUniforms().updateBuffer(m_device, this);
     }
 
-    void VulkanCore::UpdateUniforms(VulkanUniformBlock* block) {
+    void VulkanCore::UpdateUniforms(VulkanUniformBlock *block) {
         block->updateBuffer(m_device, this);
     }
+
 #ifndef ENABLE_TEXTURE
     void VulkanCore::InitDescriptorSetForRenderData(
             VulkanRenderData *rdata) { //VkDescriptorSet &m_descriptorSet) {
@@ -1387,6 +1441,7 @@ namespace gvr {
         LOGI("Vulkan after update descriptor");
     }
 #else
+
     void VulkanCore::InitDescriptorSetForRenderData(
             VulkanRenderData *rdata) { //VkDescriptorSet &m_descriptorSet) {
         //Create a pool with the amount of descriptors we require
@@ -1426,9 +1481,9 @@ namespace gvr {
 
         VkWriteDescriptorSet &transform_desc = rdata->getTransformUbo().getDescriptorSet();
 
-        VulkanMaterial* vkMtl = reinterpret_cast<VulkanMaterial*>(rdata->material(0));
+        VulkanMaterial *vkMtl = reinterpret_cast<VulkanMaterial *>(rdata->material(0));
         transform_desc.dstSet = descriptorSet;
-        VkWriteDescriptorSet& mat_desc = vkMtl->getVulkanUniforms().getDescriptorSet();
+        VkWriteDescriptorSet &mat_desc = vkMtl->getVulkanUniforms().getDescriptorSet();
         //VkWriteDescriptorSet &write1 = mat_desc->getDescriptorSet();
         mat_desc.dstSet = descriptorSet;
         VkWriteDescriptorSet writes[3] = {};
@@ -1437,22 +1492,22 @@ namespace gvr {
         writes[2] = mat_desc;
 
 
-        ShaderData* shaderData= rdata->pass(0)->material();
-
-        if(!shaderData->areTexturesReady()){
+        ShaderData *shaderData = rdata->pass(0)->material();
+        LOGE("calling texture ready ");
+        if (!shaderData->areTexturesReady()) {
             LOGE("SHADER: textures not ready %s", rdata->owner_object()->name().c_str());
             return;
         }
-        VkTexture* texture = reinterpret_cast<VkTexture*>(shaderData->getTexture("u_texture"));
-        if(texture == NULL){
+        VkTexture *texture = reinterpret_cast<VkTexture *>(shaderData->getTexture("u_texture"));
+        if (texture == NULL) {
             LOGE("texture is NULL");
         }
         // Texture
         VkDescriptorImageInfo descriptorImageInfo = {};
         descriptorImageInfo.sampler = texture->getVkSampler();
         descriptorImageInfo.imageView = texture->getVkImageView();
-    //     descriptorImageInfo.sampler = textureObject->m_sampler;
-    //     descriptorImageInfo.imageView = textureObject->m_view;
+        //     descriptorImageInfo.sampler = textureObject->m_sampler;
+        //     descriptorImageInfo.imageView = textureObject->m_view;
 
         descriptorImageInfo.imageLayout = textureObject->m_imageLayout;
 
@@ -1471,6 +1526,7 @@ namespace gvr {
 
 
 #endif
+
     void VulkanCore::createPipelineCache() {
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
@@ -1521,7 +1577,7 @@ namespace gvr {
                                                            textureObject->m_width,
                                                            textureObject->m_height, 1, 1, 1,
                                                            VK_IMAGE_TILING_LINEAR,
-                                                           VK_IMAGE_USAGE_SAMPLED_BIT,
+                                                           VK_IMAGE_USAGE_SAMPLED_BIT, 0,
                                                            VK_SAMPLE_COUNT_1_BIT,
                                                            VK_IMAGE_LAYOUT_UNDEFINED), NULL,
                             &textureObject->m_image);
@@ -1677,17 +1733,18 @@ namespace gvr {
         textureObject->m_textureType = VK_IMAGE_TYPE_2D;
         textureObject->m_textureViewType = VK_IMAGE_VIEW_TYPE_2D;
 
-        textureObject->m_data = new uint8_t[((textureObject->m_width) * (textureObject->m_height) * 4)];
+        textureObject->m_data = new uint8_t[((textureObject->m_width) * (textureObject->m_height) *
+                                             4)];
         int flag = 0;
         for (int i = 0; i < ((textureObject->m_width) * (textureObject->m_height) * 4); i++) {
-            if(flag%2) {
+            if (flag % 2) {
                 textureObject->m_data[i] = 244;
 
                 textureObject->m_data[i + 1] = 0;
                 textureObject->m_data[i + 2] = 0;
                 textureObject->m_data[i + 3] = 244;
             }
-            else{
+            else {
                 textureObject->m_data[i] = 244;
 
                 textureObject->m_data[i + 1] = 255;
