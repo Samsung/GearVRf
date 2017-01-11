@@ -15,34 +15,9 @@
 
 package org.gearvrf.x3d;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-
-import java.util.concurrent.Future;
-
 import android.content.Context;
 import android.graphics.Color;
-import android.provider.Settings;
 import android.util.Log;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.gearvrf.script.GVRJavascriptScriptFile;
-
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAssetLoader;
@@ -50,6 +25,7 @@ import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDirectLight;
+import org.gearvrf.GVRLODGroup;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPerspectiveCamera;
@@ -65,25 +41,15 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
 import org.gearvrf.GVRTransform;
-
-import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
-import org.gearvrf.GVRRenderData.GVRRenderingOrder;
-import org.gearvrf.animation.GVRAnimation;
-
-import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
-import org.gearvrf.GVRTextureParameters.TextureWrapType;
-
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
-
-import org.gearvrf.script.GVRScriptManager;
-
-import org.joml.Vector3f;
+import org.gearvrf.script.GVRJavascriptScriptFile;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -902,8 +868,12 @@ public class X3Dobject {
                 // Check if this is part of a Level-of-Detail
                 if (lodManager.isActive()) {
                     shapeLODSceneObject = AddGVRSceneObject();
-                    shapeLODSceneObject.setLODRange(lodManager.getMinRange(),
-                            lodManager.getMaxRange());
+                    final GVRSceneObject parent = shapeLODSceneObject.getParent();
+                    if (null == parent.getComponent(GVRLODGroup.getComponentType())) {
+                        parent.attachComponent(new GVRLODGroup(gvrContext));
+                    }
+                    final GVRLODGroup lodGroup = (GVRLODGroup)parent.getComponent(GVRLODGroup.getComponentType());
+                    lodGroup.addRange(lodManager.getMinRange(), shapeLODSceneObject);
                     currentSceneObject = shapeLODSceneObject;
                 }
 
@@ -2404,8 +2374,12 @@ public class X3Dobject {
                             inlineGVRSceneObject = AddGVRSceneObject();
                             inlineGVRSceneObject.setName("inlineGVRSceneObject"
                                     + lodManager.getCurrentRangeIndex());
-                            inlineGVRSceneObject.setLODRange(lodManager.getMinRange(),
-                                    lodManager.getMaxRange());
+                            final GVRSceneObject parent = inlineGVRSceneObject.getParent();
+                            if (null == parent.getComponent(GVRLODGroup.getComponentType())) {
+                                parent.attachComponent(new GVRLODGroup(gvrContext));
+                            }
+                            final GVRLODGroup lodGroup = (GVRLODGroup) parent.getComponent(GVRLODGroup.getComponentType());
+                            lodGroup.addRange(lodManager.getMinRange(), inlineGVRSceneObject);
                             lodManager.increment();
                         }
                         InlineObject inlineObject = new InlineObject(inlineGVRSceneObject,

@@ -76,18 +76,6 @@ extern "C" {
     Java_org_gearvrf_NativeSceneObject_objectIntersectsBoundingVolume(
             JNIEnv * env, jobject obj, jlong jscene_object, jlong jother_object);
 
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeSceneObject_setLODRange(
-            JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_NativeSceneObject_getLODMinRange(
-            JNIEnv * env, jobject obj, jlong jscene_object);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
-            JNIEnv * env, jobject obj, jlong jscene_object);
-
     JNIEXPORT jfloatArray JNICALL
     Java_org_gearvrf_NativeSceneObject_getBoundingVolume(JNIEnv * env,
             jobject obj, jlong jSceneObject);
@@ -204,27 +192,6 @@ Java_org_gearvrf_NativeSceneObject_objectIntersectsBoundingVolume(
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     SceneObject* other_object = reinterpret_cast<SceneObject*>(jother_object);
     return scene_object->intersectsBoundingVolume(other_object);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeSceneObject_setLODRange(
-        JNIEnv * env, jobject obj, jlong jscene_object, jfloat min_range, jfloat max_range) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    scene_object->setLODRange(min_range, max_range);
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeSceneObject_getLODMinRange(
-        JNIEnv * env, jobject obj, jlong jscene_object) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    return scene_object->getLODMinRange();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeSceneObject_getLODMaxRange(
-        JNIEnv * env, jobject obj, jlong jscene_object) {
-    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    return scene_object->getLODMaxRange();
 }
 
 jfloatArray boundingVolumeToArray(JNIEnv* env, const BoundingVolume& bvol) {

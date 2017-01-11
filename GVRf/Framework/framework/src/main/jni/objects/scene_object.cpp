@@ -27,13 +27,11 @@
 #include "mesh.h"
 
 namespace gvr {
-bool SceneObject::using_lod_ = false;
 
 SceneObject::SceneObject() :
         HybridObject(), name_(""), children_(), visible_(true), transform_dirty_(false), in_frustum_(
-                false),  enabled_(true),query_currently_issued_(false), vis_count_(0), lod_min_range_(
-                0), lod_max_range_(MAXFLOAT), cull_status_(false), bounding_volume_dirty_(
-                true) {
+                false),  enabled_(true),query_currently_issued_(false), vis_count_(0),
+                cull_status_(false), bounding_volume_dirty_(true) {
 
     // Occlusion query setup
     queries_ = new GLuint[1];
@@ -431,10 +429,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
                     "FRUSTUM: HBV completely inside frustum, render %s and all its children\n",
                     name_.c_str());
         }
-
-        if (!using_lod_) {
-            return 3;
-        }
+        return 3;
     }
 
     // 2. Skip the empty objects with no render data
@@ -447,20 +442,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
         return 1;
     }
 
-    // 3. Check if the object against the Level-of-details
-    const float distance = rdata->camera_distance();
-    // if the object is not in the correct LOD level, cull out itself and all its children
-    if (!inLODRange(distance)) {
-        if (DEBUG_RENDERER) {
-            LOGD(
-                    "FRUSTUM: not in lod range, cull out %s and all its children\n",
-                    name_.c_str());
-        }
-
-        return 0;
-    }
-
-    // 4. Check if the object itself is intersecting with or inside the frustum
+    // 3. Check if the object itself is intersecting with or inside the frustum
     size_t size;
     {
         std::lock_guard < std::mutex > lock(children_mutex_);
@@ -629,5 +611,4 @@ bool SceneObject::checkAABBVsFrustumBasic(const float frustum[6][4],
     }
     return true;
 }
-
 }

@@ -143,31 +143,6 @@ public:
             float rdy, float rdz);
     bool intersectsBoundingVolume(SceneObject *scene_object);
 
-    void setLODRange(float minRange, float maxRange) {
-        lod_min_range_ = minRange * minRange;
-        lod_max_range_ = maxRange * maxRange;
-        using_lod_ = true;
-    }
-
-    float getLODMinRange() {
-        return lod_min_range_;
-    }
-
-    float getLODMaxRange() {
-        return lod_max_range_;
-    }
-
-    bool inLODRange(float distance_from_camera) {
-        if (!using_lod_) {
-            return true;
-        }
-        if (distance_from_camera >= lod_min_range_
-                && distance_from_camera < lod_max_range_) {
-            return true;
-        }
-        return false;
-    }
-
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
 
@@ -178,9 +153,6 @@ private:
     std::vector<Component*> components_;
     SceneObject* parent_ = nullptr;
     std::vector<SceneObject*> children_;
-    float lod_min_range_;
-    float lod_max_range_;
-    static bool using_lod_;
     bool cull_status_;
     bool transform_dirty_;
     BoundingVolume transformed_bounding_volume_;
