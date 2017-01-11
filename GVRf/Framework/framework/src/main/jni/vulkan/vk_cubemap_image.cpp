@@ -17,6 +17,7 @@
  * Cube map texture made by six bitmaps.
  ***************************************************************************/
 
+#include <cmath>
 #include "../vulkan/vk_cubemap_image.h"
 #include "../engine/renderer/renderer.h"
 #include "../engine/renderer/vulkan_renderer.h"
@@ -77,7 +78,7 @@ namespace gvr {
                      ret);
             }
             else {
-
+                mLevels = static_cast<int>(floor(log2(std::max(info.width, info.height))) + 1);
                 {
                     VkBufferImageCopy bufferCopyRegion = {};
                     ImageInfo imageInfo = {};
@@ -109,7 +110,7 @@ namespace gvr {
                 }
             }
         }
-        mVkImage.updateVkImage(tex_size, texData, imageInfos, bufferCopyRegions, t,
+        mVkImage.updateMipVkImage(tex_size, texData, imageInfos, bufferCopyRegions, t,
                                VK_FORMAT_R8G8B8A8_UNORM);
         for (int i = 0; i < bitmaps.size(); i++) {
             AndroidBitmap_unlockPixels(env, bitmaps[i]);

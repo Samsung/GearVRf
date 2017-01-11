@@ -77,16 +77,19 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
 
 void GLBitmapImage::update(int texid)
 {
+    LOGE("in update");
     if (mJava == NULL)
     {
         return;
     }
     if (mBitmap != NULL)
     {
+        LOGE("in update 1");
         updateFromBitmap(texid);
     }
     else if (mData != NULL)
     {
+        LOGE("in update 2" );
         updateFromMemory(texid);
     }
     else
@@ -106,10 +109,10 @@ void GLBitmapImage::updateFromMemory(int texid)
         LOGE("BitmapImage::updateFromMemory array is null");
         return;
     }
-
     jbyte* pixels = env->GetByteArrayElements(mData, 0);
     int t = getTarget();
     glBindTexture(t, texid);
+    LOGE("image size is %d ", mImageSize);
     if (mIsCompressed)
     {
         if (mLevels > 1)

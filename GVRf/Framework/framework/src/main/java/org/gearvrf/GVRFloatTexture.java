@@ -30,6 +30,8 @@
 package org.gearvrf;
 import android.opengl.GLES30;
 
+import static android.opengl.GLES30.GL_RG;
+
 /**
  * A specialized image, for doing computation on the GPU.
  *
@@ -61,13 +63,13 @@ public class GVRFloatTexture extends GVRImage
     public GVRFloatTexture(GVRContext gvrContext, int width, int height, float[] data)
             throws IllegalArgumentException
     {
-        super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, PixelFormat.FLOAT_PAIR.Value));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, GL_RG));
         NativeFloatTexture.update(getNative(), width, height, data);
     }
 
     public GVRFloatTexture(GVRContext gvrContext)
     {
-        super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, PixelFormat.FLOAT_PAIR.Value));
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, GL_RG));
     }
 
     /**

@@ -15,10 +15,10 @@ namespace gvr {
     class VkTexture : public Texture
     {
     public:
-        explicit VkTexture() : Texture() { }
+        explicit VkTexture() : Texture(), init_sampler_(false) { }
 
         explicit VkTexture(int texture_type) :
-                Texture(texture_type){ }
+                Texture(texture_type), init_sampler_(false){ }
 
         virtual ~VkTexture();
         virtual bool isReady();
@@ -59,7 +59,7 @@ namespace gvr {
         VkTexture& operator=(const VkTexture& gl_texture);
         VkTexture& operator=(VkTexture&& gl_texture);
 
-        void updateTexParams();
+        void createSampler(int miplevels = 0);
         bool updateImage();
 
     protected:
@@ -67,8 +67,8 @@ namespace gvr {
         static VkFilter MapFilter[];
         static VkSamplerMipmapMode mipmapMode[];
         GLuint id_;
+        bool init_sampler_;
         VkSampler m_sampler;
-     //   GlDelete* deleter_;
     };
 
 }

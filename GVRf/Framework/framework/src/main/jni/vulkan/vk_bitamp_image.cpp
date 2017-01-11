@@ -84,6 +84,9 @@ namespace gvr {
                     internalFormat = VK_FORMAT_R8_UNORM;
                     break;
             }
+            mLevels = static_cast<int>(floor(log2(std::max(info.width, info.height))) + 1);
+            //mVkImage.updateMipVkImage(info.width, info.height, pixels, target, internalFormat);
+
 
             VkBufferImageCopy bufferCopyRegion = {};
             ImageInfo imageInfo = {};
@@ -106,6 +109,8 @@ namespace gvr {
             imageInfos.push_back(imageInfo);
             mVkImage.updateVkImage(tex_size, texData, imageInfos, bufferCopyRegions, target,
                                    internalFormat);
+
+
             AndroidBitmap_unlockPixels(env, bitmap);
             return internalFormat;
         }
