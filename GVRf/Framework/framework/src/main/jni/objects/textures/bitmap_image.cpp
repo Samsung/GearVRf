@@ -75,7 +75,6 @@ void BitmapImage::update(JNIEnv *env, int width, int height, int imageSize,
     mWidth = width;
     mHeight = height;
     mLevels = levels;
-    mFormat = GL_RGBA;
     mIsCompressed = true;
     mImageSize = imageSize;
     setDataOffsets(dataOffsets, levels);

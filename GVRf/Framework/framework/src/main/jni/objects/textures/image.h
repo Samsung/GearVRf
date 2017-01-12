@@ -18,6 +18,7 @@
 #define IMAGE_H_
 
 #include <mutex>
+#include <vector>
 #include "objects/hybrid_object.h"
 #include "gl/gl_headers.h"  // for GL_TEXTURE_xxx
 
@@ -61,7 +62,7 @@ public:
     Image(int type, int format) :
             HybridObject(), mType(type), mFormat(format), mPendingUpdate(0),
             mWidth(0), mHeight(0), mImageSize(0), mUpdateLock(),
-             mLevels(0), mDataOffsets(NULL), mTarget(0)
+             mLevels(0),  mTarget(0)
     {
 
     }
@@ -69,12 +70,8 @@ public:
     Image(int type, int width, int height, int imagesize, int format, int levels) :
             HybridObject(), mType(type), mPendingUpdate(0), mUpdateLock(),
             mWidth(width), mHeight(height), mImageSize(imagesize),
-            mFormat(format), mLevels(levels), mDataOffsets(NULL), mTarget(0)
+            mFormat(format), mLevels(levels),  mTarget(0)
     {
-        if (levels > 1)
-        {
-            mDataOffsets = new int[levels];
-        }
     }
 
     int getWidth() const { return mWidth; }
@@ -85,35 +82,20 @@ public:
     int getFormat() const { return mFormat; }
     int getDataOffset(int level)
     {
-        if ((mDataOffsets != NULL) && (level >= 0) && (level < mLevels))
+        if (!mDataOffsets.empty() && (level >= 0) && (level < mDataOffsets.size()))
         {
             return mDataOffsets[level];
         }
         return 0;
     }
 
-    bool setDataOffset(int level, int offset)
-    {
-        if ((mDataOffsets != NULL) && (level >= 0) && (level < mLevels))
-        {
-            mDataOffsets[level] = offset;
-            return true;
-        }
-        return false;
-    }
-
     bool setDataOffsets(const int* offsets, int n)
     {
-        if (n != mLevels)
-        {
-            return false;
-        }
-        mUpdateLock.lock();
+        mDataOffsets.resize(n);
         for (int i = 0; i < n; ++i)
         {
             mDataOffsets[i] = offsets[i];
         }
-        mUpdateLock.unlock();
     }
 
     bool checkForUpdate(int texid)
@@ -140,7 +122,7 @@ protected:
     int     mFormat;
     int     mLevels;
     int     mTarget;
-    int*    mDataOffsets;
+    std::vector<int>    mDataOffsets;
     bool    mPendingUpdate;
 
 
