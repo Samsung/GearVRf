@@ -55,7 +55,7 @@ glm::mat4 Camera::getViewMatrix() {
         std::string error = "Camera::getViewMatrix() : transform not attached.";
         throw error;
     }
-    return glm::affineInverse(t->getModelMatrix());
+    return glm::affineInverse(t->getModelMatrix(true));
 }
 
 glm::mat4 Camera::getCenterViewMatrix() {

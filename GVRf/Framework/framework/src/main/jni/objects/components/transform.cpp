@@ -65,8 +65,8 @@ void Transform::invalidate(bool rotationUpdated) {
     }
 }
 
-glm::mat4 Transform::getModelMatrix() {
-    if (!model_matrix_.isValid()) {
+glm::mat4 Transform::getModelMatrix(bool forceRecalculate) {
+    if (!model_matrix_.isValid() || forceRecalculate) {
         glm::mat4 translation_matrix = glm::translate(glm::mat4(), position_);
         glm::mat4 rotation_matrix = glm::mat4_cast(rotation_);
         glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
@@ -82,7 +82,6 @@ glm::mat4 Transform::getModelMatrix() {
         } else {
             model_matrix_.validate(trs_matrix);
         }
-
     }
     return model_matrix_.element();
 }

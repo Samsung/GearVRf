@@ -179,7 +179,7 @@ public:
     }
 
     void invalidate(bool rotationUpdated);
-    glm::mat4 getModelMatrix();
+    glm::mat4 getModelMatrix(bool forceRecalculate = false);
     glm::mat4 getLocalModelMatrix();
     void translate(float x, float y, float z);
     void setRotationByAxis(float angle, float x, float y, float z);
