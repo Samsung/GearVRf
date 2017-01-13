@@ -86,7 +86,7 @@ namespace gvr {
 
         void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
-        void InitDescriptorSetForRenderData(VulkanRenderData *rdata);
+        bool InitDescriptorSetForRenderData(VulkanRenderData *rdata);
 
         void BuildCmdBufferForRenderData(std::vector <VkDescriptorSet> &allDescriptors,
                                          int &swapChainIndex,

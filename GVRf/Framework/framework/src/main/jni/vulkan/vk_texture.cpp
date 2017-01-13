@@ -36,7 +36,6 @@ namespace gvr {
 
     bool VkTexture::isReady()
     {
-        LOGE("Vulkan: isready");
         if (mPendingTask)
         {
             if (getTarget() || (mImage != NULL))
@@ -52,18 +51,19 @@ namespace gvr {
 
     bool VkTexture::updateGPU()
     {
-        LOGE("Vulkan: updateGPU");
+        if( mPendingTask == 0)
+            return false;
+
         if (mPendingTask & Texture::TASK_INIT_PARAMS)
         {
             mPendingTask &= ~Texture::TASK_INIT_PARAMS;
         }
         if ((mPendingTask & Texture::TASK_UPDATE_IMAGE))
         {
-            LOGE("Vulkan: calling updateImage");
             updateImage();
             mPendingTask &= ~Texture::TASK_UPDATE_IMAGE;
         }
-        LOGE("vulkan: returning updateGPU ");
+
         return (mPendingTask == 0);
     }
 
@@ -89,7 +89,6 @@ namespace gvr {
 
     void VkTexture::createSampler(int maxLod) {
 
-        LOGE("MAX LOD is %d", maxLod);
         // Sets the new MIN FILTER
         VkFilter min_filter_type_ = MapFilter[mTexParams.getMinFilter()];
 

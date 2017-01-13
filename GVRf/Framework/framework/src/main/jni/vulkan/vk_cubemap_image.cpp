@@ -111,7 +111,7 @@ namespace gvr {
             }
         }
         mVkImage.updateMipVkImage(tex_size, texData, imageInfos, bufferCopyRegions, t,
-                               VK_FORMAT_R8G8B8A8_UNORM);
+                               VK_FORMAT_R8G8B8A8_UNORM, mLevels);
         for (int i = 0; i < bitmaps.size(); i++) {
             AndroidBitmap_unlockPixels(env, bitmaps[i]);
             env->DeleteLocalRef(bitmaps[i]);

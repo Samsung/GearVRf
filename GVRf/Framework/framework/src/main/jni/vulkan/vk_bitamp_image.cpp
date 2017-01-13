@@ -85,9 +85,6 @@ namespace gvr {
                     break;
             }
             mLevels = static_cast<int>(floor(log2(std::max(info.width, info.height))) + 1);
-            //mVkImage.updateMipVkImage(info.width, info.height, pixels, target, internalFormat);
-
-
             VkBufferImageCopy bufferCopyRegion = {};
             ImageInfo imageInfo = {};
             bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -107,8 +104,8 @@ namespace gvr {
             tex_size = info.height * info.stride;
             texData.push_back(pixels);
             imageInfos.push_back(imageInfo);
-            mVkImage.updateVkImage(tex_size, texData, imageInfos, bufferCopyRegions, target,
-                                   internalFormat);
+            mVkImage.updateMipVkImage(tex_size, texData, imageInfos, bufferCopyRegions, target,
+                                   internalFormat, mLevels);
 
 
             AndroidBitmap_unlockPixels(env, bitmap);
@@ -141,9 +138,8 @@ namespace gvr {
             LOGE("BitmapImage::updateFromMemory array is null");
             return;
         }
-
+       // mLevels = static_cast<int>(floor(log2(std::max(mWidth, mHeight))) + 1);
         jbyte *pixels = env->GetByteArrayElements(array, 0);
-        int t = getTarget();
         std::vector<void *> texData;
         std::vector<VkBufferImageCopy> bufferCopyRegions;
         std::vector<ImageInfo> imageInfos;
@@ -175,12 +171,15 @@ namespace gvr {
             else
                 internal_format = VK_FORMAT_R8_UNORM;
 
+   //         mVkImage.updateMipVkImage(mImageSize, texData, imageInfos, bufferCopyRegions, target,
+   //                                   internal_format, mLevels);
             mVkImage.updateVkImage(mImageSize, texData, imageInfos, bufferCopyRegions, target,
                                    internal_format);
         }
         else {
 
             // TODO : loadCompressed Mipmaps
+            // This is not supported for Vulkan : our physical device does not have feature with  VK_FORMAT_FEATURE_BLIT_DST_BIT
 
         }
         env->ReleaseByteArrayElements(array, pixels, 0);

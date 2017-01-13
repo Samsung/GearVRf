@@ -47,6 +47,10 @@ bool GLTexture::isReady()
 
 bool GLTexture::updateGPU()
 {
+
+    if( mPendingTask == 0)
+        return false;
+
     if (mPendingTask & Texture::TASK_INIT_PARAMS)
     {
         LOGE("GLTexture::updateGPU ");

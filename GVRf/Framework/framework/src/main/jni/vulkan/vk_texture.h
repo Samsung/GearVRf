@@ -36,8 +36,12 @@ namespace gvr {
         }
         const VkImageView& getVkImageView(){
 
+            if(mImage == NULL)
+                return NULL;
+
             VkCubemapImage* cubemapImage;
             VkBitmapImage* bitmapImage;
+
             switch(mImage->getType()){
 
                 case Image::ImageType::CUBEMAP:

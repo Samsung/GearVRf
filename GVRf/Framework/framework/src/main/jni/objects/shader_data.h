@@ -74,7 +74,6 @@ public:
         if (texture != NULL)
         {
             LOGE("SHADER: texture %s is ready", key.c_str());
-            texture->setReady(true);
             dirty();
         }
     }

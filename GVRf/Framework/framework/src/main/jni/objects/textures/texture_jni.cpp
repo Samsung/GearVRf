@@ -47,7 +47,7 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeTexture_constructor(JNIEnv * env, jobject obj)
 {
-    Texture* tex = Renderer::getInstance()->createTexture(Texture::TextureType::TEXTURE_2D);
+    Texture* tex = Renderer::getInstance()->createTexture(0);
     return reinterpret_cast<jlong>(tex);
 }
 

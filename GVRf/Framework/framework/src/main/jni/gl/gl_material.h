@@ -43,7 +43,7 @@ namespace gvr {
             int texIndex = updateTextures(shader);
             if (texIndex >= 0)
             {
-                if (dirty_)
+               // if (dirty_)
                 {
                     updateUniforms(shader->getProgramId());
                     dirty_ = false;
