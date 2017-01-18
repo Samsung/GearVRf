@@ -166,7 +166,7 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         @Override
         public void onEarlyInit(GVRContext context) {
             initWidget();
-        }  
+        }
     };
 
     public GVRWidgetPlugin(GVRActivity activity) {

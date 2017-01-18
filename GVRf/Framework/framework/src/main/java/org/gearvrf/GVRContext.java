@@ -2302,30 +2302,6 @@ public abstract class GVRContext implements IEventReceiver {
     public abstract void setMainScene(GVRScene scene);
 
     /**
-     * Returns a {@link GVRScene} that you can populate before passing to
-     * {@link #setMainScene(GVRScene)}.
-     * 
-     * Implementation maintains a single element buffer, initialized to
-     * {@code null}. When this method is called, creates a new scene if the
-     * buffer is {@code null}, then returns the buffered scene. If this buffered
-     * scene is passed to {@link #setMainScene(GVRScene)}, the buffer is reset
-     * to {@code null}.
-     * 
-     * <p>
-     * One use of this is to build your scene graph while the splash screen is
-     * visible. If you have called {@linkplain #getNextMainScene()} (so that the
-     * next-main-scene buffer is non-{@code null} when the splash screen is
-     * closed) GVRF will automatically switch to the 'pending' main-scene; if
-     * the buffer is {@code null}, GVRF will simply remove the splash screen
-     * from the main scene object.
-     * 
-     * @since 1.6.4
-     */
-    public GVRScene getNextMainScene() {
-        return getNextMainScene(null);
-    }
-
-    /**
      * Start a debug server on the default TCP/IP port for the default number
      * of clients.
      */
@@ -2381,38 +2357,6 @@ public abstract class GVRContext implements IEventReceiver {
         mDebugServer.shutdown();
         mDebugServer = null;
     }
-
-    /**
-     * Returns a {@link GVRScene} that you can populate before passing to
-     * {@link #setMainScene(GVRScene)}.
-     * 
-     * Implementation maintains a single element buffer, initialized to
-     * {@code null}. When this method is called, creates a new scene if the
-     * buffer is {@code null}, then returns the buffered scene. If this buffered
-     * scene is passed to {@link #setMainScene(GVRScene)}, the buffer is reset
-     * to {@code null}.
-     * 
-     * <p>
-     * One use of this is to build your scene graph while the splash screen is
-     * visible. If you have called {@linkplain #getNextMainScene()} (so that the
-     * next-main-scene buffer is non-{@code null} when the splash screen is
-     * closed) GVRF will automatically switch to the 'pending' main-scene; if
-     * the buffer is {@code null}, GVRF will simply remove the splash screen
-     * from the main scene object.
-     * 
-     * @param onSwitchMainScene
-     *            Optional (may be {@code null}) {@code Runnable}, called when
-     *            this {@link GVRScene} becomes the new main scene, whether
-     *            {@linkplain #setMainScene(GVRScene) explicitly} or implicitly
-     *            (as, for example, when the splash screen closes). This
-     *            callback lets apps do things like start animations when their
-     *            scene becomes visible, instead of in
-     *            {@link GVRMain#onInit(GVRContext) onInit()} when the scene
-     *            objects may be hidden by the splash screen.
-     * 
-     * @since 1.6.4
-     */
-    public abstract GVRScene getNextMainScene(Runnable onSwitchMainScene);
 
     /**
      * Returns the {@link GVRInputManager}.

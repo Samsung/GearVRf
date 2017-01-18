@@ -22,7 +22,6 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
-import org.gearvrf.debug.GVRStatsLine;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
@@ -36,6 +35,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 abstract class GVRViewManager extends GVRContext {
 
@@ -81,39 +81,40 @@ abstract class GVRViewManager extends GVRContext {
 
     @Override
     public GVRScene getMainScene() {
-        return mMainScene;
-    }
-
-    @Override
-    public synchronized GVRScene getNextMainScene(Runnable onSwitchMainScene) {
-        if (mNextMainScene == null) {
-            mNextMainScene = new GVRScene(this);
-        }
-        NativeScene.setMainScene(mNextMainScene.getNative());
-        mOnSwitchMainScene = onSwitchMainScene;
-        return mNextMainScene;
-    }
-
-    @Override
-    public synchronized void setMainScene(GVRScene scene) {
-        mMainScene = scene;
-        NativeScene.setMainScene(mMainScene.getNative());
-
-        if (mNextMainScene == scene) {
-            mNextMainScene = null;
-            if (mOnSwitchMainScene != null) {
-                try {
-                    mOnSwitchMainScene.run();
-                } catch (final Exception exc) {
-                    Log.e(TAG, "onSwitchMainScene runnable threw " + exc);
-                }
-                mOnSwitchMainScene = null;
+        mMainSceneLock.lock();
+        try {
+            if (mState == ViewManagerState.SHOWING_SPLASH) {
+                return mPendingMainScene;
+            } else {
+                return mMainScene;
             }
+        } finally {
+            mMainSceneLock.unlock();
         }
-        if (null != mMainScene) {
-            getActivity().setCameraRig(mMainScene.getMainCameraRig());
-            mInputManager.setScene(mMainScene);
+    }
+
+    @Override
+    public void setMainScene(GVRScene scene) {
+        if (null == scene) {
+            throw new IllegalArgumentException();
         }
+        mMainSceneLock.lock();
+        try {
+            if (mState == ViewManagerState.SHOWING_SPLASH) {
+                mPendingMainScene = scene;
+            } else {
+                setMainSceneImpl(scene);
+            }
+        } finally {
+            mMainSceneLock.unlock();
+        }
+    }
+
+    private void setMainSceneImpl(GVRScene scene) {
+        mMainScene = scene;
+        NativeScene.setMainScene(scene.getNative());
+        getActivity().setCameraRig(scene.getMainCameraRig());
+        mInputManager.setScene(scene);
     }
 
     protected boolean updateSensoredScene() {
@@ -121,15 +122,12 @@ abstract class GVRViewManager extends GVRContext {
             return true;
         }
 
-        if (null != mMainScene) {
-            final GVRCameraRig cameraRig = mMainScene.getMainCameraRig();
+        final GVRCameraRig cameraRig = mMainScene.getMainCameraRig();
 
-            if (null != cameraRig && (mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
-                Log.i(TAG, "camera rig yaw reset");
-                cameraRig.resetYaw();
-                mSensoredScene = mMainScene;
-                return true;
-            }
+        if (null != cameraRig && (mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
+            cameraRig.resetYaw();
+            mSensoredScene = mMainScene;
+            return true;
         }
         return false;
     }
@@ -187,7 +185,26 @@ abstract class GVRViewManager extends GVRContext {
         mPreviousTimeNanos = GVRTime.getCurrentTime();
         mRenderBundle = makeRenderBundle();
         getActivity().getConfigurationManager().configureRendering();
-        setMainScene(new GVRScene(this));
+
+        setMainSceneImpl(new GVRScene(GVRViewManager.this));
+    }
+
+    private void createMainScene() {
+        if (getActivity().getAppSettings().showLoadingIcon) {
+            mSplashScreen = mMain.createSplashScreen();
+            if (mSplashScreen != null) {
+                mMainSceneLock.lock();
+                try {
+                    mState = ViewManagerState.SHOWING_SPLASH;
+                    mPendingMainScene = new GVRScene(GVRViewManager.this);
+                } finally {
+                    mMainSceneLock.unlock();
+                }
+                mMainScene.addSceneObject(mSplashScreen);
+            }
+        } else {
+            mSplashScreen = null;
+        }
     }
 
     /**
@@ -213,7 +230,7 @@ abstract class GVRViewManager extends GVRContext {
          * Without the sensor data, can't draw a scene properly.
          */
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
-            Runnable runnable = null;
+            Runnable runnable;
             while ((runnable = mRunnables.poll()) != null) {
                 try {
                     runnable.run();
@@ -264,19 +281,19 @@ abstract class GVRViewManager extends GVRContext {
         void afterDrawEyes() {}
     }
 
+    private ViewManagerState mState = ViewManagerState.RUNNING;
+    private enum ViewManagerState {
+        RUNNING,
+        SHOWING_SPLASH
+    }
+    private final ReentrantLock mMainSceneLock = new ReentrantLock();
+
     private FrameHandler firstFrame = new FrameHandler() {
         @Override
         public void beforeDrawEyes() {
             mMain.setViewManager(GVRViewManager.this);
 
-            if (getActivity().getAppSettings().showLoadingIcon) {
-                mSplashScreen = mMain.createSplashScreen();
-                if (mSplashScreen != null) {
-                    getMainScene().addSceneObject(mSplashScreen);
-                }
-            } else {
-                mSplashScreen = null;
-            }
+            createMainScene();
 
             // execute pending runnables now so any necessary gl calls
             // are done before onInit().  As an example the request to
@@ -297,11 +314,8 @@ abstract class GVRViewManager extends GVRContext {
                 @Override
                 public void run() {
                     try {
-                        getEventManager().sendEvent(mMain, IScriptEvents.class,
-                                "onEarlyInit", GVRViewManager.this);
-
-                        getEventManager().sendEvent(mMain, IScriptEvents.class,
-                                "onInit", GVRViewManager.this);
+                        getEventManager().sendEvent(mMain, IScriptEvents.class, "onEarlyInit", GVRViewManager.this);
+                        getEventManager().sendEvent(mMain, IScriptEvents.class, "onInit", GVRViewManager.this);
 
                         if (null != mSplashScreen && GVRMain.SplashMode.AUTOMATIC == mMain
                                 .getSplashMode() && mMain.getSplashDisplayTime() < 0f) {
@@ -360,16 +374,10 @@ abstract class GVRViewManager extends GVRContext {
             if (mSplashScreen != null && (timeoutExpired || mSplashScreen.closeRequested())) {
                 if (mSplashScreen.closeRequested() || mMain.getSplashMode() == GVRMain.SplashMode.AUTOMATIC) {
 
-                    final SplashScreen splashScreen = mSplashScreen;
                     closing = true;
                     Threads.spawnLow(new Runnable() {
                         @Override
                         public void run() {
-                            //skip a frame to ensure deferred work from on onInit gets to execute on
-                            //the gl thread
-                            GVRNotifications.waitBeforeStep();
-                            GVRNotifications.waitAfterStep();
-
                             runOnGlThread(new Runnable() {
                                 public void run() {
                                     new GVROpacityAnimation(mSplashScreen, mMain.getSplashFadeTime(), 0) //
@@ -377,14 +385,18 @@ abstract class GVRViewManager extends GVRContext {
 
                                                 @Override
                                                 public void finished(GVRAnimation animation) {
-                                                    if (mNextMainScene != null) {
-                                                        setMainScene(mNextMainScene);
-                                                        // Splash screen finishes. Notify main
-                                                        // scene it is ready.
-                                                        GVRViewManager.this.notifyMainSceneReady();
-                                                    } else {
-                                                        getMainScene().removeSceneObject(splashScreen);
+                                                    mMainSceneLock.lock();
+                                                    try {
+                                                        mState = ViewManagerState.RUNNING;
+                                                        setMainScene(mPendingMainScene);
+                                                        mPendingMainScene = null;
+                                                    } finally {
+                                                        mMainSceneLock.unlock();
                                                     }
+                                                    // Splash screen finishes. Notify main
+                                                    // scene it is ready.
+                                                    GVRViewManager.this.notifyMainSceneReady();
+                                                    mSplashScreen = null;
 
                                                     mFrameHandler = normalFrames;
                                                     splashFrames = null;
@@ -566,8 +578,7 @@ abstract class GVRViewManager extends GVRContext {
     protected final Map<Runnable, Integer> mRunnablesPostRender = new HashMap<Runnable, Integer>();
 
     protected GVRScene mMainScene;
-    protected GVRScene mNextMainScene;
-    protected Runnable mOnSwitchMainScene;
+    protected GVRScene mPendingMainScene;
     protected GVRScene mSensoredScene;
 
     protected SplashScreen mSplashScreen;

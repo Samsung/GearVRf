@@ -266,7 +266,7 @@ public class GVRScriptManager {
 
                 @Override
                 public void onInit(GVRContext gvrContext) throws Throwable {
-                    mainScene = gvrContext.getNextMainScene();
+                    mainScene = gvrContext.getMainScene();
                 }
 
                 @Override

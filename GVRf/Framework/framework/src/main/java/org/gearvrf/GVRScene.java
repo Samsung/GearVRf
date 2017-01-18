@@ -176,8 +176,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * This node is a common ancestor to all the objects
      * in the scene.
      * @return top level scene object.
-     * @see addSceneObject
-     * @see removeSceneObject
+     * @see #addSceneObject(GVRSceneObject)
+     * @see #removeSceneObject(GVRSceneObject)
      */
     public GVRSceneObject getRoot() {
         return mSceneRoot;
@@ -605,12 +605,24 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
                     && !sceneObject.getRenderData().isLightMapEnabled()) {
                 // TODO: Add support to enable and disable light map at run time.
                 continue;
-                    }
+            }
 
             sceneObject.getRenderData().getMaterial().setShaderType(shaderId);
             sceneObject.getRenderData().getMaterial().setTexture(key + "_texture", texture);
             sceneObject.getRenderData().getMaterial().setTextureAtlasInfo(key, atlasInfo);
         }
+    }
+
+    /**
+     * Sets the background color of the scene.
+     *
+     * If you don't set the background color, the default is an opaque black.
+     * Meaningful parameter values are from 0 to 1, inclusive: values
+     * {@literal < 0} are clamped to 0; values {@literal > 1} are clamped to 1.
+     */
+    public final void setBackgroundColor(float r, float g, float b, float a) {
+        getMainCameraRig().getLeftCamera().setBackgroundColor(r, g, b, a);
+        getMainCameraRig().getRightCamera().setBackgroundColor(r, g, b, a);
     }
 
     @Override
@@ -707,8 +719,6 @@ class NativeScene {
     static native void addSceneObject(long scene, long sceneObject);
    
     public static native void invalidateShadowMap(long scene);
-
-    static native void removeSceneObject(long scene, long sceneObject);
 
     static native void removeAllSceneObjects(long scene);
 
