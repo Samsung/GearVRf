@@ -18,12 +18,12 @@ android {
 
         externalNativeBuild {
             ndkBuild {
-                if(rootProject.hasProperty("buildGvrfAndDemos")) {
+                if (rootProject.hasProperty("buildGvrfAndDemos")) {
                     arguments.add("NDK_DEBUG=1")
                 }
                 arguments = ["-j" + Runtime.runtime.availableProcessors()]
                 arguments += ['OVR_MOBILE_SDK=' + rootProject.property("OVR_MOBILE_SDK")]
-                arguments += ['PROJECT_ROOT='+rootProject.projectDir]
+                arguments += ['PROJECT_ROOT=' + rootProject.projectDir]
                 arguments += ['BUILDTYPE=Release']      // for oculus
             }
         }
@@ -35,40 +35,55 @@ android {
         }
     }
 
-    task buildInfo(type:Exec){
-        commandLine 'git log -n 1 --format=%H'.split()
+    task buildInfo() {
+        def commitId
+
+        File head = new File(projectDir.absolutePath + '/../../../.git/HEAD')
+        if (head.exists()) {
+            def elements = head.text.split()
+            if (elements.length > 0) {
+                File commit = new File(projectDir.absolutePath + '/../../../.git/' + elements[elements.length-1])
+                if (commit.exists()) {
+                    commitId = commit.text.trim();
+                } else {
+                    return
+                }
+            } else {
+                return
+            }
+        } else {
+            return
+        }
+
         def source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
         def javaSource = new File(projectDir.absolutePath + '/src/main/java/org/gearvrf/', 'OvrBuildInfo.java')
-        standardOutput = new ByteArrayOutputStream()
 
-        doLast {
-            source.text = '#include "util/gvr_log.h"\n'
-            source.text += '#include <jni.h>\n\n'
-            source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
-            source.text += '    LOGI("BACKEND_OCULUS-CPP  HEAD: '+ standardOutput.toString().trim() + '");\n'
-            source.text += '    JNIEnv* env;\n';
-            source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
-            source.text += '        jclass java_class = env->FindClass("org/gearvrf/OvrBuildInfo");\n'
-            source.text += '        if (env->ExceptionCheck()) {\n'
-            source.text += '            env->ExceptionClear();\n'
-            source.text += '        }\n'
-            source.text += '        if(nullptr != java_class) {\n'
-            source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
-            source.text += '            if (env->ExceptionCheck()) {\n'
-            source.text += '                env->ExceptionClear();\n'
-            source.text += '            }\n'
-            source.text += '            env->DeleteLocalRef(java_class);\n'
-            source.text += '        }\n'
-            source.text += '    }\n'
-            source.text += '    return JNI_VERSION_1_6;\n'
-            source.text += '}'
+        source.text = '#include "util/gvr_log.h"\n'
+        source.text += '#include <jni.h>\n\n'
+        source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
+        source.text += '    LOGI("BACKEND_OCULUS-CPP  HEAD: ' + commitId + '");\n'
+        source.text += '    JNIEnv* env;\n';
+        source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
+        source.text += '        jclass java_class = env->FindClass("org/gearvrf/OvrBuildInfo");\n'
+        source.text += '        if (env->ExceptionCheck()) {\n'
+        source.text += '            env->ExceptionClear();\n'
+        source.text += '        }\n'
+        source.text += '        if(nullptr != java_class) {\n'
+        source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
+        source.text += '            if (env->ExceptionCheck()) {\n'
+        source.text += '                env->ExceptionClear();\n'
+        source.text += '            }\n'
+        source.text += '            env->DeleteLocalRef(java_class);\n'
+        source.text += '        }\n'
+        source.text += '    }\n'
+        source.text += '    return JNI_VERSION_1_6;\n'
+        source.text += '}'
 
-            javaSource.text = 'package org.gearvrf;\n'
-            javaSource.text += 'public class OvrBuildInfo {\n'
-            javaSource.text += '    public final static String HEAD="' + standardOutput.toString().trim() + '";\n'
-            javaSource.text += '    static { android.util.Log.i("gvrf", "BACKEND_OCULUS-JAVA HEAD: " + HEAD); }\n'
-            javaSource.text += '}\n'
-        }
+        javaSource.text = 'package org.gearvrf;\n'
+        javaSource.text += 'public class OvrBuildInfo {\n'
+        javaSource.text += '    public final static String HEAD="' + commitId + '";\n'
+        javaSource.text += '    static { android.util.Log.i("gvrf", "BACKEND_OCULUS-JAVA HEAD: " + HEAD); }\n'
+        javaSource.text += '}\n'
     }
 
     buildTypes {
@@ -138,7 +153,7 @@ tasks.whenTaskAdded { task ->
     if (task.name == 'externalNativeBuildDebug') {
         task.dependsOn 'buildInfo'
     } else if (task.name == 'bundleDebug') {
-        task<< {
+        task << {
             tasks.copyAARFiles.execute()
 
             def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
