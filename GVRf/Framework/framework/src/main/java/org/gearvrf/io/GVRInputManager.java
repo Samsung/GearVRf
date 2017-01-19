@@ -183,7 +183,8 @@ public abstract class GVRInputManager {
         if ((sources & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) {
             // We do not want to add the Oculus touchpad as a mouse device.
             if (vendorId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID
-                    && productId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID) {
+                    && productId == GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID
+                    || (vendorId == 0 && productId == 0)) {
                 return GVRControllerType.GAZE;
             }
             return GVRControllerType.MOUSE;
