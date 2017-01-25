@@ -801,6 +801,72 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     public void setAlphaBlend(boolean alphaBlend) {
         NativeRenderData.setAlphaBlend(getNative(), alphaBlend);
     }
+
+    /**
+     * Sets the blend functions for alpha blending between the
+     * screen (destination) and the texture (source) alpha.
+     * The blend functions are symbolic constants that
+     * specify how to scale the source and
+     * destination before they are added together:
+     * <p/>
+     * destAlpha = destBlendFunc * destAlpha + sourceBlendFunc * sourceAlpha
+     * <p/>
+     * The functions are defined the same way as in OpenGL.
+     * The source blend function defaults to GL_ONE,
+     * the destination blend function defaults to GL_ONE_MINUS_SRC_ALPHA.
+     *
+     * @param sourceBlendFunc blend function for source
+     * @param destBlendFunc   blend function for destination
+     *  <p>
+     *   The supported functions are: GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_DEST_ALPHA,
+     *   GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DEST_ALPHA, GL_SRC_ALPHA_SATURATE.
+     *   Color blending or blending with a constant alpha are not supported.
+     *  </p>
+     *
+     * @see #getSourceAlphaBlendFunc() #getDestBlendFunc() #setAlphaBlend(boolean)
+     */
+    public void setAlphaBlendFunc(int sourceBlendFunc, int destBlendFunc)
+    {
+        NativeRenderData.setAlphaBlendFunc(getNative(), sourceBlendFunc, destBlendFunc);
+    }
+
+    /**
+     * Gets the source blend function for alpha blending.
+     * The blend functions are symbolic constants that
+     * specify how to scale the source and
+     * destination before they are added together:
+     * <p/>
+     * destAlpha = destBlendFunc * destAlpha + sourceBlendFunc * sourceAlpha
+     * <p/>
+     * The functions are defined the same way as in OpenGL.
+     * The source blend function defaults to GL_ONE.
+     * @return constant value for source blend function
+     * @see #setAlphaBlendFunc(int, int) #getDestBlendFunc()
+     */
+    public int getSourceAlphaBlendFunc()
+    {
+        return NativeRenderData.getSourceAlphaBlendFunc(getNative());
+    }
+
+    /**
+     * Gets the destination blend function for alpha blending.
+     * The blend functions are symbolic constants that
+     * specify how to scale the source and
+     * destination before they are added together:
+     * <p/>
+     * destAlpha = destBlendFunc * destAlpha + sourceBlendFunc * sourceAlpha
+     * <p/>
+     * The functions are defined the same way as in OpenGL.
+     * The destination blend function defaults to GL_ONE_MINUS_SRC_ALPHA.
+     *
+     * @return constant value for source blend function
+     * @see #setAlphaBlendFunc(int, int) #getSourceAlphaBlendFunc()
+     */
+    public int getDestAlphaBlendFunc()
+    {
+        return NativeRenderData.getDestAlphaBlendFunc(getNative());
+    }
+
     /**
      * @return {@code true} if {@code GL_ALPHA_TO_COVERAGE} is enabled, {@code false} if not
      */
@@ -889,8 +955,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     /**
      * Checks if a renderable object can cast shadows.
      * @returns true if shadows are cast, false if not.
-     * @see GVRRenderData.setCastShadows
-     * @see GVRLightBase.castShadows
+     * @see #setCastShadows(boolean)
+     * @see GVRLightBase#getCastShadow()
      */
     public boolean getCastShadows() {
         return NativeRenderData.getCastShadows(getNative());
@@ -986,6 +1052,12 @@ class NativeRenderData {
     static native boolean getAlphaBlend(long renderData);
 
     public static native void setAlphaBlend(long renderData, boolean alphaBlend);
+
+    static native void setAlphaBlendFunc(long renderData, int sourceBlend, int destBlend);
+
+    static native int getSourceAlphaBlendFunc(long renderData);
+
+    static native int getDestAlphaBlendFunc(long renderData);
 
     static native boolean getAlphaToCoverage(long renderData);
 

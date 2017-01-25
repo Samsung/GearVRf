@@ -71,6 +71,7 @@ public:
                     rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
                     offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
                     depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
+                    source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
                     sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES),
                     texture_capturer(0), cast_shadows_(true), dirty_flag_(std::make_shared<bool>(true)) {
     }
@@ -96,6 +97,8 @@ public:
         offset_units_ = rdata.offset_units_;
         depth_test_ = rdata.depth_test_;
         alpha_blend_ = rdata.alpha_blend_;
+        source_alpha_blend_func_ = rdata.source_alpha_blend_func_;
+        dest_alpha_blend_func_ = rdata.dest_alpha_blend_func_;
         alpha_to_coverage_ = rdata.alpha_to_coverage_;
         sample_coverage_ = rdata.sample_coverage_;
         invert_coverage_mask_ = rdata.invert_coverage_mask_;
@@ -252,6 +255,19 @@ public:
         hash_code_dirty_ = true;
     }
 
+    void set_alpha_blend_func(int sourceblend, int destblend) {
+        source_alpha_blend_func_ = sourceblend;
+        dest_alpha_blend_func_ = destblend;
+    }
+
+    int source_alpha_blend_func() const {
+        return source_alpha_blend_func_;
+    }
+
+    int dest_alpha_blend_func() const {
+        return dest_alpha_blend_func_;
+    }
+
     bool alpha_blend() const {
         return alpha_blend_;
     }
@@ -360,6 +376,8 @@ private:
     std::vector<RenderPass*> render_pass_list_;
     Light* light_;
     std::shared_ptr<bool> dirty_flag_;
+    int source_alpha_blend_func_;
+    int dest_alpha_blend_func_;
     bool use_light_;
     bool batching_;
     bool use_lightmap_;

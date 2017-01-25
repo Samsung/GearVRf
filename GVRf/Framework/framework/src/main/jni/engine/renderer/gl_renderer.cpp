@@ -142,9 +142,8 @@ void GLRenderer::setRenderStates(RenderData* render_data, RenderState& rstate) {
 
     if (render_data->offset()) {
         GL(glEnable (GL_POLYGON_OFFSET_FILL));
-        GL(
-                glPolygonOffset(render_data->offset_factor(),
-                        render_data->offset_units()));
+        GL(glPolygonOffset(render_data->offset_factor(),
+                           render_data->offset_units()));
     }
     if (!render_data->depth_test()) {
         GL(glDisable (GL_DEPTH_TEST));
@@ -154,10 +153,10 @@ void GLRenderer::setRenderStates(RenderData* render_data, RenderState& rstate) {
     }
     if (render_data->alpha_to_coverage()) {
         GL(glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-        GL(
-                glSampleCoverage(render_data->sample_coverage(),
-                        render_data->invert_coverage_mask()));
+        GL(glSampleCoverage(render_data->sample_coverage(),
+                            render_data->invert_coverage_mask()));
     }
+    glBlendFunc(render_data->source_alpha_blend_func(), render_data->dest_alpha_blend_func());
 }
 /**
  * Restore the render states for render data
