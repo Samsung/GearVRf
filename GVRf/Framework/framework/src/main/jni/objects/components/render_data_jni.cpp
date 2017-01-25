@@ -113,6 +113,18 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
         jobject obj, jlong jrender_data, jboolean alpha_blend);
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setAlphaBlendFunc(JNIEnv * env,
+        jobject obj, jlong jrender_data, jint sourceBlend, jint destBlend);
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getSourceAlphaBlendFunc(JNIEnv * env,
+        jobject obj, jlong jrender_data);
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getDestAlphaBlendFunc(JNIEnv * env,
+         jobject obj, jlong jrender_data);
+
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getAlphaToCoverage(JNIEnv * env,
         jobject obj, jlong jrender_data);
@@ -318,6 +330,30 @@ Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
     jobject obj, jlong jrender_data, jboolean alpha_blend) {
 RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
 render_data->set_alpha_blend(static_cast<bool>(alpha_blend));
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setAlphaBlendFunc(JNIEnv * env,
+    jobject obj, jlong jrender_data, jint sourceBlend, jint destBlend)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    render_data->set_alpha_blend_func(sourceBlend, destBlend);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getSourceAlphaBlendFunc(JNIEnv * env,
+   jobject obj, jlong jrender_data)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->source_alpha_blend_func();
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getDestAlphaBlendFunc(JNIEnv * env,
+    jobject obj, jlong jrender_data)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->dest_alpha_blend_func();
 }
 
 JNIEXPORT jboolean JNICALL
