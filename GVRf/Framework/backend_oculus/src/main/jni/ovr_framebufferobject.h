@@ -26,7 +26,7 @@ class FrameBufferObject {
 public:
 
     void clear();
-    bool create(const ovrTextureFormat colorFormat, const int width, const int height,
+    void create(const ovrTextureFormat colorFormat, const int width, const int height,
             const int multisamples, bool resolveDepth, const ovrTextureFormat depthFormat);
     void destroy();
     void bind();
@@ -47,6 +47,15 @@ public:
     GLuint mColorBuffer = 0;
     GLuint* mRenderFrameBuffers = nullptr;
     GLuint* mResolveFrameBuffers = nullptr;
+
+private:
+    enum multisample_t {
+        MSAA_OFF, MSAA_RENDER_TO_TEXTURE, MSAA_BLIT
+    };
+
+    multisample_t mMultisampleMode;
+
+    GLenum translateVrapiFormatToInternal(const ovrTextureFormat format) const;
 };
 
 } //namespace gvr

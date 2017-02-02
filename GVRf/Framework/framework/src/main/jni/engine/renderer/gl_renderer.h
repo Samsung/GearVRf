@@ -105,7 +105,9 @@ private:
                     std::vector<SceneObject*>& scene_objects,
                     ShaderManager *shader_manager, glm::mat4 vp_matrix);
 
+    void clearBuffers(const Camera& camera) const;
 };
+
 }
 #endif
 

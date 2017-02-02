@@ -27,6 +27,7 @@ import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
+import org.gearvrf.utility.VrAppSettings.EyeBufferParams.DepthFormat;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -184,7 +185,8 @@ abstract class GVRViewManager extends GVRContext {
 
         mPreviousTimeNanos = GVRTime.getCurrentTime();
         mRenderBundle = makeRenderBundle();
-        getActivity().getConfigurationManager().configureRendering();
+        final DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
+        getActivity().getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
 
         setMainSceneImpl(new GVRScene(GVRViewManager.this));
     }

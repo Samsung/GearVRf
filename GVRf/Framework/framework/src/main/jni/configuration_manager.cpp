@@ -14,6 +14,7 @@
  */
 
 #include <GLES3/gl3.h>
+#include <engine/renderer/renderer.h>
 #include "configuration_manager.h"
 
 namespace gvr {
@@ -25,8 +26,9 @@ namespace gvr {
     }
 
 
-    void ConfigurationManager::configureRendering() {
+    void ConfigurationManager::configureRendering(bool useStencil) {
         calculateMaxLights();
+        Renderer::getInstance()->setUseStencilBuffer(useStencil);
     }
 
     /*

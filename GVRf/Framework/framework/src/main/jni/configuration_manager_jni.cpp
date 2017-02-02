@@ -28,7 +28,7 @@ namespace gvr {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeConfigurationManager_configureRendering(JNIEnv *env, jobject obj,
-                                                                           jlong jConfigurationManager);
+                                                                           jlong jConfigurationManager, jboolean useStencil);
 
     JNIEXPORT int JNICALL
     Java_org_gearvrf_NativeConfigurationManager_getMaxLights(JNIEnv *env, jobject obj,
@@ -45,9 +45,9 @@ namespace gvr {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeConfigurationManager_configureRendering(JNIEnv *env, jobject obj,
-                                                                   jlong jConfigurationManager) {
+                                                                   jlong jConfigurationManager, jboolean useStencil) {
         ConfigurationManager *configuration_manager = reinterpret_cast<ConfigurationManager *>(jConfigurationManager);
-        configuration_manager->configureRendering();
+        configuration_manager->configureRendering(useStencil);
     }
 
     JNIEXPORT int JNICALL

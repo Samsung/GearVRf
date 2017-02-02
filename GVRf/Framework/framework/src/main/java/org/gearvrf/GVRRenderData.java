@@ -74,6 +74,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * {@link #TRANSPARENT} object.
      */
     public abstract static class GVRRenderingOrder {
+        public static final int STENCIL = -1000;
         /**
          * Rendered first, below any other objects at the same distance from the
          * camera
@@ -595,8 +596,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            The rendering options bit mask.
      * @see GVRRenderMaskBit
      */
-    public void setRenderMask(int renderMask) {
+    public GVRRenderData setRenderMask(int renderMask) {
         NativeRenderData.setRenderMask(getNative(), renderMask);
+        return this;
     }
 
     /**
@@ -613,8 +615,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @param renderingOrder
      *            See {@link GVRRenderingOrder}
      */
-    public void setRenderingOrder(int renderingOrder) {
+    public GVRRenderData setRenderingOrder(int renderingOrder) {
         NativeRenderData.setRenderingOrder(getNative(), renderingOrder);
+        return this;
     }
 
     /**
@@ -658,13 +661,13 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            {@code false} if not.
      * @param pass
      */
-    public void setCullTest(boolean cullTest) {
+    public GVRRenderData setCullTest(boolean cullTest) {
         if (cullTest) {
             setCullFace(GVRCullFaceEnum.Back);
         } else {
             setCullFace(GVRCullFaceEnum.None);
         }
-
+        return this;
     }
 
     /**
@@ -676,8 +679,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            to discard front faces, {@code GVRCullFaceEnum.None} Tells
      *            Graphics API to not discard any face
      */
-    public void setCullFace(GVRCullFaceEnum cullFace) {
-        setCullFace(cullFace, 0);
+    public GVRRenderData setCullFace(GVRCullFaceEnum cullFace) {
+        setCullFace(cullFace, 0); return this;
     }
 
     /**
@@ -691,12 +694,13 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @param passIndex
      *            The rendering pass to set cull face state
      */
-    public void setCullFace(GVRCullFaceEnum cullFace, int passIndex) {
+    public GVRRenderData setCullFace(GVRCullFaceEnum cullFace, int passIndex) {
         if (passIndex < mRenderPassList.size()) {
             mRenderPassList.get(passIndex).setCullFace(cullFace);
         } else {
             Log.e(TAG, "Trying to set cull face to a invalid pass. Pass " + passIndex + " was not created.");
         }
+        return this;
     }
 
     /**
@@ -714,8 +718,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            {@code true} if {@code GL_POLYGON_OFFSET_FILL} should be
      *            enabled, {@code false} if not.
      */
-    public void setOffset(boolean offset) {
+    public GVRRenderData setOffset(boolean offset) {
         NativeRenderData.setOffset(getNative(), offset);
+        return this;
     }
 
     /**
@@ -737,8 +742,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            value is 0.
      * @see #setOffset(boolean)
      */
-    public void setOffsetFactor(float offsetFactor) {
+    public GVRRenderData setOffsetFactor(float offsetFactor) {
         NativeRenderData.setOffsetFactor(getNative(), offsetFactor);
+        return this;
     }
 
     /**
@@ -760,8 +766,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            0.
      * @see #setOffset(boolean)
      */
-    public void setOffsetUnits(float offsetUnits) {
+    public GVRRenderData setOffsetUnits(float offsetUnits) {
         NativeRenderData.setOffsetUnits(getNative(), offsetUnits);
+        return this;
     }
 
     /**
@@ -779,8 +786,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            {@code true} if {@code GL_DEPTH_TEST} should be enabled,
      *            {@code false} if not.
      */
-    public void setDepthTest(boolean depthTest) {
+    public GVRRenderData setDepthTest(boolean depthTest) {
         NativeRenderData.setDepthTest(getNative(), depthTest);
+        return this;
     }
 
     /**
@@ -798,8 +806,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            {@code true} if {@code GL_BLEND} should be enabled,
      *            {@code false} if not.
      */
-    public void setAlphaBlend(boolean alphaBlend) {
+    public GVRRenderData setAlphaBlend(boolean alphaBlend) {
         NativeRenderData.setAlphaBlend(getNative(), alphaBlend);
+        return this;
     }
 
     /**
@@ -879,8 +888,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            {@code true} if {@code GL_ALPHA_TO_COVERAGE} should be enabled,
      *            {@code false} if not.
      */
-    public void setAlphaToCoverage(boolean alphaToCoverage) {
+    public GVRRenderData setAlphaToCoverage(boolean alphaToCoverage) {
         NativeRenderData.setAlphaToCoverage(getNative(), alphaToCoverage);
+        return this;
     }
 
     /**
@@ -893,8 +903,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @param sampleCoverage
      *                 Specifies the coverage of the modification mask.
      */
-    public void setSampleCoverage(float sampleCoverage) {
+    public GVRRenderData setSampleCoverage(float sampleCoverage) {
         NativeRenderData.setSampleCoverage(getNative(),sampleCoverage);
+        return this;
     }
     
     /**
@@ -908,8 +919,9 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @param invertCoverageMask
      *          Specifies whether the modification mask implied by value is inverted or not.
      */
-    public void setInvertCoverageMask(boolean invertCoverageMask){
+    public GVRRenderData setInvertCoverageMask(boolean invertCoverageMask){
         NativeRenderData.setInvertCoverageMask(getNative(),invertCoverageMask);
+        return this;
     }
 
     /**
@@ -924,7 +936,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * 
      * @param drawMode
      */
-    public void setDrawMode(int drawMode) {
+    public GVRRenderData setDrawMode(int drawMode) {
         if (drawMode != GL_POINTS && drawMode != GL_LINES
                 && drawMode != GL_LINE_STRIP && drawMode != GL_LINE_LOOP
                 && drawMode != GL_TRIANGLES && drawMode != GL_TRIANGLE_STRIP
@@ -933,6 +945,7 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
                     "drawMode must be one of GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_LINE_LOOP, GL_TRIANGLES, GL_TRIANGLE_FAN, GL_TRIANGLE_STRIP.");
         }
         NativeRenderData.setDrawMode(getNative(), drawMode);
+        return this;
     }
 
     /**
@@ -968,9 +981,11 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * non-transparent shadows. This function lets you disable shadow-casting.
      * @param castShadows true to cast shadows, false to not cast shadows
      */
-    public void setCastShadows(boolean castShadows) {
+    public GVRRenderData setCastShadows(boolean castShadows) {
         NativeRenderData.setCastShadows(getNative(), castShadows);
+        return this;
     }
+
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         GVRMesh mesh = null;
@@ -1004,6 +1019,37 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         return sb.toString();
     }
 
+    /**
+     * See https://www.khronos.org/opengles/sdk/docs/man3/html/glStencilFunc.xhtml
+     */
+    public GVRRenderData setStencilFunc(int func, int ref, int mask) {
+        NativeRenderData.setStencilFunc(getNative(), func, ref, mask);
+        return this;
+    }
+
+    /**
+     * See https://www.khronos.org/opengles/sdk/docs/man/xhtml/glStencilOp.xml
+     */
+    public GVRRenderData setStencilOp(int fail, int zfail, int zpass) {
+        NativeRenderData.setStencilOp(getNative(), fail, zfail, zpass);
+        return this;
+    }
+
+    /**
+     * See https://www.khronos.org/opengles/sdk/docs/man/xhtml/glStencilMask.xml
+     */
+    public GVRRenderData setStencilMask(int mask) {
+        NativeRenderData.setStencilMask(getNative(), mask);
+        return this;
+    }
+
+    /**
+     * @param flag enable or disable stencil testing; disabled by default
+     */
+    public GVRRenderData setStencilTest(boolean flag) {
+        NativeRenderData.setStencilTest(getNative(), flag);
+        return this;
+    }
 }
 
 class NativeRenderData {
@@ -1051,7 +1097,7 @@ class NativeRenderData {
 
     static native boolean getAlphaBlend(long renderData);
 
-    public static native void setAlphaBlend(long renderData, boolean alphaBlend);
+    static native void setAlphaBlend(long renderData, boolean alphaBlend);
 
     static native void setAlphaBlendFunc(long renderData, int sourceBlend, int destBlend);
 
@@ -1061,23 +1107,31 @@ class NativeRenderData {
 
     static native boolean getAlphaToCoverage(long renderData);
 
-    public static native void setAlphaToCoverage(long renderData, boolean alphaToCoverage);    
+    static native void setAlphaToCoverage(long renderData, boolean alphaToCoverage);
 
     static native float getSampleCoverage(long renderData);
 
-    public static native void setSampleCoverage(long renderData,float sampleCoverage);
+    static native void setSampleCoverage(long renderData,float sampleCoverage);
     
     static native boolean getInvertCoverageMask(long renderData);
 
-    public static native void setInvertCoverageMask(long renderData,boolean invertCoverageMask);
+    static native void setInvertCoverageMask(long renderData,boolean invertCoverageMask);
 
-    public static native int getDrawMode(long renderData);
+    static native int getDrawMode(long renderData);
 
-    public static native void setDrawMode(long renderData, int draw_mode);
+    static native void setDrawMode(long renderData, int draw_mode);
 
-    public static native void setTextureCapturer(long renderData, long texture_capturer);
+    static native void setTextureCapturer(long renderData, long texture_capturer);
 
-    public static native void setCastShadows(long renderData, boolean castShadows);
+    static native void setCastShadows(long renderData, boolean castShadows);
 
-    public static native boolean getCastShadows(long renderData);
+    static native boolean getCastShadows(long renderData);
+
+    static native void setStencilFunc(long renderData, int func, int ref, int mask);
+
+    static native void setStencilOp(long renderData, int fail, int zfail, int zpass);
+
+    static native void setStencilMask(long renderData, int mask);
+
+    static native void setStencilTest(long renderData, boolean flag);
 }

@@ -155,7 +155,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         }
 
         for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
-            bool b = frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
+            frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
                     mHeightConfiguration, mMultisamplesConfiguration, mResolveDepthConfiguration,
                     mDepthTextureFormatConfiguration);
         }

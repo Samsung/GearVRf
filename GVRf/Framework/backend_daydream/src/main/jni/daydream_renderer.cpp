@@ -112,13 +112,13 @@ void DaydreamRenderer::InitializeGl() {
     specs.push_back(gvr_api_->CreateBufferSpec());
 
     specs[0].SetColorFormat(GVR_COLOR_FORMAT_RGBA_8888);
-    specs[0].SetDepthStencilFormat(GVR_DEPTH_STENCIL_FORMAT_DEPTH_16);
+    specs[0].SetDepthStencilFormat(GVR_DEPTH_STENCIL_FORMAT_DEPTH_24_STENCIL_8);
     specs[0].SetSize(render_size_);
     specs[0].SetSamples(2);
 
     specs[1].SetSize(render_size_);
     specs[1].SetColorFormat(GVR_COLOR_FORMAT_RGBA_8888);
-    specs[1].SetDepthStencilFormat(GVR_DEPTH_STENCIL_FORMAT_DEPTH_16);
+    specs[1].SetDepthStencilFormat(GVR_DEPTH_STENCIL_FORMAT_DEPTH_24_STENCIL_8);
     specs[1].SetSamples(2);
     swapchain_.reset(new gvr::SwapChain(gvr_api_->CreateSwapChain(specs)));
 

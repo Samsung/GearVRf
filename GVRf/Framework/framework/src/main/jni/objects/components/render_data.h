@@ -53,7 +53,7 @@ template<typename T> std::string to_string(T value) {
 class RenderData: public Component {
 public:
     enum Queue {
-        Background = 1000, Geometry = 2000, Transparent = 3000, Overlay = 4000
+        Stencil = -1000, Background = 1000, Geometry = 2000, Transparent = 3000, Overlay = 4000
     };
 
     enum RenderMaskBit {
@@ -105,6 +105,15 @@ public:
         draw_mode_ = rdata.draw_mode_;
         texture_capturer = rdata.texture_capturer;
         dirty_flag_ = rdata.dirty_flag_;
+
+        stencilTestFlag_ = rdata.stencilTestFlag_;
+        stencilMaskMask_ = rdata.stencilMaskMask_;
+        stencilFuncFunc_ = rdata.stencilFuncFunc_;
+        stencilFuncRef_ = rdata.stencilFuncRef_;
+        stencilFuncMask_ = rdata.stencilFuncMask_;
+        stencilOpSfail_ = rdata.stencilOpSfail_;
+        stencilOpDpfail_ = rdata.stencilOpDpfail_;
+        stencilOpDppass_ = rdata.stencilOpDppass_;
     }
 
     RenderData(const RenderData& rdata) {
@@ -351,6 +360,15 @@ public:
             render_data_string.append(to_string(invert_coverage_mask_));
             render_data_string.append(to_string(draw_mode_));
 
+            render_data_string.append(to_string(stencilTestFlag_));
+            render_data_string.append(to_string(stencilMaskMask_));
+            render_data_string.append(to_string(stencilFuncFunc_));
+            render_data_string.append(to_string(stencilFuncRef_));
+            render_data_string.append(to_string(stencilFuncMask_));
+            render_data_string.append(to_string(stencilOpSfail_));
+            render_data_string.append(to_string(stencilOpDpfail_));
+            render_data_string.append(to_string(stencilOpDppass_));
+
             hash_code = render_data_string;
             hash_code_dirty_ = false;
 
@@ -359,6 +377,21 @@ public:
     }
 
     void setCameraDistanceLambda(std::function<float()> func);
+
+    void setStencilFunc(int func, int ref, int mask);
+
+    void setStencilOp(int sfail, int dpfail, int dppass);
+
+    void setStencilMask(unsigned int mask);
+
+    bool stencil_test() { return stencilTestFlag_; }
+    int stencil_func_func() { return stencilFuncFunc_; }
+    int stencil_func_ref() { return stencilFuncRef_; }
+    int stencil_func_mask() { return stencilFuncMask_; }
+    unsigned int stencil_mask_mask() { return stencilMaskMask_; }
+    int stencil_op_sfail() { return stencilOpSfail_; }
+    int stencil_op_dpfail() { return stencilOpDpfail_; }
+    int stencil_op_dppass() { return stencilOpDppass_; }
 
 private:
     //  RenderData(const RenderData& render_data);
@@ -397,6 +430,18 @@ private:
     TextureCapturer *texture_capturer;
 
     std::function<float()> cameraDistanceLambda_ = nullptr;
+
+    int stencilFuncFunc_ = 0;
+    int stencilFuncRef_ = 0;
+    int stencilFuncMask_ = 0;
+    int stencilOpSfail_ = 0;
+    int stencilOpDpfail_ = 0;
+    int stencilOpDppass_ = 0;
+    unsigned int stencilMaskMask_ = 0;
+    bool stencilTestFlag_ = false;
+
+public:
+    void setStencilTest(bool flag);
 };
 
 bool compareRenderDataByOrderShaderDistance(RenderData* i, RenderData* j);

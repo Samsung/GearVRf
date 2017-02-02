@@ -18,27 +18,29 @@
  ***************************************************************************/
 
 #include "renderer.h"
-#include "gl/gl_program.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
-#include "eglextension/tiledrendering/tiled_rendering_enhancer.h"
-#include "objects/material.h"
 #include "objects/post_effect_data.h"
 #include "objects/scene.h"
-#include "objects/scene_object.h"
-#include "objects/components/camera.h"
-#include "objects/components/render_data.h"
 #include "objects/textures/render_texture.h"
 #include "shaders/shader_manager.h"
 #include "shaders/post_effect_shader_manager.h"
-#include "util/gvr_gl.h"
-#include "util/gvr_log.h"
 #include "gl_renderer.h"
-#include <unordered_map>
-#include <unordered_set>
-#include <gvr_image_capture.h>
 
 namespace gvr {
+
+void GLRenderer::clearBuffers(const Camera& camera) const {
+    glClearColor(camera.background_color_r(), camera.background_color_g(), camera.background_color_b(), camera.background_color_a());
+
+    GLbitfield mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT;
+    if (useStencilBuffer_) {
+        mask |= GL_STENCIL_BUFFER_BIT;
+        glStencilMask(~0);
+    }
+
+    glClear(mask);
+}
+
 void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         int viewportX, int viewportY, int viewportWidth, int viewportHeight,
         ShaderManager* shader_manager,
@@ -76,27 +78,20 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glDisable (GL_POLYGON_OFFSET_FILL));
     GL(glLineWidth(1.0f));
     if (post_effects.size() == 0) {
-        GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-        GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
-        GL(glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(),
-                camera->background_color_a()));
-        GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
+        clearBuffers(*camera);
         renderRenderDataVector(rstate);
     } else {
         RenderTexture* texture_render_texture = post_effect_render_texture_a;
-        RenderTexture* target_render_texture;
 
         GL(glBindFramebuffer(GL_FRAMEBUFFER,
                 texture_render_texture->getFrameBufferId()));
         GL(glViewport(0, 0, texture_render_texture->width(),
                 texture_render_texture->height()));
 
-        GL(glClearColor(camera->background_color_r(),
-                camera->background_color_g(), camera->background_color_b(), camera->background_color_a()));
-        GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-
+        clearBuffers(*camera);
         for (auto it = render_data_vector.begin();
                 it != render_data_vector.end(); ++it) {
             GL(renderRenderData(rstate, *it));
@@ -108,10 +103,8 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
         for (int i = 0; i < post_effects.size() - 1; ++i) {
             if (i % 2 == 0) {
                 texture_render_texture = post_effect_render_texture_a;
-                target_render_texture = post_effect_render_texture_b;
             } else {
                 texture_render_texture = post_effect_render_texture_b;
-                target_render_texture = post_effect_render_texture_a;
             }
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
             GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
@@ -148,6 +141,26 @@ void GLRenderer::setRenderStates(RenderData* render_data, RenderState& rstate) {
     if (!render_data->depth_test()) {
         GL(glDisable (GL_DEPTH_TEST));
     }
+
+    if (render_data->stencil_test()) {
+        GL(glEnable(GL_STENCIL_TEST));
+
+        GL(glStencilFunc(render_data->stencil_func_func(), render_data->stencil_func_ref(), render_data->stencil_func_mask()));
+
+        int sfail = render_data->stencil_op_sfail();
+        int dpfail = render_data->stencil_op_dpfail();
+        int dppass = render_data->stencil_op_dppass();
+        if (0 != sfail && 0 != dpfail && 0 != dppass) {
+            GL(glStencilOp(sfail, dpfail, dppass));
+        }
+
+        GL(glStencilMask(render_data->stencil_mask_mask()));
+        if (RenderData::Queue::Stencil == render_data->rendering_order()) {
+            GL(glDepthMask(GL_FALSE));
+            GL(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
+        }
+    }
+
     if (!render_data->alpha_blend()) {
         GL(glDisable (GL_BLEND));
     }
@@ -173,6 +186,15 @@ void GLRenderer::restoreRenderStates(RenderData* render_data) {
     if (!render_data->depth_test()) {
         GL(glEnable (GL_DEPTH_TEST));
     }
+
+    if (render_data->stencil_test()) {
+        GL(glDisable(GL_STENCIL_TEST));
+        if (RenderData::Queue::Stencil == render_data->rendering_order()) {
+            GL(glDepthMask(GL_TRUE));
+            GL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+        }
+    }
+
     if (!render_data->alpha_blend()) {
         GL(glEnable (GL_BLEND));
     }

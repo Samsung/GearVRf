@@ -63,6 +63,26 @@ void RenderData::setCameraDistanceLambda(std::function<float()> func) {
     cameraDistanceLambda_ = func;
 }
 
+void RenderData::setStencilFunc(int func, int ref, int mask) {
+    stencilFuncFunc_= func;
+    stencilFuncRef_ = ref;
+    stencilFuncMask_ = mask;
+}
+
+void RenderData::setStencilOp(int sfail, int dpfail, int dppass) {
+    stencilOpSfail_ = sfail;
+    stencilOpDpfail_ = dpfail;
+    stencilOpDppass_ = dppass;
+}
+
+void RenderData::setStencilMask(unsigned int mask) {
+    stencilMaskMask_ = mask;
+}
+
+void RenderData::setStencilTest(bool flag) {
+    stencilTestFlag_ = flag;
+}
+
 bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
     //1. rendering order needs to be sorted first to guarantee specified correct order
     if (i->rendering_order() == j->rendering_order()) {
