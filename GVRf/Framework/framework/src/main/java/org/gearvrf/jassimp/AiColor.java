@@ -11,16 +11,16 @@ Redistribution and use of this software in source and binary forms,
 with or without modification, are permitted provided that the following 
 conditions are met:
 
- * Redistributions of source code must retain the above
+* Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
   following disclaimer.
 
- * Redistributions in binary form must reproduce the above
+* Redistributions in binary form must reproduce the above
   copyright notice, this list of conditions and the
   following disclaimer in the documentation and/or other
   materials provided with the distribution.
 
- * Neither the name of the assimp team, nor the names of its
+* Neither the name of the assimp team, nor the names of its
   contributors may be used to endorse or promote products
   derived from this software without specific prior
   written permission of the assimp team.
@@ -37,14 +37,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
- */
+*/
 package org.gearvrf.jassimp;
 
 import java.nio.ByteBuffer;
 
+
 /**
- * Wrapper for colors.
- * <p>
+ * Wrapper for colors.<p>
  * 
  * The wrapper is writable, i.e., changes performed via the set-methods will
  * modify the underlying mesh.
@@ -53,16 +53,15 @@ public final class AiColor {
     /**
      * Constructor.
      * 
-     * @param buffer
-     *            the buffer to wrap
-     * @param offset
-     *            offset into buffer
+     * @param buffer the buffer to wrap
+     * @param offset offset into buffer
      */
     public AiColor(ByteBuffer buffer, int offset) {
         m_buffer = buffer;
         m_offset = offset;
     }
-
+    
+    
     /**
      * Returns the red color component.
      * 
@@ -71,7 +70,8 @@ public final class AiColor {
     public float getRed() {
         return m_buffer.getFloat(m_offset);
     }
-
+    
+    
     /**
      * Returns the green color component.
      * 
@@ -80,7 +80,8 @@ public final class AiColor {
     public float getGreen() {
         return m_buffer.getFloat(m_offset + 4);
     }
-
+    
+    
     /**
      * Returns the blue color component.
      * 
@@ -89,7 +90,8 @@ public final class AiColor {
     public float getBlue() {
         return m_buffer.getFloat(m_offset + 8);
     }
-
+    
+    
     /**
      * Returns the alpha color component.
      * 
@@ -98,60 +100,63 @@ public final class AiColor {
     public float getAlpha() {
         return m_buffer.getFloat(m_offset + 12);
     }
-
+    
+    
     /**
      * Sets the red color component.
      * 
-     * @param red
-     *            the new value
+     * @param red the new value
      */
     public void setRed(float red) {
         m_buffer.putFloat(m_offset, red);
     }
-
+    
+    
     /**
      * Sets the green color component.
      * 
-     * @param green
-     *            the new value
+     * @param green the new value
      */
     public void setGreen(float green) {
         m_buffer.putFloat(m_offset + 4, green);
     }
-
+    
+    
     /**
      * Sets the blue color component.
      * 
-     * @param blue
-     *            the new value
+     * @param blue the new value
      */
     public void setBlue(float blue) {
         m_buffer.putFloat(m_offset + 8, blue);
     }
-
+    
+    
     /**
      * Sets the alpha color component.
      * 
-     * @param alpha
-     *            the new value
+     * @param alpha the new value
      */
     public void setAlpha(float alpha) {
         m_buffer.putFloat(m_offset + 12, alpha);
     }
+    
 
     @Override
     public String toString() {
-        return "[" + getRed() + ", " + getGreen() + ", " + getBlue() + ", "
-                + getAlpha() + "]";
+        return "[" + getRed() + ", " + getGreen() + ", " + getBlue() + ", " + 
+                getAlpha() + "]";
     }
+
 
     /**
      * Wrapped buffer.
      */
     private final ByteBuffer m_buffer;
-
+    
+    
     /**
-     * Offset into m_buffer.
+     * Offset into m_buffer. 
      */
     private final int m_offset;
 }
