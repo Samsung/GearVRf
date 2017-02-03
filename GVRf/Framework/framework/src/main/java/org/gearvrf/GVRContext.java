@@ -279,17 +279,45 @@ public abstract class GVRContext implements IEventReceiver {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource,
-            EnumSet<GVRImportSettings> settings) {
+            EnumSet<GVRImportSettings> settings)
+    {
+        class MeshFinder implements GVRSceneObject.ComponentVisitor
+        {
+            private GVRMesh meshFound = null;
+            public GVRMesh getMesh() { return meshFound; }
+            public boolean visit(GVRComponent comp)
+            {
+                GVRRenderData rdata = (GVRRenderData) comp;
+                meshFound = rdata.getMesh();
+                return (meshFound == null);
+            }
+        };
+        MeshFinder findMesh = new MeshFinder();
         GVRMesh mesh = meshCache.get(androidResource);
-        if (mesh == null) try {
-            GVRAssimpImporter assimpImporter = mImporter.readFileFromResources(this, androidResource, settings);
-            mesh = assimpImporter.getMesh(0);
-            meshCache.put(androidResource, mesh);
-        }
-        catch (IOException ex) {
-            getEventManager().sendEvent(this, IAssetEvents.class,
-                    "onModelError", new Object[] { this, ex.getMessage(), androidResource.getResourceFilename() });
-            return null;
+        if (mesh == null)
+        {
+            try
+            {
+                GVRSceneObject model = mImporter.loadModel(androidResource.getResourceFilename(),
+                                                           settings, true, null);
+                model.forAllComponents(findMesh);
+                mesh = findMesh.getMesh();
+                if (mesh != null)
+                {
+                    meshCache.put(androidResource, mesh);
+                }
+                else
+                {
+                    throw new IOException("No mesh found in model " + androidResource.getResourceFilename());
+                }
+            }
+            catch (IOException ex)
+            {
+                getEventManager().sendEvent(this, IAssetEvents.class,
+                                            "onModelError", new Object[]{this, ex.getMessage(),
+                                androidResource.getResourceFilename()});
+                return null;
+            }
         }
         return mesh;
     }
