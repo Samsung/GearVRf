@@ -18,12 +18,8 @@
  ***************************************************************************/
 
 #include "error_shader.h"
-
-#include "gl/gl_program.h"
 #include "objects/material.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 #include "engine/renderer/renderer.h"
 
 namespace gvr {
@@ -59,7 +55,7 @@ void ErrorShader::render(RenderState* rstate, RenderData* render_data, Material*
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     glUniform4f(u_color_, r, g, b, a);
-    checkGlError("ErrorShader::render");
+    checkGLError("ErrorShader::render");
 }
 
 }

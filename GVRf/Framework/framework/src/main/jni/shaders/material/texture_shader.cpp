@@ -18,16 +18,10 @@
  ***************************************************************************/
 
 #include "texture_shader.h"
-
-#include "gl/gl_program.h"
 #include "objects/material.h"
 #include "objects/light.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
-#include "objects/textures/texture.h"
-#include "util/gvr_gl.h"
 #include "util/gvr_log.h"
-#include "engine/renderer/renderer.h"
+
 #define LIGHT           1
 #define NO_LIGHT        2
 #define MULTIVIEW       4
@@ -354,7 +348,7 @@ void TextureShader::render(RenderState* rstate,
    std::vector<glm::mat4> model_matrix;
    model_matrix.push_back(rstate->uniforms.u_model);
    programInit(rstate,render_data,material,model_matrix,1,false);
-   checkGlError("TextureShader::render");
+    checkGLError("TextureShader::render");
 }
 void TextureShader::render_batch(const std::vector<glm::mat4>& model_matrix,
         RenderData* render_data,  RenderState& rstate, unsigned int indexCount, int drawcount)
@@ -363,7 +357,7 @@ void TextureShader::render_batch(const std::vector<glm::mat4>& model_matrix,
     programInit(&rstate,render_data,rstate.material_override,model_matrix,drawcount,true);
     GL(glDrawElements(render_data->draw_mode(), indexCount, GL_UNSIGNED_SHORT, 0));
     GL(glBindVertexArray(0));
-    checkGlError(" TextureShader::render_batch");
+    checkGLError(" TextureShader::render_batch");
 }
 }
 ;

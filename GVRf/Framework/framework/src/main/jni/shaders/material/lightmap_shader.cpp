@@ -18,13 +18,8 @@
  ***************************************************************************/
 
 #include "lightmap_shader.h"
-
-#include "gl/gl_program.h"
 #include "objects/material.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
-#include "objects/textures/texture.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 #include "engine/renderer/renderer.h"
 
 namespace gvr {
@@ -93,7 +88,7 @@ void LightMapShader::render(RenderState* rstate,
 
     glUniform2f(u_lightmap_offset_, lightmap_offset.x, lightmap_offset.y);
     glUniform2f(u_lightmap_scale_, lightmap_scale.x, lightmap_scale.y);
-    checkGlError("LightMapShader::render");
+    checkGLError("LightMapShader::render");
 }
 
 };

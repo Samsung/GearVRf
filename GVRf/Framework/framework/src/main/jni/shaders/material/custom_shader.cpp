@@ -18,14 +18,8 @@
  ***************************************************************************/
 
 #include "custom_shader.h"
-#include "engine/renderer/renderer.h"
-#include "gl/gl_program.h"
-#include "objects/material.h"
 #include "objects/scene.h"
-#include "objects/mesh.h"
-#include "objects/textures/texture.h"
-#include "objects/components/render_data.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 
 #include <sys/time.h>
 
@@ -70,7 +64,9 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
                 it->location = it->variableType.f_getLocation(program_->id());
                 LOGV("CustomShader::texture:location: variable: %s location: %d", it->variable.c_str(),
                         it->location);
+                checkGLError("CustomShader::initialize texture");
             }
+
         }
         textureVariablesDirty_ = false;
     }
@@ -84,6 +80,7 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
                 LOGV("CustomShader::uniform:location: location: %d", it->location);
             }
         }
+        checkGLError("CustomShader::initialize uniforms");
         uniformVariablesDirty_ = false;
     }
 
@@ -96,6 +93,7 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
                         it->location);
             }
         }
+        checkGLError("CustomShader::initialize attributes");
         attributeVariablesDirty_ = false;
     }
 }
@@ -120,6 +118,7 @@ void CustomShader::addTextureKey(const std::string& variable_name, const std::st
         if (nullptr != texture) {
             glBindTexture(texture->getTarget(), texture->getId());
             glUniform1i(location, textureIndex++);
+            checkGLError("CustomShader::addTextureKey");
         }
     };
 
@@ -252,6 +251,7 @@ void CustomShader::addUniformMat4Key(const std::string& variable_name,
 void CustomShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
 	//LOGE(" start of render %s", render_data->owner_object()->name().c_str());
 	initializeOnDemand(rstate);
+    checkGLError("CustomShader::initialize");
     {
         std::lock_guard<std::mutex> lock(textureVariablesLock_);
         for (auto it = textureVariables_.begin(); it != textureVariables_.end(); ++it) {
@@ -259,6 +259,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             if ((texture == NULL) || !texture->isReady()) {
                 return;
             }
+            checkGLError("CustomShader::render textureReady");
         }
     }
    // LOGE("rendering %s with program %d", render_data->owner_object()->name().c_str(), program_->id());
@@ -284,7 +285,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             finalTransform = mesh->getVertexBoneData().getFinalBoneTransform(i);
             glUniformMatrix4fv(u_bone_matrices + i, 1, GL_FALSE, glm::value_ptr(finalTransform));
         }
-        checkGlError("CustomShader after bones");
+        checkGLError("CustomShader::render bones");
     }
     /*
      * Update values of uniform variables
@@ -295,6 +296,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             auto d = *it;
             try {
                 d.variableType.f_bind(*material, d.location);
+                checkGLError("CustomShader::render bindUniform");
             } catch(const std::string& exc) {
                 //the keys defined for this shader might not have been used by the material yet
             }
@@ -341,6 +343,7 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             auto d = *it;
             d.variableType.f_bind(texture_index, *material, d.location);
             texture_index++;
+            checkGLError("CustomShader::render bindTexture");
         }
     }
     /*
@@ -361,6 +364,6 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     if (castShadow){
     	Light::bindShadowMap(program_->id(), texture_index);
     }
-    checkGlError("CustomShader::render");
+    checkGLError("CustomShader::render");
 }
 } /* namespace gvr */
