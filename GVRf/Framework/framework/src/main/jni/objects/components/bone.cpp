@@ -12,12 +12,14 @@
 #include "util/gvr_log.h"
 
 namespace gvr {
+glm::mat4 Bone::identityMatrix_;
+
 Bone::Bone()
   : Component(Bone::getComponentType())
   , name_()
   , boneWeights_()
   , offsetMatrix_()
-  , finalTransformMatrixPtr_()
+  , finalTransformMatrixPtr_(nullptr)
 {
 }
 

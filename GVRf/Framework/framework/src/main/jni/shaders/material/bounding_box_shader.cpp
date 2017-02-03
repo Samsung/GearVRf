@@ -21,10 +21,7 @@
 
 #include "gl/gl_program.h"
 #include "objects/material.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
-#include "objects/textures/texture.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = //
@@ -55,7 +52,7 @@ void BoundingBoxShader::render(const glm::mat4& mvp_matrix,
         RenderData* render_data, Material* material) {
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    checkGlError("BoundingBoxShader::render");
+    checkGLError("BoundingBoxShader::render");
 }
 
 }

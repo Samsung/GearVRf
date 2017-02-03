@@ -18,13 +18,8 @@
  ***************************************************************************/
 
 #include "unlit_horizontal_stereo_shader.h"
-
-#include "gl/gl_program.h"
 #include "objects/material.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
-#include "objects/textures/texture.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 #include "engine/renderer/renderer.h"
 
 namespace gvr {
@@ -94,7 +89,7 @@ void UnlitHorizontalStereoShader::render(RenderState* rstate,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, mono_rendering || rstate->uniforms.u_right ? 1 : 0);
-    checkGlError("HorizontalStereoUnlitShader::render");
+    checkGLError("HorizontalStereoUnlitShader::render");
 }
 
 }

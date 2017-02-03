@@ -95,7 +95,7 @@ void OESHorizontalStereoShader::render(RenderState* rstate,
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
     glUniform1i(u_right_, mono_rendering || rstate->uniforms.u_right ? 1 : 0);
-    checkGlError("OESHorizontalStereoShader::render");
+    checkGLError("OESHorizontalStereoShader::render");
 }
 
 }

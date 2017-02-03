@@ -23,7 +23,7 @@
 #include "gl/gl_program.h"
 #include "objects/post_effect_data.h"
 #include "objects/textures/render_texture.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 
 namespace gvr {
 static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
@@ -103,6 +103,6 @@ void HorizontalFlipPostEffectShader::render(
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 
-    checkGlError("HorizontalFlipPostEffectShader::render");
+    checkGLError("HorizontalFlipPostEffectShader::render");
 }
 }

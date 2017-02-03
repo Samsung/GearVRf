@@ -58,12 +58,6 @@ public:
         return id_;
     }
 
-    static void checkGlError(const char* op) {
-        for (GLint error = glGetError(); error; error = glGetError()) {
-            LOGI("after %s() glError (0x%x)\n", op, error);
-        }
-    }
-
     GLuint loadShader(GLenum shaderType, int strLength, const char** pSourceStrings,
             const GLint*pSourceStringLengths) {
         GLuint shader = glCreateShader(shaderType);
@@ -119,9 +113,9 @@ public:
             }
 
             glAttachShader(program, vertexShader);
-            checkGlError("glAttachShader");
+            checkGLError("glAttachShader");
             glAttachShader(program, pixelShader);
-            checkGlError("glAttachShader");
+            checkGLError("glAttachShader");
 
             glLinkProgram(program);
             GLint linkStatus = GL_FALSE;

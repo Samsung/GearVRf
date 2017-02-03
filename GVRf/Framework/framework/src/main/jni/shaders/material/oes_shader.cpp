@@ -163,7 +163,7 @@ void OESShader::render(RenderState* rstate, RenderData* render_data, Material* m
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-    checkGlError("OESShader::render");
+    checkGLError("OESShader::render");
 }
 
 }
