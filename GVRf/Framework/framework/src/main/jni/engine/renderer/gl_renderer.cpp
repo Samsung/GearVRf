@@ -30,9 +30,13 @@
 namespace gvr {
 
 void GLRenderer::clearBuffers(const Camera& camera) const {
-    glClearColor(camera.background_color_r(), camera.background_color_g(), camera.background_color_b(), camera.background_color_a());
+    GLbitfield mask = GL_DEPTH_BUFFER_BIT;
 
-    GLbitfield mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT;
+    if (-1 != camera.background_color_r()) {
+        glClearColor(camera.background_color_r(), camera.background_color_g(), camera.background_color_b(), camera.background_color_a());
+        mask |= GL_COLOR_BUFFER_BIT;
+    }
+
     if (useStencilBuffer_) {
         mask |= GL_STENCIL_BUFFER_BIT;
         glStencilMask(~0);
@@ -66,6 +70,7 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
 
     std::vector<PostEffectData*> post_effects = camera->post_effect_data();
 
+    GL(glDepthMask(GL_TRUE));
     GL(glEnable (GL_DEPTH_TEST));
     GL(glDepthFunc (GL_LEQUAL));
     GL(glEnable (GL_CULL_FACE));
@@ -77,6 +82,7 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
     GL(glDisable (GL_POLYGON_OFFSET_FILL));
     GL(glLineWidth(1.0f));
+
     if (post_effects.size() == 0) {
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
         glViewport(viewportX, viewportY, viewportWidth, viewportHeight);

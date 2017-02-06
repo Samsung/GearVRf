@@ -78,6 +78,7 @@ private:
 
     jobject viewManager_ = nullptr;
     bool docked_ = false;
+    bool clampToBorderSupported_ = false;
 
 public:
     void onSurfaceCreated(JNIEnv& env);

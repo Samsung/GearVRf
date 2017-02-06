@@ -619,10 +619,15 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * If you don't set the background color, the default is an opaque black.
      * Meaningful parameter values are from 0 to 1, inclusive: values
      * {@literal < 0} are clamped to 0; values {@literal > 1} are clamped to 1.
+     *
+     * Pass -1 for all parameters to disable the background color. If you do
+     * know you don't want the corresponding glClear call then you can use these
+     * special values to skip it.
      */
     public final void setBackgroundColor(float r, float g, float b, float a) {
-        getMainCameraRig().getLeftCamera().setBackgroundColor(r, g, b, a);
-        getMainCameraRig().getRightCamera().setBackgroundColor(r, g, b, a);
+        mMainCameraRig.getLeftCamera().setBackgroundColor(r, g, b, a);
+        mMainCameraRig.getRightCamera().setBackgroundColor(r, g, b, a);
+        mMainCameraRig.getCenterCamera().setBackgroundColor(r, g, b, a);
     }
 
     @Override
