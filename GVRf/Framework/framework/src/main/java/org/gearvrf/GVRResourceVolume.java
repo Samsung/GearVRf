@@ -144,7 +144,32 @@ public class GVRResourceVolume {
         this.enableUrlLocalCache = cacheEnabled;
     }
 
-    private ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource> resourceMap = new ConcurrentHashMap<GVRAndroidResource, GVRAndroidResource>();
+    private ConcurrentHashMap<String, GVRAndroidResource> resourceMap = new ConcurrentHashMap<String, GVRAndroidResource>();
+
+    /**
+     * Adds an android resource to the volume's resource map.
+     * This function is useful if you have created the GVRAndroidResource from a resource ID
+     * but would like to read it via it's filename. If you add the resource first,
+     * you can call openResource() on it's filename.
+     *
+     * @param resource
+     *            Android resource to open.
+     *
+     * @throws IOException
+     */
+    public GVRAndroidResource addResource(GVRAndroidResource resource)
+    {
+        String fileName = resource.getResourceFilename();
+        GVRAndroidResource resourceValue = resourceMap.get(fileName);
+        if (resourceValue != null)
+        {
+            return resourceValue;
+        }
+        // Only put the resourceKey into the map for the first time, later put
+        // will simply return the first resource
+        resourceValue = resourceMap.putIfAbsent(fileName, resource);
+        return resourceValue == null ? resource : resourceValue;
+    }
 
     /**
      * Opens a file from the volume. The filePath is relative to the
@@ -200,14 +225,14 @@ public class GVRResourceVolume {
                     String.format("Unrecognized volumeType %s", volumeType));
         }
 
-        GVRAndroidResource resourceValue = resourceMap.get(resourceKey);
+        GVRAndroidResource resourceValue = resourceMap.get(filePath);
         if (resourceValue != null) {
             return resourceValue;
         }
 
         // Only put the resourceKey into the map for the first time, later put
         // will simply return the first resource
-        resourceValue = resourceMap.putIfAbsent(resourceKey, resourceKey);
+        resourceValue = resourceMap.putIfAbsent(filePath, resourceKey);
         return resourceValue == null ? resourceKey : resourceValue;
     }
 

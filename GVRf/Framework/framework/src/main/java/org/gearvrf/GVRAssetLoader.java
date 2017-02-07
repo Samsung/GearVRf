@@ -118,6 +118,24 @@ public final class GVRAssetLoader {
         }
 
         /**
+         * Request to load an asset.
+         * @param context GVRContext to get asset load events.
+         * @param resource GVRAndroidResource describing the file to load.
+         */
+        public AssetRequest(GVRContext context, GVRAndroidResource resource, GVRScene scene)
+        {
+            mScene = scene;
+            mContext = context;
+            mNumTextures = 0;
+            mFileName = resource.getResourceFilename();
+            mUserHandler = null;
+            mErrors = "";
+            mVolume = new GVRResourceVolume(mContext, mFileName);
+            mVolume.addResource(resource);
+            Log.d(TAG, "ASSET: loading %s ...", mFileName);
+        }
+
+        /**
          * Request to load an asset and add it to the scene.
          * @param model GVRSceneObject to be the root of the loaded asset.
          * @param filePath path to file
@@ -1149,6 +1167,45 @@ public final class GVRAssetLoader {
         return model;
     }
 
+    /**
+     * Loads a scene object {@link GVRSceneObject} from
+     * a 3D model and raises asset events to a handler.
+     *
+     * @param resource
+     *            GVRAndroidResource describing the file to load.
+     *
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @param cacheEnabled
+     *            If true, add the loaded model to the in-memory cache.
+     *
+     * @param scene
+     *            If present, this asset loader will wait until all of the textures have been
+     *            loaded and then adds the model to the scene.
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException
+     *
+     */
+    public GVRModelSceneObject loadModel(GVRAndroidResource resource,
+                                         EnumSet<GVRImportSettings> settings,
+                                         boolean cacheEnabled,
+                                         GVRScene scene) throws IOException
+    {
+        GVRModelSceneObject model = new GVRModelSceneObject(mContext);
+        AssetRequest assetRequest = new AssetRequest(mContext, resource, scene);
+        String filePath = assetRequest.getFileName();
+        String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+
+        model.setName(assetRequest.getBaseName());
+        if (ext.equals("x3d"))
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        else
+            loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), cacheEnabled, null);
+        return model;
+    }
 
     /**
      * Loads a scene object {@link GVRSceneObject} from a 3D model.
