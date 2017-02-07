@@ -298,9 +298,8 @@ public abstract class GVRContext implements IEventReceiver {
         {
             try
             {
-                GVRSceneObject model = mImporter.loadModel(androidResource.getResourceFilename(),
-                                                           settings, true, null);
-                model.forAllComponents(findMesh);
+                GVRSceneObject model = mImporter.loadModel(androidResource, settings, true, null);
+                model.forAllComponents(findMesh, GVRRenderData.getComponentType());
                 mesh = findMesh.getMesh();
                 if (mesh != null)
                 {
