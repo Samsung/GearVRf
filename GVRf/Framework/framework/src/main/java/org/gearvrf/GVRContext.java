@@ -2842,15 +2842,4 @@ public abstract class GVRContext implements IEventReceiver {
         }
         return null;
     }
-
-    final void releaseNative(GVRHybridObject hybridObject) {
-        synchronized (mReferenceSet) {
-            if (hybridObject.getNative() != 0L) {
-                GVRReference reference = findReference(hybridObject.getNative());
-                if (reference != null) {
-                    reference.close();
-                }
-            }
-        }
-    }
 }
