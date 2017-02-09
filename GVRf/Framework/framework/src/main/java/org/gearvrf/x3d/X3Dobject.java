@@ -3134,10 +3134,6 @@ public class X3Dobject {
                                             break;
                                         }
                                     }
-
-                                    // Let's return the memory since it's not being used
-                                    gvrRenderData.releaseNative();
-
                                 }
                                 gvrRenderData = meshAttachedSceneObject.getRenderData();
                                 // reset the DEF item to now point to
