@@ -1044,7 +1044,7 @@ public final class GVRAssetLoader {
             public void run()
             {
                 AssetRequest assetRequest = new AssetRequest(model, volume, scene, true);
-                String filePath = volume.getFullPath();
+                String filePath = volume.getFileName();
                 String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
                 model.setName(assetRequest.getBaseName());
