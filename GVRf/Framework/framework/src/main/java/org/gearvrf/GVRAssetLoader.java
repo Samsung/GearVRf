@@ -237,7 +237,7 @@ public final class GVRAssetLoader {
          */
         public GVRTexture loadEmbeddedTexture(final TextureRequest request, final AiTexture aitex, final GVRTextureParameters texParams) throws IOException
         {
-            GVRAndroidResource resource = new GVRAndroidResource(request.TextureFile);
+            GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
             GVRBitmapTexture bmapTex;
 
             Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
@@ -1093,7 +1093,7 @@ public final class GVRAssetLoader {
         {
             public void run()
             {
-                String filePath = volume.getFullPath();
+                String filePath = volume.getFileName();
                 AssetRequest assetRequest = new AssetRequest(model, volume, scene, false);
                 String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
@@ -1231,7 +1231,7 @@ public final class GVRAssetLoader {
         {
             public void run()
             {
-                String filePath = fileVolume.getFullPath();
+                String filePath = fileVolume.getFileName();
                 String ext = filePath.substring(filePath.length() - 3).toLowerCase();
                 AssetRequest assetRequest = new AssetRequest(model, fileVolume, handler);
                 model.setName(assetRequest.getBaseName());

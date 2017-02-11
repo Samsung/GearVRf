@@ -206,15 +206,28 @@ public class GVRResourceVolume {
                     String.format("Unrecognized volumeType %s", volumeType));
         }
 
-        GVRAndroidResource resourceValue = resourceMap.get(resourceKey);
-        if (resourceValue != null) {
+        return addResource(resourceKey);
+    }
+
+
+    /**
+     * Add the given resource to the internal resource map.
+     * @param res resource to add
+     * @return existing resource if already in the map, otherwise new resource passed
+     */
+    private GVRAndroidResource addResource(GVRAndroidResource res)
+    {
+        GVRAndroidResource resourceValue = resourceMap.get(res);
+        if (resourceValue != null)
+        {
             return resourceValue;
         }
-
+        //
         // Only put the resourceKey into the map for the first time, later put
         // will simply return the first resource
-        resourceValue = resourceMap.putIfAbsent(resourceKey, resourceKey);
-        return resourceValue == null ? resourceKey : resourceValue;
+        //
+        resourceValue = resourceMap.putIfAbsent(res, res);
+        return resourceValue == null ? res : resourceValue;
     }
 
     /***
