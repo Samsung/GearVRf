@@ -273,17 +273,8 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     IActivityEvents.class,
                     "onSetMain", gvrMain);
             final GVRConfigurationManager localConfigurationManager = mConfigurationManager;
-            if (null != mDockEventReceiver && !isMonoscopicMode && localConfigurationManager
-                    .isDockListenerRequired()) {
-                getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
-                    @Override
-                    public void onDrawFrame(float frameTime) {
-                        if (localConfigurationManager.isHmtConnected()) {
-                            handleOnDock();
-                            getGVRContext().unregisterDrawFrameListener(this);
-                        }
-                    }
-                });
+            if (!(isMonoscopicMode && localConfigurationManager.isDockListenerRequired())) {
+                handleOnDock();
             }
         } else {
             throw new IllegalArgumentException(
