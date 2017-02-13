@@ -215,7 +215,7 @@ public class GVRResourceVolume {
      * @param res resource to add
      * @return existing resource if already in the map, otherwise new resource passed
      */
-    private GVRAndroidResource addResource(GVRAndroidResource res)
+    protected GVRAndroidResource addResource(GVRAndroidResource res)
     {
         GVRAndroidResource resourceValue = resourceMap.get(res);
         if (resourceValue != null)
