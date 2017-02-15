@@ -750,6 +750,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString) throws IOException {
@@ -775,6 +776,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled) throws IOException {
@@ -797,6 +799,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, EnumSet<GVRImportSettings> settings) throws IOException {
@@ -807,6 +810,7 @@ public abstract class GVRContext implements IEventReceiver {
      * Retrieves the particular index mesh for the given node.
      * 
      * @return The mesh, encapsulated as a {@link GVRMesh}.
+     * @deprecated use GVRContext.loadModel instead
      */
     public GVRMesh getNodeMesh(GVRAssimpImporter assimpImporter,
             String nodeName, int meshIndex) {

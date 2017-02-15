@@ -610,48 +610,79 @@ class GVRJassimpAdapter {
         }
     }
 
-    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){
-        for(AiLight light: lights){
+    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist)
+    {
+        for(AiLight light: lights)
+        {
+            GVRLightBase l;
             AiLightType type = light.getType();
-            if(type == AiLightType.DIRECTIONAL){
-                GVRDirectLight gvrLight = new GVRDirectLight(mContext);
-                setPhongLightProp(gvrLight,light);
-                setLightProp(gvrLight, light);
-                String name = light.getName();
-                lightlist.put(name, gvrLight);
+            String name = light.getName();
+
+            if (type == AiLightType.DIRECTIONAL)
+            {
+                l = new GVRDirectLight(mContext);
             }
-            if(type == AiLightType.POINT){
-                GVRPointLight gvrLight = new GVRPointLight(mContext);
-                setPhongLightProp(gvrLight,light);
-                setLightProp(gvrLight, light);
-                String name = light.getName();
-                lightlist.put(name, gvrLight);
+            else if (type == AiLightType.POINT)
+            {
+                l = new GVRPointLight(mContext);
             }
-            if(type == AiLightType.SPOT){
+            else if (type == AiLightType.SPOT)
+            {
                 float outerAngleRadians = light.getAngleOuterCone();
                 float innerAngleRadians = light.getAngleInnerCone();
                 GVRSpotLight gvrLight = new GVRSpotLight(mContext);
-                setPhongLightProp(gvrLight,light);
-                setLightProp(gvrLight, light);
-                if (innerAngleRadians == 0.0f) {
+
+                if (innerAngleRadians == 0.0f)
+                {
                     innerAngleRadians = outerAngleRadians / 1.5f;
                 }
                 gvrLight.setInnerConeAngle((float) Math.toDegrees(innerAngleRadians));
                 gvrLight.setOuterConeAngle((float) Math.toDegrees(outerAngleRadians));
-                String name = light.getName();
-                lightlist.put(name, gvrLight);
+                Log.e("ASSET", "Light: %s  cone angles (%f %f)", name, innerAngleRadians, outerAngleRadians);
+
+                l = gvrLight;
             }
+            else
+            {
+                continue;
+            }
+            lightlist.put(name, l);
+            setPhongLightProp(l,light);
+            setLightProp(l, light);
+
+            float aconst = l.getFloat("attenuation_constant");
+            float alin = l.getFloat("attenuation_linear");
+            float aquad = l.getFloat("attenuation_quadratic");
+            Log.e("ASSET", "Light: %s  attenuation (%f %f %f)", name, aconst, alin, aquad);
         }
 
     }
 
-    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
-        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
-        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
-        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
+    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight)
+    {
+        float aconstant = assimpLight.getAttenuationConstant();
+        float alinear = assimpLight.getAttenuationLinear();
+        float aquad = assimpLight.getAttenuationQuadratic();
+
+        if (Double.isInfinite(alinear))
+        {
+            alinear = 1.0f;
+        }
+        if (Double.isInfinite(aquad))
+        {
+            aquad = 1.0f;
+        }
+        if ((aconstant + aquad + alinear) == 0.0f)
+        {
+            aconstant = 1.0f;
+        }
+        gvrLight.setFloat("attenuation_constant", aconstant);
+        gvrLight.setFloat("attenuation_linear", alinear);
+        gvrLight.setFloat("attenuation_quadratic", aquad);
     }
 
-    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
+    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight)
+    {
         org.gearvrf.jassimp.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
         org.gearvrf.jassimp.AiColor diffuseCol = assimpLight.getColorDiffuse(sWrapperProvider);
         org.gearvrf.jassimp.AiColor specular = assimpLight.getColorSpecular(sWrapperProvider);
