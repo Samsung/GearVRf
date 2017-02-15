@@ -141,13 +141,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
 
         mActivityNative = mDelegate.getActivityNative();
-        mConfigurationManager = mDelegate.makeConfigurationManager(this);
-
-        if (mConfigurationManager.isDockListenerRequired()) {
-            startDockEventReceiver();
-        } else {
-            handleOnDock();
-        }
     }
 
     protected void onInitAppSettings(VrAppSettings appSettings) {
@@ -155,8 +148,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     private void onConfigure(final String dataFilename) {
+        mConfigurationManager = mDelegate.makeConfigurationManager(this);
         mConfigurationManager.configureForHeadset(GVRConfigurationManager.DEFAULT_HEADSET_MODEL);
         mDelegate.parseXmlSettings(getAssets(), dataFilename);
+
         onInitAppSettings(mAppSettings);
     }
 
@@ -257,6 +252,12 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 mViewManager = mDelegate.makeMonoscopicViewManager();
             }
             mDelegate.setViewManager(mViewManager);
+
+            if (mConfigurationManager.isDockListenerRequired()) {
+                startDockEventReceiver();
+            } else {
+                handleOnDock();
+            }
 
             mViewManager.getEventManager().sendEventWithMask(
                     SEND_EVENT_MASK,
