@@ -673,7 +673,7 @@ class GVRJassimpAdapter {
         gvrLight.setFloat("attenuation_linear", alinear);
         gvrLight.setFloat("attenuation_quadratic", aquad);
     }
-    
+
     private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight)
     {
         org.gearvrf.jassimp.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
