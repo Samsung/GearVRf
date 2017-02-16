@@ -108,8 +108,9 @@ public class GVRExternalScene extends GVRBehavior
      * IAssetEvents are emitted to the event listener on the context.
      * 
      * @param scene scene to add the model to, null is permissible
+     * @returns true
      */
-    public void load(GVRScene scene)
+    public boolean load(GVRScene scene)
     {
         GVRAssetLoader loader = getGVRContext().getAssetLoader();
 
@@ -125,5 +126,6 @@ public class GVRExternalScene extends GVRBehavior
         {
             loader.loadModel(getOwnerObject(), mVolume, scene);
         }
+        return true;
     }
 }
