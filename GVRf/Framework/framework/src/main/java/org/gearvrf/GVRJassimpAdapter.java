@@ -638,8 +638,6 @@ class GVRJassimpAdapter {
                 }
                 gvrLight.setInnerConeAngle((float) Math.toDegrees(innerAngleRadians));
                 gvrLight.setOuterConeAngle((float) Math.toDegrees(outerAngleRadians));
-                Log.e("ASSET", "Light: %s  cone angles (%f %f)", name, innerAngleRadians, outerAngleRadians);
-
                 l = gvrLight;
             }
             else
@@ -649,11 +647,6 @@ class GVRJassimpAdapter {
             lightlist.put(name, l);
             setPhongLightProp(l,light);
             setLightProp(l, light);
-
-            float aconst = l.getFloat("attenuation_constant");
-            float alin = l.getFloat("attenuation_linear");
-            float aquad = l.getFloat("attenuation_quadratic");
-            Log.e("ASSET", "Light: %s  attenuation (%f %f %f)", name, aconst, alin, aquad);
         }
 
     }
