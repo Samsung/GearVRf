@@ -102,8 +102,9 @@ Java_org_gearvrf_NativeBone_getOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr
     Bone* bone = reinterpret_cast<Bone*>(ptr);
     glm::mat4 matrix;
 
-    if (bone)
+    if (bone) {
         matrix = bone->getOffsetMatrix();
+    }
     jsize size = sizeof(matrix) / sizeof(jfloat);
     if (size != 16) {
         LOGE("sizeof(matrix) / sizeof(jfloat) != 16");
@@ -134,8 +135,9 @@ Java_org_gearvrf_NativeBone_getFinalTransformMatrix(JNIEnv * env, jobject clz, j
     Bone* bone = reinterpret_cast<Bone*>(ptr);
     glm::mat4 matrix;
 
-    if (bone)
-        glm::mat4 matrix = bone->getFinalTransformMatrix();
+    if (bone) {
+        matrix = bone->getFinalTransformMatrix();
+    }
     jsize size = sizeof(matrix) / sizeof(jfloat);
     if (size != 16) {
         LOGE("sizeof(matrix) / sizeof(jfloat) != 16");
