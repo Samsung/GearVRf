@@ -99,7 +99,6 @@ public class GVRResourceVolume {
         gvrContext = context;
         volumeType = GVRResourceVolume.VolumeType.ANDROID_ASSETS;
         defaultPath = FileNameUtils.getParentDirectory(filename);
-        fileName = filename.substring(defaultPath.length() + 1);
         if (fname.startsWith("sd:"))
         {
             if (defaultPath != null)
@@ -116,6 +115,14 @@ public class GVRResourceVolume {
         else
         {
             defaultPath = FileNameUtils.getParentDirectory(filename);
+        }
+        if (defaultPath != null)
+        {
+            fileName = filename.substring(defaultPath.length() + 1);
+        }
+        else
+        {
+            fileName = filename;
         }
     }
     
