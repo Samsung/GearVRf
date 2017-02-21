@@ -69,6 +69,7 @@ public class GVRResourceVolume {
     protected GVRContext gvrContext;
     protected VolumeType volumeType;
     protected String defaultPath;
+    protected String fileName;
     protected boolean enableUrlLocalCache = false;
 
     /**
@@ -82,11 +83,15 @@ public class GVRResourceVolume {
 
     /**
      * Constructor. Creates a {@link GVRResourceVolume} object based on a filename.
+     *
+     * This form of the constructor maintains the filename and can provide it
+     * later via @{link #getFileName() }.
      * @param filename A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
      *            Otherwise the file is assumed to be relative to the "assets" directory.
      * @param context The GVR Context.
+     * @see #getFileName()
      */
     public GVRResourceVolume(GVRContext context, String filename)
     {
@@ -109,7 +114,15 @@ public class GVRResourceVolume {
         }
         else
         {
-            defaultPath = FileNameUtils.getParentDirectory(filename);        	
+            defaultPath = FileNameUtils.getParentDirectory(filename);
+        }
+        if (defaultPath != null)
+        {
+            fileName = filename.substring(defaultPath.length() + 1);
+        }
+        else
+        {
+            fileName = filename;
         }
     }
     
@@ -200,16 +213,37 @@ public class GVRResourceVolume {
                     String.format("Unrecognized volumeType %s", volumeType));
         }
 
-        GVRAndroidResource resourceValue = resourceMap.get(resourceKey);
-        if (resourceValue != null) {
+        return addResource(resourceKey);
+    }
+
+
+    /**
+     * Add the given resource to the internal resource map.
+     * @param res resource to add
+     * @return existing resource if already in the map, otherwise new resource passed
+     */
+    protected GVRAndroidResource addResource(GVRAndroidResource res)
+    {
+        GVRAndroidResource resourceValue = resourceMap.get(res);
+        if (resourceValue != null)
+        {
             return resourceValue;
         }
-
+        //
         // Only put the resourceKey into the map for the first time, later put
         // will simply return the first resource
-        resourceValue = resourceMap.putIfAbsent(resourceKey, resourceKey);
-        return resourceValue == null ? resourceKey : resourceValue;
+        //
+        resourceValue = resourceMap.putIfAbsent(res, res);
+        return resourceValue == null ? res : resourceValue;
     }
+
+    /***
+     * Gets the filename from the initial file path specified in the constructor.
+     * This filename is only available if the GVRResourceVolume was constructed
+     * with the GVRResourceVolume(GVRContext, String) constructor.
+     * The filename returned does not include the parent directory.
+     */
+    String getFileName() { return fileName; }
 
     /**
      * Adapt a file path to the current file system.
