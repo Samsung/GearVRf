@@ -229,7 +229,7 @@ void Light::createDepthTexture(int width, int height, int depth) {
  //   glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGB10_A2, width,height,depth,0,GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV,NULL);
     glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGBA8, width,height,depth,0,GL_RGBA, GL_UNSIGNED_BYTE,NULL);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    checkGlError("Light::createDepthTexture");
+    checkGLError("Light::createDepthTexture");
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: create shadow map depth texture %d", depth_texture_->id());
 #endif

@@ -28,7 +28,7 @@ namespace gvr {
 
 static long long getCurrentTime() {
     timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts); // Works on Linux
+    clock_gettime(CLOCK_BOOTTIME, &ts); // Works on Linux
     long long time = static_cast<long long>(ts.tv_sec)
             * static_cast<long long>(1000000000)
             + static_cast<long long>(ts.tv_nsec);

@@ -564,7 +564,7 @@ void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_da
         }
         glBindVertexArray(0);
     }
-    checkGlError("renderMesh::renderMaterialShader");
+    checkGLError("renderMesh::renderMaterialShader");
 }
 }
 

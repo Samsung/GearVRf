@@ -42,7 +42,11 @@ public:
     }
 
     glm::mat4 &getFinalTransformMatrix() {
-        return *finalTransformMatrixPtr_;
+        if (finalTransformMatrixPtr_)
+        {
+            return *finalTransformMatrixPtr_;
+        }
+        return identityMatrix_;
     }
 
     static long long getComponentType() {
@@ -56,6 +60,7 @@ private:
     Bone& operator=(Bone&& bone);
 
 private:
+    static glm::mat4 identityMatrix_;
     std::string name_;
     std::vector<BoneWeight*> boneWeights_;
     glm::mat4 offsetMatrix_;

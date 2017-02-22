@@ -6,14 +6,9 @@
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "objects/material.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
 #include "objects/components/texture_capturer.h"
-#include "objects/textures/texture.h"
 #include "objects/textures/external_renderer_texture.h"
-#include "util/gvr_gl.h"
 #include "util/gvr_log.h"
-#include "engine/renderer/renderer.h"
 
 static GVRF_ExternalRenderer externalRenderer = NULL;
 
@@ -107,7 +102,7 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
         capturer->callback(TCCB_NEW_CAPTURE, 0);
     }
 
-    checkGlError("ExternalRendererShader::render");
+    checkGLError("ExternalRendererShader::render");
 }
 
 }

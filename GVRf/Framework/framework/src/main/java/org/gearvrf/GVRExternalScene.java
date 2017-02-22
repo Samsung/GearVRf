@@ -22,6 +22,7 @@ public class GVRExternalScene extends GVRBehavior
     static private long TYPE_EXTERNALSCENE = newComponentType(GVRExternalScene.class);
     private String mFilePath;
     private boolean mReplaceScene;
+    public final GVRResourceVolume mVolume;
 
     /**
      * Constructs an external scene component to load the given asset file.
@@ -33,7 +34,22 @@ public class GVRExternalScene extends GVRBehavior
     {
         super(ctx);
         mType = getComponentType();
+        mVolume = new GVRResourceVolume(ctx, filePath);
         mFilePath = filePath;
+        mReplaceScene = replaceScene;
+    }
+
+    /**
+     * Constructs an external scene component to load the given asset file.
+     * @param volume        GVRResourceVolume containing the path of the asset.
+     * @param replaceScene  true to replace the current scene, false to just add the model
+     */
+    public GVRExternalScene(GVRResourceVolume volume, boolean replaceScene)
+    {
+        super(volume.gvrContext);
+        mType = getComponentType();
+        mVolume = volume;
+        mFilePath = volume.getFullPath();
         mReplaceScene = replaceScene;
     }
 
@@ -86,9 +102,13 @@ public class GVRExternalScene extends GVRBehavior
      * the asset, the scene will contain only the owner of this
      * component upon return. Otherwise, the loaded asset is a
      * child of this component's owner.
+     *
+     * Loading the asset is performed in a separate thread.
+     * This function returns before the asset has finished loading.
+     * IAssetEvents are emitted to the event listener on the context.
      * 
      * @param scene scene to add the model to, null is permissible
-     * @return true if asset file available, false on IOException
+     * @returns true
      */
     public boolean load(GVRScene scene)
     {
@@ -98,21 +118,14 @@ public class GVRExternalScene extends GVRBehavior
         {
             scene = getGVRContext().getMainScene();
         }
-        try
+        if (mReplaceScene)
         {
-            if (mReplaceScene)
-            {
-                loader.loadScene(getOwnerObject(), mFilePath, scene);
-            }
-            else
-            {
-                loader.loadModel(getOwnerObject(), mFilePath, scene);
-            }
-            return true;
+            loader.loadScene(getOwnerObject(), mVolume, scene);
         }
-        catch (IOException ex)
+        else
         {
-            return false;
+            loader.loadModel(getOwnerObject(), mVolume, scene);
         }
+        return true;
     }
 }

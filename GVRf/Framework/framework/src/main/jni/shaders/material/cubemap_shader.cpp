@@ -18,13 +18,8 @@
  ***************************************************************************/
 
 #include "cubemap_shader.h"
-
-#include "gl/gl_program.h"
 #include "objects/material.h"
-#include "objects/mesh.h"
-#include "objects/components/render_data.h"
-#include "objects/textures/texture.h"
-#include "util/gvr_gl.h"
+#include "util/gvr_log.h"
 #include "engine/renderer/renderer.h"
 
 // OpenGL Cube map texture uses coordinate system different to other OpenGL functions:
@@ -118,7 +113,7 @@ void CubemapShader::render(RenderState* rstate, RenderData* render_data, Materia
     glUniform1i(u_texture_, 0);
     glUniform3f(u_color_, color.r, color.g, color.b);
     glUniform1f(u_opacity_, opacity);
-    checkGlError("CubemapShader::render");
+    checkGLError("CubemapShader::render");
 }
 
 }

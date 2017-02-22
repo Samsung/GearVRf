@@ -394,13 +394,14 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 if (!isPaused()) {
                     if (duration < 250) {
                         if (!mGVRMain.onBackPress()) {
-                            if (mDelegate.onBackPress()) {
-                                return true;
+                            if (!mDelegate.onBackPress()) {
+                                mViewManager.getActivity().finish();
                             }
                         }
                     }
                 }
             }
+            return true;
         } else {
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_VOLUME_UP:
