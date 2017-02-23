@@ -74,9 +74,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
     protected int mCurrentEye;
 
-    ByteBuffer mReadbackBuffer = null;
-    int mReadbackBufferWidth = 0, mReadbackBufferHeight = 0;
-
     // Statistic debug info
     private GVRStatsLine mStatsLine;
     private GVRFPSTracer mFPSTracer;
@@ -217,28 +214,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
     }
 
-    private void readRenderResult() {
-        if (mReadbackBuffer == null) {
-
-            mReadbackBufferWidth = mLensInfo.getFBOWidth();
-            mReadbackBufferHeight = mLensInfo.getFBOHeight();
-            mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
-            mReadbackBuffer.order(ByteOrder.nativeOrder());
-        }
-        readRenderResultNative(mRenderBundle.getPostEffectRenderTextureA().getNative(), mReadbackBuffer);
-    }
-
-    private void returnScreenshotToCaller(final GVRScreenshotCallback callback, final int width, final int height) {
-        // run the callback function in a background thread
-        final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
-        Threads.spawn(new Runnable() {
-            public void run() {
-                final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
-                callback.onScreenCaptured(capturedBitmap);
-            }
-        });
-    }
-
     private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, byte[][] byteArrays, int index) {
         renderCamera(mMainScene, centerCamera, mRenderBundle);
         readRenderResult();
@@ -287,55 +262,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
             centerCameraObject.detachCamera();
             mainCameraRig.getOwnerObject().removeChildObject(centerCameraObject);
-        }
-    }
-
-    private void returnScreenshot3DToCaller(final GVRScreenshot3DCallback callback, final byte[][] byteArrays,
-            final int width, final int height) {
-
-        if (byteArrays.length != 6) {
-            throw new IllegalArgumentException("byteArrays length is not 6.");
-        } else {
-            // run the callback function in a background thread
-            Threads.spawn(new Runnable() {
-                public void run() {
-                    final Bitmap[] bitmapArray = new Bitmap[6];
-                    Runnable[] threads = new Runnable[6];
-
-                    for (int i = 0; i < 6; i++) {
-                        final int index = i;
-                        threads[i] = new Runnable() {
-                            public void run() {
-                                byte[] bytearray = byteArrays[index];
-                                byteArrays[index] = null;
-                                Bitmap bitmap = ImageUtils.generateBitmapFlipV(bytearray, width, height);
-                                synchronized (this) {
-                                    bitmapArray[index] = bitmap;
-                                    notify();
-                                }
-                            }
-                        };
-                    }
-
-                    for (Runnable thread : threads) {
-                        Threads.spawnLow(thread);
-                    }
-
-                    for (int i = 0; i < 6; i++) {
-                        synchronized (threads[i]) {
-                            if (bitmapArray[i] == null) {
-                                try {
-                                    threads[i].wait();
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-
-                    callback.onScreenCaptured(bitmapArray);
-                }
-            });
         }
     }
 
@@ -492,5 +418,4 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     }
 
     private static native void drawEyes(long ptr);
-    private native void readRenderResultNative(long renderTexture, Object readbackBuffer);
 }

@@ -14,6 +14,7 @@
  */
 package org.gearvrf;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -24,11 +25,15 @@ import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.script.GVRScriptManager;
+import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
 import org.gearvrf.utility.VrAppSettings.EyeBufferParams.DepthFormat;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -568,6 +573,79 @@ abstract class GVRViewManager extends GVRContext {
         mScreenshot3DCallback = callback;
     }
 
+    protected void readRenderResult() {
+        if (mReadbackBuffer == null) {
+            final VrAppSettings settings = mActivity.getAppSettings();
+            final VrAppSettings.EyeBufferParams eyeBufferParams = settings.getEyeBufferParams();
+            mReadbackBufferWidth = eyeBufferParams.getResolutionWidth();
+            mReadbackBufferHeight = eyeBufferParams.getResolutionHeight();
+
+            mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
+            mReadbackBuffer.order(ByteOrder.nativeOrder());
+        }
+        readRenderResultNative(mRenderBundle.getPostEffectRenderTextureA().getNative(), mReadbackBuffer);
+    }
+
+    protected void returnScreenshotToCaller(final GVRScreenshotCallback callback, final int width, final int height) {
+        // run the callback function in a background thread
+        final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
+        Threads.spawn(new Runnable() {
+            public void run() {
+                final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
+                callback.onScreenCaptured(capturedBitmap);
+            }
+        });
+    }
+
+    protected void returnScreenshot3DToCaller(final GVRScreenshot3DCallback callback, final byte[][] byteArrays,
+                                            final int width, final int height) {
+
+        if (byteArrays.length != 6) {
+            throw new IllegalArgumentException("byteArrays length is not 6.");
+        } else {
+            // run the callback function in a background thread
+            Threads.spawn(new Runnable() {
+                public void run() {
+                    final Bitmap[] bitmapArray = new Bitmap[6];
+                    Runnable[] threads = new Runnable[6];
+
+                    for (int i = 0; i < 6; i++) {
+                        final int index = i;
+                        threads[i] = new Runnable() {
+                            public void run() {
+                                byte[] bytearray = byteArrays[index];
+                                byteArrays[index] = null;
+                                Bitmap bitmap = ImageUtils.generateBitmapFlipV(bytearray, width, height);
+                                synchronized (this) {
+                                    bitmapArray[index] = bitmap;
+                                    notify();
+                                }
+                            }
+                        };
+                    }
+
+                    for (Runnable thread : threads) {
+                        Threads.spawnLow(thread);
+                    }
+
+                    for (int i = 0; i < 6; i++) {
+                        synchronized (threads[i]) {
+                            if (bitmapArray[i] == null) {
+                                try {
+                                    threads[i].wait();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
+                    callback.onScreenCaptured(bitmapArray);
+                }
+            });
+        }
+    }
+
     private final GVRScriptManager mScriptManager;
     protected final GVRActivity mActivity;
     protected float mFrameTime;
@@ -591,11 +669,16 @@ abstract class GVRViewManager extends GVRContext {
 
     protected GVRMain mMain;
 
+    protected ByteBuffer mReadbackBuffer;
+    protected int mReadbackBufferWidth;
+    protected int mReadbackBufferHeight;
+
+
     protected native void renderCamera(long scene, long camera, long shaderManager,
                                        long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
     protected native void cull(long scene, long camera, long shader_manager);
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
-
+    private native static void readRenderResultNative(long renderTexture, Object readbackBuffer);
 
     private static final String TAG = "GVRViewManager";
 }
