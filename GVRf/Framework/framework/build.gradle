@@ -53,12 +53,15 @@ android {
                 if (commit.exists()) {
                     commitId = commit.text.trim();
                 } else {
+                    println "HEAD commit missing"
                     return
                 }
             } else {
+                println "HEAD elements empty"
                 return
             }
         } else {
+            println "HEAD file missing"
             return
         }
 
@@ -111,17 +114,6 @@ android {
         jniLibs {
             srcDir 'src/main/libs'
         }
-    }
-
-    task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
-        }
-
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/' + project.name + '-debug.aar').absolutePath
-    }
-    uploadToGitHub.doFirst {
-        println('uploading to github')
     }
 }
 
@@ -204,10 +196,6 @@ tasks.whenTaskAdded { task ->
                 from 'build/outputs/aar'
                 into gearvrfLibs
                 include project.name + '-debug.aar'
-            }
-
-            if (System.env['ACCESS_TOKEN'] != null) {
-                uploadToGitHub.execute();
             }
 
             tasks.packageForPlugins.execute()
