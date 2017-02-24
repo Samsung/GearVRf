@@ -4,6 +4,7 @@
 #include <assimp/cfileio.h>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
+#include <assimp/config.h>
 
 #include "android/asset_manager_jni.h"
 
@@ -1714,6 +1715,15 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 
 	/* do import */
 	const aiScene *cScene;
+
+	aiPropertyStore *aiprops = aiCreatePropertyStore();
+
+	// this property gets rid of the temporary dummy nodes created by assimp
+	// while importing the models.
+	// There is however one known issue with this property:
+	// https://github.com/assimp/assimp/issues/1068
+	aiSetImportPropertyInteger(aiprops, AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);
+
 	if (assetManager) {
 	    AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
 
@@ -1724,14 +1734,13 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 
 	    char* extension = 0;
 	    if (cFilename != 0) {
-	        extension = strrchr(cFilename, '.');
-	        if (extension && extension != cFilename) {
-	            extension++;
-	        }
-	    }
-
-	    cScene = aiImportFileFromMemory(pBuffer, assetSize, (unsigned int) postProcess,
-	            extension);
+			extension = strrchr(cFilename, '.');
+			if (extension && extension != cFilename) {
+				extension++;
+			}
+		}
+		cScene = aiImportFileFromMemoryWithProperties(pBuffer, assetSize, (unsigned int)
+				postProcess, extension, aiprops);
 
 	    delete pBuffer;
 	} else if (jFileIO) {
@@ -1745,8 +1754,7 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 	            .CloseProc = aiFileClose,
 	            .UserData = reinterpret_cast<char*>(&fileOpsData)
 	    };
-
-	    cScene = aiImportFileEx(cFilename, (unsigned int) postProcess, &fileIO);
+		cScene = aiImportFileExWithProperties(cFilename, (unsigned int) postProcess, &fileIO, aiprops);
 	} else {
 	    cScene = aiImportFile(cFilename, (unsigned int) postProcess);
 	}

@@ -125,7 +125,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 return lastKeyIndex = low + 1;
             }
 
-            Log.v(TAG, "Warning: interpolation failed at time " + time);
+            //Log.v(TAG, "Warning: interpolation failed at time " + time);
             return lastKeyIndex = -1;
         }
     }

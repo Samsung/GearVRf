@@ -134,6 +134,15 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
     }
 
     /**
+     * Return the offset matrix as a float array.
+     *
+     * @return the offset matrix as a float array.
+     */
+    public float[] getOffsetMatrixFloatArray() {
+        return NativeBone.getOffsetMatrix(getNative());
+    }
+
+    /**
      * Gets the scene object of this bone.
      *
      * @return the scene object that represents this bone in a
