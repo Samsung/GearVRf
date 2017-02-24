@@ -11,16 +11,16 @@ Redistribution and use of this software in source and binary forms,
 with or without modification, are permitted provided that the following 
 conditions are met:
 
- * Redistributions of source code must retain the above
+* Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
   following disclaimer.
 
- * Redistributions in binary form must reproduce the above
+* Redistributions in binary form must reproduce the above
   copyright notice, this list of conditions and the
   following disclaimer in the documentation and/or other
   materials provided with the distribution.
 
- * Neither the name of the assimp team, nor the names of its
+* Neither the name of the assimp team, nor the names of its
   contributors may be used to endorse or promote products
   derived from this software without specific prior
   written permission of the assimp team.
@@ -37,34 +37,36 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
- */
+*/
 package org.gearvrf.jassimp;
 
 import java.util.Set;
 
+
 /**
- * Enumerates the types of geometric primitives supported by Assimp.
- * <p>
+ * Enumerates the types of geometric primitives supported by Assimp.<p>
  */
 public enum AiPrimitiveType {
     /**
      * A point primitive.
      */
     POINT(0x1),
-
+    
+    
     /**
      * A line primitive.
      */
     LINE(0x2),
-
+    
+    
     /**
      * A triangular primitive.
      */
     TRIANGLE(0x4),
-
+    
+    
     /**
-     * A higher-level polygon with more than 3 edges.
-     * <p>
+     * A higher-level polygon with more than 3 edges.<p>
      * 
      * A triangle is a polygon, but polygon in this context means
      * "all polygons that are not triangles". The "Triangulate"-Step is provided
@@ -73,38 +75,37 @@ public enum AiPrimitiveType {
      */
     POLYGON(0x8);
 
+    
     /**
-     * Utility method for converting from c/c++ based integer enums to java
-     * enums.
-     * <p>
+     * Utility method for converting from c/c++ based integer enums to java 
+     * enums.<p>
      * 
      * This method is intended to be used from JNI and my change based on
      * implementation needs.
      * 
-     * @param set
-     *            the target set to fill
-     * @param rawValue
-     *            an integer based enum value (as defined by assimp)
+     * @param set the target set to fill
+     * @param rawValue an integer based enum value (as defined by assimp) 
      */
     static void fromRawValue(Set<AiPrimitiveType> set, int rawValue) {
-
+        
         for (AiPrimitiveType type : AiPrimitiveType.values()) {
             if ((type.m_rawValue & rawValue) != 0) {
                 set.add(type);
             }
         }
     }
-
+    
+    
     /**
      * Constructor.
      * 
-     * @param rawValue
-     *            maps java enum to c/c++ integer enum values
+     * @param rawValue maps java enum to c/c++ integer enum values
      */
     private AiPrimitiveType(int rawValue) {
         m_rawValue = rawValue;
     }
-
+    
+    
     /**
      * The mapped c/c++ integer enum value.
      */

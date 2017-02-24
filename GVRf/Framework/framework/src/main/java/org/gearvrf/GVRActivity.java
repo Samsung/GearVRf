@@ -139,6 +139,19 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
+        mDockEventReceiver = new DockEventReceiver(this,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        handleOnDock();
+                    }
+                }, new Runnable() {
+                    @Override
+                    public void run() {
+                        handleOnUndock();
+                    }
+                });
+        mDockEventReceiver.start();
 
         mActivityNative = mDelegate.getActivityNative();
     }
@@ -152,6 +165,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mConfigurationManager.configureForHeadset(GVRConfigurationManager.DEFAULT_HEADSET_MODEL);
         mDelegate.parseXmlSettings(getAssets(), dataFilename);
 
+        startDockEventReceiver();
         onInitAppSettings(mAppSettings);
     }
 
@@ -253,31 +267,23 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             }
             mDelegate.setViewManager(mViewManager);
 
-            if (mConfigurationManager.isDockListenerRequired()) {
-                startDockEventReceiver();
-            } else {
-                handleOnDock();
-            }
-
             mViewManager.getEventManager().sendEventWithMask(
                     SEND_EVENT_MASK,
                     this,
                     IActivityEvents.class,
                     "onSetMain", gvrMain);
-
             final GVRConfigurationManager localConfigurationManager = mConfigurationManager;
-            if (!isMonoscopicMode) {
-                if (null != mDockEventReceiver && localConfigurationManager.isDockListenerRequired()) {
-                    getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
-                        @Override
-                        public void onDrawFrame(float frameTime) {
-                            if (localConfigurationManager.isHmtConnected()) {
-                                handleOnDock();
-                                getGVRContext().unregisterDrawFrameListener(this);
-                            }
+            if (null != mDockEventReceiver && !isMonoscopicMode && localConfigurationManager
+                    .isDockListenerRequired()) {
+                getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
+                    @Override
+                    public void onDrawFrame(float frameTime) {
+                        if (localConfigurationManager.isHmtConnected()) {
+                            handleOnDock();
+                            getGVRContext().unregisterDrawFrameListener(this);
                         }
-                    });
-                }
+                    }
+                });
             }
         } else {
             throw new IllegalArgumentException(
@@ -650,8 +656,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 });
         if (null != mDockEventReceiver) {
             mDockEventReceiver.start();
-        } else {
-            Log.w(TAG, "dock listener not started");
         }
     }
 
