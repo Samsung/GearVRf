@@ -110,10 +110,17 @@ abstract class GVRConfigurationManager {
         GVRPerspectiveCamera.setDefaultFovY(fovY);
 
         if (null != viewManager) {
-            final GVRCameraRig cameraRig = viewManager.getMainScene().getMainCameraRig();
-            updatePerspectiveCameraFovY(cameraRig.getLeftCamera(), fovY);
-            updatePerspectiveCameraFovY(cameraRig.getRightCamera(), fovY);
-            updatePerspectiveCameraFovY(cameraRig.getCenterCamera(), fovY);
+            viewManager.runOnGlThread(new Runnable() {
+                @Override
+                public void run() {
+                    //when the viewmgr starts executing drawframelisteners it has a main scene
+                    //and a camera rig
+                    final GVRCameraRig cameraRig = viewManager.getMainScene().getMainCameraRig();
+                    updatePerspectiveCameraFovY(cameraRig.getLeftCamera(), fovY);
+                    updatePerspectiveCameraFovY(cameraRig.getRightCamera(), fovY);
+                    updatePerspectiveCameraFovY(cameraRig.getCenterCamera(), fovY);
+                }
+            });
         }
     }
 
