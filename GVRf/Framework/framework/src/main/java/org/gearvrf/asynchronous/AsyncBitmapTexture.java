@@ -344,7 +344,7 @@ class AsyncBitmapTexture {
         }
 
         @Override
-        protected Bitmap loadResource() throws IOException{
+        protected Bitmap loadResource() throws IOException {
             Bitmap bitmap;
             String resourceName = resource.getResourceFilename();
             if (resourceName.toLowerCase().endsWith("tga")) {
@@ -360,25 +360,28 @@ class AsyncBitmapTexture {
         }
     }
 
-    static Bitmap decodeStreamTGA(InputStream stream) {
+    static Bitmap decodeStreamTGA(InputStream stream) throws IOException {
         Bitmap bitmap = null;
-        try {
-            byte[] headerTGA = new byte[18];
+        byte[] headerTGA = new byte[18];
 
-            stream.read(headerTGA);
-            int type = headerTGA[2] & 0xFF;
-            // uncompressed RGB tga
-            if (type == 2) {
-                int depth = headerTGA[16] & 0xFF;
-                int descriptor = headerTGA[17] & 0xFF;
-                int width = (headerTGA[12] & 0xFF) | (headerTGA[13] & 0xFF) << 8;
-                int height = (headerTGA[14] & 0xFF) | (headerTGA[15] & 0xFF) << 8;
+        stream.read(headerTGA);
+        int type = headerTGA[2] & 0xFF;
+        // uncompressed RGB tga
+        if (type == 2) {
+            int depth = headerTGA[16] & 0xFF;
+            int descriptor = headerTGA[17] & 0xFF;
+            int width = (headerTGA[12] & 0xFF) | (headerTGA[13] & 0xFF) << 8;
+            int height = (headerTGA[14] & 0xFF) | (headerTGA[15] & 0xFF) << 8;
+            try
+            {
                 bitmap = decodeStreamRGB(stream, width, height, depth, descriptor);
-            } else {
-                Log.d(TAG, "TGA format not supported: type is not uncompressed RGB");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            catch (Exception ex)
+            {
+                Log.d(TAG, "Exception reading TGA file" + ex.getMessage());
+            }
+        } else {
+            Log.d(TAG, "TGA format not supported: type is not uncompressed RGB");
         }
         return bitmap;
     }
@@ -386,115 +389,216 @@ class AsyncBitmapTexture {
     private static final int RIGHT_ORIGIN = 0x10;
     private static final int UPPER_ORIGIN = 0x20;
 
-    static Bitmap decodeStreamRGB(InputStream stream, int width, int height, int depth, int descriptor) {
+
+    static Bitmap decodeStreamRGB(InputStream stream, int width, int height, int depth, int descriptor) throws IOException {
         Bitmap bitmap = null;
         byte rgb[];
         byte data[];
         int currentHeight = 0;
+        int size = width * height * 4;
+        int t;
 
-        try {
-            switch (depth) {
-                case 24:
-                    rgb = new byte[width * height * 4];
-                    data = new byte[width * 3];
+        if (depth == 24)
+        {
+            rgb = new byte[size];
+            data = new byte[width * 3];
 
-                    while (stream.read(data) != -1) {
-                        for (int i = 0; i < width; i++) {
+            if ((descriptor & RIGHT_ORIGIN) == 0)
+            {
+                if ((descriptor & UPPER_ORIGIN) != 0)
+                {
+                    currentHeight = 0;
+                    while ((currentHeight < height) && (stream.read(data) != -1))
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
                             byte r = data[i * 3 + 0];
                             byte g = data[i * 3 + 1];
                             byte b = data[i * 3 + 2];
-                            byte a = (byte)0xFF;
-                            if ((descriptor & RIGHT_ORIGIN) != 0) {
-                                if ((descriptor & UPPER_ORIGIN) != 0) {
-                                    // Upper Right
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 0] = b;
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 1] = g;
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 2] = r;
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 3] = a;
-                                } else {
-                                    // Lower Right
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 0] = b;
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 1] = g;
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 2] = r;
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 3] = a;
-                                }
-                            } else {
-                                if ((descriptor & UPPER_ORIGIN) != 0) {
-                                    // Upper Left
-                                    rgb[currentHeight * width * 4 + i * 4 + 0] = b;
-                                    rgb[currentHeight * width * 4 + i * 4 + 1] = g;
-                                    rgb[currentHeight * width * 4 + i * 4 + 2] = r;
-                                    rgb[currentHeight * width * 4 + i * 4 + 3] = a;
-                                } else {
-                                    // Lower Left
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 0] = b;
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 1] = g;
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 2] = r;
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 3] = a;
-                                }
-                            }
+                            byte a = (byte) 0xFF;
+                            t = (width * currentHeight + i) * 4;
+
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
                         }
                         currentHeight++;
                     }
-                    bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgb));
-                    return bitmap;
+                }
+                else
+                {
+                    currentHeight = height - 1;
+                    while ((currentHeight >= 0) && (stream.read(data) != -1))
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = (byte) 0xFF;
+                            t = (width * currentHeight + i) * 4;
 
-                case 32:
-                    rgb = new byte[width * height * 4];
-                    data = new byte[width * 4];
-
-                    while (stream.read(data) != -1) {
-                        for (int i = 0; i < width; i++) {
-                            byte r = data[i * 4 + 0];
-                            byte g = data[i * 4 + 1];
-                            byte b = data[i * 4 + 2];
-                            byte a = data[i * 4 + 3];
-                            if ((descriptor & RIGHT_ORIGIN) != 0) {
-                                if ((descriptor & UPPER_ORIGIN) != 0) {
-                                    // Upper Right
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 0] = b;
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 1] = g;
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 2] = r;
-                                    rgb[currentHeight * width * 4 + (width - i - 1) * 4 + 3] = a;
-                                } else {
-                                    // Lower Right
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 0] = b;
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 1] = g;
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 2] = r;
-                                    rgb[(height - currentHeight - 1) * width * 4 + (width - i - 1) * 4 + 3] = a;
-                                }
-                            } else {
-                                if ((descriptor & UPPER_ORIGIN) != 0) {
-                                    // Upper Left
-                                    rgb[currentHeight * width * 4 + i * 4 + 0] = b;
-                                    rgb[currentHeight * width * 4 + i * 4 + 1] = g;
-                                    rgb[currentHeight * width * 4 + i * 4 + 2] = r;
-                                    rgb[currentHeight * width * 4 + i * 4 + 3] = a;
-                                } else {
-                                    // Lower Left
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 0] = b;
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 1] = g;
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 2] = r;
-                                    rgb[(height - currentHeight - 1) * width * 4 + i * 4 + 3] = a;
-                                }
-                            }
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
                         }
-                        currentHeight++;
+                        currentHeight--;
                     }
-                    bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgb));
-                    return bitmap;
-
-                default:
-                    return bitmap;
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            else
+            {
+                if ((descriptor & UPPER_ORIGIN) != 0)
+                {
+                    currentHeight = 0;
+                    while ((currentHeight < height) && (stream.read(data) != -1))
+                    {
+                        for (int i = width - 1; i >= 0; i--)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = (byte) 0xFF;
+                            t = (width * currentHeight + i) * 4;
 
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
+                        }
+                        currentHeight++;
+                    }
+                }
+                else
+                {
+                    currentHeight = height - 1;
+                    while ((currentHeight >= 0) && (stream.read(data) != -1))
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = (byte) 0xFF;
+                            t = (width * currentHeight + i) * 4;
+
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
+                        }
+                        currentHeight--;
+                    }
+                }
+            }
+        }
+        else if (depth == 32)
+        {
+            rgb = new byte[width * height * 4];
+            data = new byte[width * 4];
+
+            if ((descriptor & RIGHT_ORIGIN) == 0)
+            {
+                if ((descriptor & UPPER_ORIGIN) != 0)
+                {
+                    currentHeight = 0;
+                    while ((currentHeight < height) && (stream.read(data) != -1))
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = data[i * 3 + 3];
+                            t = (width * currentHeight + i) * 4;
+
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
+                        }
+                        currentHeight++;
+                    }
+                }
+                else
+                {
+                    currentHeight = height - 1;
+                    while ((currentHeight >= 0) && (stream.read(data) != -1))
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = data[i * 3 + 3];
+                            t = (width * currentHeight + i) * 4;
+
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
+                        }
+                        currentHeight--;
+                    }
+                }
+            }
+            else
+            {
+                if ((descriptor & UPPER_ORIGIN) != 0)
+                {
+                    currentHeight = 0;
+                    while ((currentHeight < height) && (stream.read(data) != -1))
+                    {
+                        for (int i = 0; i < width; i++)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = data[i * 3 + 3];
+                            t = (width * currentHeight + i) * 4;
+
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
+                        }
+                        currentHeight++;
+                    }
+                }
+                else
+                {
+                    while ((currentHeight >= 0) && (stream.read(data) != -1))
+                    {
+                        currentHeight = height - 1;
+                        for (int i = 0; i < width; i++)
+                        {
+                            byte r = data[i * 3 + 0];
+                            byte g = data[i * 3 + 1];
+                            byte b = data[i * 3 + 2];
+                            byte a = data[i * 3 + 3];
+                            t = (width * currentHeight + i) * 4;
+
+                            rgb[t + 0] = b;
+                            rgb[t + 1] = g;
+                            rgb[t + 2] = r;
+                            rgb[t + 3] = a;
+                        }
+                        currentHeight--;
+                    }
+                }
+            }
+        }
+        else
+        {
+            return null;
+        }
+        bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgb));
         return bitmap;
     }
+
 
     /*
      * decodeStream

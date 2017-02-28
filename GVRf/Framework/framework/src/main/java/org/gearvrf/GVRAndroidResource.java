@@ -52,7 +52,10 @@ public class GVRAndroidResource {
         NEW, OPEN, CLOSED
     }
 
-    private enum ResourceType {
+    /**
+     * Designates the type of volume this resource comes from.
+     */
+    public enum ResourceType {
         ANDROID_ASSETS, ANDROID_RESOURCE, LINUX_FILESYSTEM, NETWORK, INPUT_STREAM
     }
 
@@ -215,6 +218,22 @@ public class GVRAndroidResource {
         resourceType = ResourceType.INPUT_STREAM;
     }
 
+    /**
+     * Gets the type of volume this resource resides on.
+     * <ul>
+     * <li>ANDROID_ASSETS  resource is a file in the "assets" directory of the application.</li>
+     * <li>ANDROID_RESOURCE  resource is referenced by resource ID.</li>
+     * <li>LINUX_FILESYSTEM  resource is on the SD card of the device.</li>
+     * <li>NETWORK  resource is a URL on the network.</li>
+     * <li>INPUT_STREAM  resource is from an input stream.</li>
+     * </ul>
+     * @return GVRAndroidResource.ResourceType giving type of resource
+     */
+    ResourceType getResourceType()
+    {
+        return resourceType;
+    }
+
     /*
      * A {@link URLBufferedInputStream} that supports {@link
      * InputStream#mark(int)} and {@link InputStream#reset()}
@@ -308,7 +327,7 @@ public class GVRAndroidResource {
      */
     public synchronized final void closeStream() {
         try {
-            if (streamState == StreamStates.OPEN) {
+            if ((stream != null) && (streamState == StreamStates.OPEN)) {
                 stream.close();
                 stream = null;
             }

@@ -11,16 +11,16 @@ Redistribution and use of this software in source and binary forms,
 with or without modification, are permitted provided that the following 
 conditions are met:
 
- * Redistributions of source code must retain the above
+* Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
   following disclaimer.
 
- * Redistributions in binary form must reproduce the above
+* Redistributions in binary form must reproduce the above
   copyright notice, this list of conditions and the
   following disclaimer in the documentation and/or other
   materials provided with the distribution.
 
- * Neither the name of the assimp team, nor the names of its
+* Neither the name of the assimp team, nor the names of its
   contributors may be used to endorse or promote products
   derived from this software without specific prior
   written permission of the assimp team.
@@ -37,54 +37,107 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
- */
+*/
 package org.gearvrf.jassimp;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.EnumSet;
 import java.util.Set;
 
+
+
 /**
- * Entry point to the jassimp library.
- * <p>
+ * Entry point to the jassimp library.<p>
  * 
  * Use {@link #importFile(String, Set)} to load a file.
  * 
  * <h3>General Notes and Pitfalls</h3>
- * Due to the loading via JNI, strings (for example as returned by the
- * <code>getName()</code> methods) are not interned. You should therefore
- * compare strings the way it should be done, i.e, via <code>equals()</code>.
+ * Due to the loading via JNI, strings (for example as returned by the 
+ * <code>getName()</code> methods) are not interned. You should therefore 
+ * compare strings the way it should be done, i.e, via <code>equals()</code>. 
  * Pointer comparison will fail.
  */
-class Jassimp {
-
-    public static final int NATIVE_AIVEKTORKEY_SIZE;
-    public static final int NATIVE_AIQUATKEY_SIZE;
-    public static final int NATIVE_AIVEKTOR3D_SIZE;
-    public static final int NATIVE_FLOAT_SIZE;
-    public static final int NATIVE_INT_SIZE;
-    public static final int NATIVE_UINT_SIZE;
-    public static final int NATIVE_DOUBLE_SIZE;
-    public static final int NATIVE_LONG_SIZE;
-
-    static {
-        NATIVE_AIVEKTORKEY_SIZE = getVKeysize();
-        NATIVE_AIQUATKEY_SIZE = getQKeysize();
-        NATIVE_AIVEKTOR3D_SIZE = getV3Dsize();
-        NATIVE_FLOAT_SIZE = getfloatsize();
-        NATIVE_INT_SIZE = getintsize();
-        NATIVE_UINT_SIZE = getuintsize();
-        NATIVE_DOUBLE_SIZE = getdoublesize();
-        NATIVE_LONG_SIZE = getlongsize();
-    }
-
+public final class Jassimp {
+    
     /**
      * The default wrapper provider using built in types.
      */
-    public static final AiWrapperProvider<?, ?, ?, ?, ?> BUILTIN = new AiBuiltInWrapperProvider();
+    public static final AiWrapperProvider<?, ?, ?, ?, ?> BUILTIN = 
+            new AiBuiltInWrapperProvider();
+    
 
     /**
-     * Returns the size of a struct or ptimitive.
-     * <p>
+     * Imports a file via assimp without post processing.
+     * 
+     * @param filename the file to import
+     * @return the loaded scene
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFile(String filename) throws IOException {
+        
+        return importFile(filename, EnumSet.noneOf(AiPostProcessSteps.class));
+    }
+    
+    
+    /**
+     * Imports a file via assimp.
+     * 
+     * @param filename the file to import
+     * @param postProcessing post processing flags
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFile(String filename, 
+            Set<AiPostProcessSteps> postProcessing) throws IOException {
+        
+        return aiImportFile(filename, AiPostProcessSteps.toRawValue(
+                postProcessing));
+    }
+
+    /**
+     * Imports a file via assimp without post processing.
+     *
+     * @param filename the file to import
+     * @param fileIO the fileIO handler
+     * @return the loaded scene
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFileEx(String filename, JassimpFileIO fileIO) throws IOException {
+        return importFileEx(filename, EnumSet.noneOf(AiPostProcessSteps.class), fileIO);
+    }
+
+    /**
+     * Imports a file via assimp.
+     *
+     * @param filename the file to import
+     * @param postProcessing post processing flags
+     * @param fileIO the fileIO handler
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFileEx(String filename,
+                                       Set<AiPostProcessSteps> postProcessing,
+                                       JassimpFileIO fileIO) throws IOException {
+
+        return aiImportFileEx(filename, AiPostProcessSteps.toRawValue(postProcessing), fileIO);
+    }
+
+    /**
+     * The native interface.
+     *
+     * @param filename the file to load
+     * @param postProcessing post processing flags
+     * @param fileIO the fileIO handler
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    private static native AiScene aiImportFileEx(String filename,
+                                                 long postProcessing,
+                                                 JassimpFileIO fileIO) throws IOException;
+
+    /**
+     * Returns the size of a struct or ptimitive.<p>
      * 
      * @return the result of sizeof call
      */
@@ -126,8 +179,7 @@ class Jassimp {
     public static native int getlongsize();
 
     /**
-     * Returns a human readable error description.
-     * <p>
+     * Returns a human readable error description.<p>
      * 
      * This method can be called when one of the import methods fails, i.e.,
      * throws an exception, to get a human readable error description.
@@ -135,82 +187,73 @@ class Jassimp {
      * @return the error string
      */
     public static native String getErrorString();
-
+    
+    
     /**
-     * Returns the active wrapper provider.
-     * <p>
+     * Returns the active wrapper provider.<p>
      * 
-     * This method is part of the wrapped API (see {@link AiWrapperProvider} for
-     * details on wrappers).
+     * This method is part of the wrapped API (see {@link AiWrapperProvider}
+     * for details on wrappers).
      * 
      * @return the active wrapper provider
      */
     public static AiWrapperProvider<?, ?, ?, ?, ?> getWrapperProvider() {
         return s_wrapperProvider;
     }
-
+    
+    
     /**
-     * Sets a new wrapper provider.
-     * <p>
+     * Sets a new wrapper provider.<p>
      * 
-     * This method is part of the wrapped API (see {@link AiWrapperProvider} for
-     * details on wrappers).
+     * This method is part of the wrapped API (see {@link AiWrapperProvider}
+     * for details on wrappers).
      * 
-     * @param wrapperProvider
-     *            the new wrapper provider
+     * @param wrapperProvider the new wrapper provider
      */
-    public static void setWrapperProvider(
-            AiWrapperProvider<?, ?, ?, ?, ?> wrapperProvider) {
-
+    public static void setWrapperProvider(AiWrapperProvider<?, ?, ?, ?, ?> 
+            wrapperProvider) {
+        
         s_wrapperProvider = wrapperProvider;
     }
-
+    
+    
     /**
-     * Helper method for wrapping a matrix.
-     * <p>
+     * Helper method for wrapping a matrix.<p>
      * 
      * Used by JNI, do not modify!
      * 
-     * @param data
-     *            the matrix data
+     * @param data the matrix data
      * @return the wrapped matrix
      */
     static Object wrapMatrix(float[] data) {
         return s_wrapperProvider.wrapMatrix4f(data);
     }
-
+    
+    
     /**
-     * Helper method for wrapping a color (rgb).
-     * <p>
+     * Helper method for wrapping a color (rgb).<p>
      * 
      * Used by JNI, do not modify!
      * 
-     * @param red
-     *            red component
-     * @param green
-     *            green component
-     * @param blue
-     *            blue component
+     * @param red red component
+     * @param green green component
+     * @param blue blue component
      * @return the wrapped color
      */
     static Object wrapColor3(float red, float green, float blue) {
         return wrapColor4(red, green, blue, 1.0f);
     }
-
+    
+    
     /**
-     * Helper method for wrapping a color (rgba).
-     * <p>
+     * Helper method for wrapping a color (rgba).<p>
      * 
      * Used by JNI, do not modify!
      * 
-     * @param red
-     *            red component
-     * @param green
-     *            green component
-     * @param blue
-     *            blue component
-     * @param alpha
-     *            alpha component
+     * @param red red component
+     * @param green green component
+     * @param blue blue component
+     * @param alpha alpha component
      * @return the wrapped color
      */
     static Object wrapColor4(float red, float green, float blue, float alpha) {
@@ -222,19 +265,16 @@ class Jassimp {
         temp.flip();
         return s_wrapperProvider.wrapColor(temp, 0);
     }
-
+    
+    
     /**
-     * Helper method for wrapping a vector.
-     * <p>
+     * Helper method for wrapping a vector.<p>
      * 
      * Used by JNI, do not modify!
      * 
-     * @param x
-     *            x component
-     * @param y
-     *            y component
-     * @param z
-     *            z component
+     * @param x x component
+     * @param y y component
+     * @param z z component
      * @return the wrapped vector
      */
     static Object wrapVec3(float x, float y, float z) {
@@ -245,31 +285,70 @@ class Jassimp {
         temp.flip();
         return s_wrapperProvider.wrapVector3f(temp, 0, 3);
     }
-
+    
+    
     /**
-     * Helper method for wrapping a scene graph node.
-     * <p>
+     * Helper method for wrapping a scene graph node.<p>
      * 
      * Used by JNI, do not modify!
      * 
-     * @param parent
-     *            the parent node
-     * @param matrix
-     *            the transformation matrix
-     * @param meshRefs
-     *            array of matrix references
-     * @param name
-     *            the name of the node
+     * @param parent the parent node
+     * @param matrix the transformation matrix
+     * @param meshRefs array of matrix references
+     * @param name the name of the node
      * @return the wrapped matrix
      */
     static Object wrapSceneNode(Object parent, Object matrix, int[] meshRefs,
             String name) {
-
+        
         return s_wrapperProvider.wrapSceneNode(parent, matrix, meshRefs, name);
     }
-
+    
+    
+    /**
+     * The native interface.
+     * 
+     * @param filename the file to load
+     * @param postProcessing post processing flags
+     * @return the loaded scene, or null if an error occurred
+     * @throws IOException if an error occurs
+     */
+    private static native AiScene aiImportFile(String filename, 
+            long postProcessing) throws IOException;
+    
+    
     /**
      * The active wrapper provider.
      */
-    private static AiWrapperProvider<?, ?, ?, ?, ?> s_wrapperProvider = new AiBuiltInWrapperProvider();
+    private static AiWrapperProvider<?, ?, ?, ?, ?> s_wrapperProvider = 
+            new AiBuiltInWrapperProvider();
+    
+    
+    /**
+     * Pure static class, no accessible constructor.
+     */
+    private Jassimp() {
+        /* nothing to do */
+    }
+    
+    public static final int NATIVE_AIVEKTORKEY_SIZE; 
+    public static final int NATIVE_AIQUATKEY_SIZE; 
+    public static final int NATIVE_AIVEKTOR3D_SIZE; 
+    public static final int NATIVE_FLOAT_SIZE; 
+    public static final int NATIVE_INT_SIZE; 
+    public static final int NATIVE_UINT_SIZE; 
+    public static final int NATIVE_DOUBLE_SIZE; 
+    public static final int NATIVE_LONG_SIZE; 
+
+    static {
+        //System.loadLibrary("jassimp");
+    	NATIVE_AIVEKTORKEY_SIZE = getVKeysize();
+    	NATIVE_AIQUATKEY_SIZE = getQKeysize();
+    	NATIVE_AIVEKTOR3D_SIZE = getV3Dsize();
+    	NATIVE_FLOAT_SIZE = getfloatsize();
+    	NATIVE_INT_SIZE = getintsize();
+    	NATIVE_UINT_SIZE = getuintsize();
+    	NATIVE_DOUBLE_SIZE = getdoublesize();
+    	NATIVE_LONG_SIZE = getlongsize();
+    }
 }

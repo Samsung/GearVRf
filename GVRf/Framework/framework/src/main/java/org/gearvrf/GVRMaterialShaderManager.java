@@ -41,12 +41,15 @@ import org.gearvrf.utility.Log;
     @Override
     public GVRCustomMaterialShaderId addShader(String vertexShader,
             String fragmentShader) {
-        final int shaderId = NativeShaderManager.addCustomShader(getNative(),
-                vertexShader, fragmentShader);
-        GVRCustomMaterialShaderId result = new GVRCustomMaterialShaderId(
-                shaderId);
-        materialMaps.put(result, retrieveShaderMap(result));
-        return result;
+        synchronized (materialMaps)
+        {
+            final int shaderId = NativeShaderManager.addCustomShader(getNative(),
+                                                                     vertexShader, fragmentShader);
+            GVRCustomMaterialShaderId result = new GVRCustomMaterialShaderId(
+                    shaderId);
+            materialMaps.put(result, retrieveShaderMap(result));
+            return result;
+        }
     }
     
     /**
@@ -68,44 +71,57 @@ import org.gearvrf.utility.Log;
      */
     public GVRShaderTemplate retrieveShaderTemplate(Class<? extends GVRShaderTemplate> templateClass)
         throws IllegalArgumentException, UnsupportedOperationException {
-        GVRShaderTemplate template = mShaderTemplates.get(templateClass);
-        if (template != null) {
+        synchronized (mShaderTemplates)
+        {
+            GVRShaderTemplate template = mShaderTemplates.get(templateClass);
+            if (template != null)
+            {
+                return template;
+            }
+            try
+            {
+                Constructor<? extends GVRShaderTemplate> constructor =
+                        templateClass.getConstructor(GVRContext.class);
+                template = (GVRShaderTemplate) constructor.newInstance(getGVRContext());
+                mShaderTemplates.put(templateClass, template);
+            }
+            catch (NoSuchMethodException mex)
+            {
+                throw new UnsupportedOperationException("shader template of class "
+                                                        + templateClass.getSimpleName()
+                                                        +
+                                                        " does not have a constructor which takes GVRContext "
+                                                        + mex.getMessage());
+            }
+            catch (InstantiationException iex)
+            {
+                throw new UnsupportedOperationException("error creating shader template of class "
+                                                        + templateClass.getSimpleName()
+                                                        + iex.getMessage());
+            }
+            catch (IllegalAccessException aex)
+            {
+                throw new UnsupportedOperationException("error creating shader template of class "
+                                                        + templateClass.getSimpleName()
+                                                        + aex.getMessage());
+            }
+            catch (InvocationTargetException tex)
+            {
+                throw new UnsupportedOperationException("error creating shader template of class "
+                                                        + templateClass.getSimpleName()
+                                                        + tex.getMessage());
+            }
+            // TODO: generate event to force rebinding of shaders
             return template;
         }
-        try {
-            Constructor<? extends GVRShaderTemplate> constructor = templateClass.getConstructor(GVRContext.class);
-            template = (GVRShaderTemplate) constructor.newInstance(getGVRContext());
-            mShaderTemplates.put(templateClass, template);
-        }
-        catch (NoSuchMethodException mex) {
-            throw new UnsupportedOperationException("shader template of class "
-                    + templateClass.getSimpleName()
-                    + " does not have a constructor which takes GVRContext "
-                    + mex.getMessage());
-        }
-        catch (InstantiationException iex) {
-            throw new UnsupportedOperationException("error creating shader template of class "
-                    + templateClass.getSimpleName()
-                    + iex.getMessage());
-        }
-        catch (IllegalAccessException aex) {
-            throw new UnsupportedOperationException("error creating shader template of class "
-                    + templateClass.getSimpleName()
-                    + aex.getMessage());
-        }
-        catch (InvocationTargetException tex)
-        {
-            throw new UnsupportedOperationException("error creating shader template of class "
-                    + templateClass.getSimpleName()
-                    + tex.getMessage());
-        }
-        // TODO: generate event to force rebinding of shaders
-        return template;
     }
     
     @Override
     public GVRMaterialMap getShaderMap(GVRCustomMaterialShaderId id) {
-        return materialMaps.get(id);
+        synchronized (materialMaps)
+        {
+            return materialMaps.get(id);
+        }
     }
 
     @SuppressWarnings("resource")

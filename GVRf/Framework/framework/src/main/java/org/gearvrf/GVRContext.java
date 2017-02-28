@@ -279,17 +279,44 @@ public abstract class GVRContext implements IEventReceiver {
      * @since 1.6.2
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource,
-            EnumSet<GVRImportSettings> settings) {
+            EnumSet<GVRImportSettings> settings)
+    {
+        class MeshFinder implements GVRSceneObject.ComponentVisitor
+        {
+            private GVRMesh meshFound = null;
+            public GVRMesh getMesh() { return meshFound; }
+            public boolean visit(GVRComponent comp)
+            {
+                GVRRenderData rdata = (GVRRenderData) comp;
+                meshFound = rdata.getMesh();
+                return (meshFound == null);
+            }
+        };
+        MeshFinder findMesh = new MeshFinder();
         GVRMesh mesh = meshCache.get(androidResource);
-        if (mesh == null) try {
-            GVRAssimpImporter assimpImporter = mImporter.readFileFromResources(this, androidResource, settings);
-            mesh = assimpImporter.getMesh(0);
-            meshCache.put(androidResource, mesh);
-        }
-        catch (IOException ex) {
-            getEventManager().sendEvent(this, IAssetEvents.class,
-                    "onModelError", new Object[] { this, ex.getMessage(), androidResource.getResourceFilename() });
-            return null;
+        if (mesh == null)
+        {
+            try
+            {
+                GVRSceneObject model = mImporter.loadModel(androidResource, settings, true, null);
+                model.forAllComponents(findMesh, GVRRenderData.getComponentType());
+                mesh = findMesh.getMesh();
+                if (mesh != null)
+                {
+                    meshCache.put(androidResource, mesh);
+                }
+                else
+                {
+                    throw new IOException("No mesh found in model " + androidResource.getResourceFilename());
+                }
+            }
+            catch (IOException ex)
+            {
+                getEventManager().sendEvent(this, IAssetEvents.class,
+                                            "onModelError", new Object[]{this, ex.getMessage(),
+                                androidResource.getResourceFilename()});
+                return null;
+            }
         }
         return mesh;
     }
@@ -723,6 +750,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString) throws IOException {
@@ -748,6 +776,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, boolean cacheEnabled) throws IOException {
@@ -770,6 +799,7 @@ public abstract class GVRContext implements IEventReceiver {
      *
      * @throws IOException
      *             File does not exist or cannot be read
+     * @deprecated use GVRAssetLoader.loadModel instead
      *
      */
     public GVRSceneObject loadModelFromURL(String urlString, EnumSet<GVRImportSettings> settings) throws IOException {
@@ -780,6 +810,7 @@ public abstract class GVRContext implements IEventReceiver {
      * Retrieves the particular index mesh for the given node.
      * 
      * @return The mesh, encapsulated as a {@link GVRMesh}.
+     * @deprecated use GVRContext.loadModel instead
      */
     public GVRMesh getNodeMesh(GVRAssimpImporter assimpImporter,
             String nodeName, int meshIndex) {
