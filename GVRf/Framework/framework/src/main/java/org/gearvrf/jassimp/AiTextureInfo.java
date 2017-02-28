@@ -11,16 +11,16 @@ Redistribution and use of this software in source and binary forms,
 with or without modification, are permitted provided that the following 
 conditions are met:
 
- * Redistributions of source code must retain the above
+* Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
   following disclaimer.
 
- * Redistributions in binary form must reproduce the above
+* Redistributions in binary form must reproduce the above
   copyright notice, this list of conditions and the
   following disclaimer in the documentation and/or other
   materials provided with the distribution.
 
- * Neither the name of the assimp team, nor the names of its
+* Neither the name of the assimp team, nor the names of its
   contributors may be used to endorse or promote products
   derived from this software without specific prior
   written permission of the assimp team.
@@ -37,40 +37,32 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
- */
+*/
 package org.gearvrf.jassimp;
+
 
 /**
  * Data structure for texture related material properties.
  */
 public final class AiTextureInfo {
-
+    
     /**
      * Constructor.
      * 
-     * @param type
-     *            type
-     * @param index
-     *            index
-     * @param file
-     *            file
-     * @param uvIndex
-     *            uv index
-     * @param blend
-     *            blend factor
-     * @param texOp
-     *            texture operation
-     * @param mmU
-     *            map mode for u axis
-     * @param mmV
-     *            map mode for v axis
-     * @param mmW
-     *            map mode for w axis
+     * @param type type
+     * @param index index
+     * @param file file
+     * @param uvIndex uv index
+     * @param blend blend factor
+     * @param texOp texture operation
+     * @param mmU map mode for u axis
+     * @param mmV map mode for v axis
+     * @param mmW map mode for w axis
      */
-    AiTextureInfo(AiTextureType type, int index, String file, int uvIndex,
-            float blend, AiTextureOp texOp, AiTextureMapMode mmU,
+    AiTextureInfo(AiTextureType type, int index, String file,
+            int uvIndex, float blend, AiTextureOp texOp, AiTextureMapMode mmU,
             AiTextureMapMode mmV, AiTextureMapMode mmW) {
-
+        
         m_type = type;
         m_index = index;
         m_file = file;
@@ -81,6 +73,7 @@ public final class AiTextureInfo {
         m_textureMapModeV = mmV;
         m_textureMapModeW = mmW;
     }
+    
 
     /**
      * Specifies the type of the texture (e.g. diffuse, specular, ...).
@@ -90,10 +83,10 @@ public final class AiTextureInfo {
     public AiTextureType getType() {
         return m_type;
     }
-
+    
+    
     /**
-     * Index of the texture in the texture stack.
-     * <p>
+     * Index of the texture in the texture stack.<p>
      * 
      * Each type maintains a stack of textures, i.e., there may be a diffuse.0,
      * a diffuse.1, etc
@@ -103,7 +96,8 @@ public final class AiTextureInfo {
     public int getIndex() {
         return m_index;
     }
-
+    
+    
     /**
      * Returns the path to the texture file.
      * 
@@ -112,7 +106,8 @@ public final class AiTextureInfo {
     public String getFile() {
         return m_file;
     }
-
+    
+    
     /**
      * Returns the index of the UV coordinate set.
      * 
@@ -121,7 +116,8 @@ public final class AiTextureInfo {
     public int getUVIndex() {
         return m_uvIndex;
     }
-
+    
+    
     /**
      * Returns the blend factor.
      * 
@@ -130,7 +126,8 @@ public final class AiTextureInfo {
     public float getBlend() {
         return m_blend;
     }
-
+    
+    
     /**
      * Returns the texture operation used to combine this texture and the
      * preceding texture in the stack.
@@ -140,7 +137,8 @@ public final class AiTextureInfo {
     public AiTextureOp getTextureOp() {
         return m_textureOp;
     }
-
+    
+    
     /**
      * Returns the texture map mode for U texture axis.
      * 
@@ -149,7 +147,8 @@ public final class AiTextureInfo {
     public AiTextureMapMode getTextureMapModeU() {
         return m_textureMapModeU;
     }
-
+    
+    
     /**
      * Returns the texture map mode for V texture axis.
      * 
@@ -158,7 +157,8 @@ public final class AiTextureInfo {
     public AiTextureMapMode getTextureMapModeV() {
         return m_textureMapModeV;
     }
-
+    
+    
     /**
      * Returns the texture map mode for W texture axis.
      * 
@@ -167,47 +167,56 @@ public final class AiTextureInfo {
     public AiTextureMapMode getTextureMapModeW() {
         return m_textureMapModeW;
     }
-
+    
+    
     /**
      * Type.
      */
     private final AiTextureType m_type;
-
+    
+    
     /**
      * Index.
      */
     private final int m_index;
-
+    
+    
     /**
      * Path.
      */
     private final String m_file;
-
+    
+    
     /**
      * UV index.
      */
     private final int m_uvIndex;
-
+    
+    
     /**
      * Blend factor.
      */
     private final float m_blend;
-
+    
+    
     /**
      * Texture operation.
      */
     private final AiTextureOp m_textureOp;
-
+    
+    
     /**
      * Map mode U axis.
      */
     private final AiTextureMapMode m_textureMapModeU;
-
+    
+    
     /**
      * Map mode V axis.
      */
     private final AiTextureMapMode m_textureMapModeV;
-
+    
+    
     /**
      * Map mode W axis.
      */

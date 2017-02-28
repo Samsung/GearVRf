@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2015, assimp team
+Copyright (c) 2006-2016, assimp team
 
 All rights reserved.
 
@@ -42,16 +42,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /** @file  Importer.hpp
  *  @brief Defines the C++-API to the Open Asset Import Library.
  */
-#ifndef INCLUDED_AI_ASSIMP_HPP
-#define INCLUDED_AI_ASSIMP_HPP
+#pragma once
+#ifndef AI_ASSIMP_HPP_INC
+#define AI_ASSIMP_HPP_INC
 
 #ifndef __cplusplus
 #   error This header requires C++ to be used. Use assimp.h for plain C.
-#endif
+#endif // __cplusplus
 
 // Public ASSIMP data structures
-#include "types.h"
-#include "config.h"
+#include <assimp/types.h>
+#include <assimp/config.h>
 
 namespace Assimp    {
     // =======================================================================
@@ -114,6 +115,11 @@ namespace Assimp    {
 * threads for loading, each thread should maintain its own Importer instance.
 */
 class ASSIMP_API Importer   {
+public:
+    /**
+     *  @brief The upper limit for hints.
+     */
+    static const unsigned int MaxLenHint = 200;
 
 public:
 
@@ -187,7 +193,6 @@ public:
      */
     aiReturn UnregisterPPStep(BaseProcess* pImp);
 
-
     // -------------------------------------------------------------------
     /** Set an integer configuration property.
      * @param szName Name of the property. All supported properties
@@ -218,7 +223,7 @@ public:
     /** Set a floating-point configuration property.
      * @see SetPropertyInteger()
      */
-    bool SetPropertyFloat(const char* szName, float fValue);
+    bool SetPropertyFloat(const char* szName, ai_real fValue);
 
     // -------------------------------------------------------------------
     /** Set a string configuration property.
@@ -263,8 +268,8 @@ public:
     /** Get a floating-point configuration property
      * @see GetPropertyInteger()
      */
-    float GetPropertyFloat(const char* szName,
-        float fErrorReturn = 10e10f) const;
+    ai_real GetPropertyFloat(const char* szName,
+        ai_real fErrorReturn = 10e10) const;
 
     // -------------------------------------------------------------------
     /** Get a string configuration property
@@ -286,10 +291,10 @@ public:
 
     // -------------------------------------------------------------------
     /** Supplies a custom IO handler to the importer to use to open and
-     * access files. If you need the importer to use custion IO logic to
+     * access files. If you need the importer to use custom IO logic to
      * access the files, you need to provide a custom implementation of
      * IOSystem and IOFile to the importer. Then create an instance of
-     * your custion IOSystem implementation and supply it by this function.
+     * your custom IOSystem implementation and supply it by this function.
      *
      * The Importer takes ownership of the object and will destroy it
      * afterwards. The previously assigned handler will be deleted.
@@ -351,7 +356,7 @@ public:
     bool IsDefaultProgressHandler() const;
 
     // -------------------------------------------------------------------
-    /** @brief Check whether a given set of postprocessing flags
+    /** @brief Check whether a given set of post-processing flags
      *  is supported.
      *
      *  Some flags are mutually exclusive, others are probably
@@ -453,11 +458,13 @@ public:
      *    to the #Importer instance.  */
     const aiScene* ApplyPostProcessing(unsigned int pFlags);
 
+    const aiScene* ApplyCustomizedPostProcessing( BaseProcess *rootProcess, bool requestValidation );
+
     // -------------------------------------------------------------------
     /** @brief Reads the given file and returns its contents if successful.
      *
      * This function is provided for backward compatibility.
-     * See the const char* version for detailled docs.
+     * See the const char* version for detailed docs.
      * @see ReadFile(const char*, pFlags)  */
     const aiScene* ReadFile(
         const std::string& pFile,
@@ -509,9 +516,6 @@ public:
      *   It will work as well for static linkage with Assimp.*/
     aiScene* GetOrphanedScene();
 
-
-
-
     // -------------------------------------------------------------------
     /** Returns whether a given file extension is supported by ASSIMP.
      *
@@ -550,7 +554,7 @@ public:
     inline void GetExtensionList(std::string& szOut) const;
 
     // -------------------------------------------------------------------
-    /** Get the number of importrs currently registered with Assimp. */
+    /** Get the number of importers currently registered with Assimp. */
     size_t GetImporterCount() const;
 
     // -------------------------------------------------------------------
@@ -593,9 +597,6 @@ public:
     *  @return (size_t)-1 if no importer is found */
     size_t GetImporterIndex (const char* szExtension) const;
 
-
-
-
     // -------------------------------------------------------------------
     /** Returns the storage allocated by ASSIMP to hold the scene data
      * in memory.
@@ -615,7 +616,6 @@ public:
      * structure in a well-defined manner. This is a debug feature and not
      * intended for use in production environments. */
     void SetExtraVerbose(bool bDo);
-
 
     // -------------------------------------------------------------------
     /** Private, do not use. */
@@ -651,4 +651,5 @@ AI_FORCE_INLINE bool Importer::IsExtensionSupported(const std::string& szExtensi
 }
 
 } // !namespace Assimp
-#endif // INCLUDED_AI_ASSIMP_HPP
+
+#endif // AI_ASSIMP_HPP_INC

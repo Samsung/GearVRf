@@ -38,11 +38,10 @@ import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 
 import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
-import org.gearvrf.jassimp.GVROldWrapperProvider;
 import org.gearvrf.GVRJassimpAdapter;
-import org.gearvrf.jassimp2.AiTexture;
-import org.gearvrf.jassimp2.Jassimp;
-import org.gearvrf.jassimp2.JassimpFileIO;
+import org.gearvrf.jassimp.AiTexture;
+import org.gearvrf.jassimp.Jassimp;
+import org.gearvrf.jassimp.JassimpFileIO;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.GVRByteArray;
@@ -116,6 +115,24 @@ public final class GVRAssetLoader {
             mUserHandler = null;
             mErrors = "";
             mVolume = fileVolume;
+            Log.d(TAG, "ASSET: loading %s ...", mFileName);
+        }
+
+        /**
+         * Request to load an asset.
+         * @param context GVRContext to get asset load events.
+         * @param resource GVRAndroidResource describing the file to load.
+         */
+        public AssetRequest(GVRContext context, GVRAndroidResource resource, GVRScene scene)
+        {
+            mScene = scene;
+            mContext = context;
+            mNumTextures = 0;
+            mFileName = resource.getResourceFilename();
+            mUserHandler = null;
+            mErrors = "";
+            mVolume = new GVRResourceVolume(mContext, mFileName);
+            mVolume.addResource(resource);
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
 
@@ -235,12 +252,20 @@ public final class GVRAssetLoader {
          * @param aitex   Assimp texture containing the pixel data
          * @return GVRTexture made from embedded texture
          */
-        public GVRTexture loadEmbeddedTexture(final TextureRequest request, final AiTexture aitex, final GVRTextureParameters texParams) throws IOException
+        public GVRTexture loadEmbeddedTexture(final TextureRequest request, final AiTexture aitex, final GVRTextureParameters texParams)
         {
-            GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
+            GVRAndroidResource resource = null;
             GVRBitmapTexture bmapTex;
 
             Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
+            try
+            {
+                resource = new GVRAndroidResource(request.TextureFile);
+            }
+            catch (IOException ex)
+            {
+                request.failed(ex, resource);
+            }
             Map<String, GVRTexture> texCache = GVRAssetLoader.getEmbeddedTextureCache();
             synchronized (texCache)
             {
@@ -453,7 +478,7 @@ public final class GVRAssetLoader {
         public final String TextureFile;
         protected GVRTextureParameters mTexParams;
         protected AssetRequest mAssetRequest;
-        private boolean loadFinished;
+        private boolean loadFinished;   // in case loaded(), failed() called more than once
 
         public TextureRequest(AssetRequest assetRequest, String texFile, final GVRTextureParameters texParams)
         {
@@ -473,7 +498,7 @@ public final class GVRAssetLoader {
 
         public void loaded(final GVRTexture texture, GVRAndroidResource resource)
         {
-            mAssetRequest.getContext().runOnGlThread(new Runnable()
+            texture.getGVRContext().runOnGlThread(new Runnable()
             {
                 public void run()
                 {
@@ -482,9 +507,9 @@ public final class GVRAssetLoader {
             });
             if (!loadFinished)
             {
-                mAssetRequest.onTextureLoaded(mAssetRequest.getContext(), texture, TextureFile);
+                loadFinished = true;
+                mAssetRequest.onTextureLoaded(texture.getGVRContext(), texture, TextureFile);
             }
-            loadFinished = true;
         }
 
         @Override
@@ -492,8 +517,8 @@ public final class GVRAssetLoader {
         {
             if (!loadFinished)
             {
-                mAssetRequest.onTextureError(mAssetRequest.getContext(), t.getMessage(), TextureFile);
                 loadFinished = true;
+                mAssetRequest.onTextureError(mAssetRequest.getContext(), t.getMessage(), TextureFile);
                 loaded(getDefaultTexture(mAssetRequest.getContext()), null);
             }
         }
@@ -839,25 +864,6 @@ public final class GVRAssetLoader {
         return new GVRAssimpImporter(gvrContext, nativeValue);
     }
 
-    /**
-     * Imports a 3D model from a file on the device's SD card. The application
-     * must have read permission for the directory containing the file.
-     *
-     * Does not check that file exists and is readable by this process: the only
-     * public caller does that check.
-     *
-     * @param gvrContext
-     *            Context to import file from.
-     * @param filename
-     *            Name of the file to import.
-     * @return An instance of {@link GVRAssimpImporter}.
-     */
-    GVRAssimpImporter readFileFromSDCard(GVRContext gvrContext,
-            String filename, EnumSet<GVRImportSettings> settings) {
-        long nativeValue = NativeImporter.readFileFromSDCard(filename, GVRImportSettings.getAssimpImportFlags(settings));
-        return new GVRAssimpImporter(gvrContext, nativeValue);
-    }
-
 
     // IO Handler for Jassimp
     static class ResourceVolumeIO implements JassimpFileIO {
@@ -908,7 +914,9 @@ public final class GVRAssetLoader {
                 GVRAndroidResource resource = uncachedIO.getResourceVolume().openResource(path);
                 GVRByteArray byteArray = cache.get(resource);
                 if (byteArray == null) {
-                    resource.closeStream(); // needed to avoid hanging
+                    if (resource.getResourceType() != GVRAndroidResource.ResourceType.INPUT_STREAM) {
+                        resource.closeStream(); // needed to avoid hanging
+                    }
                     byte[] data = uncachedIO.read(path);
                     if (data == null) {
                         return null;
@@ -1201,6 +1209,53 @@ public final class GVRAssetLoader {
     }
 
     /**
+     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
+     * The model is not added to the current scene.
+     * IAssetEvents are emitted to the event handler supplied first and then to
+     * the event listener attached to the context.
+     * This function blocks the current thread while loading the model
+     * but loads the textures asynchronously in the background.
+     *
+     * @param resource
+     *            GVRAndroidResource describing the asset. If it is a resource ID,
+     *            the file it references must have a valid extension because the
+     *            extension is used to determine what type of 3D file it is.
+     *
+     * @param settings
+     *            Additional import {@link GVRImportSettings settings}
+     *
+     * @param cacheEnabled
+     *            If true, add the loaded model to the in-memory cache.
+     *
+     * @param scene
+     *            If present, this asset loader will wait until all of the textures have been
+     *            loaded and then adds the model to the scene.
+     *
+     * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
+     * and animations.
+     * @throws IOException
+     *
+     */
+    public GVRModelSceneObject loadModel(GVRAndroidResource resource,
+                                         EnumSet<GVRImportSettings> settings,
+                                         boolean cacheEnabled,
+                                         GVRScene scene) throws IOException
+    {
+        String filePath = resource.getResourceFilename();
+        String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+        GVRModelSceneObject model = new GVRModelSceneObject(mContext);
+        GVRResourceVolume volume = new GVRResourceVolume(mContext, resource);
+        AssetRequest assetRequest = new AssetRequest(model, volume, scene, false);
+
+        model.setName(assetRequest.getBaseName());
+        if (ext.equals("x3d"))
+            loadX3DModel(assetRequest, model, settings, cacheEnabled, null);
+        else
+            loadJassimpModel(assetRequest, model, settings, cacheEnabled, null);
+        return model;
+    }
+
+    /**
      * Loads a scene object {@link GVRSceneObject} from
      * a 3D model and raises asset events to a handler.
      *
@@ -1274,7 +1329,7 @@ public final class GVRAssetLoader {
             EnumSet<GVRImportSettings> settings, boolean cacheEnabled, GVRScene scene) throws IOException
     {
         Jassimp.setWrapperProvider(GVRJassimpAdapter.sWrapperProvider);
-        org.gearvrf.jassimp2.AiScene assimpScene = null;
+        org.gearvrf.jassimp.AiScene assimpScene = null;
         String filePath = request.getBaseName();
         GVRJassimpAdapter jassimpAdapter = new GVRJassimpAdapter(this, filePath);
 
@@ -1299,18 +1354,9 @@ public final class GVRAssetLoader {
             request.onModelError(mContext, errmsg, filePath);
             throw new IOException(errmsg);
         }
-        try
-        {
-            jassimpAdapter.processScene(request, model, assimpScene, volume);
-            request.onModelLoaded(mContext, model, filePath);
-            return model;
-        }
-        catch (IOException ex)
-        {
-            assimpScene = null;
-            request.onModelError(mContext, ex.getMessage(), filePath);
-            throw ex;
-        }
+        jassimpAdapter.processScene(request, model, assimpScene, volume);
+        request.onModelLoaded(mContext, model, filePath);
+        return model;
     }
     
 
@@ -1419,18 +1465,11 @@ public final class GVRAssetLoader {
      /**
      * State-less, should be fine having one instance
      */
-    private final static GVROldWrapperProvider sWrapperProvider = new GVROldWrapperProvider();
-
     private final static String TAG = "GVRAssetLoader";
 
 }
 
 class NativeImporter {
-    static native long readFileFromAssets(AssetManager assetManager,
-            String filename, int settings);
-
-    static native long readFileFromSDCard(String filename, int settings);
-
     static native long readFromByteArray(byte[] bytes, String filename, int settings);
 }
 
