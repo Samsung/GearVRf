@@ -120,12 +120,44 @@ public class GVRExternalScene extends GVRBehavior
         }
         if (mReplaceScene)
         {
-            loader.loadScene(getOwnerObject(), mVolume, scene);
+            loader.loadScene(getOwnerObject(), mVolume, scene, null);
         }
         else
         {
             loader.loadModel(getOwnerObject(), mVolume, scene);
         }
         return true;
+    }
+
+    /**
+     * Loads the asset referenced by the file name
+     * under the owner of this component.
+     * If this component was constructed to replace the scene with
+     * the asset, the main scene of the current context
+     * will contain only the owner of this
+     * component upon return. Otherwise, the loaded asset is a
+     * child of this component's owner.
+     *
+     * Loading the asset is performed in a separate thread.
+     * This function returns before the asset has finished loading.
+     * IAssetEvents are emitted to the input event handler and
+     * to any event listener on the context.
+     *
+     * @param handler
+     *            IAssetEvents handler to process asset loading events
+     * @returns true
+     */
+    public void load(IAssetEvents handler)
+    {
+        GVRAssetLoader loader = getGVRContext().getAssetLoader();
+
+        if (mReplaceScene)
+        {
+            loader.loadScene(getOwnerObject(), mVolume, getGVRContext().getMainScene(), handler);
+        }
+        else
+        {
+            loader.loadModel(mVolume, getOwnerObject(), GVRImportSettings.getRecommendedSettings(), true, handler);
+        }
     }
 }
