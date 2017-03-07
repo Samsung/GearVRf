@@ -16,6 +16,7 @@
 package org.gearvrf.io;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.input.InputManager;
 import android.hardware.input.InputManager.InputDeviceListener;
 import android.util.SparseArray;
@@ -47,6 +48,7 @@ import java.util.List;
  */
 public abstract class GVRInputManager {
     private static final String TAG = GVRInputManager.class.getSimpleName();
+    private static final String WEAR_TOUCH_PAD_SERVICE_PACKAGE_NAME = "org.gearvrf.weartouchpad";
     private final InputManager inputManager;
     private final GVRContext context;
     private GVRAndroidWearTouchpad androidWearTouchpad;
@@ -94,9 +96,19 @@ public abstract class GVRInputManager {
         for (int deviceId : inputManager.getInputDeviceIds()) {
             addDevice(deviceId);
         }
-        if(useAndroidWearTouchpad) {
+        if(useAndroidWearTouchpad && checkIfWearTouchPadServiceInstalled(context)) {
             androidWearTouchpad = new GVRAndroidWearTouchpad(context);
         }
+    }
+
+    private boolean checkIfWearTouchPadServiceInstalled(GVRContext context) {
+        PackageManager pm = context.getActivity().getPackageManager();
+        try {
+            pm.getPackageInfo(WEAR_TOUCH_PAD_SERVICE_PACKAGE_NAME, PackageManager.GET_ACTIVITIES);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        return false;
     }
 
     /**

@@ -102,6 +102,11 @@ public class WearInputService extends Service {
                 GetCapabilityResult capabilityResult =
                         Wearable.CapabilityApi.getCapability(apiClient, TRACKPAD_CAPABILITY_NAME,
                                 CapabilityApi.FILTER_REACHABLE).await();
+
+                if(capabilityResult.getCapability() == null){
+                    return;
+                }
+
                 nodes.addAll(capabilityResult.getCapability().getNodes());
 
                 for (Node node : nodes) {
