@@ -50,7 +50,6 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/monoscopic/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += vrapi
-LOCAL_STATIC_LIBRARIES += systemutils
 
 ## CPP flags are already defined in cflags.mk.
 #LOCAL_CPPFLAGS += -fexceptions -frtti -std=c++11 -D__GXX_EXPERIMENTAL_CXX0X__ -mhard-float -D_NDK_MATH_NO_SOFTFP=1
