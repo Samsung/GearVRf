@@ -372,10 +372,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     private long mBackKeyDownTime;
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (mViewManager.dispatchKeyEvent(event)) {
-            return true;
-        }
-
         final int keyAction = event.getAction();
         if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
             if (KeyEvent.ACTION_DOWN == keyAction) {
@@ -414,7 +410,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     }
             }
         }
-
+        if (mViewManager.dispatchKeyEvent(event)) {
+            return true;
+        }
         return super.dispatchKeyEvent(event);
     }
 
