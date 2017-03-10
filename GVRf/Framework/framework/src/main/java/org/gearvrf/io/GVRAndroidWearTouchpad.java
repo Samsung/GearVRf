@@ -55,7 +55,7 @@ class GVRAndroidWearTouchpad {
         gvrContext = context;
         activity = gvrContext.getActivity();
         eventManager = gvrContext.getEventManager();
-        gvrContext.getEventReceiver().addListener(new ActivityPauseEvent());
+        gvrContext.getActivity().getEventReceiver().addListener(new ActivityPauseEvent());
         connectToWatch();
     }
 
@@ -87,6 +87,7 @@ class GVRAndroidWearTouchpad {
         if (boundToService) {
             connectedToWatch = false;
             activity.unbindService(serviceConnection);
+            boundToService = false;
         }
     }
 
