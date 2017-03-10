@@ -17,7 +17,6 @@
 
 #include "engine/renderer/renderer.h"
 #include "objects/textures/render_texture.h"
-//#include "objects/components/camera.h"
 
 namespace gvr {
 
@@ -69,6 +68,30 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz, jlong jrender_texture,
                                                                             jobject jreadback_buffer);
+
+void Java_org_gearvrf_GVRViewManager_renderTexture(JNIEnv *jni, jclass clazz,
+                                                  jlong jscene, jlong jcamera, jlong jRenderTexture,
+                                                  jlong jshader_manager,
+                                                  jlong jpost_effect_shader_manager,
+                                                  jlong jpost_effect_render_texture_a,
+                                                  jlong jpost_effect_render_texture_b) {
+    Scene *scene = reinterpret_cast<Scene *>(jscene);
+    Camera *camera = reinterpret_cast<Camera *>(jcamera);
+    RenderTexture* renderTexture = reinterpret_cast<RenderTexture*>(jRenderTexture);
+    ShaderManager *shader_manager =
+            reinterpret_cast<ShaderManager *>(jshader_manager);
+    PostEffectShaderManager *post_effect_shader_manager =
+            reinterpret_cast<PostEffectShaderManager *>(jpost_effect_shader_manager);
+    RenderTexture *post_effect_render_texture_a =
+            reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_a);
+    RenderTexture *post_effect_render_texture_b =
+            reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
+
+    gRenderer->renderCamera(scene, camera, renderTexture, shader_manager,
+                            post_effect_shader_manager, post_effect_render_texture_a,
+                            post_effect_render_texture_b);
+}
+
 } // extern "C"
 
 
