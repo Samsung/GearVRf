@@ -15,6 +15,9 @@
 
 package org.gearvrf;
 
+import android.content.res.Resources;
+
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,9 +28,7 @@ import java.util.Map;
  * Get the singleton from {@link GVRContext#getPostEffectShaderManager()}
  */
 public class GVRPostEffectShaderManager extends
-        GVRBaseShaderManager<GVRPostEffectMap, GVRCustomPostEffectShaderId>
-        implements
-        GVRShaderManagers<GVRPostEffectMap, GVRCustomPostEffectShaderId> {
+        GVRBaseShaderManager implements GVRShaderManagers {
 
     private final Map<GVRCustomPostEffectShaderId, GVRPostEffectMap> posteffects = new HashMap<GVRCustomPostEffectShaderId, GVRPostEffectMap>();
 
@@ -36,7 +37,7 @@ public class GVRPostEffectShaderManager extends
     }
 
     @Override
-    public GVRCustomPostEffectShaderId addShader(String vertexShader,
+    public GVRShaderId addShader(String vertexShader,
             String fragmentShader) {
         final int shaderId = NativePostEffectShaderManager
                 .addCustomPostEffectShader(getNative(), vertexShader,
@@ -47,7 +48,21 @@ public class GVRPostEffectShaderManager extends
         return result;
     }
 
+
     @Override
+    public GVRCustomPostEffectShaderId addShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
+        Resources resources = getResources();
+        InputStream vertexShader = open(resources, vertexShader_resRaw);
+        InputStream fragmentShader = open(resources, fragmentShader_resRaw);
+        GVRShaderId id = addShader(vertexShader, fragmentShader);
+        return new GVRCustomPostEffectShaderId(id);
+    }
+
+    @Override
+    public GVRShaderMaps getShaderMapping(GVRShaderId id) {
+        return posteffects.get(id);
+    }
+
     public GVRPostEffectMap getShaderMap(GVRCustomPostEffectShaderId id) {
         return posteffects.get(id);
     }

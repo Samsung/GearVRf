@@ -19,11 +19,10 @@ import android.util.SparseArray;
 
 /**
  * Opaque type that specifies a material shader.
- * 
- * The inheritance tree represents the fact that stock shaders do not use
- * {@link GVRMaterialMap name maps.}
+ * Currently material and post effect shaders are kept in separate realms.
+ * Material shader IDs may overlap PostEffect shader IDs.
  */
-public abstract class GVRMaterialShaderId {
+public abstract class GVRMaterialShaderId extends GVRShaderId {
     private final static SparseArray<GVRMaterialShaderId> sIds = new SparseArray<GVRMaterialShaderId>();
 
     static {
@@ -43,8 +42,6 @@ public abstract class GVRMaterialShaderId {
         });
     }
 
-    final int ID;
-
     /** @deprecated Probably unnecessary ... */
     @SuppressWarnings("unchecked")
     protected final static <T extends GVRMaterialShaderId> T get(int id) {
@@ -56,7 +53,7 @@ public abstract class GVRMaterialShaderId {
     }
 
     protected GVRMaterialShaderId(int id) {
-        ID = id;
+        super(id);
         put(id, this);
     }
 }
