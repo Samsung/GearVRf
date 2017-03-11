@@ -47,7 +47,7 @@ import android.graphics.Color;
  * <p>
  * Each {@link GVRMaterial} contains two main things:
  * <ul>
- * <li>The id of a (stock or custom) shader, which is used to draw the mesh. See
+ * <li>The id of a shader, which is used to draw the mesh. See
  * {@link GVRShaderType} and {@link GVRContext#getMaterialShaderManager()}.
  * 
  * <li>Data to pass to the shader. This usually - but not always - means a
@@ -57,19 +57,17 @@ import android.graphics.Color;
  * <p>
  * The simplest way to create a {@link GVRMaterial} is to call the
  * {@linkplain GVRMaterial#GVRMaterial(GVRContext) constructor that takes only a
- * GVRContext.} Then you just {@link GVRMaterial#setMainTexture(GVRTexture)
- * setMainTexture()} and you're ready to draw with the default shader, which is
- * called 'unlit' because it simply drapes the texture over the mesh, without
- * any lighting or reflection effects.
+ * GVRContext.} Then you just {@link GVRMaterial#setTexture(String, GVRTexture)
+ * setTexture()} and you're ready to draw with the default shader,
+ * which simply drapes the texture over the mesh.
  * 
  * <pre>
  * // for example
  * GVRMaterial material = new GVRMaterial(gvrContext);
- * material.setMainTexture(texture);
+ * material.setTexture("main_texture", texture);
  * </pre>
  */
-public class GVRMaterial extends GVRHybridObject implements
-        GVRShaders<GVRMaterialShaderId> {
+public class GVRMaterial extends GVRHybridObject implements GVRShaders {
     private static class TextureInfo
     {
         public GVRTexture Texture;
@@ -80,7 +78,7 @@ public class GVRMaterial extends GVRHybridObject implements
     private static final String TAG = Log.tag(GVRHybridObject.class);
 
     private int mShaderFeatureSet;
-    private GVRMaterialShaderId shaderId;
+    private GVRShaderId shaderId;
     final private Map<String, TextureInfo> textures = new HashMap();
 
     /** Pre-built shader ids. */
@@ -204,7 +202,7 @@ public class GVRMaterial extends GVRHybridObject implements
         setFloat("uvIndex", 0);
     }
 
-    public GVRMaterialShaderId getShaderType() {
+    public GVRShaderId getShaderType() {
         return shaderId;
     }
 
@@ -214,7 +212,7 @@ public class GVRMaterial extends GVRHybridObject implements
      * @param shaderId
      *            The new shader id.
      */
-    public void setShaderType(GVRMaterialShaderId shaderId) {
+    public void setShaderType(GVRShaderId shaderId) {
         this.shaderId = shaderId;
         NativeMaterial.setShaderType(getNative(), shaderId.ID);
     }
