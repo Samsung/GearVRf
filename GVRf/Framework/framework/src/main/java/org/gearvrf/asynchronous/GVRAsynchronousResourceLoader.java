@@ -551,7 +551,6 @@ public class GVRAsynchronousResourceLoader {
             @Override
             public void failed(Throwable t, GVRAndroidResource androidResource) {
                 Log.d(TAG, "failed(%s), %s", androidResource, t);
-                result.getGVRContext().getEventManager().sendEvent(result.getGVRContext(), IAssetEvents.class, "onTextureError", new Object[] { t.getMessage(), "future" });
                 synchronized (lock) {
                     error = t;
                     pending = false;
