@@ -101,6 +101,12 @@ class LaserCursor extends Cursor {
         ioDevice.setNearDepth(-scale);
     }
 
+    @Override
+    void setupIoDevice(IoDevice ioDevice) {
+        super.setupIoDevice(ioDevice);
+        ioDevice.setDisableRotation(true);
+    }
+
     private ControllerEventListener listener = new ControllerEventListener() {
 
         @Override

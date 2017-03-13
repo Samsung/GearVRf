@@ -148,16 +148,13 @@ class CursorSceneObject {
 
         // make sure that the render data does not change when
         // a collision test is in progress.
+
         synchronized (lock) {
-            if (sceneObject.hasMesh() == false) {
+            if (meshSceneObject == null) {
                 return false;
             }
 
-            if (meshSceneObject == null || meshSceneObject.hasMesh() == false) {
-                return false;
-            }
-
-            return meshSceneObject.isColliding(sceneObject);
+            return meshSceneObject.intersectsBoundingVolume(sceneObject);
         }
     }
 

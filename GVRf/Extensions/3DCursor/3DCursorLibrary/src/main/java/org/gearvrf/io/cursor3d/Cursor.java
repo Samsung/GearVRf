@@ -538,7 +538,7 @@ public abstract class Cursor {
         }
     }
 
-    private void setupIoDevice(IoDevice ioDevice) {
+    void setupIoDevice(IoDevice ioDevice) {
         if (ioDevice != null) {
             // should have a normal asset
             setAsset(cursorTheme.getAsset(Action.DEFAULT));

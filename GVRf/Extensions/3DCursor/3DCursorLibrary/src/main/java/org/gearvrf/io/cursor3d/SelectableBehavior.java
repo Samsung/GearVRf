@@ -1,21 +1,14 @@
 package org.gearvrf.io.cursor3d;
 
-import android.os.Handler;
-import android.os.Handler.Callback;
-import android.os.Message;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRSceneObject.BoundingVolume;
 import org.gearvrf.GVRSwitch;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
-import org.gearvrf.scene_objects.GVRSphereSceneObject;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 
@@ -41,6 +34,12 @@ public class SelectableBehavior extends GVRBehavior {
     protected ObjectState currentState = ObjectState.DEFAULT;
     private StateChangedListener stateChangedListener;
     private CursorManager cursorManager;
+
+    // required for scaling
+    private Cursor clickCursor1 = null;
+    private Cursor clickCursor2 = null;
+    private float prevDistance = 0;
+    private Vector3f vecDistance = new Vector3f();
 
     /**
      * Set a {@link StateChangedListener} using
@@ -90,7 +89,12 @@ public class SelectableBehavior extends GVRBehavior {
          * that the appearance of the associated {@link GVRSceneObject} in this state changes
          * from the {@link ObjectState#DEFAULT} to make the user aware of the clicked state.
          */
-        CLICKED
+        CLICKED,
+        /**
+         * This state means that two {@link Cursor}s have selected this {@link GVRSceneObject} it
+         * will be scaled based on the relative distance between these two {@link Cursor}s
+         */
+        SCALE
     }
 
     /**
@@ -194,6 +198,8 @@ public class SelectableBehavior extends GVRBehavior {
             }
         }
         cursorManager.addSelectableObject(sceneObject);
+        SelectableGroup component = new SelectableGroup(getGVRContext(), sceneObject);
+        sceneObject.attachComponent(component);
     }
 
     @Override
@@ -201,6 +207,7 @@ public class SelectableBehavior extends GVRBehavior {
         super.onDetach(sceneObject);
         sceneObject.detachComponent(GVRSwitch.getComponentType());
         cursorManager.removeSelectableObject(sceneObject);
+        sceneObject.detachComponent(SelectableGroup.getComponentType());
     }
 
     /**
@@ -220,6 +227,16 @@ public class SelectableBehavior extends GVRBehavior {
             }
         }
         return false;
+    }
+
+    private void setScale(Cursor cursor) {
+        int cursorId = cursor.getId();
+        states.remove(cursorId);
+        if(!isHigherOrEqualStatePresent(ObjectState.SCALE)) {
+            currentState = ObjectState.SCALE;
+            setState(currentState, cursor);
+        }
+        states.put(cursorId, ObjectState.SCALE);
     }
 
     private void setButtonPress(Cursor cursor) {
@@ -297,7 +314,6 @@ public class SelectableBehavior extends GVRBehavior {
         boolean isColliding = event.isColliding();
         int cursorId = event.getCursor().getId();
         KeyEvent keyEvent = event.getKeyEvent();
-
         ObjectState state = states.get(cursorId);
         if (state == null) {
             return;
@@ -325,6 +341,26 @@ public class SelectableBehavior extends GVRBehavior {
                     if (isActive) {
                         handleDragEvent(event);
                     } else {
+                        setIntersect(cursor);
+                        handleClickReleased(event);
+                    }
+                } else {
+                    if (isActive) {
+                        if (event.getCursor().getCursorType() == CursorType.OBJECT) {
+                            setDefault(cursor);
+                        }
+                        handleCursorLeave(event);
+                    } else {
+                        setDefault(cursor);
+                        handleClickReleased(event);
+                    }
+                }
+                break;
+            case SCALE:
+                if(isOver && isColliding) {
+                    if(isActive) {
+                        handleScale(event);
+                    }  else {
                         setIntersect(cursor);
                         handleClickReleased(event);
                     }
@@ -383,13 +419,64 @@ public class SelectableBehavior extends GVRBehavior {
         previousActive = event.isActive();
     }
 
+
+    private void handleScale(CursorEvent event) {
+        vecDistance.set(clickCursor1.getPositionX(),clickCursor1.getPositionY(), clickCursor1
+                .getPositionZ());
+        float distance = vecDistance.distance(clickCursor2.getPositionX(), clickCursor2.getPositionY
+                (), clickCursor2.getPositionZ());
+        if(prevDistance != 0) {
+            float diff = distance/prevDistance;
+            GVRTransform transform = getOwnerObject().getTransform();
+            float scaleX = transform.getScaleX() * diff;
+            float scaleY = transform.getScaleY() * diff;
+            float scaleZ = transform.getScaleZ() * diff;
+            transform.setScale(scaleX,scaleY,scaleZ);
+        }
+        prevDistance = distance;
+    }
+
+
     void handleClickEvent(CursorEvent event) {
+        if(clickCursor1 == null) {
+            clickCursor1 = event.getCursor();
+        } else if(clickCursor1 != null && clickCursor2 == null) {
+            clickCursor2 = event.getCursor();
+            setScale(clickCursor2);
+            setScale(clickCursor1);
+        }
     }
 
     void handleClickReleased(CursorEvent event) {
+        if(clickCursor1 == event.getCursor()) {
+            clickCursor1 = null;
+            if(clickCursor2 != null) {
+                setButtonPress(clickCursor2);
+                prevDistance = 0;
+            }
+        } else if( event.getCursor() == clickCursor2) {
+            clickCursor2 = null;
+            if(clickCursor1 != null) {
+                setButtonPress(clickCursor1);
+                prevDistance = 0;
+            }
+        }
     }
 
     void handleCursorLeave(CursorEvent event) {
+        if(clickCursor1 == event.getCursor()) {
+            clickCursor1 = null;
+            if(clickCursor2 != null) {
+                setButtonPress(clickCursor2);
+                prevDistance = 0;
+            }
+        } else if( event.getCursor() == clickCursor2) {
+            clickCursor2 = null;
+            if(clickCursor1 != null) {
+                setButtonPress(clickCursor1);
+                prevDistance = 0;
+            }
+        }
     }
 
     void handleDragEvent(CursorEvent event) {
@@ -439,10 +526,11 @@ public class SelectableBehavior extends GVRBehavior {
     }
 
     /**
-     *  Returns a unique long value Associated with the {@link SelectableBehavior} class. Each
-     *  subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
-     *  get the instance of {@link SelectableBehavior} attached to any {@link GVRSceneObject}
-     *  using {@link GVRSceneObject#getComponent(long)}
+     * Returns a unique long value Associated with the {@link SelectableBehavior} class. Each
+     * subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
+     * get the instance of {@link SelectableBehavior} attached to any {@link GVRSceneObject}
+     * using {@link GVRSceneObject#getComponent(long)}
+     *
      * @return the component type value.
      */
     public static long getComponentType() {
