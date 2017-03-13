@@ -598,12 +598,11 @@ public class GVRMaterial extends GVRHybridObject implements
             tinfo.Texture = texture;
             textures.put(key, tinfo);
         }
-        else
+        else if(texture != null)
         {
             tinfo.Texture = texture;
-        }
-        if (texture != null)
             NativeMaterial.setTexture(getNative(), key, texture.getNative());
+        }
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
