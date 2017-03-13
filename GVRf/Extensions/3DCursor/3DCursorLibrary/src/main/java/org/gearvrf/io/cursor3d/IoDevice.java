@@ -43,6 +43,7 @@ public class IoDevice {
     private String deviceId;
     private String name;
     private String vendorName;
+    private boolean disableRotation = false;
 
     /**
      * Create a new {@link IoDevice}. Call this from a subclass constructor.
@@ -263,10 +264,23 @@ public class IoDevice {
      * @param z 'Z' component of the quaternion.
      */
     protected void setRotation(float w, float x, float y, float z) {
+        if(disableRotation){
+            //we don't want to rotate a cursor with no rotation.
+            return;
+        }
+
         GVRSceneObject sceneObject = gvrCursorController.getSceneObject();
         if (sceneObject != null) {
             sceneObject.getTransform().setRotation(w, x, y, z);
         }
+    }
+
+    void setDisableRotation(boolean value) {
+        //reset rotation here
+        if(value) {
+            setRotation(1.0f, 0.0f, 0.0f, 0.0f);
+        }
+        this.disableRotation = value;
     }
 
     /**
@@ -292,12 +306,16 @@ public class IoDevice {
 
     void addControllerEventListener(GVRCursorController.ControllerEventListener
                                             controllerEventListener) {
-        gvrCursorController.addControllerEventListener(controllerEventListener);
+        if (controllerEventListener != null) {
+            gvrCursorController.addControllerEventListener(controllerEventListener);
+        }
     }
 
     void removeControllerEventListener(GVRCursorController.ControllerEventListener
                                                controllerEventListener) {
-        gvrCursorController.removeControllerEventListener(controllerEventListener);
+        if (controllerEventListener != null) {
+            gvrCursorController.removeControllerEventListener(controllerEventListener);
+        }
     }
 
     // TODO this has to go only used by CursorInputManager

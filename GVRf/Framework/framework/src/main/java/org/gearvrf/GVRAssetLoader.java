@@ -141,15 +141,16 @@ public final class GVRAssetLoader {
          * @param model GVRSceneObject to be the root of the loaded asset.
          * @param fileVolume GVRResourceVolume containing path to file
          * @param scene GVRScene to add the asset to.
+         * @param userHandler user event handler to get asset events.
          * @param replaceScene true to replace entire scene with model, false to add model to scene
          */
-        public AssetRequest(GVRSceneObject model, GVRResourceVolume fileVolume, GVRScene scene, boolean replaceScene)
+        public AssetRequest(GVRSceneObject model, GVRResourceVolume fileVolume, GVRScene scene, IAssetEvents userHandler, boolean replaceScene)
         {
             mScene = scene;
             mContext = model.getGVRContext();
             mNumTextures = 0;
             mFileName = fileVolume.getFileName();
-            mUserHandler = null;
+            mUserHandler = userHandler;
             mModel = null;
             mErrors = "";
             mReplaceScene = replaceScene;
@@ -157,26 +158,6 @@ public final class GVRAssetLoader {
             Log.d(TAG, "ASSET: loading %s ...", mFileName);
         }
 
-        /**
-         * Request to load an asset and raise asset events.
-         * @param model GVRSceneObject to be the root of the loaded asset.
-         * @param fileVolume GVRResourceVolume containing path to file.
-         *                   You should use the GVRResourceVolume(GVRContext, String) constructor
-         *                   to generate a volume with a designated filename.
-         * @param userHandler user event handler to get asset events.
-         */
-        public AssetRequest(GVRSceneObject model, GVRResourceVolume fileVolume, IAssetEvents userHandler)
-        {
-            mScene = null;
-            mContext = model.getGVRContext();;
-            mNumTextures = 0;
-            mFileName = fileVolume.getFileName();
-            mUserHandler = userHandler;
-            mModel = null;
-            mErrors = "";
-            mVolume = fileVolume;
-            Log.d(TAG, "ASSET: loading %s ...", mFileName);
-        }
 
         public GVRContext getContext()       { return mContext; }
         public boolean replaceScene()        { return mReplaceScene; }
@@ -434,36 +415,59 @@ public final class GVRAssetLoader {
                                                  "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
         }
 
+        /**
+         * Generate the onAssetLoaded event.
+         * Add the model to the scene and start animations.
+         */
         private void generateLoadEvent()
         {
             String errors = !"".equals(mErrors) ? mErrors : null;
             if (mModel != null)
             {
-                if ((mScene != null) && (mModel.getParent() == null))
+                if ((mScene != null))
                 {
-                    Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
-                    if (mReplaceScene)
+                    /*
+                     * If the model does not already have a parent,
+                     * add it to the scene.
+                     */
+                    if (mModel.getParent() == null)
                     {
-                        GVRSceneObject mainCam = mModel.getSceneObjectByName("MainCamera");
-                        GVRCameraRig modelCam = (mainCam != null) ? mainCam.getCameraRig() : null;
-
-                        mScene.clear();
-                        if (modelCam != null)
+                        Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
+                        if (mReplaceScene)
                         {
-                            GVRCameraRig sceneCam = mScene.getMainCameraRig();
-                            sceneCam.getTransform().setModelMatrix(mainCam.getTransform().getLocalModelMatrix());
-                            sceneCam.setNearClippingDistance(modelCam.getNearClippingDistance());
-                            sceneCam.setFarClippingDistance(modelCam.getFarClippingDistance());
-                            sceneCam.setCameraRigType(modelCam.getCameraRigType());
-                        }
-                    }
+                            GVRSceneObject mainCam = mModel.getSceneObjectByName("MainCamera");
+                            GVRCameraRig modelCam =
+                                    (mainCam != null) ? mainCam.getCameraRig() : null;
 
-                    GVRAnimator animator = (GVRAnimator) mModel.getComponent(GVRAnimator.getComponentType());
-                    if ((animator != null) && animator.autoStart())
-                    {
-                        animator.start();
+                            mScene.clear();
+                            if (modelCam != null)
+                            {
+                                GVRCameraRig sceneCam = mScene.getMainCameraRig();
+                                sceneCam.getTransform().setModelMatrix(
+                                        mainCam.getTransform().getLocalModelMatrix());
+                                sceneCam.setNearClippingDistance(
+                                        modelCam.getNearClippingDistance());
+                                sceneCam.setFarClippingDistance(modelCam.getFarClippingDistance());
+                                sceneCam.setCameraRigType(modelCam.getCameraRigType());
+                            }
+                        }
+                        mScene.addSceneObject(mModel);
                     }
-                    mScene.addSceneObject(mModel);
+                    /*
+                     * Bind appropriate shaders in case asset contains lights
+                     */
+                    else
+                    {
+                        mScene.bindShaders(mModel);
+                    }
+                }
+                /*
+                 * If the model has animations, start them now.
+                 */
+                GVRAnimator animator = (GVRAnimator) mModel.getComponent(GVRAnimator.getComponentType());
+                if ((animator != null) && animator.autoStart())
+                {
+                    animator.start();
                 }
             }
             onAssetLoaded(mContext, mModel, mFileName, errors);
@@ -980,7 +984,7 @@ public final class GVRAssetLoader {
     public GVRModelSceneObject loadModel(final String filePath, final GVRScene scene) throws IOException
     {
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
-        AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, false);
+        AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, null, false);
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
         model.setName(assetRequest.getBaseName());
@@ -1015,7 +1019,7 @@ public final class GVRAssetLoader {
     public GVRModelSceneObject loadScene(final String filePath, final GVRScene scene) throws IOException
     {
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
-        AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, true);
+        AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, null, true);
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
         model.setName(assetRequest.getBaseName());
@@ -1043,15 +1047,16 @@ public final class GVRAssetLoader {
      *            You can subclass GVRResourceVolume to provide custom IO.
      * @param scene
      *            Scene to be replaced with the model.
-     *
+     * @param handler
+     *            IAssetEvents handler to process asset loading events
      */
-    public void loadScene(final GVRSceneObject model, final GVRResourceVolume volume, final GVRScene scene)
+    public void loadScene(final GVRSceneObject model, final GVRResourceVolume volume, final GVRScene scene, final IAssetEvents handler)
     {
         Threads.spawn(new Runnable()
         {
             public void run()
             {
-                AssetRequest assetRequest = new AssetRequest(model, volume, scene, true);
+                AssetRequest assetRequest = new AssetRequest(model, volume, scene, handler, true);
                 String filePath = volume.getFileName();
                 String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
@@ -1102,7 +1107,7 @@ public final class GVRAssetLoader {
             public void run()
             {
                 String filePath = volume.getFileName();
-                AssetRequest assetRequest = new AssetRequest(model, volume, scene, false);
+                AssetRequest assetRequest = new AssetRequest(model, volume, scene, null, false);
                 String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
                 model.setName(assetRequest.getBaseName());
@@ -1150,7 +1155,7 @@ public final class GVRAssetLoader {
     {
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
         GVRResourceVolume   volume = new GVRResourceVolume(mContext, filePath);
-        AssetRequest assetRequest = new AssetRequest(model, volume, handler);
+        AssetRequest assetRequest = new AssetRequest(model, volume, null, handler, false);
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
         model.setName(assetRequest.getBaseName());
@@ -1198,7 +1203,7 @@ public final class GVRAssetLoader {
     {
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
-        AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, false);
+        AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, null, false);
         model.setName(assetRequest.getBaseName());
 
 		if (ext.equals("x3d"))
@@ -1245,7 +1250,7 @@ public final class GVRAssetLoader {
         String ext = filePath.substring(filePath.length() - 3).toLowerCase();
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
         GVRResourceVolume volume = new GVRResourceVolume(mContext, resource);
-        AssetRequest assetRequest = new AssetRequest(model, volume, scene, false);
+        AssetRequest assetRequest = new AssetRequest(model, volume, scene, null, false);
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
@@ -1277,7 +1282,7 @@ public final class GVRAssetLoader {
      * by loading the 3D model.
      */
     public void loadModel(final GVRResourceVolume fileVolume,
-                          final GVRModelSceneObject model,
+                          final GVRSceneObject model,
                           final EnumSet<GVRImportSettings> settings,
                           final boolean cacheEnabled,
                           final IAssetEvents handler)
@@ -1288,7 +1293,7 @@ public final class GVRAssetLoader {
             {
                 String filePath = fileVolume.getFileName();
                 String ext = filePath.substring(filePath.length() - 3).toLowerCase();
-                AssetRequest assetRequest = new AssetRequest(model, fileVolume, handler);
+                AssetRequest assetRequest = new AssetRequest(model, fileVolume, null, handler, false);
                 model.setName(assetRequest.getBaseName());
 
                 try

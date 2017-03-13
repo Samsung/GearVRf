@@ -124,7 +124,7 @@ public class GVRSwitch extends GVRBehavior
         {
             return;
         }
-        if (mSwitchIndex < 0)
+        if (mSwitchIndex < 0 || mSwitchIndex > owner.rawGetChildren().size())
         {
             return;
         }
