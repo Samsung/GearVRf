@@ -1081,11 +1081,14 @@ public final class GVRAssetLoader {
 
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
-     * adds it to the specified scene.
+     * on the volume provided and adds it to the specified scene.
      * IAssetEvents are emitted to event listeners attached to the context.
      * This function loads the model and its textures asynchronously in the background
      * and will return before the model is loaded.
      * IAssetEvents are emitted to event listeners attached to the context.
+     * The resource volume may reference res/raw in which case all textures
+     * and other referenced assets must also come from res/raw. The asset loader
+     * cannot loadtextures from the drawable directory.
      *
      * @param model
      *            A GVRSceneObject to become the root of the loaded model.
@@ -1214,12 +1217,17 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
+     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
+     * inside an Android resource.
+     * cannot load textures from the drawable directory.
      * The model is not added to the current scene.
      * IAssetEvents are emitted to the event handler supplied first and then to
      * the event listener attached to the context.
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
+     * The resource may be from res/raw in which case all textures
+     * and other referenced assets must also come from res/raw. The asset loader
+     * cannot load textures referenced from within 3D models from the drawable directory.
      *
      * @param resource
      *            GVRAndroidResource describing the asset. If it is a resource ID,
