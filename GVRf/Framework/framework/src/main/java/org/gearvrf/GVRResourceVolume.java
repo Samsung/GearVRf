@@ -112,9 +112,10 @@ public class GVRResourceVolume {
         defaultPath = FileNameUtils.getParentDirectory(filename);
         switch (resource.getResourceType())
         {
-            default:
             case ANDROID_RESOURCE:
             volumeType = VolumeType.ANDROID_RESOURCE;
+
+            default:
             break;
 
             case LINUX_FILESYSTEM:
