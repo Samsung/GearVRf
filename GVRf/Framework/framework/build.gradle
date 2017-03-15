@@ -126,84 +126,55 @@ dependencies {
 }
 
 clean {}.doLast {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        def libsdirPath = projectDir.absolutePath + '/../../../' +
-                rootProject.property("LIBS_DIRECTORY")
-        project.delete(libsdirPath + '/' + project.name + '-debug.aar')
-    }
-
-    def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-    if (file(testsLibs).exists()) {
-        project.delete(testsLibs + '/' + project.name + '-debug.aar')
-    }
-
     def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
     if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
         project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
         project.delete(gearvrfLibs + '/' + project.name + '-for-plugins.zip')
     }
 }
 
-task copyAARFiles(type: Copy) {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        println "copying aar files to the libs_directory"
-        def libsdirPath = projectDir.absolutePath + '/../../../' +
-                rootProject.property("LIBS_DIRECTORY")
-        def libsDir = new File(libsdirPath);
-        if (libsDir.exists()) {
-            from 'build/outputs/aar'
-            into libsDir
-            include project.name + '-debug.aar'
-        } else {
-            println "Cannot copy aar files, libs directory does not exist!"
+task packageForPlugins(type: Zip) {
+    outputs.upToDateWhen { false }
+    baseName project.name + '-for-plugins'
+
+    if (file('./build/intermediates/bundles/release/classes.jar').exists()
+        && file('./build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/').exists())
+    {
+        from './build/intermediates/bundles/release/classes.jar'
+        rename 'classes.jar', project.name + '-classes.jar'
+
+        from './src/main/libs/'
+        include '*.jar'
+
+        from './build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/'
+        include '*.so'
+
+        doLast {
+            copy {
+                from 'build/distributions/'
+                into project.rootDir.absolutePath + "/../gearvrf-libs"
+                include project.name + '-for-plugins.zip'
+            }
         }
     }
 }
 
-task packageForPlugins(type: Zip) {
-    baseName project.name + '-for-plugins'
-
-    from './build/intermediates/bundles/debug/classes.jar'
-    rename 'classes.jar', project.name + '-classes.jar'
-
-    from './src/main/libs/'
-    include '*.jar'
-
-    from './build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/'
-    include '*.so'
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
 }
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'externalNativeBuildDebug') {
         task.dependsOn 'buildInfo'
+    } else if (task.name == 'externalNativeBuildRelease') {
+        task.dependsOn 'buildInfo'
     } else if (task.name == 'bundleDebug') {
-        task << {
-            tasks.copyAARFiles.execute()
-
-            def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-            if (file(testsLibs).exists()) {
-                copy {
-                    from 'build/outputs/aar'
-                    into testsLibs
-                    include project.name + '-debug.aar'
-                }
-            }
-            def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-            if (!file(gearvrfLibs).exists()) {
-                file(gearvrfLibs).mkdir();
-            }
-            copy {
-                from 'build/outputs/aar'
-                into gearvrfLibs
-                include project.name + '-debug.aar'
-            }
-
-            tasks.packageForPlugins.execute()
-            copy {
-                from 'build/distributions/'
-                into gearvrfLibs
-                include project.name + '-for-plugins.zip'
-            }
-        }
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(packageForPlugins)
+        task.finalizedBy(copyJarToBin)
     }
 }
