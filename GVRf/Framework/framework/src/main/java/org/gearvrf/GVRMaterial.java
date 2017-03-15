@@ -591,19 +591,20 @@ public class GVRMaterial extends GVRHybridObject implements
 
     public void setTexture(String key, GVRTexture texture) {
         checkStringNotNullOrEmpty("key", key);
-        TextureInfo tinfo = textures.get(key);
-        if (tinfo == null)
+        synchronized (textures)
         {
-            tinfo = new TextureInfo();
-            tinfo.Texture = texture;
-            textures.put(key, tinfo);
+            TextureInfo tinfo = textures.get(key);
+            if (tinfo == null)
+            {
+                tinfo = new TextureInfo();
+                textures.put(key, tinfo);
+            }
+            if (texture != null)
+            {
+                tinfo.Texture = texture;
+                NativeMaterial.setTexture(getNative(), key, texture.getNative());
+            }
         }
-        else
-        {
-            tinfo.Texture = texture;
-        }
-        if (texture != null)
-            NativeMaterial.setTexture(getNative(), key, texture.getNative());
     }
 
     public void setTexture(final String key, final Future<GVRTexture> texture) {
@@ -615,7 +616,7 @@ public class GVRMaterial extends GVRHybridObject implements
             }
         } else {
             if (texture instanceof FutureResource<?>) {
-				setTexture(key, (GVRTexture) null);
+                setTexture(key, (GVRTexture) null);
                 TextureCallback callback = new TextureCallback() {
                     @Override
                     public void loaded(GVRTexture texture,
@@ -664,14 +665,17 @@ public class GVRMaterial extends GVRHybridObject implements
      */
     public void setTexCoord(String texName, String texCoordAttr, String shaderVarName)
     {
-        TextureInfo tinfo = textures.get(texName);
-        if (tinfo == null)
+        synchronized (textures)
         {
-            tinfo = new TextureInfo();
-            textures.put(texName, tinfo);
+            TextureInfo tinfo = textures.get(texName);
+            if (tinfo == null)
+            {
+                tinfo = new TextureInfo();
+                textures.put(texName, tinfo);
+            }
+            tinfo.TexCoordAttr = texCoordAttr;
+            tinfo.ShaderVar = shaderVarName;
         }
-        tinfo.TexCoordAttr = texCoordAttr;
-        tinfo.ShaderVar = shaderVarName;
     }
 
     /**
