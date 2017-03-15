@@ -42,6 +42,7 @@ import org.gearvrf.jassimp.AiTextureMapMode;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVRNewWrapperProvider;
 import org.gearvrf.jassimp.Jassimp;
+import org.gearvrf.jassimp.JassimpConfig;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -58,8 +59,8 @@ class GVRJassimpAdapter {
     private AiScene mScene;
     private GVRContext mContext;
     private String mFileName;
-    private static final int MAX_TEX_COORDS = 8;
-    private static final int MAX_VERTEX_COLORS = 8;
+    private static final int MAX_TEX_COORDS = JassimpConfig.MAX_NUMBER_TEXCOORDS;
+    private static final int MAX_VERTEX_COLORS = JassimpConfig.MAX_NUMBER_COLORSETS;
 
 
     public interface INodeFactory {
