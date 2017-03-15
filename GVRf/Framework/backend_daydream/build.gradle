@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.condition.Os
-
 apply plugin: 'com.android.library'
 
 repositories {
@@ -40,35 +38,12 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
-        releaseToGitHub {
-        }
     }
 
     externalNativeBuild {
         cmake {
             path 'src/main/jni/CMakeLists.txt'
         }
-    }
-
-    task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
-        }
-
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/backend_daydream-debug.aar').absolutePath
-    }
-    uploadToGitHub.doFirst {
-        println('uploading to github')
-    }
-    task deleteAllFromGitHub(type: Exec) {
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
-        }
-
-        commandLine '../../tools/delete_all_from_github'
-    }
-    deleteAllFromGitHub.doFirst {
-        println('deleting all assets from github release')
     }
 
     packagingOptions {
@@ -86,50 +61,24 @@ dependencies {
     compile "org.joml:joml-android:${jomlVersion}"
 }
 
-task copyAARFiles(type: Copy) {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        println "copying aar files to the libs_directory"
-        def libsdirPath = projectDir.absolutePath + '/../../../' +
-                rootProject.property("LIBS_DIRECTORY")
-        def libsDir = new File(libsdirPath);
-        if (libsDir.exists()) {
-            from 'build/outputs/aar'
-            into libsDir
-            include 'backend_daydream-debug.aar'
-        } else {
-            println "Cannot copy aar files, libs directory does not exist!"
-        }
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
     }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
 }
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'bundleDebug') {
-        task<< {
-            tasks.copyAARFiles.execute()
-
-            def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-            if (file(testsLibs).exists()) {
-                copy {
-                    from 'build/outputs/aar'
-                    into testsLibs
-                    include '*-debug.aar'
-                }
-            }
-
-            def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-            if (!file(gearvrfLibs).exists()) {
-                file(gearvrfLibs).mkdir();
-            }
-            copy {
-                from 'build/outputs/aar'
-                into gearvrfLibs
-                include '*-debug.aar'
-            }
-
-            if (System.env['ACCESS_TOKEN'] != null) {
-                deleteAllFromGitHub.execute();
-                uploadToGitHub.execute();
-            }
-        }
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
     }
 }
