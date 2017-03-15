@@ -16,6 +16,7 @@
 package org.gearvrf;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -300,6 +301,9 @@ public class GVRResourceVolume {
             case ANDROID_RESOURCE:
             path = FileNameUtils.getBaseName(filePath);
             resourceId = gvrContext.getContext().getResources().getIdentifier(path, "raw", gvrContext.getContext().getPackageName());
+            if (resourceId == 0) {
+                throw new FileNotFoundException(filePath + " resource not found");
+            }
             resourceKey = new GVRAndroidResource(gvrContext, resourceId);
             break;
 
