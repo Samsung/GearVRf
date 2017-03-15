@@ -4,6 +4,18 @@ if (!hasProperty("ARM64")) {
     include ':backend_daydream'
 }
 
+// define KSENSOR_SRC_PATH in gradle.properties
+if (hasProperty("ksensor")) {
+	println("Using KSensor_SRC_PATH = " + KSENSOR_SRC_PATH)
+	if (hasProperty("savr")) {
+        include ':ksensor_savr'
+        project(':ksensor_savr').projectDir=new File(KSENSOR_SRC_PATH)
+	} else {
+        include ':ksensor'
+        project(':ksensor').projectDir=new File(KSENSOR_SRC_PATH)
+	}
+}
+
 if(file("../../../extra_settings.gradle").exists()) {
     apply from: '../../../extra_settings.gradle'
 }
