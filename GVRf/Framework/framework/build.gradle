@@ -134,28 +134,24 @@ clean {}.doLast {
     }
 }
 
-task packageFrameworkForPlugins(type: Zip) {
+task packageForPlugins(type: Zip) {
     outputs.upToDateWhen { false }
     baseName project.name + '-for-plugins'
 
-    if (file('./build/intermediates/bundles/release/classes.jar').exists()
-        && file('./build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/').exists())
-    {
-        from './build/intermediates/bundles/release/classes.jar'
-        rename 'classes.jar', project.name + '-classes.jar'
+    from './build/intermediates/bundles/release/classes.jar'
+    rename 'classes.jar', project.name + '-classes.jar'
 
-        from './src/main/libs/'
-        include '*.jar'
+    from './src/main/libs/'
+    include '*.jar'
 
-        from './build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/'
-        include '*.so'
+    from './build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/'
+    include '*.so'
 
-        doLast {
-            copy {
-                from 'build/distributions/'
-                into project.rootDir.absolutePath + "/../gearvrf-libs"
-                include project.name + '-for-plugins.zip'
-            }
+    doLast {
+        copy {
+            from 'build/distributions/'
+            into project.rootDir.absolutePath + "/../gearvrf-libs"
+            include project.name + '-for-plugins.zip'
         }
     }
 }
@@ -174,7 +170,7 @@ tasks.whenTaskAdded { task ->
     } else if (task.name == 'bundleDebug') {
         task.finalizedBy(copyJarToBin)
     } else if (task.name == 'bundleRelease') {
-        task.finalizedBy(packageFrameworkForPlugins)
+        task.finalizedBy(packageForPlugins)
         task.finalizedBy(copyJarToBin)
     }
 }
