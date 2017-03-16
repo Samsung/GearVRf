@@ -134,7 +134,7 @@ clean {}.doLast {
     }
 }
 
-task packageForPlugins(type: Zip) {
+task packageFrameworkForPlugins(type: Zip) {
     outputs.upToDateWhen { false }
     baseName project.name + '-for-plugins'
 
@@ -174,7 +174,7 @@ tasks.whenTaskAdded { task ->
     } else if (task.name == 'bundleDebug') {
         task.finalizedBy(copyJarToBin)
     } else if (task.name == 'bundleRelease') {
-        task.finalizedBy(packageForPlugins)
+        task.finalizedBy(packageFrameworkForPlugins)
         task.finalizedBy(copyJarToBin)
     }
 }
