@@ -97,7 +97,8 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
     }
 
     @Override
-    public void setMain(GVRMain gvrMain, String dataFileName) {
+    public boolean setMain(GVRMain gvrMain, String dataFileName) {
+        return true;
     }
 
     @Override

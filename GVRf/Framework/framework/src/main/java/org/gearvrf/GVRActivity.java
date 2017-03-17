@@ -219,6 +219,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mDockEventReceiver.stop();
         }
 
+        if (!mConfigurationManager.isDockListenerRequired()) {
+            handleOnUndock();
+        }
+
         if (null != mActivityNative) {
             mActivityNative.onDestroy();
             mActivityNative = null;
@@ -252,7 +256,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         this.mGVRMain = gvrMain;
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             onConfigure(dataFileName);
-            mDelegate.setMain(gvrMain, dataFileName);
+            if (!mDelegate.setMain(gvrMain, dataFileName)) {
+                Log.w(TAG, "delegate's setMain failed");
+                return;
+            }
 
             boolean isMonoscopicMode = mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
             if (!isMonoscopicMode) {
@@ -678,7 +685,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyUp(int keyCode, KeyEvent event);
         boolean onKeyLongPress(int keyCode, KeyEvent event);
 
-        void setMain(GVRMain gvrMain, String dataFileName);
+        boolean setMain(GVRMain gvrMain, String dataFileName);
         void setViewManager(GVRViewManager viewManager);
         void onInitAppSettings(VrAppSettings appSettings);
 
