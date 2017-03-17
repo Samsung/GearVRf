@@ -19,6 +19,7 @@ android {
                 arguments = ["-j" + Runtime.runtime.availableProcessors()]
                 arguments += ['OVR_MOBILE_SDK=' + rootProject.property("OVR_MOBILE_SDK")]
                 arguments += ['PROJECT_ROOT=' + rootProject.projectDir]
+                arguments += ['PROJECT_DIR=' + projectDir.absolutePath]
                 arguments += ['BUILDTYPE=Release']      // for oculus
                 if (rootProject.hasProperty("buildGvrfAndDemos")) {
                     arguments += ["NDK_DEBUG=1"]
@@ -32,7 +33,11 @@ android {
         ndk {
             moduleName "gvrf-oculus"
             stl "gnustl_static"
-            abiFilters = ['armeabi-v7a']
+            if (rootProject.hasProperty("ARM64")) {
+                abiFilters = ['arm64-v8a']
+            } else {
+                abiFilters = ['armeabi-v7a']
+            }
         }
     }
 
