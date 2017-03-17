@@ -67,7 +67,6 @@ public class GVRPointLight extends GVRLightBase
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-        setFloat("specular_exponent", 8.0f);
         setFloat("attenuation_constant", 1);
         setFloat("attenuation_linear", 0);
         setFloat("attenuation_quadratic", 0);
