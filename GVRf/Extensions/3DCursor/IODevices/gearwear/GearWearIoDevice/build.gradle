@@ -17,9 +17,7 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs '../../../../../Framework/framework/src/main/libs/',
-        '../../../3DCursorLibrary/build/outputs/aar/',
-        '../../../../../Framework/framework/build/outputs/aar/'
+        dirs '../../../../../gearvrf-libs'
     }
 }
 
@@ -40,19 +38,6 @@ android {
         }
     }
 
-    task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['RELEASE_ID'] != null
-        }
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
-        }
-
-        commandLine '../../../../../tools/upload_to_github', file('build/outputs/aar/GearWearIoDevice-debug.aar').absolutePath
-    }
-    uploadToGitHub.doFirst {
-        println('uploading to github')
-    }
 }
 
 dependencies {
@@ -64,34 +49,25 @@ dependencies {
     compile project(':gearwearlibrary')
 }
 
-assembleDebug {}.doLast{
-    task copyAARFiles(type: Copy) {
-        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-            def libsdirPath = projectDir.absolutePath + '/../../../../../../' +
-                    rootProject.property("LIBS_DIRECTORY")
-            def libsDir = new File(libsdirPath);
-            if (libsDir.exists()) {
-                from 'build/outputs/aar'
-                into libsDir
-                include '**/*.aar'
-            } else {
-                println "Cannot copy aar files, libs directory does not exist!"
-            }
-        }
-    }
-    tasks.copyAARFiles.execute()
 
+clean {}.doLast {
     def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-    if (!file(gearvrfLibs).exists()) {
-        file(gearvrfLibs).mkdir();
-    }
-    copy {
-        from 'build/outputs/aar'
-        into gearvrfLibs
-        include '*-debug.aar'
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
     }
 }
 
-assembleDebug {}.doLast {
-    uploadToGitHub.execute();
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
 }

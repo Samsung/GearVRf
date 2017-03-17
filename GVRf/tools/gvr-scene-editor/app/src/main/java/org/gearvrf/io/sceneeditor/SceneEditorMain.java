@@ -92,7 +92,7 @@ public class SceneEditorMain extends GVRMain {
     public void onInit(GVRContext gvrContext) {
         this.gvrContext = gvrContext;
         this.resources = gvrContext.getContext().getResources();
-        mainScene = gvrContext.getNextMainScene();
+        mainScene = gvrContext.getMainScene();
         mainScene.getMainCameraRig().getLeftCamera().setBackgroundColor(Color.DKGRAY);
         mainScene.getMainCameraRig().getRightCamera().setBackgroundColor(Color.DKGRAY);
         cursorManager = new CursorManager(gvrContext, mainScene);

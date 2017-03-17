@@ -19,20 +19,52 @@ apply plugin: XmlValidator
 
 System.setProperty("appName", "gvr-scene-editor")
 
-if(file("../common.gradle").exists()) {
-    apply from: '../common.gradle'
+repositories {
+    jcenter()
+    flatDir {
+        dirs '../../../gearvrf-libs'
+    }
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
 android {
-    defaultConfig {
-        applicationId "org.gearvrf.io.sceneeditor"
-    }
+    compileSdkVersion 21
+    buildToolsVersion "25.0.0"
 
     buildTypes {
+        debug {
+            resValue 'string', 'app_name', System.getProperty("appName")
+        }
         release {
+            resValue 'string', 'app_name', System.getProperty("appName")
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
+    }
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 19
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(
+                    output.outputFile.parent,
+                    System.getProperty("appName") + ".apk")
+        }
+    }
+
+    // ignore the x86 and arm-v8 files from the google vr libraries
+    packagingOptions {
+        exclude 'lib/x86/libgvr.so'
+        exclude 'lib/arm64-v8a/libgvr.so'
+    }
+
+    defaultConfig {
+        applicationId "org.gearvrf.io.sceneeditor"
     }
 
     lintOptions {
@@ -43,10 +75,40 @@ android {
     }
 }
 
+task copyOculusSignature(type: Copy) {
+    if (rootProject.hasProperty("OCULUS_SIGS_DIRECTORY")) {
+        copy {
+            from rootProject.property("OCULUS_SIGS_DIRECTORY")
+            into 'src/main/assets'
+            include 'oculussig_*'
+        }
+    }
+}
+
+preBuild {}.dependsOn copyOculusSignature
+
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile(name:'3DCursorLibrary-debug', ext:'aar')
     compile(name:'sceneserializer-debug', ext:'aar')
+    compile(name: 'framework-debug', ext: 'aar')
+    compile 'com.google.vr:sdk-base:1.10.0'
+    compile "org.joml:joml-android:${jomlVersion}"
+
+    if (rootProject.hasProperty("only_daydream")) {
+        compile(name: 'backend_daydream-debug', ext: 'aar')
+        compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-7'
+    } else {
+        if (rootProject.hasProperty("no_oculus")) {
+            compile(name: 'backend-debug', ext: 'aar')
+        } else { //default oculus+daydream
+            compile(name: 'backend_oculus-debug', ext: 'aar')
+            compile(name: 'backend_daydream-debug', ext: 'aar')
+            compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-7'
+        }
+    }
 }
 
 //TODO export plugin to jar

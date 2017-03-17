@@ -2,8 +2,7 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs '../../../Framework/framework/src/main/libs/',
-        '../../../Framework/framework/build/outputs/aar/'
+        dirs '../../../gearvrf-libs'
     }
 }
 
@@ -31,31 +30,24 @@ dependencies {
     compile(name: 'framework-debug', ext: 'aar')
 }
 
-assembleDebug {}.doLast{
-    task copyAARFiles(type: Copy) {
-        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-            def libsdirPath = projectDir.absolutePath + '/../../../../' +
-                    rootProject.property("LIBS_DIRECTORY")
-            def libsDir = new File(libsdirPath);
-            if (libsDir.exists()) {
-                from 'build/outputs/aar'
-                into libsDir
-                include '**/*.aar'
-            } else {
-                println "Cannot copy aar files, libs directory does not exist!"
-            }
-        }
-
-    }
-    tasks.copyAARFiles.execute()
-
+clean {}.doLast {
     def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-    if (!file(gearvrfLibs).exists()) {
-        file(gearvrfLibs).mkdir();
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
     }
-    copy {
-        from 'build/outputs/aar'
-        into gearvrfLibs
-        include '*-debug.aar'
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
     }
 }

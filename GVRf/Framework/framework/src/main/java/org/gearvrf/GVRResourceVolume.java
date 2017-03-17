@@ -16,6 +16,7 @@
 package org.gearvrf;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -24,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.gearvrf.utility.FileNameUtils;
 
+import android.content.res.Resources;
 import android.os.Environment;
 
 /**
@@ -34,6 +36,7 @@ public class GVRResourceVolume {
 
     public enum VolumeType {
         ANDROID_ASSETS ("assets", "/"),
+        ANDROID_RESOURCE ("res", "/"),
         ANDROID_SDCARD ("sdcard", "/"),
         LINUX_FILESYSTEM ("linux", "/"),
         NETWORK ("url", "/"),
@@ -90,6 +93,11 @@ public class GVRResourceVolume {
      * This form of the constructor gets the volume type and the volume path
      * from the filename in the resource. This form of the constructor maintains the
      * resource filename and can provide it later via @{link #getFileName() }.
+     *
+     * If a volume is opened using a GVRAndroidResource that references a file
+     * using an Android resource ID, other files that are referenced by that
+     * volume (textures, MTL files) are assumed to be in res/raw.
+     *
      * @param context The GVR Context.
      * @param resource GVRAndroidResource residing on the volume. This resource is added
      *                 to the internal resource map of this volume so it can be opened
@@ -105,9 +113,10 @@ public class GVRResourceVolume {
         defaultPath = FileNameUtils.getParentDirectory(filename);
         switch (resource.getResourceType())
         {
-            default:
             case ANDROID_RESOURCE:
-            volumeType = VolumeType.ANDROID_ASSETS;
+            volumeType = VolumeType.ANDROID_RESOURCE;
+
+            default:
             break;
 
             case LINUX_FILESYSTEM:
@@ -275,6 +284,7 @@ public class GVRResourceVolume {
 
         filePath = adaptFilePath(filePath);
         String path;
+        int resourceId;
 
         GVRAndroidResource resourceKey;
         switch (volumeType) {
@@ -286,6 +296,15 @@ public class GVRResourceVolume {
                 path = path.substring(1);
             }
             resourceKey = new GVRAndroidResource(gvrContext, path);
+            break;
+
+            case ANDROID_RESOURCE:
+            path = FileNameUtils.getBaseName(filePath);
+            resourceId = gvrContext.getContext().getResources().getIdentifier(path, "raw", gvrContext.getContext().getPackageName());
+            if (resourceId == 0) {
+                throw new FileNotFoundException(filePath + " resource not found");
+            }
+            resourceKey = new GVRAndroidResource(gvrContext, resourceId);
             break;
 
         case LINUX_FILESYSTEM:
@@ -323,6 +342,8 @@ public class GVRResourceVolume {
      * The filename returned does not include the parent directory.
      */
     String getFileName() { return fileName; }
+
+
 
     /**
      * Adapt a file path to the current file system.
