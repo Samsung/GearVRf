@@ -22,6 +22,7 @@
 #include "util/gvr_log.h"
 
 #include <sys/time.h>
+#include "objects/components/shadow_map.h"
 
 namespace gvr {
 CustomShader::CustomShader(const std::string& vertex_shader, const std::string& fragment_shader)
@@ -350,19 +351,29 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
      * Update the uniforms for the lights
      */
     const std::vector<Light*>& lightlist = rstate->scene->getLightList();
-    bool castShadow = false;
+    ShadowMap* shadowMap = nullptr;
     for (auto it = lightlist.begin();
          it != lightlist.end();
-         ++it) {
+         ++it)
+    {
         Light* light = (*it);
-         if (light != NULL) {
+         if (light != NULL)
+         {
             light->render(program_->id(), texture_index);
-            if (light->castShadow())
-                castShadow = true;
+            ShadowMap* sm = light->getShadowMap();
+            if (sm != nullptr)
+            {
+                shadowMap = sm;
+            }
          }
     }
-    if (castShadow){
-    	Light::bindShadowMap(program_->id(), texture_index);
+    if (shadowMap)
+    {
+        int loc = glGetUniformLocation(program_->id(), "u_shadow_maps");
+        if (loc >= 0)
+        {
+            shadowMap->bindTexture(loc, texture_index);
+        }
     }
     checkGLError("CustomShader::render");
 }

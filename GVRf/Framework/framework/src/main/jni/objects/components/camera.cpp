@@ -33,6 +33,7 @@ Camera::Camera() :
 }
 
 Camera::~Camera() {
+
 }
 
 void Camera::addPostEffect(PostEffectData* post_effect) {
@@ -45,31 +46,17 @@ void Camera::removePostEffect(PostEffectData* post_effect) {
                     post_effect), post_effect_data_.end());
 }
 
-glm::mat4 Camera::getViewMatrix() {
-    if (owner_object() == 0) {
-        std::string error = "Camera::getViewMatrix() : camera not attached.";
-        throw error;
+const glm::mat4& Camera::getViewMatrix() {
+    if (owner_object() != nullptr) {
+        Transform *const t = owner_object()->transform();
+        if (t != nullptr) {
+            view_matrix_ = glm::affineInverse(t->getModelMatrix(true));
+        }
     }
-    Transform* const t = owner_object()->transform();
-    if (nullptr == t) {
-        std::string error = "Camera::getViewMatrix() : transform not attached.";
-        throw error;
-    }
-    return glm::affineInverse(t->getModelMatrix(true));
+    return view_matrix_;
 }
 
-glm::mat4 Camera::getCenterViewMatrix() {
-    if (owner_object() == 0) {
-        std::string error = "Camera::getCenterViewMatrix() : camera not attached.";
-        LOGE("%s at %s:%d", error.c_str(), __FILE__, __LINE__);
-        throw error;
-    }
-    Transform* const t = owner_object()->parent()->transform();
-    if (nullptr == t) {
-        std::string error = "Camera::getCenterViewMatrix() : transform not attached.";
-        LOGE("%s at %s:%d", error.c_str(), __FILE__, __LINE__);
-        throw error;
-    }
-    return glm::affineInverse(t->getModelMatrix());
+void Camera::setViewMatrix(const glm::mat4& viewMtx) {
+    view_matrix_ = viewMtx;
 }
 }

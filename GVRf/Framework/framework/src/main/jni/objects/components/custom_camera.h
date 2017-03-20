@@ -49,7 +49,7 @@ private:
     CustomCamera& operator=(const CustomCamera& camera);
     CustomCamera& operator=(CustomCamera&& camera);
 
-private:
+protected:
     glm::mat4 projection_matrix_;
 };
 }

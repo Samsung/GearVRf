@@ -309,6 +309,15 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         return 0;
     }
 
+    public void setViewMatrix(float[] matrix)
+    {
+        if (matrix.length != 16)
+        {
+            throw new IllegalArgumentException("Matrix size not equal to 16.");
+        }
+        NativeCamera.setViewMatrix(getNative(), matrix);
+    }
+
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         sb.append(Log.getSpaces(indent));
@@ -366,4 +375,6 @@ class NativeCamera {
     static native void addPostEffect(long camera, long postEffectData);
 
     static native void removePostEffect(long camera, long postEffectData);
+
+    static native void setViewMatrix(long camera, float[] matrix);
 }
