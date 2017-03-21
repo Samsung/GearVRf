@@ -80,6 +80,8 @@ public:
         return height_;
     }
 
+    void setBackgroundColor(float r, float g, float b);
+    void useStencil(bool useFlag)   { use_stencil_ = useFlag; }
     virtual void beginRendering();
     virtual void endRendering();
 
@@ -106,6 +108,8 @@ protected:
     int width_;
     int height_;
     int sample_count_;
+    bool use_stencil_;
+    float back_color_[3];
     GLRenderBuffer* renderTexture_gl_render_buffer_ = nullptr;// This is actually depth buffer.
     GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
     GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;

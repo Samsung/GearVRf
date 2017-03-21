@@ -118,6 +118,12 @@ void  RenderTarget::beginRendering()
     mRenderState.uniforms.u_right = mRenderState.render_mask & RenderData::RenderMaskBit::Right;
     mRenderState.viewportWidth = mRenderTexture->width();
     mRenderState.viewportHeight = mRenderTexture->height();
+    if (-1 != mCamera->background_color_r())
+    {
+        mRenderTexture->setBackgroundColor(mCamera->background_color_r(),
+                                           mCamera->background_color_g(),
+                                           mCamera->background_color_b());
+    }
     mRenderTexture->beginRendering();
     checkGLError("RenderTarget::beginRendering");
 }

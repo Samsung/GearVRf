@@ -26,16 +26,18 @@ namespace gvr {
 RenderTexture::RenderTexture(int width, int height, GLTexture* tex) :
         Texture(tex), target_(tex->target()),
         width_(width), height_(height), sample_count_(0),
+        back_color_{0, 0, 0}, use_stencil_(0),
         renderTexture_gl_render_buffer_(nullptr),
-        renderTexture_gl_frame_buffer_ (nullptr)
+        renderTexture_gl_frame_buffer_(nullptr)
 {  }
 
 RenderTexture::RenderTexture(int width, int height) :
         Texture(new GLTexture(GL_TEXTURE_2D)),
         target_(GL_TEXTURE_2D),
         width_(width), height_(height), sample_count_(0),
+        back_color_{0, 0, 0}, use_stencil_(0),
         renderTexture_gl_render_buffer_(new GLRenderBuffer()),
-        renderTexture_gl_frame_buffer_ (new GLFrameBuffer()) {
+        renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
     initialize(width, height);
     glBindTexture(target_, gl_texture_->id());
     glTexImage2D(target_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
@@ -56,9 +58,11 @@ RenderTexture::RenderTexture(int width, int height) :
 }
 
 RenderTexture::RenderTexture(int width, int height, int sample_count) :
-        Texture(new GLTexture(GL_TEXTURE_2D)), target_(GL_TEXTURE_2D), width_(width), height_(height), sample_count_(
-                sample_count), renderTexture_gl_render_buffer_(new GLRenderBuffer()), renderTexture_gl_frame_buffer_(
-                new GLFrameBuffer()) {
+        Texture(new GLTexture(GL_TEXTURE_2D)), target_(GL_TEXTURE_2D),
+        width_(width), height_(height), sample_count_(sample_count),
+        back_color_{0, 0, 0}, use_stencil_(0),
+        renderTexture_gl_render_buffer_(new GLRenderBuffer()),
+        renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
     initialize(width, height);
     glBindTexture(target_, gl_texture_->id());
     glTexImage2D(target_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
@@ -82,8 +86,10 @@ RenderTexture::RenderTexture(int width, int height, int sample_count) :
 RenderTexture::RenderTexture(int width, int height, int sample_count,
         int jcolor_format, int jdepth_format, bool resolve_depth,
         int* texture_parameters) :
-        Texture(new GLTexture(GL_TEXTURE_2D, texture_parameters)), target_(GL_TEXTURE_2D), width_(width), height_(
-                height), sample_count_(sample_count), renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
+        Texture(new GLTexture(GL_TEXTURE_2D, texture_parameters)), target_(GL_TEXTURE_2D),
+        width_(width), height_(height), sample_count_(sample_count),
+        back_color_{0, 0, 0}, use_stencil_(0),
+        renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
     initialize(width, height);
     GLenum depth_format;
     glBindTexture(target_, gl_texture_->id());
@@ -155,6 +161,13 @@ RenderTexture::RenderTexture(int width, int height, int sample_count,
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderTexture::setBackgroundColor(float r, float g, float b)
+{
+    back_color_[0] = r;
+    back_color_[1] = g;
+    back_color_[2] = b;
 }
 
 void RenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
@@ -231,7 +244,21 @@ void RenderTexture::beginRendering() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     invalidateFrameBuffer(GL_FRAMEBUFFER, true, true, true);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    if ((back_color_[0] + back_color_[1] + back_color_[2] + use_stencil_) != 0)
+    {
+        int mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+        glClearColor(back_color_[0], back_color_[1], back_color_[2], 1);
+        if (use_stencil_)
+        {
+            mask |= GL_STENCIL_BUFFER_BIT;
+            glStencilMask(~0);
+        }
+        glClear(mask);
+    }
+    else
+    {
+        glClear(GL_DEPTH_BUFFER_BIT);
+    }
 }
 
 void RenderTexture::endRendering() {

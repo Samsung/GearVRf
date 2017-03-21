@@ -164,6 +164,7 @@ void GLRenderer::cullAndRender(RenderTarget* renderTarget, Scene* scene,
     if ((post_effects.size() == 0) ||
         (post_effect_render_texture_a == nullptr))
     {
+        saveRenderTexture->useStencil(useStencilBuffer_);
         renderTarget->beginRendering();
         for (auto it = render_data_vector.begin();
              it != render_data_vector.end();
@@ -181,6 +182,7 @@ void GLRenderer::cullAndRender(RenderTarget* renderTarget, Scene* scene,
     {
         RenderTexture* renderTexture = post_effect_render_texture_a;
 
+        renderTexture->useStencil(useStencilBuffer_);
         renderTarget->setTexture(renderTexture);
         renderTarget->beginRendering();
         for (auto it = render_data_vector.begin();
