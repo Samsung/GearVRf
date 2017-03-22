@@ -135,7 +135,8 @@ public class GVRScriptManager {
 
         synchronized (mGlobalVariables) {
             for (Map.Entry<String, Object> ent : mGlobalVariables.entrySet()) {
-                bindings.put(ent.getKey(), ent.getValue());
+                //Commented out for v8Engine
+                //bindings.put(ent.getKey(), ent.getValue());
             }
             mBindingsClosers.add(new Runnable() {
                 @Override
@@ -226,7 +227,8 @@ public class GVRScriptManager {
         if (language.equals(LANG_LUA)) {
             script = new GVRLuaScriptFile(mGvrContext, resource.getStream());
         } else if (language.equals(LANG_JAVASCRIPT)) {
-            script = new GVRJavascriptScriptFile(mGvrContext, resource.getStream());
+            // Commented out for v8ScriptingEngine
+            //script = new GVRJavascriptScriptFile(mGvrContext, resource.getStream());
         }
 
         resource.closeStream();

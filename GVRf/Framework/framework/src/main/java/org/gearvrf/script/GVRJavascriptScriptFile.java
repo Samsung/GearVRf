@@ -1,9 +1,13 @@
 package org.gearvrf.script;
 
-import java.io.IOException;
-import java.io.InputStream;
+import android.util.Log;
 
 import org.gearvrf.GVRContext;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 
 /**
  * Represents a Javascript file. The script text can be loaded in one
@@ -25,7 +29,10 @@ import org.gearvrf.GVRContext;
  * or attach it to a scriptable object using {@link GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}
  * to handle events delivered to it.
  */
-public class GVRJavascriptScriptFile extends GVRScriptFile {
+
+
+public class GVRJavascriptScriptFile  extends GVRScriptFile {
+
     /**
      * Loads a Javascript file from {@code inputStream}.
      *
@@ -35,10 +42,12 @@ public class GVRJavascriptScriptFile extends GVRScriptFile {
      *     The input stream from which the script is loaded.
      * @throws IOException if the script cannot be read.
      */
+
     public GVRJavascriptScriptFile(GVRContext gvrContext, InputStream inputStream) throws IOException {
         super(gvrContext, GVRScriptManager.LANG_JAVASCRIPT);
         load(inputStream);
     }
+
 
     /**
      * Loads a Javascript file from a text string.
@@ -48,12 +57,18 @@ public class GVRJavascriptScriptFile extends GVRScriptFile {
      * @param scriptText
      *     String containing a Javascript program.
      */
+    private static final String TAG = GVRJavascriptScriptFile.class.getSimpleName();
+
+    //protected String mScriptText;
+    //protected GVRContext mGvrContext;
+
     public GVRJavascriptScriptFile(GVRContext gvrContext, String scriptText) {
         super(gvrContext, GVRScriptManager.LANG_JAVASCRIPT);
         setScriptText(scriptText);
     }
-    
+
     protected String getInvokeStatement(String eventName, Object[] params) {
+
         StringBuilder sb = new StringBuilder();
 
         // function name
@@ -65,6 +80,7 @@ public class GVRJavascriptScriptFile extends GVRScriptFile {
             if (i != 0) {
                 sb.append(", ");
             }
+            // commented out just to get this to build
             sb.append(getDefaultParamName(i));
         }
 
