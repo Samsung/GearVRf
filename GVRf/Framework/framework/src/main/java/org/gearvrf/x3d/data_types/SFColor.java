@@ -17,6 +17,7 @@ package org.gearvrf.x3d.data_types;
 /**
  * Defines the X3D SFColor data type
  */
+
 public class SFColor {
 
     private float red = 0;

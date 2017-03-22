@@ -29,6 +29,8 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+
+
 import org.gearvrf.GVRContext;
 
 /**
@@ -277,7 +279,11 @@ public abstract class GVRScriptFile {
 
     protected void fillBindings(Bindings localBindings, Object[] params) {
         for (int i = 0; i < params.length; ++i) {
-            localBindings.put(getDefaultParamName(i), params[i]);
+            Object o = params[i];
+            String str = getDefaultParamName(i);
+            //localBindings.put(getDefaultParamName(i), params[i]);
+            //localBindings.put(str, o);
+            //localBindings.
         }
     }
 

@@ -128,7 +128,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
      */
     public void setScriptText(String scriptText, String language)
     {
-        GVRScriptFile newScript;
+        GVRScriptFile newScript = null;
         
         if (language.equals(GVRScriptManager.LANG_LUA))
         {

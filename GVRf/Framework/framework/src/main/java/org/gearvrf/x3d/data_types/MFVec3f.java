@@ -29,6 +29,13 @@ public class MFVec3f {
         setValue(newVals);
     }
 
+
+    public MFVec3f(double[] newVals) {
+        this.vals = new float[newVals.length];
+        for (int i = 0; i < this.vals.length; i++) {
+            this.vals[i] = (float)newVals[i];
+        }
+    }
     public int getValueCount() {
         return this.vals.length;
     }
@@ -40,6 +47,12 @@ public class MFVec3f {
     public void setValue(float[] newVals) {
         for (int i = 0; i < this.vals.length; i++) {
             this.vals[i] = newVals[i];
+        }
+    }
+
+    public void setValue(double[] newVals) {
+        for (int i = 0; i < this.vals.length; i++) {
+            this.vals[i] = (float)newVals[i];
         }
     }
 
