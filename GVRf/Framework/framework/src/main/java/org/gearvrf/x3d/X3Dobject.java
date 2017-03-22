@@ -3161,8 +3161,7 @@ public class X3Dobject {
                                     shaderSettings.emissiveColor[0],
                                     shaderSettings.emissiveColor[1],
                                     shaderSettings.emissiveColor[2], 1.0f);
-                            gvrMaterial.setFloat("specular_exponent",
-                                    shaderSettings.shininess);
+                            gvrMaterial.setFloat("specular_exponent", 128.0f * shaderSettings.shininess);
 
                             if (!shaderSettings.getMaterialName().isEmpty()) {
                                 DefinedItem definedItem = new DefinedItem(
