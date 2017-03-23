@@ -597,7 +597,7 @@ abstract class GVRViewManager extends GVRContext {
             mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
             mReadbackBuffer.order(ByteOrder.nativeOrder());
         }
-        readRenderResultNative(mRenderBundle.getPostEffectRenderTextureA().getNative(), mReadbackBuffer);
+        readRenderResultNative(mReadbackBuffer);
     }
 
     protected void returnScreenshotToCaller(final GVRScreenshotCallback callback, final int width, final int height) {
@@ -611,52 +611,160 @@ abstract class GVRViewManager extends GVRContext {
         });
     }
 
-    protected void returnScreenshot3DToCaller(final GVRScreenshot3DCallback callback, final byte[][] byteArrays,
-                                            final int width, final int height) {
+    protected void returnScreenshot3DToCaller(final GVRScreenshot3DCallback callback, final Bitmap[] bitmaps,
+                                              final int width, final int height) {
 
-        if (byteArrays.length != 6) {
-            throw new IllegalArgumentException("byteArrays length is not 6.");
-        } else {
-            // run the callback function in a background thread
-            Threads.spawn(new Runnable() {
-                public void run() {
-                    final Bitmap[] bitmapArray = new Bitmap[6];
-                    Runnable[] threads = new Runnable[6];
+        // run the callback function in a background thread
+        Threads.spawn(new Runnable() {
+            public void run() {
+                final Bitmap[] bitmapArray = new Bitmap[6];
+                Runnable[] threads = new Runnable[6];
 
-                    for (int i = 0; i < 6; i++) {
-                        final int index = i;
-                        threads[i] = new Runnable() {
-                            public void run() {
-                                byte[] bytearray = byteArrays[index];
-                                byteArrays[index] = null;
-                                Bitmap bitmap = ImageUtils.generateBitmapFlipV(bytearray, width, height);
-                                synchronized (this) {
-                                    bitmapArray[index] = bitmap;
-                                    notify();
-                                }
+                for (int i = 0; i < 6; i++) {
+                    final int index = i;
+                    threads[i] = new Runnable() {
+                        public void run() {
+                            final Bitmap bitmap = bitmaps[index];
+                            bitmaps[index] = null;
+
+                            synchronized (this) {
+                                bitmapArray[index] = bitmap;
+                                notify();
                             }
-                        };
-                    }
+                        }
+                    };
+                }
 
-                    for (Runnable thread : threads) {
-                        Threads.spawnLow(thread);
-                    }
+                for (Runnable thread : threads) {
+                    Threads.spawnLow(thread);
+                }
 
-                    for (int i = 0; i < 6; i++) {
-                        synchronized (threads[i]) {
-                            if (bitmapArray[i] == null) {
-                                try {
-                                    threads[i].wait();
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                for (int i = 0; i < 6; i++) {
+                    synchronized (threads[i]) {
+                        if (bitmapArray[i] == null) {
+                            try {
+                                threads[i].wait();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
-
-                    callback.onScreenCaptured(bitmapArray);
                 }
-            });
+
+                callback.onScreenCaptured(bitmapArray);
+            }
+        });
+    }
+
+    // capture 3D screenshot
+    protected void capture3DScreenShot() {
+        if (mScreenshot3DCallback == null) {
+            return;
+        }
+        final Bitmap[] bitmaps = new Bitmap[6];
+        renderSixCamerasAndReadback(mMainScene.getMainCameraRig(), bitmaps);
+        returnScreenshot3DToCaller(mScreenshot3DCallback, bitmaps, mReadbackBufferWidth, mReadbackBufferHeight);
+
+        mScreenshot3DCallback = null;
+    }
+
+    protected void captureRightEye() {
+        captureEye(mScreenshotRightCallback);
+        mScreenshotRightCallback = null;
+    }
+
+    protected void captureLeftEye() {
+        captureEye(mScreenshotLeftCallback);
+        mScreenshotLeftCallback = null;
+    }
+
+        // capture screenshot of an eye
+    private void captureEye(GVRScreenshotCallback callback) {
+        if (null == callback) {
+            return;
+        }
+
+        readRenderResult();
+        returnScreenshotToCaller(callback, mReadbackBufferWidth, mReadbackBufferHeight);
+    }
+
+    // capture center eye
+    protected void captureCenterEye() {
+        if (mScreenshotCenterCallback == null) {
+            return;
+        }
+
+        final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
+        final GVRPostEffect postEffect = new GVRPostEffect(this, GVRPostEffect.GVRPostEffectShaderType.HorizontalFlip.ID);
+        centerCamera.addPostEffect(postEffect);
+        renderCamera(mMainScene, centerCamera, mRenderBundle);
+        centerCamera.removePostEffect(postEffect);
+
+        readRenderResult();
+        final Bitmap bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
+        mReadbackBuffer.rewind();
+        bitmap.copyPixelsFromBuffer(mReadbackBuffer);
+
+        final GVRScreenshotCallback callback = mScreenshotCenterCallback;
+        Threads.spawn(new Runnable() {
+            public void run() {
+                callback.onScreenCaptured(bitmap);
+            }
+        });
+
+        mScreenshotCenterCallback = null;
+    }
+
+    private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index) {
+        renderCamera(mMainScene, centerCamera, mRenderBundle);
+        readRenderResult();
+
+        bitmaps[index] = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
+        mReadbackBuffer.rewind();
+        bitmaps[index].copyPixelsFromBuffer(mReadbackBuffer);
+    }
+
+    private void renderSixCamerasAndReadback(final GVRCameraRig mainCameraRig, final Bitmap[] bitmaps) {
+        // temporarily create a center camera
+        GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(this);
+        centerCamera.setFovY(90.0f);
+        centerCamera.setRenderMask(GVRRenderData.GVRRenderMaskBit.Left | GVRRenderData.GVRRenderMaskBit.Right);
+        GVRSceneObject centerCameraObject = new GVRSceneObject(this);
+
+        centerCameraObject.attachCamera(centerCamera);
+        centerCamera.addPostEffect(new GVRPostEffect(this, GVRPostEffect.GVRPostEffectShaderType.HorizontalFlip.ID));
+
+        mainCameraRig.getOwnerObject().addChildObject(centerCameraObject);
+        GVRTransform centerCameraTransform = centerCameraObject.getTransform();
+        int index = 0;
+        // render +x face
+        centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        // render -x face
+        centerCameraTransform.rotateByAxis(180, 0, 1, 0);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        // render +y face
+        centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
+        centerCameraTransform.rotateByAxis(90, 1, 0, 0);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        // render -y face
+        centerCameraTransform.rotateByAxis(180, 1, 0, 0);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        // render +z face
+        centerCameraTransform.rotateByAxis(90, 1, 0, 0);
+        centerCameraTransform.rotateByAxis(180, 0, 1, 0);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        // render -z face
+        centerCameraTransform.rotateByAxis(180, 0, 1, 0);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        centerCameraObject.detachCamera();
+        mainCameraRig.getOwnerObject().removeChildObject(centerCameraObject);
+    }
+
+    protected void captureFinish() {
+        if (mScreenshotLeftCallback == null && mScreenshotRightCallback == null
+                && mScreenshotCenterCallback == null && mScreenshot3DCallback == null) {
+            mReadbackBuffer = null;
         }
     }
 
@@ -694,7 +802,7 @@ abstract class GVRViewManager extends GVRContext {
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
     protected native void cullAndRender(long render_target, long scene, long shader_manager,
                                         long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
-    private native static void readRenderResultNative(long renderTexture, Object readbackBuffer);
+    private native static void readRenderResultNative(Object readbackBuffer);
 
     private static final String TAG = "GVRViewManager";
 }
