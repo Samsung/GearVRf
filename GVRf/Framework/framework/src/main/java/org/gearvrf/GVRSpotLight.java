@@ -149,6 +149,13 @@ public class GVRSpotLight extends GVRPointLight
         mChanged = true;
     }
 
+    /**
+     * Enables or disabled shadow casting for a spot light.
+     * Enabling shadows attaches a GVRShadowMap component to the
+     * GVRSceneObject which owns the light and provides the
+     * component with an perspective camera for shadow casting.
+     * @param enableFlag true to enable shadow casting, false to disable
+     */
     public void setCastShadow(boolean enableFlag)
     {
         super.setCastShadow(enableFlag);

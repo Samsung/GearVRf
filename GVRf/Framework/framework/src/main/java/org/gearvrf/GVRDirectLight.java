@@ -187,6 +187,13 @@ public class GVRDirectLight extends GVRLightBase
         setVec4("specular_intensity", r, g, b, a);
     }
 
+    /**
+     * Enables or disabled shadow casting for a direct light.
+     * Enabling shadows attaches a GVRShadowMap component to the
+     * GVRSceneObject which owns the light and provides the
+     * component with an orthographic camera for shadow casting.
+     * @param enableFlag true to enable shadow casting, false to disable
+     */
     public void setCastShadow(boolean enableFlag)
     {
         super.setCastShadow(enableFlag);
