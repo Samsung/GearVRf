@@ -63,7 +63,7 @@ public class GVRAndroidResource {
      * Instance members
      */
 
-    private InputStream stream = null;
+    private InputStream stream;
     private StreamStates streamState;
 
     // Save parameters, for hashCode() and equals()
@@ -75,7 +75,7 @@ public class GVRAndroidResource {
     private final URL url;
     private boolean enableUrlLocalCache = false;
     
-    private Context context = null;
+    private Context context;
     private ResourceType resourceType;
     private String inputStreamName;
 
@@ -133,7 +133,7 @@ public class GVRAndroidResource {
      *            A {@code R.raw} or {@code R.drawable} id
      */
     public GVRAndroidResource(Context context, int resourceId) {
-        this.context = context;
+        this.context = context.getApplicationContext();
         Resources resources = context.getResources();
         streamState = StreamStates.NEW;
 
@@ -175,7 +175,7 @@ public class GVRAndroidResource {
      *            {@code assets/foo/bar.png}
      */
     public GVRAndroidResource(Context context, String assetRelativeFilename) {
-        this.context = context;    
+        this.context = context.getApplicationContext();
         streamState = StreamStates.NEW;
 
         filePath = null;

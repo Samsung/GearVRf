@@ -36,11 +36,9 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
         jobject callbacks) : envMainThread_(&env), configurationHelper_(env, vrAppSettings) //use_multiview(false)
 {
     activity_ = env.NewGlobalRef(activity);
-
     activityClass_ = GetGlobalClassReference(env, activityClassName);
-    viewManagerClass_ = GetGlobalClassReference(env, viewManagerClassName);
 
-    onDrawEyeMethodId = GetMethodId(env, viewManagerClass_, "onDrawEye", "(I)V");
+    onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(I)V");
     updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
 }
 
@@ -48,10 +46,7 @@ GVRActivity::~GVRActivity() {
     LOGV("GVRActivity::~GVRActivity");
     uninitializeVrApi();
 
-    envMainThread_->DeleteGlobalRef(viewManagerClass_);
     envMainThread_->DeleteGlobalRef(activityClass_);
-
-    envMainThread_->DeleteGlobalRef(viewManager_);
     envMainThread_->DeleteGlobalRef(activity_);
 }
 
@@ -95,13 +90,6 @@ bool GVRActivity::updateSensoredScene() {
 void GVRActivity::setCameraRig(jlong cameraRig) {
     cameraRig_ = reinterpret_cast<CameraRig*>(cameraRig);
     sensoredSceneUpdated_ = false;
-}
-
-/**
- * Must be called on the main thread
- */
-void GVRActivity::setViewManager(jobject viewManager) {
-    viewManager_ = oculusJavaMainThread_.Env->NewGlobalRef(viewManager);
 }
 
 void GVRActivity::onSurfaceCreated(JNIEnv& env) {
@@ -177,7 +165,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
     }
 }
 
-void GVRActivity::onDrawFrame() {
+void GVRActivity::onDrawFrame(jobject jViewManager) {
     ovrFrameParms parms = vrapi_DefaultFrameParms(&oculusJavaGlThread_, VRAPI_FRAME_INIT_DEFAULT, vrapi_GetTimeInSeconds(),
             NULL);
     parms.FrameIndex = ++frameIndex;
@@ -225,7 +213,7 @@ void GVRActivity::onDrawFrame() {
 
         beginRenderingEye(eye);
 
-        oculusJavaGlThread_.Env->CallVoidMethod(viewManager_, onDrawEyeMethodId, eye);
+        oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye);
 
         endRenderingEye(eye);
     }

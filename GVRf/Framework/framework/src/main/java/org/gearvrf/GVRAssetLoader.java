@@ -15,6 +15,31 @@
 
 package org.gearvrf;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import org.gearvrf.GVRAndroidResource.TextureCallback;
+import org.gearvrf.animation.GVRAnimator;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
+import org.gearvrf.asynchronous.GVRCompressedTexture;
+import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
+import org.gearvrf.jassimp.AiTexture;
+import org.gearvrf.jassimp.Jassimp;
+import org.gearvrf.jassimp.JassimpFileIO;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.gearvrf.utility.FileNameUtils;
+import org.gearvrf.utility.GVRByteArray;
+import org.gearvrf.utility.Log;
+import org.gearvrf.utility.ResourceCache;
+import org.gearvrf.utility.ResourceCacheBase;
+import org.gearvrf.utility.ResourceReader;
+import org.gearvrf.utility.Threads;
+import org.gearvrf.x3d.ShaderSettings;
+import org.gearvrf.x3d.X3Dobject;
+import org.gearvrf.x3d.X3DparseLights;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -29,37 +54,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.gearvrf.GVRAndroidResource.TextureCallback;
-import org.gearvrf.animation.GVRAnimator;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
-
-import org.gearvrf.asynchronous.GVRCompressedTexture;
-import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
-import org.gearvrf.GVRJassimpAdapter;
-import org.gearvrf.jassimp.AiTexture;
-import org.gearvrf.jassimp.Jassimp;
-import org.gearvrf.jassimp.JassimpFileIO;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
-import org.gearvrf.utility.FileNameUtils;
-import org.gearvrf.utility.GVRByteArray;
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.ResourceCache;
-import org.gearvrf.utility.Threads;
-import org.gearvrf.x3d.ShaderSettings;
-import org.gearvrf.x3d.X3Dobject;
-import org.gearvrf.x3d.X3DparseLights;
-import android.content.Context;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
-import org.gearvrf.utility.ResourceCacheBase;
-import org.gearvrf.utility.ResourceReader;
-
-import static java.lang.Integer.parseInt;
 
 /**
  * {@link GVRAssetLoader} provides methods for importing 3D models and making them
@@ -80,7 +74,7 @@ public final class GVRAssetLoader {
      * The default texture parameter instance for overloading texture methods
      *
      */
-    public static GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS;
+    private final GVRTextureParameters mDefaultTextureParameters;
 
     /**
      * Loads textures and listens for texture load events.
@@ -492,14 +486,6 @@ public final class GVRAssetLoader {
             loadFinished = false;
         }
 
-        public TextureRequest(AssetRequest assetRequest, String texFile)
-        {
-            mAssetRequest = assetRequest;
-            TextureFile = texFile;
-            mTexParams = GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS;
-            loadFinished = false;
-        }
-
         public void loaded(final GVRTexture texture, GVRAndroidResource resource)
         {
             texture.getGVRContext().runOnGlThread(new Runnable()
@@ -541,13 +527,6 @@ public final class GVRAssetLoader {
     {
         public final GVRMaterial Material;
         public final String TextureName;
-
-        public MaterialTextureRequest(AssetRequest assetRequest, String texFile)
-        {
-        	super(assetRequest, texFile);
-            Material = null;
-            TextureName = null;
-        }
 
         public MaterialTextureRequest(AssetRequest assetRequest, String texFile, GVRMaterial material, String textureName,
                                       final GVRTextureParameters texParams)
@@ -601,10 +580,7 @@ public final class GVRAssetLoader {
     public GVRAssetLoader(GVRContext context)
     {
         mContext = context;
-        if (DEFAULT_TEXTURE_PARAMETERS == null)
-        {
-            DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(context);
-        }
+        mDefaultTextureParameters = new GVRTextureParameters(context);
     }
 
     /**
@@ -657,7 +633,7 @@ public final class GVRAssetLoader {
      *            default texture parameters are used.
      * @return The file as a texture, or {@code null} if the file can not be
      *         decoded into a Bitmap.
-     * @see GVRAssetLoader#DEFAULT_TEXTURE_PARAMETERS
+     * @see GVRAssetLoader#getDefaultTextureParameters
      */
     public GVRTexture loadTexture(GVRAndroidResource resource,
                                   GVRTextureParameters textureParameters)
@@ -691,7 +667,7 @@ public final class GVRAssetLoader {
 
     public GVRTexture loadTexture(GVRAndroidResource resource)
     {
-        return loadTexture(resource, DEFAULT_TEXTURE_PARAMETERS);
+        return loadTexture(resource, mDefaultTextureParameters);
     }
 
 
@@ -764,7 +740,7 @@ public final class GVRAssetLoader {
     {
         if (texparams == null)
         {
-            texparams = DEFAULT_TEXTURE_PARAMETERS;
+            texparams = mDefaultTextureParameters;
         }
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
                 callback, resource, texparams, priority, quality);
@@ -818,7 +794,7 @@ public final class GVRAssetLoader {
     public void loadTexture(GVRAndroidResource resource, TextureCallback callback)
     {
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                callback, resource, DEFAULT_TEXTURE_PARAMETERS, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                callback, resource, mDefaultTextureParameters, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
     }
 
     public Future<GVRTexture> loadFutureTexture(GVRAndroidResource resource,
@@ -1473,6 +1449,10 @@ public final class GVRAssetLoader {
         }
 
         return new File(outputFilename);
+    }
+
+    GVRTextureParameters getDefaultTextureParameters() {
+        return mDefaultTextureParameters;
     }
 
      /**

@@ -99,12 +99,13 @@ public class GVRComponent extends GVRHybridObject {
         }
         else
         {
-            onDetach(getOwnerObject());
-            if (getNative() != 0)
-            {
-                NativeComponent.setOwnerObject(getNative(), 0L);
+            if (null != this.owner) {
+                onDetach(this.owner);
+                if (getNative() != 0) {
+                    NativeComponent.setOwnerObject(getNative(), 0L);
+                }
+                this.owner = null;
             }
-            this.owner = null;
         }
     }
 

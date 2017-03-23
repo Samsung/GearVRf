@@ -104,7 +104,6 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     public void setViewManager(GVRViewManager viewManager) {
         mActiveViewManager = (OvrViewManager)viewManager;
         mActivityHandler.setViewManager(mActiveViewManager);
-        mActivityNative.setViewManager(mActiveViewManager);
     }
 
     @Override

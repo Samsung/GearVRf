@@ -146,7 +146,7 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * The default texture parameter instance for overloading texture methods
-     * @deprecated use GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS instead
+     * @deprecated use GVRAssetLoader.getDefaultTextureParameters instead
      */
     public final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(
             this);
@@ -812,9 +812,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @return The mesh, encapsulated as a {@link GVRMesh}.
      * @deprecated use GVRContext.loadModel instead
      */
-    public GVRMesh getNodeMesh(GVRAssimpImporter assimpImporter,
-            String nodeName, int meshIndex) {
-
+    GVRMesh getNodeMesh(GVRAssimpImporter assimpImporter, String nodeName, int meshIndex) {
         return assimpImporter.getNodeMesh(nodeName, meshIndex);
     }
 
@@ -940,7 +938,7 @@ public abstract class GVRContext implements IEventReceiver {
      * 
      */
     public GVRBitmapTexture loadTexture(String fileName) {
-        return loadTexture(fileName, GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS);
+        return loadTexture(fileName, getAssetLoader().getDefaultTextureParameters());
     }
 
     /**
@@ -1035,7 +1033,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @deprecated use GVRAssetLoader.loadTexture instead
      */
     public GVRTexture loadTexture(GVRAndroidResource resource) {
-        return mImporter.loadTexture(resource, GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS);
+        return mImporter.loadTexture(resource, getAssetLoader().getDefaultTextureParameters());
     }
 
     /**
@@ -1102,7 +1100,7 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public GVRCubemapTexture loadCubemapTexture(
             GVRAndroidResource[] resourceArray) {
-        return loadCubemapTexture(resourceArray, GVRAssetLoader.DEFAULT_TEXTURE_PARAMETERS);
+        return loadCubemapTexture(resourceArray, getAssetLoader().getDefaultTextureParameters());
     }
 
     // Texture parameters

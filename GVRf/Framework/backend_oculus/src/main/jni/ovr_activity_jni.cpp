@@ -37,12 +37,6 @@ JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_setCameraRig(JNIEnv * 
     activity->setCameraRig(cameraRig);
 }
 
-JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_setViewManager(JNIEnv * jni, jclass clazz, jlong appPtr,
-                                                                       jobject viewManager) {
-    GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->setViewManager(viewManager);
-}
-
 JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDock(JNIEnv * jni, jclass clazz, jlong appPtr) {
     GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
     activity->onDock();
@@ -75,10 +69,10 @@ JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeOnSurfaceC
     activity->onSurfaceChanged(*jni);
 }
 
-JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jclass clazz,
+JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jobject jViewManager,
         jlong appPtr) {
     GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->onDrawFrame();
+    activity->onDrawFrame(jViewManager);
 }
 
 JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeShowConfirmQuit(JNIEnv * jni, jclass clazz, jlong appPtr) {

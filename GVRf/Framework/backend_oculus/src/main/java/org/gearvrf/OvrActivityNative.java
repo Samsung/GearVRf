@@ -50,10 +50,6 @@ class OvrActivityNative implements IActivityNative {
         return mPtr;
     }
 
-    public void setViewManager(OvrViewManager viewManager) {
-        setViewManager(mPtr, viewManager);
-    }
-
     private static native void setCameraRig(long appPtr, long cameraRig);
 
     private static native void onDock(long appPtr);
@@ -63,6 +59,4 @@ class OvrActivityNative implements IActivityNative {
     private static native void onDestroy(long appPtr);
 
     private static native long onCreate(Activity act, VrAppSettings vrAppSettings);
-
-    private static native void setViewManager(long appPtr, OvrViewManager viewManager);
 }
