@@ -31,6 +31,7 @@ namespace gvr {
 
 class RenderTexture: public Texture {
 public:
+    RenderTexture(int width, int height, GLTexture* tex);
     explicit RenderTexture(int width, int height);
     explicit RenderTexture(int width, int height, int sample_count);
     explicit RenderTexture(int width, int height, int sample_count,
@@ -58,12 +59,14 @@ public:
     }
 
     GLenum getTarget() const {
-        return TARGET;
+        return target_;
     }
 
     GLuint getFrameBufferId() const {
         return renderTexture_gl_frame_buffer_->id();
     }
+
+    GLuint getDepthBufferId() { return renderTexture_gl_render_buffer_->id(); }
 
     void bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
@@ -77,8 +80,10 @@ public:
         return height_;
     }
 
-    void beginRendering();
-    void endRendering();
+    void setBackgroundColor(float r, float g, float b);
+    void useStencil(bool useFlag)   { use_stencil_ = useFlag; }
+    virtual void beginRendering();
+    virtual void endRendering();
 
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.
@@ -98,18 +103,33 @@ private:
     void generateRenderTexture(int sample_count, int jdepth_format, GLenum depth_format, int width,
             int height, int jcolor_format);
     void invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer);
-private:
-    static const GLenum TARGET = GL_TEXTURE_2D;
+
+protected:
     int width_;
     int height_;
     int sample_count_;
-    GLenum texture_filter;
+    bool use_stencil_;
+    float back_color_[3];
     GLRenderBuffer* renderTexture_gl_render_buffer_ = nullptr;// This is actually depth buffer.
     GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
     GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;
     GLRenderBuffer* renderTexture_gl_color_buffer_ = nullptr;// This is only for multisampling case
                                      // when resolveDepth is on.
     GLuint renderTexture_gl_pbo_ = 0;
+    GLenum target_;
     bool readback_started_;          // set by startReadBack()
-};}
+};
+
+class RenderTextureArray : public RenderTexture
+{
+public:
+    RenderTextureArray(int width, int height, int numLayers);
+    bool bindFrameBuffer(int layerIndex);
+    bool bindTexture(int gl_location, int texIndex);
+    virtual void beginRendering();
+
+protected:
+    int     mNumLayers;
+};
+}
 #endif

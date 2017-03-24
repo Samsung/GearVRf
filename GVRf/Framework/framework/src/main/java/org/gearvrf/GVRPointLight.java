@@ -53,7 +53,7 @@ public class GVRPointLight extends GVRLightBase
     private static String shaderSource = null;
     public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
-        uniformDescriptor += " vec4 diffuse_intensity"
+        mUniformDescriptor += " vec4 diffuse_intensity"
                 + " vec4 ambient_intensity"
                 + " vec4 specular_intensity"
                 + " float attenuation_constant"
@@ -63,7 +63,7 @@ public class GVRPointLight extends GVRLightBase
         if (shaderSource == null) {
             shaderSource = TextFile.readTextFile(gvrContext.getContext(), R.raw.pointlight);
         }
-        fragmentShaderSource = shaderSource;
+        mFragmentShaderSource = shaderSource;
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);

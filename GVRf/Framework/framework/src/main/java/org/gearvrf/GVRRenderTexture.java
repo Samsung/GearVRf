@@ -151,6 +151,8 @@ class NativeRenderTexture {
             int sampleCount, int colorFormat, int depthFormat,
             boolean resolveDepth, int[] parameters);
 
+    static native long ctorArray(int width, int height, int layers);
+
     static native void beginRendering(long ptr);
 
     static native void endRendering(long ptr);

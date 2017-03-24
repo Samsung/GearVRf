@@ -15,13 +15,8 @@
 
 package org.gearvrf;
 
-import static org.gearvrf.utility.Assert.*;
-
-import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 /**
  * Illuminates object in the scene with a directional light source.
@@ -53,19 +48,20 @@ import org.joml.Vector4f;
  * @see GVRSpotLight
  * @see GVRLightBase
  */
-public class GVRDirectLight extends GVRLightBase {
+public class GVRDirectLight extends GVRLightBase
+{
     private static String fragmentShader = null;
     private static String vertexShader = null;
     private boolean useShadowShader = true;
-    private Matrix4f biasMatrix = null;
-    
+
     public GVRDirectLight(GVRContext gvrContext) {
         this(gvrContext, null);
      }
 
-    public GVRDirectLight(GVRContext gvrContext, GVRSceneObject parent) {
+    public GVRDirectLight(GVRContext gvrContext, GVRSceneObject parent)
+    {
         super(gvrContext, parent);
-        uniformDescriptor += " vec4 diffuse_intensity"
+        mUniformDescriptor += " vec4 diffuse_intensity"
                 + " vec4 ambient_intensity"
                 + " vec4 specular_intensity"
                 + " float shadow_map_index"
@@ -76,13 +72,14 @@ public class GVRDirectLight extends GVRLightBase {
                  fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
              if (vertexShader == null)
                  vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
-             vertexDescriptor = "vec4 shadow_position";
-             vertexShaderSource = vertexShader;
-             setFloat("shadow_map_index", -1.0f);
+             mVertexDescriptor = "vec4 shadow_position";
+             mVertexShaderSource = vertexShader;
          }
          else if (fragmentShader == null)
-             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);             
-         fragmentShaderSource = fragmentShader;
+         {
+             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
+         }
+         mFragmentShaderSource = fragmentShader;
          setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
          setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
          setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
@@ -151,7 +148,8 @@ public class GVRDirectLight extends GVRLightBase {
      * @param b blue component (0 to 1)
      * @param a alpha component (0 to 1)
      */
-    public void setDiffuseIntensity(float r, float g, float b, float a) {
+    public void setDiffuseIntensity(float r, float g, float b, float a)
+    {
         setVec4("diffuse_intensity", r, g, b, a);
     }
 
@@ -184,10 +182,30 @@ public class GVRDirectLight extends GVRLightBase {
      * @param b blue component (0 to 1)
      * @param a alpha component (0 to 1)
      */
-    public void setSpecularIntensity(float r, float g, float b, float a) {
+    public void setSpecularIntensity(float r, float g, float b, float a)
+    {
         setVec4("specular_intensity", r, g, b, a);
     }
 
+    /**
+     * Enables or disabled shadow casting for a direct light.
+     * Enabling shadows attaches a GVRShadowMap component to the
+     * GVRSceneObject which owns the light and provides the
+     * component with an orthographic camera for shadow casting.
+     * @param enableFlag true to enable shadow casting, false to disable
+     */
+    public void setCastShadow(boolean enableFlag)
+    {
+        super.setCastShadow(enableFlag);
+        if (enableFlag && (getOwnerObject() != null))
+        {
+            GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
+            if ((shadowMap != null) && (shadowMap.getCamera() == null))
+            {
+                shadowMap.addOrthoShadowCamera(getGVRContext().getMainScene().getMainCameraRig().getCenterCamera());
+            }
+        }
+    }
 
     /**
      * Updates the position, direction and shadow matrix
@@ -197,77 +215,31 @@ public class GVRDirectLight extends GVRLightBase {
      */
     public void onDrawFrame(float frameTime)
     {
+        if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
         float[] odir = getVec3("world_direction");
-        float[] opos = getVec3("world_position");
         boolean changed = false;
-        GVRTransform lightTrans = owner.getTransform();
-        Matrix4f worldmtx = lightTrans.getModelMatrix4f();
+        Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
 
-        olddir.x = odir[0];
-        olddir.y = odir[1];
-        olddir.z = odir[2];
-        oldpos.x = opos[0];
-        oldpos.y = opos[1];
-        oldpos.z = opos[2];
-        newdir.x = 0.0f;
-        newdir.y = 0.0f;
-        newdir.z = -1.0f;
-
-        worldmtx.setTranslation(oldpos);
-        lightrot.identity();
-        defaultDir.get(lightrot);
-        worldmtx.mul(lightrot);
-        worldmtx.transformDirection(newdir);
-        newdir.normalize();
-        if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
+        mOldDir.x = odir[0];
+        mOldDir.y = odir[1];
+        mOldDir.z = odir[2];
+        mNewDir.x = 0.0f;
+        mNewDir.y = 0.0f;
+        mNewDir.z = -1.0f;
+        worldmtx.mul(mLightRot);
+        worldmtx.transformDirection(mNewDir);
+        mNewDir.normalize();
+        if ((mOldDir.x != mNewDir.x) || (mOldDir.y != mNewDir.y) || (mOldDir.z != mNewDir.z))
         {
             changed = true;
-            setVec3("world_direction", newdir.x, newdir.y, newdir.z);
+            setVec3("world_direction", mNewDir.x, mNewDir.y, mNewDir.z);
         }
-        if (getCastShadow())
+        GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRShadowMap.getComponentType());
+        if ((shadowMap != null) && changed && shadowMap.isEnabled())
         {
             computePosition();
-            if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
-            {
-                changed = true;
-                setVec3("world_position", newpos.x, newpos.y, newpos.z);
-                worldmtx = lightTrans.getModelMatrix4f();
-                worldmtx.setTranslation(newpos);
-                setVec3("shadowTrans", newpos.x, newpos.y, newpos.z);
-                worldmtx.mul(lightrot);
-            }
-            if (changed || (biasMatrix == null))
-            {
-                Matrix4f proj = new Matrix4f();
-                Vector4f v = new Vector4f();
-                GVRCameraRig rig = getGVRContext().getMainScene().getMainCameraRig();
-                float far = mShadowMaterial.getFloat("shadow_far");
-                float near = mShadowMaterial.getFloat("shadow_near");
-                float fovy = (float) Math.toRadians(rig.getCenterCamera().getFovY());
-                float aspect = rig.getCenterCamera().getAspectRatio();
-                float h = (float) Math.atan(fovy / 2.0f) * far;
-                float w = aspect * h;
-
-                if (biasMatrix == null)
-                {
-                    biasMatrix = new Matrix4f();
-                    biasMatrix.scale(0.5f);
-                    biasMatrix.setTranslation(0.5f, 0.5f, 0.5f);
-                }
-                proj.orthoSymmetric(w, h, near, far);
-                setMat4("projMatrix", proj);
-                worldmtx.invert();
-                proj.mul(worldmtx);
-                biasMatrix.mul(proj, proj);
-                proj.getColumn(0, v);
-                setVec4("sm0", v.x, v.y, v.z, v.w);
-                proj.getColumn(1, v);
-                setVec4("sm1", v.x, v.y, v.z, v.w);
-                proj.getColumn(2, v);
-                setVec4("sm2", v.x, v.y, v.z, v.w);
-                proj.getColumn(3, v);
-                setVec4("sm3", v.x, v.y, v.z, v.w);
-            }
+            worldmtx.setTranslation(mNewPos);
+            shadowMap.setOrthoShadowMatrix(worldmtx, this);
         }
     }
 
@@ -277,8 +249,9 @@ public class GVRDirectLight extends GVRLightBase {
         GVRSceneObject.BoundingVolume bv = scene.getRoot().getBoundingVolume();
         float far = scene.getMainCameraRig().getFarClippingDistance();
 
-        newpos.x = bv.center.x - far * newdir.x;
-        newpos.y = bv.center.y - far * newdir.y;
-        newpos.z = bv.center.z - far * newdir.z;
+        mNewPos.x = bv.center.x - far * mNewDir.x;
+        mNewPos.y = bv.center.y - far * mNewDir.y;
+        mNewPos.z = bv.center.z - far * mNewDir.z;
+        setVec3("world_position", mNewPos.x, mNewPos.y, mNewPos.z);
     }
 }

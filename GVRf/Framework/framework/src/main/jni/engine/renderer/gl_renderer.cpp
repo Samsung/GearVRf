@@ -131,6 +131,99 @@ void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
     GL(glDisable(GL_BLEND));
 }
 
+void GLRenderer::cullAndRender(RenderTarget* renderTarget, Scene* scene,
+                        ShaderManager* shader_manager,
+                        PostEffectShaderManager* post_effect_shader_manager,
+                        RenderTexture* post_effect_render_texture_a,
+                        RenderTexture* post_effect_render_texture_b)
+{
+    RenderState& rstate = renderTarget->getRenderState();
+    Camera* camera = renderTarget->getCamera();
+    const std::vector<PostEffectData*>& post_effects = camera->post_effect_data();
+    RenderTexture* saveRenderTexture = renderTarget->getTexture();
+
+    cullFromCamera(scene, camera, shader_manager);
+    rstate.shader_manager = shader_manager;
+    rstate.scene = scene;
+    if (!rstate.shadow_map)
+    {
+        state_sort();
+        GL(glEnable (GL_BLEND));
+        GL(glBlendEquation (GL_FUNC_ADD));
+        GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
+    }
+    GL(glDepthMask(GL_TRUE));
+    GL(glEnable (GL_DEPTH_TEST));
+    GL(glDepthFunc (GL_LEQUAL));
+    GL(glEnable (GL_CULL_FACE));
+    GL(glFrontFace (GL_CCW));
+    GL(glCullFace (GL_BACK));
+    GL(glDisable (GL_POLYGON_OFFSET_FILL));
+    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+    GL(glLineWidth(1.0f));
+    if ((post_effects.size() == 0) ||
+        (post_effect_render_texture_a == nullptr))
+    {
+        saveRenderTexture->useStencil(useStencilBuffer_);
+        renderTarget->beginRendering();
+        for (auto it = render_data_vector.begin();
+             it != render_data_vector.end();
+             ++it)
+        {
+            RenderData* rdata = *it;
+            if (!rstate.shadow_map || rdata->cast_shadows())
+            {
+                GL(renderRenderData(rstate, rdata));
+            }
+        }
+        renderTarget->endRendering();
+    }
+    else
+    {
+        RenderTexture* renderTexture = post_effect_render_texture_a;
+
+        renderTexture->useStencil(useStencilBuffer_);
+        renderTarget->setTexture(renderTexture);
+        renderTarget->beginRendering();
+        for (auto it = render_data_vector.begin();
+             it != render_data_vector.end();
+             ++it)
+        {
+            RenderData* rdata = *it;
+            if (!rstate.shadow_map || rdata->cast_shadows())
+            {
+                GL(renderRenderData(rstate, rdata));
+            }
+        }
+        GL(glDisable(GL_DEPTH_TEST));
+        GL(glDisable(GL_CULL_FACE));
+        renderTarget->endRendering();
+        for (int i = 0; i < post_effects.size() - 1; ++i)
+        {
+            if (i % 2 == 0)
+            {
+                renderTexture = post_effect_render_texture_a;
+            }
+            else
+            {
+                renderTexture = post_effect_render_texture_b;
+            }
+            renderTarget->setTexture(renderTexture);
+            renderTarget->beginRendering();
+            GL(renderPostEffectData(camera, renderTexture,
+                                    post_effects[i], post_effect_shader_manager));
+            renderTarget->endRendering();
+        }
+        renderTarget->setTexture(saveRenderTexture);
+        renderTarget->beginRendering();
+        GL(renderPostEffectData(camera, renderTexture, post_effects.back(), post_effect_shader_manager));
+        renderTarget->endRendering();
+    }
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+    GL(glDisable(GL_BLEND));
+}
+
 /**
  * Set the render states for render data
  */
@@ -215,64 +308,22 @@ void GLRenderer::restoreRenderStates(RenderData* render_data) {
  * special depth shader (GVRDepthShader) to create the shadow map.
  * @see Renderer::renderShadowMap Light::makeShadowMap
  */
-void GLRenderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height)
+void GLRenderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
 {
     const std::vector<Light*> lights = scene->getLightList();
-    GL(glEnable (GL_DEPTH_TEST));
-    GL(glDepthFunc (GL_LEQUAL));
-    GL(glEnable (GL_CULL_FACE));
-    GL(glFrontFace (GL_CCW));
-    GL(glCullFace (GL_BACK));
-    GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-
+    GLint drawFB, readFB;
     int texIndex = 0;
-    std::vector<SceneObject*> scene_objects;
-    scene_objects.reserve(1024);
+
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFB);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFB);
     for (auto it = lights.begin(); it != lights.end(); ++it) {
-     	if ((*it)->castShadow() &&
-     	    (*it)->makeShadowMap(scene, shader_manager, texIndex, scene_objects, width, height))
-            ++texIndex;
+        (*it)->makeShadowMap(scene, shader_manager, texIndex);
+        ++texIndex;
     }
-    GL(glDisable(GL_DEPTH_TEST));
-    GL(glDisable(GL_CULL_FACE));
-
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, readFB);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFB);
 }
 
-/**
- * Generates a shadow map into the specified framebuffer.
- * @param rstate        RenderState with rendering parameters
- * @param camera        camera with light viewpoint
- * @param framebufferId ID of framebuffer to render shadow map into
- * @param scene_objects temporary storage for culling
- * @see Light::makeShadowMap Renderer::makeShadowMaps
- */
-void GLRenderer::renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) {
-
-	cullFromCamera(rstate.scene, camera, rstate.shader_manager, scene_objects);
-
-    GLint drawFbo = 0, readFbo = 0;
-    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFbo);
-    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFbo);
-    const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
-
-	GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, 3, attachments));
-    GL(glViewport(rstate.viewportX, rstate.viewportY, rstate.viewportWidth, rstate.viewportHeight));
-    glClearColor(0,0,0,1);
-    GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-    rstate.shadow_map = true;
-    for (auto it = render_data_vector.begin();
-         it != render_data_vector.end(); ++it) {
-        RenderData* rdata = *it;
-        if (rdata->cast_shadows()) {
-            GL(renderRenderData(rstate, rdata));
-        }
-    }
-    rstate.shadow_map = false;
-    GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, 2, &attachments[1]));
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
-}
 
 void GLRenderer::renderCamera(Scene* scene, Camera* camera,
         ShaderManager* shader_manager,

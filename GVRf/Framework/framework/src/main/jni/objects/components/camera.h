@@ -82,13 +82,11 @@ public:
     void addPostEffect(PostEffectData* post_effect);
     void removePostEffect(PostEffectData* post_effect);
     virtual glm::mat4 getProjectionMatrix() const = 0;
-    glm::mat4 getViewMatrix();
-    glm::mat4 getCenterViewMatrix();
-
+    virtual const glm::mat4& getViewMatrix();
+    virtual void setViewMatrix(const glm::mat4& viewMtx);
     static long long getComponentType() {
         return COMPONENT_TYPE_CAMERA;
     }
-
 private:
     Camera(const Camera& camera);
     Camera(Camera&& camera);
@@ -102,6 +100,7 @@ private:
     float background_color_a_;
     int render_mask_;
     std::vector<PostEffectData*> post_effect_data_;
+    glm::mat4 view_matrix_;
 };
 
 }

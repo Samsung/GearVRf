@@ -309,6 +309,27 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         return 0;
     }
 
+    /**
+     * Sets the view matrix of the Camera.
+     * The view matrix is the inverse of the camera model matrix.
+     * Normally it is computed automatically from the GVRTransform
+     * attached to the GVRSceneObject which owns the camera.
+     * If the camera is NOT attached to a scene object,
+     * you can use this call to set the view matrix so the
+     * camera can be used with a GVRRenderTarget.
+     *
+     * @param matrix new view matrix.
+     * @see GVRRenderTarget#setCamera(GVRCamera)
+     */
+    public void setViewMatrix(float[] matrix)
+    {
+        if (matrix.length != 16)
+        {
+            throw new IllegalArgumentException("Matrix size not equal to 16.");
+        }
+        NativeCamera.setViewMatrix(getNative(), matrix);
+    }
+
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         sb.append(Log.getSpaces(indent));
@@ -366,4 +387,6 @@ class NativeCamera {
     static native void addPostEffect(long camera, long postEffectData);
 
     static native void removePostEffect(long camera, long postEffectData);
+
+    static native void setViewMatrix(long camera, float[] matrix);
 }

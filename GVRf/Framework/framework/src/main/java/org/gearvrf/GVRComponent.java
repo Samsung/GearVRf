@@ -49,7 +49,7 @@ public class GVRComponent extends GVRHybridObject {
     }
     
     /**
-     * Special constructor, for descendants like {#link GVRMeshEyePointee} that
+     * Special constructor, for descendants like {#link GVRCollider} that
      * need to 'unregister' instances.
      * 
      * @param gvrContext
