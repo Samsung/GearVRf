@@ -17,6 +17,7 @@
 #ifndef ACTIVITY_JNI_H
 #define ACTIVITY_JNI_H
 
+#include "ovr_gear_controller.h"
 #include "ovr_framebufferobject.h"
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
@@ -76,6 +77,7 @@ private:
 
     bool docked_ = false;
     bool clampToBorderSupported_ = false;
+    GearController *gearController;
 
 public:
     void onSurfaceCreated(JNIEnv& env);
@@ -92,6 +94,10 @@ public:
 
     void onDock() { docked_ = true; }
     void onUndock() { docked_ = false; }
+
+    void setGearController(GearController *controller){
+        gearController = controller;
+    }
 };
 
 }
