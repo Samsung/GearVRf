@@ -965,7 +965,7 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
         else
             loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
         return model;
@@ -1000,7 +1000,7 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, scene);
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
         else
             loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, scene);
         return model;
@@ -1041,8 +1041,7 @@ public final class GVRAssetLoader {
                 {
                     if (ext.equals("x3d"))
                         loadX3DModel(assetRequest, model,
-                                     GVRImportSettings.getRecommendedSettings(),
-                                     true, scene);
+                                     GVRImportSettings.getRecommendedSettings());
                     else
                         loadJassimpModel(assetRequest, model,
                                          GVRImportSettings.getRecommendedSettings(), true, scene);
@@ -1094,8 +1093,7 @@ public final class GVRAssetLoader {
                 {
                     if (ext.equals("x3d"))
                         loadX3DModel(assetRequest, model,
-                                     GVRImportSettings.getRecommendedSettings(),
-                                     true, null);
+                                     GVRImportSettings.getRecommendedSettings());
                     else
                         loadJassimpModel(assetRequest, model,
                                          GVRImportSettings.getRecommendedSettings(), true, null);
@@ -1139,7 +1137,7 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
+            loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
         else
             loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings(), true, null);
         return model;
@@ -1186,7 +1184,7 @@ public final class GVRAssetLoader {
         model.setName(assetRequest.getBaseName());
 
 		if (ext.equals("x3d"))
-		    loadX3DModel(assetRequest, model, settings, cacheEnabled, null);
+		    loadX3DModel(assetRequest, model, settings);
 		else
 		    loadJassimpModel(assetRequest, model, settings, cacheEnabled, null);
         return model;
@@ -1238,7 +1236,7 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model, settings, cacheEnabled, null);
+            loadX3DModel(assetRequest, model, settings);
         else
             loadJassimpModel(assetRequest, model, settings, cacheEnabled, null);
         return model;
@@ -1283,7 +1281,7 @@ public final class GVRAssetLoader {
                 try
                 {
                     if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model, settings, cacheEnabled, null);
+                        loadX3DModel(assetRequest, model, settings);
                     else
                         loadJassimpModel(assetRequest, model, settings, cacheEnabled, null);
                 }
@@ -1350,8 +1348,7 @@ public final class GVRAssetLoader {
     
 
     GVRSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
-            GVRSceneObject root, EnumSet<GVRImportSettings> settings,
-            boolean cacheEnabled, GVRScene scene) throws IOException
+            GVRSceneObject root, EnumSet<GVRImportSettings> settings) throws IOException
     {
         GVRResourceVolume volume = assetRequest.getVolume();
         InputStream inputStream = null;

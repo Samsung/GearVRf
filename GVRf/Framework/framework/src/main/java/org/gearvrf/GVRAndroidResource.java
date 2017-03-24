@@ -313,6 +313,23 @@ public class GVRAndroidResource {
         return stream;
     }
 
+    /**
+     * Sets the stream for a resource.
+     * This function allows you to provide a stream that is already open to
+     * an existing resource. It will throw an exception if that resource
+     * already has an open stream.
+     * @param s InputStream currently open stream to use for I/O.
+     */
+    protected synchronized void setStream(InputStream s)
+    {
+        if (stream != null)
+        {
+            throw new UnsupportedOperationException("Cannot set the stream of an open resource");
+        }
+        stream = s;
+        streamState = StreamStates.OPEN;
+    }
+
     /*
      * TODO Should we somehow expose the CLOSED state? Return null or throw an
      * exception from getStream()? Or is it enough for the calling code to fail,
