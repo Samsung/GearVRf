@@ -61,7 +61,7 @@ import java.io.InputStream;
  * 
  *            </ul>
  */
-public interface GVRShaderManagers<MAP, ID> {
+public interface GVRShaderManagers {
 
     /**
      * Builds a shader program from the supplied vertex and fragment shader
@@ -75,7 +75,7 @@ public interface GVRShaderManagers<MAP, ID> {
      *         getShaderMap(ID)}, or to the {@link GVRMaterial} and
      *         {@link GVRPostEffect} constructors and {@code setShader} methods.
      */
-    public ID addShader(String vertexShader, String fragmentShader);
+    public GVRShaderId addShader(String vertexShader, String fragmentShader);
 
     /**
      * Builds a shader program from the supplied vertex and fragment shader
@@ -129,7 +129,7 @@ public interface GVRShaderManagers<MAP, ID> {
      * addShader(String, String) form ... but the functionality is not
      * worthless.
      */
-    public ID addShader(String pathPrefix, String vertexShader_asset,
+    public GVRShaderId addShader(String pathPrefix, String vertexShader_asset,
             String fragmentShader_asset);
 
     /**
@@ -149,7 +149,7 @@ public interface GVRShaderManagers<MAP, ID> {
      *         getShaderMap(ID)}, or to the {@link GVRMaterial} and
      *         {@link GVRPostEffect} constructors and {@code setShader} methods.
      */
-    public ID addShader(int vertexShader_resRaw, int fragmentShader_resRaw);
+    public GVRShaderId addShader(int vertexShader_resRaw, int fragmentShader_resRaw);
 
     /**
      * Builds a shader program from the supplied vertex and fragment shader
@@ -170,7 +170,7 @@ public interface GVRShaderManagers<MAP, ID> {
      *         getShaderMap(ID)}, or to the {@link GVRMaterial} and
      *         {@link GVRPostEffect} constructors and {@code setShader} methods.
      */
-    public ID addShader(InputStream vertexShader_stream,
+    public GVRShaderId addShader(InputStream vertexShader_stream,
             InputStream fragmentShader_stream);
 
     /**
@@ -180,6 +180,6 @@ public interface GVRShaderManagers<MAP, ID> {
      *            Opaque type from {@link #addShader(String, String)}
      * @return A name mapping object
      */
-    public MAP getShaderMap(ID id);
+    public GVRShaderMaps getShaderMapping(GVRShaderId id);
 
 }
