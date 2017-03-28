@@ -286,7 +286,6 @@ public abstract class GVRInputManager {
                 int key = cache.keyAt(index);
                 GVRBaseController cachedController = cache.get(key);
                 if (cachedController == controller) {
-                    cache.remove(key);
                     controllerIds.remove(deviceId);
                     if (controller.getControllerType() == GVRControllerType.MOUSE) {
                         mouseDeviceManager.removeCursorController(controller);
@@ -294,9 +293,12 @@ public abstract class GVRInputManager {
                             .getControllerType() == GVRControllerType.GAMEPAD) {
                         gamepadDeviceManager.removeCursorController(controller);
                     } else if (controller.getControllerType() == GVRControllerType.GAZE) {
-                        ((GVRGazeCursorController) controller)
-                                .decrementReferenceCount();
+                        if(!((GVRGazeCursorController) controller).decrementReferenceCount()){
+                            // do not remove the controller yet.
+                            return null;
+                        }
                     }
+                    cache.remove(key);
                     return controller;
                 }
             }
