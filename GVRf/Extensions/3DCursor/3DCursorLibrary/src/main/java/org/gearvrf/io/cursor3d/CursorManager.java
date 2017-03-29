@@ -414,7 +414,7 @@ public class CursorManager {
 
     void markCursorUnused(Cursor cursor) {
         Log.d(TAG, "Marking cursor:" + cursor.getName() + " unused");
-        scene.removeSceneObject(cursor.getMainSceneObject());
+        removeCursorFromScene(cursor);
         synchronized (cursors) {
             cursors.remove(cursor);
         }
@@ -489,9 +489,9 @@ public class CursorManager {
         IoDevice device = cursor.getIoDevice();
         settingsIoDeviceFarDepth = device.getFarDepth();
         settingsIoDeviceNearDepth = device.getNearDepth();
-        scene.removeSceneObject(cursor.getMainSceneObject());
+        removeCursorFromScene(cursor);
         settingsCursor.transferIoDevice(cursor);
-        scene.addSceneObject(settingsCursor.getMainSceneObject());
+        addCursorToScene(settingsCursor);
     }
 
     /**
@@ -503,14 +503,13 @@ public class CursorManager {
      */
     public void disableSettingsCursor() {
         if(menuCursor != null) {
-            scene.removeSceneObject(settingsCursor.getMainSceneObject());
+            removeCursorFromScene(settingsCursor);
             menuCursor.transferIoDevice(settingsCursor);
             settingsCursor.ioDevice = null; // clear IoDevice of the settings cursor.
-            scene.addSceneObject(menuCursor.getMainSceneObject());
             IoDevice device = menuCursor.ioDevice;
             device.setFarDepth(settingsIoDeviceFarDepth);
             device.setNearDepth(settingsIoDeviceNearDepth);
-            scene.addSceneObject(menuCursor.getMainSceneObject());
+            addCursorToScene(menuCursor);
             menuCursor = null;
         }
     }
@@ -679,6 +678,26 @@ public class CursorManager {
         updateCursorsInScene(scene, true);
     }
 
+    private void addCursorToScene(Cursor cursor){
+        GVRSceneObject object = cursor.getMainSceneObject();
+        IoDevice ioDevice = cursor.getIoDevice();
+        if(IoDeviceLoader.isMouseIoDevice(ioDevice)){
+            scene.getMainCameraRig().addChildObject(object);
+        }else {
+            scene.addSceneObject(object);
+        }
+    }
+
+    private void removeCursorFromScene(Cursor cursor){
+        GVRSceneObject object = cursor.getMainSceneObject();
+        IoDevice ioDevice = cursor.getIoDevice();
+        if(IoDeviceLoader.isMouseIoDevice(ioDevice)){
+            scene.getMainCameraRig().removeChildObject(object);
+        }else {
+            scene.removeSceneObject(object);
+        }
+    }
+
     /**
      * Add or remove the active cursors from the provided scene.
      *
@@ -688,11 +707,10 @@ public class CursorManager {
     private void updateCursorsInScene(GVRScene scene, boolean add) {
         for (Cursor cursor : cursors) {
             if (cursor.isActive()) {
-                GVRSceneObject object = cursor.getMainSceneObject();
                 if (add) {
-                    scene.addSceneObject(object);
+                    addCursorToScene(cursor);
                 } else {
-                    scene.removeSceneObject(object);
+                    removeCursorFromScene(cursor);
                 }
             }
         }
@@ -911,7 +929,7 @@ public class CursorManager {
     private void addNewCursor(Cursor cursor, IoDevice ioDevice) {
         cursor.setIoDevice(ioDevice);
         if (scene != null) {
-            scene.addSceneObject(cursor.getMainSceneObject());
+            addCursorToScene(cursor);
             cursor.setScene(scene);
         }
 
@@ -950,12 +968,14 @@ public class CursorManager {
                     Cursor cursor = cursorIterator.next();
 
                     if (cursor.getIoDevice().equals(removedIoDevice)) {
+                        if (scene != null) {
+                            removeCursorFromScene(cursor);
+                        }
+
                         cursor.resetIoDevice(removedIoDevice);
                         cursorIterator.remove();
                         unusedCursors.add(cursor);
-                        if (scene != null) {
-                            scene.removeSceneObject(cursor.getMainSceneObject());
-                        }
+
                         for (CursorActivationListener listener : activationListeners) {
                             listener.onDeactivated(cursor);
                         }

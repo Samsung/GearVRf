@@ -43,6 +43,7 @@ class SceneObject;
 class PostEffectData;
 class PostEffectShaderManager;
 class RenderData;
+class RenderTarget;
 class RenderTexture;
 class ShaderManager;
 class Light;
@@ -143,11 +144,15 @@ public:
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b) = 0;
-
+    virtual void cullFromCamera(Scene *scene, Camera *camera,
+                                ShaderManager* shader_manager);
     virtual void restoreRenderStates(RenderData* render_data) = 0;
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
-    virtual void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects) = 0;
-    virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height) = 0;
+    virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
+                        ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
+                        RenderTexture* post_effect_render_texture_a,
+                        RenderTexture* post_effect_render_texture_b) = 0;
+    virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager) = 0;
 
 private:
     static bool isVulkan_;
@@ -156,7 +161,6 @@ private:
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
 
-    virtual void state_sort();
     virtual bool isShader3d(const Material* curr_material);
     virtual bool isDefaultPosition3d(const Material* curr_material);
 
@@ -172,6 +176,7 @@ protected:
     virtual ~Renderer(){
         delete batch_manager;
     }
+    virtual void state_sort();
     virtual void renderMesh(RenderState& rstate, RenderData* render_data) = 0;
     virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material) = 0;
     virtual void occlusion_cull(Scene* scene,
@@ -179,9 +184,6 @@ protected:
                 ShaderManager *shader_manager, glm::mat4 vp_matrix) = 0;
     void addRenderData(RenderData *render_data);
     virtual bool occlusion_cull_init(Scene* scene, std::vector<SceneObject*>& scene_objects);
-    virtual void cullFromCamera(Scene *scene, Camera *camera,
-            ShaderManager* shader_manager,
-            std::vector<SceneObject*>& scene_objects);
 
     virtual void
             renderPostEffectData(Camera* camera,

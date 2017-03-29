@@ -94,16 +94,21 @@ class GVRGazeCursorController extends GVRBaseController implements
         }
     }
 
-    /*
+    /**
      * The decrement the reference count to let the cursor controller know how
      * many input devices are using this controller.
+     *
+     * @return returns <code>true</code> when the count hits zero, <code>false</code> otherwise.
      */
-    void decrementReferenceCount() {
+    boolean decrementReferenceCount() {
         referenceCount--;
         // no more devices
         if (referenceCount == 0 && isEnabled) {
-           stop();
+            stop();
+            return true;
         }
+
+        return false;
     }
 
     @Override

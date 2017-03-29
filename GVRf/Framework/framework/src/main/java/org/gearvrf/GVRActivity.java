@@ -66,11 +66,11 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     private volatile GVRConfigurationManager mConfigurationManager;
     private GVRMain mGVRMain;
     private VrAppSettings mAppSettings;
-    private static View mFullScreenView = null;
+    private static View mFullScreenView;
 
     // Group of views that are going to be drawn
     // by some GVRViewSceneObject to the scene.
-    private ViewGroup mRenderableViewGroup = null;
+    private ViewGroup mRenderableViewGroup;
     private IActivityNative mActivityNative;
     private boolean mPaused = true;
 
@@ -213,6 +213,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     this,
                     IActivityEvents.class,
                     "onDestroy");
+            mViewManager = null;
         }
         if (null != mDockEventReceiver) {
             mDockEventReceiver.stop();
@@ -222,6 +223,14 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mActivityNative.onDestroy();
             mActivityNative = null;
         }
+
+        mDockListeners.clear();
+        mGVRMain = null;
+        mDelegate = null;
+        mAppSettings = null;
+        mRenderableViewGroup = null;
+        mConfigurationManager = null;
+
         super.onDestroy();
     }
 
@@ -620,7 +629,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         return mConfigurationManager;
     }
 
-    static interface DockListener {
+    interface DockListener {
         void onDock();
         void onUndock();
     }

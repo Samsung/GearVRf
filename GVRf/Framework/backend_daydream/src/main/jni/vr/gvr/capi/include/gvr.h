@@ -219,7 +219,8 @@ void gvr_destroy(gvr_context** gvr);
 
 /// Initializes necessary GL-related objects and uses the current thread and
 /// GL context for rendering. Please make sure that a valid GL context is
-/// available when this function is called.
+/// available when this function is called.  This should never be called more
+/// than once on the same GL context (doing so would cause resource leaks).
 ///
 /// @param gvr Pointer to the gvr instance to be initialized.
 void gvr_initialize_gl(gvr_context* gvr);
@@ -234,6 +235,10 @@ void gvr_initialize_gl(gvr_context* gvr);
 /// Note: On Android, this feature can be enabled solely via the GvrLayout Java
 /// instance which (indirectly) owns this gvr_context. The corresponding
 /// method call is GvrLayout.setAsyncReprojectionEnabled().
+///
+/// Note: Because of the above requirements, asynchronous reprojection is only
+/// currently available on Daydream-ready Android devices.  This function will
+/// always return false on other devices.
 ///
 /// @param gvr Pointer to the gvr instance.
 /// @return Whether async reprojection is enabled. Defaults to false.
@@ -310,6 +315,11 @@ gvr_sizei gvr_get_screen_target_size(const gvr_context* gvr);
 //     rendering surface dimensions match that of the active display.
 void gvr_set_surface_size(gvr_context* gvr, gvr_sizei surface_size_pixels);
 
+/// @deprecated Use the Swap Chain API instead. This function exists only to
+///     support legacy rendering pathways for Cardboard devices. It is
+///     incompatible with the low-latency experiences supported by async
+///     reprojection.
+///
 /// Performs postprocessing, including lens distortion, on the contents of the
 /// passed texture and shows the result on the screen. Lens distortion is
 /// determined by the parameters of the viewer encoded in its QR code. The
@@ -317,11 +327,6 @@ void gvr_set_surface_size(gvr_context* gvr, gvr_sizei surface_size_pixels);
 ///
 /// If the application does not call gvr_initialize_gl() before calling this
 /// function, the results are undefined.
-///
-/// @deprecated This function exists only to support legacy rendering pathways
-///     for Cardboard devices. It is incompatible with the low-latency
-///     experiences supported by async reprojection. Use the swap chain API
-///     instead.
 ///
 /// @param gvr Pointer to the gvr instance which will do the distortion.
 /// @param texture_id The OpenGL ID of the texture that contains the next frame
@@ -333,6 +338,15 @@ void gvr_distort_to_screen(gvr_context* gvr, int32_t texture_id,
                            const gvr_buffer_viewport_list* viewport_list,
                            gvr_mat4f head_space_from_start_space,
                            gvr_clock_time_point target_presentation_time);
+
+/// Queries whether a particular GVR feature is supported by the underlying
+/// platform.
+///
+/// @param gvr The context to query against.
+/// @param feature The gvr_feature type being queried.
+/// @return true if feature is supported, false otherwise.
+bool gvr_is_feature_supported(const gvr_context* gvr, int32_t feature);
+
 /// @}
 
 /////////////////////////////////////////////////////////////////////////////
@@ -452,9 +466,7 @@ int32_t gvr_buffer_viewport_get_external_surface_id(
     const gvr_buffer_viewport* viewport);
 
 /// Sets the ID of the externally-managed Surface texture from which this
-/// viewport reads. The ID is issued by the SurfaceTextureManager. If the ID
-/// is not -1, the distortion renderer will sample color pixels from the
-/// external surface at ID, using the source buffer for texture coords.
+/// viewport reads. The ID is issued by GvrLayout.
 ///
 /// @param viewport The buffer viewport.
 /// @param external_surface_id The ID of the surface to read from.
@@ -611,9 +623,8 @@ void gvr_buffer_spec_set_depth_stencil_format(gvr_buffer_spec* spec,
 /// gvr_swap_chain_destroy() to free GPU resources. The passed gvr_context must
 /// not be destroyed until then.
 ///
-/// Note: Currently, swap chains only support more than one buffer when
-/// asynchronous reprojection is enabled. This restriction will be lifted in a
-/// future release.
+/// Swap chains can have no buffers. This is useful when only displaying
+/// external surfaces. When `count` is zero, `buffers` must be null.
 ///
 /// @param gvr GVR instance for which a swap chain will be created.
 /// @param buffers Array of pixel buffer specifications. Each frame in the
@@ -741,7 +752,7 @@ gvr_mat4f gvr_get_head_space_from_start_space_rotation(
 /// scenarios, e.g., when tracking is non-biological.
 ///
 /// @param gvr Pointer to the context instance from which the pose was obtained.
-/// @param head_rotation_in_start_space The head rotation as returned by
+/// @param head_space_from_start_space_rotation The head rotation as returned by
 ///     gvr_get_head_space_from_start_space_rotation().
 /// @param factor A scaling factor for the neck model offset, clamped from 0 to
 ///     1. This should be 1 for most scenarios, while 0 will effectively disable
@@ -763,11 +774,12 @@ void gvr_pause_tracking(gvr_context* gvr);
 /// @param gvr Pointer to the gvr instance for which tracking will be resumed.
 void gvr_resume_tracking(gvr_context* gvr);
 
-/// Resets head tracking.
+/// @deprecated Calls to this method can be safely replaced by calls to
+///    gvr_recenter_tracking. This accomplishes the same effects but avoids the
+///    undesirable side-effects of a full reset (temporary loss of tracking
+///    quality).
 ///
-/// This API call is deprecated. Use gvr_recenter_tracking instead, which
-/// accomplishes the same effects but avoids the undesirable side-effects of
-/// a full reset (temporary loss of tracking quality).
+/// Resets head tracking.
 ///
 /// Only to be used by Cardboard apps. Daydream apps must not call this. On the
 /// Daydream platform, recentering is handled automatically and should never
@@ -777,8 +789,6 @@ void gvr_resume_tracking(gvr_context* gvr);
 /// Daydream mode.
 ///
 /// @param gvr Pointer to the gvr instance for which tracking will be reseted.
-/// @deprecated Calls to this method can be safely replaced by calls to
-//    gvr_recenter_tracking.
 void gvr_reset_tracking(gvr_context* gvr);
 
 /// Recenters the head orientation (resets the yaw to zero, leaving pitch and
@@ -1585,6 +1595,11 @@ class GvrApi {
     gvr_distort_to_screen(context_, texture_id, viewport_list.viewport_list_,
                           rendered_head_pose_in_start_space_matrix,
                           texture_presentation_time);
+  }
+
+  /// For more information, see gvr_is_feature_supported().
+  bool IsFeatureSupported(int32_t feature) {
+    return gvr_is_feature_supported(context_, feature);
   }
 
   /// For more information, see gvr_buffer_spec_create().

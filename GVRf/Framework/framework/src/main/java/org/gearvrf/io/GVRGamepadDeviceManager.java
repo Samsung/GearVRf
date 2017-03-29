@@ -89,7 +89,7 @@ class GVRGamepadDeviceManager {
         }
 
         GVRGamepadController controller = new GVRGamepadController(context,
-                GVRControllerType.CONTROLLER, name, vendorId, productId, thread);
+                GVRControllerType.GAMEPAD, name, vendorId, productId, thread);
         int id = controller.getId();
         controllers.append(id, controller);
         return controller;

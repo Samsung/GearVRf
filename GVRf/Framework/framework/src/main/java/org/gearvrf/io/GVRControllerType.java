@@ -19,5 +19,35 @@ package org.gearvrf.io;
  * IO device types supported by the GVRf IO framework.
  */
 public enum GVRControllerType {
-    MOUSE, CONTROLLER, GAZE, EXTERNAL, UNKNOWN
+    /**
+     * This are the generic "mice" supported by Android. Both USB and Bluetooth "mice" are
+     * handled by the IO framework.
+     */
+    MOUSE,
+    /**
+     * This type describes the gamepad controllers supported by Android. Description of which can
+     * be found here:
+     * https://developer.android.com/training/game-controllers/controller-input.html
+     */
+    GAMEPAD,
+    /**
+     * This type describes the head tracked gaze input method.
+     */
+    GAZE,
+    /**
+     * This type includes the 3 or 6 DOF orientation controllers that come with common VR
+     * headsets. Examples include the gear controller or the daydream controller.
+     * These input devices usually provide position, rotation, button and touch events to the
+     * application.
+     */
+    CONTROLLER,
+    /**
+     * These are the input devices added externally to the framework using the
+     * {@link GVRInputManager}.
+     */
+    EXTERNAL,
+    /**
+     * This controller type is returned when the device is not recognized by the framework.
+     */
+    UNKNOWN
 }

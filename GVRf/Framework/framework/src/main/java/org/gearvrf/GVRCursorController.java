@@ -21,7 +21,6 @@ import android.view.MotionEvent;
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
-import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -56,7 +55,7 @@ public abstract class GVRCursorController {
     private ActiveState activeState = ActiveState.NONE;
     private boolean active;
     private float nearDepth, farDepth = -Float.MAX_VALUE;
-    private final Vector3f position, ray;
+    private final Vector3f position, ray, origin;
     private boolean enable = true;
     private List<KeyEvent> keyEvent;
     private List<KeyEvent> processedKeyEvent;
@@ -117,6 +116,7 @@ public abstract class GVRCursorController {
         uniqueControllerId++;
         position = new Vector3f();
         ray = new Vector3f();
+        origin = new Vector3f();
         keyEvent = new ArrayList<KeyEvent>();
         processedKeyEvent = new ArrayList<KeyEvent>();
         motionEvent = new ArrayList<MotionEvent>();
@@ -233,7 +233,7 @@ public abstract class GVRCursorController {
      * {@link GVRControllerType#EXTERNAL}. {@link GVRControllerType#EXTERNAL}
      * allows the input device to define its own input behavior. If the device
      * wishes to implement {@link GVRControllerType#MOUSE} or
-     * {@link GVRControllerType#CONTROLLER} make sure that the behavior is
+     * {@link GVRControllerType#GAMEPAD} make sure that the behavior is
      * consistent with that defined in GVRMouseDeviceManager and
      * GVRGamepadDeviceManager.
      *
@@ -628,6 +628,14 @@ public abstract class GVRCursorController {
             }
             processedMotionEvent.clear();
         }
+    }
+
+    void setOrigin(float x, float y, float z){
+        origin.set(x,y,z);
+    }
+
+    Vector3f getOrigin(){
+        return origin;
     }
 
     Vector3f getRay() {

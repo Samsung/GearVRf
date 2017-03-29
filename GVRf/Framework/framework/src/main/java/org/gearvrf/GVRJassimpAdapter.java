@@ -42,6 +42,7 @@ import org.gearvrf.jassimp.AiTextureMapMode;
 import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVRNewWrapperProvider;
 import org.gearvrf.jassimp.Jassimp;
+import org.gearvrf.jassimp.JassimpConfig;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -58,7 +59,9 @@ class GVRJassimpAdapter {
     private AiScene mScene;
     private GVRContext mContext;
     private String mFileName;
-    private static final int MAX_TEX_COORDS = 8;
+    private static final int MAX_TEX_COORDS = JassimpConfig.MAX_NUMBER_TEXCOORDS;
+    private static final int MAX_VERTEX_COLORS = JassimpConfig.MAX_NUMBER_COLORSETS;
+
 
     public interface INodeFactory {
         GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
@@ -114,7 +117,7 @@ class GVRJassimpAdapter {
             mesh.setNormals(normalsArray);
         }
 
-        // TexCords
+        // TexCoords
         for(int texIndex=0; texIndex< MAX_TEX_COORDS; texIndex++) {
             FloatBuffer fbuf = aiMesh.getTexCoordBuffer(texIndex);
             if (fbuf != null) {
@@ -131,6 +134,22 @@ class GVRJassimpAdapter {
                     }
                 }
                 mesh.setTexCoords(coords.array(), texIndex);
+            }
+        }
+
+        // Vertex Colors
+        for(int c = 0; c < MAX_VERTEX_COLORS; c++) {
+            FloatBuffer fbuf = aiMesh.getColorBuffer(c);
+            if (fbuf != null) {
+                FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 4);
+                FloatBuffer source = aiMesh.getColorBuffer(c);
+                String name = "a_color";
+
+                if (c > 0) {
+                    name += c;
+                }
+                coords.put(source);
+                mesh.setVec4Vector(name, coords.array());
             }
         }
 

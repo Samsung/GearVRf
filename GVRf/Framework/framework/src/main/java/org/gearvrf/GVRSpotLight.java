@@ -16,8 +16,6 @@ package org.gearvrf;
 
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 /**
  * Illuminates object in the scene with a cone shaped beam.
@@ -68,26 +66,26 @@ public class GVRSpotLight extends GVRPointLight
     private static String fragmentShader = null;
     private static String vertexShader = null;
     private boolean useShadowShader = true;
-    private Matrix4f biasMatrix = null;
+    private boolean mChanged = true;
 
     public GVRSpotLight(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);
         
-        uniformDescriptor += " float inner_cone_angle; float outer_cone_angle; ";
+        mUniformDescriptor += " float inner_cone_angle; float outer_cone_angle; ";
         if (useShadowShader)
         {
-            uniformDescriptor += " float shadow_map_index; vec4 sm0; vec4 sm1; vec4 sm2; vec4 sm3";
-            vertexDescriptor = "vec4 shadow_position";
+            mUniformDescriptor += " float shadow_map_index; vec4 sm0; vec4 sm1; vec4 sm2; vec4 sm3";
+            mVertexDescriptor = "vec4 shadow_position";
             if (fragmentShader == null)
                 fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotshadowlight);
             if (vertexShader == null)
                 vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
-            vertexShaderSource = vertexShader;
+            mVertexShaderSource = vertexShader;
             setFloat("shadow_map_index", -1.0f);
         }
         else if (fragmentShader == null)
             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.spotlight);
-        fragmentShaderSource = fragmentShader;
+        mFragmentShaderSource = fragmentShader;
         setInnerConeAngle(90.0f);
         setOuterConeAngle(90.0f);
     }
@@ -100,9 +98,11 @@ public class GVRSpotLight extends GVRPointLight
      * Get the inner angle of the spotlight cone in degrees.
      * 
      * Inside the inner cone angle the light is at full intensity.
-     * {@link setInnerConeAngle setOuterConeAngle}
+     * @see #setInnerConeAngle(float)
+     * @see #setOuterConeAngle(float}
      */
-    public float getInnerConeAngle() {
+    public float getInnerConeAngle()
+    {
         return (float) Math.toDegrees(Math.acos(getFloat("inner_cone_angle")));
     }
 
@@ -113,9 +113,11 @@ public class GVRSpotLight extends GVRPointLight
      * The underlying uniform "inner_cone_angle" is the cosine
      * of this input angle. If the inner cone angle is larger than the outer cone angle
      * there will be unexpected results.
-     * {@link getInnerConeAngle setOuterConeAngle}
+     * @see #getInnerConeAngle()
+     * @see #getOuterConeAngle(}
      */
-    public void setInnerConeAngle(float angle) {
+    public void setInnerConeAngle(float angle)
+    {
         setFloat("inner_cone_angle", (float) Math.cos(Math.toRadians(angle)));
     }
     
@@ -123,9 +125,11 @@ public class GVRSpotLight extends GVRPointLight
      * Get the outer angle of the spotlight cone in degrees.
      * 
      * Beyond the outer cone angle there is no illumination.
-     * {@link setInnerConeAngle setOuterConeAngle}
+     * @see #setInnerConeAngle(float)
+     * @see #setOuterConeAngle(float}
      */
-    public float getOuterConeAngle() {
+    public float getOuterConeAngle()
+    {
         return (float) Math.toDegrees(Math.acos(getFloat("outer_cone_angle")));
     }
     
@@ -136,12 +140,36 @@ public class GVRSpotLight extends GVRPointLight
      * The underlying uniform "outer_cone_angle" is the cosine
      * of this input angle. If the inner cone angle is larger than the outer cone angle
      * there will be unexpected results.
-     * {@link getInnerConeAngle setOuterConeAngle}
+     * @see #setInnerConeAngle(float)
+     * @see #getOuterConeAngle()
      */
-    public void setOuterConeAngle(float angle) {
+    public void setOuterConeAngle(float angle)
+    {
         setFloat("outer_cone_angle", (float) Math.cos(Math.toRadians(angle)));
+        mChanged = true;
     }
-    
+
+    /**
+     * Enables or disabled shadow casting for a spot light.
+     * Enabling shadows attaches a GVRShadowMap component to the
+     * GVRSceneObject which owns the light and provides the
+     * component with an perspective camera for shadow casting.
+     * @param enableFlag true to enable shadow casting, false to disable
+     */
+    public void setCastShadow(boolean enableFlag)
+    {
+        super.setCastShadow(enableFlag);
+        if (enableFlag && (getOwnerObject() != null))
+        {
+            GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
+            if ((shadowMap != null) && (shadowMap.getCamera() == null))
+            {
+                shadowMap.addPerspShadowCamera(getGVRContext().getMainScene().getMainCameraRig().getCenterCamera(),
+                                               (float) Math.acos(getFloat("outer_cone_angle")) * 2.0f);
+            }
+        }
+    }
+
     /**
      * Updates the position, direction and shadow matrix
      * of this light from the transform of scene object that owns it.
@@ -150,66 +178,40 @@ public class GVRSpotLight extends GVRPointLight
      */
     public void onDrawFrame(float frameTime)
     {
-        GVRSceneObject parent = owner;
+        if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
-        Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
-        olddir.x = odir[0];
-        olddir.y = odir[1];
-        olddir.z = odir[2];
-        
-        oldpos.x = opos[0];
-        oldpos.y = opos[1];
-        oldpos.z = opos[2];
+        Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
+        boolean changed = mChanged;
 
-        newdir.x = 0.0f;
-        newdir.y = 0.0f;
-        newdir.z = -1.0f;
-        
-        lightrot.identity();
-        boolean changed = false;
-        defaultDir.get(lightrot);
-        worldmtx.getTranslation(newpos);
-        worldmtx.mul(lightrot);
-        worldmtx.transformDirection(newdir);
-        newdir.normalize();
-        if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
+        mChanged = false;
+        mOldDir.x = odir[0];
+        mOldDir.y = odir[1];
+        mOldDir.z = odir[2];
+        mOldPos.x = opos[0];
+        mOldPos.y = opos[1];
+        mOldPos.z = opos[2];
+        mNewDir.x = 0.0f;
+        mNewDir.y = 0.0f;
+        mNewDir.z = -1.0f;
+        worldmtx.getTranslation(mNewPos);
+        worldmtx.mul(mLightRot);
+        worldmtx.transformDirection(mNewDir);
+        mNewDir.normalize();
+        if ((mOldDir.x != mNewDir.x) || (mOldDir.y != mNewDir.y) || (mOldDir.z != mNewDir.z))
         {
             changed = true;
-            setVec3("world_direction", newdir.x, newdir.y, newdir.z);
+            setVec3("world_direction", mNewDir.x, mNewDir.y, mNewDir.z);
         }
-        if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
+        if ((mOldPos.x != mNewPos.x) || (mOldPos.y != mNewPos.y) || (mOldPos.z != mNewPos.z))
         {
             changed = true;
-            setVec3("world_position", newpos.x, newpos.y, newpos.z);
+            setVec3("world_position", mNewPos.x, mNewPos.y, mNewPos.z);
         }
-        if (getCastShadow() && (changed || (biasMatrix == null)))
+        GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRShadowMap.getComponentType());
+        if ((shadowMap != null) && changed && shadowMap.isEnabled())
         {
-            Matrix4f proj = new Matrix4f();
-            Vector4f v = new Vector4f();
-            float far = mShadowMaterial.getFloat("shadow_far");
-            float near = mShadowMaterial.getFloat("shadow_near");
-            float angle = (float) Math.acos(getFloat("outer_cone_angle")) * 2.0f;
-            
-            if (biasMatrix == null)
-            {
-                biasMatrix = new Matrix4f();
-                biasMatrix.scale(0.5f);
-                biasMatrix.setTranslation(0.5f, 0.5f, 0.5f);
-            }
-            proj.perspective(angle, 1.0f, near, far);
-            setMat4("projMatrix", proj);
-            worldmtx.invert();
-            proj.mul(worldmtx);
-            biasMatrix.mul(proj, proj);
-            proj.getColumn(0, v);
-            setVec4("sm0", v.x, v.y, v.z, v.w);
-            proj.getColumn(1, v);
-            setVec4("sm1", v.x, v.y, v.z, v.w);
-            proj.getColumn(2, v);
-            setVec4("sm2", v.x, v.y, v.z, v.w);
-            proj.getColumn(3, v);
-            setVec4("sm3", v.x, v.y, v.z, v.w);
+            shadowMap.setPerspShadowMatrix(worldmtx, this);
         }
     }
 }

@@ -25,7 +25,11 @@ android {
         }
         ndk {
             moduleName "gvrf-daydream"
-            abiFilters = ['armeabi-v7a']
+            if (rootProject.hasProperty("ARM64")) {
+                abiFilters "arm64-v8a"
+            } else {
+                abiFilters "armeabi-v7a"
+            }
         }
     }
 
@@ -48,6 +52,7 @@ android {
 
     packagingOptions {
         exclude 'lib/armeabi-v7a/libgvr.so'
+        exclude 'lib/arm64-v8a/libgvr.so'
     }
 }
 
@@ -56,7 +61,7 @@ project.ext.jomlVersion = "1.9.1-SNAPSHOT"
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile 'com.google.vr:sdk-base:1.10.0'
+    compile 'com.google.vr:sdk-base:1.30.0'
     compile project(':framework')
     compile "org.joml:joml-android:${jomlVersion}"
 }

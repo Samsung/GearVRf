@@ -213,8 +213,8 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
     glm::vec4 material_diffuse_color = material->getVec4("diffuse_color");
     glm::vec4 material_specular_color = material->getVec4("specular_color");
     float material_specular_exponent = material->getFloat("specular_exponent");
-
-    if (texture->getTarget() != GL_TEXTURE_2D) {
+    GLenum target = texture->getTarget();
+    if (target != GL_TEXTURE_2D) {
         std::string error = "TextureShader::render : texture with wrong target.";
         throw error;
     }
