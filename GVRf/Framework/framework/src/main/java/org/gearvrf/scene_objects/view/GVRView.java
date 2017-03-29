@@ -15,6 +15,7 @@
 
 package org.gearvrf.scene_objects.view;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 import android.graphics.Canvas;
@@ -77,4 +78,11 @@ public interface GVRView {
      * @return Returns GVRView instance as {@linkplain View Android view}.
      */
     View getView();
+
+    /**
+     * {@link GVRViewSceneObject} will call it to unregister {@linkplain View the view}.
+     *
+     * @param context @param context current {@link GVRActivity}.
+     */
+    void unregisterView(GVRActivity context);
 }
