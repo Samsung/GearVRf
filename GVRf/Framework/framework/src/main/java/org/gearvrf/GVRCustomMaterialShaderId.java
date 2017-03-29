@@ -31,4 +31,5 @@ public class GVRCustomMaterialShaderId extends GVRMaterialShaderId {
     GVRCustomMaterialShaderId(int id) {
         super(id);
     }
+    GVRCustomMaterialShaderId(GVRShaderId id) { super(id.ID); }
 }

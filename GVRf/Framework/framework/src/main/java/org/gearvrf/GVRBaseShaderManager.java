@@ -45,7 +45,7 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
                     vertexShader_asset);
             InputStream fragmentShader = open(resources, pathPrefix,
                     fragmentShader_asset);
-            return addShader(vertexShader, fragmentShader);
+            return newShader(vertexShader, fragmentShader);
         } catch (IOException e) {
             e.printStackTrace(); // give user a clue
             return null;
@@ -53,19 +53,19 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
     }
 
     @Override
-    public GVRShaderId addShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
+    public GVRShaderId newShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
         Resources resources = getResources();
         InputStream vertexShader = open(resources, vertexShader_resRaw);
         InputStream fragmentShader = open(resources, fragmentShader_resRaw);
-        return addShader(vertexShader, fragmentShader);
+        return newShader(vertexShader, fragmentShader);
     }
 
     @Override
-    public GVRShaderId addShader(InputStream vertexShader_stream,
+    public GVRShaderId newShader(InputStream vertexShader_stream,
             InputStream fragmentShader_stream) {
         String vertexShader = TextFile.readTextFile(vertexShader_stream);
         String fragmentShader = TextFile.readTextFile(fragmentShader_stream);
-        return addShader(vertexShader, fragmentShader);
+        return newShader(vertexShader, fragmentShader);
     }
 
 

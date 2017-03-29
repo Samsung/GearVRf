@@ -460,7 +460,7 @@ public class GVRShaderTemplate
         GVRShaderManagers shaderManager = context.getMaterialShaderManager();
         if (variant.ShaderID == null)
         {
-            variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);
             Log.d("gvrf", "SHADER: Generated lit material shader #" + variant.ShaderID.ID + " " + signature);
         }
         GVRShaderMaps materialMap = shaderManager.getShaderMapping(variant.ShaderID);
@@ -537,7 +537,7 @@ public class GVRShaderTemplate
         GVRShaderManagers shaderManager = context.getMaterialShaderManager();
         if (variant.ShaderID == null)
         {
-            variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);
             Log.d("gvrf", "SHADER: Generated material shader #" + variant.ShaderID.ID + " " + signature);
         }
         GVRShaderMaps materialMap = shaderManager.getShaderMapping(variant.ShaderID);
@@ -596,7 +596,7 @@ public class GVRShaderTemplate
         GVRShaderManagers shaderManager = context.getPostEffectShaderManager();
         if (variant.ShaderID == null)
         {
-            variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);
             Log.d("gvrf", "SHADER: Generated post effect shader #" + variant.ShaderID.ID + " " + signature);
         }
         GVRShaderMaps materialMap = shaderManager.getShaderMapping(variant.ShaderID);
