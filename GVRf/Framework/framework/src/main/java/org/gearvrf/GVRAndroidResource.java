@@ -294,6 +294,7 @@ public class GVRAndroidResource {
         resourceFilePath = null;
         this.url = url;
         resourceType = ResourceType.NETWORK;
+        this.context = context.getContext().getApplicationContext();
     }
 
     /**
