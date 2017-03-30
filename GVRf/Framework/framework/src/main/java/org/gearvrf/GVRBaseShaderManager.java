@@ -29,6 +29,10 @@ import org.gearvrf.utility.TextFile;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 
+/**
+ * Encapsulates the implementation shared between GVRMaterialShaderManager
+ * and GVRPostEffectShaderManager.
+ */
 public abstract class GVRBaseShaderManager extends GVRHybridObject
         implements GVRShaderManagers {
 
@@ -36,6 +40,23 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
         super(gvrContext, pointer);
     }
 
+    /**
+     * Adds a shader from sources in the assets directory.
+     * @param pathPrefix
+     *            Optional (may be {@code null}) prefix for shader filenames. If
+     *            present, will be prepended to {@code vertexShader} and
+     *            {@code fragmentShader}, thus allowing you to build a tree of
+     *            shaders in your assets directory, where each node contains
+     *            vertex and fragment shaders with the same filename. If
+     *            {@code null}, {@code vertexShader} and {@code fragmentShader}
+     *            are the path names of files in the assets directory.
+     * @param vertexShader_asset
+     *            Filename of a vertex shader, relative to the assets directory
+     * @param fragmentShader_asset
+     *            Filename of a fragment shader, relative to the assets
+     *            directory
+     * @return ID of new shader added
+     */
     @Override
     public GVRShaderId addShader(String pathPrefix, String vertexShader_asset,
             String fragmentShader_asset) {
@@ -52,6 +73,14 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
         }
     }
 
+    /**
+     * Adds a shader from sources in res/raw.
+     * @param vertexShader_resRaw
+     *            R.raw id, for a file containing a vertex shader
+     * @param fragmentShader_resRaw
+     *            R.raw id, for a file containing a fragment shader
+     * @return
+     */
     @Override
     public GVRShaderId newShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
         Resources resources = getResources();
@@ -60,6 +89,16 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
         return newShader(vertexShader, fragmentShader);
     }
 
+    /**
+     * Adds a shader from sources in separate input streams.
+     * @param vertexShader_stream
+     *            GLSL source code for a vertex shader. Stream will be closed
+     *            when method returns.
+     * @param fragmentShader_stream
+     *            GLSL source code for a fragment shader. Stream will be closed
+     *            when method returns.
+     * @return
+     */
     @Override
     public GVRShaderId newShader(InputStream vertexShader_stream,
             InputStream fragmentShader_stream) {

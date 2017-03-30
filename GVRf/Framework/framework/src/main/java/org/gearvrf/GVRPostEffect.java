@@ -103,6 +103,10 @@ public class GVRPostEffect extends GVRHybridObject implements
         return textures.get(key);
     }
 
+    /**
+     * Return the list of texture keys for this post effect.
+     * @return set of unique texture names.
+     */
     public Set<String> getTextureNames() {
         return textures.keySet();
     }

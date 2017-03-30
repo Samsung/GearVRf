@@ -202,15 +202,23 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
         setFloat("uvIndex", 0);
     }
 
+    /**
+     * Gets the type of shader this material uses.
+     * @return GVRShaderId identifying the type of shader.
+     * @see GVRMaterialShaderManager#addShader(String, String)
+     * @see GVRPostEffectShaderManager#addShader(String, String)
+     */
     public GVRShaderId getShaderType() {
         return shaderId;
     }
 
     /**
-     * Set shader id
+     * Set the type of shader this material uses.
+     * In future releases this call will be deprecated.
      * 
      * @param shaderId
      *            The new shader id.
+     * @deprecated
      */
     public void setShaderType(GVRShaderId shaderId) {
         this.shaderId = shaderId;
