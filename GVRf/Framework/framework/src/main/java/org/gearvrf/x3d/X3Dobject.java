@@ -17,6 +17,10 @@ package org.gearvrf.x3d;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.webkit.WebSettings;
+
+import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRWebView;
 import org.gearvrf.utility.Log;
 
 import java.io.FileNotFoundException;
@@ -2435,6 +2439,11 @@ public class X3Dobject {
 
                 /********** Anchor **********/
                 else if (qName.equalsIgnoreCase("Anchor")) {
+
+
+                    AddWebObject("http://www.consumer-vr.com/");
+
+
                     String name = "";
                     String description = "";
                     String[] parameter = null;
@@ -2468,6 +2477,8 @@ public class X3Dobject {
                             currentSceneObject);
                     sensor.setAnchorURL(url);
                     sensors.add(sensor);
+                    animationInteractivityManager.BuildInteractiveObjectFromAnchor(sensor, url);
+
                     currentSensor = sensor;
                 } // end <Anchor> node
 
@@ -3661,4 +3672,61 @@ public class X3Dobject {
 
     } // end Parse
 
+    private void AddWebObject (String url) {
+        final String urlFinal = url;
+
+        gvrContext.getActivity().runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+
+                Log.e("X3D-AWO", "         BGN new GVRWebView(gvrActivity)");
+                GVRWebView gvrWebView = new GVRWebView( gvrContext.getActivity() );
+                Log.e("X3D-AWO", "         END new GVRWebView(gvrActivity)");
+                gvrWebView.setInitialScale(100);
+                gvrWebView.measure(1600, 900);
+                gvrWebView.layout(0, 0, 1600, 900);
+                WebSettings webSettings = gvrWebView.getSettings();
+                webSettings.setJavaScriptEnabled(true);
+
+                Log.e("X3D-AWO", "   BGN THREAD gvrWebViewFinal.loadUrl( "+  urlFinal +" )");
+                gvrWebView.loadUrl( urlFinal );
+                Log.e("X3D-AWO", "   END THREAD gvrWebViewFinal.loadUrl( "+  urlFinal +" )");
+
+
+                Log.e("X3D-AWO", "   Create web object");
+                GVRViewSceneObject webObject = new GVRViewSceneObject(gvrContext,
+                        gvrWebView, 4.0f, 3.0f);
+                webObject.setName("web view object");
+
+                webObject.getRenderData().getMaterial().setOpacity(1.0f);
+                webObject.getTransform().setPosition(-3.0f, -2.0f, -8.0f);
+
+                webObject.getRenderData().setRenderMask(0);
+
+                webObject.getRenderData().setRenderMask(
+                        GVRRenderData.GVRRenderMaskBit.Left
+                                | GVRRenderData.GVRRenderMaskBit.Right);
+
+                Log.e("X3D-AWO", "      BGN addChildObject");
+
+
+
+                GVRSceneObject sphere = new GVRSphereSceneObject(gvrContext);
+                GVRRenderData rdata = sphere.getRenderData();
+                GVRMaterial mtl = new GVRMaterial(gvrContext);
+                mtl.setDiffuseColor(0.5f, 0.0f, 1.0f, 1.0f);
+                sphere.setName("balloon");
+                rdata.setShaderTemplate(GVRPhongShader.class);
+                rdata.setAlphaBlend(true);
+                rdata.setMaterial(mtl);
+                //rdata.setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
+                sphere.getTransform().setPosition(-2.0f, 2.5f, -6);
+                currentSceneObject.addChildObject(sphere);
+
+                currentSceneObject.addChildObject(webObject);
+                Log.e("X3D-AWO", "      END addChildObject");
+            }
+
+        });
+    }  // end test function
 }

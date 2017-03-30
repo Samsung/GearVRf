@@ -18,10 +18,15 @@ package org.gearvrf.x3d;
 
 import android.graphics.Color;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMain;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPointLight;
+import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRLightBase;
@@ -34,7 +39,14 @@ import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.scene_objects.GVRCylinderSceneObject;
+import org.gearvrf.scene_objects.GVRSphereSceneObject;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRView;
+import org.gearvrf.scene_objects.view.GVRWebView;
 import org.gearvrf.script.GVRJavascriptScriptFile;
+
+import org.gearvrf.GVRScene;
 
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.script.javascript.GVRJavascriptV8File;
@@ -50,9 +62,21 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.util.GregorianCalendar;
-import java.util.Calendar;
-import java.util.Date;
+//import java.util.GregorianCalendar;
+//import java.util.Calendar;
+//import java.util.Date;
+
+//import android.os.Bundle;
+//import android.view.MotionEvent;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.graphics.Canvas;
+
+//import org.gearvrf.GVRActivity;
+//import org.gearvrf.scene_objects.view.GVRView;
+//import org.gearvrf.scene_objects.view.GVRWebView;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -434,6 +458,20 @@ public class AnimationInteractivityManager {
         }  //  end if routeToDefinedItem != null
     }  //  end buildInteractiveObject
 
+
+    /**
+     * BuildInteractiveObjectFromAnchor is a special type of interactive object in that it does not get
+     * built using ROUTE's.
+     *
+     * @param anchorSensor is the Sensor that describes the sensor set to an Anchor
+     * @param anchorDestination is either another Viewpoint, url to a web site or another x3d scene
+     */
+    public void BuildInteractiveObjectFromAnchor(Sensor anchorSensor, String anchorDestination) {
+        InteractiveObject interactiveObject = new InteractiveObject();
+        interactiveObject.setSensor(anchorSensor, anchorDestination);
+        interactiveObjects.add(interactiveObject);
+    }
+
     /**
      * initAnimationsAndInteractivity() called when we parse </scene> in
      * an X3D file.  This method will parse the array list of InteractiveObjects
@@ -678,7 +716,8 @@ public class AnimationInteractivityManager {
                     // set up the call-back
                     interactiveObject.getScriptObject().setScriptCalledPerFrame(true);
                     perFrameScripting.setInteractiveObjectVars(interactiveObjectFinal);
-                }
+                } // time sensor != null
+
             }  // end if a Script (that likely includes a sensor)
 
             else if ((interactiveObject.getSensor() != null) &&
@@ -738,6 +777,168 @@ public class AnimationInteractivityManager {
                     });
                 }  // end if sensor == TOUCH
             }  // end if at least sensor, and eventUtility
+            else if (interactiveObject.getSensor() != null) {
+                // Likely this is an Anchor tag since there are no routes with it
+                //Sensor sensor = interactiveObject.getSensor();
+                if ( interactiveObject.getSensor().getType() == Sensor.Type.ANCHOR) {
+                    final InteractiveObject interactiveObjectFinal = interactiveObject;
+                    interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+                        //boolean stateChanged = false;
+                        boolean isActiveDone = false;
+
+                        @Override
+                        public void onSensorEvent(SensorEvent event) {
+
+                            //Log.e("X3D-Anchor", "onSensorEvent(): " + interactiveObjectFinal.getSensor().getAnchorURL());
+
+                            //if (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
+                            if (event.isActive() ) {
+                                //Log.e("X3D-Anchor", "   event.isActive()");
+                                //Sensor anchorSensor = interactiveObjectFinal.getSensor();
+                                if (!isActiveDone) {
+                                    // only go through once even if object is clicked a long time
+                                    isActiveDone = true;
+                                    String url = interactiveObjectFinal.getSensor().getAnchorURL();
+                                    if ( url.toLowerCase().endsWith(".x3d")) {
+                                        Log.e("X3D-Anchor", "      go to .x3d: " + url);
+                                    }
+                                    else if ( url.startsWith("#")) {
+                                        Log.e("X3D-Anchor", "      go to Viewpoint: " + url);
+                                    }
+                                    else  {
+                                        Log.e("X3D-Anchor", "      go to web page: " + url);
+                                        /*
+                                        GVRActivity gvrActivity = gvrContext.getActivity();
+                                        GVRMain gvrMain = gvrActivity.getMain();
+
+                                        GVRView webView = gvrActivity.getWebView();
+                                        //GVRActivity gvrActivity = gvrContext.get
+                                        //public GVRWebView(GVRActivity context)
+                                        Log.e("X3D-Anchor", "         BGN new GVRWebView(gvrActivity)");
+                                       //GVRWebView gvrWebView = new GVRWebView(gvrActivity);
+                                        Log.e("X3D-Anchor", "         END new GVRWebView(gvrActivity)");
+                                        gvrWebView.setInitialScale(100);
+                                        gvrWebView.measure(2000, 1000);
+                                        gvrWebView.layout(0, 0, 2000, 1000);
+                                    //    WebSettings webSettings = gvrWebView.getSettings();
+                                    //    webSettings.setJavaScriptEnabled(true);
+                                        Log.e("X3D-Anchor", "         BGN loadUrl(" + url + ")");
+                                    //    gvrWebView.loadUrl( url );
+                                     //   Log.e("X3D-Anchor", "         END loadUrl(" + url + ")");
+                                    //     gvrContext.runOnGlThread(new Runnable() {
+                                        final GVRWebView gvrWebViewFinal = gvrWebView;
+*/
+                                        final String urlFinal = url;
+                                        final GVRSceneObject gvrSceneObjectAnchor = interactiveObjectFinal.getSensor().getGVRSceneObject();
+
+                                        //gvrContext.runOnTheFrameworkThread( new Runnable() {
+                                        //gvrContext.runOnGlThread( new Runnable() {
+                                        gvrContext.getActivity().runOnUiThread( new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Log.e("X3D-Anchor", "         BGN new GVRWebView(gvrActivity)");
+                                                GVRWebView gvrWebView = new GVRWebView( gvrContext.getActivity() );
+                                                Log.e("X3D-Anchor", "         END new GVRWebView(gvrActivity)");
+                                                gvrWebView.setInitialScale(100);
+                                                gvrWebView.measure(1600, 900);
+                                                gvrWebView.layout(0, 0, 1600, 900);
+                                                WebSettings webSettings = gvrWebView.getSettings();
+                                                webSettings.setJavaScriptEnabled(true);
+
+                                                //RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
+                                                //firstFrameRun_MustInitalize = false;
+                                                Log.e("X3D-Anchor", "   BGN THREAD gvrWebViewFinal.loadUrl( "+  urlFinal +" )");
+                                                gvrWebView.loadUrl( urlFinal );
+                                                Log.e("X3D-Anchor", "   END THREAD gvrWebViewFinal.loadUrl( "+  urlFinal +" )");
+
+                                                //gvrWebView.setWebViewClient(new WebViewClient());
+
+                                                //gvrWebView.draw(Canvas canvas);
+
+
+                                                Log.e("X3D-Anchor", "   Create web object");
+                                                GVRViewSceneObject webObject = new GVRViewSceneObject(gvrContext,
+                                                        gvrWebView, 4.0f, 3.0f);
+                                                webObject.setName("web view object");
+                                                //webObject.getRenderData().getMaterial().setDiffuseColor(1.0f, 1.0f, 0.0f, 1.0f);  // yellow
+                                                webObject.getRenderData().getMaterial().setOpacity(1.0f);
+                                                webObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
+                                                webObject.getTransform().setPosition(1.0f, -1.0f, -5.0f);
+                                                gvrWebView.invalidate();
+
+                                                webObject.getRenderData().setRenderMask(0);
+
+                                                webObject.getRenderData().setRenderMask(
+                                                        GVRRenderData.GVRRenderMaskBit.Left
+                                                                | GVRRenderData.GVRRenderMaskBit.Right);
+
+                                                Log.e("X3D-Anchor", "BGN addChildObject(s)");
+                                                gvrSceneObjectAnchor.addChildObject(webObject);
+
+                                                /*
+                                                GVRSceneObject sphere = new GVRSphereSceneObject(gvrContext);
+                                                GVRRenderData rdata = sphere.getRenderData();
+                                                GVRMaterial mtl = new GVRMaterial(gvrContext);
+                                                mtl.setDiffuseColor(0.5f, 1.0f, 1.0f, 1.0f);
+                                                sphere.setName("balloon2");
+                                                rdata.setShaderTemplate(GVRPhongShader.class);
+                                                rdata.setAlphaBlend(true);
+                                                rdata.setMaterial(mtl);
+                                                //rdata.setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
+                                                sphere.getTransform().setPosition(2.0f, 2.5f, -6);
+                                                gvrSceneObjectAnchor.addChildObject(sphere);
+                                                */
+                                                GVRMaterial mBlue = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID);
+                                                mBlue.setDiffuseColor(1, 0, 0, 1);
+                                                GVRSphereSceneObject sphereSceneObject = new GVRSphereSceneObject(gvrContext, true, mBlue);
+                                                sphereSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
+
+                                                sphereSceneObject.getTransform().setPositionZ(-6.0f);
+                                                sphereSceneObject.getTransform().setPositionY(2.5f);
+                                                sphereSceneObject.getTransform().setPositionX(2.0f);
+
+                                                GVRScene mainScene = gvrContext.getMainScene();
+                                                //mainScene.addSceneObject(sphereSceneObject);
+                                                gvrSceneObjectAnchor.addChildObject(sphereSceneObject);
+                                                mainScene.bindShaders(sphereSceneObject);
+
+                                                Log.e("X3D-Anchor", "END addChildObject(s)");
+                                            }
+
+                                        });
+                                        /*
+                                        gvrWebView.setWebViewClient(new WebViewClient() {
+                                            @Override
+                                            public boolean shouldOverrideUrlLoading (WebView view,
+                                                                      WebResourceRequest request) {
+                                            //public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                                Log.e("X3D-Anchor", "         shouldOverrideUrlLoading THREAD");
+                                                //view.loadUrl(request.getUrl());
+                                                //view.
+                                                return true;
+                                            }
+                                        });
+                                        */
+
+
+                                        //public GVRViewSceneObject(GVRContext gvrContext, GVRView gvrView,
+                                        //float width, float height) {
+                                     //   GVRViewSceneObject gvrViewSceneObject = new GVRViewSceneObject(gvrContext, gvrWebView, 200, 300);
+                                        //GVRViewSceneObject gvrViewSceneObject = new GVRViewSceneObject(gvrContext, gvrActivity.getWebView(), 200, 300);
+                                    //    gvrViewSceneObject.getTransform().setPosition(1.0f, 0.0f, -10);
+
+                                    }
+                                    // CLICKED while over Anchor object
+                                    //stateChanged = !stateChanged;
+                                }
+                            } else if (!event.isActive() ) {
+                                isActiveDone = false;
+                            }
+                        }
+                    });
+
+                }
+            } // sensor != null
 
         }  // end for loop traversing through all interactive objects
         if (perFrameScripting.getRunState()) {
