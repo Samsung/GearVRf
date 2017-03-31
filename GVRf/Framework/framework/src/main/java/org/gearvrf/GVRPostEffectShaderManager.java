@@ -15,6 +15,9 @@
 
 package org.gearvrf;
 
+import android.content.res.Resources;
+
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,19 +26,33 @@ import java.util.Map;
  * scene graph, before lens distortion is applied.
  * 
  * Get the singleton from {@link GVRContext#getPostEffectShaderManager()}
+ *
+ * This class is deprecated. The preferred method of authoring custom
+ * shaders is to derive from {@link GVRShaderTemplate}.
+ * In future releases there will be no difference between material
+ * and post-effect shaders.
+ * @deprecated
  */
 public class GVRPostEffectShaderManager extends
-        GVRBaseShaderManager<GVRPostEffectMap, GVRCustomPostEffectShaderId>
-        implements
-        GVRShaderManagers<GVRPostEffectMap, GVRCustomPostEffectShaderId> {
+        GVRBaseShaderManager implements GVRShaderManagers {
 
-    private final Map<GVRCustomPostEffectShaderId, GVRPostEffectMap> posteffects = new HashMap<GVRCustomPostEffectShaderId, GVRPostEffectMap>();
+    private final Map<GVRShaderId, GVRPostEffectMap> posteffects = new HashMap<GVRShaderId, GVRPostEffectMap>();
 
     GVRPostEffectShaderManager(GVRContext gvrContext) {
         super(gvrContext, NativePostEffectShaderManager.ctor());
     }
 
-    @Override
+    /**
+     * Builds a shader program from the supplied vertex and fragment shader
+     * code.
+     *
+     * @param vertexShader
+     *            GLSL source code for a vertex shader.
+     * @param fragmentShader
+     *            GLSL source code for a fragment shader.
+     * @return An opaque type that you can pass to {@link #getShaderMap(GVRCustomPostEffectShaderId)},
+     *         or to the {@link GVRPostEffect} constructor and {@code setShader} methods.
+     */
     public GVRCustomPostEffectShaderId addShader(String vertexShader,
             String fragmentShader) {
         final int shaderId = NativePostEffectShaderManager
@@ -48,6 +65,43 @@ public class GVRPostEffectShaderManager extends
     }
 
     @Override
+    public GVRShaderId newShader(String vertexShader, String fragmentShader)
+    {
+        final int shaderId = NativePostEffectShaderManager
+                .addCustomPostEffectShader(getNative(), vertexShader,
+                        fragmentShader);
+        GVRCustomPostEffectShaderId result = new GVRCustomPostEffectShaderId(shaderId);
+        posteffects.put(result, retrieveShaderMap(result));
+        return result;
+    }
+
+    /**
+     * Builds a shader program from the supplied vertex and fragment shader
+     * code from resources in res/raw.
+     *
+     * @param vertexShader_resRaw
+     *            R.raw id, for a file containing a vertex shader
+     * @param fragmentShader_resRaw
+     *            R.raw id, for a file containing a fragment shader
+     * @return An opaque type that you can pass to {@link #getShaderMap(GVRCustomPostEffectShaderId)}
+     *         or to the {@link GVRPostEffect} constructor and {@code setShader} methods.
+     */
+    public GVRCustomPostEffectShaderId addShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
+        return (GVRCustomPostEffectShaderId) newShader(vertexShader_resRaw, fragmentShader_resRaw);
+    }
+
+    @Override
+    public GVRShaderMaps getShaderMapping(GVRShaderId id) {
+        return posteffects.get(id);
+    }
+
+    /**
+     * Get a name mapping object for the custom shader program.
+     *
+     * @param id
+     *            Opaque type from {@link #newShader(String, String)}
+     * @return A name mapping object
+     */
     public GVRPostEffectMap getShaderMap(GVRCustomPostEffectShaderId id) {
         return posteffects.get(id);
     }

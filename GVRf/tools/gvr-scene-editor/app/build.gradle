@@ -96,6 +96,7 @@ dependencies {
     compile(name: 'framework-debug', ext: 'aar')
     compile 'com.google.vr:sdk-base:1.10.0'
     compile "org.joml:joml-android:${jomlVersion}"
+	compile 'com.google.code.gson:gson:2.7'
 
     if (rootProject.hasProperty("only_daydream")) {
         compile(name: 'backend_daydream-debug', ext: 'aar')

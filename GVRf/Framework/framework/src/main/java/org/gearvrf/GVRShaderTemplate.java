@@ -80,7 +80,7 @@ public class GVRShaderTemplate
     {
         String FragmentShaderSource;
         String VertexShaderSource;
-        GVRCustomMaterialShaderId ShaderID;
+        GVRShaderId ShaderID;
     };
 
     protected class LightClass
@@ -349,6 +349,33 @@ public class GVRShaderTemplate
         return defines + combinedSource;
     }
 
+    private String generateShaderSource(String type)
+    {
+        String template = getSegment(type + "Template");
+
+        if (template == null)
+        {
+            throw new IllegalArgumentException(type + "Template segment missing - cannot make shader");
+        }
+        String combinedSource = template;
+
+        for (Map.Entry<String, String> entry : mShaderSegments.entrySet())
+        {
+            String key = entry.getKey();
+            if (key.startsWith(type))
+            {
+                String segmentSource = entry.getValue();
+                if (segmentSource == null)
+                    segmentSource = "";
+                combinedSource = combinedSource.replace("@" + key, segmentSource);
+            }
+        }
+        combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
+        if (mGLSLVersion <= 100)
+            return combinedSource;
+        return "#version " + mGLSLVersion.toString() + " es\n" + combinedSource;
+    }
+
     /**
      * Generate the vertex shader assignments to copy texture
      * coordinates from the vertex array to shader variables.
@@ -432,7 +459,21 @@ public class GVRShaderTemplate
             }
             mShaderVariants.put(signature, variant);
         }
-        generateGLShader(context, material, signature);
+        GVRShaderManagers shaderManager = context.getMaterialShaderManager();
+        if (variant.ShaderID == null)
+        {
+            variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            Log.d("gvrf", "SHADER: Generated lit material shader #" + variant.ShaderID.ID + " " + signature);
+        }
+        GVRShaderMaps materialMap = shaderManager.getShaderMapping(variant.ShaderID);
+        Set<String> texNames = material.getTextureNames();
+
+        for (String s : texNames)
+        {
+            materialMap.addTextureKey(s, s);
+        }
+        makeMaterialMap(material, materialMap);
+        material.setShaderType(variant.ShaderID);
     }
 
     private void writeShader(GVRContext context, String fileName, String sourceCode)
@@ -493,7 +534,21 @@ public class GVRShaderTemplate
             variant.FragmentShaderSource = generateShaderVariant("Fragment", variantDefines, null, null, material);
             mShaderVariants.put(signature, variant);            
         }
-        generateGLShader(context, material, signature);
+        GVRShaderManagers shaderManager = context.getMaterialShaderManager();
+        if (variant.ShaderID == null)
+        {
+            variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            Log.d("gvrf", "SHADER: Generated material shader #" + variant.ShaderID.ID + " " + signature);
+        }
+        GVRShaderMaps materialMap = shaderManager.getShaderMapping(variant.ShaderID);
+        Set<String> texNames = material.getTextureNames();
+
+        for (String s : texNames)
+        {
+            materialMap.addTextureKey(s, s);
+        }
+        makeMaterialMap(material, materialMap);
+        material.setShaderType(variant.ShaderID);
     }
 
     /**
@@ -504,25 +559,51 @@ public class GVRShaderTemplate
      * 
      * @param context   GVRContext to use to generate shader
      * @param material  material to use with shader
-     * @param signature unique string identifying this shader variant
      */
-    private void generateGLShader(final GVRContext context, final GVRMaterial material, final String signature) {
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                ShaderVariant variant = mShaderVariants.get(signature);
-                GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
-                if (variant.ShaderID == null)
-                {
-                    variant.ShaderID = shaderManager.addShader(variant.VertexShaderSource, variant.FragmentShaderSource);
-                    Log.d("gvrf", "SHADER: Generated shader #" + variant.ShaderID.ID + " " + signature);
-                }
-                GVRMaterialMap materialMap = shaderManager.getShaderMap(variant.ShaderID);
-                makeMaterialMap(material, materialMap);
+    public void bindShader(GVRContext context, GVRPostEffect material)
+    {
+        if (material == null)
+        {
+            return;
+        }
+        HashMap<String, Integer> variantDefines = new HashMap<String, Integer>();
+        if (mShaderVariants == null)
+        {
+            mShaderVariants = new HashMap<String, ShaderVariant>();
+        }
+        String signature = generateSignature(variantDefines, null);
+        ShaderVariant variant = mShaderVariants.get(signature);
+        if (variant != null)
+        {
+            if (variant.ShaderID != null)
+            {
+                Log.d("gvrf", "SHADER: Reuse shader #" + variant.ShaderID.ID + " " + signature);
                 material.setShaderType(variant.ShaderID);
+                return;
             }
-        };
-        context.runOnGlThread(task);
+        }
+        else
+        {
+            variant = new ShaderVariant();
+            variant.VertexShaderSource = generateShaderSource("Vertex");
+            variant.FragmentShaderSource = generateShaderSource("Fragment");
+            mShaderVariants.put(signature, variant);
+        }
+        GVRShaderManagers shaderManager = context.getPostEffectShaderManager();
+        if (variant.ShaderID == null)
+        {
+            variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);
+            Log.d("gvrf", "SHADER: Generated post effect shader #" + variant.ShaderID.ID + " " + signature);
+        }
+        GVRShaderMaps materialMap = shaderManager.getShaderMapping(variant.ShaderID);
+        Set<String> texNames = material.getTextureNames();
+
+        for (String s : texNames)
+        {
+            materialMap.addTextureKey(s, s);
+        }
+        makeMaterialMap(material, materialMap);
+        material.setShaderType(variant.ShaderID);
     }
     
     /**
@@ -572,17 +653,12 @@ public class GVRShaderTemplate
      * @param material material to make map for
      * @param map material map to populate
      */
-    protected void makeMaterialMap(GVRMaterial material, GVRMaterialMap map)
+    protected void makeMaterialMap(GVRShaders material, GVRShaderMaps map)
     {
         Pattern uniformPattern = Pattern.compile("[ ]*([A-Za-z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
         Pattern uniformTypePattern = Pattern.compile("([A-Za-z]+)([0-9_]+)");
         Matcher matcher1 = uniformPattern.matcher(mUniformDescriptor);
-        Set<String> texNames = material.getTextureNames();
 
-        for (String s : texNames)
-        {
-            map.addTextureKey(s, s);
-        }
         while (matcher1.find())
         {
             String type = matcher1.group(1);

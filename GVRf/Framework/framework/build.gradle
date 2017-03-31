@@ -123,6 +123,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
     compile "org.joml:joml-android:${jomlVersion}"
+    compile 'com.google.code.gson:gson:2.7'
 }
 
 clean {}.doLast {
