@@ -140,7 +140,9 @@ public class GVRScriptManager {
                 @Override
                 public void run() {
                     final Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
-                    bindings.clear();
+                    if (null != bindings) {
+                        bindings.clear();
+                    }
                     engine.setBindings(null, ScriptContext.GLOBAL_SCOPE);
                 }
             });
