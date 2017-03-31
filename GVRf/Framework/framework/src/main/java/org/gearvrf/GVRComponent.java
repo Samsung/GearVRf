@@ -21,13 +21,13 @@ import org.gearvrf.utility.Exceptions;
 
 /**
  * Base class for defining components to extend the scene object.
- *
+ * <p>
  * Components are used to add behaviours to scene objects.
- * A GVRSceneObject can have any number of components but only
+ * A {@link GVRSceneObject} can have any number of components but only
  * one component of each type. Usually the component type loosely
  * corresponds to the base class of the component. For example,
  * GVRCamera and GVRCameraRig have different component types.
- * GVROrthographicCamera and GVRPerspectiveCamera both have the
+ * {@link GVROrthogonalCamera} and {@link GVRPerspectiveCamera} both have the
  * same type. All of the light classes have the same type as well.
  * 
  * @see GVRSceneObject#attachComponent(GVRComponent)
@@ -120,10 +120,12 @@ public class GVRComponent extends GVRHybridObject {
     
     /**
      * Enable or disable this component.
+     * <p>
+     * Enabling a component will call the {@link #onEnable} function internally.
+     * Disabling a component will call {@link #onDisable}.
      * @param flag true to enable, false to disable.
-     * @see enable
-     * @see disable
-     * @see isEnabled
+     * @see #setEnable(boolean)
+     * @see #isEnabled()
      */
     public void setEnable(boolean flag) {
         if (flag == mIsEnabled)
@@ -147,6 +149,9 @@ public class GVRComponent extends GVRHybridObject {
     
     /**
      * Enable the component so it will be active in the scene.
+     * <p>
+     * This is the same as setEnable(true).
+     * @see #setEnable(boolean)
      */
     public void enable() {
         setEnable(true);
@@ -154,6 +159,9 @@ public class GVRComponent extends GVRHybridObject {
 
     /**
      * Disable the component so it will not be active in the scene.
+     * <p>
+     * This is the same as setEnable(false).
+     * @see #setEnable(boolean)
      */
     public void disable() {
         setEnable(false);
@@ -190,7 +198,7 @@ public class GVRComponent extends GVRHybridObject {
     
     /**
      * Get the component of the specified class attached to the owner scene object.
-     * 
+     * <p>
      * If the scene object that owns this component also has a component
      * of the given type, it will be returned.
      * @param type  type of component to find. This must be a value
@@ -205,6 +213,7 @@ public class GVRComponent extends GVRHybridObject {
      * Called when a component is attached to a scene object.
      * 
      * @param newOwner  GVRSceneObject the component is attached to.
+     * @see GVRSceneObject#attachComponent(GVRComponent)
      */
     public void onAttach(GVRSceneObject newOwner) { }
 
@@ -212,6 +221,7 @@ public class GVRComponent extends GVRHybridObject {
      * Called when a component is detached from a scene object.
      * 
      * @param oldOwner  GVRSceneObject the component was detached from.
+     * @see GVRSceneObject#detachComponent(long)
      */
     public void onDetach(GVRSceneObject oldOwner) { }
 
@@ -231,11 +241,13 @@ public class GVRComponent extends GVRHybridObject {
 
     /**
      * Called when a component is enabled.
+     * @see #setEnable(boolean)
      */
     public void onEnable() { }
     
     /**
      * Called when a component is disabled.
+     * @see #setEnable(boolean)
      */
     public void onDisable() { }
 }

@@ -18,8 +18,9 @@ package org.gearvrf;
 
 /**
  * A render texture array is an array of textures
- * which may be rendered into. All of the textures
- * in the array must be the same size.
+ * which may be rendered into.
+ * <p>
+ * All of the textures in the array must be the same size.
  * The GVRRenderTextureArray object is used internally
  * for shadow mapping. All of the shadow maps are kept
  * in a single layered texture.
@@ -29,9 +30,10 @@ package org.gearvrf;
 public class GVRRenderTextureArray extends GVRRenderTexture
 {
     /**
-     * Create a layered texture array. The GPU memory for the
-     * textures is not allocated here. It will be created in
-     * the GL thread the first time the texture array is
+     * Create a layered texture array.
+     * <p>
+     * The GPU memory for the textures is not allocated here.
+     * It will be created in the GL thread the first time the texture array is
      * used for rendering.
      * @param ctx       GVRContext to associate the texture array with.
      * @param width     pixel width of textures in the array.

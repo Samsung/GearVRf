@@ -19,17 +19,17 @@ package org.gearvrf;
 /**
  * A sphere collider allows a scene object to be picked
  * when a ray penetrates its bounding sphere.
- * 
+ * <p>
  * This is the fastest but least accurate method of picking.
  * It performs a ray-sphere intersection and works best
  * on scene objects which do not vary a lot in their
  * X, Y and Z dimensions.
- * 
+ * <p>
  * The center of the collision sphere is the center of
  * the scene object it is attached to. If no radius is
  * provided, the radius is obtained from the bounding
  * volume of the scene object.
- *
+ * <p>
  * You can use a sphere collider on a scene object without
  * a mesh if you specify the radius by calling setRadius.
  * This radius is transformed by the world matrix on the scene object
@@ -38,8 +38,8 @@ package org.gearvrf;
  * @see GVRPicker
  * @see GVRSphereCollider
  * @see GVRMeshCollider
- * @see GVRSceneObject.attachComponent
- * @see GVRSceneObject.getBoundingVolume
+ * @see GVRSceneObject#attachComponent(GVRComponent)
+ * @see GVRSceneObject#getBoundingVolume()
  */
 public class GVRSphereCollider extends GVRCollider
 {
@@ -50,7 +50,7 @@ public class GVRSphereCollider extends GVRCollider
     
     /**
      * Set the radius of the collision sphere.
-     * 
+     * <p>
      * This radius is transformed by the world matrix
      * associated with the scene object that owns
      * the sphere collider. If a non-zero radius
@@ -60,8 +60,8 @@ public class GVRSphereCollider extends GVRCollider
      * mesh attached to the scene object.
      * 
      * @param radius radius of collision sphere
-     * @see GVRSphereCollider.getRadius
-     * @see GVRMesh.getSphereBound
+     * @see GVRSphereCollider#getRadius()
+     * @see GVRMesh#getSphereBound(float[])
      * @see GVRPicker
      */
     public void setRadius(float radius)
@@ -71,14 +71,14 @@ public class GVRSphereCollider extends GVRCollider
 
     /**
      * Get the radius set on the collision sphere.
-     * 
+     * <p>
      * This radius is the one provided by setRadius
      * or 0 if the radius has not been set.
      * It is NOT the radius of the bounding volume
      * on the scene object.
      * 
      * @return radius set for collision sphe4re
-     * @see GVRSphereCollider.setRadius
+     * @see GVRSphereCollider#setRadius(float)
      * @see GVRPicker
      */
     public float getRadius()

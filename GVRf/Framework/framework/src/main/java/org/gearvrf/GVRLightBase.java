@@ -23,18 +23,18 @@ import org.joml.Vector3f;
 
 /**
  * Base class for defining light sources.
- *
+ * <p>
  * Lights are implemented by the fragment shader. Each different light
  * implementation corresponds to a subclass of GVRLightBase which is
  * responsible for supplying the shader source code for the light. GearVRF
  * aggregates all of the light source implementations into a single fragment
  * shader.
- *
+ * <p>
  * Each subclass of GVRLightBase is a different light implementation and has
  * different shader source. The uniform descriptor is a string which gives the
  * name and type of all uniforms expected in the shader source. It is supplied
  * when a light is created to describe the expected shader input.
- *
+ * <p>
  * GearVRF will automatically compute shadow maps for a light if shadow casting
  * is enabled. The light vertex and fragment shader must be implemented to take
  * advantage of these shadow maps.
@@ -42,6 +42,7 @@ import org.joml.Vector3f;
  * @see GVRShaderTemplate
  * @see GVRRenderData#bindShader(GVRScene)
  * @see GVRLightBase#setCastShadow(boolean)
+ * @see GVRShadowMap
  */
 public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 {
@@ -96,23 +97,24 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
     /**
      * Enable or disable shadow casting by this light.
-     *
+     * <p>
      * If shadow casting is enabled, GearVRF will compute shadow maps
      * for the all of the lights which cast shadows. This is computationally
      * intensive because it requires rendering the entire scene from the viewpoint
      * of the light. It is memory intensive because it requires keeping a framebuffer
      * (shadow map) for each shadow-casting light.
-     * 
+     *  <p>
      * In order for a light to actually produce shadows, it must employ a
      * shader that performs the shadow map calculation. The built-in {@link GVRDirectLight}
      * and {@link GVRSpotLight} can produce shadows. {@link GVRPointLight} does not currently implement
      * shadow casting.
-     * 
+     * <p>
      * This function will create the material and shader used for making shadow maps
      * if necessary. It will also cause the HAS_SHADOWS symbol to be defined in the
      * shader if shadow casting is enabled.
      *
      * @param enableFlag true to enable shadow casting, false to disable
+     * @see GVRShadowMap
      */
     public void setCastShadow(boolean enableFlag)
     {
@@ -179,18 +181,20 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
     /**
      * Gets the shadow material used in constructing shadow maps.
-     *
-     * The shadow material has several public attributes which affect the shadow
+     * <p>
+     * The shadow material currently has several public attributes which affect the shadow
      * map construction:
-     *  - shadow_near   near plane of the shadow map camera (default 0.1)
-     *  - shadow_far    far plane of the shadow map camera (default 50)
+     * <ul>
+     *     <li>shadow_near   near plane of the shadow map camera </li>
+     *     <li>shadow_far    far plane of the shadow map camera</li>
+     * </ul>
+     * <p>
      * The shadow map is constructed using a depth map rendered
-     * from the viewpoint of the light. This global material
-     * contains the shadow map properties. Modifying the near and far
+     * from the viewpoint of the light. Modifying the near and far
      * planes change how much of the scene is visible from the light.
      * The shadow map will be more detailed if this range is small.
      * It may be blocky if the range is too large.
-     *
+     * <p>
      * Note that shadow_near and shadow_far will be deprecated in the next release.
      * The proper way to change the near and far planes of the shadow map
      * camera is to call {@link GVRShadowMap#getCamera } and then call
@@ -203,7 +207,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Enable the light.
+     * Called internally to enable the light.
+     * <p>
+     * If a light is not enabled, it will not illuminate anything in the scene.
+     * @see GVRComponent#setEnable(boolean)
      */
     @Override
     public void onEnable()
@@ -212,7 +219,12 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Disable the light.
+     * Called internally to disable the light.
+     * <p>
+     * If a light is disabled, it will not illuminate anything in the scene.
+     * Disabling lights may not affect the performance of your application
+     * once they have been added to the scene.
+     * @see GVRComponent#setEnable(boolean)
      */
     @Override
     public void onDisable()
@@ -222,7 +234,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     /**
      * Get the position of the light in world coordinates.
-     * 
+     * <p>
      * The position is computed from the scene object the light is attached to.
      * It corresponds to the "world_position" uniform for the light.
      * 
@@ -233,25 +245,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Set the world position of the light.
-     * 
-     * The position is computed from the scene object the light is attached to.
-     * It corresponds to the "world_position" uniform for the light.
-     * 
-     * @param x
-     *            x-coordinate in world coordinate system
-     * @param y
-     *            y-coordinate in world coordinate system
-     * @param z
-     *            z-coordinate in world coordinate system
-     */
-    public void setPosition(float x, float y, float z) {
-        setVec3("world_position", x, y, z);
-    }
-
-    /**
      * Get the light ID.
-     * 
+     * <p>
      * This is a string that uniquely identifies the light and is generated by
      * GearVRF when it is added to the scene. It is used to generate shader code.
      */
@@ -262,8 +257,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
     /**
      * Access the fragment shader source code implementing this light.
-     *
-     * The shader code defines a function which computes the
+     * <p>
+     * The fragment shader source code defines a function which computes the
      * color contributed by this light. It takes a structure of uniforms and a
      * Surface structure as input and outputs a Radiance structure. The
      * contents of the uniform structure is defined by the uniform descriptor. The fragment
@@ -282,7 +277,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
     /**
      * Access the vertex shader source code implementing this light.
-     *
+     * <p>
      * The shader code defines a function which computes the per-vertex
      * outputs for this light. The input is a structure of uniforms and the output
      * is a varying structure which is used by the fragment shader.
@@ -301,7 +296,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     
     /**
      * Access the descriptor defining the shader uniforms used by this light.
-     *
+     * <p>
      * Describes the uniform data passed to the shader for this light.
      * This string produces the structure defined in the shader source code.
      * Each light object maintains a copy of these values and sends them to the
@@ -319,7 +314,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
 
     /**
      * Access the descriptor defining the vertex shader output produced by this light.
-     *
+     * <p>
      * Defines the GLSL structure representing the varying data for this light.
      * These produce the structure defined in the shader source code.
      * Each light object maintains a copy of these values and sends them to the
@@ -335,8 +330,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Gets the value of a floating uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
+     * @param key   name of uniform to get
      * @return floating point value of uniform
      */
     public float getFloat(String key)
@@ -347,10 +341,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Sets the value of a floating uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
-     * @param value
-     *            floating point value of uniform
+     * @param key       name of uniform to get
+     * @param value     floating point value of uniform
      */
     public void setFloat(String key, float value)
     {
@@ -362,8 +354,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Gets the value of a vec3 floating uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
+     * @param key   name of uniform to get
      * @return vec3 value of uniform
      */
     public float[] getVec3(String key)
@@ -374,8 +365,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Sets the value of a vec3 uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
+     * @param key   name of uniform to get
      * @param x     X coordinate of vector
      * @param y     Y coordinate of vector
      * @param z     Z coordinate of vector
@@ -389,8 +379,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Gets the value of a vec4 floating uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
+     * @param key   name of uniform to get
      * @return vec4 value of uniform
      */
     public float[] getVec4(String key)
@@ -416,10 +405,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Sets the value of a 4x4 matrix uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
-     * @param matrix
-     *            4x4 matrix value of uniform
+     * @param key       name of uniform to get
+     * @param matrix    4x4 matrix value of uniform
      */
     public void setMat4(String key, Matrix4f matrix)
     {
@@ -432,8 +419,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Gets the value of a 4x4 matrix uniform based on its name.
      * 
-     * @param key
-     *            name of uniform to get
+     * @param key   name of uniform to get
      */
     public Matrix4f getMat4(String key)
     {
@@ -448,6 +434,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Get the default orientation of the light when there is no transformation
      * applied.
+     * @see #setDefaultOrientation(Quaternionf)
      */
     public Quaternionf getDefaultOrientation()
     {
@@ -457,7 +444,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     /**
      * Set the default orientation of the light when there is no transformation
      * applied.
-     * 
+     * <p>
      * GearVRF lights default to looking down the positive Z axis with a light
      * direction of (0, 0, 1). This function lets you change the initial forward
      * vector for lights. This orientation is multiplied by the world
@@ -465,8 +452,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * order to derive the light direction in world space that is passed to the
      * fragment shader.
      * 
-     * @param orientation
-     *            quaternion with the initial light orientation
+     * @param orientation   quaternion with the initial light orientation
      */
     public void setDefaultOrientation(Quaternionf orientation)
     {
@@ -475,10 +461,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     }
 
 
-/**
- * Updates the position and direction of this light from the transform of
- * scene object that owns it.
- */
+    /**
+     * Updates the position and direction of this light from the transform of
+     * scene object that owns it.
+     */
     public void onDrawFrame(float frameTime)
     {     
         if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }

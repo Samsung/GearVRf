@@ -38,7 +38,7 @@ import android.util.Log;
 
 /**
  * Generates a set of vertex and fragment shaders from the same source template.
- *
+ * <p>
  * Each shader template keeps a set of named source code segments which are used
  * to compose the shaders. The code in the "FragmentTemplate" slot is the master
  * template for the fragment shader, the one attached as "VertexTemplate" is the
@@ -48,24 +48,24 @@ import android.util.Log;
  * replaced with vertex shader segments. This permits multiple segments to be
  * combined into a single fragment or vertex shader. The segment names are also
  * #defined in the shader for conditional compilation.
- * 
+ * <p>
  * To generate different variants from the same source we use #ifdef creatively.
  * Any shader variable name starting with a "HAS_" is assumed to be a #ifdef
  * that affects the generated code. These names typically correspond to
  * uniforms, textures or vertex buffer attributes. If these parameters are
  * defined by the material or mesh, that name will be #defined to 1 in the
  * shader. Otherwise, it will not be defined.
- * 
+ * <p>
  * Each shader variant generated has a unique signature so that the same variant
  * will not be generated twice.
- *
+ * <p>
  * The shader template also defines a uniform descriptor which contains the
  * names and types of all the uniforms in the material used by the shader. Each
  * entry is a float or integer type, an optional count and the name of the
  * uniform (e.g. "float3 diffuse_color, float specular_exponent, int is_enabled"
- * 
+ *  <p>
  * Multiple lights are supported by specifying light shader source code segments
- * in GVRLightBase. You can define different light implementations with
+ * in {@link GVRLightBase}. You can define different light implementations with
  * their own data structures and these will be included in the generated
  * fragment shader.
  * 
@@ -104,6 +104,7 @@ public class GVRShaderTemplate
 
     /**
      * Construct a shader template for a shader using GLSL version 100.
+     * <p>
      * To make a shader for another version use the other form of the constructor.
      *
      * @param descriptor
@@ -145,7 +146,7 @@ public class GVRShaderTemplate
 
     /**
      * Attach a named shader segment.
-     *
+     * <p>
      * Shader segment names should start with either "Vertex" or "Fragment" to
      * designate which type of shader the code belongs with. Both vertex and
      * fragment shaders can have more than one code segment contribute to the
@@ -175,7 +176,7 @@ public class GVRShaderTemplate
 
     /**
      * Get the string describing the shader uniforms.
-     *
+     * <p>
      * Each uniform is a fixed number of integer or float values. It is
      * described with the type ("int" or "float") immediately followed by the
      * size (a small integer) a space and then the name of uniform in the shader
@@ -228,10 +229,10 @@ public class GVRShaderTemplate
 
     /**
      * Generates the set of unique parameter names that make a particular
-     * variant of the shader from the source template. Wherever the source
-     * template contains "HAS_" followed by a name of a uniform, texture or
-     * attribute used in the material or mesh, a "#define" for that name is
-     * generated.
+     * variant of the shader from the source template.
+     * <p>
+     * Wherever the source template contains "HAS_" followed by a name of a uniform, texture or
+     * attribute used in the material or mesh, a "#define" for that name is generated.
      *
      * @param definedNames
      *            set with defined names for this shader
@@ -260,8 +261,9 @@ public class GVRShaderTemplate
     }
 
     /**
-     * Construct the source code for a GL shader based on the input defines. The
-     * shader segments attached to slots that start with <type> are combined to
+     * Construct the source code for a GL shader based on the input defines.
+     * <p>
+     * The shader segments attached to slots that start with <type> are combined to
      * form the GL shader. #define statements are added to define compile-time
      * constants to control the code generated.
      *
@@ -371,7 +373,7 @@ public class GVRShaderTemplate
 
     /**
      * Select the specific vertex and fragment shader to use.
-     *
+     * <p>
      * The shader template is used to generate the sources for the vertex and
      * fragment shader based on the vertex, material and light properties. This
      * function may compile the shader if it does not already exist.
@@ -452,15 +454,13 @@ public class GVRShaderTemplate
 
     /**
      * Select the specific vertex and fragment shader to use with this material.
-     * 
+     * <p>
      * The shader template is used to generate the sources for the vertex and
      * fragment shader based on the material properties only.
      * It will ignore the mesh attributes and all lights.
      * 
-     * @param context
-     *            GVRContext
-     * @param material
-     *            material to use with the shader
+     * @param context GVRContext shader is used with
+     * @param material material to use with the shader
      * @return ID of vertex/fragment shader set
      */
     public void bindShader(GVRContext context, GVRMaterial material)
@@ -498,7 +498,7 @@ public class GVRShaderTemplate
 
     /**
      * Generates a GL shader and adds it to the material.
-     * 
+     * <p>
      * The shader generation is actually performed by the GL thread.
      * This function spawns a task to generate it.
      * 
@@ -527,9 +527,10 @@ public class GVRShaderTemplate
     
     /**
      * Generate shader-specific defines from the rendering information.
+     * <p>
      * You can override this function in your shader class to change which
      * variant is generated depending on the GVRRenderData settings.
-     * 
+     * <p>
      * The base implementation LIGHTSOURCES as 0 if lighting is not enabled by the render data,
      * and it defines SHADOWS as 1 if any light source enables shadow casting. 
      * 
@@ -565,6 +566,7 @@ public class GVRShaderTemplate
     
     /**
      * Makes the material map for the shader.
+     * <p>
      * The material map does not change any names, just maps
      * the keys in the material to themselves.
      * @param material material to make map for
@@ -618,6 +620,7 @@ public class GVRShaderTemplate
 
     /**
      * Generates the shader code to compute fragment lighting for each light source.
+     * <p>
      * The fragment shader defines a <LightPixel> function which computes the effect of all
      * light sources on the fragment color. This function calls the
      * <AddLight> function which integrates the light sources. This function
@@ -682,6 +685,7 @@ public class GVRShaderTemplate
 
     /**
      * Generates the shader code to compute vertex lighting for each light source.
+     * <p>
      * The vertex shader defines a <LightVertex> function which computes
      * vertex output information for each light
      * 

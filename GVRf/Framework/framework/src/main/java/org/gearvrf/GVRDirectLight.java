@@ -20,27 +20,34 @@ import org.joml.Matrix4f;
 
 /**
  * Illuminates object in the scene with a directional light source.
- * 
+ * <p>
  * The direction of the light is the forward orientation of the scene object
  * the light is attached to. Light is emitted in that direction
  * from infinitely far away.
- *
+ * <p>
+ * Directional lights do not support attenuation.
  * The intensity of the light remains constant and does not fall
  * off with distance from the light.
- *
+ * <p>
  * Dlrect light uniforms:
- * {@literal
- *   world_direction       direction of light in world coordinates
- *                         derived from scene object orientation
- *   ambient_intensity     intensity of ambient light emitted
- *   diffuse_intensity     intensity of diffuse light emitted
- *   specular_intensity    intensity of specular light emitted
- *   sm0                   shadow matrix column 1
- *   sm1                   shadow matrix column 2
- *   sm2                   shadow matrix column 3
- *   sm3                   shadow matrix column 4
- * }
- * 
+ * <table>
+ *  <tr>
+ *      <td>world_direction</td>
+ *      <td>direction of light in world coordinates derived from scene object orientation</td>
+ *  </tr>
+ *  <tr>
+ *      <td>ambient_intensity</td>
+ *      <td>intensity of ambient light emitted</td>
+ *  </tr>
+ *  <tr>
+ *      <td>specular_intensity</td>
+ *      <td>intensity of specular light emitted</td>
+ *  </tr>
+ *  <tr><td>sm0</td><td>shadow matrix column 1</td></tr>
+ *  <tr><td>sm1</td><td>shadow matrix column 2</td></tr>
+ *  <tr><td>sm2</td><td>shadow matrix column 3</td></tr>
+ *  <tr><td>sm3</td><td>shadow matrix column 4</td></tr>
+ * </table>
  * Note: some mobile GPU drivers do not correctly pass a mat4 thru so we currently
  * use 4 vec4's instead.
  * 
@@ -87,7 +94,7 @@ public class GVRDirectLight extends GVRLightBase
     
     /**
      * Get the ambient light intensity.
-     * 
+     * <p>
      * This designates the color of the ambient reflection.
      * It is multiplied by the material ambient color to derive
      * the hue of the ambient reflection for that material.
@@ -102,7 +109,7 @@ public class GVRDirectLight extends GVRLightBase
 
     /**
      * Set the ambient light intensity.
-     * 
+     * <p>
      * This designates the color of the ambient reflection.
      * It is multiplied by the material ambient color to derive
      * the hue of the ambient reflection for that material.
@@ -120,7 +127,7 @@ public class GVRDirectLight extends GVRLightBase
 
     /**
      * Get the diffuse light intensity.
-     * 
+     * <p>
      * This designates the color of the diffuse reflection.
      * It is multiplied by the material diffuse color to derive
      * the hue of the diffuse reflection for that material.
@@ -136,7 +143,7 @@ public class GVRDirectLight extends GVRLightBase
 
     /**
      * Set the diffuse light intensity.
-     * 
+     * <p>
      * This designates the color of the diffuse reflection.
      * It is multiplied by the material diffuse color to derive
      * the hue of the diffuse reflection for that material.
@@ -155,7 +162,7 @@ public class GVRDirectLight extends GVRLightBase
 
     /**
      * Get the specular intensity of the light.
-     *
+     * <p>
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
@@ -170,7 +177,7 @@ public class GVRDirectLight extends GVRLightBase
 
     /**
      * Set the specular intensity of the light.
-     * 
+     * <p>
      * This designates the color of the specular reflection.
      * It is multiplied by the material specular color to derive
      * the hue of the specular reflection for that material.
@@ -189,10 +196,12 @@ public class GVRDirectLight extends GVRLightBase
 
     /**
      * Enables or disabled shadow casting for a direct light.
+     * <p>
      * Enabling shadows attaches a GVRShadowMap component to the
      * GVRSceneObject which owns the light and provides the
      * component with an orthographic camera for shadow casting.
      * @param enableFlag true to enable shadow casting, false to disable
+     * @see GVRShadowMap
      */
     public void setCastShadow(boolean enableFlag)
     {

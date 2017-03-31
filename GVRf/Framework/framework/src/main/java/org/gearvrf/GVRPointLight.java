@@ -18,29 +18,54 @@ import org.gearvrf.utility.TextFile;
 
 /**
  * Illuminates object in the scene with a point light source.
- * 
+ * <p>
  * The position of the light is the position of the scene object
  * the light is attached to. Light is emitted in all directions
  * from that point.
- *
+ * <p>
  * The intensity of the light diminishes with distance from the
  * light. Three attenuation factors are provided to specify how
  * the intensity of the light falls off with distance:
+ * <p>
  * {@code 1 / (attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2)}
- *
- * Point light uniforms:
- * {@literal
- *   enabled               1 = light is enabled, 0 = light is disabled
- *   world_position        position of light in world coordinates
- *                         derived from scene object position
- *   ambient_intensity     intensity of ambient light emitted
- *   diffuse_intensity     intensity of diffuse light emitted
- *   specular_intensity    intensity of specular light emitted
- *   attenuation_constant  constant attenuation factor
- *   attenuation_linear    linear attenuation factor
- *   attenuation_quadratic quadratic attenuation factor
- * }
- * 
+ * <h3>Point light Uniforms:</h3>
+ * <table>
+ * <tr><td>enabled</td><td>1 = light illuminates, 0 = light does not illuminate</td></tr>
+ *  <tr>
+ *     <td>world_position</td>
+ *     <td>position of light in world coordinates derived from scene object position</td>
+ *  </tr>
+ *  <tr>
+ *      <td>world_direction</td>
+ *      <td>direction of light in world coordinates derived from scene object orientation</td>
+ *  </tr>
+ *  <tr>
+ *      <td>ambient_intensity</td>
+ *      <td>intensity of ambient light emitted</td>
+ *  </tr>
+ *  <tr>
+ *      <td>specular_intensity</td>
+ *      <td>intensity of specular light emitted</td>
+ *  </tr>
+ *  <tr>
+ *      <td>attenuation_constant</td>
+ *      <td>constant attenuation factor</td>
+ *  </tr>
+ *  <tr>
+ *      <td>attenuation_linear</td>
+ *      <td>linear attenuation factor</td>
+ *  </tr>
+ *  <tr>
+ *      <td><attenuation_quadratic/td>
+ *      <td>quadratic attenuation factor</td>
+ *  </tr>
+ *  <tr><td>inner_cone_angle</td><td>cosine of inner cone angle</td></tr>
+ *  <tr><td>outer_cone_angle</td><td>cosine of outer cone angle</td></tr>
+ *  <tr><td>sm0</td><td>shadow matrix column 1</td></tr>
+ *  <tr><td>sm1</td><td>shadow matrix column 2</td></tr>
+ *  <tr><td>sm2</td><td>shadow matrix column 3</td></tr>
+ *  <tr><td>sm3</td><td>shadow matrix column 4</td></tr>
+ * </table>
  * Point lights currently cannot cast shadows. Enabling shadows for
  * this light type will waste resources.
  * 
@@ -78,7 +103,7 @@ public class GVRPointLight extends GVRLightBase
 
     /**
     * Get the ambient light intensity.
-    * 
+    * <p>
     * This designates the color of the ambient reflection.
     * It is multiplied by the material ambient color to derive
     * the hue of the ambient reflection for that material.
@@ -93,7 +118,7 @@ public class GVRPointLight extends GVRLightBase
 
    /**
     * Set the ambient light intensity.
-    * 
+    * <p>
     * This designates the color of the ambient reflection.
     * It is multiplied by the material ambient color to derive
     * the hue of the ambient reflection for that material.
@@ -111,7 +136,7 @@ public class GVRPointLight extends GVRLightBase
 
    /**
     * Get the diffuse light intensity.
-    * 
+    * <p>
     * This designates the color of the diffuse reflection.
     * It is multiplied by the material diffuse color to derive
     * the hue of the diffuse reflection for that material.
@@ -145,7 +170,7 @@ public class GVRPointLight extends GVRLightBase
 
    /**
     * Get the specular intensity of the light.
-    *
+    * <p>
     * This designates the color of the specular reflection.
     * It is multiplied by the material specular color to derive
     * the hue of the specular reflection for that material.
@@ -160,7 +185,7 @@ public class GVRPointLight extends GVRLightBase
 
    /**
     * Set the specular intensity of the light.
-    * 
+    * <p>
     * This designates the color of the specular reflection.
     * It is multiplied by the material specular color to derive
     * the hue of the specular reflection for that material.
@@ -178,7 +203,8 @@ public class GVRPointLight extends GVRLightBase
 
     /**
      * Get the constant attenuation factor.
-     * This dims the light by a constant amount: {@code 1 / attenuation_constant}.
+     * <p>
+     * Dims the light by a constant amount: {@code 1 / attenuation_constant}.
      * @return constant attenuation
      */
     public float getAttenuationConstant() {
@@ -187,7 +213,8 @@ public class GVRPointLight extends GVRLightBase
 
     /**
      * Get the constant attenuation factor.
-     * This dims the light linearly based on distance from the light:
+     * <p>
+     * Dims the light linearly based on distance from the light:
      * {@code 1 / attenuation_linear * distance}.
      * @return linear attenuation
      */
@@ -197,7 +224,8 @@ public class GVRPointLight extends GVRLightBase
 
     /**
      * Get the quadratic attenuation factor.
-     * This dims the light quadratically based on distance from the light:
+     * <p>
+     * Dims the light quadratically based on distance from the light:
      * {@code 1 / attenuation_quadratic * distance * distance}.
      * @return quadratic attenuation
      */
@@ -207,7 +235,8 @@ public class GVRPointLight extends GVRLightBase
     
     /**
      * Set the constant attenuation factor.
-     * This dims the light by a constant amount: {@code 1 / attenuation_constant}.
+     * <p>
+     * Dims the light by a constant amount: {@code 1 / attenuation_constant}.
      * @param v constant attenuation value
      */
     public void setAttenuationConstant(float v) {
@@ -216,7 +245,8 @@ public class GVRPointLight extends GVRLightBase
 
     /**
      * Set the linear attenuation factor.
-     * This dims the light linearly based on distance from the light:
+     * <p>
+     * Dims the light linearly based on distance from the light:
      * {@code 1 / attenuation_linear * distance}.
      * param v linear attenuation value
      */
@@ -226,7 +256,8 @@ public class GVRPointLight extends GVRLightBase
 
     /**
      * Set the quadratic attenuation factor.
-     * This dims the light quadratically based on distance from the light:
+     * <p>
+     * Dims the light quadratically based on distance from the light:
      * {@code 1 / attenuation_quadratic * distance * distance}.
      * @param v quadratic attenuation value
      */
@@ -237,6 +268,7 @@ public class GVRPointLight extends GVRLightBase
     /**
      * Set the three attenuation constants to control how
      * light falls off based on distance from the light source.
+     * <p>
      * {@code 1 / (attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2)}
      * @param constant  constant attenuation factor
      * @param linear    linear attenuation factor

@@ -24,8 +24,51 @@ import android.content.Context;
 import org.gearvrf.R;
 
    /**
-    * Manages a set of variants on vertex and fragment shaders from the same source
-    * code.
+    * Implements the Phong lighting model in GearVRF.
+    * <p>
+    * The Phong shader is used by content loaded through
+    * the GVRAssetLoader class. It supports ambient,
+    * diffuse, specular, opacity and emissive material
+    * colors and textures. You can blend two textures
+    * of the same type together. It also supports multiple light sources.
+    * <p>
+    * <h3>Vertex Attributes:</h3>
+    * <table>
+    *     <tr><td>a_position</td><td>x,y,z vertex position</td></tr>
+    *     <tr><td>a_normal</td><td>x,y,z, vertex normal</td></tr>
+    *     <tr><td>a_texcoord</td><td>u,v first texture coordinate set</td></tr>
+    *     <tr><td>a_texcoord1</td><td>u,v second texture coordinate set</td></tr>
+    *     <tr><td>a_texcoord2</td><td>u,v third texture coordinate set</td></tr>
+    *     <tr><td>a_texcoord3</td><td>u,v fourth texture coordinate set</td></tr>
+    * </table>
+    * <p>
+    *  <h3>Material Uniforms:</h3>
+    *  <table>
+    *      <tr><td>ambient_color</td><td>r,g,b,a ambient material color</td></tr>
+    *      <tr><td>diffuse_color</td><td>r,g,b,a diffuse material color</td></tr>
+    *      <tr><td>specular_color</td><td>r,g,b,a specular material color</td></tr>
+    *      <tr><td>emissive_color</td><td>r,g,b,a emissive material color</td></tr>
+    *      <tr><td>specular_exponent</td><td>Phong specular power</td></tr>
+    *      <tr><td>u_lightmap_offset</td><td>offset for lightmap texture coordinates</td></tr>
+    *      <tr><td>u_lightmap_scale</td><td>scale for lightmap texture coordinates</td></tr>
+    *  </table>
+    *  <h3>Textures:</h3>
+    *  <table>
+    *      <tr><td>ambientTexture</td><td>texture providing ambient color</td></tr>
+    *      <tr><td>diffuseTexture</td><td>texture providing diffuse color</td></tr>
+    *      <tr><td>specularTexture</td><td>texture providing specular color</td></tr>
+    *      <tr><td>opacityTexture</td><td>texture controlling opacity (alpha)</td></tr>
+    *      <tr><td>emissiveTexture</td><td>texture providing emissive color</td></tr>
+    *      <tr><td>lightmapTexture</td><td>texture providing diffuse illumination</td></tr>
+    *      <tr><td>normalTexture</td><td>texture containing normal map</td></tr>
+    *  </table>
+    *  <h3>Texture Blending:</h3>
+    *  To support blending of textures, another set of texture samplers
+    *  is supported. These secondary textures are blended
+    *  with the previous texture of the same type based on the
+    *  blend operation.
+    *  <ul>
+     *  @see GVRLightBase GVRSpotLight GVRDirectLight GVRPointLight
     */
    public class GVRPhongShader extends GVRShaderTemplate
    {

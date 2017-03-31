@@ -17,17 +17,16 @@ package org.gearvrf;
 
 /**
  * Represents collision geometry that is a mesh.
- * 
- * A {@link GVRCollider} is something that is being pointed at by a picking
- * ray. {@linkplain GVRCollider Colliders} are attached to
- * {@link GVRSceneObject scene objects.} The {@link GVRPicker} will return an
- * array of GVRColliders: you use {@link GVRCollider#getOwnerObject()} to retrieve the scene object.
- * 
  * <p>
- * A MeshCollider holds the {@link GVRMesh} that the picking ray will be
+ * A {@link GVRCollider} is something that is being pointed at by a picking ray.
+ * {@linkplain GVRCollider Colliders} are attached to {@link GVRSceneObject scene objects.}
+ * The {@link GVRPicker} will return an array of GVRColliders:
+ * you use {@link GVRCollider#getOwnerObject()} to retrieve the scene object.
+ * <p>
+ * A mesh collider holds the {@link GVRMesh} that the picking ray will be
  * tested against. If no mesh is specified, it will use the mesh
  * attached to the GVRSceneObject that owns it.
- * 
+ * <p>
  * You do not need to wait for the mesh to load before attaching the collider.
  * If the scene object that owns the mesh collider does not have a mesh and
  * the mesh collider doesn't have one, the scene object will not be pickable.
@@ -37,7 +36,7 @@ public class GVRMeshCollider extends GVREyePointee {
 
     /**
      * Constructor to make mesh collider and attach a mesh.
-     * 
+     * <p>
      * When the mesh is complicated, it will be cheaper - though less accurate -
      * to use the bounding box instead of the mesh.
      * 
@@ -54,11 +53,11 @@ public class GVRMeshCollider extends GVREyePointee {
     
     /**
      * Constructor to make mesh collider without a mesh.
-     * 
+     * <p>
      * The collider will use the mesh attached to the
      * scene object that owns it. If there is no mesh
      * on that scene object, the collider will never be picked.
-     * 
+     * <p>
      * Your application does not have to wait for the mesh to load
      * before attaching a collider - it will become pickable
      * when the mesh becomes available.
@@ -73,8 +72,8 @@ public class GVRMeshCollider extends GVREyePointee {
     }
 
     /**
-     * Simple constructor.
-     * 
+     * Construct a mesh collider to collide against a specific mesh.
+     * <p>
      * When the mesh is complicated, it will be cheaper - though less accurate -
      * to use {@link GVRMesh#getBoundingBox()} instead of the raw mesh.
      * 
