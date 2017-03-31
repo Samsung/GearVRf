@@ -1259,9 +1259,6 @@ public final class GVRAssetLoader {
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
-     *
-     * @return A {@link GVRModelSceneObject} that is the root of the hierarchy generated
-     * by loading the 3D model.
      */
     public void loadModel(final GVRResourceVolume fileVolume,
                           final GVRSceneObject model,

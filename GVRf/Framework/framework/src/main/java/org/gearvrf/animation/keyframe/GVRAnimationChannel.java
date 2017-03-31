@@ -281,7 +281,7 @@ public final class GVRAnimationChannel implements PrettyPrint {
      * Defines how the animation behaves before the first key is encountered.
      * <p>
      *
-     * The default value is {@link org.gearvrf.jassimp2.AiAnimBehavior#DEFAULT} (the original
+     * The default value is {@link org.gearvrf.jassimp.AiAnimBehavior#DEFAULT} (the original
      * transformation matrix of the affected node is used).
      * 
      * @return the animation behavior before the first key

@@ -125,8 +125,6 @@ public class GVRAccessibilityTalkBack {
 
     /**
      * By default locale is English US.
-     * 
-     * @return
      */
     public Locale getDefaultLocale() {
         return Locale.US;

@@ -181,12 +181,10 @@ public class GVRAsynchronousResourceLoader {
 
     /**
      * Load a bitmap texture asynchronously.
-     * 
-     * This is the implementation of
-     * {@link GVRContext#loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource, int)}
-     * - it will usually be more convenient (and more efficient) to call that
-     * directly.
-     * 
+     * <p>
+     * Never call this function directly. Use {@link GVRAssetLoader} to
+     * load textures.
+     * </p>
      * @param gvrContext
      *            The GVRF context
      * @param textureCache
@@ -204,6 +202,7 @@ public class GVRAsynchronousResourceLoader {
      *             {@link GVRContext#LOWEST_PRIORITY} or {@literal >}
      *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
      *             parameters are {@code null}.
+     * @deprecated
      */
     public static void loadBitmapTexture(GVRContext gvrContext,
             ResourceCache<GVRTexture> textureCache,
