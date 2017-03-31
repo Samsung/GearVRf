@@ -17,12 +17,13 @@ package org.gearvrf;
 
 /**
  * Opaque type that specifies a custom post-effect shader.
- * 
+ * Currently material and post effect shaders are kept in separate realms.
+ * Material shader IDs may overlap PostEffect shader IDs.
  * You get these from
- * {@link GVRPostEffectShaderManager#addShader(String, String)} ; you can pass
- * these to
+ * {@link GVRPostEffectShaderManager#addShader(String, String)} and you can pass
+ * them to
  * {@link GVRPostEffect#GVRPostEffect(GVRContext, GVRPostEffectShaderId)},
- * {@link GVRPostEffect#setShaderType(GVRPostEffectShaderId)}, and
+ * {@link GVRPostEffect#setShaderType(GVRShaderId)}, and
  * {@link GVRPostEffectShaderManager#getShaderMap(GVRCustomPostEffectShaderId)}.
  */
 public class GVRCustomPostEffectShaderId extends GVRPostEffectShaderId {
@@ -30,4 +31,9 @@ public class GVRCustomPostEffectShaderId extends GVRPostEffectShaderId {
     GVRCustomPostEffectShaderId(int id) {
         super(id);
     }
+    GVRCustomPostEffectShaderId(GVRShaderId shaderId) {
+        super(shaderId.ID);
+    }
+
+
 }

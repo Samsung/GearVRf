@@ -37,12 +37,12 @@ import java.util.concurrent.Future;
  * </table>
  * </p>
  */
-public interface GVRShaders<ID> {
+public interface GVRShaders {
 
     static final String MAIN_TEXTURE = "main_texture";
 
     /** @return The current shader id. */
-    public ID getShaderType();
+    public GVRShaderId getShaderType();
 
     /**
      * Set shader id
@@ -51,7 +51,7 @@ public interface GVRShaders<ID> {
      *            The new shader id. This is an opaque type, used to keep object
      *            and scene shader ids in distinct namespaces.
      */
-    public void setShaderType(ID shaderId);
+    public void setShaderType(GVRShaderId shaderId);
 
     /**
      * The {@link GVRTexture texture} currently bound to the

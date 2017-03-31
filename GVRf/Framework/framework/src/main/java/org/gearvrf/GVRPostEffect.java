@@ -17,21 +17,22 @@ package org.gearvrf;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.gearvrf.utility.Threads;
 
 /**
- * A "post effect" shader is a GL shader which can be inserted into the pipeline
+ * A "post effect" shader is a shader which can be inserted into the pipeline
  * between rendering the scene graph and applying lens distortion.
  * 
- * A {@link GVRPostEffect} combines the id of a (stock or custom) post effect
+ * A {@link GVRPostEffect} combines the id of a post effect
  * shader with shader data: you can, for example, apply the same shader to each
  * eye, using different parameters for each eye. It is actually quite similar to
  * {@link GVRMaterial}.
  */
 public class GVRPostEffect extends GVRHybridObject implements
-        GVRShaders<GVRPostEffectShaderId> {
+        GVRShaders {
 
     private final Map<String, GVRTexture> textures = new HashMap<String, GVRTexture>();
 
@@ -71,7 +72,7 @@ public class GVRPostEffect extends GVRHybridObject implements
     }
 
     /** @return The post-effect shader id */
-    public GVRPostEffectShaderId getShaderType() {
+    public GVRShaderId getShaderType() {
         final int shaderType = NativePostEffectData.getShaderType(getNative());
         return GVRPostEffectShaderId.get(shaderType);
     }
@@ -82,7 +83,7 @@ public class GVRPostEffect extends GVRHybridObject implements
      * @param shaderId
      *            The new shader.
      */
-    public void setShaderType(GVRPostEffectShaderId shaderId) {
+    public void setShaderType(GVRShaderId shaderId) {
         NativePostEffectData.setShaderType(getNative(), shaderId.ID);
     }
 
@@ -100,6 +101,14 @@ public class GVRPostEffect extends GVRHybridObject implements
 
     public GVRTexture getTexture(String key) {
         return textures.get(key);
+    }
+
+    /**
+     * Return the list of texture keys for this post effect.
+     * @return set of unique texture names.
+     */
+    public Set<String> getTextureNames() {
+        return textures.keySet();
     }
 
     public void setTexture(String key, GVRTexture texture) {
