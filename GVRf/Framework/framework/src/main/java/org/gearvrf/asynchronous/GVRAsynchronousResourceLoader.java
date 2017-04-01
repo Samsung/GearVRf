@@ -17,7 +17,6 @@ package org.gearvrf.asynchronous;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +27,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.gearvrf.FutureWrapper;
-import org.gearvrf.IAssetEvents;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRAtlasInformation;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCompressedCubemapTexture;
@@ -44,7 +43,6 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRShaders;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
-import org.gearvrf.IErrorEvents;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;

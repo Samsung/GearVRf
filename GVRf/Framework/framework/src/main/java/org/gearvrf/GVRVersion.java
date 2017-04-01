@@ -60,7 +60,7 @@ public class GVRVersion {
      * capture 3D screenshot.
      * 
      * Add high-level {@link GVRSceneObject#GVRSceneObject(GVRContext,
-     * Future<GVRMesh>, Future<GVRTexture>)} constructor.
+     * Future&lt;GVRMesh&gt;, Future&lt;GVRTexture&gt;)} constructor.
      * 
      * Add {@link FutureWrapper} to generate required Future<T> for the new
      * constructor.

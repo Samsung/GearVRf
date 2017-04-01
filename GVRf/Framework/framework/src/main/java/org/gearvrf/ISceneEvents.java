@@ -1,5 +1,8 @@
 package org.gearvrf;
 
+/**
+ * Callback interface for scene initialization.
+ */
 public interface ISceneEvents extends IEvents {
     /**
      * Called when the scene has been initialized.

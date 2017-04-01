@@ -1361,7 +1361,7 @@ public class AnimationInteractivityManager {
      * Called upon initialization and updates to those vectors
      *
      * @param d
-     * @return
+     * @return quaternion representation of vector
      */
     public Quaternionf ConvertDirectionalVectorToQuaternion(Vector3f d) {
         d.negate();

@@ -569,8 +569,9 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     
     /**
      * Get all components of a specific class from this scene object and its descendants.
-     * @param T     class which derived from GVRComponent
-     * @param type  component type (as returned from getComponentType())
+     * <p>
+     * T must be a class which derived from {@link GVRComponent}.
+     * @param type  component type (as returned from GVRComponent.getComponentType).
      * @return ArrayList of components with the specified class.
      */
     @SuppressWarnings("unchecked")
@@ -692,12 +693,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * Simple, high-level API to enable or disable eye picking for this scene
      * object.
      * 
-     * The {@linkplain #attachCollider low-level
-     * API} gives you a lot of control over eye picking, but it does involve an
-     * awful lot of details. This method
-     * (and {@link #getPickingEnabled()}) provides a simple boolean property.
-     * It attaches a GVRSphereCollider to the scene object. If you want more
-     * accurate picking, you can use {@link attachComponent} to attach a
+     * The {@linkplain #attachCollider(GVRCollider)} low-level
+     * API gives you a lot of control over eye picking, but it does involve an
+     * awful lot of details. This method (and {@link #getPickingEnabled()}) provides a simple boolean property.
+     * It attaches a {@link GVRSphereCollider} to the scene object. If you want more
+     * accurate picking, you can use {@link #attachComponent(GVRComponent)} to attach a
      * mesh collider instead. The mesh collider is more accurate but also
      * costs more to compute.
      * 
@@ -802,8 +802,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     /**
      * Add the owner of {@code childComponent} as a child of this object. (owner object of the
-     * Adding a child will increase the
-     * {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * Adding a child will increase the {@link #getChildrenCount()} for this scene object.
      * If the component is not attached to a scene object this function does nothing.
      * 
      * @param childComponent
@@ -818,8 +817,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
     /**
      * Remove the owner of {@code childComponent} as a child of this object.
-     * Removing a child will decrease
-     * the {@link getChildrenCount() getChildrenCount()} for this scene object.
+     * Removing a child will decrease the {@link #getChildrenCount()} for this scene object.
      * If the component is not attached to a scene object this function does nothing.
      * 
      * @param childComponent
@@ -831,11 +829,29 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
             removeChildObject(childComponent.getOwnerObject());
         }
     }
-    
+
+    /**
+     * This interface provides access to the components of a scene object.
+     * <p>
+     * It is passed to {@link GVRSceneObject#forAllDescendants(SceneVisitor)}
+     * to visit all of the descendants in a scene object's hierarchy
+     * (including the object itself). The {@link #visit(GVRSceneObject)} function
+     * will be called for each scene object as long as it returns true.
+     * @see GVRSceneObject#forAllDescendants(SceneVisitor
+     */
     public interface SceneVisitor {
         public boolean visit(GVRSceneObject obj);
     }
-    
+
+    /**
+     * This interface provides access to the components of a scene object.
+     * <p>
+     * It is passed to {@link GVRSceneObject#forAllComponents(ComponentVisitor)}
+     * to visit all of the components in a scene object's hierarchy.
+     * The {@link #visit(GVRComponent)} function will be called for each
+     * component as long as it returns true.
+     * @see GVRSceneObject#forAllComponents(ComponentVisitor)
+     */
     public interface ComponentVisitor {
         public boolean visit(GVRComponent comp);
     }
@@ -849,10 +865,10 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 	 * children() or getChildren().
 	 *
 	 * @param visitor SceneVisitor interface implementing "visit" function
-	 * @see children
-	 * @see getChildren
+	 * @see #children()
+	 * @see #getChildren()
 	 * @see SceneVisitor
-	 * @see forAllComponents
+	 * @see #forAllComponents(ComponentVisitor)
 	 */
     public void forAllDescendants(SceneVisitor visitor) {
         if (visitor.visit(this)) {
@@ -874,11 +890,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 	 * @param visitor ComponentVisitor interface implementing "visit" function
 	 * @param componentType type of component to find
 	 *
-	 * @see children
-	 * @see getChildren
-	 * @see SceneVisitor
-	 * @see forAllDescendants
-	 * @see getComponent
+     * @see #children()
+     * @see #getChildren()
+     * @see SceneVisitor
+	 * @see #forAllDescendants(SceneVisitor)
+	 * @see #getComponent(long)
 	 */    
     public void forAllComponents(ComponentVisitor visitor, long componentType) {
         GVRComponent comp = getComponent(componentType);
@@ -902,11 +918,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 	 *
 	 * @param visitor ComponentVisitor interface implementing "visit" function
 	 *
-	 * @see children
-	 * @see getChildren
+	 * @see #children()
+	 * @see #getChildren()
 	 * @see SceneVisitor
-	 * @see forAllDescendants
-	 * @see getComponent
+	 * @see #forAllDescendants(SceneVisitor)
+	 * @see #getComponent(long)
 	 */  
     public void forAllComponents(ComponentVisitor visitor) {
         for (GVRComponent comp : mComponents.values()) {

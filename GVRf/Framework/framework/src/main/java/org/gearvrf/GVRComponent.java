@@ -63,10 +63,10 @@ public class GVRComponent extends GVRHybridObject {
      * constant, so that there is only one {@code List} per class.
      * Descendants that supply a {@code List} and <em>also</em> have
      * descendants that supply a {@code List} should use
-     * {@link CleanupHandlerListManager} to maintain a
+     * {@link GVRHybridObject.CleanupHandlerListManager} to maintain a
      * {@code Map<List<NativeCleanupHandler>, List<NativeCleanupHandler>>}
      * whose keys are descendant lists and whose values are unique
-     * concatenated lists - see {@link GVREyePointeeHolder} for an example.
+     * concatenated lists - see {@link GVRCollider} for an example.
      */
     protected GVRComponent(GVRContext gvrContext, long nativePointer,
             List<NativeCleanupHandler> cleanupHandlers) {

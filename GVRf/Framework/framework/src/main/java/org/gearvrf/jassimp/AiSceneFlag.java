@@ -88,7 +88,7 @@ public enum AiSceneFlag {
     
     /**
      * This flag is currently only set by the 
-     * {@link jassimp.AiPostProcessSteps#JOIN_IDENTICAL_VERTICES 
+     * {@link org.gearvrf.jassimp.AiPostProcessSteps#JOIN_IDENTICAL_VERTICES
      * JOIN_IDENTICAL_VERTICES}.<p>
      * 
      * It indicates that the vertices of the output meshes aren't in the 
