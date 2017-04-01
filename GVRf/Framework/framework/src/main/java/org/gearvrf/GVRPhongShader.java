@@ -24,7 +24,7 @@ import android.content.Context;
 import org.gearvrf.R;
 
    /**
-    * Implements the Phong lighting model in GearVRF.
+    * Shader which implements the Phong lighting model.
     * <p>
     * The Phong shader is used by content loaded through
     * the GVRAssetLoader class. It supports ambient,

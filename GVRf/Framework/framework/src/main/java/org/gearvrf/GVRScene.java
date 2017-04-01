@@ -33,8 +33,9 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Contains a the hierarchy of visible objects, a camera and processes events.
- * 
+ * Contains a hierarchy of visible objects, a camera and event handlers
+ * for processing events.
+ * <p>
  * The scene receives events defined in {@link ISceneEvents} and {@link IPickEvents}.
  * To add a listener to these events, use the
  * following code:
@@ -44,7 +45,7 @@ import java.util.Set;
  *     };
  *     getEventReceiver().addListener(mySceneEventListener);
  * </pre>
- * 
+ * <p>
  * The scene graph is a hierarchy with all the objects to display.
  * It has a single root and one main camera rig.
  * Each visible object, or node, in the scene graph is a {@link GVRSceneObject}

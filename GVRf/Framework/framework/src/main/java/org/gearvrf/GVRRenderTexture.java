@@ -15,7 +15,15 @@
 
 package org.gearvrf;
 
-/** Frame Buffer object. */
+/**
+ * A texture which may be rendered into.
+ * <p>
+ * Typically a render texture is attached to a GVRRenderTarget
+ * component which will render a scene into the texture each frame.
+ * This texture can then be used to texture objects in
+ * another rendered scene.
+ * @see GVRRenderTarget
+ */
 public class GVRRenderTexture extends GVRTexture {
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size.

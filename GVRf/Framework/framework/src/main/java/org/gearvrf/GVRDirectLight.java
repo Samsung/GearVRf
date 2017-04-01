@@ -19,7 +19,7 @@ import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 
 /**
- * Illuminates object in the scene with a directional light source.
+ * Illuminates objects in the scene with a directional light source.
  * <p>
  * The direction of the light is the forward orientation of the scene object
  * the light is attached to. Light is emitted in that direction

@@ -837,7 +837,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * to visit all of the descendants in a scene object's hierarchy
      * (including the object itself). The {@link #visit(GVRSceneObject)} function
      * will be called for each scene object as long as it returns true.
-     * @see GVRSceneObject#forAllDescendants(SceneVisitor
+     * @see GVRSceneObject#forAllDescendants(SceneVisitor)
      */
     public interface SceneVisitor {
         public boolean visit(GVRSceneObject obj);
@@ -1262,12 +1262,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Describes the BoundingVolume of this SceneObject.
-     *
-     * Describes the BoundingVolume of this SceneObject.  The bounding
-     * volume encompases this GVRSceneObject and all of its children.
+     * Describes the bounding volume of a SceneObject.
+     * <p>
+     * The boundingvolume encompasses the GVRSceneObject and all of its children.
      * The volume includes both the bounding sphere (described by the center and radius) and the bounding box (described by the minCorner and maxCorner).
-     *
+     * @see GVRSceneObject#getBoundingVolume()
      */
     public static final class BoundingVolume {
         public final Vector3f center;

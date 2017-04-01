@@ -25,7 +25,18 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-/** Wrapper for a GL texture. */
+/**
+ * Contains one or more bitmap images and texture sampler parameters.
+ * <p>
+ * A texture can be mapped onto a mesh to provide color detail greater
+ * than the mesh vertices. There are different types of textures
+ * depending on the format of the underlying image data.
+ * @see GVRCubemapTexture
+ * @see GVRBitmapTexture
+ * @see GVRCompressedCubemapTexture
+ * @see GVRCompressedCubemapTexture
+ * @see GVRFloatTexture
+ */
 public class GVRTexture extends GVRHybridObject {
     private List<GVRAtlasInformation> mAtlasInformation = null;
     private String mVertexTexCoord = null;

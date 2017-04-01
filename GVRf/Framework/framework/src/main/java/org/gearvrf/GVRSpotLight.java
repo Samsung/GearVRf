@@ -18,7 +18,7 @@ import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 
 /**
- * Illuminates object in the scene with a cone shaped beam.
+ * Illuminates objects in the scene with a cone shaped beam.
  * <p>
  * The apex of the cone is at the position of the scene object
  * the light is attached to. The direction of the cone is the

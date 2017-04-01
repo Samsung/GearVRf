@@ -36,7 +36,7 @@ package org.gearvrf;
  * so it will scale as the scene object does.
  *
  * @see GVRPicker
- * @see GVRSphereCollider
+ * @see GVRBoxCollider
  * @see GVRMeshCollider
  * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRSceneObject#getBoundingVolume()

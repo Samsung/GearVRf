@@ -53,7 +53,7 @@ public abstract class ZipLoader {
          * convenience function to process the {@link GVRAndroidResource}s obtained from the zip
          * file. For eg. use
          * {@link GVRContext#loadFutureTexture(GVRAndroidResource, int)} to return
-         * a {@link Future&lt;GVRTexture&gt;>} to the {@link ZipLoader}.
+         * a {@literal Future<GVRTexture>} to the {@link ZipLoader}.
          *
          * @param context  the GVRf context
          * @param resource a resource entry obtained from the zip file

@@ -24,14 +24,9 @@ import java.util.Map;
 /**
  * Manages post-effect shaders, for modifying the texture holding the rendered
  * scene graph, before lens distortion is applied.
- * 
+ * <p>
  * Get the singleton from {@link GVRContext#getPostEffectShaderManager()}
- *
- * This class is deprecated. The preferred method of authoring custom
- * shaders is to derive from {@link GVRShaderTemplate}.
- * In future releases there will be no difference between material
- * and post-effect shaders.
- * @deprecated
+ * @see GVRPostEffect
  */
 public class GVRPostEffectShaderManager extends
         GVRBaseShaderManager implements GVRShaderManagers {
