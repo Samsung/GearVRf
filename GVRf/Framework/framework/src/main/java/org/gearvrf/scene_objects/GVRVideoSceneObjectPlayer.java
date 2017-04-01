@@ -3,7 +3,8 @@ package org.gearvrf.scene_objects;
 import android.view.Surface;
 
 /**
- * Use to supply different media player objects to GVRVideoSceneObject.
+ * Supply different media player objects to GVRVideoSceneObject.
+ * <p>
  * For example in addition to the default MediaPlayer this can be used to make GVRVideoSceneObject
  * utilize the ExoPlayer.
  * @param <T>
