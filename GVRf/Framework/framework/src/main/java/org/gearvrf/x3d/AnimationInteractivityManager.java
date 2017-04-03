@@ -127,6 +127,8 @@ public class AnimationInteractivityManager {
     private Vector<EventUtility> eventUtilities = null;
     private ArrayList<ScriptObject> scriptObjects = null;
 
+    private AnchorImplementation anchorImplementation = null;
+
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
 
     // Append this incremented value to GVRSceneObject names to insure unique
@@ -152,6 +154,9 @@ public class AnimationInteractivityManager {
         this.timeSensors = timeSensors;
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
+
+        anchorImplementation = new AnchorImplementation(this.gvrContext);
+
     }
 
     /**
@@ -247,6 +252,15 @@ public class AnimationInteractivityManager {
                         //This sensor already exists inside an Interactive Object
                         interactiveObject.setSensor(routeFromSensor, fromField);
                         routeToTimeSensorFound = true;
+                    }
+                }
+                else if (routeFromScriptObject != null) {
+                    // a rare case where a Script node sends data to a TimeSensor
+                    if (routeFromScriptObject == interactiveObject.getScriptObject()) {
+                        //TODO: complete adding field to this Script Node when sent to TimeSensor
+                        //interactiveObject.getScriptObject().setToTimeSensor(routeToTimeSensor, toField);
+                        routeToTimeSensorFound = true;
+
                     }
                 }
             }
@@ -782,161 +796,7 @@ public class AnimationInteractivityManager {
                 // Likely this is an Anchor tag since there are no routes with it
                 //Sensor sensor = interactiveObject.getSensor();
                 if ( interactiveObject.getSensor().getType() == Sensor.Type.ANCHOR) {
-                    final InteractiveObject interactiveObjectFinal = interactiveObject;
-                    interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
-                        //boolean stateChanged = false;
-                        boolean isActiveDone = false;
-
-                        @Override
-                        public void onSensorEvent(SensorEvent event) {
-
-                            if (event.isActive() ) {
-                                if (!isActiveDone) {
-                                    // only go through once even if object is clicked a long time
-                                    isActiveDone = true;
-                                    String url = interactiveObjectFinal.getSensor().getAnchorURL();
-                                    if ( url.toLowerCase().endsWith(".x3d")) {
-                                        Log.e("X3D-Anchor", "      go to .x3d: " + url);
-                                    }
-                                    else if ( url.startsWith("#")) {
-                                        Log.e("X3D-Anchor", "      go to Viewpoint: " + url);
-                                    }
-                                    else  {
-                                        Log.e("X3D-Anchor", "      go to web page: " + url);
-                                        final String urlFinal = url;
-                                        final GVRSceneObject gvrSceneObjectAnchor = interactiveObjectFinal.getSensor().getGVRSceneObject();
-                                        gvrContext.getActivity().runOnUiThread( new Runnable() {
-                                            @Override
-                                            public void run(){
-                                                // Launch a new WebView window and place the web page there.
-                                                Log.e("X3D-Anchor", "         BGN new GVRWebView(gvrActivity)");
-                                                GVRWebView gvrWebView = new GVRWebView(gvrContext.getActivity());
-                                                Log.e("X3D-Anchor", "         END new GVRWebView(gvrActivity)");
-                                                gvrWebView.setInitialScale(100);
-                                                gvrWebView.measure(1600, 900);
-                                                gvrWebView.layout(0, 0, 1600, 900);
-                                                WebSettings webSettings = gvrWebView.getSettings();
-                                                webSettings.setJavaScriptEnabled(true);
-
-                                                Log.e("X3D-Anchor", "   BGN THREAD gvrWebViewFinal.loadUrl( " + urlFinal + " )");
-                                                gvrWebView.loadUrl(urlFinal);
-
-                                                Log.e("X3D-Anchor", "   Create web object");
-                                                GVRViewSceneObject gvrWebViewSceneObject = new GVRViewSceneObject(gvrContext,
-                                                            gvrWebView, 4.0f, 3.0f);
-                                                gvrWebViewSceneObject.setName("web view object");
-
-                                                gvrWebViewSceneObject.getRenderData().getMaterial().setOpacity(1.0f);
-                                                gvrWebViewSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
-                                                gvrWebViewSceneObject.getTransform().setPosition(0.0f, 0.0f, 0.0f);
-                                                //gvrWebViewSceneObject.getTransform().setPosition(1.0f, -1.0f, -5.0f);
-                                                //gvrWebView.invalidate();
-
-                                                gvrWebViewSceneObject.getRenderData().setRenderMask(0);
-
-                                                gvrWebViewSceneObject.getRenderData().setRenderMask(
-                                                        GVRRenderData.GVRRenderMaskBit.Left
-                                                                | GVRRenderData.GVRRenderMaskBit.Right);
-
-                                                Log.e("X3D-Anchor", "BGN addChildObject(s)");
-                                                GVRMaterial background = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID);
-                                                background.setDiffuseColor(0, 0, .5f, 1);
-                                                GVRCubeSceneObject gvrUICubeSceneObject = new GVRCubeSceneObject(gvrContext, true, background);
-                                                gvrUICubeSceneObject.getTransform().setScale(4, .5f, .2f);
-                                                gvrUICubeSceneObject.getTransform().setPosition(0, 1.75f, -.1f);
-                                                gvrUICubeSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
-                                                // Currently req to show an object dynamically added
-                                                GVRScene mainScene = gvrContext.getMainScene();
-                                                mainScene.bindShaders(gvrUICubeSceneObject);
-
-                                                GVRSceneObject combinedGVRSceneObject = new GVRSceneObject(gvrContext);
-                                                combinedGVRSceneObject.getTransform().setPosition(1.0f, -1.0f, -5.0f);
-                                                //combinedGVRSceneObject.addChildObject(gvrWebViewSceneObject);
-                                                //combinedGVRSceneObject.addChildObject(gvrUICubeSceneObject);
-                                                //gvrSceneObjectAnchor.addChildObject(combinedGVRSceneObject);
-
-                                                // Set up sensor for the WebView wall
-                                                //Sensor webObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrWebViewSceneObject);
-                                                Sensor webObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
-                                                //final GVRSceneObject webObjectFinal = gvrWebViewSceneObject;
-                                                //final GVRSceneObject uiObjectFinal = gvrUICubeSceneObject;
-                                                final Sensor  webObjectSensorFinal = webObjectSensor;
-                                                final GVRSceneObject  gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
-                                                final GVRSceneObject  gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
-                                                final GVRSceneObject  combinedGVRSceneObjectFinal = combinedGVRSceneObject;
-                                                final GVRSceneObject  gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
-                                                combinedGVRSceneObjectFinal.addChildObject(gvrWebViewSceneObjectFinal);
-                                                combinedGVRSceneObjectFinal.addChildObject(gvrUICubeSceneObjectFinal);
-                                                gvrSceneObjectAnchorFinal.addChildObject(combinedGVRSceneObjectFinal);
-
-                                                webObjectSensor.addISensorEvents(new ISensorEvents() {
-                                                    //boolean stateChanged = false;
-                                                    boolean webObjectIsActiveDone = false;
-                                                    GVRSphereSceneObject gvrSphereScaleObject = null;
-                                                    @Override
-                                                    public void onSensorEvent(SensorEvent event) {
-                                                        if (event.isActive() ) {
-                                                            if (!webObjectIsActiveDone) {
-                                                                // only go through once even if object is clicked a long time
-                                                                webObjectIsActiveDone = true;
-                                                                Log.e("X3D-Anchor", "BGN webObjectIsActiveDone");
-                                                                Vector3f hitPoint = webObjectSensorFinal.getHitPoint();
-                                                                //Log.e("X3D-Anchor", "   hitPoint: " + hitPoint.x + ", "  + hitPoint.y + ", " + hitPoint.z );
-                                                                Log.e("X3D-Anchor", "   event: " + event.getHitX() + ", "  + event.getHitY() + ", " + event.getHitZ() );
-                                                                if (event.getHitX() > .25f) {
-                                                                    Log.e("X3D-Anchor", "   delete webView and UI" );
-                                                                    if (gvrSphereScaleObject != null) gvrWebViewSceneObjectFinal.removeChildObject(gvrSphereScaleObject);
-                                                                    gvrSphereScaleObject = null;
-                                                                    gvrSceneObjectAnchorFinal.removeChildObject(combinedGVRSceneObjectFinal);
-                                                                    //gvrSceneObjectAnchorFinal.removeChildObject(gvrUICubeSceneObjectFinal);
-                                                                }
-                                                                else if (event.getHitX() > 0) {
-                                                                    Log.e("X3D-Anchor", "    > 0" );
-                                                                    if (gvrSphereScaleObject == null) {
-                                                                        GVRMaterial sphereScaleColor = new GVRMaterial(gvrContext);
-                                                                        sphereScaleColor.setDiffuseColor(1, .5f, .5f, 1);
-                                                                        gvrSphereScaleObject = new GVRSphereSceneObject(gvrContext, true, sphereScaleColor);
-                                                                        gvrSphereScaleObject.getTransform().setScale(.25f, .25f, .25f);
-                                                                        gvrSphereScaleObject.getTransform().setPosition(2, 1.5f, 0);
-                                                                        gvrSphereScaleObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
-                                                                        // Currently req to show an object dynamically added
-                                                                        GVRScene mainScene = gvrContext.getMainScene();
-                                                                        mainScene.bindShaders(gvrSphereScaleObject);
-                                                                        gvrWebViewSceneObjectFinal.addChildObject(gvrSphereScaleObject);
-                                                                    }
-                                                                }
-                                                                else if (event.getHitX() > -.25f) {
-                                                                    Log.e("X3D-Anchor", "    > -.25" );
-
-                                                                }
-                                                                else  {
-                                                                    Log.e("X3D-Anchor", "    click else condition" );
-
-                                                                }
-
-                                                            }
-                                                        }  else if (!event.isActive() ) {
-                                                            webObjectIsActiveDone = false;
-                                                        }
-
-                                                    }
-                                                });
-
-
-                                                Log.e("X3D-Anchor", "END addChildObject(s)");
-
-                                            }  // end run
-                                        });
-                                    }
-                                    // CLICKED while over Anchor object
-                                    //stateChanged = !stateChanged;
-                                }
-                            } else if (!event.isActive() ) {
-                                isActiveDone = false;
-                            }
-                        }
-                    });  // end of AddISensorEvent
-
+                    anchorImplementation.AnchorInteractivity( interactiveObject );
                 }  //  end if Sensor Type is Anchor
             } // end sensor != null
 
@@ -1571,6 +1431,9 @@ public class AnimationInteractivityManager {
                             else if ( scriptObjectToEventUtility != null) {
                                 scriptObjectToEventUtility.setToggle(sfBool.getValue());
                             }
+                            else {
+                                Log.e(TAG, "Error: Not setting SFBool '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFBool
                         else if (fieldType.equalsIgnoreCase("SFFloat")) {
                             SFFloat sfFloat = (SFFloat) returnedJavaScriptValue;
@@ -1609,10 +1472,14 @@ public class AnimationInteractivityManager {
                                     }
                                 }  //  end presumed to be a light
                             }  //  end GVRScriptObject ! null
+                            else {
+                                Log.e(TAG, "Error: Not setting SFFloat '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFFloat
                         else if (fieldType.equalsIgnoreCase("SFTime")) {
                             SFTime sfTime = (SFTime) returnedJavaScriptValue;
                             //TODO: eventually will be supported
+                            Log.e(TAG, "Error: Not setting SFTime '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
 
                         }  //  end SFTime
                         else if (fieldType.equalsIgnoreCase("SFColor")) {
@@ -1647,6 +1514,9 @@ public class AnimationInteractivityManager {
                                     }
                                 }
                             }  //  SFColor change to a GVRSceneObject (likely a Light)
+                            else {
+                                Log.e(TAG, "Error: Not setting SFColor '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFColor (to a light or Material)
                         else if (fieldType.equalsIgnoreCase("SFVec3f")) {
                             SFVec3f sfVec3f = (SFVec3f) returnedJavaScriptValue;
@@ -1704,6 +1574,9 @@ public class AnimationInteractivityManager {
                                     }
                                 }  // end it could be a light
                             }  // end GVRSceneObject with SFVec3f
+                            else {
+                                Log.e(TAG, "Error: Not setting SFVec3f '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFVec3f
                         else if (fieldType.equalsIgnoreCase("SFRotation")) {
                             SFRotation sfRotation = (SFRotation) returnedJavaScriptValue;
@@ -1722,6 +1595,9 @@ public class AnimationInteractivityManager {
                                     }
                                 }  //  definedItem != null
                             }  // end GVRSceneObject with SFRotation
+                            else {
+                                Log.e(TAG, "Error: Not setting SFRotation '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFRotation
                     }  //  end value != null
                 }  //  end OUTPUT-ONLY or INPUT_OUTPUT

@@ -59,6 +59,7 @@ public class ScriptObject {
         private EventUtility toEventUtility = null;
         private EventUtility fromEventUtility = null;
         private TimeSensor fromTimeSensor = null;
+        private TimeSensor toTimeSensor = null;
         private String toItemField = ""; // fields to and from ROUTE's
         private String fromItemField = "";
     }
@@ -198,6 +199,15 @@ public class ScriptObject {
     public void setFromTimeSensor(Field field, TimeSensor timeSensor, String fromField) {
         field.fromTimeSensor = timeSensor;
         field.fromItemField = fromField;
+    }
+
+    public TimeSensor getToTimeSensor(Field field) {
+        return field.toTimeSensor;
+    }
+
+    public void setToTimeSensor(Field field, TimeSensor timeSensor, String toField) {
+        field.toTimeSensor = timeSensor;
+        field.toItemField = toField;
     }
 
     // Methods related to the JavaScript code
