@@ -525,7 +525,7 @@ public final class GVRAssetLoader {
     /**
      * Texture load callback that binds the texture to the material.
      */
-    public static class MaterialTextureRequest extends TextureRequest
+    static class MaterialTextureRequest extends TextureRequest
     {
         public final GVRMaterial Material;
         public final String TextureName;
