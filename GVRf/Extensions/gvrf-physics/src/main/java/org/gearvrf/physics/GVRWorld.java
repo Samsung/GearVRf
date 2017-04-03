@@ -34,6 +34,8 @@ import java.util.LinkedList;
  * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
 public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, ComponentVisitor {
+    protected float mFrameTime;
+    private boolean mIsProcessing;
 
     static {
         System.loadLibrary("gvrf-physics");
@@ -49,6 +51,8 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix) {
         super(gvrContext, NativePhysics3DWorld.ctor());
         mHasFrameCallback = false;
+        mIsProcessing = false;
+        mFrameTime = 0.0f;
         mCollisionMatrix = collisionMatrix;
     }
 
@@ -102,9 +106,15 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
 
     @Override
     public void onDrawFrame(float frameTime) {
-        NativePhysics3DWorld.step(getNative(), frameTime);
+        mFrameTime += frameTime;
+        if (mIsProcessing) {
+            return;
+        }
+        NativePhysics3DWorld.step(getNative(), mFrameTime);
 
         generateCollisionEvents();
+        mFrameTime = 0.0f;
+        mIsProcessing = false;
     }
 
     private void generateCollisionEvents() {
