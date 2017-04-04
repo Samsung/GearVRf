@@ -15,6 +15,7 @@
 
 package org.gearvrf.widgetplugin;
 
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 
 
@@ -35,6 +36,7 @@ public class GVRWidgetInputDispatcher {
     float mDownX = 0, mDownY = 0, mDownAbsX = 0, mDownAbsY= 0;
 
     GVRWidgetSceneObject mPickedObject = null;
+    float [] mHitLocation;
 
     class Coords {
         float x;
@@ -51,9 +53,11 @@ public class GVRWidgetInputDispatcher {
         mInput = in;
     }
 
-    public void setPickedObject(GVRSceneObject obj) {
+    public void setPickedObject(GVRPicker.GVRPickedObject pickInfo) {
+        GVRSceneObject obj = pickInfo.getHitObject();
         if (obj instanceof GVRWidgetSceneObject) {
             mPickedObject = (GVRWidgetSceneObject) obj;
+            mHitLocation = pickInfo.getHitLocation();
         } else {
             mPickedObject = null;
         }
@@ -110,12 +114,10 @@ public class GVRWidgetInputDispatcher {
      */
     private void gethit(GVRWidgetSceneObjectMeshInfo info) {
 
-        float[] hit = mPickedObject.getEyePointeeHolder().getHit();
-
-        coords.x = (Math.abs(info.mTopLeftX - hit[0]) / Math.abs(info.mTopLeftX
+        coords.x = (Math.abs(info.mTopLeftX - mHitLocation[0]) / Math.abs(info.mTopLeftX
                 - info.mBottomRightX));
 
-        coords.y = (Math.abs(info.mTopLeftY - hit[1]) / Math.abs(info.mTopLeftY
+        coords.y = (Math.abs(info.mTopLeftY - mHitLocation[1]) / Math.abs(info.mTopLeftY
                 - info.mBottomRightY));
     }
 
