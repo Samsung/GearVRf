@@ -98,5 +98,7 @@ public class GVRVersion {
 
     public static final String V_3_1_0 = "3.1.0";
 
-    public static final String CURRENT = V_3_1_0;
+    public static final String V_3_2_0 = "3.2.0";
+
+    public static final String CURRENT = V_3_2_0;
 }
