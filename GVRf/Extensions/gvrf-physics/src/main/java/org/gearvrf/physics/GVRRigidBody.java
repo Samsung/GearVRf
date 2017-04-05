@@ -365,12 +365,10 @@ public class GVRRigidBody extends GVRComponent {
 
     @Override
     public void onAttach(GVRSceneObject newOwner) {
-        super.onAttach(newOwner);
-
         if (newOwner.getCollider() == null) {
-            throw new RuntimeException("GVRRigidBody depends of a Collider attached to it's SceneObject");
+            throw new UnsupportedOperationException("You must have a collider attached to the scene object before attaching the rigid body");
         }
-
+        super.onAttach(newOwner);
         doPhysicsAttach(newOwner);
     }
 

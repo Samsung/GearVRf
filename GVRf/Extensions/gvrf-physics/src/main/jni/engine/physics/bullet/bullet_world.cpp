@@ -22,6 +22,7 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 namespace gvr {
+std::mutex BulletWorld::sLock;
 
 BulletWorld::BulletWorld() {
     initialize();
@@ -83,6 +84,7 @@ void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
 }
 
 void BulletWorld::step(float timeStep) {
+    std::lock_guard<std::mutex> lock(sLock);
     mPhysicsWorld->stepSimulation(timeStep);
 }
 
@@ -153,5 +155,18 @@ void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int co
     mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(), collidesWith, collisiontype);
 }
 
+void BulletWorld::setGravity(float x, float y, float z) {
+    mPhysicsWorld->setGravity(btVector3(x, y, z));
+}
+
+void BulletWorld::setGravity(glm::vec3 gravity) {
+    mPhysicsWorld->setGravity(btVector3(gravity.x, gravity.y, gravity.z));
+}
+
+glm::vec3 BulletWorld::getGravity() {
+    btVector3 g = mPhysicsWorld->getGravity();
+    glm::vec3 v(g.getX(), g.getY(), g.getZ());
+    return v;
+}
 }
 

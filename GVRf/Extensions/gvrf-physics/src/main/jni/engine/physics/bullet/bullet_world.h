@@ -47,6 +47,14 @@ class BulletWorld : public Physics3DWorld {
 
     void listCollisions(std::list <ContactPoint> &contactPoints);
 
+    void setGravity(float x, float y, float z);
+
+    void setGravity(glm::vec3 gravity);
+
+    glm::vec3 getGravity();
+    static std::mutex& getLock() { return sLock; }
+
+
  private:
     void initialize();
 
@@ -63,6 +71,8 @@ class BulletWorld : public Physics3DWorld {
     btNearCallback *gTmpFilter;
     int gNearCallbackCount = 0;
     void *gUserData = 0;
+    static std::mutex sLock;
+
 };
 
 }
