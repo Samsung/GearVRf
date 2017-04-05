@@ -210,6 +210,14 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
 
     }
 
+    public void setGravity(float x, float y, float z) {
+        NativePhysics3DWorld.setGravity(getNative(), x, y, z);
+    }
+
+    public void getGravity(float[] gravity) {
+        NativePhysics3DWorld.getGravity(getNative(), gravity);
+    }
+
     @Override
     public boolean visit(GVRComponent gvrComponent) {
         if (!gvrComponent.isEnabled()) {
@@ -236,6 +244,10 @@ class NativePhysics3DWorld {
     static native void removeRigidBody(long jphysics_world, long jrigid_body);
 
     static native void step(long jphysics_world, float jtime_step);
+
+    static native void getGravity(long jworld, float[] array);
+
+    static native void setGravity(long jworld, float x, float y, float z);
 
     static native GVRCollisionInfo[] listCollisions(long jphysics_world);
 }

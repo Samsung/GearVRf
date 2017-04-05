@@ -22,6 +22,7 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 namespace gvr {
+std::mutex BulletWorld::sLock;
 
 BulletWorld::BulletWorld() {
     initialize();
@@ -83,6 +84,7 @@ void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
 }
 
 void BulletWorld::step(float timeStep) {
+    std::lock_guard<std::mutex> lock(sLock);
     mPhysicsWorld->stepSimulation(timeStep);
 }
 

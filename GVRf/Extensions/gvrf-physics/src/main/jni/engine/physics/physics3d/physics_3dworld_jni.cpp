@@ -73,6 +73,7 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_getComponentType(JNIEnv * env, job
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBody(JNIEnv * env, jobject obj,
         jlong jworld, jlong jrigid_body) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletWorld *world = reinterpret_cast<BulletWorld*>(jworld);
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
@@ -82,6 +83,7 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBody(JNIEnv * env, jobject
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBodyWithMask(JNIEnv * env, jobject obj,
         jlong jworld, jlong jrigid_body, jlong collisionType, jlong collidesWith) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletWorld *world = reinterpret_cast<BulletWorld*>(jworld);
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
@@ -91,6 +93,7 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBodyWithMask(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_NativePhysics3DWorld_removeRigidBody(JNIEnv * env, jobject obj,
         jlong jworld, jlong jrigid_body) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletWorld *world = reinterpret_cast<BulletWorld*>(jworld);
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 

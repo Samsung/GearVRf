@@ -14,7 +14,8 @@
  */
 
 #include "../bullet/bullet_rigidbody.h"
-
+#include "../bullet/bullet_world.h"
+#include <mutex>
 #include "glm/gtc/type_ptr.hpp"
 #include "util/gvr_jni.h"
 
@@ -220,6 +221,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setMass(JNIEnv * env, jobject obj,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_applyCentralForce(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody *rigid_body = reinterpret_cast<BulletRigidBody *>(jrigid_body);
 
     rigid_body->applyCentralForce(x, y, z);
@@ -236,6 +238,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_applyTorque(JNIEnv * env, jobject obj
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_onAttach(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->onAttach();
@@ -244,6 +247,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_onAttach(JNIEnv * env, jobject obj,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_onDetach(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->onDetach();
@@ -276,6 +280,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getCenterZ(JNIEnv * env, jobject obj,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setCenter(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->set_center(x, y, z);
@@ -316,6 +321,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getRotationZ(JNIEnv * env, jobject ob
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setRotation(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat w, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->set_rotation(w, x, y, z);
@@ -348,6 +354,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getScaleZ(JNIEnv * env, jobject obj,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setScale(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->set_scale(x, y, z);
@@ -356,6 +363,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setScale(JNIEnv * env, jobject obj,
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setGravity(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setGravity(x, y, z);
@@ -364,6 +372,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setGravity(JNIEnv * env, jobject obj,
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setDamping(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat linear, jfloat angular) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setDamping(linear, angular);
@@ -372,6 +381,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setDamping(JNIEnv * env, jobject obj,
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setLinearVelocity(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setLinearVelocity(x, y, z);
@@ -380,6 +390,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setLinearVelocity(JNIEnv * env, jobje
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setAngularVelocity(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setAngularVelocity(x, y, z);
@@ -388,6 +399,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setAngularVelocity(JNIEnv * env, jobj
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setAngularFactor(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setAngularFactor(x, y, z);
@@ -396,6 +408,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setAngularFactor(JNIEnv * env, jobjec
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setLinearFactor(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setLinearFactor(x, y, z);
@@ -404,6 +417,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setLinearFactor(JNIEnv * env, jobject
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setFriction(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setFriction(n);
@@ -412,6 +426,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setFriction(JNIEnv * env, jobject obj
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setRestitution(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setRestitution(n);
@@ -420,6 +435,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setRestitution(JNIEnv * env, jobject 
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setSleepingThresholds(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat linear, jfloat angular) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setSleepingThresholds(linear, angular);
@@ -428,6 +444,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setSleepingThresholds(JNIEnv * env, j
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setCcdMotionThreshold(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setCcdMotionThreshold(n);
@@ -436,6 +453,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setCcdMotionThreshold(JNIEnv * env, j
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setContactProcessingThreshold(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setContactProcessingThreshold(n);
@@ -444,6 +462,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setContactProcessingThreshold(JNIEnv 
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setIgnoreCollisionCheck(JNIEnv * env, jobject obj,
         jlong jrigid_body, jobject collisionObj, jboolean ignore) {
+    std::lock_guard<std::mutex> lock(BulletWorld::getLock());
     BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
 
     rigid_body->setIgnoreCollisionCheck(reinterpret_cast<BulletRigidBody*>(jrigid_body), ignore);

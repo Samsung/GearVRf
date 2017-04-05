@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "bullet_world.h"
 #include "bullet_rigidbody.h"
 #include "bullet_gvr_utils.h"
 #include "objects/components/sphere_collider.h"
@@ -63,6 +63,7 @@ void BulletRigidBody::initialize() {
 }
 
 void BulletRigidBody::finalize() {
+
     if (mRigidBody->getCollisionShape()) {
         mConstructionInfo.m_collisionShape = 0;
         delete mRigidBody->getCollisionShape();
