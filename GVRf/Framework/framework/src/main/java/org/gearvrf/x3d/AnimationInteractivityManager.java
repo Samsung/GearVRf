@@ -39,15 +39,8 @@ import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
-import org.gearvrf.scene_objects.GVRCubeSceneObject;
-import org.gearvrf.scene_objects.GVRCylinderSceneObject;
-import org.gearvrf.scene_objects.GVRSphereSceneObject;
-import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRView;
-import org.gearvrf.scene_objects.view.GVRWebView;
-import org.gearvrf.script.GVRJavascriptScriptFile;
 
-import org.gearvrf.GVRScene;
+import org.gearvrf.script.GVRJavascriptScriptFile;
 
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.script.javascript.GVRJavascriptV8File;
@@ -62,22 +55,6 @@ import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-
-//import java.util.GregorianCalendar;
-//import java.util.Calendar;
-//import java.util.Date;
-
-//import android.os.Bundle;
-//import android.view.MotionEvent;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.graphics.Canvas;
-
-//import org.gearvrf.GVRActivity;
-//import org.gearvrf.scene_objects.view.GVRView;
-//import org.gearvrf.scene_objects.view.GVRWebView;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -258,9 +235,13 @@ public class AnimationInteractivityManager {
                     // a rare case where a Script node sends data to a TimeSensor
                     if (routeFromScriptObject == interactiveObject.getScriptObject()) {
                         //TODO: complete adding field to this Script Node when sent to TimeSensor
-                        //interactiveObject.getScriptObject().setToTimeSensor(routeToTimeSensor, toField);
-                        routeToTimeSensorFound = true;
-
+                        for (ScriptObject.Field field : routeFromScriptObject.getFieldsArrayList()) {
+                            if (toField.equalsIgnoreCase(routeFromScriptObject.getFieldName(field))) {
+                                //routeFromScriptObject.setFromEventUtility(field, routeFromEventUtility, fromField);
+                                interactiveObject.getScriptObject().setToTimeSensor(field, routeToTimeSensor, toField);
+                                routeToTimeSensorFound = true;
+                            }
+                        }
                     }
                 }
             }
@@ -518,7 +499,7 @@ public class AnimationInteractivityManager {
                     for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
                         gvrAnimationChannel.setPosKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().cycleInterval
+                                        * interactiveObject.getTimeSensor().getCycleInterval()
                                         * FRAMES_PER_SECOND, interactiveObject.getInterpolator().keyValue[j * 3],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 1],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
@@ -543,7 +524,7 @@ public class AnimationInteractivityManager {
                         Quaternionf quaternionf = new Quaternionf(axisAngle4f);
                         gvrAnimationChannel.setRotKeyQuaternion(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().cycleInterval
+                                        * interactiveObject.getTimeSensor().getCycleInterval()
                                         * FRAMES_PER_SECOND, quaternionf);
                     }
                 }   //  end rotation
@@ -558,7 +539,7 @@ public class AnimationInteractivityManager {
                     for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
                         gvrAnimationChannel.setScaleKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().cycleInterval
+                                        * interactiveObject.getTimeSensor().getCycleInterval()
                                         * FRAMES_PER_SECOND, interactiveObject.getInterpolator().keyValue[j * 3],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 1],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
@@ -573,15 +554,16 @@ public class AnimationInteractivityManager {
                     gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
                             gvrAnimatedObject.getName() + KEY_FRAME_ANIMATION + animationCount,
                             gvrAnimatedObject,
-                            interactiveObject.getTimeSensor().cycleInterval * FRAMES_PER_SECOND,
+                            interactiveObject.getTimeSensor().getCycleInterval() * FRAMES_PER_SECOND,
                             FRAMES_PER_SECOND);
                     gvrKeyFrameAnimation.addChannel(gvrAnimationChannel);
-                    if (interactiveObject.getTimeSensor().loop) {
+                    if (interactiveObject.getTimeSensor().getLoop()) {
                         gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.REPEATED);
                         gvrKeyFrameAnimation.setRepeatCount(-1);
                     }
                     gvrKeyFrameAnimation.prepare();
                     animationCount++;
+                    interactiveObject.getTimeSensor().addGVRKeyFrameAnimation( gvrKeyFrameAnimation );
 
                     // Third, determine if this will be animation only, or
                     // interactive triggered in picking
@@ -844,7 +826,7 @@ public class AnimationInteractivityManager {
                 }
             }
 
-            cycleInterval = this.interactiveObjectFinal.getTimeSensor().cycleInterval;
+            cycleInterval = this.interactiveObjectFinal.getTimeSensor().getCycleInterval();
             if (cycleInterval <= 0) cycleInterval = 1;
 
             BuildInitJavaScript(interactiveObjectFinal);
@@ -944,7 +926,7 @@ public class AnimationInteractivityManager {
                 }  // end if SFBool
                 else if ((fieldType.equalsIgnoreCase("SFFloat")) && (definedItem == null)) {
                     if (timeSensor != null) {
-                        scriptParameters.add( timeSensor.cycleInterval );
+                        scriptParameters.add( timeSensor.getCycleInterval() );
                     }
                     else scriptParameters.add(argument0); // the time passed in from an SFTime node
                 } else if (scriptObject.getFromDefinedItem(field) != null) {
@@ -1431,6 +1413,15 @@ public class AnimationInteractivityManager {
                             else if ( scriptObjectToEventUtility != null) {
                                 scriptObjectToEventUtility.setToggle(sfBool.getValue());
                             }
+                            else if ( scriptObject.getToTimeSensor(fieldNode) != null) {
+                                TimeSensor timeSensor = scriptObject.getToTimeSensor(fieldNode);
+                                if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("loop")){
+                                    timeSensor.setLoop( sfBool.getValue(), gvrContext );
+                                }
+                                if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("enabled")){
+                                    timeSensor.setEnabled( sfBool.getValue(), gvrContext );
+                                }
+                            }
                             else {
                                 Log.e(TAG, "Error: Not setting SFBool '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
                             }
@@ -1478,9 +1469,19 @@ public class AnimationInteractivityManager {
                         }  //  end SFFloat
                         else if (fieldType.equalsIgnoreCase("SFTime")) {
                             SFTime sfTime = (SFTime) returnedJavaScriptValue;
-                            //TODO: eventually will be supported
-                            Log.e(TAG, "Error: Not setting SFTime '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
-
+                            if ( scriptObject.getToTimeSensor(fieldNode) != null) {
+                                TimeSensor timeSensor = scriptObject.getToTimeSensor(fieldNode);
+                                if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("startTime")){
+                                    timeSensor.startTime = (float)sfTime.getValue();
+                                }
+                                else if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("stopTime")){
+                                    timeSensor.stopTime = (float)sfTime.getValue();
+                                }
+                                else if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("cycleInterval")){
+                                    timeSensor.setCycleInterval( (float)sfTime.getValue() );
+                                }
+                                else Log.e(TAG, "Error: Not setting SFTime '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                           }
                         }  //  end SFTime
                         else if (fieldType.equalsIgnoreCase("SFColor")) {
                             SFColor sfColor = (SFColor) returnedJavaScriptValue;

@@ -16,13 +16,12 @@
 
 package org.gearvrf.x3d;
 
-import android.graphics.Color;
-
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPhongShader;
@@ -70,6 +69,16 @@ public class AnchorImplementation {
     private static final String Is_ACTIVE = "isActive";
 
     private GVRContext gvrContext = null;
+
+    private PerFrameWebViewControl perFrameWebViewControl = new PerFrameWebViewControl();
+    private GVRSphereSceneObject gvrScaleObject = null;
+    private Vector3f scaleObjectTranslationLocal = new Vector3f();
+    private Vector3f scaleObjectTranslationGlobal = new Vector3f();
+
+    // when the scale icon is clicked on, saves the initial value for the camera's look at
+    private float[] initialCameralookAt_scaleObj = new float[3];
+
+
 
     public AnchorImplementation(GVRContext gvrContext ) {
       this.gvrContext = gvrContext;
@@ -186,7 +195,6 @@ public class AnchorImplementation {
                                     uibObjectSensor.addISensorEvents(new ISensorEvents() {
                                         //boolean stateChanged = false;
                                         boolean uiObjectIsActiveDone = false;
-                                        GVRSphereSceneObject gvrScaleObject = null;
                                         @Override
                                         public void onSensorEvent(SensorEvent event) {
                                             if (event.isActive() ) {
@@ -220,59 +228,80 @@ public class AnchorImplementation {
                                                             Sensor sphereScaleSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrScaleObject);
                                                             final Sensor  sphereScaleSensorFinal = sphereScaleSensor;
                                                             //final GVRSceneObject gvrScaleObjectFinal = gvrScaleObject;
+                                                            final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
+
                                                             sphereScaleSensor.addISensorEvents(new ISensorEvents() {
                                                                 boolean isOverScaleObject = false;
                                                                 boolean isActiveScaleObject = false;
                                                                 public void onSensorEvent(SensorEvent event) {
 
-                                                                    if (event.isActive()) {
-                                                                        isActiveScaleObject = !isActiveScaleObject;
-                                                                        if ( isActiveScaleObject ) {
-                                                                            Log.e("X3D-Anchor", "       Scale isActive");
-                                                                            gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, .8f, .8f, 1);
-                                                                            float[] scaleObjectTranslation = {gvrScaleObject.getTransform().getPositionX(),
-                                                                                    gvrScaleObject.getTransform().getPositionY(), gvrScaleObject.getTransform().getPositionZ()};
-                                                                            Log.e("X3D-Anchor", "       scale Obj Translation " + gvrScaleObject.getTransform().getPositionX() +
-                                                                                    ", " + gvrScaleObject.getTransform().getPositionY() + ", " + gvrScaleObject.getTransform().getPositionZ());
-                                                                            Log.e("X3D-Anchor", "       scale Obj Translation " + scaleObjectTranslation[0] +
-                                                                                    ", " + scaleObjectTranslation[1] + ", " + scaleObjectTranslation[2]);
-                                                                            Matrix4f matrixA = gvrScaleObject.getTransform().getLocalModelMatrix4f();
-                                                                            Matrix4f matrixB = gvrScaleObject.getTransform().getModelMatrix4f();
+                                                                    if (event.isActive() || event.isOver() ) {
+                                                                        if ( event.isActive() ) {
+                                                                            if ( !isActiveScaleObject ) {
+                                                                                isActiveScaleObject = true;
+                                                                                Log.e("X3D-Anchor", "       Scale isActive");
+                                                                                gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, 1, .5f, 1);
+                                                                                //float[] scaleObjectTranslation = {gvrScaleObject.getTransform().getPositionX(),
+                                                                                //        gvrScaleObject.getTransform().getPositionY(), gvrScaleObject.getTransform().getPositionZ()};
+                                                                                //Log.e("X3D-Anchor", "       scale Obj Translation " + gvrScaleObject.getTransform().getPositionX() +
+                                                                                //        ", " + gvrScaleObject.getTransform().getPositionY() + ", " + gvrScaleObject.getTransform().getPositionZ());
+                                                                                //Log.e("X3D-Anchor", "       scale Obj Translation " + scaleObjectTranslation[0] +
+                                                                                //        ", " + scaleObjectTranslation[1] + ", " + scaleObjectTranslation[2]);
+                                                                                //Matrix4f scaleObjectMatrixLocal = gvrScaleObject.getTransform().getLocalModelMatrix4f();
 
-                                                                            // Get the current camera direction
-                                                                            GVRScene mainScene = gvrContext.getMainScene();
-                                                                            GVRCameraRig gvrCameraRig = mainScene.getMainCameraRig();
-                                                                            GVRCamera gvrCamera = gvrCameraRig.getCenterCamera();
-                                                                            GVRTransform cameraTransform = gvrCamera.getTransform();
-                                                                            Quaternionf cameraQuaternion = new Quaternionf(cameraTransform.getRotationX(),
-                                                                                    cameraTransform.getRotationY(), cameraTransform.getRotationZ(), cameraTransform.getRotationW());
-                                                                            Log.e("X3D-Anchor", "          cameraQuaternion (wxyz): " + cameraQuaternion.w + ", " +
-                                                                                    cameraQuaternion.x + ", " + cameraQuaternion.y + ", " + cameraQuaternion.z);
-                                                                            Matrix4f matrix = new Matrix4f();
-                                                                            cameraQuaternion.get(matrix);
-                                                                            Vector3f camDirVector = new Vector3f(0, 0, -1);
-                                                                            camDirVector.mulDirection(matrix, camDirVector);
-                                                                            scaleObjectTranslation[0] = camDirVector.x * scaleObjectTranslation[2] / camDirVector.z;
-                                                                            scaleObjectTranslation[1] = camDirVector.y * scaleObjectTranslation[2] / camDirVector.z;
-                                                                            gvrScaleObject.getTransform().setPositionX( scaleObjectTranslation[0] );
-                                                                            gvrScaleObject.getTransform().setPositionY( scaleObjectTranslation[1] );
+                                                                                //scaleObjectMatrixLocal.getTranslation(scaleObjectTranslationLocal);
+
+                                                                                gvrScaleObject.getTransform().getLocalModelMatrix4f().getTranslation(scaleObjectTranslationLocal);
+                                                                                Log.e("X3D-Anchor", "          scaleObjectMatrixLocal translation: (" + scaleObjectTranslationLocal.x + ", " + scaleObjectTranslationLocal.y + ", " + scaleObjectTranslationLocal.z + " )");
+
+                                                                                //Matrix4f scaleObjectMatrixGlobal = gvrScaleObject.getTransform().getModelMatrix4f();
+                                                                                //scaleObjectMatrixGlobal.getTranslation(scaleObjectTranslationGlobal);
+                                                                                gvrScaleObject.getTransform().getModelMatrix4f().getTranslation(scaleObjectTranslationGlobal);
+                                                                                Log.e("X3D-Anchor", "          scaleObjectMatrixGlobal translation: (" + scaleObjectTranslationGlobal.x + ", " + scaleObjectTranslationGlobal.y + ", " + scaleObjectTranslationGlobal.z + " )");
+
+                                                                                // Get the current camera direction
+                                                                                GVRScene mainScene = gvrContext.getMainScene();
+                                                                                GVRCameraRig gvrCameraRig = mainScene.getMainCameraRig();
+                                                                                initialCameralookAt_scaleObj = gvrCameraRig.getLookAt();
+                                                                                Log.e("X3D-Anchor", "          Camera Rig lookAt: (" + initialCameralookAt_scaleObj[0] + ", " + initialCameralookAt_scaleObj[1] + ", " + initialCameralookAt_scaleObj[2]);
+                                                                                gvrContext.registerDrawFrameListener(mOnDrawFrame);
+                                                                            }
+                                                                            else {
+                                                                                isActiveScaleObject = false;
+                                                                                gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, .5f, .5f, 1);
+                                                                                gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
+                                                                                Log.e("X3D-Anchor", "       Scale NOT Active");
+
+                                                                            }
+
                                                                         }
-                                                                        else {
+                                                                        else if (event.isOver()) {
                                                                             gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, .5f, .5f, 1);
-
                                                                         }
+                                                                        //else {
+                                                                        //    gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, 0, 0, 1);
+                                                                        //}
+                                                                    }  // end if event.isActive or event.isOver
+                                                                    if ( !isActiveScaleObject && !event.isOver()  ) {
+                                                                        gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, 0, 0, 1);
                                                                     }
+                                                                    /*
                                                                     else if (event.isOver()) {
-                                                                        if (!isOverScaleObject) {
-                                                                            gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, .5f, .5f, 1);
-                                                                            isOverScaleObject = true;
-                                                                            Log.e("X3D-Anchor", "       Scale isOver" );
+                                                                        if ( !isActiveScaleObject ) {
+                                                                            if (!isOverScaleObject) {
+                                                                                gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, .5f, .5f, 1);
+                                                                                isOverScaleObject = true;
+                                                                                Log.e("X3D-Anchor", "       Scale isOver" );
+                                                                            }
                                                                         }
                                                                     }
                                                                     else if (!event.isOver()) {
-                                                                        isOverScaleObject = false;
-                                                                        gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, 0, 0, 1);
+                                                                        if ( !isActiveScaleObject ) {
+                                                                            isOverScaleObject = false;
+                                                                            gvrScaleObject.getRenderData().getMaterial().setDiffuseColor(1, 0, 0, 1);
+                                                                        }
                                                                     }
+                                                                    */
                                                                     //else if (!event.isActive()) {
                                                                     //
                                                                     //}
@@ -308,6 +337,44 @@ public class AnchorImplementation {
         });  // end of AddISensorEvent
 
     }  //  end AnchorImplementation class
+
+
+    private class PerFrameWebViewControl {
+
+        final void onDrawFrame(float frameTime) {
+            GVRScene mainScene = gvrContext.getMainScene();
+            GVRCameraRig gvrCameraRig = mainScene.getMainCameraRig();
+            float[] currentCameraLookAt = gvrCameraRig.getLookAt();
+            if (gvrScaleObject != null) {
+                float scaleObjectZdepth = scaleObjectTranslationGlobal.z;
+                //Log.e("X3D-Anchor", "PerFrameWebViewControl: Camera Rig lookAt: (" + currentCameraLookAt[0] + ", " + currentCameraLookAt[1] + ", " + currentCameraLookAt[2]);
+                Log.e("X3D-Anchor", "onDrawFrame: Camera Rig lookAt: (" + (currentCameraLookAt[0] * scaleObjectZdepth/currentCameraLookAt[2]) + ", " +
+                        (currentCameraLookAt[1] * scaleObjectZdepth/currentCameraLookAt[2]) + ", " + (currentCameraLookAt[2] * scaleObjectZdepth/currentCameraLookAt[2]));
+
+                Vector3f diff = new Vector3f();
+                scaleObjectTranslationGlobal.sub(scaleObjectTranslationLocal, diff);
+                Log.e("X3D-Anchor", "   Vector diff: (" + diff.x + ", " + diff.y + ", " + diff.z + ")");
+
+                float[] diffLookAt = new float[3];
+                for (int i = 0; i < 3; i++) {
+                    diffLookAt[i] = currentCameraLookAt[i] - initialCameralookAt_scaleObj[i];
+                }
+                Log.e("X3D-Anchor", "    Camera Rig lookAt Diff: (" + diffLookAt[0] + ", " + diffLookAt[1] + ", " + diffLookAt[2]);
+
+            }
+
+        }  //  end onDrawFrame
+    }  //  end private class PerFrameScripting
+
+
+
+    private final class DrawFrame implements GVRDrawFrameListener {
+        @Override
+        public void onDrawFrame(float frameTime) {
+            perFrameWebViewControl.onDrawFrame(frameTime);
+        }
+    }
+
 
 }  //  end AnchorInteractivity
 
