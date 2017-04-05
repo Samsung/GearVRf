@@ -10,7 +10,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(gvrf SHARED IMPORTED)
 set_property(TARGET gvrf PROPERTY IMPORTED_LOCATION
-             ${CMAKE_CURRENT_SOURCE_DIR}/../../../build/intermediates/exploded-aar/Framework/framework/unspecified/jni/${ANDROID_ABI}/libgvrf.so)
+             ${CMAKE_CURRENT_SOURCE_DIR}/../../../../framework/build/intermediates/bundles/release/jni/${ANDROID_ABI}/libgvrf.so)
 
 add_library(gvr SHARED IMPORTED)
 set_property(TARGET gvr PROPERTY IMPORTED_LOCATION
