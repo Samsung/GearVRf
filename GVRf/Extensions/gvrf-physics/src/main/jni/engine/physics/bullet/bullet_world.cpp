@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <algorithm>
 #include "bullet_world.h"
 #include "bullet_rigidbody.h"
 #include "util/gvr_log.h"
@@ -77,6 +77,12 @@ void BulletWorld::finalize() {
 
 void BulletWorld::addRigidBody(PhysicsRigidBody *body) {
     mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody());
+}
+
+void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
+    mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(),
+                                collidesWith, collisiontype);
+
 }
 
 void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
@@ -151,9 +157,6 @@ void BulletWorld::listCollisions(std::list <ContactPoint> &contactPoints) {
 
 }
 
-void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
-    mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(), collidesWith, collisiontype);
-}
 
 void BulletWorld::setGravity(float x, float y, float z) {
     mPhysicsWorld->setGravity(btVector3(x, y, z));
