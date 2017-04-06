@@ -19,6 +19,7 @@ import com.naef.jnlua.script.LuaScriptEngineFactory;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRContextProxy;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRResourceVolume;

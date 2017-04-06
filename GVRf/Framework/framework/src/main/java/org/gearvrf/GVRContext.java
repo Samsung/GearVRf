@@ -175,6 +175,15 @@ public abstract class GVRContext implements IEventReceiver {
     }
 
     /**
+     * Just for proxy-ing. See GVRContextProxy.
+     */
+    GVRContext() {
+        mContext = null;
+        mHandler = null;
+        mHandlerThread = null;
+    }
+
+    /**
      * Get the Android {@link Context}, which provides access to system services
      * and to your application's resources. Since version 2.0.1, this is
      * actually your {@link GVRActivity} implementation, but you should probably

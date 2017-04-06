@@ -1,33 +1,14 @@
-package org.gearvrf.script;
+package org.gearvrf;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRAssetLoader;
-import org.gearvrf.GVRAtlasInformation;
-import org.gearvrf.GVRBitmapTexture;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCubemapTexture;
-import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVREventManager;
-import org.gearvrf.GVREventReceiver;
-import org.gearvrf.GVRImportSettings;
-import org.gearvrf.GVRMaterialShaderManager;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRPostEffectShaderManager;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScreenshot3DCallback;
-import org.gearvrf.GVRScreenshotCallback;
-import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.gearvrf.script.GVRScriptManager;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -35,11 +16,19 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Future;
 
-public final class GVRContextProxy {
+/**
+ * Class that supports the scripting feature. Not meant for anything
+ * but internal use by the framework.
+ */
+public final class GVRContextProxy extends GVRContext {
     private final WeakReference<GVRContext> mContext;
 
-    GVRContextProxy(GVRContext context) {
-        mContext = new WeakReference<GVRContext>(context);
+    /**
+     * Proxy calls into the passed context while holding a weak reference to it.
+     */
+    public GVRContextProxy(GVRContext context) {
+        super();
+        mContext = new WeakReference<>(context);
     }
 
     public Context getContext() {
