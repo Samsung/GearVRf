@@ -98,7 +98,7 @@ class GVRInputManagerImpl extends GVRInputManager {
         this.scene = scene;
         for (GVRCursorController controller : controllers) {
             controller.setScene(scene);
-            sensorManager.processPick(scene, controller);
+            controller.invalidate();
         }
     }
 

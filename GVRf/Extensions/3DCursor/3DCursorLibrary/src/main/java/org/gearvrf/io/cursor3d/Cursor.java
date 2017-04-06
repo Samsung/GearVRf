@@ -649,7 +649,8 @@ public abstract class Cursor {
 
     protected void handleControllerEvent(GVRCursorController controller, boolean sentEvent) {
         lookAt();
-        if (!controller.isEventHandledBySensorManager() && !sentEvent &&
+        if (cursorManager.isDepthOrderEnabled() &&
+                !controller.isEventHandledBySensorManager() && !sentEvent &&
                 (controller.getKeyEvent() != null || controller.getMotionEvents().size() > 0)) {
             CursorEvent cursorEvent = CursorEvent.obtain();
             cursorEvent.setOver(false);
@@ -724,8 +725,11 @@ public abstract class Cursor {
 
         IoDevice oldIoDevice = this.ioDevice;
         setIoDevice(availableIoDevice);
-        cursorManager.markIoDeviceUsed(availableIoDevice);
+        cursorManager.removeCursorFromScene(this);
         cursorManager.markIoDeviceUnused(oldIoDevice);
+        cursorManager.markIoDeviceUsed(availableIoDevice);
+        cursorManager.addCursorToScene(this);
+
     }
 
     private boolean isIoDeviceCompatible(IoDevice ioDevice) {

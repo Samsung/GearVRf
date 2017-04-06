@@ -20,7 +20,6 @@ import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
 
 import org.gearvrf.io.CursorControllerListener;
@@ -80,6 +79,7 @@ public class OvrGearController extends GVRCursorController {
     private EventHandlerThread thread;
     private boolean initialized = false;
     private final long mPtr;
+    private boolean isEnabled = false;
 
     OvrGearController(GVRContext context) {
         super(GVRControllerType.CONTROLLER);
@@ -90,6 +90,7 @@ public class OvrGearController extends GVRCursorController {
         this.context = context;
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
+        isEnabled = isEnabled();
     }
 
 
@@ -115,9 +116,45 @@ public class OvrGearController extends GVRCursorController {
         }
     }
 
+    @Override
+    public void setEnable(boolean enable) {
+        if (!isEnabled && enable) {
+
+            if (initialized) {
+                //set the enabled flag on the handler thread
+                isEnabled = true;
+                thread.setEnabled(true);
+            }
+        } else if (isEnabled && !enable) {
+            if (initialized) {
+                isEnabled = false;
+                //set the disabled flag on the handler thread
+                thread.setEnabled(false);
+            }
+        }
+    }
+
+    @Override
+    protected void setScene(GVRScene scene) {
+        if (!initialized) {
+            super.setScene(scene);
+        } else {
+            thread.setScene(scene);
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        if (!initialized) {
+            //do nothing
+            return;
+        }
+        thread.sendInvalidate();
+    }
+
     void onDrawFrame() {
         boolean connected = readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
-        if (connected) {
+        if (connected && isEnabled()) {
             if (!initialized) {
                 thread.start();
                 thread.prepareHandler();
@@ -222,7 +259,7 @@ public class OvrGearController extends GVRCursorController {
     private class EventHandlerThread extends HandlerThread {
         private static final String THREAD_NAME = "GVREventHandlerThread";
         private final Vector3f FORWARD = new Vector3f(0.0f, 0.0f, -1.0f);
-        private Handler gazeEventHandler;
+        private Handler handler;
         private Vector3f result = new Vector3f();
         private int prevButtonEnter = KeyEvent.ACTION_UP;
         private int prevButtonA = KeyEvent.ACTION_UP;
@@ -230,6 +267,13 @@ public class OvrGearController extends GVRCursorController {
         private static final int MSG_INITIALIZE = 1;
         private static final int MSG_UNINITIALIZE = 2;
         private static final int MSG_EVENT = 3;
+        public static final int MSG_SET_ENABLE = 4;
+        public static final int MSG_SET_SCENE = 5;
+        public static final int MSG_SEND_INVALIDATE = 6;
+
+        public static final int ENABLE = 0;
+        public static final int DISABLE = 1;
+
         private ControllerEvent currentControllerEvent;
 
         EventHandlerThread() {
@@ -237,7 +281,7 @@ public class OvrGearController extends GVRCursorController {
         }
 
         void prepareHandler() {
-            gazeEventHandler = new Handler(getLooper(), new Handler.Callback() {
+            handler = new Handler(getLooper(), new Handler.Callback() {
                 @Override
                 public boolean handleMessage(Message message) {
                     switch (message.what) {
@@ -250,6 +294,17 @@ public class OvrGearController extends GVRCursorController {
                         case MSG_UNINITIALIZE:
                             context.getInputManager().removeCursorController(OvrGearController
                                     .this);
+                            break;
+                        case MSG_SET_ENABLE:
+                            OvrGearController.super.setEnable(message.arg1 == ENABLE);
+                            break;
+                        case MSG_SET_SCENE:
+                            OvrGearController.super.setScene((GVRScene) message.obj);
+                            break;
+                        case MSG_SEND_INVALIDATE:
+                            OvrGearController.super.invalidate();
+                            break;
+                        default:
                             break;
                     }
                     return true;
@@ -288,15 +343,33 @@ public class OvrGearController extends GVRCursorController {
         }
 
         void sendEvent(ControllerEvent event) {
-            gazeEventHandler.sendMessage(Message.obtain(null, MSG_EVENT, event));
+            handler.sendMessage(Message.obtain(null, MSG_EVENT, event));
         }
 
         void initialize() {
-            gazeEventHandler.sendMessage(Message.obtain(null, MSG_INITIALIZE));
+            handler.sendMessage(Message.obtain(null, MSG_INITIALIZE));
         }
 
         void uninitialize() {
-            gazeEventHandler.sendMessage(Message.obtain(null, MSG_UNINITIALIZE));
+            handler.sendMessage(Message.obtain(null, MSG_UNINITIALIZE));
+        }
+
+        public void setEnabled(boolean enable) {
+            handler.removeMessages(MSG_SET_ENABLE);
+            Message msg = Message.obtain(handler, MSG_SET_ENABLE, enable ? ENABLE : DISABLE);
+            msg.sendToTarget();
+        }
+
+        void setScene(GVRScene scene){
+            handler.removeMessages(MSG_SET_SCENE);
+            Message msg = Message.obtain(handler, MSG_SET_SCENE, scene);
+            msg.sendToTarget();
+        }
+
+        void sendInvalidate(){
+            handler.removeMessages(MSG_SEND_INVALIDATE);
+            Message msg = Message.obtain(handler, MSG_SEND_INVALIDATE);
+            msg.sendToTarget();
         }
     }
 

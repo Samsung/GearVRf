@@ -91,7 +91,7 @@ public abstract class GVRInputManager {
         inputManager.registerInputDeviceListener(inputDeviceListener, null);
         controllerIds = new SparseArray<GVRBaseController>();
         cache = new SparseArray<GVRBaseController>();
-        mouseDeviceManager = new GVRMouseDeviceManager();
+        mouseDeviceManager = new GVRMouseDeviceManager(context);
         gamepadDeviceManager = new GVRGamepadDeviceManager();
         for (int deviceId : inputManager.getInputDeviceIds()) {
             addDevice(deviceId);
@@ -151,8 +151,8 @@ public abstract class GVRInputManager {
         inputManager.unregisterInputDeviceListener(inputDeviceListener);
         controllerIds.clear();
         cache.clear();
-        mouseDeviceManager.stop();
-        gamepadDeviceManager.stop();
+        mouseDeviceManager.forceStopThread();
+        gamepadDeviceManager.forceStopThread();
         if (gazeCursorController != null) {
             gazeCursorController.close();
         }

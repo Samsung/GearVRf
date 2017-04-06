@@ -42,8 +42,11 @@ class CursorInputManager {
         ioDeviceListeners = new ArrayList<IoDeviceListener>();
         List<GVRCursorController> gvrCursorControllers = gvrInputManager.getCursorControllers();
         for (GVRCursorController gvrController : gvrCursorControllers) {
-            IoDevice ioDevice = IoDeviceLoader.getIoDevice(gvrController);
-            addIoDevice(ioDevice);
+            //TODO: Ignore the controller for now. Not yet implemented
+            if(gvrController.getControllerType() != GVRControllerType.CONTROLLER) {
+                IoDevice ioDevice = IoDeviceLoader.getIoDevice(gvrController);
+                addIoDevice(ioDevice);
+            }
         }
     }
 
@@ -81,7 +84,9 @@ class CursorInputManager {
     private CursorControllerListener gvrControllerListener = new CursorControllerListener() {
         @Override
         public void onCursorControllerAdded(GVRCursorController gvrCursorController) {
-            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL) {
+            //TODO: Ignore the controller for now. Not yet implemented
+            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL ||
+                    gvrCursorController.getControllerType() == GVRControllerType.CONTROLLER) {
                 return;
             }
             IoDevice addedIoDevice = IoDeviceLoader.getIoDevice(gvrCursorController);
@@ -92,7 +97,9 @@ class CursorInputManager {
         public void onCursorControllerRemoved(GVRCursorController gvrCursorController) {
             // remove from list
             IoDevice removedIoDevice = null;
-            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL) {
+            //TODO: Ignore the controller for now. Not yet implemented
+            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL ||
+                    gvrCursorController.getControllerType() == GVRControllerType.CONTROLLER) {
                 return;
             }
             synchronized (lock) {

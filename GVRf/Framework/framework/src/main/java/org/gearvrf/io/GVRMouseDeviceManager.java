@@ -16,6 +16,7 @@
 package org.gearvrf.io;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -44,10 +45,12 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
     private static final String THREAD_NAME = "GVRMouseManagerThread";
     private EventHandlerThread thread;
     private SparseArray<GVRMouseController> controllers;
-    private boolean threadStarted = false;
+    boolean threadStarted = false;
     private GVRContext gvrContext;
 
-    GVRMouseDeviceManager() {
+
+    GVRMouseDeviceManager(GVRContext context) {
+        this.gvrContext = context;
         thread = new EventHandlerThread(THREAD_NAME);
         controllers = new SparseArray<GVRMouseController>();
     }
@@ -55,16 +58,9 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
     GVRBaseController getCursorController(GVRContext context, String name,
                                           int vendorId, int productId) {
         Log.d(TAG, "Creating Mouse Device");
-        if (threadStarted == false) {
-            Log.d(TAG, "Starting " + THREAD_NAME);
-            thread.start();
-            thread.prepareHandler();
-            threadStarted = true;
-            this.gvrContext = context;
-            context.registerDrawFrameListener(this);
-        }
+        startThread();
         GVRMouseController controller = new GVRMouseController(context,
-                GVRControllerType.MOUSE, name, vendorId, productId, thread);
+                GVRControllerType.MOUSE, name, vendorId, productId, this);
         int id = controller.getId();
         controllers.append(id, controller);
         return controller;
@@ -74,15 +70,9 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         int id = controller.getId();
         controllers.remove(id);
 
-        // stop the thread if no more devices are online
-        if (controllers.size() == 0 && threadStarted) {
-            Log.d(TAG, "Stopping " + THREAD_NAME);
-            thread.quitSafely();
-            thread = new EventHandlerThread(THREAD_NAME);
-            threadStarted = false;
-            if(gvrContext != null){
-                gvrContext.unregisterDrawFrameListener(this);
-            }
+        // stopThread the thread if no more devices are online
+        if (controllers.size() == 0) {
+           forceStopThread();
         }
     }
 
@@ -91,28 +81,74 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         thread.updatePosition();
     }
 
-    static class GVRMouseController extends GVRBaseController {
+    private static class GVRMouseController extends GVRBaseController {
         private static final KeyEvent BUTTON_1_DOWN = new KeyEvent(
                 KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
         private static final KeyEvent BUTTON_1_UP = new KeyEvent(
                 KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_1);
-        private static final Vector3f FORWARD =  new Vector3f(0.0f, 0.0f, -1.0f);
 
-        private EventHandlerThread thread;
+        private GVRMouseDeviceManager deviceManager;
         private GVRContext context;
         private final Vector3f position;
         private final Quaternionf rotation;
         private Matrix4f scratchMatrix = new Matrix4f();
         private Vector3f scratchVector = new Vector3f();
         private GVRSceneObject internalObject;
+        boolean isEnabled = false;
 
         GVRMouseController(GVRContext context, GVRControllerType controllerType, String name, int
-                vendorId, int productId, EventHandlerThread thread) {
+                vendorId, int productId, GVRMouseDeviceManager deviceManager) {
             super(controllerType, name, vendorId, productId);
             this.context = context;
-            this.thread = thread;
+            this.deviceManager = deviceManager;
             position = new Vector3f(0.0f, 0.0f, -1.0f);
             rotation = new Quaternionf();
+            isEnabled = isEnabled();
+        }
+
+        @Override
+        public void setEnable(boolean enable) {
+            if (!isEnabled && enable) {
+                isEnabled = true;
+                deviceManager.startThread();
+                //set the enabled flag on the handler thread
+                deviceManager.thread.setEnable(getId(), true);
+            } else if (isEnabled && !enable) {
+                isEnabled = false;
+                //set the disabled flag on the handler thread
+                deviceManager.thread.setEnable(getId(), false);
+                deviceManager.stopThread();
+            }
+        }
+
+        @Override
+        protected void setScene(GVRScene scene) {
+            if (!deviceManager.threadStarted) {
+                super.setScene(scene);
+            } else {
+                deviceManager.thread.setScene(getId(), scene);
+            }
+        }
+
+        void callParentSetEnable(boolean enable){
+            super.setEnable(enable);
+        }
+
+        void callParentSetScene(GVRScene scene) {
+            super.setScene(scene);
+        }
+
+        void callParentInvalidate() {
+            super.invalidate();
+        }
+
+        @Override
+        public void invalidate() {
+            if (!deviceManager.threadStarted) {
+                //do nothing
+                return;
+            }
+            deviceManager.thread.sendInvalidate(getId());
         }
 
         @Override
@@ -123,7 +159,7 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
-                return thread.submitKeyEvent(getId(), event);
+                return deviceManager.thread.submitKeyEvent(getId(), event);
             } else {
                 return false;
             }
@@ -132,7 +168,7 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         @Override
         public boolean dispatchMotionEvent(MotionEvent event) {
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
-                return thread.submitMotionEvent(getId(), event);
+                return deviceManager.thread.submitMotionEvent(getId(), event);
             } else {
                 return false;
             }
@@ -259,6 +295,13 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         private static final int MOTION_EVENT = 0;
         private static final int KEY_EVENT = 1;
         private static final int UPDATE_POSITION = 2;
+        public static final int SET_ENABLE = 3;
+        public static final int SET_SCENE = 4;
+        public static final int SEND_INVALIDATE = 5;
+
+        public static final int ENABLE = 0;
+        public static final int DISABLE = 1;
+
         private Handler handler;
 
         EventHandlerThread(String name) {
@@ -285,8 +328,23 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
                         case UPDATE_POSITION:
                             for(int i =0; i< controllers.size();i++){
                                 GVRMouseController controller = controllers.valueAt(i);
-                                controller.updatePosition();
+                                if(controller.isEnabled()) {
+                                    controller.updatePosition();
+                                }
                             }
+                            break;
+                        case SET_ENABLE:
+                            controllers.get(id).callParentSetEnable(msg.arg2 == ENABLE);
+                            break;
+
+                        case SET_SCENE:
+                            controllers.get(id).callParentSetScene((GVRScene) msg.obj);
+                            break;
+
+                        case SEND_INVALIDATE:
+                            controllers.get(id).callParentInvalidate();
+                            break;
+
                         default:
                             break;
                     }
@@ -312,11 +370,34 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         boolean submitMotionEvent(int id, MotionEvent event) {
             if (threadStarted) {
                 MotionEvent clone = MotionEvent.obtain(event);
-                Message message = Message.obtain(null, MOTION_EVENT, id, 0,
-                        clone);
+                Message message = Message.obtain(null, MOTION_EVENT, id, 0, clone);
                 return handler.sendMessage(message);
             }
             return false;
+        }
+
+        void setEnable(int id, boolean enable) {
+            if (threadStarted) {
+                handler.removeMessages(SET_ENABLE);
+                Message msg = Message.obtain(handler, SET_ENABLE, id, enable ? ENABLE : DISABLE);
+                msg.sendToTarget();
+            }
+        }
+
+        void setScene(int id, GVRScene scene){
+            if (threadStarted) {
+                handler.removeMessages(SET_SCENE);
+                Message msg = Message.obtain(handler, SET_SCENE, id, 0, scene);
+                msg.sendToTarget();
+            }
+        }
+
+        void sendInvalidate(int id){
+            if (threadStarted) {
+                handler.removeMessages(SEND_INVALIDATE);
+                Message msg = Message.obtain(handler, SEND_INVALIDATE, id, 0);
+                msg.sendToTarget();
+            }
         }
 
         private void dispatchKeyEvent(int id, KeyEvent event) {
@@ -362,9 +443,40 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         }
     }
 
-    void stop() {
-        if (threadStarted) {
+    void startThread(){
+        if(!threadStarted){
+            thread.start();
+            thread.prepareHandler();
+            threadStarted = true;
+            gvrContext.registerDrawFrameListener(this);
+        }
+    }
+
+    void stopThread() {
+        boolean foundEnabled = false;
+
+        for(int i = 0 ;i< controllers.size(); i++){
+            GVRCursorController controller = controllers.valueAt(i);
+            if(controller.isEnabled()){
+                foundEnabled = true;
+                break;
+            }
+        }
+
+        if (!foundEnabled && threadStarted) {
+            gvrContext.unregisterDrawFrameListener(this);
             thread.quitSafely();
+            thread = new EventHandlerThread(THREAD_NAME);
+            threadStarted = false;
+        }
+    }
+
+    void forceStopThread(){
+        if (threadStarted) {
+            gvrContext.unregisterDrawFrameListener(this);
+            thread.quitSafely();
+            thread = new EventHandlerThread(THREAD_NAME);
+            threadStarted = false;
         }
     }
 }
