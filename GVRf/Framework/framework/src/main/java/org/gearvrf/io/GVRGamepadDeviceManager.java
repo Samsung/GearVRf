@@ -271,7 +271,11 @@ class GVRGamepadDeviceManager {
         @Override
         public void setPosition(float x, float y, float z) {
             internalObject.getTransform().setPosition(x, y, z);
-            super.setPosition(x, y, z);
+            if (!deviceManager.threadStarted) {
+                //do nothing
+                return;
+            }
+            deviceManager.thread.sendInvalidate(getId());
         }
     }
 
