@@ -2034,8 +2034,9 @@ public class X3Dobject {
                         solid = parseBooleanString(attributeValue);
                         Log.e(TAG, "Box solid not currently implemented. ");
                     }
+                    Vector3f sizeVector = new Vector3f(size[0], size[1], size[3]);
                     GVRCubeSceneObject gvrCubeSceneObject = new GVRCubeSceneObject(
-                            gvrContext);
+                            gvrContext, solid, sizeVector);
                     currentSceneObject.addChildObject(gvrCubeSceneObject);
                     meshAttachedSceneObject = gvrCubeSceneObject;
 
@@ -2151,7 +2152,7 @@ public class X3Dobject {
                         Log.e(TAG, "Sphere solid not currently implemented. ");
                     }
                     GVRSphereSceneObject gvrSphereSceneObject = new GVRSphereSceneObject(
-                            gvrContext);
+                            gvrContext, solid, radius);
                     currentSceneObject.addChildObject(gvrSphereSceneObject);
                     meshAttachedSceneObject = gvrSphereSceneObject;
 
