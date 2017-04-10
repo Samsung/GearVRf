@@ -1,0 +1,53 @@
+<!--
+  ~ Copyright (c) 2016. Samsung Electronics Co., LTD
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="rect_corner_radius">10dp</dimen>
+    <dimen name="bg_rect_radius">20dp</dimen>
+    <dimen name="cusor_type_bg_radius">6dp</dimen>
+    <dimen name="cursor_config_margin_start">10dp</dimen>
+    <dimen name="theme_preview_size">56dp</dimen>
+    <dimen name="cursor_list_image_size">30dp</dimen>
+    <dimen name="cursor_list_element_margin">10dp</dimen>
+    <dimen name="theme_element_width">110dp</dimen>
+    <dimen name="theme_element_height">80dp</dimen>
+    <dimen name="window_padding">10dp</dimen>
+    <dimen name="settings_element_spacing">10dp</dimen>
+    <dimen name="iodevice_element_height">80dp</dimen>
+    <dimen name="iodevice_element_width">100dp</dimen>
+    <dimen name="dialog_button_vertical">10dp</dimen>
+    <dimen name="dialog_button_width">100dp</dimen>
+    <dimen name="dialog_text_size">45sp</dimen>
+    <dimen name="dialog_corner_radius">25dp</dimen>
+    <dimen name="back_button_horizontal_padding">30dp</dimen>
+    <dimen name="back_button_vertical_padding">10dp</dimen>
+    <dimen name="divider_line_height">4dp</dimen>
+    <dimen name="divider_line_padding">10dp</dimen>
+    <dimen name="cursor_list_divider_height">8dp</dimen>
+    <dimen name="cursor_list_element_v_padding">6dp</dimen>
+    <dimen name="cursor_list_element_h_padding">8dp</dimen>
+    <dimen name="circle_size">20dp</dimen>
+    <dimen name="circle_margin_end">10dp</dimen>
+    <dimen name="cursor_config_text_size">20sp</dimen>
+    <dimen name="iodevice_element_margin">3dp</dimen>
+    <dimen name="cursor_list_io_dev_min_width">100dp</dimen>
+    <dimen name="cursor_list_text_box_padding">6dp</dimen>
+    <dimen name="toggle_button_width">77dp</dimen>
+    <dimen name="cursor_list_indicator_width">25dp</dimen>
+    <dimen name="cursor_type_text_view_width">80dp</dimen>
+</resources>

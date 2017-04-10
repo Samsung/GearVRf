@@ -1,0 +1,7 @@
+Devices:
+
+1) name="Gear Wearable"
+   deviceId="gearwearable"
+   vendorId="1256"
+   productId="9898"
+   vendorName="Samsung"

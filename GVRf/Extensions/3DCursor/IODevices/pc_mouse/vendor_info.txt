@@ -1,0 +1,8 @@
+Devices:
+
+1) vendorName "PC Mouse"
+   vendorId="0"
+   productId="0"
+   deviceId="mouse"
+   name="PC Mouse"
+

@@ -1,0 +1,53 @@
+apply plugin: 'com.android.library'
+
+repositories {
+    flatDir {
+        dirs '../../../gearvrf-libs'
+    }
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
+    compile(name: 'framework-debug', ext: 'aar')
+}
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
+}

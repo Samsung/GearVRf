@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/0.10.12/js/jquery.terminal.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/0.10.12/css/jquery.terminal.min.css" rel="stylesheet"/>    
+<script type="text/javascript">
+
+var removePrompt = function(input, prompt) {
+    while (input.endsWith(prompt)) {
+        input = input.substring(0, input.length - prompt.length);
+    }
+    return input;
+}
+
+jQuery(document).ready(function($) {
+
+    var GVRF_PROMPT = "gvrf> ";
+    var JS_PROMPT = "js> ";
+    var LUA_PROMPT = "lua> ";
+    var connected = false;
+    var terminalVar = null;
+
+    $('#js_error').hide();
+
+    var ws = new WebSocket("ws://" + location.hostname + ":5000/commands");
+    ws.onopen = function() {
+        connected = true;
+    }                
+
+    ws.onmessage = function (evt) 
+    { 
+        var received_msg = evt.data;
+        if(terminalVar !== null) {
+            if(received_msg.endsWith(GVRF_PROMPT)) {
+                terminalVar.set_prompt(GVRF_PROMPT);
+                terminalVar.echo(removePrompt(received_msg,GVRF_PROMPT));
+            } else if(received_msg.endsWith(JS_PROMPT)) {
+                terminalVar.set_prompt(JS_PROMPT);
+                terminalVar.echo(removePrompt(received_msg,JS_PROMPT));
+            } else if(received_msg.endsWith(LUA_PROMPT)) {
+                terminalVar.set_prompt(LUA_PROMPT);
+                terminalVar.echo(removePrompt(received_msg,LUA_PROMPT));
+            } else if(received_msg === "\n"){
+                //skip
+            } else {
+                terminalVar.echo(received_msg);
+            }
+        }
+    };
+
+    var wsError = function() {
+    	$('#js_terminal').hide();
+        $('#js_error').show();
+    }
+
+    ws.onerror = wsError;
+    ws.onclose = wsError;
+
+    $('#js_terminal').terminal(function(command, term) {
+        terminalVar = term;
+        if (command !== '') {
+            // send to web socket
+            if(connected == true) {
+                console.log("Sending command:" + command);
+                ws.send(command);
+            } else {
+                console.log("Not connected");
+            }
+        } else {
+           term.echo('');
+        }
+    }, {
+        greetings: 'GVRf Web Console',
+        name: 'gvrf_web_console',
+        height: 500,
+        prompt: GVRF_PROMPT,
+        exit: false
+    });
+});
+</script>
+</head>
+<body>
+
+<h1>GVRframework Web Console</h1>
+<div id="js_terminal" class="terminal" style="height: 500px;">
+</div>
+<div id="js_error">
+<h2>Terminal unavailable, Connection closed or Max simultaneous sessions limit reached</h2>
+</div>
+</body>
+</html>
+
+

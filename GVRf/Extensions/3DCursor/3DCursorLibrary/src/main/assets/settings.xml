@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2016. Samsung Electronics Co., LTD
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<settings xmlns="http://www.w3schools.com/3DCursor"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.w3schools.com/3DCursor xml/settings_schema.xsd">
+    <global onscreen="yes"
+            preview="no"
+            soundEnabled="yes"/>
+    <theme name="Red Dot"
+           cursorType="laser"
+           description="Defines a red laser dot with animations"
+           id="red_dot">
+        <asset action="default"
+               soundEnabled="no"
+               src="cursor_default.png"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="click"
+               soundEnabled="yes"
+               soundSrc="click_a.mp3"
+               src="cursor_action1.png"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="loading"
+               animated="yes"
+               duration="1.0"
+               soundEnabled="no"
+               src="cursor_loading.zip"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="hover"
+               animated="yes"
+               duration="1.0"
+               soundEnabled="no"
+               src="cursor_hover.zip"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+    </theme>
+    <theme name="White Dot"
+           cursorType="laser"
+           description="A theme with a white dot"
+           id="white_dot">
+        <asset action="default"
+               soundEnabled="no"
+               src="preset_2_cursor_default.png"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="click"
+               soundEnabled="yes"
+               soundSrc="click_a.mp3"
+               src="preset_2_action_a.png"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="loading"
+               animated="yes"
+               duration="1.5"
+               soundEnabled="no"
+               src="preset_2_cursor_loading.zip"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="hover"
+               animated="yes"
+               duration="1.5"
+               soundEnabled="no"
+               src="preset_2_cursor_hover.zip"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+    </theme>
+    <theme name="Blue Arrow"
+           cursorType="laser"
+           id="blue_arrow">
+        <asset action="default"
+               soundEnabled="no"
+               src="preset_3_cursor_default.png"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="click"
+               soundEnabled="yes"
+               soundSrc="click_a.mp3"
+               src="preset_3_action_a.png"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="loading"
+               animated="yes"
+               duration="1.5"
+               soundEnabled="no"
+               src="preset_3_cursor_loading.zip"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+        <asset action="hover"
+               animated="yes"
+               duration="1.5"
+               soundEnabled="no"
+               src="preset_3_cursor_hover.zip"
+               type="2D"
+               x="0.1"
+               y="0.1"/>
+    </theme>
+    <theme name="Plaid Sphere"
+           cursorType="object"
+           id="plaid_sphere">
+        <asset action="default"
+               animated="no"
+               soundEnabled="no"
+               src="cursor_sphere_default"
+               type="3D"/>
+        <asset action="intersect"
+               animated="yes"
+               duration="1.5"
+               soundEnabled="no"
+               src="cursor_sphere_intersect"
+               type="3D"/>
+        <asset action="click"
+               soundEnabled="no"
+               src="cursor_anim.fbx"
+               type="3D"/>
+    </theme>
+    <theme name="Right Hand"
+           cursorType="object"
+           id="right_hand">
+        <asset action="default"
+               animated="no"
+               soundEnabled="no"
+               src="right_hand_open"
+               type="3D"/>
+        <asset action="intersect"
+               animated="no"
+               soundEnabled="no"
+               src="right_hand_open"
+               type="3D"/>
+        <asset action="click"
+               animated="no"
+               soundEnabled="no"
+               src="right_hand_closed"
+               type="3D"/>
+    </theme>
+    <theme name="Left Hand"
+           cursorType="object"
+           id="left_hand">
+        <asset action="default"
+               animated="no"
+               soundEnabled="no"
+               src="left_hand_open"
+               type="3D"/>
+        <asset action="intersect"
+               animated="no"
+               soundEnabled="no"
+               src="left_hand_open"
+               type="3D"/>
+        <asset action="click"
+               animated="no"
+               soundEnabled="no"
+               src="left_hand_closed"
+               type="3D"/>
+    </theme>
+    <theme name="Crystal Sphere"
+           cursorType="object"
+           id="crystal_sphere">
+        <asset action="default"
+               animated="no"
+               soundEnabled="no"
+               src="poly_sphere_default"
+               type="3D"/>
+        <asset action="click"
+               animated="no"
+               soundEnabled="no"
+               src="poly_sphere_click"
+               type="3D"/>
+        <asset action="intersect"
+               animated="no"
+               soundEnabled="no"
+               src="poly_sphere_collision"
+               type="3D"/>
+    </theme>
+    <cursor name="Center Cursor"
+            active="no"
+            position="center"
+            themeId="red_dot"
+            type="laser">
+        <io deviceId="mouse"
+            priority="1"
+            productId="0"
+            vendorId="0"/>
+        <io deviceId="android_gamepad"
+            priority="2"
+            productId="1"
+            vendorId="1"/>
+        <io deviceId="gearvr"
+            priority="3"
+            productId="42240"
+            vendorId="1256"/>
+    </cursor>
+    <cursor name="Right Cursor"
+            active="yes"
+            position="center"
+            themeId="crystal_sphere"
+            type="object">
+        <io deviceId="mouse"
+            priority="1"
+            productId="0"
+            vendorId="0"/>
+        <io deviceId="android_gamepad"
+            priority="2"
+            productId="1"
+            vendorId="1"/>
+        <io deviceId="gearvr"
+            priority="3"
+            productId="42240"
+            vendorId="1256"/>
+    </cursor>
+    <cursor name="Left Cursor"
+            active="yes"
+            position="center"
+            themeId="crystal_sphere"
+            type="object">
+        <io deviceId="mouse"
+            priority="1"
+            productId="0"
+            vendorId="0"/>
+        <io deviceId="android_gamepad"
+            priority="2"
+            productId="1"
+            vendorId="1"/>
+        <io deviceId="gearvr"
+            priority="3"
+            productId="42240"
+            vendorId="1256"/>
+    </cursor>
+</settings>

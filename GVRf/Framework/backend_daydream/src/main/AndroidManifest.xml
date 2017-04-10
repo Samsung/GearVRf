@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+
+
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.gearvrf.daydream"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="19"
+        android:targetSdkVersion="24" />
+
+    <!-- copied from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
+
+    <!-- Required for vibration feedback when the trigger action is performed. -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Required to read the paired viewer's distortion parameters. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- Required to detect viewer insertion. -->
+    <uses-permission android:name="android.permission.NFC"/>
+
+    <!-- Make accelerometer and gyroscope hard requirements for good head tracking. -->
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true"/>
+
+    <!-- Indicates use of Android's VR-mode, available only on Android N+. -->
+    <uses-feature android:name="android.software.vr.mode" android:required="false"/>
+    <!-- Indicates use of VR features that are available only on Daydream-ready devices. -->
+    <uses-feature android:name="android.hardware.vr.high_performance" android:required="false"/>
+
+    <!-- done copying from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
+
+</manifest>

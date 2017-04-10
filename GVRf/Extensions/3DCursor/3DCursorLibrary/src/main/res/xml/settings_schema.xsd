@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016. Samsung Electronics Co., LTD
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<xs:schema elementFormDefault="qualified" targetNamespace="http://www.w3schools.com/3DCursor"
+           xmlns="http://www.w3schools.com/3DCursor"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:simpleType name="bool">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="actionEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="default"/>
+            <xs:enumeration value="hover"/>
+            <xs:enumeration value="click"/>
+            <xs:enumeration value="intersect"/>
+            <xs:enumeration value="loading"/>
+            <xs:enumeration value="gesture"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="assetType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="2D"/>
+            <xs:enumeration value="3D"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="cursorType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="laser"/>
+            <xs:enumeration value="object"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="cursorPosition">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="center"/>
+            <xs:enumeration value="left"/>
+            <xs:enumeration value="right"/>
+            <xs:enumeration value="other"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="settings">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="global" maxOccurs="1">
+                    <xs:complexType>
+                        <xs:attribute name="soundEnabled" type="bool" use="required"/>
+                        <xs:attribute name="onscreen" default="no" type="bool"/>
+                        <xs:attribute name="preview" default="no" type="bool"/>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="theme" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="asset" maxOccurs="unbounded" minOccurs="1">
+                                <xs:complexType>
+                                    <xs:attribute name="action" type="actionEnum" use="required"/>
+                                    <xs:attribute name="type" type="assetType"
+                                                  use="required"/>
+                                    <xs:attribute name="animated" default="no"
+                                                  type="bool"/>
+                                    <xs:attribute name="duration" type="xs:decimal"/>
+                                    <xs:attribute name="soundSrc" type="xs:string"/>
+                                    <xs:attribute name="soundEnabled" type="bool"/>
+                                    <xs:attribute name="src" type="xs:string"
+                                                  use="required"/>
+                                    <xs:attribute name="x" default="0.1" type="xs:decimal"/>
+                                    <xs:attribute name="y" default="0.1" type="xs:decimal"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                        <xs:attribute name="id" type="xs:string"
+                                      use="required"/>
+                        <xs:attribute name="cursorType" type="cursorType" use="required"/>
+                        <xs:attribute name="description"
+                                      type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="cursor" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="io" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:attribute name="vendorId" type="xs:nonNegativeInteger"
+                                                  use="required"/>
+                                    <xs:attribute name="productId" type="xs:nonNegativeInteger"
+                                                  use="required"/>
+                                    <xs:attribute name="deviceId" type="xs:string"
+                                                  use="required"/>
+                                    <xs:attribute name="priority" type="xs:positiveInteger"
+                                                  use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                        <xs:attribute name="type" type="cursorType" use="required"/>
+                        <xs:attribute name="position" default="center"
+                                      type="cursorPosition"/>
+                        <xs:attribute name="savedIoVendorId"
+                                      type="xs:positiveInteger"/>
+                        <xs:attribute name="savedIoProductId"
+                                      type="xs:positiveInteger"/>
+                        <xs:attribute name="savedIoDeviceId" type="xs:string"/>
+                        <xs:attribute name="active" type="bool"
+                                      use="required"/>
+                        <xs:attribute name="themeId" type="xs:string" use="required"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+
+
+    </xs:element>
+</xs:schema>

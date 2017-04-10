@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#assumes these environment variables have been set correctly
+#ACCESS_TOKEN=<>
+#Generate one at GitHub/Settings/Personal access tokens
+RELEASEID=4169404
+#release id for the repo; determine the id by running
+#curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases
+#look for the "id" property of the release that is to be updated
+
+#get assets
+ASSET_URLS_RAW="$(curl -H "Authorization: token $ACCESS_TOKEN" https://api.github.com/repos/Samsung/GearVRf/releases/$RELEASEID/assets|grep '"url"'|grep assets)"
+
+TMP_ARRAY=$(echo $ASSET_URLS_RAW | tr ", \"" "\n")
+
+#delete existing assets
+for ELEMENT in $TMP_ARRAY
+do
+    THE_URL="$(echo $ELEMENT|grep https)"
+    if [ -n "$THE_URL" ]; then
+        echo about to delete asset $THE_URL
+        curl -H "Authorization: token $ACCESS_TOKEN" -X DELETE $THE_URL
+    fi  
+done
+

@@ -1,0 +1,16 @@
+Devices:
+
+_VENDOR_TODO_ update device info here. This information helps app developers easily add this io device to their settings.xml.
+
+1) name="Right controller"
+   deviceId="template_1"
+   vendorId="1234"
+   productId="5678"
+   vendorName="Template Company"
+
+2) name="Left controller"
+   deviceId="template_2"
+   vendorId="1234"
+   productId="5678"
+   vendorName="Template Company"
+

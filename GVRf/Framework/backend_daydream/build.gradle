@@ -1,0 +1,89 @@
+apply plugin: 'com.android.library'
+
+repositories {
+    flatDir {
+        dirs 'src/main/libs'
+    }
+    // For GVR components, the official source of the .aars is the Google
+    // repository.
+    maven {
+        url "http://google.bintray.com/googlevr"
+    }
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion '24.0.3'
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 21
+        externalNativeBuild {
+            cmake {
+                arguments.add('-DANDROID_TOOLCHAIN=gcc')
+            }
+        }
+        ndk {
+            moduleName "gvrf-daydream"
+            if (rootProject.hasProperty("ARM64")) {
+                abiFilters "arm64-v8a"
+            } else {
+                abiFilters "armeabi-v7a"
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable = true
+            jniDebuggable = true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
+        }
+    }
+
+    packagingOptions {
+        exclude 'lib/armeabi-v7a/libgvr.so'
+        exclude 'lib/arm64-v8a/libgvr.so'
+    }
+}
+
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
+    compile 'com.google.vr:sdk-base:1.30.0'
+    compile project(':framework')
+    compile "org.joml:joml-android:${jomlVersion}"
+}
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
+}

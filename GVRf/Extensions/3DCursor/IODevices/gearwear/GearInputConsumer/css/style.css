@@ -1,0 +1,64 @@
+/*
+ * Copyright (c) 2016. Samsung Electronics Co., LTD
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+* {
+    font-family: Lucida Sans, Arial, Helvetica, sans-serif;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    background-color: #83AF9B;
+    color: #FFFFFF;
+    margin: 0px auto;
+    padding: 0px;
+    font-size: 20px;
+}
+
+.page {
+    width: 100%;
+    height: 100%;
+    display: table;
+}
+
+header h1 {
+    margin-top: 10px;
+    font-size: 30px;
+    text-align: center;
+    margin: auto;
+}
+
+#mainContent {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.button {
+    height: 50px;
+    width: 150px;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+button {
+    height: 35px;
+    width: 150px;
+    font-size: 20px;
+    background-color: #ffffff;
+    outline: 0 none;
+    color: #83AF9B;
+    vertical-align: middle;
+    border-radius: 0px;
+    box-shadow: 0px 0px 0px 0px #ffffff;
+}

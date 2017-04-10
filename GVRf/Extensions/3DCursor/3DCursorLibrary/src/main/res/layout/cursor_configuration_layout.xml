@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016. Samsung Electronics Co., LTD
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/rounded_rect_bg"
+                android:padding="@dimen/window_padding">
+
+    <TextView
+        android:id="@+id/done"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/hlist_background"
+        android:paddingBottom="@dimen/back_button_vertical_padding"
+        android:paddingEnd="@dimen/back_button_horizontal_padding"
+        android:paddingStart="@dimen/back_button_horizontal_padding"
+        android:paddingTop="@dimen/back_button_vertical_padding"
+        android:text="@string/done"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_above="@id/done"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="@dimen/settings_element_spacing">
+
+                <TextView
+                    android:id="@+id/tvCursorName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="Cursor Name"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvBackButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/hlist_background"
+                    android:paddingBottom="@dimen/back_button_vertical_padding"
+                    android:paddingEnd="@dimen/back_button_horizontal_padding"
+                    android:paddingStart="@dimen/back_button_horizontal_padding"
+                    android:paddingTop="@dimen/back_button_vertical_padding"
+                    android:text="@string/close_window"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"/>
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/divider_line_height"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="@dimen/settings_element_spacing"
+                android:background="@android:color/white"
+                android:paddingEnd="@dimen/divider_line_padding"
+                android:paddingStart="@dimen/divider_line_padding"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/settings_element_spacing"
+                android:layout_marginStart="@dimen/cursor_config_margin_start"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/circle_size"
+                    android:layout_height="@dimen/circle_size"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="@dimen/circle_margin_end"
+                    android:background="@drawable/circle"
+                    android:gravity="center"
+                    android:text="1"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="@string/cursor_type"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/cursor_config_text_size"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvCursorType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center"
+                    android:text="LASER"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/cursor_config_text_size"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/cursor_config_margin_start"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/circle_size"
+                    android:layout_height="@dimen/circle_size"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="@dimen/circle_margin_end"
+                    android:background="@drawable/circle"
+                    android:gravity="center"
+                    android:text="2"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/select_cursor_theme"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/cursor_config_text_size"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/settings_element_spacing"
+                android:layout_marginStart="@dimen/cursor_config_margin_start">
+
+                <HorizontalScrollView
+                    android:id="@+id/hsvThemes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true">
+
+                    <LinearLayout
+                        android:id="@+id/llThemes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"/>
+                </HorizontalScrollView>
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/cursor_config_margin_start"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/circle_size"
+                    android:layout_height="@dimen/circle_size"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="@dimen/circle_margin_end"
+                    android:background="@drawable/circle"
+                    android:gravity="center"
+                    android:text="3"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/select_io_device"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/cursor_config_text_size"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/settings_element_spacing"
+                android:layout_marginStart="@dimen/cursor_config_margin_start">
+
+                <HorizontalScrollView
+                    android:id="@+id/hsvIoDevices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true">
+
+                    <LinearLayout
+                        android:id="@+id/llIoDevices"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"/>
+                </HorizontalScrollView>
+            </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>
