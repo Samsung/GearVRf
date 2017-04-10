@@ -30,31 +30,32 @@ import org.joml.Vector3f;
  * The picker can function in two modes. One way is to simply call its
  * static functions to make a single scan through the scene to determine
  * what is hit by the picking ray.
- *
+ * <p>
  * The other way is to add the picker as a component to a scene object.
  * The picking ray is generated from the camera viewpoint
  * each frame. It's origin is the camera position and it's direction is
  * the camera forward look vector (what the user is looking at).
- *  
+ * <p>
  * For a {@linkplain GVRSceneObject scene object} to be pickable, it must have a
  * {@link GVRCollider} component attached to it that is enabled. 
  * The picker "casts" a ray into the screen graph, and returns an array
  * containing all the collisions as instances of GVRPickedObject.
  * The picked object contains the collider instance hit, the distance from the
  * camera and the hit position.
- * 
+ * <p>
  * The picker maintains the list of currently picked objects
  * (which can be obtained with getPicked()) and continually updates it each frame.
- *
- * In this mode, when the ray from the scene object hits a pickable object,
+ * When the ray from the scene object hits a pickable object,
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
- *  - onEnter(GVRSceneObject)  called when the pick ray enters a scene object.
- *  - onExit(GVRSceneObject)   called when the pick ray exits a scene object.
- *  - onInside(GVRSceneObject) called while the pick ray penetrates a scene object.
- *  - onPick(GVRPicker)        called when the set of picked objects changes.
- *  - onNoPick(GVRPicker)      called once when nothing is picked.
+ * <ul>
+ * <li>onEnter(GVRSceneObject)  called when the pick ray enters a scene object.</li>
+ * <li>onExit(GVRSceneObject)   called when the pick ray exits a scene object.</li>
+ * <li>onInside(GVRSceneObject) called while the pick ray penetrates a scene object.</li>
+ * <li>onPick(GVRPicker)        called when the set of picked objects changes.</li>
+ * <li>onNoPick(GVRPicker)      called once when nothing is picked.</li>
+ * </ul>
  *
  * @see IPickEvents
  * @see GVRSceneObject#attachCollider(GVRCollider)
@@ -73,7 +74,7 @@ public class GVRPicker extends GVRBehavior {
     protected GVRPickedObject[] mPicked = null;
 
     /**
-     * Construct a picker which picks from a given scene.
+     * Construct a picker which picks from the given scene.
      * Instantiating the picker will cause it to scan the scene
      * every frame and generate pick events based on the result.
      *
@@ -92,13 +93,13 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * Get the current ray to use for picking.
-     * 
+     * <p>
      * If the picker is attached to a scene object,
      * this ray is derived from the scene object's transform.
      * The origin of the ray is the translation component
      * of the total model matrix and the ray direction
      * is the forward look vector.
-     *
+     * <p>
      * If not attached to a scene object, the origin of the
      * ray is the position of the viewer and its direction
      * is where the viewer is looking.
@@ -118,7 +119,7 @@ public class GVRPicker extends GVRBehavior {
     
     /**
      * Gets the current pick list.
-     * 
+     * <p>
      * Each collision with an object is described as a
      * GVRPickedObject which contains the scene object
      * and collider hit, the distance from the camera
@@ -127,9 +128,9 @@ public class GVRPicker extends GVRBehavior {
      * list are sorted based on increasing distance
      * from the origin of the pick ray.
      * @return GVRPickedObject array with objects picked or null if nothing picked.
-     * @see doPick
+     * @see #doPick()
      * @see IPickEvents
-     * @see setPickRay
+     * @see #setPickRay(float, float, float, float, float, float)
      */
     public final GVRPickedObject[] getPicked()
     {
@@ -155,7 +156,7 @@ public class GVRPicker extends GVRBehavior {
      * main camera with (0, 0, 0) at the viewer and (0, 0, -1)
      * where the viewer is looking.
      *
-     * @see doPick
+     * @see #doPick()
      */
     public void setPickRay(float ox, float oy, float oz, float dx, float dy, float dz)
     {
@@ -181,7 +182,7 @@ public class GVRPicker extends GVRBehavior {
      * This function is called automatically by
      * the picker every frame.
      * @see IPickEvents 
-     * @see pickObjects
+     * @see #pickObjects(GVRScene, GVRTransform, float, float, float, float, float, float)
      */
     protected void doPick()
     {
@@ -276,18 +277,15 @@ public class GVRPicker extends GVRBehavior {
     }
     
     /**
-     * Casts a ray into the scene graph, and returns the GVREyePointeeHolders it intersects.
-     * 
+     * Casts a ray into the scene graph, and returns the colliders it intersects.
+     * <p>
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
      * {@code [dx, dy, dz]}.
-     *
-     * <p>
      * The ray origin may be [0, 0, 0] and the direction components should be
      * normalized from -1 to 1: Note that the y direction runs from -1 at the
      * bottom to 1 at the top. To construct a picking ray originating at the
      * user's head and pointing into the scene along the camera lookat vector,
      * pass in 0, 0, 0 for the origin and 0, 0, -1 for the direction.
-     * 
      * <p>
      * Note: this function only returns GVREyePointeeHolder colliders
      * and is deprecated in favor of pickObject which returns all colliders.
@@ -317,7 +315,7 @@ public class GVRPicker extends GVRBehavior {
      *         penetrated by the ray, sorted by distance from the camera rig.
      *         Use {@link GVRCollider#getOwnerObject()} to get the
      *         corresponding scene objects.
-     * @deprecated use pickObjects instead
+     * @deprecated
      */
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene, float ox, float oy, float oz, float dx,
             float dy, float dz) {
@@ -354,7 +352,7 @@ public class GVRPicker extends GVRBehavior {
      * @return the array of {@link GVREyePointeeHolder } objects which are penetrated by the
      *         picking ray. They are sorted by distance from the camera.
      * 
-     * @deprecated use pickObjects instead
+     * @deprecated
      */
     public static final GVREyePointeeHolder[] pickScene(GVRScene scene) {
         return pickScene(scene, 0, 0, 0, 0, 0, -1.0f);
@@ -385,7 +383,6 @@ public class GVRPicker extends GVRBehavior {
      * 
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
      * {@code [dx, dy, dz]}.
-     * 
      * <p>
      * The ray origin may be [0, 0, 0] and the direction components should be
      * normalized from -1 to 1: Note that the y direction runs from -1 at the
@@ -440,21 +437,18 @@ public class GVRPicker extends GVRBehavior {
      * 
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
      * {@code [dx, dy, dz]}.
-     * 
-     * <p>
      * The ray origin may be [0, 0, 0] and the direction components should be
      * normalized from -1 to 1: Note that the y direction runs from -1 at the
      * bottom to 1 at the top. To construct a picking ray originating at the
      * user's head and pointing into the scene along the camera lookat vector,
      * pass in 0, 0, 0 for the origin and 0, 0, -1 for the direction.
-     * 
      * <p>
      * This method is thread safe because it guarantees that only
      * one thread at a time is doing a ray cast into a particular scene graph,
      * and it extracts the hit data during within its synchronized block. You
      * can then examine the return list without worrying about another thread
      * corrupting your hit data.
-     * 
+     * <p>
      * Depending on the type of collider, that the hit location may not be exactly
      * where the ray would intersect the scene object itself. Rather, it is
      * where the ray intersects the collision geometry associated with the collider.
@@ -499,11 +493,10 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * Casts a ray into the scene graph, and returns the objects it intersects.
-     *
+     * <p>
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
      * {@code [dx, dy, dz]}. The ray is in the coordinate system of the
      * input transform, allowing it to be with respect to a scene object.
-     *
      * <p>
      * The ray origin may be [0, 0, 0] and the direction components should be
      * normalized from -1 to 1: Note that the y direction runs from -1 at the
@@ -511,14 +504,13 @@ public class GVRPicker extends GVRBehavior {
      * center of a scene object and pointing where that scene object looks,
      * attach the GVRPicker to the scene object and  pass (0, 0, 0) as
      * the ray origin and (0, 0, -1) for the direction.
-     *
      * <p>
      * This method is thread safe because it guarantees that only
      * one thread at a time is doing a ray cast into a particular scene graph,
      * and it extracts the hit data during within its synchronized block. You
      * can then examine the return list without worrying about another thread
      * corrupting your hit data.
-     *
+     * <p>
      * Depending on the type of collider, that the hit location may not be exactly
      * where the ray would intersect the scene object itself. Rather, it is
      * where the ray intersects the collision geometry associated with the collider.
@@ -565,8 +557,8 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * Casts a ray into the scene graph, and returns the objects it intersects.
-     * 
-     * @deprecated use GVRPickedObject[] pickObjects
+     * This function is deprecated in favor of {@link #pickObjects}
+     * @deprecated
      */
     public static final List<GVRPickedObject> findObjects(GVRScene scene, float ox, float oy, float oz, float dx,
             float dy, float dz) {
@@ -591,12 +583,9 @@ public class GVRPicker extends GVRBehavior {
     /**
      * Tests the {@link GVRSceneObject}s contained within scene against the
      * camera rig's lookat vector.
-     * 
      * <p>
-     * This method uses higher-level function
-     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
-     * findObjects()} internally.
-     * 
+     * This function is deprecated in favor of {@link #pickObjects}
+     *
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
      * 
@@ -604,7 +593,7 @@ public class GVRPicker extends GVRBehavior {
      *         camera rig. Each {@link GVRPickedObject} contains the object
      *         within the {@link GVREyePointeeHolder} along with the hit
      *         location.
-     * 
+     * @deprecated
      */
     public static final List<GVRPickedObject> findObjects(GVRScene scene) {
         return findObjects(scene, 0, 0, 0, 0, 0, -1.0f);
@@ -628,6 +617,9 @@ public class GVRPicker extends GVRBehavior {
 
         /**
          * Creates a new instance of {@link GVRPickedObject}.
+         * <p>
+         * This object is used by GVRPicker to represent an
+         * object that has been picked.
          *
          * @param hitCollider
          *            The {@link GVRCollider} that the ray intersected.

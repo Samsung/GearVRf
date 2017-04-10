@@ -1,5 +1,8 @@
 package org.gearvrf;
 
+/**
+ * GVRTexture which contains a compressed cubemap image.
+ */
 public class GVRCompressedCubemapTexture extends GVRTexture
 {
   // Compressed cubemap texture parameters

@@ -35,9 +35,9 @@ import android.view.Surface;
 import android.graphics.Rect;
 
 /**
- * This class represents a {@linkplain GVRSceneObject Scene object} that shows a {@link View}
+ * {@linkplain GVRSceneObject Scene object} that shows a {@link View}
  * into the scene with an arbitrarily complex geometry.
- * See {@link GVRView}
+ * @see GVRView
  */
 public class GVRViewSceneObject extends GVRSceneObject {
 

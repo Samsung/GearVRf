@@ -60,7 +60,7 @@ import org.joml.Vector4f;
  * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRCollider
  * @see GVRComponent#setEnable(boolean)
- * @see GVRPickedObject
+ * @see GVRPicker.GVRPickedObject
  */
 public class GVRFrustumPicker extends GVRPicker {
     protected FrustumIntersection mCuller;
@@ -237,14 +237,14 @@ public class GVRFrustumPicker extends GVRPicker {
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
      *
-     * @return A list of {@link GVRPickedObject}, sorted by distance from the
-     *         camera rig. Each {@link GVRPickedObject} contains the scene object
+     * @return A list of {@link GVRPicker.GVRPickedObject} instances sorted by distance from the
+     *         camera rig. Each item in the list contains the scene object
      *         which owns the {@link GVRCollider} along with the hit
      *         location and distance from the camera.
      *
      * @since 1.6.6
      */
-    public static final GVRPickedObject[] pickVisible(GVRScene scene) {
+    public static final GVRPicker.GVRPickedObject[] pickVisible(GVRScene scene) {
         sFindObjectsLock.lock();
         try {
             final GVRPickedObject[] result = NativePicker.pickVisible(scene.getNative());

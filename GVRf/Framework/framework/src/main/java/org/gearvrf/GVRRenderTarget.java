@@ -18,10 +18,11 @@ package org.gearvrf;
 /**
  * A render target is a component which allows the scene to be rendered
  * into a texture from the viewpoint of a particular scene object.
- * GVRRenderTarget can initiate a DrawFrameListener which causes
- * the scene to be rendered into the texture every frame.
- * To initiate rendering you must call @{link #startListening()}.
- * A render target may also have a custom camera to allow control
+ * <p>
+ * GVRRenderTarget renders into the texture every frame by
+ * adding a draw frame listener.
+ * To initiate rendering you must call {@link #startListening()}.
+ * A render target also has a custom camera to allow control
  * over the projection matrix.
  * @see GVRRenderTexture
  * @see GVRShadowMap
@@ -40,6 +41,7 @@ public class GVRRenderTarget extends GVRBehavior
 
     /**
      * Constructs a render target component which renders the given scene to a designated texture.
+     * <p>
      * The objects in the scene are rendered from the viewpoint of the scene object
      * the GVRRenderTarget is attached to. Nothing is rendered if
      * the render target is not attached to a scene object.
@@ -70,6 +72,7 @@ public class GVRRenderTarget extends GVRBehavior
 
     /**
      * Sets the camera to use for this render target.
+     * <p>
      * The position and orientation of the render camera is taken
      * from the transform of the scene object this component is
      * attached to. The projection matrix which defines the
@@ -97,6 +100,7 @@ public class GVRRenderTarget extends GVRBehavior
 
     /**
      * Sets the texture this render target will render to.
+     * <p>
      * If no texture is provided, the render target will
      * not render anything.
      * @param texture GVRRenderTexture to render to.

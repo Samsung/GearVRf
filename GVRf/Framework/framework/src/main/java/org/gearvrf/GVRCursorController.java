@@ -29,21 +29,20 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Define a class of type {@link GVRCursorController} to register a new cursor
- * controller with the {@link GVRInputManager}.
- *
+ * Registers a new cursor controller with the {@link GVRInputManager}.
+ * <p>
  * You can request for all the {@link GVRCursorController}s in the system by
  * querying the {@link GVRInputManager#getCursorControllers()} call.
  *
  * Alternatively all notifications for {@link GVRCursorController}s attached or
  * detached from the framework can be obtained by registering a
  * {@link CursorControllerListener} with the {@link GVRInputManager}.
- *
+ *<p>
  * Make use of the {@link GVRCursorController#setSceneObject(GVRSceneObject)} to
  * add a Cursor for the controller in 3D space. The {@link GVRInputManager} will
  * manipulate the {@link GVRSceneObject} based on the input coming in to the
  * {@link GVRCursorController}.
- *
+ *<p>
  * Use the {@link GVRInputManager#addCursorController(GVRCursorController)} call
  * to add an external {@link GVRCursorController} to the framework.
  */

@@ -20,8 +20,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLES20;
 
 /**
- * The class to be used to set and pass texture filter and warp types for
- * loading texture and also to enhance texture even after they are loaded.
+ * Contains texture sampling parameters for filtering and wrapping.
  */
 public class GVRTextureParameters {
 

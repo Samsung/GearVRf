@@ -65,7 +65,7 @@ public abstract class GVRCompressedTextureLoader {
      * simply load the whole thing into a {@code byte[]}, and pass the offset of
      * the actual data to
      * {@link #CompressedTexture(int, int, int, int, int, byte[], int, int)}.
-     * But, when a file may contain either an Android {@link Bitmap} or a
+     * But, when a file may contain either an Android {@link android.graphics.Bitmap} or a
      * compressed texture, we don't want to load the whole file into memory:
      * {@link BitmapFactory#decodeStream(InputStream)} is more memory-efficient
      * than {@link BitmapFactory#decodeByteArray(byte[], int, int)}.

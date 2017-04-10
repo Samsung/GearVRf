@@ -1306,22 +1306,21 @@ public class AnimationInteractivityManager {
                                                 Quaternionf q = ConvertDirectionalVectorToQuaternion(v3);
                                                 gvrSpotLightBase.getTransform().setRotation(q.w, q.x, q.y, q.z);
                                             } else if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("location")) {
-                                                gvrSpotLightBase.setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
+                                                gvrSceneObject.getTransform().setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             }
                                         } else if (gvrComponent instanceof GVRPointLight) {
                                             GVRPointLight gvrPointLightBase = (GVRPointLight) gvrComponent;
                                             if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("attenuation")) {
                                                 gvrPointLightBase.setAttenuation(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             } else if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("location")) {
-                                                gvrPointLightBase.setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
+                                                gvrSceneObject.getTransform().setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             }
                                         } else if (gvrComponent instanceof GVRDirectLight) {
-                                            GVRDirectLight gvrDirectLightBase = (GVRDirectLight) gvrComponent;
                                             if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("direction")) {
                                                 scriptObjectToDefinedItem.setDirection(sfVec3f.x, sfVec3f.y, sfVec3f.z);
                                                 Vector3f v3 = new Vector3f(sfVec3f).normalize();
                                                 Quaternionf q = ConvertDirectionalVectorToQuaternion(v3);
-                                                gvrDirectLightBase.getTransform().setRotation(q.w, q.x, q.y, q.z);
+                                                gvrSceneObject.getTransform().setRotation(q.w, q.x, q.y, q.z);
                                             }
                                         }
                                     }
@@ -1362,7 +1361,7 @@ public class AnimationInteractivityManager {
      * Called upon initialization and updates to those vectors
      *
      * @param d
-     * @return
+     * @return quaternion representation of vector
      */
     public Quaternionf ConvertDirectionalVectorToQuaternion(Vector3f d) {
         d.negate();

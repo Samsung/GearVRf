@@ -33,12 +33,12 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
- * A class to minimize overload fan-out.
- * 
+ * Encapsulates an Android resource, external file or URL.
+ * <p>
  * APIs that load resources can take a {@link GVRAndroidResource} instead of
  * having overloads for {@code assets} files, {@code res/drawable} and
  * {@code res/raw} files, and plain old files.
- * 
+ * <p>
  * See the discussion of asset-relative filenames <i>vs.</i> {@code R.raw}
  * resource ids in the <a href="package-summary.html#assets">package
  * description</a>.

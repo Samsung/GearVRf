@@ -15,6 +15,20 @@
 
 package org.gearvrf;
 
+/**
+ * A box collider allows a scene object to be picked
+ * when a ray penetrates its bounding box.
+ * <p>
+ * This method of picking performs a ray-box intersection.
+ * The center of the collision box is the center of
+ * the scene object it is attached to. If no extents are
+ * provided, the dimensions of the box are (1, 1, 1).
+ *
+ * @see GVRPicker
+ * @see GVRSphereCollider
+ * @see GVRMeshCollider
+ * @see GVRSceneObject#attachComponent(GVRComponent)
+ */
 public class GVRBoxCollider extends GVRCollider {
     public GVRBoxCollider(GVRContext context) {
         super(context, NativeBoxCollider.ctor());

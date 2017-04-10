@@ -18,43 +18,61 @@ import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 
 /**
- * Illuminates object in the scene with a cone shaped beam.
- * 
+ * Illuminates objects in the scene with a cone shaped beam.
+ * <p>
  * The apex of the cone is at the position of the scene object
  * the light is attached to. The direction of the cone is the
  * forward direction of that scene object.
- * 
+ * <p>
  * There are two angles for the cone. Beyond the "outer angle"
  * no light is emitted. Inside the "inner angle" the light is
  * at full intensity. Between the two angles the light linearly
  * decreases allowing for soft edges.
- * 
+ * <p>
  * The intensity of the light diminishes with distance from the
  * cone apex. Three attenuation factors are provided to specify how
  * the intensity of the light falls off with distance:
+ * <p>
  * {@code I = attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2}
- *
- * Spot light uniforms:
- * {@literal
- *   enabled               1 = light is enabled, 0 = light is disabled
- *   world_position        position of spot light in world coordinates
- *                         derived from scene object position
- *   world_direction       direction of spot light in world coordinates
- *                         derived from scene object orientation
- *   ambient_intensity     intensity of ambient light emitted
- *   diffuse_intensity     intensity of diffuse light emitted
- *   specular_intensity    intensity of specular light emitted
- *   attenuation_constant  constant attenuation factor
- *   attenuation_linear    linear attenuation factor
- *   attenuation_quadratic quadratic attenuation factor
- *   inner_cone_angle      cosine of inner cone angle
- *   outer_cone_angle      cosine of outer cone angle
- *   sm0                   shadow matrix column 1
- *   sm1                   shadow matrix column 2
- *   sm2                   shadow matrix column 3
- *   sm3                   shadow matrix column 4
- * }
- * 
+ * <p>
+ * <h3>Spot light uniforms:</h3>
+ * <table>
+ *     <tr><td>enabled</td><td>1 = light illuminates, 0 = light does not illuminate</td></tr>
+ *  <tr>
+ *     <td>world_position</td>
+ *     <td>position of light in world coordinates derived from scene object position</td>
+ *  </tr>
+ *  <tr>
+ *      <td>world_direction</td>
+ *      <td>direction of light in world coordinates derived from scene object orientation</td>
+ *  </tr>
+ *  <tr>
+ *      <td>ambient_intensity</td>
+ *      <td>intensity of ambient light emitted</td>
+ *  </tr>
+ *  <tr>
+ *      <td>specular_intensity</td>
+ *      <td>intensity of specular light emitted</td>
+ *  </tr>
+ *  <tr>
+ *      <td>attenuation_constant</td>
+ *      <td>constant attenuation factor</td>
+ *  </tr>
+ *  <tr>
+ *      <td>attenuation_linear</td>
+ *      <td>linear attenuation factor</td>
+ *  </tr>
+ *  <tr>
+ *      <td><attenuation_quadratic/td>
+ *      <td>quadratic attenuation factor</td>
+ *  </tr>
+ *  <tr><td>inner_cone_angle</td><td>cosine of inner cone angle</td></tr>
+ *  <tr><td>outer_cone_angle</td><td>cosine of outer cone angle</td></tr>
+ *  <tr><td>sm0</td><td>shadow matrix column 1</td></tr>
+ *  <tr><td>sm1</td><td>shadow matrix column 2</td></tr>
+ *  <tr><td>sm2</td><td>shadow matrix column 3</td></tr>
+ *  <tr><td>sm3</td><td>shadow matrix column 4</td></tr>
+ * </table>
  * Note: some mobile GPU drivers do not correctly pass a mat4 thru so we currently
  * use 4 vec4's instead.
  *  
@@ -96,10 +114,10 @@ public class GVRSpotLight extends GVRPointLight
 
     /**
      * Get the inner angle of the spotlight cone in degrees.
-     * 
+     * <p>
      * Inside the inner cone angle the light is at full intensity.
      * @see #setInnerConeAngle(float)
-     * @see #setOuterConeAngle(float}
+     * @see #setOuterConeAngle(float)
      */
     public float getInnerConeAngle()
     {
@@ -108,13 +126,13 @@ public class GVRSpotLight extends GVRPointLight
 
     /**
      * Set the inner angle of the spotlight cone in degrees.
-     * 
+     * <p>
      * Inside the inner cone angle the light is at full intensity.
      * The underlying uniform "inner_cone_angle" is the cosine
      * of this input angle. If the inner cone angle is larger than the outer cone angle
      * there will be unexpected results.
      * @see #getInnerConeAngle()
-     * @see #getOuterConeAngle(}
+     * @see #getOuterConeAngle()
      */
     public void setInnerConeAngle(float angle)
     {
@@ -123,10 +141,10 @@ public class GVRSpotLight extends GVRPointLight
     
     /**
      * Get the outer angle of the spotlight cone in degrees.
-     * 
+     * <p>
      * Beyond the outer cone angle there is no illumination.
      * @see #setInnerConeAngle(float)
-     * @see #setOuterConeAngle(float}
+     * @see #setOuterConeAngle(float)
      */
     public float getOuterConeAngle()
     {
@@ -135,7 +153,7 @@ public class GVRSpotLight extends GVRPointLight
     
     /**
      * Set the inner angle of the spotlight cone in degrees.
-     * 
+     * <p>
      * Beyond the outer cone angle there is no illumination.
      * The underlying uniform "outer_cone_angle" is the cosine
      * of this input angle. If the inner cone angle is larger than the outer cone angle
@@ -151,10 +169,12 @@ public class GVRSpotLight extends GVRPointLight
 
     /**
      * Enables or disabled shadow casting for a spot light.
+     * <p>
      * Enabling shadows attaches a GVRShadowMap component to the
      * GVRSceneObject which owns the light and provides the
      * component with an perspective camera for shadow casting.
      * @param enableFlag true to enable shadow casting, false to disable
+     * @see GVRShadowMap
      */
     public void setCastShadow(boolean enableFlag)
     {
