@@ -11,14 +11,14 @@ import android.util.LongSparseArray;
  * A collider allows a scene object to be picked.
  * Instead of checking against all the vertices of the object's mesh,
  * a simpler collision geometry is provided to optimize picking.
- * 
+ * <p>
  * There are different types of colliders depending on how accurate
- * you want picking to be. The GVRSphereCollider is the fastest but
- * least accurate - it picks against a sphere. You can use a GVRMeshCollider
+ * you want picking to be. The {@link GVRSphereCollider} is the fastest but
+ * least accurate - it picks against a sphere. You can use a {@link GVRMeshCollider}
  * to pick against a mesh which can be a simplified version of the
  * scene object's real mesh, such as the mesh bounding box.
- *
- * The GVRPicker class can cast a ray against the scene graph and
+ * <p>
+ * The {@link GVRPicker} class can cast a ray against the scene graph and
  * return a list of which collider were hit and where. The picker can
  * be attached to a scene graph node, such as the camera rig owner,
  * to automatically generate the ray from the scene object transform
@@ -88,7 +88,7 @@ public class GVRCollider extends GVRComponent
     
     /**
      * Gets pick distance.
-     * 
+     * <p>
      * The pick distance defaults to zero which will
      * cause the item to be picked now matter how far
      * along the pick ray the hit is. If the distance
@@ -106,7 +106,7 @@ public class GVRCollider extends GVRComponent
     /**
      * Sets the maximum distance from pick ray origin
      * before a hit is ignored.
-     * 
+     * <p>
      * The pick distance defaults to zero which will
      * cause the item to be picked now matter how far
      * along the pick ray the hit is. If the distance
@@ -114,7 +114,7 @@ public class GVRCollider extends GVRComponent
      * picked if it is further from the ray origin
      * than the pick distance.
      * 
-     * @see getPickDistance
+     * @see #getPickDistance()
      */
     public void setPickDistance(float dist)
     {

@@ -56,12 +56,14 @@ import java.util.UUID;
 import java.util.concurrent.Future;
 
 /**
- * {@link GVRAssetLoader} provides methods for importing 3D models and making them
- * available through instances of {@link GVRAssimpImporter}.
+ * Imports 3D models and textures from multiple sources.
  * <p>
  * Supports importing models from an application's resources (both
  * {@code assets} and {@code res/raw}), from directories on the device's SD
  * card and URLs on the internet that the application has permission to read.
+ * <p>
+ * The ASSIMP package is used to load all 3D content formats except for X3D
+ * which is supported by a custom GearVRF loader.
  */
 public final class GVRAssetLoader {
     /**
@@ -523,7 +525,7 @@ public final class GVRAssetLoader {
     /**
      * Texture load callback that binds the texture to the material.
      */
-    public static class MaterialTextureRequest extends TextureRequest
+    static class MaterialTextureRequest extends TextureRequest
     {
         public final GVRMaterial Material;
         public final String TextureName;
@@ -1259,9 +1261,6 @@ public final class GVRAssetLoader {
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
-     *
-     * @return A {@link GVRModelSceneObject} that is the root of the hierarchy generated
-     * by loading the 3D model.
      */
     public void loadModel(final GVRResourceVolume fileVolume,
                           final GVRSceneObject model,

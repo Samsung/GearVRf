@@ -3,7 +3,8 @@ package org.gearvrf.scene_objects;
 import android.view.Surface;
 
 /**
- * Use to supply different media player objects to GVRVideoSceneObject.
+ * Supply different media player objects to GVRVideoSceneObject.
+ * <p>
  * For example in addition to the default MediaPlayer this can be used to make GVRVideoSceneObject
  * utilize the ExoPlayer.
  * @param <T>
@@ -11,7 +12,7 @@ import android.view.Surface;
 public interface GVRVideoSceneObjectPlayer<T> {
     /**
      * Returns the actual player instance
-     * @return
+     * @return video player of type T
      */
     T getPlayer();
 
@@ -31,7 +32,7 @@ public interface GVRVideoSceneObjectPlayer<T> {
      * Called by GVRVideoSceneObject to determine whether the Surface it creates internally can
      * be released immediately after being passed to the media player. If this returns false it
      * means that the implementation is responsible for releasing the Surface.
-     * @return
+     * @return true if surface can be released, else false
      */
     boolean canReleaseSurfaceImmediately();
 

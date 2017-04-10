@@ -1,5 +1,8 @@
 package org.gearvrf.animation.keyframe;
 
+/**
+ * Controls a keyframe animation.
+ */
 public abstract class GVRAnimationController {
     private static final float TOL = 1e-6f;
     protected final GVRKeyFrameAnimation animation;

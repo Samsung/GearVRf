@@ -15,5 +15,8 @@
 
 package org.gearvrf.script;
 
+/**
+ * Interface for scriptable objects.
+ */
 public interface IScriptable {
 }

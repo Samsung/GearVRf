@@ -17,7 +17,6 @@ package org.gearvrf.asynchronous;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +27,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.gearvrf.FutureWrapper;
-import org.gearvrf.IAssetEvents;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRAtlasInformation;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCompressedCubemapTexture;
@@ -44,7 +43,6 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRShaders;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
-import org.gearvrf.IErrorEvents;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
@@ -181,12 +179,10 @@ public class GVRAsynchronousResourceLoader {
 
     /**
      * Load a bitmap texture asynchronously.
-     * 
-     * This is the implementation of
-     * {@link GVRContext#loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource, int)}
-     * - it will usually be more convenient (and more efficient) to call that
-     * directly.
-     * 
+     * <p>
+     * Never call this function directly. Use {@link GVRAssetLoader} to
+     * load textures.
+     * </p>
      * @param gvrContext
      *            The GVRF context
      * @param textureCache
@@ -204,6 +200,7 @@ public class GVRAsynchronousResourceLoader {
      *             {@link GVRContext#LOWEST_PRIORITY} or {@literal >}
      *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
      *             parameters are {@code null}.
+     * @deprecated
      */
     public static void loadBitmapTexture(GVRContext gvrContext,
             ResourceCache<GVRTexture> textureCache,

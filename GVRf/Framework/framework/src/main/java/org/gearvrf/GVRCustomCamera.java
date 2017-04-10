@@ -15,7 +15,9 @@
 
 package org.gearvrf;
 
-/** A version of {@link GVRCamera} with a custom projection matrix. */
+/**
+ *  A {@link GVRCamera} which permits a custom projection matrix.
+ */
 public class GVRCustomCamera extends GVRCamera {
     public GVRCustomCamera(GVRContext gvrContext) {
         super(gvrContext, NativeCustomCamera.ctor());

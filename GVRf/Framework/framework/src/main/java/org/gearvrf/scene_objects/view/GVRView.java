@@ -21,10 +21,10 @@ import android.graphics.Canvas;
 import android.view.View;
 
 /**
- * Because it is not possible add a {@linkplain View Android view} to the {@link GVRScene},
+ * Because it is not possible add a {@linkplain View Android view} to the {@link org.gearvrf.GVRScene},
  * {@link GVRView} is a special view that provides a way to draw {@link View} into some
- * {@link GVRViewSceneObject} added to {@linkplain GVRScene the scene graph}. Call
- * {@link GVRActivity#registerView(View)} to add the {@link GVRView} to Android hierarchy view.
+ * {@link GVRViewSceneObject} added to {@linkplain org.gearvrf.GVRScene the scene graph}. Call
+ * {@link org.gearvrf.GVRActivity#registerView(View)} to add the {@link GVRView} to Android hierarchy view.
  * After it has been registered, the UI Thread will call {@link GVRView#draw(Canvas)} to refresh the
  * view as necessary. To draw the {@link GVRView} into its {@link GVRViewSceneObject} is necessary
  * override {@link GVRView#draw(Canvas)} and call the superclass version replacing the given
@@ -44,7 +44,7 @@ import android.view.View;
  * </pre>
  *
  * Once you are done with a particular instance you need to call
- * {@link GVRActivity#unregisterView(View)} on it to avoid memory leaks.
+ * {@link org.gearvrf.GVRActivity#unregisterView(View)} on it to avoid memory leaks.
  *
  * See {@link GVRWebView} and {@link GVRViewSceneObject}
  */
@@ -59,7 +59,7 @@ public interface GVRView {
      * {@link GVRViewSceneObject#unlockCanvasAndPost(Canvas)}
      * 
      * @param canvas Use it to get some dimensions to be applied to the new Canvas given by
-     *            {@link GVRViewSceneObject#lockCanvas(android.graphics.Rect)}
+     *            {@link GVRViewSceneObject#lockCanvas()}
      */
     void draw(Canvas canvas);
 

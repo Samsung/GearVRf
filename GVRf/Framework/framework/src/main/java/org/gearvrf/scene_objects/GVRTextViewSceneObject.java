@@ -40,6 +40,9 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+/**
+ * Scene object that maps a texture containing text onto a quad.
+ */
 public class GVRTextViewSceneObject extends GVRSceneObject {
     private static final int REALTIME_REFRESH_INTERVAL = 1;
     private static final int HIGH_REFRESH_INTERVAL = 10; // frames

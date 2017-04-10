@@ -27,6 +27,9 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
 
+/**
+ * Scene object whose mesh describes a cylinder.
+ */
 public class GVRCylinderSceneObject extends GVRSceneObject {
     public static class CylinderParams {
         public float       Height = 1.0f;

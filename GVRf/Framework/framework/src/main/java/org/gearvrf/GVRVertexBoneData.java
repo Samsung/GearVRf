@@ -1,5 +1,8 @@
 package org.gearvrf;
 
+/**
+ * Internal class containing vertex bone weights and indices.
+ */
 public final class GVRVertexBoneData implements PrettyPrint {
     @SuppressWarnings("unused")
     private GVRMesh mMesh;

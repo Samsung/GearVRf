@@ -46,10 +46,12 @@ import android.view.Window;
 import android.view.WindowManager;
 
 /**
+ * Main application class from which all GVRF applications must derive.
+ * <p>
  * The typical GVRF application will have a single Android {@link Activity},
  * which <em>must</em> descend from {@link GVRActivity}, not directly from
  * {@code Activity}.
- * 
+ * <p>
  * {@code GVRActivity} creates and manages the internal classes which use sensor
  * data to manage a viewpoint, and thus present an appropriate stereoscopic view
  * of your scene graph. {@code GVRActivity} also gives GVRF a full-screen window
