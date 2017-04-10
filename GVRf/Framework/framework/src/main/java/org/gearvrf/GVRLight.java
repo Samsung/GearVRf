@@ -17,6 +17,10 @@ package org.gearvrf;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.utility.TextFile;
 
+/**
+ * A point light - exists only for backwards compatibility.
+ * @deprecated use GVRPointLight
+ */
 public class GVRLight extends GVRPointLight 
 {
     public GVRLight (GVRContext gvrContext, GVRSceneObject owner) {

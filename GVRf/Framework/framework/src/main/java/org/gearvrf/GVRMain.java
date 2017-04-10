@@ -55,7 +55,7 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
      */
 
     /**
-     * Called before {@link #onInit(GVRContext).
+     * Called before {@link #onInit(GVRContext)}.
      *
      * This is used for initializing plug-ins and other early components.
      */
@@ -284,7 +284,7 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
     /**
      * Override this method to supply a custom splash screen shader.
      *
-     * The default is the built-in {@linkplain GVRMaterial.GVRShaderType.Unlit
+     * The default is the built-in {@linkplain GVRMaterial.GVRShaderType.Texture
      * unlit shader.}
      *
      * @param gvrContext

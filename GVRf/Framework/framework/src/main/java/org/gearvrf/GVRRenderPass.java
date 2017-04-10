@@ -17,15 +17,14 @@ package org.gearvrf;
 
 
 /**
- * A RenderPass let one render the same scene object multiple times with different settings. This is useful to
- * achieve effects like outline in cartoon-ish rendering or computing addictive lights for instance.
- * 
+ * Renders the same scene object multiple times with different settings.
+ * <p>
+ * This is useful to achieve effects like outline in cartoon-ish rendering or computing additive lights.
  * The benefit of using a render pass over duplicating the object and rendering twice is that like culling, transform and
  * skinning are performed only once.
- * 
- * A render pass encapsulates a material and all rendering states that can be set per pass. 
- * 
- *
+ * <p>
+ * A render pass encapsulates a material and all rendering states that can be set per pass.
+ * @see GVRRenderData
  */
 public class GVRRenderPass extends GVRHybridObject {
     

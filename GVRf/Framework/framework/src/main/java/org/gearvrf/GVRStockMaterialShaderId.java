@@ -20,7 +20,7 @@ package org.gearvrf;
  * 
  * You get these from {@link GVRMaterial.GVRShaderType}; you can pass these to
  * {@link GVRMaterial#GVRMaterial(GVRContext, GVRMaterialShaderId)} and to
- * {@link GVRMaterial#setShaderType(GVRMaterialShaderId)}; you can <em>not</em>
+ * {@link GVRMaterial#setShaderType(GVRShaderId)}; you can <em>not</em>
  * pass these to
  * {@link GVRMaterialShaderManager#getShaderMap(GVRCustomMaterialShaderId)}.
  */

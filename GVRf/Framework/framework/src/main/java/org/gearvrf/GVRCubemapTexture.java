@@ -20,7 +20,9 @@ import java.util.Map;
 
 import android.graphics.Bitmap;
 
-/** Cube map texture. */
+/**
+ * GVRTexture which contains a cube map image.
+ */
 public class GVRCubemapTexture extends GVRTexture {
     /**
      * Constructs a cube map texture using six pre-existing {@link Bitmap}s.

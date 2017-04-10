@@ -19,7 +19,14 @@ import static org.gearvrf.utility.Assert.*;
 
 import org.gearvrf.utility.Log;
 
-/** Holds the GVRCameras. */
+/**
+ * The camera rig component contains the three VR cameras used to render the scene.
+ * <p>
+ * The left and right cameras are used to render the left and right eyes.
+ * There is also a center camera with a viewpoint farther back that
+ * provides a clipping frustum for both eyes.
+ * @see GVRCamera
+ */
 public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     private GVRSceneObject headTransformObject;
 
@@ -29,29 +36,31 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     private GVRSceneObject leftCameraObject, rightCameraObject;
     private GVRSceneObject centerCameraObject;
 
-    /** Ways to use the rotation sensor data. */
+    /**
+     * How the rotation sensor data is applied.
+     * */
     public abstract static class GVRCameraRigType {
-        /** Rotates freely. Default. */
+        /** Camera rotates freely. Default. */
         public abstract static class Free {
             public static final int ID = 0;
         }
 
-        /** Yaw rotation (naively speaking, rotation by y-axis) only. */
+        /** Camera rotates about y-axis (yaw) only  */
         public abstract static class YawOnly {
             public static final int ID = 1;
         }
 
-        /** No roll rotation (naively speaking, rotation by z-axis). */
+        /** Camera does not rotate about z-axis (no roll). */
         public abstract static class RollFreeze {
             public static final int ID = 2;
         }
 
-        /** No rotation at all. */
+        /** Camera ignores sensors and does not rotate at all. */
         public abstract static class Freeze {
             public static final int ID = 3;
         }
 
-        /** Orbits the pivot. */
+        /** Camera orbits the pivot. */
         public abstract static class OrbitPivot {
             public static final int ID = 4;
             public static final String DISTANCE = "distance";

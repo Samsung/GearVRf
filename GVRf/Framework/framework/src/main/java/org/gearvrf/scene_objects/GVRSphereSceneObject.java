@@ -25,6 +25,9 @@ import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.utility.Log;
 
+/**
+ * Scene object whose mesh describes a sphere.
+ */
 public class GVRSphereSceneObject extends GVRSceneObject {
 
     @SuppressWarnings("unused")

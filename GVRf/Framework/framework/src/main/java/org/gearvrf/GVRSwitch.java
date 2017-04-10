@@ -47,9 +47,9 @@ public class GVRSwitch extends GVRBehavior
      * @param gvrContext    The current GVRF context
      * @param nativePointer Pointer to the native object, returned by the native constructor
      */
-    protected GVRSwitch(GVRContext gvrContext, long nativeConstructor)
+    protected GVRSwitch(GVRContext gvrContext, long nativePointer)
     {
-        super(gvrContext, nativeConstructor);
+        super(gvrContext, nativePointer);
     }    
 
     static public long getComponentType() { return TYPE_SWITCH; }   
@@ -73,7 +73,7 @@ public class GVRSwitch extends GVRBehavior
      * 
      * If it is out of range, none of the children will be shown.
      * @param index 0 based index into children of owner.
-     * @see GVRSceneObject.getChildByIndex
+     * @see GVRSceneObject#getChildByIndex(int)
      */
     public void setSwitchIndex(int index)
     {
@@ -84,12 +84,11 @@ public class GVRSwitch extends GVRBehavior
      * Sets the current switch index based on object name.
      * This function finds the child of the scene object
      * this component is attached to and sets the switch
-     * index to reference it so this is the object that
-     * will be displayed.
+     * index to reference it so that object will be displayed.
      * 
      * If it is out of range, none of the children will be shown.
-     * @param index 0 based index into children of owner.
-     * @see GVRSceneObject.getChildByIndex
+     * @param childName name of child to select
+     * @see GVRSceneObject#getChildByIndex(int)
      */
     public void selectByName(String childName)
     {

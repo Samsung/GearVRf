@@ -185,7 +185,7 @@ public abstract class GVRHybridObject {
      * descendant class that adds a list of cleanup handler(s), instead of
      * (potentially) one list per instance.
      * 
-     * See the usage in {@link GVREyePointeeHolder}.
+     * See the usage in {@link GVRCollider}.
      */
     protected static class CleanupHandlerListManager {
         private final List<NativeCleanupHandler> mPrefixList;

@@ -19,6 +19,9 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.utility.Log;
 
+/**
+ * Scene object whose mesh describes a cone.
+ */
 public class GVRConeSceneObject extends GVRCylinderSceneObject {
 
     @SuppressWarnings("unused")
