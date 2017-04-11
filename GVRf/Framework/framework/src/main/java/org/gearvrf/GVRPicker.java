@@ -106,6 +106,7 @@ public class GVRPicker extends GVRBehavior {
     {
         super(owner.getGVRContext());
         mScene = scene;
+        setPickRay(0, 0, 0, 0, 0, 1);
         owner.attachComponent(this);
     }
 
