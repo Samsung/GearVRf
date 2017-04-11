@@ -69,11 +69,11 @@ public class GVRRenderTexture extends GVRTexture {
      * @param sampleCount
      *            MSAA sample count.
      * @param colorFormat
-     *            GVR color format. See {@linkplain org.gearvrf.utility.
-     *            VrAppSettings.EyeBufferParams.ColorFormat ColorFormat}.
+     *            GVR color format.
+     *            See {@linkplain org.gearvrf.utility.VrAppSettings.EyeBufferParams.ColorFormat ColorFormat}.
      * @param depthFormat
-     *            Depth format. See {@linkplain org.gearvrf.utility.
-     *            VrAppSettings.EyeBufferParams.DepthFormat DepthFormat}.
+     *            Depth format.
+     *            See {@linkplain org.gearvrf.utility.VrAppSettings.EyeBufferParams.DepthFormat DepthFormat}.
      * @param resolveDepth
      *            If true, resolves the depth buffer into a texture.
      * @param parameters

@@ -46,7 +46,7 @@ import java.nio.FloatBuffer;
  * OvrGearController controller = (OvrGearController) gvrCursorController;
  * </code>
  *
- * Additionally register a {@link ControllerEventListener} using
+ * Additionally register a {@link org.gearvrf.GVRCursorController.ControllerEventListener} using
  * {@link GVRCursorController#addControllerEventListener(ControllerEventListener)} to receive
  * notification whenever the controller information is updated.
  */

@@ -58,7 +58,7 @@ public enum AiConfigOptions {
      * Property type: float.<p>
      *  
      * Warning: setting this option may cause a severe loss of performance. The
-     * performance is unaffected if the {@link #CONFIG_FAVOUR_SPEED} flag is 
+     * performance is unaffected if the CONFIG_FAVOUR_SPEED flag is
      * set but the output quality may be reduced.
      */
     PP_GSN_MAX_SMOOTHING_ANGLE("PP_GSN_MAX_SMOOTHING_ANGLE"),

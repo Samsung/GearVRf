@@ -79,7 +79,6 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
      *            R.raw id, for a file containing a vertex shader
      * @param fragmentShader_resRaw
      *            R.raw id, for a file containing a fragment shader
-     * @return
      */
     @Override
     public GVRShaderId newShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
@@ -97,7 +96,6 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
      * @param fragmentShader_stream
      *            GLSL source code for a fragment shader. Stream will be closed
      *            when method returns.
-     * @return
      */
     @Override
     public GVRShaderId newShader(InputStream vertexShader_stream,

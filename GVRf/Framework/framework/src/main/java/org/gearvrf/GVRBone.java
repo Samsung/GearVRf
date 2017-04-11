@@ -123,8 +123,6 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * This method is part of the wrapped API (see {@link AiWrapperProvider}
      * for details on wrappers).
      *
-     * @param wrapperProvider the wrapper provider (used for type inference)
-     *
      * @return the offset matrix
      */
     public Matrix4f getOffsetMatrix() {

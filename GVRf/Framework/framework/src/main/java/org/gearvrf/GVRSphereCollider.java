@@ -38,8 +38,8 @@ package org.gearvrf;
  * @see GVRPicker
  * @see GVRSphereCollider
  * @see GVRMeshCollider
- * @see GVRSceneObject.attachComponent
- * @see GVRSceneObject.getBoundingVolume
+ * @see GVRSceneObject#attachComponent(GVRComponent)
+ * @see GVRSceneObject#getBoundingVolume()
  */
 public class GVRSphereCollider extends GVRCollider
 {
@@ -60,8 +60,8 @@ public class GVRSphereCollider extends GVRCollider
      * mesh attached to the scene object.
      * 
      * @param radius radius of collision sphere
-     * @see GVRSphereCollider.getRadius
-     * @see GVRMesh.getSphereBound
+     * @see GVRSphereCollider#getRadius()
+     * @see GVRMesh#getSphereBound(float[])
      * @see GVRPicker
      */
     public void setRadius(float radius)
@@ -78,7 +78,7 @@ public class GVRSphereCollider extends GVRCollider
      * on the scene object.
      * 
      * @return radius set for collision sphe4re
-     * @see GVRSphereCollider.setRadius
+     * @see GVRSphereCollider#setRadius(float)
      * @see GVRPicker
      */
     public float getRadius()

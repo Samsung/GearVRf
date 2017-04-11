@@ -214,7 +214,7 @@ public class GVRBitmapTexture extends GVRTexture {
      *            Texture height, in pixels
      * @param grayscaleData
      *            {@code width * height} bytes of gray scale data
-     * @return {@link Future<Boolean>} A update request on a non-GL thread will
+     * @return {@link java.util.concurrent.Future} A update request on a non-GL thread will
      *         finally be forwarded to the GL thread and be executed before main
      *         rendering happens. So at the time we call the safeUpdate, we can
      *         only return a Future containing a boolean value to see if it is
@@ -284,7 +284,7 @@ public class GVRBitmapTexture extends GVRTexture {
      * @param bitmap
      *            A standard Android {@link Bitmap} gvrContext Current GVR
      *            context we are running with.
-     * @return {@link Future<Boolean>} A update request on a non-GL thread will
+     * @return {@link Future} A update request on a non-GL thread will
      *         finally be forwarded to the GL thread and be executed before main
      *         rendering happens. So at the time we call the safeUpdate, we can
      *         only return a Future containing a boolean value to see if it is

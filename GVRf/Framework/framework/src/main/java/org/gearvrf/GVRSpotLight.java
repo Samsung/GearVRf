@@ -99,7 +99,7 @@ public class GVRSpotLight extends GVRPointLight
      * 
      * Inside the inner cone angle the light is at full intensity.
      * @see #setInnerConeAngle(float)
-     * @see #setOuterConeAngle(float}
+     * @see #setOuterConeAngle(float)
      */
     public float getInnerConeAngle()
     {
@@ -114,7 +114,7 @@ public class GVRSpotLight extends GVRPointLight
      * of this input angle. If the inner cone angle is larger than the outer cone angle
      * there will be unexpected results.
      * @see #getInnerConeAngle()
-     * @see #getOuterConeAngle(}
+     * @see #getOuterConeAngle()
      */
     public void setInnerConeAngle(float angle)
     {
@@ -126,7 +126,7 @@ public class GVRSpotLight extends GVRPointLight
      * 
      * Beyond the outer cone angle there is no illumination.
      * @see #setInnerConeAngle(float)
-     * @see #setOuterConeAngle(float}
+     * @see #setOuterConeAngle(float)
      */
     public float getOuterConeAngle()
     {

@@ -409,7 +409,6 @@ public class GVRShaderTemplate
      *            GVRRenderData with mesh and material to use
      * @param scene
      *            scene being rendered
-     * @return ID of vertex/fragment shader set
      */
     public void bindShader(GVRContext context, GVRRenderData rdata, GVRScene scene)
     {
@@ -502,7 +501,6 @@ public class GVRShaderTemplate
      *            GVRContext
      * @param material
      *            material to use with the shader
-     * @return ID of vertex/fragment shader set
      */
     public void bindShader(GVRContext context, GVRMaterial material)
     {
@@ -562,7 +560,6 @@ public class GVRShaderTemplate
      *            GVRContext
      * @param material
      *            material to use with the shader
-     * @return ID of vertex/fragment shader set
      */
     public void bindShader(GVRContext context, GVRPostEffect material)
     {

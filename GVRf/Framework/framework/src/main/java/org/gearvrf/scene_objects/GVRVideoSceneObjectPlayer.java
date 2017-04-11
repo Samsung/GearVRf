@@ -11,7 +11,6 @@ import android.view.Surface;
 public interface GVRVideoSceneObjectPlayer<T> {
     /**
      * Returns the actual player instance
-     * @return
      */
     T getPlayer();
 
@@ -31,7 +30,6 @@ public interface GVRVideoSceneObjectPlayer<T> {
      * Called by GVRVideoSceneObject to determine whether the Surface it creates internally can
      * be released immediately after being passed to the media player. If this returns false it
      * means that the implementation is responsible for releasing the Surface.
-     * @return
      */
     boolean canReleaseSurfaceImmediately();
 

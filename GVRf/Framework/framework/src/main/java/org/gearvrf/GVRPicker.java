@@ -127,9 +127,9 @@ public class GVRPicker extends GVRBehavior {
      * list are sorted based on increasing distance
      * from the origin of the pick ray.
      * @return GVRPickedObject array with objects picked or null if nothing picked.
-     * @see doPick
+     * @see #doPick()
      * @see IPickEvents
-     * @see setPickRay
+     * @see #setPickRay(float, float, float, float, float, float)
      */
     public final GVRPickedObject[] getPicked()
     {
@@ -155,7 +155,7 @@ public class GVRPicker extends GVRBehavior {
      * main camera with (0, 0, 0) at the viewer and (0, 0, -1)
      * where the viewer is looking.
      *
-     * @see doPick
+     * @see #doPick()
      */
     public void setPickRay(float ox, float oy, float oz, float dx, float dy, float dz)
     {
@@ -181,7 +181,7 @@ public class GVRPicker extends GVRBehavior {
      * This function is called automatically by
      * the picker every frame.
      * @see IPickEvents 
-     * @see pickObjects
+     * @see #pickObjects(GVRScene, float, float, float, float, float, float)
      */
     protected void doPick()
     {

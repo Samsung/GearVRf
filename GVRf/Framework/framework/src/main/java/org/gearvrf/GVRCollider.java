@@ -114,7 +114,7 @@ public class GVRCollider extends GVRComponent
      * picked if it is further from the ray origin
      * than the pick distance.
      * 
-     * @see getPickDistance
+     * @see #getPickDistance()
      */
     public void setPickDistance(float dist)
     {

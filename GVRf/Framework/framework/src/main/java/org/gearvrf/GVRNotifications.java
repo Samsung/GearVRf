@@ -44,7 +44,7 @@ public final class GVRNotifications {
      * Wait for the next before-step event.
      * 
      * This method will block until the GL thread receives the next
-     * {@link GLSurfaceView.Renderer#onDrawFrame(javax.microedition.khronos.opengles.GL10)
+     * {@link android.opengl.GLSurfaceView.Renderer#onDrawFrame(javax.microedition.khronos.opengles.GL10)
      * onDrawFrame()} call. Since your thread(s) will wake up shortly before
      * {@link GVRMain#onStep()}, you should only use this method if you need
      * the tightest possible synchronization with the GL thread. That is, you
@@ -73,7 +73,7 @@ public final class GVRNotifications {
      * Wait for the next after-step event.
      * 
      * This method will block until the GL thread is returning from the next
-     * {@link GLSurfaceView.Renderer#onDrawFrame(javax.microedition.khronos.opengles.GL10)
+     * {@link android.opengl.GLSurfaceView.Renderer#onDrawFrame(javax.microedition.khronos.opengles.GL10)
      * onDrawFrame()} call: waking non-GL threads here guarantees the least
      * possible competition for CPU time.
      */

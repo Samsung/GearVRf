@@ -325,8 +325,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     
     /**
      * Calculate a bounding sphere from the mesh vertices.
-     * @param sphere        float[4] array to get center of sphere and radius
-     * @return sphere[0] = center.x, sphere[1] = center.y, sphere[2] = center.z, sphere[3] = radius
+     * @param sphere        float[4] array to get center of sphere and radius;
+     *                      sphere[0] = center.x, sphere[1] = center.y, sphere[2] = center.z, sphere[3] = radius
      */
     public void getSphereBound(float[] sphere) {
         NativeMesh.getSphereBound(getNative(), sphere);

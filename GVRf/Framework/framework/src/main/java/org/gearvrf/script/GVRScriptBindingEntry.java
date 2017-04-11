@@ -42,7 +42,7 @@ public class GVRScriptBindingEntry {
     public String language;
 
     /**
-     * The type of the volume. It corresponds to the enum {@link org.gearvrf.GVRResourceVolume#VolumeType}.
+     * The type of the volume. It corresponds to the enum {@link org.gearvrf.GVRResourceVolume.VolumeType}.
      * If this field is omitted, it defaults to the volume from which the {@link GVRScriptBundle}
      * is loaded.
      */

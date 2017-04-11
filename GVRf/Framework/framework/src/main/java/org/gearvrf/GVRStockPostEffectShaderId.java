@@ -21,7 +21,7 @@ package org.gearvrf;
  * You get these from {@link GVRPostEffect.GVRPostEffectShaderType}; you can
  * pass these to
  * {@link GVRPostEffect#GVRPostEffect(GVRContext, GVRPostEffectShaderId)} and to
- * {@link GVRPostEffect#setShaderType(GVRPostEffectShaderId)}; you can
+ * {@link GVRPostEffect#setShaderType(GVRShaderId)}; you can
  * <em>not</em> pass these to
  * {@link GVRPostEffectShaderManager#getShaderMap(GVRCustomPostEffectShaderId)}.
  */

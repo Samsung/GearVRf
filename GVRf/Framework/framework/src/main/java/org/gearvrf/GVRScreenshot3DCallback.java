@@ -22,7 +22,7 @@ import android.graphics.Bitmap;
 /**
  * Callback interface for asynchronous 3D screenshot capture. The screenshot
  * result will be passed to the caller as the parameter of
- * {@link GVRScreenshot3DCallback#onScreenCaptured(List)}.
+ * {@link GVRScreenshot3DCallback#onScreenCaptured(Bitmap[])}
  */
 public interface GVRScreenshot3DCallback {
     /**

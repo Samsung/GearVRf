@@ -48,7 +48,7 @@ public class GVRStatsLine {
 
     /**
      * Constructor.
-     * @param lingTag
+     * @param lineTag
      *         The line tag printed at beginning of each statistics line.
      */
     public GVRStatsLine(String lineTag) {
@@ -81,7 +81,6 @@ public class GVRStatsLine {
 
     /**
      * Prints the statistic line, including all added columns.
-     * @return The line to be printed.
      */
     public void printLine() {
         Log.d(mLineTag, "%s", getStats(sFormat));
@@ -92,7 +91,7 @@ public class GVRStatsLine {
      * {@code periodMS} millisecond has passed since last printing, the new line
      * is suppressed. The {@code periodMS} can be set to 0 to print every line.
      *
-     * @param period The log period in milliseconds.
+     * @param periodMS The log period in milliseconds.
      */
     public void printLine(long periodMS) {
         long currentTime = GVRTime.getMilliTime();

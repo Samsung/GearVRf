@@ -17,8 +17,8 @@ import java.util.List;
  * An asset which has animations will have this component
  * attached to collect the animations for the asset.
  *
- * @see GVRAssetLoader
- * @see GVRExternalScene
+ * @see org.gearvrf.GVRAssetLoader
+ * @see org.gearvrf.GVRExternalScene
  * @see GVRAnimator
  * @see GVRAnimationEngine
  */
@@ -82,8 +82,8 @@ public class GVRAnimator extends GVRBehavior
      * the new one will not be started.
      *
      * @param anim animation to add
-     * @see GVRAnimator.removeAnimation
-     * @see GVRAnimator.clear
+     * @see GVRAnimator#removeAnimation(GVRAnimation)
+     * @see GVRAnimator#clear()
      */
     public void addAnimation(GVRAnimation anim)
     {
@@ -98,8 +98,8 @@ public class GVRAnimator extends GVRBehavior
      * if the animation is already running it will not be stopped.
      *
      * @param anim animation to add
-     * @see GVRAnimator.addAnimation
-     * @see GVRAnimator.clear
+     * @see GVRAnimator#addAnimation(GVRAnimation)
+     * @see GVRAnimator#clear()
      */
     public void removeAnimation(GVRAnimation anim)
     {
@@ -111,10 +111,9 @@ public class GVRAnimator extends GVRBehavior
      *
      * The state of the animations are not changed when removed. For example,
      * if the animations are already running they are not be stopped.
-     *
-     * @param anim animation to add
-     * @see GVRAnimator.removeAnimation
-     * @see GVRAnimator.addAnimation
+
+     * @see GVRAnimator#removeAnimation(GVRAnimation)
+     * @see GVRAnimator#addAnimation(GVRAnimation)
      */
     public void clear()
     {
@@ -130,7 +129,7 @@ public class GVRAnimator extends GVRBehavior
      *                   ONCE - run the animations once
      *                   REPEATED - repeat the animation
      *                   PINGPONG - run forward, run reverse, repeat
-     * @see GVRAnimator.setRepeatCount
+     * @see GVRAnimator#setRepeatCount(int)
      */
     public void setRepeatMode(int repeatMode)
     {
@@ -149,7 +148,7 @@ public class GVRAnimator extends GVRBehavior
      *                    -1 indicates repeat endlessly
      *                    0 indicates animation will stop after current cycle
 
-     * @see GVRAnimator.setRepeatMode
+     * @see GVRAnimator#setRepeatMode(int)
      */
     public void setRepeatCount(int repeatCount)
     {
@@ -161,8 +160,8 @@ public class GVRAnimator extends GVRBehavior
 
     /**
      * Starts all of the animations.
-     * @see GVRAnimator.reset
-     * @see GVRAnimationEngine.start
+     * @see GVRAnimator#reset()
+     * @see GVRAnimationEngine#start(GVRAnimation)
      */
     public void start()
     {
@@ -175,8 +174,8 @@ public class GVRAnimator extends GVRBehavior
 
     /**
      * Stops all of the animations associated with this animator.
-     * @see GVRAnimator.start
-     * @see GVRAnimationEngine.stop
+     * @see GVRAnimator#start()
+     * @see GVRAnimationEngine#stop(GVRAnimation)
      */
     public void stop()
     {
@@ -190,8 +189,8 @@ public class GVRAnimator extends GVRBehavior
      * Resets all animations to their initial state.
      * If the animations are running, they will start again
      * at the beginning.
-     * @see GVRAnimation.reset
-     * @see GVRAnimator.start
+     * @see GVRAnimation#reset()
+     * @see GVRAnimator#start()
      */
     public void reset()
     {

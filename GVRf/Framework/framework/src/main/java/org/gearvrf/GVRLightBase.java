@@ -194,7 +194,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      * Note that shadow_near and shadow_far will be deprecated in the next release.
      * The proper way to change the near and far planes of the shadow map
      * camera is to call {@link GVRShadowMap#getCamera } and then call
-     * @{link GVRCamera#setNearClippingPlane} and @{link GVRCamera#setFarClippingPlane}.
+     * {@link GVRPerspectiveCamera#setNearClippingDistance(float)} and
+     * {@link GVRPerspectiveCamera#setFarClippingDistance(float)}}.
      * @return shadow map material
      */
     public static GVRMaterial getShadowMaterial(GVRContext ctx)
