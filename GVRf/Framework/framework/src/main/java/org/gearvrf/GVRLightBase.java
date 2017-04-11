@@ -116,29 +116,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public void setCastShadow(boolean enableFlag)
     {
-        GVRSceneObject owner = getOwnerObject();
-
-        if (owner != null)
+        if (enableFlag)
         {
-            GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
-            if (enableFlag)
-            {
-                if (shadowMap != null)
-                {
-                    shadowMap.setEnable(true);
-                }
-                else
-                {
-                    shadowMap = new GVRShadowMap(getGVRContext());
-                    owner.attachComponent(shadowMap);
-                }
-            }
-            else if (shadowMap != null)
-            {
-                shadowMap.setEnable(false);
-            }
+            throw new UnsupportedOperationException("This light cannot cast shadows");
         }
-        mCastShadow = enableFlag;
     }
     
     /**

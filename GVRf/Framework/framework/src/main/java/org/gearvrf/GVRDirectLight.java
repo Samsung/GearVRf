@@ -196,15 +196,32 @@ public class GVRDirectLight extends GVRLightBase
      */
     public void setCastShadow(boolean enableFlag)
     {
-        super.setCastShadow(enableFlag);
-        if (enableFlag && (getOwnerObject() != null))
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
         {
             GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
-            if ((shadowMap != null) && (shadowMap.getCamera() == null))
+            if (enableFlag)
             {
-                shadowMap.addOrthoShadowCamera(getGVRContext().getMainScene().getMainCameraRig().getCenterCamera());
+                if (shadowMap != null)
+                {
+                    shadowMap.setEnable(true);
+                }
+                else
+                {
+                    GVRCamera shadowCam = GVRShadowMap.makeOrthoShadowCamera(
+                            getGVRContext().getMainScene().getMainCameraRig().getCenterCamera());
+                    shadowMap = new GVRShadowMap(getGVRContext(), shadowCam);
+                    owner.attachComponent(shadowMap);
+                }
             }
+            else
+                if (shadowMap != null)
+                {
+                    shadowMap.setEnable(false);
+                }
         }
+        mCastShadow = enableFlag;
     }
 
     /**

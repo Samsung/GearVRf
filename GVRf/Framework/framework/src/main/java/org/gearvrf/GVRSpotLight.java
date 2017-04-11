@@ -158,16 +158,31 @@ public class GVRSpotLight extends GVRPointLight
      */
     public void setCastShadow(boolean enableFlag)
     {
-        super.setCastShadow(enableFlag);
-        if (enableFlag && (getOwnerObject() != null))
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
         {
             GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
-            if ((shadowMap != null) && (shadowMap.getCamera() == null))
+            if (enableFlag)
             {
-                shadowMap.addPerspShadowCamera(getGVRContext().getMainScene().getMainCameraRig().getCenterCamera(),
-                                               (float) Math.acos(getFloat("outer_cone_angle")) * 2.0f);
+                if (shadowMap != null)
+                {
+                    shadowMap.setEnable(true);
+                }
+                else
+                {
+                    float angle = (float) Math.acos(getFloat("outer_cone_angle")) * 2.0f;
+                    GVRCamera shadowCam = GVRShadowMap.makePerspShadowCamera(getGVRContext().getMainScene().getMainCameraRig().getCenterCamera(), angle);
+                    shadowMap = new GVRShadowMap(getGVRContext(), shadowCam);
+                    owner.attachComponent(shadowMap);
+                }
+            }
+            else if (shadowMap != null)
+            {
+                shadowMap.setEnable(false);
             }
         }
+        mCastShadow = enableFlag;
     }
 
     /**
