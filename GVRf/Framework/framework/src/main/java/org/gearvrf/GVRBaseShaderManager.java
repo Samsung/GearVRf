@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.gearvrf.utility.TextFile;
+import org.gearvrf.utility.VrAppSettings;
 
 import android.content.res.AssetManager;
 import android.content.res.Resources;
@@ -102,6 +103,14 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
             InputStream fragmentShader_stream) {
         String vertexShader = TextFile.readTextFile(vertexShader_stream);
         String fragmentShader = TextFile.readTextFile(fragmentShader_stream);
+        final VrAppSettings settings = getGVRContext().getActivity().getAppSettings();
+        String defines="#version 300 es\n";
+        if (settings.isMultiviewSet())
+        {
+            defines = defines + "#define HAS_MULTIVIEW\n";
+        }
+        vertexShader = defines + vertexShader;
+        fragmentShader = defines + fragmentShader;
         return newShader(vertexShader, fragmentShader);
     }
 

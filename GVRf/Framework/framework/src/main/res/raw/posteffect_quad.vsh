@@ -11,12 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#ifdef HAS_MULTIVIEW
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+#endif
+in vec3 a_position;
+in vec2 a_texcoord;
 
-attribute vec3 a_position;
-attribute vec2 a_texcoord;
-
-varying vec2 v_scene_coord;
-varying vec2 v_overlay_coord;
+out vec2 v_scene_coord;
+out vec2 v_overlay_coord;
 
 void main() {
   v_scene_coord = a_texcoord.xy;

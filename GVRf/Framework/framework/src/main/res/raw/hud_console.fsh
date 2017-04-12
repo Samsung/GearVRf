@@ -11,19 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
- 
 
 precision mediump float;
 
 uniform sampler2D u_texture;
 uniform sampler2D u_overlay;
 
-varying vec2 v_scene_coord;
-varying vec2 v_overlay_coord;
+in vec2 v_scene_coord;
+in vec2 v_overlay_coord;
+out vec4 outColor;
 
 void main() {
-  vec4 rendered = texture2D(u_texture, v_scene_coord);
-  vec4 overlay = texture2D(u_overlay, v_overlay_coord);
+  vec4 rendered = texture(u_texture, v_scene_coord);
+  vec4 overlay = texture(u_overlay, v_overlay_coord);
 
-  gl_FragColor = mix(rendered, overlay, overlay.a);
+  outColor = mix(rendered, overlay, overlay.a);
 }
