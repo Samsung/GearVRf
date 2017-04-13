@@ -1046,10 +1046,6 @@ public class X3Dobject {
                         urlAttribute = urlAttribute.replace("\"", ""); // remove double and
                         // single quotes
                         urlAttribute = urlAttribute.replace("\'", "");
-                        urlAttribute = urlAttribute.toLowerCase();
-
-                        // urlAttribute = urlAttribute.substring(0,
-                        // urlAttribute.indexOf("."));
 
                         final String filename = urlAttribute;
                         String repeatSAttribute = attributes.getValue("repeatS");
@@ -2023,7 +2019,7 @@ public class X3Dobject {
                             {
                                     2, 2, 2
                             };
-                    boolean solid = true; // cone visible from inside
+                    boolean solid = true; // box visible from inside
 
                     attributeValue = attributes.getValue("size");
                     if (attributeValue != null) {
@@ -2032,14 +2028,12 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Box solid not currently implemented. ");
                     }
-                    Vector3f sizeVector = new Vector3f(size[0], size[1], size[3]);
+                    Vector3f sizeVector = new Vector3f(size[0], size[1], size[2]);
                     GVRCubeSceneObject gvrCubeSceneObject = new GVRCubeSceneObject(
                             gvrContext, solid, sizeVector);
                     currentSceneObject.addChildObject(gvrCubeSceneObject);
                     meshAttachedSceneObject = gvrCubeSceneObject;
-
 
                 } // end <Box> node
 
@@ -2071,13 +2065,12 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Cone solid not currently implemented. ");
                     }
                     GVRCylinderSceneObject.CylinderParams params = new GVRCylinderSceneObject.CylinderParams();
                     params.BottomRadius = bottomRadius;
                     params.TopRadius = 0;
                     params.Height = height;
-                    params.FacingOut = true;
+                    params.FacingOut = solid;
                     params.HasTopCap = false;
                     params.HasBottomCap = bottom;
                     GVRCylinderSceneObject cone = new GVRCylinderSceneObject(gvrContext,
@@ -2117,7 +2110,6 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Cylinder solid not currently implemented. ");
                     }
                     attributeValue = attributes.getValue("top");
                     if (attributeValue != null) {
@@ -2129,7 +2121,7 @@ public class X3Dobject {
                     params.Height = height;
                     params.HasBottomCap = bottom;
                     params.HasTopCap = top;
-                    params.FacingOut = true;
+                    params.FacingOut = solid;
                     GVRCylinderSceneObject gvrCylinderSceneObject = new GVRCylinderSceneObject(
                             gvrContext, params);
                     currentSceneObject.addChildObject(gvrCylinderSceneObject);
@@ -2141,7 +2133,7 @@ public class X3Dobject {
                 /********** Sphere **********/
                 else if (qName.equalsIgnoreCase("Sphere")) {
                     float radius = 1;
-                    boolean solid = true; // cylinder visible from inside
+                    boolean solid = true; // sphere visible from inside
                     attributeValue = attributes.getValue("radius");
                     if (attributeValue != null) {
                         radius = parseSingleFloatString(attributeValue, false, true);
@@ -2149,7 +2141,6 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Sphere solid not currently implemented. ");
                     }
                     GVRSphereSceneObject gvrSphereSceneObject = new GVRSphereSceneObject(
                             gvrContext, solid, radius);

@@ -1554,14 +1554,14 @@ public class AnimationInteractivityManager {
                                                 Quaternionf q = ConvertDirectionalVectorToQuaternion(v3);
                                                 gvrSpotLightBase.getTransform().setRotation(q.w, q.x, q.y, q.z);
                                             } else if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("location")) {
-                                                gvrSpotLightBase.setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
+                                                gvrSpotLightBase.getTransform().setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             }
                                         } else if (gvrComponent instanceof GVRPointLight) {
                                             GVRPointLight gvrPointLightBase = (GVRPointLight) gvrComponent;
                                             if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("attenuation")) {
                                                 gvrPointLightBase.setAttenuation(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             } else if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("location")) {
-                                                gvrPointLightBase.setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
+                                                gvrPointLightBase.getTransform().setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             }
                                         } else if (gvrComponent instanceof GVRDirectLight) {
                                             GVRDirectLight gvrDirectLightBase = (GVRDirectLight) gvrComponent;
