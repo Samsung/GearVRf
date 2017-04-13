@@ -16,6 +16,12 @@
 
 package org.gearvrf;
 
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+
+import org.gearvrf.utility.TextFile;
+import org.gearvrf.utility.VrAppSettings;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,12 +29,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.gearvrf.utility.TextFile;
-import org.gearvrf.utility.VrAppSettings;
-
-import android.content.res.AssetManager;
-import android.content.res.Resources;
 
 /**
  * Encapsulates the implementation shared between GVRMaterialShaderManager
@@ -42,7 +42,8 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
     }
 
     /**
-     * Adds a shader from sources in the assets directory.
+     * Adds a shader from sources in the assets directory. Assumes the shaders use GLSL ES version
+     * 100.
      * @param pathPrefix
      *            Optional (may be {@code null}) prefix for shader filenames. If
      *            present, will be prepended to {@code vertexShader} and
@@ -61,17 +62,52 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
     @Override
     public GVRShaderId addShader(String pathPrefix, String vertexShader_asset,
             String fragmentShader_asset) {
+        return addShader(pathPrefix, vertexShader_asset, fragmentShader_asset, GLSLESVersion.V100);
+    }
+
+    /**
+     * Adds a shader from sources in the assets directory.
+     * @param pathPrefix
+     *            Optional (may be {@code null}) prefix for shader filenames. If
+     *            present, will be prepended to {@code vertexShader} and
+     *            {@code fragmentShader}, thus allowing you to build a tree of
+     *            shaders in your assets directory, where each node contains
+     *            vertex and fragment shaders with the same filename. If
+     *            {@code null}, {@code vertexShader} and {@code fragmentShader}
+     *            are the path names of files in the assets directory.
+     * @param vertexShader_asset
+     *            Filename of a vertex shader, relative to the assets directory
+     * @param fragmentShader_asset
+     *            Filename of a fragment shader, relative to the assets
+     *            directory
+     * @param glslesVersion GLSL ES version used by the shaders
+     * @return ID of new shader added
+     */
+    public GVRShaderId addShader(String pathPrefix, String vertexShader_asset,
+                                 String fragmentShader_asset, GLSLESVersion glslesVersion) {
         Resources resources = getResources();
         try {
             InputStream vertexShader = open(resources, pathPrefix,
                     vertexShader_asset);
             InputStream fragmentShader = open(resources, pathPrefix,
                     fragmentShader_asset);
-            return newShader(vertexShader, fragmentShader);
+            return newShader(vertexShader, fragmentShader, glslesVersion);
         } catch (IOException e) {
             e.printStackTrace(); // give user a clue
             return null;
         }
+    }
+
+    /**
+     * Adds a shader from sources in res/raw. Assumes the shaders use GLSL ES version 100.
+     * @param vertexShader_resRaw
+     *            R.raw id, for a file containing a vertex shader
+     * @param fragmentShader_resRaw
+     *            R.raw id, for a file containing a fragment shader
+     */
+    @Override
+    public GVRShaderId newShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
+        return newShader(vertexShader_resRaw, fragmentShader_resRaw, GLSLESVersion.V100);
     }
 
     /**
@@ -80,17 +116,18 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
      *            R.raw id, for a file containing a vertex shader
      * @param fragmentShader_resRaw
      *            R.raw id, for a file containing a fragment shader
+     * @param glslesVersion GLSL ES version used by the shaders
      */
-    @Override
-    public GVRShaderId newShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
+    public GVRShaderId newShader(int vertexShader_resRaw, int fragmentShader_resRaw, GLSLESVersion glslesVersion) {
         Resources resources = getResources();
         InputStream vertexShader = open(resources, vertexShader_resRaw);
         InputStream fragmentShader = open(resources, fragmentShader_resRaw);
-        return newShader(vertexShader, fragmentShader);
+        return newShader(vertexShader, fragmentShader, glslesVersion);
     }
 
     /**
-     * Adds a shader from sources in separate input streams.
+     * Adds a shader from sources in separate input streams. Assumes the shaders use GLSL ES version
+     * 100.
      * @param vertexShader_stream
      *            GLSL source code for a vertex shader. Stream will be closed
      *            when method returns.
@@ -101,19 +138,41 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
     @Override
     public GVRShaderId newShader(InputStream vertexShader_stream,
             InputStream fragmentShader_stream) {
+        return newShader(vertexShader_stream, fragmentShader_stream, GLSLESVersion.V100);
+    }
+
+    /**
+     * Adds a shader from sources in separate input streams.
+     * @param vertexShader_stream
+     *            GLSL source code for a vertex shader. Stream will be closed
+     *            when method returns.
+     * @param fragmentShader_stream
+     *            GLSL source code for a fragment shader. Stream will be closed
+     *            when method returns.
+     * @param glslesVersion GLSL ES version used by the shaders
+     */
+    public GVRShaderId newShader(InputStream vertexShader_stream,
+                                 InputStream fragmentShader_stream, GLSLESVersion glslesVersion) {
         String vertexShader = TextFile.readTextFile(vertexShader_stream);
         String fragmentShader = TextFile.readTextFile(fragmentShader_stream);
         final VrAppSettings settings = getGVRContext().getActivity().getAppSettings();
-        String defines="#version 300 es\n";
-        if (settings.isMultiviewSet())
-        {
-            defines = defines + "#define HAS_MULTIVIEW\n";
+
+        String defines;
+        if (GLSLESVersion.V300 == glslesVersion) {
+            defines = "#version " + glslesVersion.toInt() + " es\n";
+            if (settings.isMultiviewSet())
+            {
+                defines = defines + "#define HAS_MULTIVIEW\n";
+            }
+        } else {
+            defines = "";
         }
+
         vertexShader = defines + vertexShader;
         fragmentShader = defines + fragmentShader;
+
         return newShader(vertexShader, fragmentShader);
     }
-
 
     /**
      * Retrieves the shader template of the specified class.
@@ -205,4 +264,17 @@ public abstract class GVRBaseShaderManager extends GVRHybridObject
     protected Map<Class<? extends GVRShaderTemplate>, GVRShaderTemplate>
             mShaderTemplates = new HashMap<Class<? extends GVRShaderTemplate>, GVRShaderTemplate>();
 
+    public enum GLSLESVersion {
+        V100(100),
+        V300(300);
+
+        private GLSLESVersion(int v) {
+            this.v = v;
+        }
+        private final int v;
+
+        private int toInt() {
+            return v;
+        }
+    }
 }

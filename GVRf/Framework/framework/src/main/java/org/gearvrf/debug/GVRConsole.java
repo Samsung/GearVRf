@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.gearvrf.GVRBaseShaderManager;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
@@ -393,7 +394,7 @@ public class GVRConsole extends GVRPostEffect {
             GVRPostEffectShaderManager shaderManager = gvrContext
                     .getPostEffectShaderManager();
             shaderId = shaderManager.addShader(R.raw.posteffect_quad,
-                    R.raw.hud_console);
+                    R.raw.hud_console, GVRBaseShaderManager.GLSLESVersion.V300);
 
             shaderMap = shaderManager.getShaderMap(shaderId);
             shaderMap.addTextureKey("u_overlay", MAIN_TEXTURE);

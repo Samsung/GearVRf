@@ -77,7 +77,7 @@ public class GVRPostEffectShaderManager extends
 
     /**
      * Builds a shader program from the supplied vertex and fragment shader
-     * code from resources in res/raw.
+     * code from resources in res/raw. Assumes the shaders are using GLSL ES version 100.
      *
      * @param vertexShader_resRaw
      *            R.raw id, for a file containing a vertex shader
@@ -88,6 +88,22 @@ public class GVRPostEffectShaderManager extends
      */
     public GVRCustomPostEffectShaderId addShader(int vertexShader_resRaw, int fragmentShader_resRaw) {
         return (GVRCustomPostEffectShaderId) newShader(vertexShader_resRaw, fragmentShader_resRaw);
+    }
+
+    /**
+     * Builds a shader program from the supplied vertex and fragment shader
+     * code from resources in res/raw.
+     *
+     * @param vertexShader_resRaw
+     *            R.raw id, for a file containing a vertex shader
+     * @param fragmentShader_resRaw
+     *            R.raw id, for a file containing a fragment shader
+     * @param glslesVersion GLSL ES version the shaders are using
+     * @return An opaque type that you can pass to {@link #getShaderMap(GVRCustomPostEffectShaderId)}
+     *         or to the {@link GVRPostEffect} constructor and {@code setShader} methods.
+     */
+    public GVRCustomPostEffectShaderId addShader(int vertexShader_resRaw, int fragmentShader_resRaw, GLSLESVersion glslesVersion) {
+        return (GVRCustomPostEffectShaderId) newShader(vertexShader_resRaw, fragmentShader_resRaw, glslesVersion);
     }
 
     @Override
