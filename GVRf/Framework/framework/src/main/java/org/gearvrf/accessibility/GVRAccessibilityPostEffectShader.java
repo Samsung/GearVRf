@@ -11,6 +11,7 @@
 
 package org.gearvrf.accessibility;
 
+import org.gearvrf.GVRBaseShaderManager;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCustomPostEffectShaderId;
 import org.gearvrf.GVRPostEffectMap;
@@ -33,7 +34,7 @@ final class GVRAccessibilityPostEffectShader {
         final GVRPostEffectShaderManager shaderManager = gvrContext
                 .getPostEffectShaderManager();
         mShaderId = shaderManager.addShader(org.gearvrf.R.raw.inverted_colors_vertex,
-                org.gearvrf.R.raw.inverted_colors_fragment);
+                org.gearvrf.R.raw.inverted_colors_fragment, GVRBaseShaderManager.GLSLESVersion.V300);
         mCustomShader = shaderManager.getShaderMap(mShaderId);
 
     }
