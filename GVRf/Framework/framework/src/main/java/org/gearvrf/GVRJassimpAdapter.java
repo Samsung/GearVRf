@@ -589,7 +589,7 @@ class GVRJassimpAdapter {
                 GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, mFileName + texFileName, gvrmtl, textureKey, texParams);
                 assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
             }
-            catch (NumberFormatException | IndexOutOfBoundsException ex)
+            catch (Exception ex)
             {
                 assetRequest.onModelError(mContext, ex.getMessage(), mFileName);
             }

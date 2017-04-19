@@ -1382,7 +1382,7 @@ public final class GVRAssetLoader {
             inputStream.close();
             assetRequest.onModelLoaded(mContext, root, fileName);
         }
-        catch (Exception ex)
+        catch (IOException ex)
         {
             assetRequest.onModelError(mContext, ex.getMessage(), fileName);
             throw ex;

@@ -51,7 +51,7 @@ public final class GVRLODGroup extends GVRBehavior {
 
     private final Vector4f mCenter = new Vector4f();
     private final Vector4f mVector = new Vector4f();
-    private final LinkedList<Object[]> mRanges = new LinkedList<>();
+    private final LinkedList<Object[]> mRanges = new LinkedList<Object[]>();
 
     /**
      * Add a range to this LOD group. Specify the scene object that should be displayed in this

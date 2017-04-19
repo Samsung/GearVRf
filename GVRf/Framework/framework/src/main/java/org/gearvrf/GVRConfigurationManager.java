@@ -27,6 +27,7 @@ import org.gearvrf.utility.DockEventReceiver;
 import org.gearvrf.utility.Threads;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 abstract class GVRConfigurationManager {
@@ -39,7 +40,7 @@ abstract class GVRConfigurationManager {
     protected GVRConfigurationManager(GVRActivity activity) {
         mPtr = NativeConfigurationManager.ctor();
 
-        mActivity = new WeakReference<>(activity);
+        mActivity = new WeakReference<GVRActivity>(activity);
 
         mResetFovY = (0 == Float.compare(0, activity.getAppSettings().getEyeBufferParams().getFovY()));
 
@@ -183,7 +184,13 @@ abstract class GVRConfigurationManager {
         final HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         for (final UsbDevice device : deviceList.values()) {
             if (device.getVendorId() == vendorId && device.getProductId() == productId) {
-                return device.getSerialNumber();
+                try {
+                    Method m = UsbDevice.class.getMethod("getSerialNumber");
+                    return (String)m.invoke(device);
+                } catch (Exception e) {
+                    Log.e(TAG, "getSerialNumber not available; assuming headset model R322");
+                    return "R322";
+                }
             }
         }
 
