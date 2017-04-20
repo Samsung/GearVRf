@@ -30,6 +30,7 @@
 
 #include "util/gvr_log.h"
 #include <cstdlib>
+#include <cstring>
 
 #include "objects/gl_pending_task.h"
 
@@ -51,7 +52,7 @@ public:
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
         pending_gl_task_ = GL_TASK_INIT_WITH_PARAM;
-        memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
+        std::memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
     }
 
     virtual ~GLTexture() {
