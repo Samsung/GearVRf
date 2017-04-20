@@ -604,7 +604,7 @@ public class GVRPicker extends GVRBehavior {
        GVRCollider collider = GVRCollider.lookup(colliderPointer);
        if (collider == null)
        {
-           Log.d("Picker", "makeHit: cannot find collider for %p", colliderPointer);
+           Log.d(TAG, "makeHit: cannot find collider for %x", colliderPointer);
            return null;
        }
        return new GVRPicker.GVRPickedObject(collider, new float[] { hitx, hity, hitz }, distance);
