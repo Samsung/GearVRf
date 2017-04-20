@@ -17,6 +17,7 @@
 #include "util/gvr_log.h"
 #include <assert.h>
 #include <cstring>
+#include <cstdlib>
 
 VulkanCore* VulkanCore::theInstance = NULL;
 
@@ -1002,7 +1003,7 @@ void VulkanCore::BuildCmdBuffer()
         GVR_VK_CHECK(!err);
 
         //void* data;
-        uint8_t *finaloutput = (uint8_t*)malloc(m_width*m_height*4* sizeof(uint8_t));
+        uint8_t *finaloutput = (uint8_t*)std::malloc(m_width*m_height*4* sizeof(uint8_t));
         for(int i = 0; i < (320); i++)
             finaloutput[i] = 0;
 
