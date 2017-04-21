@@ -88,6 +88,28 @@ public class GVRPicker extends GVRBehavior {
         startListening();
     }
 
+    /**
+     * Construct a picker which picks from a given scene
+     * using a ray emanating from the specified scene object.
+     * The picker will be attached to the scene object and
+     * will scan the scene every frame and generate pick events.
+     * <p>
+     * This constructor is useful when you want to pick from the
+     * viewpoint of a scene object. It will not generate any
+     * pick events until after the picker has been attached
+     * to the scene object.
+     *
+     * @param owner scene object to own the picker
+     * @param scene scene containing the scene objects to pick from
+     */
+    public GVRPicker(GVRSceneObject owner, GVRScene scene)
+    {
+        super(owner.getGVRContext());
+        mScene = scene;
+        setPickRay(0, 0, 0, 0, 0, 1);
+        owner.attachComponent(this);
+    }
+
     static public long getComponentType() { return TYPE_PICKMANAGER; }
 
     /**
