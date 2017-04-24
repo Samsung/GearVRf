@@ -106,6 +106,7 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
 
         headTransformObject = new GVRSceneObject(gvrContext);
         addHeadTransformObject();
+        headTransformObject.setName("_gvrf_head_transform");
 
         leftCameraObject = new GVRSceneObject(gvrContext);
         rightCameraObject = new GVRSceneObject(gvrContext);

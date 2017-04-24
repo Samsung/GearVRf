@@ -79,6 +79,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
 
         mSceneRoot = new GVRSceneObject(gvrContext);
+        mSceneRoot.setName("_gvrf_java_root");
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
@@ -99,6 +100,13 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         cameraRig.attachCenterCamera(centerCamera);
 
         addSceneObject(cameraRig.getOwnerObject());
+
+        cameraRig.getOwnerObject().setName("_gvrf_camera_rig");
+        //note that daydream ignores the left/right cameras passed above; need to do
+        //something about the apis to make all this clearer
+        cameraRig.getLeftCamera().getOwnerObject().setName("_gvrf_left_camera");
+        cameraRig.getRightCamera().getOwnerObject().setName("_gvrf_right_camera");
+        cameraRig.getCenterCamera().getOwnerObject().setName("_gvrf_center_camera");
 
         setMainCameraRig(cameraRig);
         setFrustumCulling(true);      

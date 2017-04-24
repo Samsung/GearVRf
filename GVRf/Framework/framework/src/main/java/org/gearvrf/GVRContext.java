@@ -2414,6 +2414,8 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public abstract GVREventManager getEventManager();
 
+    abstract void renderTexture(GVRScene scene, GVRCamera camera, GVRRenderTexture renderTexture);
+
     /**
      * Returns the {@link GVRScriptManager}.
      *
@@ -2823,6 +2825,10 @@ public abstract class GVRContext implements IEventReceiver {
         while (null != (reference = (GVRReference)mReferenceQueue.poll())) {
             reference.close();
         }
+    }
+
+    public interface RenderToTextureListener {
+        void onReady(GVRTexture texture);
     }
 
     final class GVRReference extends PhantomReference<GVRHybridObject> {
