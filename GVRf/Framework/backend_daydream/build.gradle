@@ -85,5 +85,9 @@ tasks.whenTaskAdded { task ->
         task.finalizedBy(copyJarToBin)
     } else if (task.name == 'bundleRelease') {
         task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'externalNativeBuildRelease') {
+        task.dependsOn ":framework:externalNativeBuildRelease"
+    } else if (task.name == 'externalNativeBuildDebug') {
+        task.dependsOn ":framework:externalNativeBuildDebug"
     }
 }

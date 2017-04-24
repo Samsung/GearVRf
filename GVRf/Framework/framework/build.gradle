@@ -137,15 +137,11 @@ clean {}.doLast {
 
 task packageForPlugins(type: Zip) {
     outputs.upToDateWhen { false }
+
     baseName project.name + '-for-plugins'
 
-    if (file('./build/intermediates/bundles/release/classes.jar').exists()) {
-        from './build/intermediates/bundles/release/classes.jar'
-        rename 'classes.jar', project.name + '-classes.jar'
-    } else if (file('./build/intermediates/bundles/default/classes.jar').exists()) {
-        from './build/intermediates/bundles/default/classes.jar'
-        rename 'classes.jar', project.name + '-classes.jar'
-    }
+    from './build/intermediates/bundles/default/classes.jar'
+    rename 'classes.jar', project.name + '-classes.jar'
 
     from './src/main/libs/'
     include '*.jar'
@@ -154,11 +150,6 @@ task packageForPlugins(type: Zip) {
     include '*.so'
 
     doLast {
-        if (!file('./build/intermediates/bundles/release/classes.jar').exists()
-            && !file('./build/intermediates/bundles/default/classes.jar').exists()) {
-            throw new GradleException('cannot find the framework classes jar file')
-        }
-
         copy {
             from 'build/distributions/'
             into project.rootDir.absolutePath + "/../gearvrf-libs"
@@ -178,9 +169,9 @@ tasks.whenTaskAdded { task ->
         task.dependsOn 'buildInfo'
     } else if (task.name == 'externalNativeBuildRelease') {
         task.dependsOn 'buildInfo'
-    } else if (task.name == 'bundleDebug') {
+    } else if (task.name == 'assembleDebug') {
         task.finalizedBy(copyJarToBin)
-    } else if (task.name == 'bundleRelease') {
+    } else if (task.name == 'assembleRelease') {
         task.finalizedBy(packageForPlugins)
         task.finalizedBy(copyJarToBin)
     }
