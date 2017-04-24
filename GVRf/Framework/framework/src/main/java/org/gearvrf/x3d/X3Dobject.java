@@ -17,10 +17,7 @@ package org.gearvrf.x3d;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.webkit.WebSettings;
 
-import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRWebView;
 import org.gearvrf.utility.Log;
 
 import java.io.FileNotFoundException;

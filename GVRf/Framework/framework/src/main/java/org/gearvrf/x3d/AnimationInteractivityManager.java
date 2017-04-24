@@ -34,6 +34,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
@@ -105,6 +106,8 @@ public class AnimationInteractivityManager {
     private ArrayList<ScriptObject> scriptObjects = null;
 
     private AnchorImplementation anchorImplementation = null;
+    private GVRAnimator gvrAnimator = null;
+
 
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
 
@@ -131,6 +134,9 @@ public class AnimationInteractivityManager {
         this.timeSensors = timeSensors;
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
+
+        gvrAnimator = new GVRAnimator(this.gvrContext);
+        root.attachComponent(gvrAnimator);
 
         anchorImplementation = new AnchorImplementation(this.gvrContext);
 
@@ -569,8 +575,8 @@ public class AnimationInteractivityManager {
                     // interactive triggered in picking
                     if (interactiveObject.getSensor() == null) {
                         // this is an animation without interactivity
-                        //TODO: Switch to GVRJassimpAdapter processScene implementation
-                        gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine());
+                        gvrAnimator.addAnimation(gvrKeyFrameAnimation);
+
                     } else {
                         // this is an interactive object
                         final InteractiveObject interactiveObjectFinal = interactiveObject;
@@ -783,6 +789,8 @@ public class AnimationInteractivityManager {
             } // end sensor != null
 
         }  // end for loop traversing through all interactive objects
+        // Initiate all the animations, both keyframe and procedural
+        gvrAnimator.start();
         if (perFrameScripting.getRunState()) {
             final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
             gvrContext.registerDrawFrameListener(mOnDrawFrame);
