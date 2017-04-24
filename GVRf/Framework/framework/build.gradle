@@ -169,9 +169,9 @@ tasks.whenTaskAdded { task ->
         task.dependsOn 'buildInfo'
     } else if (task.name == 'externalNativeBuildRelease') {
         task.dependsOn 'buildInfo'
-    } else if (task.name == 'assembleDebug') {
+    } else if (task.name == 'bundleDebug') {
         task.finalizedBy(copyJarToBin)
-    } else if (task.name == 'assembleRelease') {
+    } else if (task.name == 'bundleRelease') {
         task.finalizedBy(packageForPlugins)
         task.finalizedBy(copyJarToBin)
     }
