@@ -123,7 +123,9 @@ public class AnimationInteractivityManager {
                                          Vector<Sensor> sensors,
                                          Vector<TimeSensor> timeSensors,
                                          Vector<EventUtility> eventUtilities,
-                                         ArrayList<ScriptObject> scriptObjects
+                                         ArrayList<ScriptObject> scriptObjects,
+                                         Vector<Viewpoint> viewpoints
+
     ) {
         this.x3dObject = x3dObject;
         this.gvrContext = gvrContext;
@@ -138,7 +140,7 @@ public class AnimationInteractivityManager {
         gvrAnimator = new GVRAnimator(this.gvrContext);
         root.attachComponent(gvrAnimator);
 
-        anchorImplementation = new AnchorImplementation(this.gvrContext);
+        anchorImplementation = new AnchorImplementation(this.gvrContext, viewpoints);
 
     }
 
