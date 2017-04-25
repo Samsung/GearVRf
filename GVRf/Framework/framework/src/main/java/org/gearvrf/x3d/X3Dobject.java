@@ -266,7 +266,8 @@ public class X3Dobject {
 
             animationInteractivityManager = new AnimationInteractivityManager(
                     this, gvrContext, root, mDefinedItems, interpolators,
-                    sensors, timeSensors, eventUtilities, scriptObjects
+                    sensors, timeSensors, eventUtilities, scriptObjects,
+                    viewpoints
             );
         } catch (Exception e) {
             Log.e(TAG, "X3Dobject constructor error: " + e);
@@ -3338,7 +3339,7 @@ public class X3Dobject {
                 // The camera rig is indirectly attached to the root
 
                 if (cameraRigAtRoot != null) {
-                    GVRTransform cameraTransform = cameraRigAtRoot.getTransform();
+                    //GVRTransform cameraTransform = cameraRigAtRoot.getTransform();
                     GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
 
 

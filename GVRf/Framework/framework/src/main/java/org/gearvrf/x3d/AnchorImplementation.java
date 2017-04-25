@@ -70,6 +70,8 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
+import java.util.Vector;
+
 import android.content.Context;
 
 import javax.xml.parsers.SAXParser;
@@ -95,6 +97,8 @@ public class AnchorImplementation {
     private static final String Is_ACTIVE = "isActive";
 
     private GVRContext gvrContext = null;
+    private Vector<Viewpoint> viewpoints = new Vector<Viewpoint>();
+
 
     private PerFrameWebViewControl perFrameWebViewControl = new PerFrameWebViewControl();
 
@@ -161,8 +165,9 @@ public class AnchorImplementation {
 
 
 
-    public AnchorImplementation(GVRContext gvrContext ) {
+    public AnchorImplementation(GVRContext gvrContext, Vector<Viewpoint> viewpoints ) {
       this.gvrContext = gvrContext;
+        this.viewpoints = viewpoints;
     }
 
     /**
@@ -187,13 +192,13 @@ public class AnchorImplementation {
                         if ( url.toLowerCase().endsWith(".x3d")) {
                             // Go to another X3D page
                             Log.e("X3D-Anchor", "      go to .x3d: " + url);
+                            Log.e(TAG, "Feature going to x3d file " + url + " not currently implemented.");
                         }  // end if .x3d file
                         else if ( url.startsWith("#")) {
                             // go to another Viewpoint
-                            Log.e("X3D-Anchor", "      go to Viewpoint: " + url);
+                            GotoCamera( url );
                         }  // end if new camera
                         else if ((url.endsWith(".xml")) || (url.endsWith(".rss"))) {
-                            Log.e("X3D-Anchor", "   (LWP) XML");
                             webPageContent = "<HTML><BODY><FONT SIZE=7>Issue pressenting RSS / XML page</FONT></BODY></HTML>";
                             final String urlFinal = url;
                             Threads.spawn(new Runnable() {
@@ -255,6 +260,30 @@ public class AnchorImplementation {
         });  // end of AddISensorEvent
 
     }  //  end AnchorImplementation class
+
+
+    private void GotoCamera(String url) {
+        Log.e("X3D-Anchor", "   (GtC) Go to Viewpoint " + url);
+        Viewpoint vp = null;
+        // get the name without the '#' sign
+        String vpURL = url.substring(1, url.length());
+        for (Viewpoint viewpoint : viewpoints) {
+            if ( viewpoint.getName().equalsIgnoreCase(vpURL) ) {
+                vp = viewpoint;
+            }
+        }
+        if ( vp != null ) {
+            Log.e("X3D-Anchor", "      (GtC) Found " + url);
+            // found the Viewpoint matching the url
+            GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
+            float[] cameraPosition = vp.getPosition();
+            Log.e("X3D-Anchor", "      (GtC) Found " + url + " to (" +
+                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
+            mainCameraRig.getTransform().setPosition( cameraPosition[0], cameraPosition[1], cameraPosition[2] );
+        }
+    }  //  end GotoCamera
+
+
 
 
 
