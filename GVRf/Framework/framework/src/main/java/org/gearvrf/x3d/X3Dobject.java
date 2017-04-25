@@ -262,7 +262,6 @@ public class X3Dobject {
             cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
             this.root.addChildObject(this.mainCamera);
 
-            //this.mAnimations = root.getAnimations();
             lodManager = new LODmanager();
 
             animationInteractivityManager = new AnimationInteractivityManager(
@@ -3340,9 +3339,11 @@ public class X3Dobject {
 
                 if (cameraRigAtRoot != null) {
                     GVRTransform cameraTransform = cameraRigAtRoot.getTransform();
+                    GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
+
 
                     if (viewpoints.isEmpty()) {
-
+                        /*
                         // No <Viewpoint> node(s) included in X3D file,
 
                         // so use default viewpoint values
@@ -3351,12 +3352,18 @@ public class X3Dobject {
                         Quaternionf quaternionf = new Quaternionf(axisAngle4f);
                         cameraTransform.setRotation(quaternionf.w, quaternionf.x,
                                 quaternionf.y, quaternionf.z);
+                        */
+                        mainCameraRig.getTransform().setPosition(0.0f, 0.0f, 10.0f);
                         mainCamera.setName("DefaultCamera");
                     } else {
                         // X3D file contained a <Viewpoint> node.
                         // Per spec., grab the first viewpoint from the X3D file
                         Viewpoint viewpoint = viewpoints.firstElement();
                         viewpoint.setIsBound(true);
+
+                        float[] cameraPosition = viewpoint.getPosition();
+                        mainCameraRig.getTransform().setPosition(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+                        /*
                         float[] position = viewpoint.getPosition();
                         cameraTransform.setPosition(position[0], position[1], position[2]);
                         float[] orientation = viewpoint.getOrientation();
@@ -3375,6 +3382,7 @@ public class X3Dobject {
                             parentMatrix4x4f.mul(cameraMatrix4f);
                             cameraTransform.setModelMatrix(parentMatrix4x4f);
                         }
+                        */
                     } // <Viewpoint> node existed
                 } // end setting based on new camera rig
 
