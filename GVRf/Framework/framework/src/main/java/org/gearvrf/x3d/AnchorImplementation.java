@@ -128,7 +128,6 @@ public class AnchorImplementation {
     private float[] webPagePlusUIPosition = {1.0f, -1.0f, -5.0f};
     private float[] webPagePlusUIScale = {1, 1}; // retains current Web page Scale.  z is always 1
     private float[] beginWebPagePlusUIScale = {1, 1}; // retains the beginning Web page Scale when first clicked
-    //private final float[] translationControlInitPosition = {-.5f, 1.5f, webPagePlusUIPosition[2]};
 
 
     private float[] beginUIClickPos = {0, 0, 0}; // where we clicked on UI to control the web page U.I.
@@ -145,6 +144,11 @@ public class AnchorImplementation {
     //private final int textColorIsActive = Color.WHITE;
     private final int textColorIsActive = Color.RED;
     private final int textColorBackground = Color.CYAN;
+
+    private final String TEXT_EXIT_NAME = "exit";
+    private final String TEXT_TRANSLATE_NAME = "translate";
+    private final String TEXT_ROTATE_NAME = "rotate";
+    private final String TEXT_SCALE_NAME = "scale";
 
     private GVRDrawFrameListener mOnDrawFrame = null;
     private boolean webViewTranslation = false;
@@ -290,7 +294,6 @@ public class AnchorImplementation {
                     else {
                         // Open a Web page
                         Log.e("X3D-Anchor", "   (LWP) url " + urlFinal);
-                        //View view = gvrWebView.getView();
                         gvrWebView.setWebViewClient(new WebViewClient() {
                             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                                 Log.e("X3D-Anchor", "   setWebViewClient Error ");
@@ -327,24 +330,27 @@ public class AnchorImplementation {
 
                         // Add the icons to close, scale, translate and rotate
                         gvrTextExitObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " x ");
+                        gvrTextExitObject.setName(TEXT_EXIT_NAME);
                         gvrTextExitObject.setTextColor(textColorDefault);
                         gvrTextExitObject.setBackgroundColor(textColorBackground);
                         gvrTextExitObject.getTransform().setPosition(textExitPosition[0], textExitPosition[1], textExitPosition[2]);
                         gvrUICubeSceneObject.addChildObject(gvrTextExitObject);
-
                         gvrTextTranslationObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " t ");
+                        gvrTextTranslationObject.setName(TEXT_TRANSLATE_NAME);
                         gvrTextTranslationObject.setTextColor(textColorDefault);
                         gvrTextTranslationObject.setBackgroundColor(textColorBackground);
                         gvrTextTranslationObject.getTransform().setPosition(textTranslatePosition[0], textTranslatePosition[1], textTranslatePosition[2]);
                         gvrUICubeSceneObject.addChildObject(gvrTextTranslationObject);
 
                         gvrTextRotateObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " r ");
+                        gvrTextRotateObject.setName(TEXT_ROTATE_NAME);
                         gvrTextRotateObject.setTextColor(textColorDefault);
                         gvrTextRotateObject.setBackgroundColor(textColorBackground);
                         gvrTextRotateObject.getTransform().setPosition(textRotatePosition[0], textRotatePosition[1], textRotatePosition[2]);
                         gvrUICubeSceneObject.addChildObject(gvrTextRotateObject);
 
                         gvrTextScaleObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " s ");
+                        gvrTextScaleObject.setName(TEXT_SCALE_NAME);
                         gvrTextScaleObject.setTextColor(textColorDefault);
                         gvrTextScaleObject.setBackgroundColor(textColorBackground);
                         gvrTextScaleObject.getTransform().setPosition(textScalePosition[0], textScalePosition[1], textScalePosition[2]);
@@ -364,6 +370,7 @@ public class AnchorImplementation {
 
                         // Set up sensor for the U.I.
                         Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
+                        uibObjectSensor.setDepthOrderEnabled( true );
                         //final Sensor uiObjectSensorFinal = uibObjectSensor;
                         final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
                         final GVRSceneObject gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
@@ -673,7 +680,7 @@ public class AnchorImplementation {
             else if (qName.equalsIgnoreCase("description")) {
                 description = true;
             }
-            else if (qName.equalsIgnoreCase("description")) {
+            else if (qName.equalsIgnoreCase("link")) {
                 link = true;
             }
             else if (qName.equalsIgnoreCase("media:content")) {
@@ -748,7 +755,7 @@ public class AnchorImplementation {
                 xmlElement = new String(ch, start, length);
                 Log.e("X3D-Anchor", "      link = " + xmlElement);
                 webPageContent += "<P><FONT SIZE=6><A HREF=\"" + xmlElement + "\">" + titleString + "</A></FONT></P>";
-                description = false;
+                link = false;
             }
         }  //  end characters prsing
 
