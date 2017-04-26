@@ -140,7 +140,7 @@ public class AnimationInteractivityManager {
         gvrAnimator = new GVRAnimator(this.gvrContext);
         root.attachComponent(gvrAnimator);
 
-        anchorImplementation = new AnchorImplementation(this.gvrContext, viewpoints);
+        anchorImplementation = new AnchorImplementation(this.gvrContext, this.root, viewpoints);
 
     }
 

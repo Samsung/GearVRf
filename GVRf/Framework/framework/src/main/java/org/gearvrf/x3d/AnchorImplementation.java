@@ -22,6 +22,7 @@ import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVRExternalScene;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPhongShader;
@@ -44,6 +45,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
+import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -97,6 +99,7 @@ public class AnchorImplementation {
     private static final String Is_ACTIVE = "isActive";
 
     private GVRContext gvrContext = null;
+    private GVRSceneObject root = null;
     private Vector<Viewpoint> viewpoints = new Vector<Viewpoint>();
 
 
@@ -108,7 +111,7 @@ public class AnchorImplementation {
     private final float[] scaleControlInitPosition = {-2, 1.5f, 0};
     //private float[] webViewScale = {1, 1}; //web view scale
     // when the scale icon is clicked on, saves the initial value for the camera's look at
-    private float[] initialCameralookAt_scaleObj = new float[3];
+    //private float[] initialCameralookAt_scaleObj = new float[3];
 
     //private GVRSphereSceneObject gvrTranslationObject = null;
     private Vector3f translationObjectTranslationLocal = new Vector3f();
@@ -165,8 +168,9 @@ public class AnchorImplementation {
 
 
 
-    public AnchorImplementation(GVRContext gvrContext, Vector<Viewpoint> viewpoints ) {
-      this.gvrContext = gvrContext;
+    public AnchorImplementation(GVRContext gvrContext, GVRSceneObject root, Vector<Viewpoint> viewpoints ) {
+        this.gvrContext = gvrContext;
+        this.root = root;
         this.viewpoints = viewpoints;
     }
 
@@ -178,13 +182,15 @@ public class AnchorImplementation {
     public void AnchorInteractivity(InteractiveObject interactiveObject) {
         // The interactiveObject contains an Anchor tag.
         // Could be a link to another x3d page, <Viewpoint> (camera) or web page
+        interactiveObject.getSensor().setDepthOrderEnabled( true );
         final InteractiveObject interactiveObjectFinal = interactiveObject;
         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
             boolean isActiveDone = false;
 
             @Override
             public void onSensorEvent(SensorEvent event) {
-
+                // Getting event group stuff.
+                //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START )
                 if (event.isActive() ) {
                     if (!isActiveDone) {
                         isActiveDone = true;
@@ -192,12 +198,23 @@ public class AnchorImplementation {
                         if ( url.toLowerCase().endsWith(".x3d")) {
                             // Go to another X3D page
                             Log.e("X3D-Anchor", "      go to .x3d: " + url);
-                            Log.e(TAG, "Feature going to x3d file " + url + " not currently implemented.");
+                            GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
+                            /*
+                            int numChildren = root.getChildrenCount();
+                            for (int i = (numChildren-1); i >= 0; i++ ) {
+                                GVRSceneObject removeObj = root.getChildByIndex(i);
+                                root.removeChildObject( removeObj );
+                            }
+                            */
+                            root.attachComponent( gvrExternalScene );
+                            boolean load = gvrExternalScene.load( gvrContext.getMainScene());
+                            if ( !load ) Log.e(TAG, "Error loading new X3D scene " + url);
+                            else Log.e(TAG, "New X3D scene " + url + " loaded.");
                         }  // end if .x3d file
                         else if ( url.startsWith("#")) {
                             // go to another Viewpoint
-                            GotoCamera( url );
-                        }  // end if new camera
+                            SetNewViewpoint( url );
+                        }  // end if new Viewpoint selected
                         else if ((url.endsWith(".xml")) || (url.endsWith(".rss"))) {
                             webPageContent = "<HTML><BODY><FONT SIZE=7>Issue pressenting RSS / XML page</FONT></BODY></HTML>";
                             final String urlFinal = url;
@@ -223,15 +240,11 @@ public class AnchorImplementation {
                                       LaunchWebPage(interactiveObjectFinal, urlFinal);
                                     } catch (FileNotFoundException e) {
                                         Log.e(TAG, "File " + urlFinal + " not found: " + e);
-                                        Log.e("X3D-Anchor", "File " + urlFinal + " not found: " + e);
                                     } catch (IOException e) {
                                         Log.e(TAG, "File " + urlFinal + " not found: " + e);
-                                        Log.e("X3D-Anchor", "File " + urlFinal + " not found: " + e);
                                     }
                                     catch (Exception e) {
                                         Log.e(TAG, "File " + urlFinal + " exception: " + e);
-                                        Log.e("X3D-Anchor", "File " + urlFinal + " exception: " + e);
-
                                     } finally {
                                         if (fileInputStream != null) {
                                             try {
@@ -249,7 +262,6 @@ public class AnchorImplementation {
 
                         else  {
                             // Launch a web page window
-                            Log.e("X3D-Anchor", "      go to web page: " + url);
                             LaunchWebPage(interactiveObjectFinal, url);
                         }  // end launching a Web Page
                     }  // end if isActiveDone = false
@@ -262,7 +274,7 @@ public class AnchorImplementation {
     }  //  end AnchorImplementation class
 
 
-    private void GotoCamera(String url) {
+    private void SetNewViewpoint(String url) {
         Log.e("X3D-Anchor", "   (GtC) Go to Viewpoint " + url);
         Viewpoint vp = null;
         // get the name without the '#' sign
@@ -279,11 +291,19 @@ public class AnchorImplementation {
             float[] cameraPosition = vp.getPosition();
             Log.e("X3D-Anchor", "      (GtC) Found " + url + " to (" +
                     cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
+            float[] orientation = vp.getOrientation();
+            AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
+                    orientation[0], orientation[1], orientation[2]);
+            Quaternionf quaternionf = new Quaternionf(axisAngle4f);
             mainCameraRig.getTransform().setPosition( cameraPosition[0], cameraPosition[1], cameraPosition[2] );
+            mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y,
+                    quaternionf.z);
+
+            float[] lookAt = mainCameraRig.getLookAt();
+            Log.e("X3D-Anchor", "      (GtC) After Chg LookAt (" +
+                    lookAt[0] + ", " + lookAt[1] + ", " + lookAt[2] + ")");
         }
-    }  //  end GotoCamera
-
-
+    }  //  end SetNewViewpoint
 
 
 
@@ -400,7 +420,6 @@ public class AnchorImplementation {
                         // Set up sensor for the U.I.
                         Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
                         uibObjectSensor.setDepthOrderEnabled( true );
-                        //final Sensor uiObjectSensorFinal = uibObjectSensor;
                         final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
                         final GVRSceneObject gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
                         final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
@@ -635,14 +654,6 @@ public class AnchorImplementation {
             GVRCameraRig gvrCameraRig = mainScene.getMainCameraRig();
             float[] currentCameraLookAt = gvrCameraRig.getLookAt();
             if ( webViewScale ) {
-                //Log.e("X3D-Anchor", "ODF: scale");
-                //float[] transitionClickPt = {0, 0, translationObjectTranslationGlobal.z};
-                //transitionClickPt[0] = currentCameraLookAt[0] * translationObjectTranslationGlobal.z/currentCameraLookAt[2];
-                //transitionClickPt[1] = currentCameraLookAt[1] * translationObjectTranslationGlobal.z/currentCameraLookAt[2];
-
-                //float[] scaleChange = new float[2];
-                //webPagePlusUIScale[0] = (transitionClickPt[0] - beginUIClickPos[0])/beginWebPagePlusUIScale[0];
-                //webPagePlusUIScale[1] = (transitionClickPt[1] - beginUIClickPos[1])/beginWebPagePlusUIScale[1];
                 float zFactor = initialCameralookAt[2] / currentCameraLookAt[2];
                 webPagePlusUIScale[0] = (currentCameraLookAt[0] / initialCameralookAt[0]) * zFactor * beginWebPagePlusUIScale[0];
                 webPagePlusUIScale[1] = (currentCameraLookAt[1] / initialCameralookAt[1]) * zFactor * beginWebPagePlusUIScale[1];
@@ -656,9 +667,6 @@ public class AnchorImplementation {
                 Log.e("X3D-Anchor", "ODF: current Hit Pt: (" + currentHitPoint[0] + ", " + currentHitPoint[1] + ", " + currentHitPoint[2] + ")");
 
                 Log.e("X3D-Anchor", "ODF: scaleChange (" + webPagePlusUIScale[0] + ", " + webPagePlusUIScale[1] + ")");
-                //beginWebPagePlusUIScale[0] = webPagePlusUIScale[0];
-                //beginWebPagePlusUIScale[1] = webPagePlusUIScale[1];
-                //webPagePlusUIScale
                 Log.e("X3D-Anchor", "ODF: alt scale (" + (currentHitPoint[0]/initialHitPoint[0]) + ", " + (currentHitPoint[1]/initialHitPoint[1]) + ")");
 
                 if (webPagePlusUIScale[0] < 1 ) webPagePlusUIScale[0] = 1;
@@ -666,7 +674,6 @@ public class AnchorImplementation {
                     webPagePlusUIScale[0] = ((webPagePlusUIScale[0] - 1) / 2.0f) + 1;
                 }
                 Log.e("X3D-Anchor", "ODF: scaleChange modified (" + webPagePlusUIScale[0] + ", " + webPagePlusUIScale[1] + ")");
-                //webPagePlusUISceneObject.getTransform().setScale(webPagePlusUIScale[0], webPagePlusUIScale[1], 1);
                 webPagePlusUISceneObject.getTransform().setScale(webPagePlusUIScale[0], webPagePlusUIScale[0], 1);
 
             }  // end if scale
@@ -702,7 +709,7 @@ public class AnchorImplementation {
 
         public void startElement(String uri, String localName, String qName,
                                  Attributes attributes) throws SAXException {
-            Log.e("X3D-Anchor", "   XML parser startElement " + qName);
+            //Log.e("X3D-Anchor", "   XML parser startElement " + qName);
             if (qName.equalsIgnoreCase("title")) {
                 title = true;
             }
@@ -745,8 +752,8 @@ public class AnchorImplementation {
                     }
                     catch (Exception e) {};
                 }
-                Log.e("X3D-Anchor", "      url = " + url);
-                Log.e("X3D-Anchor", "         height = " + height + ", width = " + width + ", type = " + type);
+                //Log.e("X3D-Anchor", "      url = " + url);
+                //Log.e("X3D-Anchor", "         height = " + height + ", width = " + width + ", type = " + type);
                 webPageContent += "<img src=\"" + url + "\"><P>";
 
             }
@@ -754,35 +761,24 @@ public class AnchorImplementation {
 
         public void endElement(String uri, String localName, String qName)
                 throws SAXException {
-            /*
-            if (qName.equalsIgnoreCase("title")) {
-                //Log.e("X3D-Anchor", "      END title");
-            }
-            else if (qName.equalsIgnoreCase("media:content")) {
-                //Log.e("X3D-Anchor", "      END media:content");
-            }
-            else if (qName.equalsIgnoreCase("rss")) {
-                Log.e("X3D-Anchor", "      END res");
-            }
-            */
         }  //  end endElement
 
         public void characters(char ch[], int start, int length) throws SAXException {
             if (title) {
                 titleString = new String(ch, start, length);
-                Log.e("X3D-Anchor", "      title = " + titleString);
+                //Log.e("X3D-Anchor", "      title = " + titleString);
                 webPageContent += "<P><FONT SIZE=7><B>" + titleString + "</B></FONT></P>";
                 title = false;
             }
             else if (description) {
                 xmlElement = new String(ch, start, length);
-                Log.e("X3D-Anchor", "      description = " + xmlElement);
+                //Log.e("X3D-Anchor", "      description = " + xmlElement);
                 webPageContent += "<P><FONT SIZE=5>" + xmlElement + "</FONT></P>";
                 description = false;
             }
             else if (link) {
                 xmlElement = new String(ch, start, length);
-                Log.e("X3D-Anchor", "      link = " + xmlElement);
+                //Log.e("X3D-Anchor", "      link = " + xmlElement);
                 webPageContent += "<P><FONT SIZE=6><A HREF=\"" + xmlElement + "\">" + titleString + "</A></FONT></P>";
                 link = false;
             }
