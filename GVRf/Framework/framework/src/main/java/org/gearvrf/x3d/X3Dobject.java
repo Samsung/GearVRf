@@ -127,7 +127,7 @@ public class X3Dobject {
     private Context activityContext = null;
 
     private GVRSceneObject root = null;
-    private GVRSceneObject mainCamera = null;
+    //private GVRSceneObject mainCamera = null;
     /**
      * Array list of DEFined items Clones objects with 'USE' parameter
      * As public, enables implementation of HTML5 DOM's
@@ -253,14 +253,15 @@ public class X3Dobject {
             centerCamera
                     .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
             cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
-            this.mainCamera = cameraRigAtRoot.getOwnerObject();
-            this.mainCamera.setName("MainCamera");
+            //this.mainCamera = cameraRigAtRoot.getOwnerObject();
+            //this.mainCamera.setName("MainCamera");
+            cameraRigAtRoot.getOwnerObject().setName("MainCamera");
             cameraRigAtRoot.attachLeftCamera(leftCamera);
             cameraRigAtRoot.attachRightCamera(rightCamera);
             cameraRigAtRoot.attachCenterCamera(centerCamera);
             cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
             cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
-            this.root.addChildObject(this.mainCamera);
+            //this.root.addChildObject(this.mainCamera);
 
             lodManager = new LODmanager();
 
@@ -2006,7 +2007,6 @@ public class X3Dobject {
                     Interpolator newInterporlator = new Interpolator(name, keysList,
                             keyValuesList);
                     interpolators.add(newInterporlator);
-
                 } // end <OrientationInterpolator> node
 
 
@@ -2031,7 +2031,6 @@ public class X3Dobject {
                             gvrContext, solid, sizeVector);
                     currentSceneObject.addChildObject(gvrCubeSceneObject);
                     meshAttachedSceneObject = gvrCubeSceneObject;
-
                 } // end <Box> node
 
 
@@ -2075,7 +2074,6 @@ public class X3Dobject {
 
                     currentSceneObject.addChildObject(cone);
                     meshAttachedSceneObject = cone;
-
                 }  // end <Cone> node
 
 
@@ -2176,6 +2174,8 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         centerOfRotation = parseFixedLengthFloatString(attributeValue, 3,
                                 false, false);
+                        Log.e(TAG, "X3D Viewpoint centerOfRotation not implemented in GearVR.");
+
                     }
                     attributeValue = attributes.getValue("description");
                     if (attributeValue != null) {
@@ -2219,8 +2219,6 @@ public class X3Dobject {
                         definedItem.setViewpoint(viewpoint);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     }
-
-
                 } // end <Viewpoint> node
 
 
@@ -2957,16 +2955,14 @@ public class X3Dobject {
                         root.addChildObject(mCubeEvironment);
                     } else {
                         // Not cubemapping, then set default skyColor
-                        cameraRigAtRoot.getLeftCamera()
-                                .setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
-                        cameraRigAtRoot.getRightCamera()
-                                .setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
+                        gvrContext.getMainScene().getMainCameraRig().getLeftCamera().setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
+                        gvrContext.getMainScene().getMainCameraRig().getRightCamera().setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
                     }
 
                 } // end <Background> node
 
-                // These nodes are once per file commands and thus moved to the end of the
-                //  end of the parsing's if-then-else statement
+                // These next few nodes are used once per file and thus moved
+                //  to the end of the parsing's if-then-else statement
 
                 /********** X3D **********/
                 else if (qName.equalsIgnoreCase("x3d")) {
@@ -3355,7 +3351,8 @@ public class X3Dobject {
                                 quaternionf.y, quaternionf.z);
                         */
                         mainCameraRig.getTransform().setPosition(0.0f, 0.0f, 10.0f);
-                        mainCamera.setName("DefaultCamera");
+                        mainCameraRig.getTransform().rotate(0, 0, 1, 0);
+                        //mainCamera.setName("DefaultCamera");
                     } else {
                         // X3D file contained a <Viewpoint> node.
                         // Per spec., grab the first viewpoint from the X3D file
@@ -3363,8 +3360,13 @@ public class X3Dobject {
                         viewpoint.setIsBound(true);
 
                         float[] cameraPosition = viewpoint.getPosition();
+                        float[] orientation = viewpoint.getOrientation();
+                        AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
+                                orientation[0], orientation[1], orientation[2]);
+                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
                         mainCameraRig.getTransform().setPosition(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
-                        /*
+                        mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y,
+                                quaternionf.z);                        /*
                         float[] position = viewpoint.getPosition();
                         cameraTransform.setPosition(position[0], position[1], position[2]);
                         float[] orientation = viewpoint.getOrientation();
