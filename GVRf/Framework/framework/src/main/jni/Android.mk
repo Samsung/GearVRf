@@ -26,6 +26,11 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjnlua.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE    := jav8
+LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjav8.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 
 LOCAL_MODULE := gvrf
 
@@ -89,6 +94,7 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += assimp
 LOCAL_SHARED_LIBRARIES += jnlua
+LOCAL_SHARED_LIBRARIES += jav8
 
 ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
 LOCAL_ARM_NEON  := true
