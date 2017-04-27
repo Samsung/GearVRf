@@ -234,6 +234,11 @@ public class AnchorImplementation {
                                         UserHandler userhandler = new UserHandler();
 
                                         webPageContent = "<html><body>";
+                                        String css = "<style>" +
+                                                "#title { font-size: 60px; font-family: Arial; }" +
+                                                "#desc { font-size: 40px; font-family: Arial; }" +
+                                                "</style>";
+                                        webPageContent += css;
                                         saxParser.parse(fileInputStream, userhandler);
                                         webPageContent += "</body></html>";
 
@@ -767,13 +772,13 @@ public class AnchorImplementation {
             if (title) {
                 titleString = new String(ch, start, length);
                 //Log.e("X3D-Anchor", "      title = " + titleString);
-                webPageContent += "<P><FONT SIZE=7><B>" + titleString + "</B></FONT></P>";
+                webPageContent += "<DIV id=\"title\">" + titleString + "</DIV>";
                 title = false;
             }
             else if (description) {
                 xmlElement = new String(ch, start, length);
                 //Log.e("X3D-Anchor", "      description = " + xmlElement);
-                webPageContent += "<P><FONT SIZE=5>" + xmlElement + "</FONT></P>";
+                webPageContent += "<DIV id=\"desc\">" + xmlElement + "</DIV>";
                 description = false;
             }
             else if (link) {
