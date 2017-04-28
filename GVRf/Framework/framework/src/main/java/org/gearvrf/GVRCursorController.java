@@ -635,7 +635,14 @@ public abstract class GVRCursorController {
         }
     }
 
-    void setOrigin(float x, float y, float z){
+    /**
+     * Sets the x, y, z location from where the pick begins
+     * Should match the location of the camera
+     * @param x
+     * @param y
+     * @param z
+     */
+    public void setOrigin(float x, float y, float z){
         origin.set(x,y,z);
     }
 

@@ -18,6 +18,9 @@ package org.gearvrf.x3d;
 import android.content.Context;
 import android.graphics.Color;
 
+import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.utility.Log;
 
 import java.io.FileNotFoundException;
@@ -3339,54 +3342,40 @@ public class X3Dobject {
                     GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
 
 
+                    float[] cameraPosition = {0, 0, 10};
                     if (viewpoints.isEmpty()) {
-                        /*
-                        // No <Viewpoint> node(s) included in X3D file,
-
-                        // so use default viewpoint values
-                        cameraTransform.setPosition(0, 0, 10);
-                        AxisAngle4f axisAngle4f = new AxisAngle4f(0, 0, 1, 0);
-                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                        cameraTransform.setRotation(quaternionf.w, quaternionf.x,
-                                quaternionf.y, quaternionf.z);
-                        */
-                        mainCameraRig.getTransform().setPosition(0.0f, 0.0f, 10.0f);
                         mainCameraRig.getTransform().rotate(0, 0, 1, 0);
-                        //mainCamera.setName("DefaultCamera");
                     } else {
                         // X3D file contained a <Viewpoint> node.
                         // Per spec., grab the first viewpoint from the X3D file
                         Viewpoint viewpoint = viewpoints.firstElement();
                         viewpoint.setIsBound(true);
 
-                        float[] cameraPosition = viewpoint.getPosition();
+                        cameraPosition = viewpoint.getPosition();
                         float[] orientation = viewpoint.getOrientation();
                         AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
                                 orientation[0], orientation[1], orientation[2]);
                         Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                        mainCameraRig.getTransform().setPosition(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
-                        mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y,
-                                quaternionf.z);                        /*
-                        float[] position = viewpoint.getPosition();
-                        cameraTransform.setPosition(position[0], position[1], position[2]);
-                        float[] orientation = viewpoint.getOrientation();
-                        AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
-                                orientation[0], orientation[1], orientation[2]);
-                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                        float[] centerOfRotation = viewpoint.getCenterOfRotation();
-                        cameraTransform
-                                .rotateWithPivot(quaternionf.w, quaternionf.x, quaternionf.y,
-                                        quaternionf.z, centerOfRotation[0],
-                                        centerOfRotation[1], centerOfRotation[2]);
-                        if (viewpoint.getParent() != null) {
-                            Matrix4f cameraMatrix4f = cameraTransform.getLocalModelMatrix4f();
-                            Matrix4f parentMatrix4x4f = viewpoint.getParent().getTransform()
-                                    .getModelMatrix4f();
-                            parentMatrix4x4f.mul(cameraMatrix4f);
-                            cameraTransform.setModelMatrix(parentMatrix4x4f);
-                        }
-                        */
+                        //mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y,
+                        //        quaternionf.z);
                     } // <Viewpoint> node existed
+                    mainCameraRig.getTransform().setPosition(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+                    GVRCursorController gazeController = null;
+                    GVRInputManager inputManager = gvrContext.getInputManager();
+
+                    List<GVRCursorController> controllerList = inputManager.getCursorControllers();
+
+                    for(GVRCursorController controller: controllerList){
+                        if(controller.getControllerType() == GVRControllerType.GAZE);
+                        {
+                            gazeController = controller;
+                            break;
+                        }
+                    }
+                    if ( gazeController != null) {
+                        gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+                    }
+
                 } // end setting based on new camera rig
 
                 animationInteractivityManager.initAnimationsAndInteractivity();
