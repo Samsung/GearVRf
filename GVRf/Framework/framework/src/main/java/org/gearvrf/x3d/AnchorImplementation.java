@@ -21,6 +21,7 @@ import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalScene;
 import org.gearvrf.GVRMain;
@@ -31,6 +32,8 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
+import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
@@ -71,6 +74,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -182,7 +186,8 @@ public class AnchorImplementation {
     public void AnchorInteractivity(InteractiveObject interactiveObject) {
         // The interactiveObject contains an Anchor tag.
         // Could be a link to another x3d page, <Viewpoint> (camera) or web page
-        interactiveObject.getSensor().setDepthOrderEnabled( true );
+
+        //interactiveObject.getSensor().setDepthOrderEnabled( true );
         final InteractiveObject interactiveObjectFinal = interactiveObject;
         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
             boolean isActiveDone = false;
@@ -192,6 +197,7 @@ public class AnchorImplementation {
                 // Getting event group stuff.
                 //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START )
                 if (event.isActive() ) {
+                    Log.e("X3D-Anchor", "(AI) isActiveDone: " + isActiveDone);
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
@@ -236,7 +242,8 @@ public class AnchorImplementation {
                                         webPageContent = "<html><body>";
                                         String css = "<style>" +
                                                 "#title { font-size: 60px; font-family: Arial; }" +
-                                                "#desc { font-size: 40px; font-family: Arial; }" +
+                                                "#desc { font-size: 50px; font-family: Arial; }" +
+                                                "#link { font-size: 60px; font-family: Arial; }" +
                                                 "</style>";
                                         webPageContent += css;
                                         saxParser.parse(fileInputStream, userhandler);
@@ -270,8 +277,57 @@ public class AnchorImplementation {
                             LaunchWebPage(interactiveObjectFinal, url);
                         }  // end launching a Web Page
                     }  // end if isActiveDone = false
-                } else if (!event.isActive() ) {
-                    isActiveDone = false;
+                    else {
+                        Log.e("X3D-Anchor", "(AI) else if isActiveDone = true ");
+                        isActiveDone = false;
+                    }
+                } //else if (!event.isActive() ) {
+                    //Log.e("X3D-Anchor", "(AI) !event.isActive(): ");
+                    //isActiveDone = false;
+                //}
+                else if (event.isOver()) {
+                    //Log.e("X3D-Anchor", "is over " + interactiveObjectFinal.getDefinedItem().getName() );
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    if ( sensorObj != null ) {
+                        GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
+                        if ( sensorObj2 != null) {
+                            String name = sensorObj2.getName();
+                            Log.e("X3D-Anchor", "is over " + name );
+                            GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
+                            float[] cameraPosition = new float[3];
+                            cameraPosition[0] = mainCameraRig.getTransform().getPositionX();
+                            cameraPosition[1] = mainCameraRig.getTransform().getPositionY();
+                            cameraPosition[2] = mainCameraRig.getTransform().getPositionZ();
+
+                            Log.e("X3D-Anchor", "   (isOver) BGN Pos (" +
+                                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
+                            float[] bgnlookAt = mainCameraRig.getLookAt();
+                            Log.e("X3D-Anchor", "   (isOver) BGN LookAt (" +
+                                    bgnlookAt[0] + ", " + bgnlookAt[1] + ", " + bgnlookAt[2] + ")");
+                        }
+                    }
+                }
+                else {
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    if ( sensorObj != null ) {
+                        GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
+                        if ( sensorObj2 != null) {
+                            String name = sensorObj2.getName();
+                            Log.e("X3D-Anchor", "ELSE " + name );
+                            GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
+                            float[] cameraPosition = new float[3];
+                            cameraPosition[0] = mainCameraRig.getTransform().getPositionX();
+                            cameraPosition[1] = mainCameraRig.getTransform().getPositionY();
+                            cameraPosition[2] = mainCameraRig.getTransform().getPositionZ();
+
+                            Log.e("X3D-Anchor", "   (isOver) BGN Pos (" +
+                                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
+                            float[] bgnlookAt = mainCameraRig.getLookAt();
+                            Log.e("X3D-Anchor", "   (isOver) BGN LookAt (" +
+                                    bgnlookAt[0] + ", " + bgnlookAt[1] + ", " + bgnlookAt[2] + ")");
+                        }
+                    }
+
                 }
             }  // end of onSensorEvent
         });  // end of AddISensorEvent
@@ -294,16 +350,40 @@ public class AnchorImplementation {
             // found the Viewpoint matching the url
             GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
             float[] cameraPosition = vp.getPosition();
-            Log.e("X3D-Anchor", "      (GtC) Found " + url + " to (" +
-                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
             float[] orientation = vp.getOrientation();
+
+            Log.e("X3D-Anchor", "      (GtC) BGN Pos (" +
+                    mainCameraRig.getTransform().getPositionX() + ", " + mainCameraRig.getTransform().getPositionY() + ", " + mainCameraRig.getTransform().getPositionZ() + ")");
+            float[] bgnlookAt = mainCameraRig.getLookAt();
+            Log.e("X3D-Anchor", "      (GtC) BGN LookAt (" +
+                    bgnlookAt[0] + ", " + bgnlookAt[1] + ", " + bgnlookAt[2] + ")");
+
             AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
                     orientation[0], orientation[1], orientation[2]);
             Quaternionf quaternionf = new Quaternionf(axisAngle4f);
             mainCameraRig.getTransform().setPosition( cameraPosition[0], cameraPosition[1], cameraPosition[2] );
-            mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y,
-                    quaternionf.z);
+        //    mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y, quaternionf.z);
 
+            // Set the Gaze controller position which is where the pick ray
+            // begins in the direction of camera.lookt()
+            GVRCursorController gazeController = null;
+            GVRInputManager inputManager = gvrContext.getInputManager();
+
+            List<GVRCursorController> controllerList = inputManager.getCursorControllers();
+
+            for(GVRCursorController controller: controllerList){
+                if(controller.getControllerType() == GVRControllerType.GAZE);
+                {
+                    gazeController = controller;
+                    break;
+                }
+            }
+            if ( gazeController != null) {
+                gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+            }
+
+            Log.e("X3D-Anchor", "      (GtC) Found " + url + " to (" +
+                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
             float[] lookAt = mainCameraRig.getLookAt();
             Log.e("X3D-Anchor", "      (GtC) After Chg LookAt (" +
                     lookAt[0] + ", " + lookAt[1] + ", " + lookAt[2] + ")");
@@ -333,6 +413,7 @@ public class AnchorImplementation {
                     if ((urlFinal.endsWith(".xml")) || (urlFinal.endsWith(".rss"))) {
                         if (gvrWebView != null) gvrWebView.loadData(webPageContent, "text/html", null);
                     } // end if rss or xml data
+                    /*
                     else if (urlFinal.endsWith(".tst")) {
                         //TODO: this is just for tests and should be removed
                         Log.e("X3D-Anchor", "   (LWP) Test File (overwrite data)");
@@ -345,17 +426,17 @@ public class AnchorImplementation {
                                 "</body></html>";
                         if (gvrWebView != null) gvrWebView.loadData(summary, "text/html", null);
                     }  // end if test page.
+                    */
                     else {
                         // Open a Web page
                         Log.e("X3D-Anchor", "   (LWP) url " + urlFinal);
                         gvrWebView.setWebViewClient(new WebViewClient() {
+                            //TODO: replace for depricated code with:
+                            // onReceivedError (WebView view, WebResourceRequest request, WebResourceError error)
                             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                                 Log.e("X3D-Anchor", "   setWebViewClient Error ");
                                 Log.e("X3D-Anchor", "   errorCode " + errorCode + "; description " + description + "; url " + failingUrl);
                             }
-                            //WebViewClient webViewClient = this;
-                            //Log.e("X3D-Anchor", "   webViewClient created");
-                            //webViewClient.
                         });
                         if (gvrWebView != null) gvrWebView.loadUrl(urlFinal);
                     }  //  end if url data - a web address
@@ -430,10 +511,6 @@ public class AnchorImplementation {
                         final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
 
                         final GVRSceneObject gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
-                        //final GVRTextViewSceneObject gvrTextExitObjectFinal = gvrTextExitObject;
-                        //final GVRTextViewSceneObject gvrTextTranslationObjectFinal = gvrTextTranslationObject;
-                        //final GVRTextViewSceneObject gvrTextScaleObjectFinal = gvrTextScaleObject;
-                        //final GVRTextViewSceneObject gvrTextRotateObjectFinal = gvrTextRotateObject;
 
                         webPagePlusUISceneObjectFinal.addChildObject(gvrWebViewSceneObjectFinal);
                         webPagePlusUISceneObjectFinal.addChildObject(gvrUICubeSceneObjectFinal);
@@ -757,8 +834,6 @@ public class AnchorImplementation {
                     }
                     catch (Exception e) {};
                 }
-                //Log.e("X3D-Anchor", "      url = " + url);
-                //Log.e("X3D-Anchor", "         height = " + height + ", width = " + width + ", type = " + type);
                 webPageContent += "<img src=\"" + url + "\"><P>";
 
             }
@@ -771,20 +846,17 @@ public class AnchorImplementation {
         public void characters(char ch[], int start, int length) throws SAXException {
             if (title) {
                 titleString = new String(ch, start, length);
-                //Log.e("X3D-Anchor", "      title = " + titleString);
-                webPageContent += "<DIV id=\"title\">" + titleString + "</DIV>";
+                //webPageContent += "<DIV id=\"title\">" + titleString + "</DIV>";
                 title = false;
             }
             else if (description) {
                 xmlElement = new String(ch, start, length);
-                //Log.e("X3D-Anchor", "      description = " + xmlElement);
                 webPageContent += "<DIV id=\"desc\">" + xmlElement + "</DIV>";
                 description = false;
             }
             else if (link) {
                 xmlElement = new String(ch, start, length);
-                //Log.e("X3D-Anchor", "      link = " + xmlElement);
-                webPageContent += "<P><FONT SIZE=6><A HREF=\"" + xmlElement + "\">" + titleString + "</A></FONT></P>";
+                webPageContent += "<DIV id=\"link\"><A HREF=\"" + xmlElement + "\">" + titleString + "</A></DIV>";
                 link = false;
             }
         }  //  end characters prsing
