@@ -17,9 +17,6 @@ android {
         externalNativeBuild {
             ndkBuild {
                 arguments = ["-j" + Runtime.runtime.availableProcessors()]
-                if (rootProject.hasProperty("buildGvrfAndDemos")) {
-                    arguments.add("NDK_DEBUG=1")
-                }
                 if (rootProject.hasProperty("ARM64")) {
                     arguments += ['ARM64=true']
                 }

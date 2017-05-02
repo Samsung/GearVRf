@@ -21,9 +21,6 @@ android {
                 arguments += ['PROJECT_ROOT=' + rootProject.projectDir]
                 arguments += ['PROJECT_DIR=' + projectDir.absolutePath]
                 arguments += ['BUILDTYPE=Release']      // for oculus
-                if (rootProject.hasProperty("buildGvrfAndDemos")) {
-                    arguments += ["NDK_DEBUG=1"]
-                }
                 if (rootProject.hasProperty("ARM64")) {
                     arguments += ['ARM64=true']
                 }
