@@ -556,11 +556,11 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                /* The full screen should be updated
-                otherwise just the children's bounds may be refreshed. */
-                mRenderableViewGroup.setClipChildren(false);
-
-                mRenderableViewGroup.addView(view);
+                if (null != mRenderableViewGroup) {
+                    /* The full screen should be updated otherwise just the children's bounds may be refreshed. */
+                    mRenderableViewGroup.setClipChildren(false);
+                    mRenderableViewGroup.addView(view);
+                }
             }
         });
     }
@@ -574,7 +574,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mRenderableViewGroup.removeView(view);
+                if (null != mRenderableViewGroup) {
+                    mRenderableViewGroup.removeView(view);
+                }
             }
         });
     }
