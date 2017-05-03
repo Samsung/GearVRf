@@ -140,7 +140,7 @@ public class GVRTexture extends GVRHybridObject {
     private final Condition mCondition;
 
     private volatile FutureBase mFuture;
-    private volatile int mTextureId;
+    protected volatile int mTextureId;
 
     private class FutureBase implements Future<Integer> {
         @Override

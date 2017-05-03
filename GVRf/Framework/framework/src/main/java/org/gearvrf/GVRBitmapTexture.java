@@ -15,8 +15,6 @@
 
 package org.gearvrf;
 
-import static android.opengl.GLES20.*;
-
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -25,9 +23,19 @@ import android.opengl.GLUtils;
 import org.gearvrf.utility.Log;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.RunnableFuture;
+
+import static android.opengl.GLES20.GL_LINEAR_MIPMAP_NEAREST;
+import static android.opengl.GLES20.GL_NO_ERROR;
+import static android.opengl.GLES20.GL_TEXTURE_2D;
+import static android.opengl.GLES20.GL_TEXTURE_MIN_FILTER;
+import static android.opengl.GLES20.glBindTexture;
+import static android.opengl.GLES20.glGenerateMipmap;
+import static android.opengl.GLES20.glGetError;
+import static android.opengl.GLES20.glTexParameteri;
 
 /** Bitmap-based texture. */
 public class GVRBitmapTexture extends GVRTexture {
@@ -163,6 +171,25 @@ public class GVRBitmapTexture extends GVRTexture {
         mWidth = width;
         mHeight = height;
         mGrayscaleData = grayscaleData;
+    }
+
+    /**
+     * This constructor prepare the texture according to the specified parameters. Use in
+     * conjunction with the postBuffer method to load the texture data.
+     *
+     * @param textureParameters this is the only constructor that uses GVRTextureParameter's
+     *                          internalFormat, width, height, format and type fields; hence they
+     *                          must be set to valid values.
+     */
+    public GVRBitmapTexture(GVRContext gvrContext, GVRTextureParameters textureParameters) {
+        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters.getCurrentValuesArray()));
+
+        getGVRContext().runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                mTextureId = NativeTexture.getId(getNative());
+            }
+        });
     }
 
     /**
@@ -332,6 +359,20 @@ public class GVRBitmapTexture extends GVRTexture {
         }
     }
 
+    /**
+     * Schedule a load for the texture data supplied in pixels. The target is always GL_TEXTURE_2D.
+     * For detailed information see glTexImage2D's internalformat, width, height, format, type,
+     * pixels parameters. The buffer is not copied!
+     */
+    public void postBuffer(final int width, final int height, final int format, final int type, final Buffer pixels) {
+        getGVRContext().runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                NativeBaseTexture.updateFromBuffer(getNative(), width, height, format, type, pixels);
+            }
+        });
+    }
+
     private Bitmap mBitmap;
     private int mWidth;
     private int mHeight;
@@ -345,4 +386,6 @@ final class NativeBaseTexture {
 
     static native boolean update(long pointer, int width, int height,
             byte[] grayscaleData);
+
+    static native boolean updateFromBuffer(long pointer, int width, int height, int format, int type, Buffer pixels);
 }

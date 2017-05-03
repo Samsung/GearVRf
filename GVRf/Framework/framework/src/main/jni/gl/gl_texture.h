@@ -52,7 +52,7 @@ public:
     explicit GLTexture(GLenum target, int* texture_parameters) :
             target_(target) {
         pending_gl_task_ = GL_TASK_INIT_WITH_PARAM;
-        std::memcpy(texture_parameters_, texture_parameters, sizeof(int) * 5);
+        std::memcpy(texture_parameters_, texture_parameters, sizeof(texture_parameters_));
     }
 
     virtual ~GLTexture() {
@@ -113,6 +113,16 @@ public:
             glTexParameteri(target_, GL_TEXTURE_WRAP_T, wrap_t_type_);
             glTexParameteri(target_, GL_TEXTURE_MIN_FILTER, min_filter_type_);
             glTexParameteri(target_, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
+
+            const GLint internalFormat = texture_parameters_[5];
+            const GLint width = texture_parameters_[6];
+            const GLint height = texture_parameters_[7];
+            const GLint format = texture_parameters_[8];
+            const GLint type = texture_parameters_[9];
+            if (0 < internalFormat && 0 < width && 0 < height && 0 < format && 0 < type) {
+                glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
+            }
+
             glBindTexture(target_, 0);
             break;
         }
