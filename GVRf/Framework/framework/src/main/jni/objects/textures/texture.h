@@ -38,6 +38,10 @@ public:
             // must be recycled already. The caller will handle error.
             return 0;
         }
+
+        // Before returning the ID makes sure nothing is pending
+        runPendingGL();
+
         return gl_texture_->id();
     }
 
