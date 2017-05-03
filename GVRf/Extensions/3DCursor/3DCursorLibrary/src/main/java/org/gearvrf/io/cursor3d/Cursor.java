@@ -57,10 +57,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Each {@link Cursor} object has a {@link CursorType} that defines the type of events generated.
  */
 public abstract class Cursor {
-    private static final String TAG = Cursor.class.getSimpleName();
+    private static final String TAG = "Cursor";
     protected static final float MAX_CURSOR_SCALE = 1000;
 
-    private GVRContext context;
     protected GVRSceneObject cursor;
     private String name;
     private final CursorType type;
@@ -68,8 +67,6 @@ public abstract class Cursor {
     private Position position;
     private String savedThemeId;
     private List<PriorityIoDeviceTuple> compatibleIoDevices;
-
-    private static final float SQRT_2 = (float) Math.sqrt(2);
 
     private static int uniqueCursorId = 0;
     private final int cursorId;
@@ -100,7 +97,6 @@ public abstract class Cursor {
     }
 
     Cursor(GVRContext context, CursorType type, CursorManager cursorManager) {
-        this.context = context;
         this.type = type;
         this.cursorId = uniqueCursorId++;
         cursorSceneObject = new CursorSceneObject(context, cursorId);
@@ -524,12 +520,15 @@ public abstract class Cursor {
      */
     public void setEnable(boolean value) {
         if (!enabled && value) {
+            Log.d(TAG, Integer.toHexString(hashCode()) + " enabled");
             enabled = true;
             cursorManager.assignIoDevicesToCursors();
         } else if (enabled && !value) {
             if (ioDevice == null) {
+                Log.d(TAG, Integer.toHexString(hashCode()) + " disabled; ioDevice == null");
                 enabled = false;
             } else {
+                Log.d(TAG, Integer.toHexString(hashCode()) + " disabled");
                 enabled = false;
                 Log.d(TAG, "Destroying Iodevice:" + ioDevice.getDeviceId());
                 destroyIoDevice(ioDevice);
@@ -652,6 +651,15 @@ public abstract class Cursor {
         if (cursorManager.isDepthOrderEnabled() &&
                 !controller.isEventHandledBySensorManager() && !sentEvent &&
                 (controller.getKeyEvent() != null || controller.getMotionEvents().size() > 0)) {
+
+            Log.d(TAG, Integer.toHexString(hashCode()) + " handling event"
+                    + "; isDepthOrderEnabled " + cursorManager.isDepthOrderEnabled()
+                    + "; isEventHandledBySensorManager " + controller.isEventHandledBySensorManager()
+                    + "; sentEvent " + sentEvent
+                    + "; getMotionEvents().size() " + controller.getMotionEvents().size()
+                    + "; getKeyEvent() " + controller.getKeyEvent()
+            );
+
             CursorEvent cursorEvent = CursorEvent.obtain();
             cursorEvent.setOver(false);
             cursorEvent.setColliding(false);
