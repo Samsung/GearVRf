@@ -137,7 +137,7 @@ public class AnimationInteractivityManager {
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
 
-        gvrAnimator = new GVRAnimator(this.gvrContext);
+        gvrAnimator = new GVRAnimator(this.gvrContext, true);
         root.attachComponent(gvrAnimator);
 
         anchorImplementation = new AnchorImplementation(this.gvrContext, this.root, viewpoints);
@@ -792,7 +792,7 @@ public class AnimationInteractivityManager {
 
         }  // end for loop traversing through all interactive objects
         // Initiate all the animations, both keyframe and procedural
-        gvrAnimator.start();
+        gvrAnimator.autoStart();
         if (perFrameScripting.getRunState()) {
             final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
             gvrContext.registerDrawFrameListener(mOnDrawFrame);
