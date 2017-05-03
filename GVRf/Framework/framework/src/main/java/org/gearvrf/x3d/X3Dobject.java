@@ -3334,35 +3334,25 @@ public class X3Dobject {
                 // we now have all the ROUTES, and set up either the default or an actual
                 // camera based on a <Viewpoint> in the scene.
 
-                // Set up the camera / Viewpoint
+                // First, set up the camera / Viewpoint
                 // The camera rig is indirectly attached to the root
-
                 if (cameraRigAtRoot != null) {
-                    //GVRTransform cameraTransform = cameraRigAtRoot.getTransform();
                     GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
 
-
-                    float[] cameraPosition = {0, 0, 10};
-                    if (viewpoints.isEmpty()) {
-                        mainCameraRig.getTransform().rotate(0, 0, 1, 0);
-                    } else {
+                    float[] cameraPosition = {0, 0, 10}; // X3D's default camera position
+                    if ( !viewpoints.isEmpty()) {
                         // X3D file contained a <Viewpoint> node.
-                        // Per spec., grab the first viewpoint from the X3D file
+                        // Per X3D spec., when there is 1 or more Viewpoints in the
+                        // X3D file, init with the first viewpoint in the X3D file
                         Viewpoint viewpoint = viewpoints.firstElement();
                         viewpoint.setIsBound(true);
-
                         cameraPosition = viewpoint.getPosition();
-                        float[] orientation = viewpoint.getOrientation();
-                        AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
-                                orientation[0], orientation[1], orientation[2]);
-                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                        //mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y,
-                        //        quaternionf.z);
                     } // <Viewpoint> node existed
                     mainCameraRig.getTransform().setPosition(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
                     GVRCursorController gazeController = null;
                     GVRInputManager inputManager = gvrContext.getInputManager();
 
+                    // Set up cursor based on camera position
                     List<GVRCursorController> controllerList = inputManager.getCursorControllers();
 
                     for(GVRCursorController controller: controllerList){

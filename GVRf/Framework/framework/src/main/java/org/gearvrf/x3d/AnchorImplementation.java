@@ -113,19 +113,14 @@ public class AnchorImplementation {
     private Vector3f scaleObjectTranslationLocal = new Vector3f();
     private Vector3f scaleObjectTranslationGlobal = new Vector3f();
     private final float[] scaleControlInitPosition = {-2, 1.5f, 0};
-    //private float[] webViewScale = {1, 1}; //web view scale
-    // when the scale icon is clicked on, saves the initial value for the camera's look at
-    //private float[] initialCameralookAt_scaleObj = new float[3];
 
-    //private GVRSphereSceneObject gvrTranslationObject = null;
     private Vector3f translationObjectTranslationLocal = new Vector3f();
     private Vector3f translationObjectTranslationGlobal = new Vector3f();
     // when the tranlsation icon is clicked on, saves the initial value for the camera's look at
     private float[] initialCameralookAt = new float[3];
 
-    private final float[] webViewDimensions = {4, 3}; //web view is width 4, height 3
+    private final float[] webViewDimensions = {8.0f, 6.0f}; //web view is width x height
     private final Vector3f cubeUISize = new Vector3f(webViewDimensions[0], .5f, .2f);
-    //private final float[] cubeUIPosition = {0, 1.75f, -.1f}; // center, above the web page
     private final float[] cubeUIPosition = {0, (webViewDimensions[1] + cubeUISize.y)/2.0f, -cubeUISize.z/2.0f}; // center, above the web page
 
     private GVRTextViewSceneObject gvrTextExitObject = null;
@@ -149,11 +144,9 @@ public class AnchorImplementation {
 
     private GVRSceneObject webPagePlusUISceneObject = null;
 
-    //private final int textColorDefault = Color.BLACK;
-    private final int textColorDefault = Color.YELLOW;
+    private final int textColorDefault = Color.BLACK;
     private final int textColorIsOver   = Color.LTGRAY;
-    //private final int textColorIsActive = Color.WHITE;
-    private final int textColorIsActive = Color.RED;
+    private final int textColorIsActive = Color.WHITE;
     private final int textColorBackground = Color.CYAN;
 
     private final String TEXT_EXIT_NAME = "exit";
@@ -168,8 +161,11 @@ public class AnchorImplementation {
 
     private String webPageContent = "";
 
-
-
+    // temporary boolean to switch between just the web page display with
+    //    UI controls or just click on the web page to close it all.
+    private final boolean useWebPageTranformControls = false;
+    private boolean webPageActive = false;
+    private boolean webPageClosed = false;
 
 
     public AnchorImplementation(GVRContext gvrContext, GVRSceneObject root, Vector<Viewpoint> viewpoints ) {
@@ -195,139 +191,119 @@ public class AnchorImplementation {
             @Override
             public void onSensorEvent(SensorEvent event) {
                 // Getting event group stuff.
-                //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START )
-                if (event.isActive() ) {
-                    Log.e("X3D-Anchor", "(AI) isActiveDone: " + isActiveDone);
+                //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START ) {
+                if (event.isActive()) {
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
-                        if ( url.toLowerCase().endsWith(".x3d")) {
-                            // Go to another X3D page
-                            Log.e("X3D-Anchor", "      go to .x3d: " + url);
+                        if (url.toLowerCase().endsWith(".x3d")) {
+                            // Go to another X3D scene
                             GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
-                            /*
-                            int numChildren = root.getChildrenCount();
-                            for (int i = (numChildren-1); i >= 0; i++ ) {
-                                GVRSceneObject removeObj = root.getChildByIndex(i);
-                                root.removeChildObject( removeObj );
-                            }
-                            */
-                            root.attachComponent( gvrExternalScene );
-                            boolean load = gvrExternalScene.load( gvrContext.getMainScene());
-                            if ( !load ) Log.e(TAG, "Error loading new X3D scene " + url);
+                            //root.attachComponent( gvrExternalScene );
+                            boolean load = gvrExternalScene.load(gvrContext.getMainScene());
+                            if (!load) Log.e(TAG, "Error loading new X3D scene " + url);
                             else Log.e(TAG, "New X3D scene " + url + " loaded.");
                         }  // end if .x3d file
-                        else if ( url.startsWith("#")) {
+                        else if (url.startsWith("#")) {
                             // go to another Viewpoint
-                            SetNewViewpoint( url );
+                            SetNewViewpoint(url);
                         }  // end if new Viewpoint selected
                         else if ((url.endsWith(".xml")) || (url.endsWith(".rss"))) {
-                            webPageContent = "<HTML><BODY><FONT SIZE=7>Issue pressenting RSS / XML page</FONT></BODY></HTML>";
-                            final String urlFinal = url;
-                            Threads.spawn(new Runnable() {
+                            // Web page with XML, RSS data
+                            if (!webPageActive && !webPageClosed) {
+                                webPageActive = true;
+                                webPageContent = "<HTML><BODY><FONT SIZE=7>Issue pressenting RSS / XML page</FONT></BODY></HTML>";
+                                final String urlFinal = url;
+                                Threads.spawn(new Runnable() {
 
-                                public void run() {
-                                    File file = null;
-                                    FileInputStream fileInputStream = null;
-                                    try {
-                                        Context context = gvrContext.getContext();
-                                        file = gvrContext.getAssetLoader().downloadFile(context, urlFinal);
-                                        fileInputStream = new FileInputStream(file);
+                                    public void run() {
+                                        File file = null;
+                                        FileInputStream fileInputStream = null;
+                                        try {
+                                            Context context = gvrContext.getContext();
+                                            file = gvrContext.getAssetLoader().downloadFile(context, urlFinal);
+                                            fileInputStream = new FileInputStream(file);
 
-                                        // Parse the XML/RSS file
-                                        SAXParserFactory factory = SAXParserFactory.newInstance();
-                                        SAXParser saxParser = factory.newSAXParser();
-                                        UserHandler userhandler = new UserHandler();
+                                            // Parse the XML/RSS file
+                                            SAXParserFactory factory = SAXParserFactory.newInstance();
+                                            SAXParser saxParser = factory.newSAXParser();
+                                            UserHandler userhandler = new UserHandler();
 
-                                        webPageContent = "<html><body>";
-                                        String css = "<style>" +
-                                                "#title { font-size: 60px; font-family: Arial; }" +
-                                                "#desc { font-size: 50px; font-family: Arial; }" +
-                                                "#link { font-size: 60px; font-family: Arial; }" +
-                                                "</style>";
-                                        webPageContent += css;
-                                        saxParser.parse(fileInputStream, userhandler);
-                                        webPageContent += "</body></html>";
+                                            // CSS definitions will make XML/RSS data look nice
+                                            webPageContent = "<html><body>";
+                                            String css = "<style>" +
+                                                    "#title { font-size: 60px; font-family: Arial; }" +
+                                                    "#desc { font-size: 50px; font-family: Arial; }" +
+                                                    "#link { font-size: 60px; font-family: Arial; }" +
+                                                    "</style>";
+                                            webPageContent += css;
+                                            saxParser.parse(fileInputStream, userhandler);
+                                            webPageContent += "</body></html>";
 
-                                      LaunchWebPage(interactiveObjectFinal, urlFinal);
-                                    } catch (FileNotFoundException e) {
-                                        Log.e(TAG, "File " + urlFinal + " not found: " + e);
-                                    } catch (IOException e) {
-                                        Log.e(TAG, "File " + urlFinal + " not found: " + e);
-                                    }
-                                    catch (Exception e) {
-                                        Log.e(TAG, "File " + urlFinal + " exception: " + e);
-                                    } finally {
-                                        if (fileInputStream != null) {
-                                            try {
-                                                fileInputStream.close();
-                                            } catch (IOException e) {
+                                            LaunchWebPage(interactiveObjectFinal, urlFinal);
+                                        } catch (FileNotFoundException e) {
+                                            Log.e(TAG, "File " + urlFinal + " not found: " + e);
+                                        } catch (IOException e) {
+                                            Log.e(TAG, "File " + urlFinal + " IOException: " + e);
+                                        } catch (Exception e) {
+                                            Log.e(TAG, "File " + urlFinal + " exception: " + e);
+                                        } finally {
+                                            if (fileInputStream != null) {
+                                                try {
+                                                    fileInputStream.close();
+                                                } catch (IOException e) {
+
+                                                }
+                                            }
+                                            if (file != null) {
+                                                file.delete();
                                             }
                                         }
-                                        if (file != null) {
-                                            file.delete();
-                                        }
                                     }
-                                }
-                            });
+                                });
+                            } // end if !webPageActive
                         } // end if rss or xml data
 
-                        else  {
-                            // Launch a web page window
-                            LaunchWebPage(interactiveObjectFinal, url);
+                        else {
+                            if ( !webPageActive  && !webPageClosed) {
+                                // Launch a web page window
+                                LaunchWebPage(interactiveObjectFinal, url);
+                                webPageActive = true;
+                            }
                         }  // end launching a Web Page
                     }  // end if isActiveDone = false
                     else {
-                        Log.e("X3D-Anchor", "(AI) else if isActiveDone = true ");
                         isActiveDone = false;
                     }
-                } //else if (!event.isActive() ) {
-                    //Log.e("X3D-Anchor", "(AI) !event.isActive(): ");
-                    //isActiveDone = false;
-                //}
-                else if (event.isOver()) {
-                    //Log.e("X3D-Anchor", "is over " + interactiveObjectFinal.getDefinedItem().getName() );
-                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
-                    if ( sensorObj != null ) {
-                        GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
-                        if ( sensorObj2 != null) {
-                            String name = sensorObj2.getName();
-                            Log.e("X3D-Anchor", "is over " + name );
-                            GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
-                            float[] cameraPosition = new float[3];
-                            cameraPosition[0] = mainCameraRig.getTransform().getPositionX();
-                            cameraPosition[1] = mainCameraRig.getTransform().getPositionY();
-                            cameraPosition[2] = mainCameraRig.getTransform().getPositionZ();
-
-                            Log.e("X3D-Anchor", "   (isOver) BGN Pos (" +
-                                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
-                            float[] bgnlookAt = mainCameraRig.getLookAt();
-                            Log.e("X3D-Anchor", "   (isOver) BGN LookAt (" +
-                                    bgnlookAt[0] + ", " + bgnlookAt[1] + ", " + bgnlookAt[2] + ")");
-                        }
-                    }
                 }
-                else {
+                else if (!event.isActive() ) {
+                    //Prevents closing the web page from invoking a new page on the item behind it.
+                    webPageClosed = false;
+                }
+                else if (event.isOver()) {
                     GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
-                    if ( sensorObj != null ) {
+                    if (sensorObj != null) {
                         GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
-                        if ( sensorObj2 != null) {
-                            String name = sensorObj2.getName();
-                            Log.e("X3D-Anchor", "ELSE " + name );
+                        if (sensorObj2 != null) {
                             GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
                             float[] cameraPosition = new float[3];
                             cameraPosition[0] = mainCameraRig.getTransform().getPositionX();
                             cameraPosition[1] = mainCameraRig.getTransform().getPositionY();
                             cameraPosition[2] = mainCameraRig.getTransform().getPositionZ();
-
-                            Log.e("X3D-Anchor", "   (isOver) BGN Pos (" +
-                                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
-                            float[] bgnlookAt = mainCameraRig.getLookAt();
-                            Log.e("X3D-Anchor", "   (isOver) BGN LookAt (" +
-                                    bgnlookAt[0] + ", " + bgnlookAt[1] + ", " + bgnlookAt[2] + ")");
                         }
                     }
-
+                } else {
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    if (sensorObj != null) {
+                        GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
+                        if (sensorObj2 != null) {
+                            GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
+                            float[] cameraPosition = new float[3];
+                            cameraPosition[0] = mainCameraRig.getTransform().getPositionX();
+                            cameraPosition[1] = mainCameraRig.getTransform().getPositionY();
+                            cameraPosition[2] = mainCameraRig.getTransform().getPositionZ();
+                        }
+                    }
                 }
             }  // end of onSensorEvent
         });  // end of AddISensorEvent
@@ -336,7 +312,6 @@ public class AnchorImplementation {
 
 
     private void SetNewViewpoint(String url) {
-        Log.e("X3D-Anchor", "   (GtC) Go to Viewpoint " + url);
         Viewpoint vp = null;
         // get the name without the '#' sign
         String vpURL = url.substring(1, url.length());
@@ -346,23 +321,10 @@ public class AnchorImplementation {
             }
         }
         if ( vp != null ) {
-            Log.e("X3D-Anchor", "      (GtC) Found " + url);
             // found the Viewpoint matching the url
             GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
             float[] cameraPosition = vp.getPosition();
-            float[] orientation = vp.getOrientation();
-
-            Log.e("X3D-Anchor", "      (GtC) BGN Pos (" +
-                    mainCameraRig.getTransform().getPositionX() + ", " + mainCameraRig.getTransform().getPositionY() + ", " + mainCameraRig.getTransform().getPositionZ() + ")");
-            float[] bgnlookAt = mainCameraRig.getLookAt();
-            Log.e("X3D-Anchor", "      (GtC) BGN LookAt (" +
-                    bgnlookAt[0] + ", " + bgnlookAt[1] + ", " + bgnlookAt[2] + ")");
-
-            AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
-                    orientation[0], orientation[1], orientation[2]);
-            Quaternionf quaternionf = new Quaternionf(axisAngle4f);
             mainCameraRig.getTransform().setPosition( cameraPosition[0], cameraPosition[1], cameraPosition[2] );
-        //    mainCameraRig.getTransform().rotate(quaternionf.w, quaternionf.x, quaternionf.y, quaternionf.z);
 
             // Set the Gaze controller position which is where the pick ray
             // begins in the direction of camera.lookt()
@@ -381,12 +343,9 @@ public class AnchorImplementation {
             if ( gazeController != null) {
                 gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
             }
-
-            Log.e("X3D-Anchor", "      (GtC) Found " + url + " to (" +
-                    cameraPosition[0] + ", " + cameraPosition[1] + ", " + cameraPosition[2] + ")");
-            float[] lookAt = mainCameraRig.getLookAt();
-            Log.e("X3D-Anchor", "      (GtC) After Chg LookAt (" +
-                    lookAt[0] + ", " + lookAt[1] + ", " + lookAt[2] + ")");
+        }
+        else {
+            Log.e(TAG, "Viewpoint named " + vpURL + " not found (defined).");
         }
     }  //  end SetNewViewpoint
 
@@ -402,7 +361,6 @@ public class AnchorImplementation {
 
                     // Launch a new WebView window and place the web page there.
                     gvrWebView = new GVRWebView(gvrContext.getActivity());
-                    Log.e("X3D-Anchor", "   (LWP) new GVRWebView(gvrActivity)");
                     gvrWebView.setInitialScale(100);
                     gvrWebView.measure(1600, 1200);
                     gvrWebView.layout(0, 0, 1600, 1200);
@@ -413,29 +371,14 @@ public class AnchorImplementation {
                     if ((urlFinal.endsWith(".xml")) || (urlFinal.endsWith(".rss"))) {
                         if (gvrWebView != null) gvrWebView.loadData(webPageContent, "text/html", null);
                     } // end if rss or xml data
-                    /*
-                    else if (urlFinal.endsWith(".tst")) {
-                        //TODO: this is just for tests and should be removed
-                        Log.e("X3D-Anchor", "   (LWP) Test File (overwrite data)");
-
-                        String summary = "<html><body>" +
-                                "<H1>You scored <b>192</b> points.<P>Test of html</H1><P>" +
-                                "<img src=\"https://a.mtstatic.com/@public/production/site_6566/1452738115-apple-touch-icon.png\"><P>" +
-                                "SDC<P><img src=\"https://a.mtstatic.com/@public/production/site_6566/1452737966-logo.png\"><P>" +
-                                "SDC<P><img src=\"https://resources.samsungdevelopers.com/@api/deki/files/1156/GearVRf_Architecture.png\"><P>" +
-                                "</body></html>";
-                        if (gvrWebView != null) gvrWebView.loadData(summary, "text/html", null);
-                    }  // end if test page.
-                    */
                     else {
                         // Open a Web page
-                        Log.e("X3D-Anchor", "   (LWP) url " + urlFinal);
                         gvrWebView.setWebViewClient(new WebViewClient() {
                             //TODO: replace for depricated code with:
                             // onReceivedError (WebView view, WebResourceRequest request, WebResourceError error)
                             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                                Log.e("X3D-Anchor", "   setWebViewClient Error ");
-                                Log.e("X3D-Anchor", "   errorCode " + errorCode + "; description " + description + "; url " + failingUrl);
+                                Log.e(TAG, "   setWebViewClient Error ");
+                                Log.e(TAG, "   errorCode " + errorCode + "; description " + description + "; url " + failingUrl);
                             }
                         });
                         if (gvrWebView != null) gvrWebView.loadUrl(urlFinal);
@@ -443,7 +386,6 @@ public class AnchorImplementation {
 
                     if (gvrWebView != null) {
 
-                        //}
                         GVRViewSceneObject gvrWebViewSceneObject = new GVRViewSceneObject(gvrContext,
                                 gvrWebView, webViewDimensions[0], webViewDimensions[1]);
                         gvrWebViewSceneObject.setName("Web View");
@@ -458,215 +400,251 @@ public class AnchorImplementation {
                                 GVRRenderData.GVRRenderMaskBit.Left
                                         | GVRRenderData.GVRRenderMaskBit.Right);
 
-                        GVRCubeSceneObject gvrUICubeSceneObject = new GVRCubeSceneObject(gvrContext, true, cubeUISize);
-                        gvrUICubeSceneObject.getTransform().setPosition(cubeUIPosition[0], cubeUIPosition[1], cubeUIPosition[2]);
-                        gvrUICubeSceneObject.getRenderData().getMaterial().setDiffuseColor(.3f, .5f, .7f, 1);
-                        gvrUICubeSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
+                        if (useWebPageTranformControls) WebPageTranformControls( gvrWebViewSceneObject, gvrSceneObjectAnchor, urlFinal);
+                        else WebPageCloseOnClick( gvrWebViewSceneObject, gvrSceneObjectAnchor, urlFinal);
 
-                        // Add the icons to close, scale, translate and rotate
-                        gvrTextExitObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " x ");
-                        gvrTextExitObject.setName(TEXT_EXIT_NAME);
-                        gvrTextExitObject.setTextColor(textColorDefault);
-                        gvrTextExitObject.setBackgroundColor(textColorBackground);
-                        gvrTextExitObject.getTransform().setPosition(textExitPosition[0], textExitPosition[1], textExitPosition[2]);
-                        gvrUICubeSceneObject.addChildObject(gvrTextExitObject);
-                        gvrTextTranslationObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " t ");
-                        gvrTextTranslationObject.setName(TEXT_TRANSLATE_NAME);
-                        gvrTextTranslationObject.setTextColor(textColorDefault);
-                        gvrTextTranslationObject.setBackgroundColor(textColorBackground);
-                        gvrTextTranslationObject.getTransform().setPosition(textTranslatePosition[0], textTranslatePosition[1], textTranslatePosition[2]);
-                        gvrUICubeSceneObject.addChildObject(gvrTextTranslationObject);
-
-                        gvrTextRotateObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " r ");
-                        gvrTextRotateObject.setName(TEXT_ROTATE_NAME);
-                        gvrTextRotateObject.setTextColor(textColorDefault);
-                        gvrTextRotateObject.setBackgroundColor(textColorBackground);
-                        gvrTextRotateObject.getTransform().setPosition(textRotatePosition[0], textRotatePosition[1], textRotatePosition[2]);
-                        gvrUICubeSceneObject.addChildObject(gvrTextRotateObject);
-
-                        gvrTextScaleObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " s ");
-                        gvrTextScaleObject.setName(TEXT_SCALE_NAME);
-                        gvrTextScaleObject.setTextColor(textColorDefault);
-                        gvrTextScaleObject.setBackgroundColor(textColorBackground);
-                        gvrTextScaleObject.getTransform().setPosition(textScalePosition[0], textScalePosition[1], textScalePosition[2]);
-                        gvrUICubeSceneObject.addChildObject(gvrTextScaleObject);
-
-
-                        // Currently req to show an object dynamically added
-                        GVRScene mainScene = gvrContext.getMainScene();
-                        mainScene.bindShaders(gvrUICubeSceneObject);
-                        mainScene.bindShaders(gvrTextExitObject);
-                        mainScene.bindShaders(gvrTextTranslationObject);
-                        mainScene.bindShaders(gvrTextRotateObject);
-                        mainScene.bindShaders(gvrTextScaleObject);
-
-                        webPagePlusUISceneObject = new GVRSceneObject(gvrContext);
-                        webPagePlusUISceneObject.getTransform().setPosition(webPagePlusUIPosition[0], webPagePlusUIPosition[1], webPagePlusUIPosition[2]);
-
-                        // Set up sensor for the U.I.
-                        Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
-                        uibObjectSensor.setDepthOrderEnabled( true );
-                        final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
-                        final GVRSceneObject gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
-                        final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
-
-                        final GVRSceneObject gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
-
-                        webPagePlusUISceneObjectFinal.addChildObject(gvrWebViewSceneObjectFinal);
-                        webPagePlusUISceneObjectFinal.addChildObject(gvrUICubeSceneObjectFinal);
-                        gvrSceneObjectAnchorFinal.addChildObject(webPagePlusUISceneObjectFinal);
-
-                        uibObjectSensor.addISensorEvents(new ISensorEvents() {
-                            boolean uiObjectIsActive = false;
-                            boolean clickDown = false;
-
-                            @Override
-                            public void onSensorEvent(SensorEvent event) {
-                                if (event.isActive()) {
-                                    clickDown = !clickDown;
-                                    Log.e("X3D-Anchor", "(LWP) eventisActive " + uiObjectIsActive + ", clickDown " + clickDown);
-                                    if (clickDown) {
-                                        Log.e("X3D-Anchor", "   (LWP) clickDown " + clickDown);
-                                        // only go through once even if object is clicked a long time
-                                        uiObjectIsActive = !uiObjectIsActive;
-                                        if (uiObjectIsActive) {
-                                            if (event.getHitX() > cubeUISize.x / 4.0f) {
-                                                // Delete the WebView page
-                                                Log.e("X3D-Anchor", "   (LWP) delete webView and UI, click > 1");
-                                                if (gvrTextScaleObject != null) {
-                                                    gvrWebViewSceneObjectFinal.removeChildObject(gvrTextScaleObject);
-                                                }
-                                                if (gvrTextRotateObject != null) {
-                                                    gvrWebViewSceneObjectFinal.removeChildObject(gvrTextRotateObject);
-                                                }
-                                                if (gvrTextTranslationObject != null) {
-                                                    gvrWebViewSceneObjectFinal.removeChildObject(gvrTextTranslationObject);
-                                                }
-                                                gvrTextExitObject = null;
-                                                gvrTextScaleObject = null;
-                                                gvrTextRotateObject = null;
-                                                gvrTextTranslationObject = null;
-                                                gvrSceneObjectAnchorFinal.removeChildObject(webPagePlusUISceneObjectFinal);
-                                                webPagePlusUISceneObject = null;
-                                                webViewTranslation = false;
-                                                webViewScale = false;
-                                                gvrWebView = null;
-                                            } else if (event.getHitX() > 0) {
-                                                Log.e("X3D-Anchor", "   (LWP) else condition; 0> click > 1, ROTATION, not implemented");
-                                                webViewTranslation = false;
-
-                                            } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
-                                                Log.e("X3D-Anchor", "   (LWP) -1> click > 0; create TRANSLATION control");
-                                                TranslationControl(gvrWebViewSceneObjectFinal);
-                                            }   // end transltion web window, hit between 0 and .25,
-                                            else {
-                                                // Add A Scale sphere to the upper right corner
-                                                Log.e("X3D-Anchor", "    (LWP)  click < -1; create SCALE control");
-                                                webViewTranslation = false;
-                                                ScaleControl(gvrWebViewSceneObjectFinal, gvrSceneObjectAnchorFinal, urlFinal);
-
-                                            }  // end scaling web window, hit between -2 and -1,
-                                        } else {  // uiObjectIsActive is false
-                                            if (mOnDrawFrame != null)
-                                                gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
-                                            if (event.getHitX() > 0) {
-                                                Log.e("X3D-Anchor", "   (LWP) else condition; 0> click > 1, ROTATION, not implemented");
-                                            } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
-                                                Log.e("X3D-Anchor", "   (LWP) -1> click > 0; create TRANSLATION control");
-                                                if (gvrTextTranslationObject != null) {
-                                                    gvrTextTranslationObject.setTextColor(textColorIsOver);
-                                                }
-                                                webViewTranslation = false;
-                                            }   // end transltion web window, hit between 0 and .25,
-                                            else if (event.getHitX() < -cubeUISize.x / 4.0f) {
-                                                Log.e("X3D-Anchor", "   (LWP) else end Scale");
-                                                if (gvrTextScaleObject != null) {
-                                                    gvrTextScaleObject.setTextColor(textColorIsOver);
-                                                }
-                                                webViewScale = false;
-                                            }  // end scaling web window, hit between -2 and -1,
-                                        }
-                                    }
-                                } else if (event.isOver() && !uiObjectIsActive) {
-                                    //Log.e("X3D-Anchor", "   (LWP) event.getHitX() = " + event.getHitX());
-                                    // highlight the icons to give visual cue to users
-                                    if (event.getHitX() > cubeUISize.x / 4.0f) {
-                                        if (gvrTextExitObject != null)
-                                            gvrTextExitObject.setTextColor(textColorIsOver);
-                                        if (gvrTextRotateObject != null)
-                                            gvrTextRotateObject.setTextColor(textColorDefault);
-                                        if (gvrTextTranslationObject != null)
-                                            gvrTextTranslationObject.setTextColor(textColorDefault);
-                                        if (gvrTextScaleObject != null)
-                                            gvrTextScaleObject.setTextColor(textColorDefault);
-                                        webViewTranslation = false;
-                                        webViewScale = false;
-                                    } else if (event.getHitX() > 0) {
-                                        if (gvrTextExitObject != null)
-                                            gvrTextExitObject.setTextColor(textColorDefault);
-                                        if (gvrTextRotateObject != null)
-                                            gvrTextRotateObject.setTextColor(textColorIsOver);
-                                        if (gvrTextTranslationObject != null)
-                                            gvrTextTranslationObject.setTextColor(textColorDefault);
-                                        if (gvrTextScaleObject != null)
-                                            gvrTextScaleObject.setTextColor(textColorDefault);
-                                        webViewTranslation = false;
-                                        webViewScale = false;
-                                    }  // end scaling web window, hit between 0 and .25,
-                                    else if (event.getHitX() > -cubeUISize.x / 4.0f) {
-                                        if (gvrTextExitObject != null)
-                                            gvrTextExitObject.setTextColor(textColorDefault);
-                                        if (gvrTextRotateObject != null)
-                                            gvrTextRotateObject.setTextColor(textColorDefault);
-                                        if (gvrTextTranslationObject != null)
-                                            gvrTextTranslationObject.setTextColor(textColorIsOver);
-                                        if (gvrTextScaleObject != null)
-                                            gvrTextScaleObject.setTextColor(textColorDefault);
-                                        webViewTranslation = false;
-                                        webViewScale = false;
-                                    } else {
-                                        if (gvrTextExitObject != null)
-                                            gvrTextExitObject.setTextColor(textColorDefault);
-                                        if (gvrTextRotateObject != null)
-                                            gvrTextRotateObject.setTextColor(textColorDefault);
-                                        if (gvrTextTranslationObject != null)
-                                            gvrTextTranslationObject.setTextColor(textColorDefault);
-                                        if (gvrTextScaleObject != null)
-                                            gvrTextScaleObject.setTextColor(textColorIsOver);
-                                        webViewTranslation = false;
-                                        webViewScale = false;
-                                    }
-                                } else if (!event.isOver() && !uiObjectIsActive) {
-                                    if (gvrTextExitObject != null)
-                                        gvrTextExitObject.setTextColor(textColorDefault);
-                                    if (gvrTextRotateObject != null)
-                                        gvrTextRotateObject.setTextColor(textColorDefault);
-                                    if (gvrTextTranslationObject != null)
-                                        gvrTextTranslationObject.setTextColor(textColorDefault);
-                                    if (gvrTextScaleObject != null)
-                                        gvrTextScaleObject.setTextColor(textColorDefault);
-                                    webViewTranslation = false;
-                                    webViewScale = false;
-                                }
-                            }
-                        });
                     }
                 }  // end run
             });
         }  // end if webPagePlusUISceneObject == null
-        else {
-            Log.e("X3D-Anchor", "   (LWP) REFRESH webPagePlusUISceneObject != null");
-            /*
-            GVRScene mainScene = gvrContext.getMainScene();
-            mainScene.bindShaders(webPagePlusUISceneObject);
-            GVRSceneObject gvrSceneObject = webPagePlusUISceneObject.getChildByIndex(0);
-            mainScene.bindShaders(gvrSceneObject);
-            gvrSceneObject = webPagePlusUISceneObject.getChildByIndex(1);
-            mainScene.bindShaders(gvrSceneObject);
-            */
-        }
     }  //  end LaunchWebPage
 
+
+    // Display web page, but no user interface - close
+    private void WebPageCloseOnClick(GVRViewSceneObject gvrWebViewSceneObject, GVRSceneObject gvrSceneObjectAnchor, String url) {
+        final String urlFinal = url;
+
+        webPagePlusUISceneObject = new GVRSceneObject(gvrContext);
+        webPagePlusUISceneObject.getTransform().setPosition(webPagePlusUIPosition[0], webPagePlusUIPosition[1], webPagePlusUIPosition[2]);
+
+        GVRScene mainScene = gvrContext.getMainScene();
+        mainScene.bindShaders(webPagePlusUISceneObject);
+
+        Sensor webPageSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrWebViewSceneObject);
+        final GVRSceneObject gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
+        final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
+        final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
+
+        webPagePlusUISceneObjectFinal.addChildObject(gvrWebViewSceneObjectFinal);
+        gvrSceneObjectAnchorFinal.addChildObject(webPagePlusUISceneObjectFinal);
+
+
+        webPageSensor.addISensorEvents(new ISensorEvents() {
+            boolean uiObjectIsActive = false;
+            boolean clickDown = true;
+
+            @Override
+            public void onSensorEvent(SensorEvent event) {
+                if (event.isActive()) {
+                    clickDown = !clickDown;
+                    if (clickDown) {
+                        // Delete the WebView page
+                        gvrSceneObjectAnchorFinal.removeChildObject(webPagePlusUISceneObjectFinal);
+                        webPageActive = false;
+                        webPagePlusUISceneObject = null;
+                        webPageClosed = true;  // Make sure click up doesn't open web page behind it
+                    }
+                }
+            }
+        });
+    }  //  end WebPageCloseOnClick
+
+
+    // When we implement controls for dragging, scaling, closing, etc. a WebView
+    private void WebPageTranformControls(GVRViewSceneObject gvrWebViewSceneObject, GVRSceneObject gvrSceneObjectAnchor, String url) {
+        final String urlFinal = url;
+        GVRCubeSceneObject gvrUICubeSceneObject = new GVRCubeSceneObject(gvrContext, true, cubeUISize);
+        gvrUICubeSceneObject.getTransform().setPosition(cubeUIPosition[0], cubeUIPosition[1], cubeUIPosition[2]);
+        gvrUICubeSceneObject.getRenderData().getMaterial().setDiffuseColor(.3f, .5f, .7f, 1);
+        gvrUICubeSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
+
+        // Add the icons to close, scale, translate and rotate
+        gvrTextExitObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " x ");
+        gvrTextExitObject.setName(TEXT_EXIT_NAME);
+        gvrTextExitObject.setTextColor(textColorDefault);
+        gvrTextExitObject.setBackgroundColor(textColorBackground);
+        gvrTextExitObject.getTransform().setPosition(textExitPosition[0], textExitPosition[1], textExitPosition[2]);
+        gvrUICubeSceneObject.addChildObject(gvrTextExitObject);
+        gvrTextTranslationObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " t ");
+        gvrTextTranslationObject.setName(TEXT_TRANSLATE_NAME);
+        gvrTextTranslationObject.setTextColor(textColorDefault);
+        gvrTextTranslationObject.setBackgroundColor(textColorBackground);
+        gvrTextTranslationObject.getTransform().setPosition(textTranslatePosition[0], textTranslatePosition[1], textTranslatePosition[2]);
+        gvrUICubeSceneObject.addChildObject(gvrTextTranslationObject);
+
+        gvrTextRotateObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " r ");
+        gvrTextRotateObject.setName(TEXT_ROTATE_NAME);
+        gvrTextRotateObject.setTextColor(textColorDefault);
+        gvrTextRotateObject.setBackgroundColor(textColorBackground);
+        gvrTextRotateObject.getTransform().setPosition(textRotatePosition[0], textRotatePosition[1], textRotatePosition[2]);
+        gvrUICubeSceneObject.addChildObject(gvrTextRotateObject);
+
+        gvrTextScaleObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " s ");
+        gvrTextScaleObject.setName(TEXT_SCALE_NAME);
+        gvrTextScaleObject.setTextColor(textColorDefault);
+        gvrTextScaleObject.setBackgroundColor(textColorBackground);
+        gvrTextScaleObject.getTransform().setPosition(textScalePosition[0], textScalePosition[1], textScalePosition[2]);
+        gvrUICubeSceneObject.addChildObject(gvrTextScaleObject);
+
+        // Currently req to show an object dynamically added
+        GVRScene mainScene = gvrContext.getMainScene();
+        mainScene.bindShaders(gvrUICubeSceneObject);
+        mainScene.bindShaders(gvrTextExitObject);
+        mainScene.bindShaders(gvrTextTranslationObject);
+        mainScene.bindShaders(gvrTextRotateObject);
+        mainScene.bindShaders(gvrTextScaleObject);
+
+        webPagePlusUISceneObject = new GVRSceneObject(gvrContext);
+        webPagePlusUISceneObject.getTransform().setPosition(webPagePlusUIPosition[0], webPagePlusUIPosition[1], webPagePlusUIPosition[2]);
+
+        // Set up sensor for the U.I.
+        Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
+        //uibObjectSensor.setDepthOrderEnabled( true );
+        final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
+        final GVRSceneObject gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
+        final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
+
+        final GVRSceneObject gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
+
+        webPagePlusUISceneObjectFinal.addChildObject(gvrWebViewSceneObjectFinal);
+        webPagePlusUISceneObjectFinal.addChildObject(gvrUICubeSceneObjectFinal);
+        gvrSceneObjectAnchorFinal.addChildObject(webPagePlusUISceneObjectFinal);
+
+        uibObjectSensor.addISensorEvents(new ISensorEvents() {
+            boolean uiObjectIsActive = false;
+            boolean clickDown = false;
+
+            @Override
+            public void onSensorEvent(SensorEvent event) {
+                //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START) {
+                    if (event.isActive()) {
+                        clickDown = !clickDown;
+                        if (clickDown) {
+                            // only go through once even if object is clicked a long time
+                            uiObjectIsActive = !uiObjectIsActive;
+                            if (uiObjectIsActive) {
+                                if (event.getHitX() > cubeUISize.x / 4.0f) {
+                                    // Delete the WebView page, control currently far right of web page
+                                    gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
+                                    if (gvrTextScaleObject != null) {
+                                        gvrWebViewSceneObjectFinal.removeChildObject(gvrTextScaleObject);
+                                    }
+                                    if (gvrTextRotateObject != null) {
+                                        gvrWebViewSceneObjectFinal.removeChildObject(gvrTextRotateObject);
+                                    }
+                                    if (gvrTextTranslationObject != null) {
+                                        gvrWebViewSceneObjectFinal.removeChildObject(gvrTextTranslationObject);
+                                    }
+                                    gvrTextExitObject = null;
+                                    gvrTextScaleObject = null;
+                                    gvrTextRotateObject = null;
+                                    gvrTextTranslationObject = null;
+                                    gvrSceneObjectAnchorFinal.removeChildObject(webPagePlusUISceneObjectFinal);
+                                    webViewTranslation = false;
+                                    webViewScale = false;
+                                    gvrWebView = null;
+                                    webPagePlusUISceneObject = null;
+                                    webPageActive = false;
+                                } else if (event.getHitX() > 0) {
+                                    // TODO: Rotate the web view, control currently right side of control bar
+                                    webViewTranslation = false;
+
+                                } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
+                                    // Translate the web view, control currently left side of control bar
+                                    TranslationControl(gvrWebViewSceneObjectFinal);
+                                }   // end transltion web window, hit between 0 and .25,
+                                else {
+                                    // Scale the web view, control currently in upper right corner
+                                    webViewTranslation = false;
+                                    ScaleControl(gvrWebViewSceneObjectFinal, gvrSceneObjectAnchorFinal, urlFinal);
+
+                                }  // end scaling web window, hit between -2 and -1,
+                            } else {  // uiObjectIsActive is false
+                                if (mOnDrawFrame != null)
+                                    // wrap up any lose ends closing the web page.
+                                    gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
+                                if (event.getHitX() > 0) {
+                                    // TODO: Stop Rotating the web page
+                                } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
+                                    // Stop translating the web page
+                                    if (gvrTextTranslationObject != null) {
+                                        gvrTextTranslationObject.setTextColor(textColorIsOver);
+                                    }
+                                    webViewTranslation = false;
+                                }   // end transltion web window, hit between 0 and .25,
+                                else if (event.getHitX() < -cubeUISize.x / 4.0f) {
+                                    // Stop scaling the web page
+                                    if (gvrTextScaleObject != null) {
+                                        gvrTextScaleObject.setTextColor(textColorIsOver);
+                                    }
+                                    webViewScale = false;
+                                }  // end scaling web window, hit between -2 and -1,
+                            }
+                        }
+                    } else if (event.isOver() && !uiObjectIsActive) {
+                        // highlight the icons to give visual cue to users
+                        if (event.getHitX() > cubeUISize.x / 4.0f) {
+                            if (gvrTextExitObject != null)
+                                gvrTextExitObject.setTextColor(textColorIsOver);
+                            if (gvrTextRotateObject != null)
+                                gvrTextRotateObject.setTextColor(textColorDefault);
+                            if (gvrTextTranslationObject != null)
+                                gvrTextTranslationObject.setTextColor(textColorDefault);
+                            if (gvrTextScaleObject != null)
+                                gvrTextScaleObject.setTextColor(textColorDefault);
+                            webViewTranslation = false;
+                            webViewScale = false;
+                        } else if (event.getHitX() > 0) {
+                            if (gvrTextExitObject != null)
+                                gvrTextExitObject.setTextColor(textColorDefault);
+                            if (gvrTextRotateObject != null)
+                                gvrTextRotateObject.setTextColor(textColorIsOver);
+                            if (gvrTextTranslationObject != null)
+                                gvrTextTranslationObject.setTextColor(textColorDefault);
+                            if (gvrTextScaleObject != null)
+                                gvrTextScaleObject.setTextColor(textColorDefault);
+                            webViewTranslation = false;
+                            webViewScale = false;
+                        }  // end scaling web window, hit between 0 and .25,
+                        else if (event.getHitX() > -cubeUISize.x / 4.0f) {
+                            if (gvrTextExitObject != null)
+                                gvrTextExitObject.setTextColor(textColorDefault);
+                            if (gvrTextRotateObject != null)
+                                gvrTextRotateObject.setTextColor(textColorDefault);
+                            if (gvrTextTranslationObject != null)
+                                gvrTextTranslationObject.setTextColor(textColorIsOver);
+                            if (gvrTextScaleObject != null)
+                                gvrTextScaleObject.setTextColor(textColorDefault);
+                            webViewTranslation = false;
+                            webViewScale = false;
+                        } else {
+                            if (gvrTextExitObject != null)
+                                gvrTextExitObject.setTextColor(textColorDefault);
+                            if (gvrTextRotateObject != null)
+                                gvrTextRotateObject.setTextColor(textColorDefault);
+                            if (gvrTextTranslationObject != null)
+                                gvrTextTranslationObject.setTextColor(textColorDefault);
+                            if (gvrTextScaleObject != null)
+                                gvrTextScaleObject.setTextColor(textColorIsOver);
+                            webViewTranslation = false;
+                            webViewScale = false;
+                        }
+                    } else if (!event.isOver() && !uiObjectIsActive) {
+                        if (gvrTextExitObject != null)
+                            gvrTextExitObject.setTextColor(textColorDefault);
+                        if (gvrTextRotateObject != null)
+                            gvrTextRotateObject.setTextColor(textColorDefault);
+                        if (gvrTextTranslationObject != null)
+                            gvrTextTranslationObject.setTextColor(textColorDefault);
+                        if (gvrTextScaleObject != null)
+                            gvrTextScaleObject.setTextColor(textColorDefault);
+                        webViewTranslation = false;
+                        webViewScale = false;
+                    }
+                //} // check for multi-start
+            }
+        });
+    }  //  end WebPageTranformControls
 
     private void TranslationControl(GVRSceneObject gvrWebViewSceneObjectFinal) {
         GVRScene mainScene = gvrContext.getMainScene();
@@ -680,17 +658,12 @@ public class AnchorImplementation {
             gvrTextTranslationObject.setTextColor(textColorIsActive);
         }
         webViewTranslation = true;
-        Log.e("X3D-Anchor", "   (TC) translationObjectTranslationLocal translation: (" + translationObjectTranslationLocal.x + ", " + translationObjectTranslationLocal.y + ", " + translationObjectTranslationLocal.z + " )");
-        Log.e("X3D-Anchor", "   (TC) translationObjectTranslationGlobal translation: (" + translationObjectTranslationGlobal.x + ", " + translationObjectTranslationGlobal.y + ", " + translationObjectTranslationGlobal.z + " )");
-        Log.e("X3D-Anchor", "   (TC) initial Camera lookAt: (" + initialCameralookAt[0] + ", " + initialCameralookAt[1] + ", " + initialCameralookAt[2]);
 
         for ( int i = 0; i < 3; i++ ) {
             if (i == 2) beginUIClickPos[i] = webPagePlusUIPosition[i] - cubeUIPosition[i];
             else beginUIClickPos[i] = webPagePlusUIPosition[i] + cubeUIPosition[i] + textTranslatePosition[i];
             diffWebPageUIClick[i] = beginUIClickPos[i] - webPagePlusUIPosition[i];
         }
-        Log.e("X3D-Anchor", "   (TC) beginUIClickPos: (" + beginUIClickPos[0] + ", " + beginUIClickPos[1] + ", " + beginUIClickPos[2] + ")");
-        Log.e("X3D-Anchor", "   (TC) diffWebPageUIClick: (" + diffWebPageUIClick[0] + ", " + diffWebPageUIClick[1] + ", " + diffWebPageUIClick[2] + ")");
 
         mOnDrawFrame = new DrawFrame();
         gvrContext.registerDrawFrameListener(mOnDrawFrame);
@@ -710,19 +683,12 @@ public class AnchorImplementation {
             gvrTextScaleObject.setTextColor(textColorIsActive);
         }
         webViewScale = true;
-        Log.e("X3D-Anchor", "   (SC) translationObjectTranslationLocal translation: (" + translationObjectTranslationLocal.x + ", " + translationObjectTranslationLocal.y + ", " + translationObjectTranslationLocal.z + " )");
-        Log.e("X3D-Anchor", "   (SC) translationObjectTranslationGlobal translation: (" + translationObjectTranslationGlobal.x + ", " + translationObjectTranslationGlobal.y + ", " + translationObjectTranslationGlobal.z + " )");
 
         for (int i = 0; i < 3; i++ ) {
             initialHitPoint[i] = (initialCameralookAt[i] * translationObjectTranslationGlobal.z) / initialCameralookAt[2];
         }
         beginWebPagePlusUIScale[0] = webPagePlusUIScale[0];
         beginWebPagePlusUIScale[1] = webPagePlusUIScale[1];
-
-        Log.e("X3D-Anchor", "   (SC) beginUIClickPos: (" + beginUIClickPos[0] + ", " + beginUIClickPos[1] + ", " + beginUIClickPos[2] + ")");
-        Log.e("X3D-Anchor", "   (SC) beginWebPagePlusUIScale: (" + beginWebPagePlusUIScale[0] + ", " + beginWebPagePlusUIScale[1] + ")");
-        Log.e("X3D-Anchor", "   (SC) initial Camera lookAt: (" + initialCameralookAt[0] + ", " + initialCameralookAt[1] + ", " + initialCameralookAt[2] + ")");
-        Log.e("X3D-Anchor", "   (SC) initial Hit Pt: (" + initialHitPoint[0] + ", " + initialHitPoint[1] + ", " + initialHitPoint[2] + ")");
 
         mOnDrawFrame = new DrawFrame();
         gvrContext.registerDrawFrameListener(mOnDrawFrame);
@@ -739,36 +705,28 @@ public class AnchorImplementation {
                 float zFactor = initialCameralookAt[2] / currentCameraLookAt[2];
                 webPagePlusUIScale[0] = (currentCameraLookAt[0] / initialCameralookAt[0]) * zFactor * beginWebPagePlusUIScale[0];
                 webPagePlusUIScale[1] = (currentCameraLookAt[1] / initialCameralookAt[1]) * zFactor * beginWebPagePlusUIScale[1];
-                Log.e("X3D-Anchor", "ODF: currentCameraLookAt (" + currentCameraLookAt[0] + ", " + currentCameraLookAt[1] + ", " + currentCameraLookAt[2] + ")");
-                Log.e("X3D-Anchor", "ODF:    normalized (" + (currentCameraLookAt[0] * zFactor) + ", " + (currentCameraLookAt[1] * zFactor) + ", " + (currentCameraLookAt[2] * zFactor) + ")");
 
                 float[] currentHitPoint = new float[3];
                 for (int i = 0; i < 3; i++ ) {
                     currentHitPoint[i] = (currentCameraLookAt[i] * translationObjectTranslationGlobal.z) / currentCameraLookAt[2];
                 }
-                Log.e("X3D-Anchor", "ODF: current Hit Pt: (" + currentHitPoint[0] + ", " + currentHitPoint[1] + ", " + currentHitPoint[2] + ")");
-
-                Log.e("X3D-Anchor", "ODF: scaleChange (" + webPagePlusUIScale[0] + ", " + webPagePlusUIScale[1] + ")");
-                Log.e("X3D-Anchor", "ODF: alt scale (" + (currentHitPoint[0]/initialHitPoint[0]) + ", " + (currentHitPoint[1]/initialHitPoint[1]) + ")");
 
                 if (webPagePlusUIScale[0] < 1 ) webPagePlusUIScale[0] = 1;
                 else {
                     webPagePlusUIScale[0] = ((webPagePlusUIScale[0] - 1) / 2.0f) + 1;
                 }
-                Log.e("X3D-Anchor", "ODF: scaleChange modified (" + webPagePlusUIScale[0] + ", " + webPagePlusUIScale[1] + ")");
-                webPagePlusUISceneObject.getTransform().setScale(webPagePlusUIScale[0], webPagePlusUIScale[0], 1);
+                if (webPagePlusUISceneObject != null) webPagePlusUISceneObject.getTransform().setScale(webPagePlusUIScale[0], webPagePlusUIScale[0], 1);
 
             }  // end if scale
             else if ( webViewTranslation ) {
 
-                Log.e("X3D-Anchor", "ODF: translation");
                 float[] transitionClickPt = {0, 0, translationObjectTranslationGlobal.z};
                 transitionClickPt[0] = currentCameraLookAt[0] * translationObjectTranslationGlobal.z/currentCameraLookAt[2];
                 transitionClickPt[1] = currentCameraLookAt[1] * translationObjectTranslationGlobal.z/currentCameraLookAt[2];
                 for (int i = 0; i < 3; i++) {
                     transitionClickPt[i] -= diffWebPageUIClick[i];
                 }
-                webPagePlusUISceneObject.getTransform().setPosition( transitionClickPt[0], transitionClickPt[1], transitionClickPt[2]);
+                if (webPagePlusUISceneObject != null) webPagePlusUISceneObject.getTransform().setPosition( transitionClickPt[0], transitionClickPt[1], transitionClickPt[2]);
             }
         }  //  end onDrawFrame
     }  //  end private class PerFrameScripting
@@ -791,7 +749,6 @@ public class AnchorImplementation {
 
         public void startElement(String uri, String localName, String qName,
                                  Attributes attributes) throws SAXException {
-            //Log.e("X3D-Anchor", "   XML parser startElement " + qName);
             if (qName.equalsIgnoreCase("title")) {
                 title = true;
             }
