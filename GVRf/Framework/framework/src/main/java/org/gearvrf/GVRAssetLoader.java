@@ -1047,95 +1047,7 @@ public final class GVRAssetLoader {
         return atlasInformation;
     }
 
-    /** @since 1.6.2 */
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext, GVRAndroidResource resource,
-                                            EnumSet<GVRImportSettings> settings) throws IOException {
-        byte[] bytes;
-        InputStream stream = resource.getStream();
-        try {
-            bytes = new byte[stream.available()];
-            stream.read(bytes);
-        } finally {
-            resource.closeStream();
-        }
-        String resourceFilename = resource.getResourceFilename();
-        if (resourceFilename == null) {
-            resourceFilename = ""; // Passing null causes JNI exception.
-        }
-        long nativeValue = NativeImporter.readFromByteArray(bytes,
-                resourceFilename, GVRImportSettings.getAssimpImportFlags(settings));
-        return new GVRAssimpImporter(gvrContext, nativeValue);
-    }
-
-
-    // IO Handler for Jassimp
-    static class ResourceVolumeIO implements JassimpFileIO {
-        private GVRResourceVolume volume;
-
-        ResourceVolumeIO(GVRResourceVolume volume) {
-            this.volume = volume;
-        }
-
-        @Override
-        public byte[] read(String path) {
-            GVRAndroidResource resource = null;
-            try {
-                resource = volume.openResource(path);
-                InputStream stream = resource.getStream();
-                if (stream == null) {
-                    return null;
-                }
-                byte data[] = ResourceReader.readStream(stream);
-                return data;
-            } catch (Exception e) {
-                Log.e("GVRAssetLoader", path + " exception loading asset from " + e.getMessage());
-                return null;
-            } finally {
-                if (resource != null) {
-                    resource.closeStream();
-                }
-            }
-        }
-
-        protected GVRResourceVolume getResourceVolume() {
-            return volume;
-        }
-    };
-
-    static class CachedVolumeIO implements JassimpFileIO {
-        protected ResourceVolumeIO uncachedIO;
-        protected ResourceCacheBase<GVRByteArray> cache;
-
-        public CachedVolumeIO(ResourceVolumeIO uncachedIO) {
-            this.uncachedIO = uncachedIO;
-            cache = new ResourceCacheBase<GVRByteArray>();
-        }
-
-        @Override
-        public byte[] read(String path) {
-            try {
-                GVRAndroidResource resource = uncachedIO.getResourceVolume().openResource(path);
-                GVRByteArray byteArray = cache.get(resource);
-                if (byteArray == null) {
-                    if (resource.getResourceType() != GVRAndroidResource.ResourceType.INPUT_STREAM) {
-                        resource.closeStream(); // needed to avoid hanging
-                    }
-                    byte[] data = uncachedIO.read(path);
-                    if (data == null) {
-                        return null;
-                    }
-                    byteArray = GVRByteArray.wrap(data);
-                    cache.put(resource, byteArray);
-                }
-                return byteArray.getByteArray();
-            } catch (IOException e) {
-                Log.e("GVRAssetLoader", path + " exception loading asset from " + e.getMessage());
-                return null;
-            }
-        }
-    }
-
-    /**
+     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
      * The model is not added to the current scene.
      * IAssetEvents are emitted to the event listener attached to the context.
@@ -1867,6 +1779,73 @@ public final class GVRAssetLoader {
             throw ex;
         }
         return root;
+    }
+
+    // IO Handler for Jassimp
+    static class ResourceVolumeIO implements JassimpFileIO {
+        private GVRResourceVolume volume;
+
+        ResourceVolumeIO(GVRResourceVolume volume) {
+            this.volume = volume;
+        }
+
+        @Override
+        public byte[] read(String path) {
+            GVRAndroidResource resource = null;
+            try {
+                resource = volume.openResource(path);
+                InputStream stream = resource.getStream();
+                if (stream == null) {
+                    return null;
+                }
+                byte data[] = ResourceReader.readStream(stream);
+                return data;
+            } catch (Exception e) {
+                Log.e("GVRAssetLoader", path + " exception loading asset from " + e.getMessage());
+                return null;
+            } finally {
+                if (resource != null) {
+                    resource.closeStream();
+                }
+            }
+        }
+
+        protected GVRResourceVolume getResourceVolume() {
+            return volume;
+        }
+    };
+
+    static class CachedVolumeIO implements JassimpFileIO {
+        protected ResourceVolumeIO uncachedIO;
+        protected ResourceCacheBase<GVRByteArray> cache;
+
+        public CachedVolumeIO(ResourceVolumeIO uncachedIO) {
+            this.uncachedIO = uncachedIO;
+            cache = new ResourceCacheBase<GVRByteArray>();
+        }
+
+        @Override
+        public byte[] read(String path) {
+            try {
+                GVRAndroidResource resource = uncachedIO.getResourceVolume().openResource(path);
+                GVRByteArray byteArray = cache.get(resource);
+                if (byteArray == null) {
+                    if (resource.getResourceType() != GVRAndroidResource.ResourceType.INPUT_STREAM) {
+                        resource.closeStream(); // needed to avoid hanging
+                    }
+                    byte[] data = uncachedIO.read(path);
+                    if (data == null) {
+                        return null;
+                    }
+                    byteArray = GVRByteArray.wrap(data);
+                    cache.put(resource, byteArray);
+                }
+                return byteArray.getByteArray();
+            } catch (IOException e) {
+                Log.e("GVRAssetLoader", path + " exception loading asset from " + e.getMessage());
+                return null;
+            }
+        }
     }
 
     public static File downloadFile(Context context, String urlString) {
