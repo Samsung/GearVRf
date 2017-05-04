@@ -98,7 +98,7 @@ class AsyncMesh {
 
         @Override
         protected GVRMesh loadResource() throws InterruptedException, IOException {
-            return gvrContext.loadMesh(resource);
+            return gvrContext.getAssetLoader().loadMesh(resource);
         }
     }
 }
