@@ -15,19 +15,6 @@
 
 package org.gearvrf;
 
-import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
-import javax.microedition.khronos.opengles.GL10;
-
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.VrAppSettings;
-
 import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
 import android.opengl.EGL14;
@@ -43,6 +30,19 @@ import android.view.Choreographer.FrameCallback;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import org.gearvrf.utility.Log;
+import org.gearvrf.utility.VrAppSettings;
+
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
+import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Keep Oculus-specifics here
@@ -120,7 +120,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
             mVrApiInitialized = true;
         }
 
-        startChoreographerThreadIfNotStarted();
         if (null != mSurfaceView) {
             mSurfaceView.onResume();
         }
@@ -184,7 +183,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
     private final EGLContextFactory mContextFactory = new EGLContextFactory() {
         @Override
         public void destroyContext(final EGL10 egl, final EGLDisplay display, final EGLContext context) {
-            Log.v(TAG, "EGLContextFactory.destroyContext");
+            Log.v(TAG, "EGLContextFactory.destroyContext 0x%X", context.hashCode());
             egl.eglDestroyContext(display, context);
         }
 
@@ -202,6 +201,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
                 throw new IllegalStateException("eglCreateContext failed; egl error 0x"
                         + Integer.toHexString(egl.eglGetError()));
             }
+            Log.v(TAG, "EGLContextFactory.createContext 0x%X", context.hashCode());
             return context;
         }
     };
@@ -209,8 +209,10 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
     private final EGLWindowSurfaceFactory mWindowSurfaceFactory = new EGLWindowSurfaceFactory() {
         @Override
         public void destroySurface(final EGL10 egl, final EGLDisplay display, final EGLSurface surface) {
-            Log.v(TAG, "EGLWindowSurfaceFactory.destroySurface " + Integer.toHexString(surface.hashCode()));
-            egl.eglDestroySurface(display, surface);
+            Log.v(TAG, "EGLWindowSurfaceFactory.destroySurface 0x%X, mPixelBuffer 0x%X", surface.hashCode(), mPixelBuffer.hashCode());
+            boolean result = egl.eglDestroySurface(display, mPixelBuffer);
+            Log.v(TAG, "EGLWindowSurfaceFactory.destroySurface successful %b, egl error 0x%x", result, egl.eglGetError());
+            mPixelBuffer = null;
         }
 
         @Override
@@ -226,7 +228,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
                 throw new IllegalStateException("Pixel buffer surface not created; egl error 0x"
                         + Integer.toHexString(egl.eglGetError()));
             }
-            Log.v(TAG, "EGLWindowSurfaceFactory.createWindowSurface : " + Integer.toHexString(mPixelBuffer.hashCode()));
+            Log.v(TAG, "EGLWindowSurfaceFactory.eglCreatePbufferSurface 0x%X", mPixelBuffer.hashCode());
             return mPixelBuffer;
         }
     };
@@ -329,6 +331,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
             mChoreographerThread.quitSafely();
             try {
                 mChoreographerThread.join();
+                Log.i(TAG, "stopChoreographerThread done");
             } catch (final Exception ignored) {
             } finally {
                 mChoreographerThread = null;
@@ -337,11 +340,18 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
     }
 
     private void destroySurfaceForTimeWarp() {
+        final EGL10 egl = (EGL10) EGLContext.getEGL();
+        final EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+        final EGLContext context = egl.eglGetCurrentContext();
+
+        if (!egl.eglMakeCurrent(display, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, context)) {
+            Log.v(TAG, "destroySurfaceForTimeWarp makeCurrent NO_SURFACE failed, egl error 0x%x", egl.eglGetError());
+        }
+
         if (null != mMainSurface) {
-            Log.v(TAG, "destroying mMainSurface: 0x%x", mMainSurface.hashCode());
-            final EGL10 egl = (EGL10) EGLContext.getEGL();
-            final EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-            egl.eglDestroySurface(display, mMainSurface);
+            boolean result = egl.eglDestroySurface(display, mMainSurface);
+            Log.v(TAG, "destroySurfaceForTimeWarp destroyed mMainSurface: 0x%x, successful %b, egl error 0x%x",
+                    mMainSurface.hashCode(), result, egl.eglGetError());
             mMainSurface = null;
         }
     }
@@ -364,10 +374,13 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
         public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
             Log.i(TAG, "onSurfaceChanged; %d x %d", width, height);
 
-            if (null != mMainSurface) {
-                Log.v(TAG, "short-circuiting onSurfaceChanged");
+            if (width < height) {
+                Log.v(TAG, "short-circuiting onSurfaceChanged; surface in portrait");
                 return;
             }
+
+            nativeLeaveVrMode(mPtr);
+            destroySurfaceForTimeWarp();
 
             final EGL10 egl = (EGL10) EGLContext.getEGL();
             final EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -401,12 +414,12 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
 
             // this is the display surface timewarp will hijack
             mMainSurface = egl.eglCreateWindowSurface(display, mConfig, mSurfaceView.getHolder(), configAttribs);
-            Log.v(TAG, "mMainSurface: 0x%x", mMainSurface.hashCode());
-
             if (mMainSurface == EGL10.EGL_NO_SURFACE) {
                 throw new IllegalStateException(
                         "eglCreateWindowSurface() failed: 0x" + Integer.toHexString(egl.eglGetError()));
             }
+
+            Log.v(TAG, "mMainSurface: 0x%x", mMainSurface.hashCode());
             if (!egl.eglMakeCurrent(display, mMainSurface, mMainSurface, context)) {
                 throw new IllegalStateException(
                         "eglMakeCurrent() failed: 0x " + Integer.toHexString(egl.eglGetError()));
@@ -461,9 +474,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
 
     private static native int nativeUninitializeVrApi(long ptr);
 
-    private static final int VRAPI_INITIALIZE_SUCCESS = 0;
     private static final int VRAPI_INITIALIZE_UNKNOWN_ERROR = -1;
-    private static final int VRAPI_INITIALIZE_PERMISSIONS_ERROR = -2;
 
     private static final String TAG = "OvrVrapiActivityHandler";
 }
