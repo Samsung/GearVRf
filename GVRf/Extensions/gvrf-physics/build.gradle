@@ -56,7 +56,7 @@ android {
 }
 
 dependencies {
-    if(rootProject.hasProperty("buildGvrfAndDemos")) {
+    if (findProject(':framework')) {
         compile project (':framework')
     } else {
         compile(name: 'framework-debug', ext: 'aar')
