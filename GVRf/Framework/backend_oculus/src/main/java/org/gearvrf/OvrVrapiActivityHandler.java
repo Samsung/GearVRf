@@ -27,9 +27,7 @@ import android.os.HandlerThread;
 import android.util.DisplayMetrics;
 import android.view.Choreographer;
 import android.view.Choreographer.FrameCallback;
-import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
@@ -47,7 +45,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Keep Oculus-specifics here
  */
-class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callback {
+class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private final GVRActivity mActivity;
     private long mPtr;
@@ -147,6 +145,29 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
     public void onSetScript() {
         mSurfaceView = new GLSurfaceView(mActivity);
 
+        final DisplayMetrics metrics = new DisplayMetrics();
+        mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        final VrAppSettings appSettings = mActivity.getAppSettings();
+        int defaultWidthPixels = Math.max(metrics.widthPixels, metrics.heightPixels);
+        int defaultHeightPixels = Math.min(metrics.widthPixels, metrics.heightPixels);
+        final int frameBufferWidth = appSettings.getFramebufferPixelsWide();
+        final int frameBufferHeight = appSettings.getFramebufferPixelsHigh();
+        final SurfaceHolder holder = mSurfaceView.getHolder();
+        holder.setFormat(PixelFormat.TRANSLUCENT);
+
+        if ((-1 != frameBufferHeight) && (-1 != frameBufferWidth)) {
+            if ((defaultWidthPixels != frameBufferWidth) && (defaultHeightPixels != frameBufferHeight)) {
+                Log.v(TAG, "--- window configuration ---");
+                Log.v(TAG, "--- width: %d", frameBufferWidth);
+                Log.v(TAG, "--- height: %d", frameBufferHeight);
+                //a different resolution of the native window requested
+                defaultWidthPixels = frameBufferWidth;
+                defaultHeightPixels = frameBufferHeight;
+                Log.v(TAG, "----------------------------");
+            }
+        }
+        holder.setFixedSize(defaultWidthPixels, defaultHeightPixels);
+
         mSurfaceView.setPreserveEGLContextOnPause(true);
         mSurfaceView.setEGLContextClientVersion(3);
         mSurfaceView.setEGLContextFactory(mContextFactory);
@@ -155,29 +176,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
         mSurfaceView.setRenderer(mRenderer);
         mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-
         mActivity.setContentView(mSurfaceView);
-
-        final DisplayMetrics metrics = new DisplayMetrics();
-        mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        final VrAppSettings appSettings = mActivity.getAppSettings();
-        final int screenWidthPixels = Math.max(metrics.widthPixels, metrics.heightPixels);
-        final int screenHeightPixels = Math.min(metrics.widthPixels, metrics.heightPixels);
-        final int frameBufferWidth = appSettings.getFramebufferPixelsWide();
-        final int frameBufferHeight = appSettings.getFramebufferPixelsHigh();
-        final SurfaceHolder holder = mSurfaceView.getHolder();
-        holder.setFormat(PixelFormat.TRANSLUCENT);
-
-        if ((-1 != frameBufferHeight) && (-1 != frameBufferWidth)) {
-            if ((screenWidthPixels != frameBufferWidth) && (screenHeightPixels != frameBufferHeight)) {
-                Log.v(TAG, "--- window configuration ---");
-                Log.v(TAG, "--- width: %d", frameBufferWidth);
-                Log.v(TAG, "--- height: %d", frameBufferHeight);
-                //a different resolution of the native window requested
-                holder.setFixedSize((int) frameBufferWidth, (int) frameBufferHeight);
-                Log.v(TAG, "----------------------------");
-            }
-        }
     }
 
     private final EGLContextFactory mContextFactory = new EGLContextFactory() {
@@ -366,8 +365,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
             mConfig = config;
             nativeOnSurfaceCreated(mPtr);
             mViewManager.onSurfaceCreated();
-
-
         }
 
         @Override
@@ -442,20 +439,6 @@ class OvrVrapiActivityHandler implements OvrActivityHandler, SurfaceHolder.Callb
             mViewManager.onDrawFrame();
         }
     };
-
-    @Override
-    public void surfaceCreated(SurfaceHolder surfaceHolder) {
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-
-    }
 
 
     @SuppressWarnings("serial")
