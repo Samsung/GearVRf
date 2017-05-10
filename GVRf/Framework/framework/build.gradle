@@ -138,7 +138,7 @@ task packageForPlugins(type: Zip) {
 
     baseName project.name + '-for-plugins'
 
-    from './build/intermediates/bundles/default/classes.jar'
+    from './build/intermediates/bundles/release/classes.jar'
     rename 'classes.jar', project.name + '-classes.jar'
 
     from './src/main/libs/'
