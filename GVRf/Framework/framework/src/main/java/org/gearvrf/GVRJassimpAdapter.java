@@ -320,7 +320,7 @@ class GVRJassimpAdapter {
         }
     }
 
-    public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume)
+    public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume, boolean startAnimations)
     {
         List<AiLight> aiLights = scene.getLights();
         Hashtable<String, GVRLightBase> lightList = new Hashtable<String, GVRLightBase>();
@@ -340,7 +340,7 @@ class GVRJassimpAdapter {
             List<AiAnimation> animations = scene.getAnimations();
             if (animations.size() > 0)
             {
-                GVRAnimator animator = new GVRAnimator(mContext);
+                GVRAnimator animator = new GVRAnimator(mContext, startAnimations);
                 model.attachComponent(animator);
                 for (AiAnimation aiAnim : scene.getAnimations())
                 {
@@ -621,7 +621,6 @@ class GVRJassimpAdapter {
                     if (!aimesh.hasTexCoords(uvIndex))
                     {
                         uvIndex = 0;
-                        Log.w("GVRAssetLoader", "UVIndex not found in mesh, defaulting to first set of texture coordinates");
                     }
                     loadTexture(assetRequest, aimtl, gvrmtl, texType, i, uvIndex);
                 }

@@ -79,11 +79,15 @@ public enum GVRImportSettings {
      * OPTIMIZE_MESHES. Note that this might lose reference to node names.
      */
     OPTIMIZE_GRAPH(0x400000),
-    
+
     /**
      * Flip UV mapping in y direction.
      */
-    FLIP_UV(0x800000);
+    FLIP_UV(0x800000),
+    /**
+     * Causes the animations in the asset to start as soon as the asset is added to the scene.
+     */
+    START_ANIMATIONS(0x100000);
     
     private int mValue;
     
@@ -111,6 +115,7 @@ public enum GVRImportSettings {
         for (GVRImportSettings s : settings) {
             flags |= s.getValue();
         }
+        flags &= ~START_ANIMATIONS.getValue();
         return flags;
     }
     
