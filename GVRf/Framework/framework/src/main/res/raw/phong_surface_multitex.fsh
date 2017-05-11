@@ -133,8 +133,6 @@ diffuse.xyz *= diffuse.w;
     #ifdef HAS_emissiveTexture1_blendop
         temp = texture(emissiveTexture1, emissive_coord1.xy);
         emission = BlendColors(emission, temp, emissiveTexture1_blendop);
-    #else
-	    emission = vec4(0.0, 0.0, 0.0, 0.0);
 	#endif
 #endif
 #ifdef HAS_normalTexture
