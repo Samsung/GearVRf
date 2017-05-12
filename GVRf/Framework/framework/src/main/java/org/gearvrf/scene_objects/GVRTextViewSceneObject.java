@@ -257,6 +257,15 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mIsChanged = true;
     }
 
+
+    /**
+     * Get the TextView.
+     *
+     */
+    public TextView getTextView() {
+        return mTextView;
+    }
+
     /**
      * Set the view's background {@code Drawable}.
      * 

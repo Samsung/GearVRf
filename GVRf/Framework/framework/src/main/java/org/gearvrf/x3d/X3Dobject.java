@@ -17,12 +17,16 @@ package org.gearvrf.x3d;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.widget.TextView;
 
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.utility.Log;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -226,6 +230,9 @@ public class X3Dobject {
     private boolean parseJavaScript = false;
     // holds complete JavaScript code per <SCRIPT> tag
     private String javaScriptCode = "";
+
+
+    private int fontTextCount = 0;
 
 
     /**
@@ -2255,6 +2262,59 @@ public class X3Dobject {
 
                     gvrTextViewSceneObject.setTextColor(Color.WHITE); // default
                     gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default
+
+                    Context context = gvrContext.getContext();
+                    //GVRAssetLoader gvrAssetLoader = gvrContext.getAssetLoader();
+                    //File ttlFontFile = gvrAssetLoader.downloadFile(context, "CheapSign.ttf");
+                    TextView textView = gvrTextViewSceneObject.getTextView();
+                    Typeface font = null;
+                    //if ( fontTextCount == 0) font = Typeface.createFromFile(ttlFontFile);
+                    try {
+                        if (fontTextCount == 0) {
+                            textView.setTextSize(12.0f);
+                            font = Typeface.createFromAsset(context.getAssets(), "CheapSign.ttf");
+                            textView.setTypeface(font);
+                            Paint paint = textView.getPaint();
+                            float length = paint.measureText(text, 0, text.length());
+                            Log.e("X3D-A", "CheapSignF length = " + length);
+                            String settings = textView.getFontFeatureSettings();
+                            Log.e("X3D-A", "   CheapSignF settings = " + settings);
+                        }
+                        else if (fontTextCount == 1) {
+                            font = Typeface.createFromAsset(context.getAssets(), "BroadcastTitling.ttf");
+                            textView.setTextSize(10.0f);
+                            textView.setTypeface(font);
+                            Paint paint = textView.getPaint();
+                            float length = paint.measureText(text, 0, text.length());
+                            Log.e("X3D-A", "Broadcast Titling length = " + length);
+                        }
+                        else if (fontTextCount == 2) {
+                            font = Typeface.createFromAsset(context.getAssets(), "VacationPostcardNF.ttf");
+                            textView.setTextSize(12.0f);
+                            textView.setTypeface(font);
+                            Paint paint = textView.getPaint();
+                            float length = paint.measureText(text, 0, text.length());
+                            Log.e("X3D-A", "Vacation Postcard NF length = " + length);
+                        }
+                        else if (fontTextCount == 3) {
+                            font = Typeface.createFromAsset(context.getAssets(), "National Cartoon.ttf");
+                            textView.setTextSize(10.0f);
+                            textView.setTypeface(font);
+                            Paint paint = textView.getPaint();
+                            float length = paint.measureText(text, 0, text.length());
+                            Log.e("X3D-A", "Nat'l Cartoon length = " + length);
+                        }
+                    }
+                    catch (java.lang.RuntimeException e) {
+                        Log.e("X3D-A", "Runtime error: " + e);
+                    }
+
+                    fontTextCount++;
+                    if (font != null ) {
+                    //    textView.setTypeface(font);
+                    }
+
+
 
                     currentSceneObject.addChildObject(gvrTextViewSceneObject);
                     // Mark that this object does not require a gvrRenderingData
