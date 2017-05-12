@@ -93,6 +93,12 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private int mCount;
     private final GVRDrawFrameListenerImpl mFrameListener;
 
+    public float width = 0;
+    public float canvasWidth = 0;
+    public float height = 0;
+    public float canvasHeight = 0;
+
+
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with view's default height and width.
@@ -113,6 +119,11 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         final float factor = width/height;
         int canvasWidth = (int)(width*FACTOR_IMAGE_SIZE);
         int canvasHeight = (int)(height*FACTOR_IMAGE_SIZE);
+
+        this.width = width;
+        this.canvasWidth = canvasWidth;
+        this.height = height;
+        this.canvasHeight = canvasHeight;
 
         if (canvasWidth > canvasHeight && canvasWidth > MAX_IMAGE_SIZE) {
             canvasWidth = MAX_IMAGE_SIZE;

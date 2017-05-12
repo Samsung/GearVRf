@@ -109,6 +109,9 @@ public class X3Dobject {
     private static final String TRANSFORM_SCALE_ORIENTATION_ = "_Transform_Scale_Orientation_";
     private static final String TRANSFORM_NEGATIVE_SCALE_ORIENTATION_ = "_Transform_Neg_Scale_Orientation_";
 
+    private enum fontStyleJustifyTypes { BEGIN, END, FIRST, MIDDLE };
+    private enum fontStyleStyleTypes { PLAIN, BOLD, ITALIC, BOLDITALIC };
+
     // Append this incremented value to GVRScene names to insure unique
     // GVRSceneObjects
     // when new GVRScene objects are generated to support animation
@@ -2234,31 +2237,52 @@ public class X3Dobject {
 
                 /********** Text **********/
                 else if (qName.equalsIgnoreCase("Text")) {
+                    float[] length = null;
+                    float maxExtent = 0;
                     String name = "";
-                    String[] string = {};
-                    String[] mfStrings = null;
+                    String[] string = null;
+                    boolean solid = false;
+
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         name = attributeValue;
                     }
+                    attributeValue = attributes.getValue("length");
+                    if (attributeValue != null) {
+                        // reusing the keys parsing here cause it works
+                        parseNumbersString(attributeValue, X3Dobject.interpolatorKeyComponent,
+                                1);
+                        length = new float[keys.size()];
+                        for (int i = 0; i < length.length; i++) {
+                            Key keyObject = keys.get(i);
+                            length[i] = keyObject.key;
+                        }
+                        keys.clear();
+                    }
+                    attributeValue = attributes.getValue("maxExtent");
+                    if (attributeValue != null) {
+                        maxExtent = parseSingleFloatString(attributeValue, false, true);
+                    }
                     attributeValue = attributes.getValue("string");
                     if (attributeValue != null) {
-                        mfStrings = parseMFString(attributeValue);
-
+                        string = parseMFString(attributeValue);
+                    }
+                    attributeValue = attributes.getValue("solid");
+                    if (attributeValue != null) {
+                        Log.e(TAG, "Text solid attribute not implemented. ");
+                        solid = parseBooleanString(attributeValue);
                     }
                     gvrTextViewSceneObject = new GVRTextViewSceneObject(gvrContext);
                     String text = "";
-                    if (mfStrings != null) {
-                        for (int i = 0; i < mfStrings.length; i++) {
+                    if (string != null) {
+                        for (int i = 0; i < string.length; i++) {
                             if (i > 0)
                                 text += " ";
-                            text += mfStrings[i];
+                            text += string[i];
                         }
                     }
                     gvrTextViewSceneObject.setText(text);
-
-                    Matrix4f matrix4f = currentSceneObject.getTransform()
-                            .getModelMatrix4f();
+                    gvrTextViewSceneObject.setName(name);
 
                     gvrTextViewSceneObject.setTextColor(Color.WHITE); // default
                     gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default
@@ -2268,83 +2292,109 @@ public class X3Dobject {
                     //File ttlFontFile = gvrAssetLoader.downloadFile(context, "CheapSign.ttf");
                     TextView textView = gvrTextViewSceneObject.getTextView();
                     Typeface font = null;
-                    //if ( fontTextCount == 0) font = Typeface.createFromFile(ttlFontFile);
+
                     try {
                         if (fontTextCount == 0) {
                             textView.setTextSize(12.0f);
                             font = Typeface.createFromAsset(context.getAssets(), "CheapSign.ttf");
+                            //textView.setTextSize(10.0f);
+                            //font = Typeface.createFromAsset(context.getAssets(), "CatsAlphabet.ttf");
+
                             textView.setTypeface(font);
                             Paint paint = textView.getPaint();
-                            float length = paint.measureText(text, 0, text.length());
-                            Log.e("X3D-A", "CheapSignF length = " + length);
-                            String settings = textView.getFontFeatureSettings();
-                            Log.e("X3D-A", "   CheapSignF settings = " + settings);
+                            Log.e("X3D-A", "CheapSign 12pt: maxWidth=" + textView.getMaxWidth());
+                            gvrTextViewSceneObject.setText("");
+                            for (int i = 0; i < text.length(); i++) {
+                                textView.append(text.substring(i, i + 1));
+                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
+                            }
+                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
+                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                         else if (fontTextCount == 1) {
                             font = Typeface.createFromAsset(context.getAssets(), "BroadcastTitling.ttf");
                             textView.setTextSize(10.0f);
                             textView.setTypeface(font);
                             Paint paint = textView.getPaint();
-                            float length = paint.measureText(text, 0, text.length());
-                            Log.e("X3D-A", "Broadcast Titling length = " + length);
+                            Log.e("X3D-A", "Broadcast Titling length = " + paint.measureText(text, 0, text.length()) );
+                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
+                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                         else if (fontTextCount == 2) {
                             font = Typeface.createFromAsset(context.getAssets(), "VacationPostcardNF.ttf");
+                            //gvrTextViewSceneObject.setBackgroundColor(Color.argb(128, 128, 128, 128));
                             textView.setTextSize(12.0f);
                             textView.setTypeface(font);
                             Paint paint = textView.getPaint();
-                            float length = paint.measureText(text, 0, text.length());
-                            Log.e("X3D-A", "Vacation Postcard NF length = " + length);
+                            //float length = paint.measureText(text, 0, text.length());
+                            Log.e("X3D-A", "Vacation Postcard NF length = " + paint.measureText(gvrTextViewSceneObject.getText(), 0, gvrTextViewSceneObject.getText().length()) );
+                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
+                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                         else if (fontTextCount == 3) {
                             font = Typeface.createFromAsset(context.getAssets(), "National Cartoon.ttf");
                             textView.setTextSize(10.0f);
                             textView.setTypeface(font);
                             Paint paint = textView.getPaint();
-                            float length = paint.measureText(text, 0, text.length());
-                            Log.e("X3D-A", "Nat'l Cartoon length = " + length);
+                            //float length = paint.measureText(text, 0, text.length());
+                            //gvrTextViewSceneObject
+                            // just some test code for each character
+                            int maxWidth = textView.getMaxWidth();
+                            Log.e("X3D-A", "Nat'l Cartoon: maxWidth=" + maxWidth);
+                            gvrTextViewSceneObject.setText("");
+                            for (int i = 0; i < text.length(); i++) {
+                                textView.append(text.substring(i, i+1));
+                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
+                            }
+                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
+                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
+                        }
+                        else if (fontTextCount == 4) {
+                            textView.setTextSize(10.0f);
+                            font = Typeface.createFromAsset(context.getAssets(), "CheapSign.ttf");
+                            //textView.setTextSize(10.0f);
+                            //font = Typeface.createFromAsset(context.getAssets(), "CatsAlphabet.ttf");
+
+                            textView.setTypeface(font, 1 | 2);
+                            Paint paint = textView.getPaint();
+                            Log.e("X3D-A", "CheapSign 10pt: maxWidth=" + textView.getMaxWidth());
+                            gvrTextViewSceneObject.setText("");
+                            for (int i = 0; i < text.length(); i++) {
+                                textView.append(text.substring(i, i + 1));
+                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
+                            }
+                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
+                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                     }
                     catch (java.lang.RuntimeException e) {
                         Log.e("X3D-A", "Runtime error: " + e);
                     }
-
+                    catch (Exception e) {
+                        Log.e("X3D-A", "Exception: " + e);
+                    }
                     fontTextCount++;
                     if (font != null ) {
                     //    textView.setTypeface(font);
                     }
 
-
-
                     currentSceneObject.addChildObject(gvrTextViewSceneObject);
-                    // Mark that this object does not require a gvrRenderingData
-                    // nor gvrMesh attached.
-                    // meshAttachedSceneObject = gvrTextViewSceneObject;
-
                 } // end <Text> node
 
 
                 /********** FontStyle **********/
                 //TODO: FontStyle not currently implemented
                 else if (qName.equalsIgnoreCase("FontStyle")) {
+
                     String name = "";
-                    String[] family =
-                            {
-                                    "SERIF"
-                            };
+                    String[] family = { "SERIF" };
                     boolean horizontal = true;
-                    String[] justify =
-                            {
-                                    "BEGIN"
-                            }; // BEGIN, END, FIRST, MIDDLE
+                    fontStyleJustifyTypes[] justify = {fontStyleJustifyTypes.BEGIN};
                     String language = "";
                     boolean leftToRight = true;
-                    float size = 1;
-                    float spacing = 1;
-                    String[] style =
-                            {
-                                    "PLAIN"
-                            }; // PLAIN | BOLD | ITALIC | BOLDITALIC
+                    float spacing = 1.0f;
+                    float size = 1.0f;
+                    fontStyleStyleTypes style = fontStyleStyleTypes.PLAIN;
                     boolean topToBottom = true;
 
                     attributeValue = attributes.getValue("DEF");
@@ -2354,46 +2404,54 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("family");
                     if (attributeValue != null) {
                         family = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle family attribute not implemented. ");
+                    }
+                    attributeValue = attributes.getValue("horizontal");
+                    if (attributeValue != null) {
+                        horizontal = parseBooleanString(attributeValue);
                     }
                     attributeValue = attributes.getValue("justify");
                     if (attributeValue != null) {
-                        justify = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle justify attribute not implemented. ");
+                        String[] justifyMFString = parseMFString(attributeValue);
+                        justify = new fontStyleJustifyTypes[justifyMFString.length];
+                        for (int i = 0; i < justify.length; i++) {
+                            if ( justifyMFString[i].equalsIgnoreCase("END")) justify[i] = fontStyleJustifyTypes.END;
+                            if ( justifyMFString[i].equalsIgnoreCase("FIRST")) justify[i] = fontStyleJustifyTypes.FIRST;
+                            if ( justifyMFString[i].equalsIgnoreCase("MIDDLE")) justify[i] = fontStyleJustifyTypes.MIDDLE;
+                            else justify[i] = fontStyleJustifyTypes.BEGIN;
+                        }
                     }
                     attributeValue = attributes.getValue("language");
                     if (attributeValue != null) {
                         language = attributeValue;
-                        Log.e(TAG, "FontStyle language attribute not implemented. ");
                     }
                     attributeValue = attributes.getValue("leftToRight");
                     if (attributeValue != null) {
                         leftToRight = parseBooleanString(attributeValue);
                         Log.e(TAG, "FontStyle leftToRight attribute not implemented. ");
                     }
+                    attributeValue = attributes.getValue("spacing");
+                    if (attributeValue != null) {
+                        spacing = parseSingleFloatString(attributeValue, false, true);
+                    }
                     attributeValue = attributes.getValue("size");
                     if (attributeValue != null) {
                         size = parseSingleFloatString(attributeValue, false, true);
                     }
-                    attributeValue = attributes.getValue("spacing");
-                    if (attributeValue != null) {
-                        spacing = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "FontStyle spacing attribute not implemented. ");
-                    }
                     attributeValue = attributes.getValue("style");
                     if (attributeValue != null) {
-                        style = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle style attribute not implemented. ");
+                        if ( attributeValue.equalsIgnoreCase("BOLD")) style = fontStyleStyleTypes.BOLD;
+                        if ( attributeValue.equalsIgnoreCase("ITALIC")) style = fontStyleStyleTypes.ITALIC;
+                        if ( attributeValue.equalsIgnoreCase("BOLDITALIC")) style = fontStyleStyleTypes.BOLDITALIC;
+                        else style = fontStyleStyleTypes.PLAIN;
                     }
                     attributeValue = attributes.getValue("topToBottom");
                     if (attributeValue != null) {
                         topToBottom = parseBooleanString(attributeValue);
-                        Log.e(TAG, "FontStyle topToBottom attribute not implemented. ");
                     }
-                    // not clear how gravity and textSize will be used.
-                    // currently, just using a default value
+                    if ( gvrTextViewSceneObject != null) {
+                        gvrTextViewSceneObject.setTextSize(size * 10);
 
-                    gvrTextViewSceneObject.setTextSize(size * 10);
+                    }
                 } // end <FontStyle> node
 
 
