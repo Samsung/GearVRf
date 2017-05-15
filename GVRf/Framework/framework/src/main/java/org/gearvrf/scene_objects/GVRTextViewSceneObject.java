@@ -338,8 +338,29 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         }
         return true;
     }
+
+    /**
+     * Returns the current Typeface
+     * @return
+     */
     public Typeface getTypeface () {
         return mTextView.getTypeface();
+    }
+
+    /**
+     * The amount to add to the line spacing
+     * @param lineSpacing
+     */
+    public void setLineSpacing(float lineSpacing) {
+        mTextView.setLineSpacing(lineSpacing, 1);
+    }
+
+    /**
+     * Get the amount of extra spacing between lines.
+     * @return
+     */
+    public float getLineSpacing() {
+        return mTextView.getLineSpacingExtra();
     }
 
     /**
@@ -353,6 +374,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mTextViewContainer.setBackground(drawable);
         mIsChanged = true;
     }
+
 
     /**
      * Get the view's background {@code Drawable}, if any.
