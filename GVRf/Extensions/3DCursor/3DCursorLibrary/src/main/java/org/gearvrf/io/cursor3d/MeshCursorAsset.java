@@ -49,14 +49,14 @@ class MeshCursorAsset extends CursorAsset {
         this(context, type, action, null, texture);
     }
 
-    MeshCursorAsset(GVRContext context, CursorType type, Action action, String mesh, String
+    MeshCursorAsset(GVRContext context, CursorType type, Action action, String meshFile, String
             texture) {
         super(context, type, action);
         sceneObjectArray = new SparseArray<GVRSceneObject>();
 
         if (mesh != null) {
             try {
-                futureMesh = context.loadFutureMesh(new GVRAndroidResource(context, mesh));
+                mesh = context.getAssetLoader().loadMesh(new GVRAndroidResource(context, meshFile));
             } catch (IOException e) {
                 throw new IllegalArgumentException("Error loading mesh");
             }
@@ -93,7 +93,7 @@ class MeshCursorAsset extends CursorAsset {
         if (futureTexture == null && texture != null) {
             try {
                 GVRAndroidResource gvrAndroidResource = new GVRAndroidResource(context, texture);
-                futureTexture = context.loadFutureTexture(gvrAndroidResource);
+                futureTexture = context.getAssetLoader().loadFutureTexture(gvrAndroidResource);
             } catch (IOException e) {
                 Log.e(TAG, "Error loading texture", e);
             }
