@@ -90,7 +90,7 @@ public class X3Dobject {
      */
     public static final String X3D_ROOT_NODE = "x3d_root_node_";
 
-    private static final String TAG = "X3DObject";
+    private static final String TAG = X3Dobject.class.getSimpleName();
 
     // Like a C++ pre-compiler switch to select shaders.
     // Default is true to use Universal lights shader.
@@ -2295,6 +2295,18 @@ public class X3Dobject {
 
                     try {
                         if (fontTextCount == 0) {
+                            gvrTextViewSceneObject.setTextSize(12.0f);
+                            gvrTextViewSceneObject.setTypeface(gvrContext, "CheapSign.ttf");
+                            gvrTextViewSceneObject.setText("");
+
+                            Paint paint = textView.getPaint();
+                            for (int i = 0; i < text.length(); i++) {
+                                textView.append(text.substring(i, i + 1));
+                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
+                            }
+                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
+                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
+                            /*
                             textView.setTextSize(12.0f);
                             font = Typeface.createFromAsset(context.getAssets(), "CheapSign.ttf");
                             //textView.setTextSize(10.0f);
@@ -2310,21 +2322,29 @@ public class X3Dobject {
                             }
                             Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
                                     "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
+                                    */
                         }
                         else if (fontTextCount == 1) {
-                            font = Typeface.createFromAsset(context.getAssets(), "BroadcastTitling.ttf");
-                            textView.setTextSize(10.0f);
-                            textView.setTypeface(font);
+                            gvrTextViewSceneObject.setTextSize(10.0f);
+                            gvrTextViewSceneObject.setTypeface(gvrContext, "BroadcastTitling.ttf");
+
+                            //font = Typeface.createFromAsset(context.getAssets(), "BroadcastTitling.ttf");
+                            //textView.setTextSize(10.0f);
+                            //textView.setTypeface(font);
                             Paint paint = textView.getPaint();
                             Log.e("X3D-A", "Broadcast Titling length = " + paint.measureText(text, 0, text.length()) );
                             Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
                                     "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                         else if (fontTextCount == 2) {
-                            font = Typeface.createFromAsset(context.getAssets(), "VacationPostcardNF.ttf");
+                            gvrTextViewSceneObject.setTextSize(12.0f);
+                            gvrTextViewSceneObject.setTypeface(gvrContext, "VacationPostcardNF.ttf");
+
+                            //font = Typeface.createFromAsset(context.getAssets(), "VacationPostcardNF.ttf");
                             //gvrTextViewSceneObject.setBackgroundColor(Color.argb(128, 128, 128, 128));
-                            textView.setTextSize(12.0f);
-                            textView.setTypeface(font);
+                            //textView.setTextSize(12.0f);
+                            //textView.setTypeface(font);
+
                             Paint paint = textView.getPaint();
                             //float length = paint.measureText(text, 0, text.length());
                             Log.e("X3D-A", "Vacation Postcard NF length = " + paint.measureText(gvrTextViewSceneObject.getText(), 0, gvrTextViewSceneObject.getText().length()) );
@@ -2332,9 +2352,13 @@ public class X3Dobject {
                                     "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                         else if (fontTextCount == 3) {
-                            font = Typeface.createFromAsset(context.getAssets(), "National Cartoon.ttf");
-                            textView.setTextSize(10.0f);
-                            textView.setTypeface(font);
+                            gvrTextViewSceneObject.setTextSize(12.0f);
+                            gvrTextViewSceneObject.setTypeface(gvrContext, "National Cartoon.ttf");
+
+                            //font = Typeface.createFromAsset(context.getAssets(), "National Cartoon.ttf");
+                            //textView.setTextSize(10.0f);
+                            //textView.setTypeface(font);
+
                             Paint paint = textView.getPaint();
                             //float length = paint.measureText(text, 0, text.length());
                             //gvrTextViewSceneObject
@@ -2350,12 +2374,15 @@ public class X3Dobject {
                                     "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
                         }
                         else if (fontTextCount == 4) {
-                            textView.setTextSize(10.0f);
-                            font = Typeface.createFromAsset(context.getAssets(), "CheapSign.ttf");
+                            gvrTextViewSceneObject.setTextSize(10.0f);
+                            gvrTextViewSceneObject.setTypeface(gvrContext, "National Cartoon.ttf", 1 | 2);
+
+                            //textView.setTextSize(10.0f);
+                            //font = Typeface.createFromAsset(context.getAssets(), "CheapSign.ttf");
                             //textView.setTextSize(10.0f);
                             //font = Typeface.createFromAsset(context.getAssets(), "CatsAlphabet.ttf");
+                            //textView.setTypeface(font, 1 | 2);
 
-                            textView.setTypeface(font, 1 | 2);
                             Paint paint = textView.getPaint();
                             Log.e("X3D-A", "CheapSign 10pt: maxWidth=" + textView.getMaxWidth());
                             gvrTextViewSceneObject.setText("");

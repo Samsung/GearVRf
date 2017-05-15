@@ -27,10 +27,12 @@ import java.lang.ref.WeakReference;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.SurfaceTexture;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.Surface;
@@ -41,6 +43,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class GVRTextViewSceneObject extends GVRSceneObject {
+    private static final String TAG = GVRTextViewSceneObject.class.getSimpleName();
+
     private static final int REALTIME_REFRESH_INTERVAL = 1;
     private static final int HIGH_REFRESH_INTERVAL = 10; // frames
     private static final int MEDIUM_REFRESH_INTERVAL = 20;
@@ -98,6 +102,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public float height = 0;
     public float canvasHeight = 0;
 
+    private String font = null;
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -235,6 +240,21 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mIsChanged = true;
     }
 
+    public void setText(String text) {
+        mTextView.setText(text);
+        mIsChanged = true;
+    }
+    /**
+     * Appends the text to be displayed.
+     *
+     * @param text
+     *            The new text to be appended to the end of the current text.
+     */
+    public void append(String text) {
+        mTextView.append(text);
+        mIsChanged = true;
+    }
+
     /**
      * Get the current text.
      * 
@@ -275,6 +295,51 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      */
     public TextView getTextView() {
         return mTextView;
+    }
+
+    /**
+     * Sets the typeface (font)
+     * @param gvrContext
+     * @param font
+     *          a string that matches the font name saved in the assets directory
+     *          Must include the file ending such as "myFont.ttf"
+     *
+     * @return
+     */
+    public boolean setTypeface(GVRContext gvrContext, String font) {
+        return setTypeface(gvrContext, font, 0);
+    }
+    /**
+     * Sets the typeface (font)
+     * @param gvrContext
+     * @param font
+     *          a string that matches the font name saved in the assets directory
+     *          Must include the file ending such as "myFont.ttf"
+     * @param style
+     *          value for style: 0: normal; 1 is bold; 2 is italic;
+     *          and 1 | 2 is bold italic
+     * @return
+     */
+    public boolean setTypeface(GVRContext gvrContext, String font, int style) {
+        try {
+            Context context = gvrContext.getContext();
+            Typeface typeface = Typeface.createFromAsset(context.getAssets(), font);
+            if (typeface != null) {
+                mTextView.setTypeface(typeface, style);
+            }
+        }
+        catch (java.lang.RuntimeException e) {
+            org.gearvrf.utility.Log.e(TAG, "Runtime error: " + e);
+            return false;
+        }
+        catch (Exception e) {
+            org.gearvrf.utility.Log.e(TAG, "Exception: " + e);
+            return false;
+        }
+        return true;
+    }
+    public Typeface getTypeface () {
+        return mTextView.getTypeface();
     }
 
     /**
