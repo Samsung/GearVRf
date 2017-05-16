@@ -48,7 +48,11 @@ project.ext.jomlVersion = "1.9.1-SNAPSHOT"
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile "org.joml:joml-android:${jomlVersion}"
-    compile(name: 'framework-debug', ext: 'aar')
+    if (findProject(':framework')) {
+        compile project(':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
 }
 
 //TODO export plugin to jar
