@@ -145,7 +145,7 @@ RenderTexture::RenderTexture(int width, int height, int sample_count,
 
     glScissor(0, 0, width, height);
     glViewport(0, 0, width, height);
-    glClearColor(0, 1, 0, 1);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (resolve_depth && sample_count > 1) {
