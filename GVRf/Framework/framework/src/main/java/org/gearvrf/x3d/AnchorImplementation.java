@@ -187,6 +187,7 @@ public class AnchorImplementation {
         final InteractiveObject interactiveObjectFinal = interactiveObject;
         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
             boolean isActiveDone = false;
+            boolean newSceneLoaded = false;
 
             @Override
             public void onSensorEvent(SensorEvent event) {
@@ -197,12 +198,18 @@ public class AnchorImplementation {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
                         if (url.toLowerCase().endsWith(".x3d")) {
-                            // Go to another X3D scene
-                            GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
-                            //root.attachComponent( gvrExternalScene );
-                            boolean load = gvrExternalScene.load(gvrContext.getMainScene());
-                            if (!load) Log.e(TAG, "Error loading new X3D scene " + url);
-                            else Log.e(TAG, "New X3D scene " + url + " loaded.");
+                            if ( !newSceneLoaded ) {
+                                // Go to another X3D scene
+                                GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
+                                GVRSceneObject gvrSceneObjectAnchor = new GVRSceneObject(gvrContext);
+                                //root.attachComponent( gvrExternalScene );
+                                gvrSceneObjectAnchor.attachComponent( gvrExternalScene );
+                                boolean load = gvrExternalScene.load(gvrContext.getMainScene());
+                                newSceneLoaded = true;
+                                if (!load) Log.e(TAG, "Error loading new X3D scene " + url);
+                                else Log.e(TAG, "New X3D scene " + url + " loaded.");
+
+                            }
                         }  // end if .x3d file
                         else if (url.startsWith("#")) {
                             // go to another Viewpoint
