@@ -673,6 +673,11 @@ public class GVRShaderTemplate
                     nfloats = Integer.parseInt(size);
                 }
             }
+
+            if(type.equals("mat4")){
+                nfloats = 16;
+            }
+
             switch (nfloats)
             {
             case 1:
@@ -686,6 +691,9 @@ public class GVRShaderTemplate
                 break;
             case 4:
                 map.addUniformVec4Key(name, name);
+                break;
+            case 16:
+                map.addUniformMat4Key(name, name);
                 break;
             default:
                 throw new UnsupportedOperationException("Vertex attribute size " + nfloats + " unsupported");

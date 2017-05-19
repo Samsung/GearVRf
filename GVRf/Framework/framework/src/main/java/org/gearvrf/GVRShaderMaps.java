@@ -90,4 +90,14 @@ public interface GVRShaderMaps {
      *            The vec4's key in the post effect data.
      */
     void addUniformVec4Key(String variableName, String key);
+
+    /**
+     * Adds a link from a mat4 in a {@link GVRShaders} to a GL program.
+     *
+     * @param variableName
+     *            The variable name in the GL program.
+     * @param key
+     *            The mat4's key in the post effect data.
+     */
+    void addUniformMat4Key(String variableName, String key);
 }
