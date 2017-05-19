@@ -879,6 +879,7 @@ public class X3Dobject {
 
                 gvrRenderData = new GVRRenderData(gvrContext);
                 // gvrRenderData.setCullFace(GVRCullFaceEnum.None);
+                gvrRenderData.setAlphaToCoverage(true);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
                 shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
                 gvrRenderData.setShaderTemplate(GVRPhongShader.class);
@@ -2258,10 +2259,12 @@ public class X3Dobject {
                             length[i] = keyObject.key;
                         }
                         keys.clear();
+                        Log.e(TAG, "Text 'length' attribute currently not implemented. ");
                     }
                     attributeValue = attributes.getValue("maxExtent");
                     if (attributeValue != null) {
                         maxExtent = parseSingleFloatString(attributeValue, false, true);
+                        Log.e(TAG, "Text 'maxExtent' attribute currnetly not implemented. ");
                     }
                     attributeValue = attributes.getValue("string");
                     if (attributeValue != null) {
@@ -2269,107 +2272,29 @@ public class X3Dobject {
                     }
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
-                        Log.e(TAG, "Text solid attribute not implemented. ");
+                        Log.e(TAG, "Text 'solid' attribute not implemented. ");
                         solid = parseBooleanString(attributeValue);
                     }
                     gvrTextViewSceneObject = new GVRTextViewSceneObject(gvrContext);
                     String text = "";
                     if (string != null) {
                         for (int i = 0; i < string.length; i++) {
+                            Log.e("X3D-Font", "string["+i+"]="+string[i]+"; len=" + gvrTextViewSceneObject.lineLength(string[i]));
                             if (i > 0)
-                                text += " ";
+                                text += "\n";
                             text += string[i];
                         }
                     }
                     gvrTextViewSceneObject.setText(text);
                     gvrTextViewSceneObject.setName(name);
+                    gvrTextViewSceneObject.setNumberLines(string.length);
+                    gvrTextViewSceneObject.setTextStrings(string);
+                    Log.e("X3D-Font", "minLines="+gvrTextViewSceneObject.getMinLines() + "; maxLines="+gvrTextViewSceneObject.getMaxLines());
+
 
                     gvrTextViewSceneObject.setTextColor(Color.WHITE); // default
-                    gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default
-
-                    TextView textView = gvrTextViewSceneObject.getTextView();
-                    //Typeface font = null;
-
-                    //try {
-                    /*
-                        if (fontTextCount == 0) {
-                            gvrTextViewSceneObject.setTextSize(12.0f);
-                            gvrTextViewSceneObject.setTypeface(gvrContext, "CheapSign.ttf");
-                            gvrTextViewSceneObject.setText("");
-
-                            Paint paint = textView.getPaint();
-                            for (int i = 0; i < text.length(); i++) {
-                                textView.append(text.substring(i, i + 1));
-                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
-                            }
-                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
-                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
-                        }
-                        else if (fontTextCount == 1) {
-                            gvrTextViewSceneObject.setTextSize(10.0f);
-                            gvrTextViewSceneObject.setTypeface(gvrContext, "BroadcastTitling.ttf");
-
-                            Paint paint = textView.getPaint();
-                            Log.e("X3D-A", "Broadcast Titling length = " + paint.measureText(text, 0, text.length()) );
-                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
-                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
-                        }
-                        else if (fontTextCount == 2) {
-                            gvrTextViewSceneObject.setTextSize(12.0f);
-                            gvrTextViewSceneObject.setTypeface(gvrContext, "VacationPostcardNF.ttf");
-
-                            //font = Typeface.createFromAsset(context.getAssets(), "VacationPostcardNF.ttf");
-                            //gvrTextViewSceneObject.setBackgroundColor(Color.argb(128, 128, 128, 128));
-                            //textView.setTextSize(12.0f);
-                            //textView.setTypeface(font);
-
-                            Paint paint = textView.getPaint();
-                            //float length = paint.measureText(text, 0, text.length());
-                            Log.e("X3D-A", "Vacation Postcard NF length = " + paint.measureText(gvrTextViewSceneObject.getText(), 0, gvrTextViewSceneObject.getText().length()) );
-                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
-                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
-                        }
-                        else if (fontTextCount == 3) {
-                            gvrTextViewSceneObject.setTextSize(12.0f);
-                            gvrTextViewSceneObject.setTypeface(gvrContext, "National Cartoon.ttf");
-
-                            // just some test code for each character
-                            Paint paint = textView.getPaint();
-                            int maxWidth = textView.getMaxWidth();
-                            Log.e("X3D-A", "Nat'l Cartoon: maxWidth=" + maxWidth);
-                            gvrTextViewSceneObject.setText("");
-                            for (int i = 0; i < text.length(); i++) {
-                                textView.append(text.substring(i, i+1));
-                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
-                            }
-                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
-                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
-                        }
-                        else if (fontTextCount == 4) {
-                            gvrTextViewSceneObject.setTextSize(10.0f);
-                            gvrTextViewSceneObject.setTypeface(gvrContext, "National Cartoon.ttf", 1 | 2);
-
-                            Paint paint = textView.getPaint();
-                            Log.e("X3D-A", "CheapSign 10pt: maxWidth=" + textView.getMaxWidth());
-                            gvrTextViewSceneObject.setText("");
-                            for (int i = 0; i < text.length(); i++) {
-                                textView.append(text.substring(i, i + 1));
-                                Log.e("X3D-A", "    len = " + paint.measureText(textView.getText(), 0, textView.getText().length()) + "; text='" + textView.getText() + "'");
-                            }
-                            Log.e("X3D-A", "   w="+gvrTextViewSceneObject.width + "; h=" + gvrTextViewSceneObject.height +
-                                    "; canvasW=" + gvrTextViewSceneObject.canvasWidth + "; canvasH=" + gvrTextViewSceneObject.canvasHeight);
-                        }
-                        */
-                        /*
-                    }
-                    catch (java.lang.RuntimeException e) {
-                        Log.e("X3D-A", "Runtime error: " + e);
-                    }
-                    catch (Exception e) {
-                        Log.e("X3D-A", "Exception: " + e);
-                    }
-                    */
-                    //fontTextCount++;
+                //    gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default
+                    gvrTextViewSceneObject.setBackgroundColor(Color.RED); // testing
 
                     currentSceneObject.addChildObject(gvrTextViewSceneObject);
                 } // end <Text> node
@@ -3396,7 +3321,18 @@ public class X3Dobject {
             } else if (qName.equalsIgnoreCase("ProximitySensor")) {
                 currentSensor = null;
             } else if (qName.equalsIgnoreCase("Text")) {
-                ;
+                // since the text node is complete, now calculate
+                // the widths, heights and justification for this text
+                float maxLineLength = 0;
+                for (int i = 0; i < gvrTextViewSceneObject.getMaxLines(); i++) {
+                    float lineLength = gvrTextViewSceneObject.lineLength(gvrTextViewSceneObject.getTextLine(i));
+                    if ( maxLineLength < lineLength ) maxLineLength = lineLength;
+                    Log.e("X3D-Font", "["+i+"]="+gvrTextViewSceneObject.getTextLine(i)+"; len=" + lineLength );
+                }
+                Log.e("X3D-Font", "maxLineLength="+maxLineLength );
+                gvrTextViewSceneObject.resetTextPlaneSize(maxLineLength, (gvrTextViewSceneObject.getMaxLines()*gvrTextViewSceneObject.getTextSize()) );
+                Log.e("X3D-Fs", " " );
+
             } else if (qName.equalsIgnoreCase("FontStyle")) {
                 ;
             } else if (qName.equalsIgnoreCase("Billboard")) {

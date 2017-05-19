@@ -24,6 +24,7 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import java.lang.ref.WeakReference;
 
+import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
@@ -34,6 +35,7 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.text.Layout;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -97,12 +99,9 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     private int mCount;
     private final GVRDrawFrameListenerImpl mFrameListener;
 
-    public float width = 0;
-    public float canvasWidth = 0;
-    public float height = 0;
-    public float canvasHeight = 0;
-
-    private String font = null;
+    // individual lines of text.  Assists in determining lenghts of
+    // strings once the fonts are set.
+    private String linesOfText[] = null;
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -124,11 +123,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         final float factor = width/height;
         int canvasWidth = (int)(width*FACTOR_IMAGE_SIZE);
         int canvasHeight = (int)(height*FACTOR_IMAGE_SIZE);
-
-        this.width = width;
-        this.canvasWidth = canvasWidth;
-        this.height = height;
-        this.canvasHeight = canvasHeight;
 
         if (canvasWidth > canvasHeight && canvasWidth > MAX_IMAGE_SIZE) {
             canvasWidth = MAX_IMAGE_SIZE;
@@ -197,6 +191,56 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         this(gvrContext, DEFAULT_TEXT);
     }
 
+
+    /*
+    public GVRTextViewSceneObject(GVRContext gvrContext, float width, float height, CharSequence text) {
+        super(gvrContext, gvrContext.createQuad(width, height));
+
+        //cap the canvas dimensions
+        final float factor = width/height;
+        int canvasWidth = (int)(width*FACTOR_IMAGE_SIZE);
+        int canvasHeight = (int)(height*FACTOR_IMAGE_SIZE);
+
+        if (canvasWidth > canvasHeight && canvasWidth > MAX_IMAGE_SIZE) {
+            canvasWidth = MAX_IMAGE_SIZE;
+            canvasHeight = (int)(MAX_IMAGE_SIZE/factor);
+        } else if (canvasHeight > canvasWidth && canvasHeight > MAX_IMAGE_SIZE) {
+            canvasWidth = (int)(MAX_IMAGE_SIZE*factor);
+            canvasHeight = MAX_IMAGE_SIZE;
+        }
+
+        final GVRActivity activity = gvrContext.getActivity();
+        mTextView = new TextView(activity);
+        mTextView.setBackgroundColor(Color.TRANSPARENT);
+        mTextView.setTextColor(Color.WHITE);
+        mTextView.setText(text);
+        mTextView.setVisibility(View.VISIBLE);
+        mTextView.setLayoutParams(new LayoutParams(canvasWidth, canvasHeight));
+
+        mTextViewContainer = new LinearLayout(activity);
+        mTextViewContainer.addView(mTextView);
+        mTextViewContainer.setVisibility(View.VISIBLE);
+
+        mTextViewContainer.measure(canvasWidth, canvasHeight);
+        mTextViewContainer.layout(0, 0, canvasWidth, canvasHeight);
+
+        mFrameListener = new GVRDrawFrameListenerImpl(this);
+        gvrContext.registerDrawFrameListener(mFrameListener);
+
+        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
+        material.setMainTexture(texture);
+        getRenderData().setMaterial(material);
+
+        mSurfaceTexture = new SurfaceTexture(texture.getId());
+        mSurfaceTexture.setDefaultBufferSize(canvasWidth, canvasHeight);
+        mSurface = new Surface(mSurfaceTexture);
+
+        sReferenceCounter++;
+        mCount = sReferenceCounter;
+        mFirstFrame = true;
+    }
+     */
     /**
      * Set the text size.
      * 
@@ -288,13 +332,58 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mIsChanged = true;
     }
 
+    /**
+     * set the number of lines for this text
+     * @param lines
+     */
+    public void setNumberLines(int lines) {
+        mTextView.setLines(lines);
+        mIsChanged = true;
+    }
+    /**
+     * Min Lines for this text
+     * @return
+     */
+    public int getMinLines() {
+        return mTextView.getMinLines();
+    }
 
     /**
-     * Get the TextView.
-     *
+     * max lines for this text
+     * @return
      */
-    public TextView getTextView() {
-        return mTextView;
+    public int getMaxLines() {
+        return mTextView.getMaxLines();
+    }
+
+    /**
+     * Saves the lines of text and used later to calculate the
+     * length in pixels based on font-family, size, etc.
+     * @param textString
+     */
+    public void setTextStrings(String[] textString) {
+        linesOfText = new String[textString.length];
+        for (int i = 0; i < textString.length; i++) {
+            linesOfText[i] = textString[i];
+        }
+    }
+
+    public String getTextLine(int lineNumber) {
+        String returnString = "";
+        if ( (lineNumber >= 0) && (lineNumber < linesOfText.length) ) {
+            returnString = linesOfText[lineNumber];
+        }
+        return returnString;
+    }
+
+    /**
+     * get the length of this line based in pixels and dependent on
+     * the font and size of the characters.
+     * @param text
+     * @return
+     */
+    public float lineLength(String text) {
+        return mTextView.getPaint().measureText(text);
     }
 
     /**
@@ -326,6 +415,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             Typeface typeface = Typeface.createFromAsset(context.getAssets(), font);
             if (typeface != null) {
                 mTextView.setTypeface(typeface, style);
+                mIsChanged = true;
             }
         }
         catch (java.lang.RuntimeException e) {
@@ -362,6 +452,33 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     public float getLineSpacing() {
         return mTextView.getLineSpacingExtra();
     }
+
+    public void resetTextPlaneSize(float canvasWidth, float canvasHeight) {
+        int canvasWidthInt = (int)Math.ceil(canvasWidth);
+        int canvasHeightInt = (int)Math.ceil(canvasHeight);
+        mTextView.setLayoutParams(new LayoutParams( canvasWidthInt,  canvasHeightInt) );
+        Layout layout = mTextView.getLayout();
+        //Log.e("X3D-f", "Layout w x h:(" + layout.getWidth() + " x "+ layout.getHeight()+")");
+
+        GVRMesh gvrMesh = this.getRenderData().getMesh();
+        float width = canvasWidth/128.0f;
+        float height = canvasHeight/128.0f;
+        float[] v = gvrMesh.getVertices();
+        Log.e("X3D-f", "Prev Verts:(" + v[0] + ","+ v[1] +")(" + v[3] + ","+ v[4] +")(" + v[6] + ","+ v[7] +")(" + v[9] + ","+ v[10] +")");
+        float[] vertices = { width * -0.5f, height * 0.5f, 0.0f, width * -0.5f,
+                height * -0.5f, 0.0f, width * 0.5f, height * 0.5f, 0.0f,
+                width * 0.5f, height * -0.5f, 0.0f };
+        gvrMesh.setVertices(vertices);
+        mTextView.setBackgroundColor(Color.rgb(0, 128, 127)); // testing only
+
+        gvrMesh = getGVRContext().createQuad(width, height);
+        this.getRenderData().setMesh(gvrMesh);
+
+        v = gvrMesh.getVertices();
+        Log.e("X3D-f", "New Verts:(" + v[0] + ","+ v[1] +")(" + v[3] + ","+ v[4] +")(" + v[6] + ","+ v[7] +")(" + v[9] + ","+ v[10] +")");
+        mIsChanged = true;
+    }
+
 
     /**
      * Set the view's background {@code Drawable}.

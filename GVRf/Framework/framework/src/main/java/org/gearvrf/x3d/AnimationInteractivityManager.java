@@ -792,7 +792,7 @@ public class AnimationInteractivityManager {
 
         }  // end for loop traversing through all interactive objects
         // Initiate all the animations, both keyframe and procedural
-        gvrAnimator.autoStart();
+        //gvrAnimator.autoStart();
         if (perFrameScripting.getRunState()) {
             final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
             gvrContext.registerDrawFrameListener(mOnDrawFrame);
