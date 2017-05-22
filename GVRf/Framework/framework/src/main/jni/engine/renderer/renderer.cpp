@@ -193,7 +193,8 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
-    glm::vec3 campos(view_matrix[3]);
+    glm::mat4 cam_model_matrix = camera->owner_object()->transform()->getModelMatrix();
+    glm::vec3 campos(cam_model_matrix[3]);
 
     scene_objects.reserve(1024);
     scene_objects.clear();
