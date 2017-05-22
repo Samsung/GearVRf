@@ -20,12 +20,10 @@ import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
 
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
-
 import org.gearvrf.io.GVRInputManager;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -51,8 +49,8 @@ import java.nio.FloatBuffer;
  * {@link GVRCursorController#addControllerEventListener(ControllerEventListener)} to receive
  * notification whenever the controller information is updated.
  */
-public class OvrGearController extends GVRCursorController {
-    private static final String TAG = OvrGearController.class.getSimpleName();
+final class OvrGearController extends GVRCursorController {
+    private static final String TAG = "OvrGearController";
 
     private static final int DATA_SIZE = 12;
     private static final int BYTE_TO_FLOAT = 4;
@@ -78,9 +76,9 @@ public class OvrGearController extends GVRCursorController {
     private FloatBuffer readbackBuffer;
     private final Vector3f position;
     private EventHandlerThread thread;
-    private boolean initialized = false;
+    private boolean initialized;
     private final long mPtr;
-    private boolean isEnabled = false;
+    private boolean isEnabled;
 
     OvrGearController(GVRContext context) {
         super(GVRControllerType.CONTROLLER);
@@ -94,7 +92,6 @@ public class OvrGearController extends GVRCursorController {
         isEnabled = isEnabled();
         position = new Vector3f(0.0f, 0.0f, -1.0f);
     }
-
 
     long getPtr() {
         return mPtr;
@@ -167,8 +164,10 @@ public class OvrGearController extends GVRCursorController {
         boolean connected = readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
         if (connected && isEnabled()) {
             if (!initialized) {
-                thread.start();
-                thread.prepareHandler();
+                if (!thread.isAlive()) {
+                    thread.start();
+                    thread.prepareHandler();
+                }
                 thread.initialize();
                 initialized = true;
             }
@@ -191,8 +190,6 @@ public class OvrGearController extends GVRCursorController {
         } else {
             if (initialized) {
                 thread.uninitialize();
-                thread.quitSafely();
-                thread = new EventHandlerThread();
                 initialized = false;
             }
         }
@@ -258,13 +255,16 @@ public class OvrGearController extends GVRCursorController {
 
     @Override
     protected void finalize() throws Throwable {
-        super.finalize();
-        if (initialized) {
-            thread.uninitialize();
-            thread.quitSafely();
-            initialized = false;
+        try {
+            if (initialized) {
+                thread.uninitialize();
+                thread.quitSafely();
+                initialized = false;
+            }
+            OvrNativeGearController.delete(mPtr);
+        } finally {
+            super.finalize();
         }
-        OvrNativeGearController.delete(mPtr);
     }
 
     private class EventHandlerThread extends HandlerThread {

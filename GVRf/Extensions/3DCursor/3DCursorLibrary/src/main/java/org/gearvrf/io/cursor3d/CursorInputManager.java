@@ -92,9 +92,7 @@ class CursorInputManager {
         public void onCursorControllerRemoved(GVRCursorController gvrCursorController) {
             // remove from list
             IoDevice removedIoDevice = null;
-            //TODO: Ignore the controller for now. Not yet implemented
-            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL ||
-                    gvrCursorController.getControllerType() == GVRControllerType.CONTROLLER) {
+            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL) {
                 return;
             }
             synchronized (lock) {
