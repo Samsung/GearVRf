@@ -79,6 +79,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
 
         mSceneRoot = new GVRSceneObject(gvrContext);
+        mSceneRoot.setName("_gvrf_java_root");
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
@@ -97,6 +98,11 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         cameraRig.attachLeftCamera(leftCamera);
         cameraRig.attachRightCamera(rightCamera);
         cameraRig.attachCenterCamera(centerCamera);
+
+        cameraRig.getOwnerObject().setName("_gvrf_camera_rig");
+        leftCamera.getOwnerObject().setName("_gvrf_left_camera");
+        rightCamera.getOwnerObject().setName("_gvrf_right_camera");
+        centerCamera.getOwnerObject().setName("_gvrf_center_camera");
 
         addSceneObject(cameraRig.getOwnerObject());
 
@@ -179,7 +185,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see #addSceneObject(GVRSceneObject)
      * @see #removeSceneObject(GVRSceneObject)
      */
-    public GVRSceneObject getRoot() {
+    GVRSceneObject getRoot() {
         return mSceneRoot;
     }
     

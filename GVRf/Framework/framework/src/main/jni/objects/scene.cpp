@@ -36,6 +36,7 @@ Scene::Scene() :
     if (main_scene() == NULL) {
         set_main_scene(this);
     }
+    scene_root_.set_name("_gvrf_native_root");
 }
 
 Scene::~Scene() {
