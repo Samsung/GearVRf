@@ -91,6 +91,10 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         NONE
     }
 
+    /**
+     * Enumerated types justifyTypes and fontStyleTypes values
+     * based on X3D's <FontStyle> justify and style settings.
+     */
     public enum justifyTypes { BEGIN, END, FIRST, MIDDLE };
     public enum fontStyleTypes { PLAIN, BOLD, ITALIC, BOLDITALIC };
 
@@ -204,7 +208,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Special constructor called by X3D parser
-     * Need to call setTextPlaneSize() once some parameters such as font and size are set.
+     * setTextPlaneSize() called once parameters such as font and size are set.
      *
      * @param gvrContext
      * @param strings
@@ -244,8 +248,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     }
 
     /**
-     * Once the fonts are set and size of text, one can calculate the width and height
-     * of the desired Quad and this will attach to what was constructed above.
+     * Once the font family, size and style are set, one can build the Quad
+     * based on the width and height of the desired Quad.
      * @param canvasWidth
      * @param canvasHeight
      */
@@ -257,11 +261,6 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
         float width = canvasWidth / FACTOR_IMAGE_SIZE;
         float height = canvasHeight / FACTOR_IMAGE_SIZE;
-
-        java.util.Locale locale = mTextView.getTextLocale();
-        Log.e("X3D-f", "locale = " + locale.getCountry() + ", " + locale.getISO3Language());
-        //locale.setDefault(Locale.Category.);
-
 
         GVRContext gvrContext = getGVRContext();
         GVRMesh gvrMesh = gvrContext.createQuad(width, height);
@@ -433,18 +432,11 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     }
 
     /**
-     * set the justification to left, center/middle or right
+     * set the justification to left, center/middle or right.  The values from
+     * the enumerated type are from X3D's <FontStyle> justify setting.
      * @param justify
      */
     public void setJustification(justifyTypes justify) {
-        /*
-        if (justify == justifyTypes.BEGIN) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-        else if (justify == justifyTypes.MIDDLE) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        else if (justify == justifyTypes.END) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
-        else if (justify == justifyTypes.FIRST) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
-        else mTextView.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
-        */
-
         if (justify == justifyTypes.BEGIN) mTextView.setGravity(Gravity.START);
         else if (justify == justifyTypes.MIDDLE) mTextView.setGravity(Gravity.CENTER);
         else if (justify == justifyTypes.END) mTextView.setGravity(Gravity.RIGHT);
@@ -453,6 +445,11 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     }
 
+    /**
+     * Returns the justification type defined the enumerated type.
+     * If none is set, it returns null
+     * @return
+     */
     public justifyTypes getJustification() {
         justifyTypes justify = null;
         if ( mTextView.getGravity()== Gravity.START) justify = justifyTypes.BEGIN;
@@ -481,8 +478,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *          a string that matches the font name saved in the assets directory
      *          Must include the file ending such as "myFont.ttf"
      * @param style
-     *          value for style: 0: normal; 1 is bold; 2 is italic;
-     *          and 1 | 2 is bold italic
+     *          value for style from the enumerated list that matches values from X3D
+     *          <FontStyle> style setting
      * @return
      */
     public boolean setTypeface(GVRContext gvrContext, String font, fontStyleTypes style) {
