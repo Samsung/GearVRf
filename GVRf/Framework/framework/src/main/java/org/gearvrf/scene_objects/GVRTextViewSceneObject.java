@@ -23,8 +23,10 @@ import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import java.lang.ref.WeakReference;
+import java.util.Locale;
 
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
@@ -37,6 +39,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.Layout;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
@@ -59,6 +62,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     //@todo the following two probably should be derived from the display metrics
     private static final int FACTOR_IMAGE_SIZE = 128;
     private static final int MAX_IMAGE_SIZE = 4*FACTOR_IMAGE_SIZE;
+
+    public static final String DEFAULT_FONT = "default";
 
     /**
      * The refresh frequency of this sceneobject.
@@ -86,6 +91,10 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         NONE
     }
 
+    public enum justifyTypes { BEGIN, END, FIRST, MIDDLE };
+    public enum fontStyleTypes { PLAIN, BOLD, ITALIC, BOLDITALIC };
+
+
     private static int sReferenceCounter = 0;// This is for load balancing.
     private boolean mFirstFrame;
     private boolean mIsChanged;
@@ -102,6 +111,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     // individual lines of text.  Assists in determining lenghts of
     // strings once the fonts are set.
     private String linesOfText[] = null;
+    private GVRMaterial gvrMaterialX3D = null;
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -192,55 +202,91 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     }
 
 
-    /*
-    public GVRTextViewSceneObject(GVRContext gvrContext, float width, float height, CharSequence text) {
-        super(gvrContext, gvrContext.createQuad(width, height));
-
-        //cap the canvas dimensions
-        final float factor = width/height;
-        int canvasWidth = (int)(width*FACTOR_IMAGE_SIZE);
-        int canvasHeight = (int)(height*FACTOR_IMAGE_SIZE);
-
-        if (canvasWidth > canvasHeight && canvasWidth > MAX_IMAGE_SIZE) {
-            canvasWidth = MAX_IMAGE_SIZE;
-            canvasHeight = (int)(MAX_IMAGE_SIZE/factor);
-        } else if (canvasHeight > canvasWidth && canvasHeight > MAX_IMAGE_SIZE) {
-            canvasWidth = (int)(MAX_IMAGE_SIZE*factor);
-            canvasHeight = MAX_IMAGE_SIZE;
-        }
+    /**
+     * Special constructor called by X3D parser
+     * Need to call setTextPlaneSize() once some parameters such as font and size are set.
+     *
+     * @param gvrContext
+     * @param strings
+     */
+    public GVRTextViewSceneObject(GVRContext gvrContext, String[] strings) {
+        super(gvrContext);
 
         final GVRActivity activity = gvrContext.getActivity();
         mTextView = new TextView(activity);
         mTextView.setBackgroundColor(Color.TRANSPARENT);
         mTextView.setTextColor(Color.WHITE);
+        setNumberLines( strings.length );
+        String text = "";
+        for (int i = 0; i < strings.length; i++) {
+            if (i > 0) text += "\n";
+            text += strings[i];
+        }
         mTextView.setText(text);
-        mTextView.setVisibility(View.VISIBLE);
-        mTextView.setLayoutParams(new LayoutParams(canvasWidth, canvasHeight));
 
         mTextViewContainer = new LinearLayout(activity);
-        mTextViewContainer.addView(mTextView);
-        mTextViewContainer.setVisibility(View.VISIBLE);
-
-        mTextViewContainer.measure(canvasWidth, canvasHeight);
-        mTextViewContainer.layout(0, 0, canvasWidth, canvasHeight);
-
         mFrameListener = new GVRDrawFrameListenerImpl(this);
-        gvrContext.registerDrawFrameListener(mFrameListener);
+
 
         GVRTexture texture = new GVRExternalTexture(gvrContext);
-        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
-        material.setMainTexture(texture);
-        getRenderData().setMaterial(material);
+
+        gvrMaterialX3D = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
+        gvrMaterialX3D.setMainTexture(texture);
 
         mSurfaceTexture = new SurfaceTexture(texture.getId());
-        mSurfaceTexture.setDefaultBufferSize(canvasWidth, canvasHeight);
         mSurface = new Surface(mSurfaceTexture);
+
+        setTextStrings(strings);
 
         sReferenceCounter++;
         mCount = sReferenceCounter;
         mFirstFrame = true;
     }
+
+    /**
+     * Once the fonts are set and size of text, one can calculate the width and height
+     * of the desired Quad and this will attach to what was constructed above.
+     * @param canvasWidth
+     * @param canvasHeight
      */
+    public void setTextPlaneSize(float canvasWidth, float canvasHeight) {
+        int canvasWidthInt = (int)Math.ceil(canvasWidth);
+        int canvasHeightInt = (int)Math.ceil(canvasHeight);
+        mTextView.setVisibility(View.VISIBLE);
+        mTextView.setLayoutParams(new LayoutParams( canvasWidthInt,  canvasHeightInt) );
+
+        float width = canvasWidth / FACTOR_IMAGE_SIZE;
+        float height = canvasHeight / FACTOR_IMAGE_SIZE;
+
+        java.util.Locale locale = mTextView.getTextLocale();
+        Log.e("X3D-f", "locale = " + locale.getCountry() + ", " + locale.getISO3Language());
+        //locale.setDefault(Locale.Category.);
+
+
+        GVRContext gvrContext = getGVRContext();
+        GVRMesh gvrMesh = gvrContext.createQuad(width, height);
+
+        GVRRenderData gvrRenderData = new GVRRenderData(gvrContext);
+        gvrRenderData.setRenderingOrder(GVRRenderData.GVRRenderingOrder.TRANSPARENT);
+        gvrRenderData.setMesh(gvrMesh);
+        gvrRenderData.setMaterial(gvrMaterialX3D);
+        this.attachRenderData( gvrRenderData );
+
+        mTextViewContainer.addView(mTextView);
+        mTextViewContainer.setVisibility(View.VISIBLE);
+
+        mTextViewContainer.measure(canvasWidthInt, canvasHeightInt);
+        mTextViewContainer.layout(0, 0, canvasWidthInt, canvasHeightInt);
+
+        gvrContext.registerDrawFrameListener(mFrameListener);
+
+        mSurfaceTexture.setDefaultBufferSize(canvasWidthInt, canvasHeightInt);
+
+        sReferenceCounter++;
+        mCount = sReferenceCounter;
+        mFirstFrame = true;
+    }
+
     /**
      * Set the text size.
      * 
@@ -387,6 +433,36 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     }
 
     /**
+     * set the justification to left, center/middle or right
+     * @param justify
+     */
+    public void setJustification(justifyTypes justify) {
+        /*
+        if (justify == justifyTypes.BEGIN) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        else if (justify == justifyTypes.MIDDLE) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        else if (justify == justifyTypes.END) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+        else if (justify == justifyTypes.FIRST) mTextView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+        else mTextView.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+        */
+
+        if (justify == justifyTypes.BEGIN) mTextView.setGravity(Gravity.START);
+        else if (justify == justifyTypes.MIDDLE) mTextView.setGravity(Gravity.CENTER);
+        else if (justify == justifyTypes.END) mTextView.setGravity(Gravity.RIGHT);
+        else if (justify == justifyTypes.FIRST) mTextView.setGravity(Gravity.LEFT);
+        else mTextView.setGravity(Gravity.NO_GRAVITY);
+
+    }
+
+    public justifyTypes getJustification() {
+        justifyTypes justify = null;
+        if ( mTextView.getGravity()== Gravity.START) justify = justifyTypes.BEGIN;
+        else if ( mTextView.getGravity()== Gravity.CENTER) justify = justifyTypes.MIDDLE;
+        else if ( mTextView.getGravity()== Gravity.RIGHT) justify = justifyTypes.END;
+        else if ( mTextView.getGravity()== Gravity.LEFT) justify = justifyTypes.FIRST;
+        return justify;
+    }
+
+    /**
      * Sets the typeface (font)
      * @param gvrContext
      * @param font
@@ -396,7 +472,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * @return
      */
     public boolean setTypeface(GVRContext gvrContext, String font) {
-        return setTypeface(gvrContext, font, 0);
+        return setTypeface(gvrContext, font, fontStyleTypes.PLAIN);
     }
     /**
      * Sets the typeface (font)
@@ -409,22 +485,29 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *          and 1 | 2 is bold italic
      * @return
      */
-    public boolean setTypeface(GVRContext gvrContext, String font, int style) {
-        try {
-            Context context = gvrContext.getContext();
-            Typeface typeface = Typeface.createFromAsset(context.getAssets(), font);
-            if (typeface != null) {
-                mTextView.setTypeface(typeface, style);
-                mIsChanged = true;
+    public boolean setTypeface(GVRContext gvrContext, String font, fontStyleTypes style) {
+        if ( !font.equals(DEFAULT_FONT) ) {
+            try {
+                Context context = gvrContext.getContext();
+                int styleType = Typeface.NORMAL;
+                if (style == fontStyleTypes.BOLD) styleType = Typeface.BOLD;
+                else if  (style == fontStyleTypes.ITALIC) styleType = Typeface.ITALIC;
+                else if  (style == fontStyleTypes.BOLDITALIC) styleType = Typeface.BOLD_ITALIC;
+
+                Typeface typeface = Typeface.createFromAsset(context.getAssets(), font);
+                if (typeface != null) {
+                    mTextView.setTypeface(typeface, styleType);
+                    mIsChanged = true;
+                }
             }
-        }
-        catch (java.lang.RuntimeException e) {
-            org.gearvrf.utility.Log.e(TAG, "Runtime error: " + e);
-            return false;
-        }
-        catch (Exception e) {
-            org.gearvrf.utility.Log.e(TAG, "Exception: " + e);
-            return false;
+            catch (java.lang.RuntimeException e) {
+                org.gearvrf.utility.Log.e(TAG, "Runtime error: " + font + "; " + e);
+                return false;
+            }
+            catch (Exception e) {
+                org.gearvrf.utility.Log.e(TAG, "Exception: " + e);
+                return false;
+            }
         }
         return true;
     }
@@ -445,38 +528,17 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mTextView.setLineSpacing(lineSpacing, 1);
     }
 
+    public float getLineHeight() {
+        return mTextView.getLineHeight();
+    }
+
+
     /**
      * Get the amount of extra spacing between lines.
      * @return
      */
     public float getLineSpacing() {
         return mTextView.getLineSpacingExtra();
-    }
-
-    public void resetTextPlaneSize(float canvasWidth, float canvasHeight) {
-        int canvasWidthInt = (int)Math.ceil(canvasWidth);
-        int canvasHeightInt = (int)Math.ceil(canvasHeight);
-        mTextView.setLayoutParams(new LayoutParams( canvasWidthInt,  canvasHeightInt) );
-        Layout layout = mTextView.getLayout();
-        //Log.e("X3D-f", "Layout w x h:(" + layout.getWidth() + " x "+ layout.getHeight()+")");
-
-        GVRMesh gvrMesh = this.getRenderData().getMesh();
-        float width = canvasWidth/128.0f;
-        float height = canvasHeight/128.0f;
-        float[] v = gvrMesh.getVertices();
-        Log.e("X3D-f", "Prev Verts:(" + v[0] + ","+ v[1] +")(" + v[3] + ","+ v[4] +")(" + v[6] + ","+ v[7] +")(" + v[9] + ","+ v[10] +")");
-        float[] vertices = { width * -0.5f, height * 0.5f, 0.0f, width * -0.5f,
-                height * -0.5f, 0.0f, width * 0.5f, height * 0.5f, 0.0f,
-                width * 0.5f, height * -0.5f, 0.0f };
-        gvrMesh.setVertices(vertices);
-        mTextView.setBackgroundColor(Color.rgb(0, 128, 127)); // testing only
-
-        gvrMesh = getGVRContext().createQuad(width, height);
-        this.getRenderData().setMesh(gvrMesh);
-
-        v = gvrMesh.getVertices();
-        Log.e("X3D-f", "New Verts:(" + v[0] + ","+ v[1] +")(" + v[3] + ","+ v[4] +")(" + v[6] + ","+ v[7] +")(" + v[9] + ","+ v[10] +")");
-        mIsChanged = true;
     }
 
 
