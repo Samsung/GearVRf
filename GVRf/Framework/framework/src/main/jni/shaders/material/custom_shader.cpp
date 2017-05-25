@@ -25,6 +25,14 @@
 #include "objects/components/shadow_map.h"
 
 namespace gvr {
+bool isCommented(std::string& line){
+    int i =0;
+    while(i < line.length() && line[i] == ' ')
+        i++;
+    if(i < line.length() && line[i] == '/' && i < line.length()-1 && line[i+1]=='/')
+        return true;
+    return false;
+}
 CustomShader::CustomShader(const std::string& vertex_shader, const std::string& fragment_shader)
     : vertexShader_(vertex_shader), fragmentShader_(fragment_shader) {
 }
@@ -32,6 +40,30 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
     if (nullptr == program_)
     {
         program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
+
+        // This is a hack for handling different pragma strings for glsl compiler, it just tries for other string if current does not work
+        if(program_->id() == 0 && fragmentShader_.find("GL_OES_EGL_image_external")!=std::string::npos){
+            std::string modified_shader = "";
+            std::string line;
+            std::stringstream input_stringstream(fragmentShader_);
+
+            while(getline(input_stringstream,line,'\n')){
+                if(line.find("GL_OES_EGL_image_external_essl3")!=std::string::npos){
+                    if(!isCommented(line))
+                        modified_shader += "#extension GL_OES_EGL_image_external : require\n";
+                }
+                else if(line.find("GL_OES_EGL_image_external")!=std::string::npos){
+                    if(!isCommented(line))
+                        modified_shader += "#extension GL_OES_EGL_image_external_essl3 : require\n";
+                } else
+                    modified_shader += line + "\n";
+            }
+            delete program_;
+            program_ = new GLProgram(vertexShader_.c_str(), modified_shader.c_str());
+            if(program_->id() != 0) {
+                LOGE("Ignore the last shader compilation error, it has been handled...");
+            }
+        }
         if(use_multiview && !(strstr(vertexShader_.c_str(),"gl_ViewID_OVR")
                 && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
                 && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){

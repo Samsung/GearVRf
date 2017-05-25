@@ -79,7 +79,7 @@ void CustomPostEffectShader::addMat4Key(const std::string& variable_name, const 
     std::lock_guard<std::mutex> lock(lock_);
     mat4_keys_[pair] = 0;
 }
-
+extern bool isCommented(std::string&);
 void CustomPostEffectShader::render(Camera* camera,
         RenderTexture* render_texture,
         PostEffectData* post_effect_data,
@@ -88,6 +88,31 @@ void CustomPostEffectShader::render(Camera* camera,
 
     if (0 == program_) {
         program_ = new GLProgram(vertex_shader_.c_str(), fragment_shader_.c_str());
+
+        // This is a hack for handling different pragma strings for glsl compiler, it just tries for other string if current does not work
+        if(program_->id() == 0 && fragment_shader_.find("GL_OES_EGL_image_external")!=std::string::npos){
+            std::string modified_shader = "";
+            std::string line;
+            std::stringstream input_stringstream(fragment_shader_);
+
+            while(getline(input_stringstream,line,'\n')){
+                if(line.find("GL_OES_EGL_image_external_essl3")!=std::string::npos){
+                    if(!isCommented(line))
+                        modified_shader += "#extension GL_OES_EGL_image_external : require\n";
+                }
+                else if(line.find("GL_OES_EGL_image_external")!=std::string::npos){
+                    if(!isCommented(line))
+                        modified_shader += "#extension GL_OES_EGL_image_external_essl3 : require\n";
+                } else
+                    modified_shader += line + "\n";
+            }
+            delete program_;
+            program_ = new GLProgram(vertex_shader_.c_str(), modified_shader.c_str());
+            if(program_->id() != 0) {
+                LOGE("Ignore the last shader compilation error, it has been handled...");
+            }
+
+        }
         vertex_shader_.empty();
         fragment_shader_.empty();
 
