@@ -109,8 +109,6 @@ public class X3Dobject {
     private static final String TRANSFORM_SCALE_ORIENTATION_ = "_Transform_Scale_Orientation_";
     private static final String TRANSFORM_NEGATIVE_SCALE_ORIENTATION_ = "_Transform_Neg_Scale_Orientation_";
 
-//    private enum fontStyleStyleTypes { PLAIN, BOLD, ITALIC, BOLDITALIC };
-
     // Append this incremented value to GVRScene names to insure unique
     // GVRSceneObjects
     // when new GVRScene objects are generated to support animation
@@ -2322,8 +2320,8 @@ public class X3Dobject {
                         justify = new GVRTextViewSceneObject.justifyTypes[justifyMFString.length];
                         for (int i = 0; i < justify.length; i++) {
                             if ( justifyMFString[i].equalsIgnoreCase("END")) justify[i] = GVRTextViewSceneObject.justifyTypes.END;
-                            if ( justifyMFString[i].equalsIgnoreCase("FIRST")) justify[i] = GVRTextViewSceneObject.justifyTypes.FIRST;
-                            if ( justifyMFString[i].equalsIgnoreCase("MIDDLE")) justify[i] = GVRTextViewSceneObject.justifyTypes.MIDDLE;
+                            else if ( justifyMFString[i].equalsIgnoreCase("FIRST")) justify[i] = GVRTextViewSceneObject.justifyTypes.FIRST;
+                            else if ( justifyMFString[i].equalsIgnoreCase("MIDDLE")) justify[i] = GVRTextViewSceneObject.justifyTypes.MIDDLE;
                             else justify[i] = GVRTextViewSceneObject.justifyTypes.BEGIN;
                         }
                     }
