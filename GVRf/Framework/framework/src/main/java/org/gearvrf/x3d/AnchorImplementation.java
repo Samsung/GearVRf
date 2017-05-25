@@ -193,7 +193,7 @@ public class AnchorImplementation {
                 // Getting event group stuff.
                 if (event.isActive()) {
                     //Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getDefinedItem().getName() );
-                    Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getDefinedItem() );
+                    Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getSensor().getAnchorURL() );
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
@@ -346,9 +346,9 @@ public class AnchorImplementation {
                     break;
                 }
             }
-            //if ( gazeController != null) {
-            //    gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
-            //}
+            if ( gazeController != null) {
+                gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+            }
         }
         else {
             Log.e(TAG, "Viewpoint named " + vpURL + " not found (defined).");

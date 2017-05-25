@@ -784,7 +784,6 @@ public class AnimationInteractivityManager {
             }  // end if at least sensor, and eventUtility
             else if (interactiveObject.getSensor() != null) {
                 // Likely this is an Anchor tag since there are no routes with it
-                //Sensor sensor = interactiveObject.getSensor();
                 if ( interactiveObject.getSensor().getType() == Sensor.Type.ANCHOR) {
                     anchorImplementation.AnchorInteractivity( interactiveObject );
                 }  //  end if Sensor Type is Anchor
@@ -792,7 +791,6 @@ public class AnimationInteractivityManager {
 
         }  // end for loop traversing through all interactive objects
         // Initiate all the animations, both keyframe and procedural
-    //    gvrAnimator.autoStart();
         if (perFrameScripting.getRunState()) {
             final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
             gvrContext.registerDrawFrameListener(mOnDrawFrame);
