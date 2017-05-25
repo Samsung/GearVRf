@@ -183,7 +183,6 @@ public class AnchorImplementation {
         // The interactiveObject contains an Anchor tag.
         // Could be a link to another x3d page, <Viewpoint> (camera) or web page
 
-        //interactiveObject.getSensor().setDepthOrderEnabled( true );
         final InteractiveObject interactiveObjectFinal = interactiveObject;
         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
             boolean isActiveDone = false;
@@ -192,8 +191,9 @@ public class AnchorImplementation {
             @Override
             public void onSensorEvent(SensorEvent event) {
                 // Getting event group stuff.
-                //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START ) {
                 if (event.isActive()) {
+                    //Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getDefinedItem().getName() );
+                    Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getDefinedItem() );
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
@@ -202,7 +202,6 @@ public class AnchorImplementation {
                                 // Go to another X3D scene
                                 GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
                                 GVRSceneObject gvrSceneObjectAnchor = new GVRSceneObject(gvrContext);
-                                //root.attachComponent( gvrExternalScene );
                                 gvrSceneObjectAnchor.attachComponent( gvrExternalScene );
                                 boolean load = gvrExternalScene.load(gvrContext.getMainScene());
                                 newSceneLoaded = true;
@@ -347,9 +346,9 @@ public class AnchorImplementation {
                     break;
                 }
             }
-            if ( gazeController != null) {
-                gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
-            }
+            //if ( gazeController != null) {
+            //    gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+            //}
         }
         else {
             Log.e(TAG, "Viewpoint named " + vpURL + " not found (defined).");

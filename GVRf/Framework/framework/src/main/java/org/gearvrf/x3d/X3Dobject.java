@@ -3362,9 +3362,11 @@ public class X3Dobject {
                             break;
                         }
                     }
+                    /*
                     if ( gazeController != null) {
                         gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
                     }
+                    */
 
                 } // end setting based on new camera rig
 
