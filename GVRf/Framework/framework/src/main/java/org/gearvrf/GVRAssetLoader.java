@@ -1339,23 +1339,70 @@ public final class GVRAssetLoader {
         {
             public void run()
             {
-                AssetRequest assetRequest = new AssetRequest(model, volume, scene, handler, true);
-                String filePath = volume.getFileName();
-                String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+            AssetRequest assetRequest = new AssetRequest(model, volume, scene, handler, true);
+            String filePath = volume.getFileName();
+            String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
-                model.setName(assetRequest.getBaseName());
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model,
-                                     GVRImportSettings.getRecommendedSettings());
-                    else
-                        loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
-                }
-                catch (IOException ex)
-                {
-                    // onModelError is generated in this case
-                }
+            model.setName(assetRequest.getBaseName());
+            try
+            {
+                if (ext.equals("x3d"))
+                    loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
+                else
+                    loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
+            }
+            catch (IOException ex)
+            {
+                // onModelError is generated in this case
+            }
+            }
+        });
+    }
+
+    /**
+     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
+     * replaces the current scene with it.
+     * This function loads the model and its textures asynchronously in the background
+     * and will return before the model is loaded.
+     * IAssetEvents are emitted to event listeners attached to the context.
+     *
+     * @param model
+     *          Scene object to become the root of the loaded model.
+     *          This scene object will be named with the base filename of the loaded asset.
+     * @param volume
+     *          A GVRResourceVolume based on the asset path to load.
+     *          This volume will be used as the base for loading textures
+     *          and other models contained within the model.
+     *          You can subclass GVRResourceVolume to provide custom IO.
+     * @param settings
+     *          Import settings controlling how assets are imported
+     * @param scene
+     *          Scene to be replaced with the model.
+     * @param handler
+     *          IAssetEvents handler to process asset loading events
+     */
+    public void loadScene(final GVRSceneObject model, final GVRResourceVolume volume, final EnumSet<GVRImportSettings> settings, final GVRScene scene, final IAssetEvents handler)
+    {
+        Threads.spawn(new Runnable()
+        {
+            public void run()
+            {
+            AssetRequest assetRequest = new AssetRequest(model, volume, scene, handler, true);
+            String filePath = volume.getFileName();
+            String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+
+            model.setName(assetRequest.getBaseName());
+            try
+            {
+                if (ext.equals("x3d"))
+                    loadX3DModel(assetRequest, model, settings);
+                else
+                    loadJassimpModel(assetRequest, model, settings);
+            }
+            catch (IOException ex)
+            {
+                // onModelError is generated in this case
+            }
             }
         });
     }
@@ -1390,26 +1437,76 @@ public final class GVRAssetLoader {
         {
             public void run()
             {
-                String filePath = volume.getFileName();
-                AssetRequest assetRequest = new AssetRequest(model, volume, scene, null, false);
-                String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+            String filePath = volume.getFileName();
+            AssetRequest assetRequest = new AssetRequest(model, volume, scene, null, false);
+            String ext = filePath.substring(filePath.length() - 3).toLowerCase();
 
-                model.setName(assetRequest.getBaseName());
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model,
-                                     GVRImportSettings.getRecommendedSettings());
-                    else
-                        loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
-                }
-                catch (IOException ex)
-                {
-                    // onModelError is generated in this case.
-                }
+            model.setName(assetRequest.getBaseName());
+            try
+            {
+                if (ext.equals("x3d"))
+                    loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
+                else
+                    loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
+            }
+            catch (IOException ex)
+            {
+                // onModelError is generated in this case.
+            }
             }
         });
      }
+
+    /**
+     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
+     * on the volume provided and adds it to the specified scene.
+     * IAssetEvents are emitted to event listeners attached to the context.
+     * This function loads the model and its textures asynchronously in the background
+     * and will return before the model is loaded.
+     * IAssetEvents are emitted to event listeners attached to the context.
+     * The resource volume may reference res/raw in which case all textures
+     * and other referenced assets must also come from res/raw. The asset loader
+     * cannot loadtextures from the drawable directory.
+     *
+     * @param model
+     *            A GVRSceneObject to become the root of the loaded model.
+     * @param volume
+     *            A GVRResourceVolume based on the asset path to load.
+     *            This volume will be used as the base for loading textures
+     *            and other models contained within the model.
+     *            You can subclass GVRResourceVolume to provide custom IO.
+     * @param scene
+     *            If present, this asset loader will wait until all of the textures have been
+     *            loaded and then it will add the model to the scene.
+     * @param settings
+     *            Import settings controlling how assets are imported
+     *
+     */
+    public void loadModel(final GVRSceneObject model, final GVRResourceVolume volume, final EnumSet<GVRImportSettings> settings, final GVRScene scene)
+    {
+        Threads.spawn(new Runnable()
+        {
+            public void run()
+            {
+            String filePath = volume.getFileName();
+            AssetRequest assetRequest = new AssetRequest(model, volume, scene, null, false);
+            String ext = filePath.substring(filePath.length() - 3).toLowerCase();
+
+            model.setName(assetRequest.getBaseName());
+            try
+            {
+                if (ext.equals("x3d"))
+                    loadX3DModel(assetRequest, model, settings);
+                else
+                    loadJassimpModel(assetRequest, model, settings);
+            }
+            catch (IOException ex)
+            {
+                // onModelError is generated in this case.
+            }
+            }
+        });
+    }
 
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
