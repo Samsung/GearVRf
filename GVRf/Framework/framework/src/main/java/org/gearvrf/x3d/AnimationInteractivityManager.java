@@ -16,17 +16,9 @@
 
 package org.gearvrf.x3d;
 
-import android.graphics.Color;
-
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMain;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPointLight;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRLightBase;

@@ -256,15 +256,12 @@ public class X3Dobject {
             centerCamera
                     .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
             cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
-            //this.mainCamera = cameraRigAtRoot.getOwnerObject();
-            //this.mainCamera.setName("MainCamera");
             cameraRigAtRoot.getOwnerObject().setName("MainCamera");
             cameraRigAtRoot.attachLeftCamera(leftCamera);
             cameraRigAtRoot.attachRightCamera(rightCamera);
             cameraRigAtRoot.attachCenterCamera(centerCamera);
             cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
             cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
-            //this.root.addChildObject(this.mainCamera);
 
             lodManager = new LODmanager();
 
@@ -626,10 +623,6 @@ public class X3Dobject {
                             .setScale(gvrSceneObjectDEFitem.getTransform().getScaleX(),
                                     gvrSceneObjectDEFitem.getTransform().getScaleY(),
                                     gvrSceneObjectDEFitem.getTransform().getScaleZ());
-                    // Likely need a stack to include all the child object(s).
-                    // if ( gvrSceneObjectDEFitem.getChildrenCount() > 1)
-                    // gvrSceneObjectDEFitem = gvrSceneObjectDEFitem.getChildByIndex(1);
-                    // else
                     gvrSceneObjectDEFitem = gvrSceneObjectDEFitem.getChildByIndex(0);
                 }
                 if (gvrSceneObjectDEFitem.hasMesh()) {
@@ -683,7 +676,6 @@ public class X3Dobject {
                 } // end USE Transform
                 else {
                     // Not a 'Transform USE="..." node
-
                     // so initialize with default values
 
                     String name = "";
@@ -746,9 +738,7 @@ public class X3Dobject {
                     currentSceneObject = AddGVRSceneObject();
                     if (name.isEmpty()) {
                         // There is no DEF, thus no animation or interactivity applied to
-
                         // this Transform.
-
                         // Therefore, just set the values in a single GVRSceneObject
                         GVRTransform transform = currentSceneObject.getTransform();
                         transform.setPosition(translation[0], translation[1],
@@ -868,7 +858,6 @@ public class X3Dobject {
             else if (qName.equalsIgnoreCase("shape")) {
 
                 gvrRenderData = new GVRRenderData(gvrContext);
-                // gvrRenderData.setCullFace(GVRCullFaceEnum.None);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
                 shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
                 gvrRenderData.setShaderTemplate(GVRPhongShader.class);

@@ -16,41 +16,28 @@
 
 package org.gearvrf.x3d;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
-import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalScene;
-import org.gearvrf.GVRMain;
-import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTransform;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
-import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.scene_objects.view.GVRWebView;
-import android.view.View;
 
 import org.gearvrf.GVRScene;
 
-import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
-import org.joml.AxisAngle4f;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -61,21 +48,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.io.IOException;
-import java.net.URL;
-import java.net.HttpURLConnection;
-import java.io.ByteArrayOutputStream;
 import java.util.List;
-import java.util.UUID;
 import java.util.Vector;
 
 import android.content.Context;
@@ -106,12 +83,9 @@ public class AnchorImplementation {
     private GVRSceneObject root = null;
     private Vector<Viewpoint> viewpoints = new Vector<Viewpoint>();
 
-
     private PerFrameWebViewControl perFrameWebViewControl = new PerFrameWebViewControl();
 
     private GVRSphereSceneObject gvrScaleObject = null;
-    private Vector3f scaleObjectTranslationLocal = new Vector3f();
-    private Vector3f scaleObjectTranslationGlobal = new Vector3f();
     private final float[] scaleControlInitPosition = {-2, 1.5f, 0};
 
     private Vector3f translationObjectTranslationLocal = new Vector3f();
@@ -356,7 +330,6 @@ public class AnchorImplementation {
     }  //  end SetNewViewpoint
 
 
-
     private void LaunchWebPage(InteractiveObject interactiveObjectFinal, String url) {
         if (webPagePlusUISceneObject == null) {
             final String urlFinal = url;
@@ -505,7 +478,6 @@ public class AnchorImplementation {
 
         // Set up sensor for the U.I.
         Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
-        //uibObjectSensor.setDepthOrderEnabled( true );
         final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
         final GVRSceneObject gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
         final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
@@ -522,122 +494,73 @@ public class AnchorImplementation {
 
             @Override
             public void onSensorEvent(SensorEvent event) {
-                //if (event.getEventGroup() == SensorEvent.EventGroup.MULTI_START) {
-                    if (event.isActive()) {
-                        clickDown = !clickDown;
-                        if (clickDown) {
-                            // only go through once even if object is clicked a long time
-                            uiObjectIsActive = !uiObjectIsActive;
-                            if (uiObjectIsActive) {
-                                if (event.getHitX() > cubeUISize.x / 4.0f) {
-                                    // Delete the WebView page, control currently far right of web page
-                                    gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
-                                    if (gvrTextScaleObject != null) {
-                                        gvrWebViewSceneObjectFinal.removeChildObject(gvrTextScaleObject);
-                                    }
-                                    if (gvrTextRotateObject != null) {
-                                        gvrWebViewSceneObjectFinal.removeChildObject(gvrTextRotateObject);
-                                    }
-                                    if (gvrTextTranslationObject != null) {
-                                        gvrWebViewSceneObjectFinal.removeChildObject(gvrTextTranslationObject);
-                                    }
-                                    gvrTextExitObject = null;
-                                    gvrTextScaleObject = null;
-                                    gvrTextRotateObject = null;
-                                    gvrTextTranslationObject = null;
-                                    gvrSceneObjectAnchorFinal.removeChildObject(webPagePlusUISceneObjectFinal);
-                                    webViewTranslation = false;
-                                    webViewScale = false;
-                                    gvrWebView = null;
-                                    webPagePlusUISceneObject = null;
-                                    webPageActive = false;
-                                } else if (event.getHitX() > 0) {
-                                    // TODO: Rotate the web view, control currently right side of control bar
-                                    webViewTranslation = false;
-
-                                } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
-                                    // Translate the web view, control currently left side of control bar
-                                    TranslationControl(gvrWebViewSceneObjectFinal);
-                                }   // end transltion web window, hit between 0 and .25,
-                                else {
-                                    // Scale the web view, control currently in upper right corner
-                                    webViewTranslation = false;
-                                    ScaleControl(gvrWebViewSceneObjectFinal, gvrSceneObjectAnchorFinal, urlFinal);
-
-                                }  // end scaling web window, hit between -2 and -1,
-                            } else {  // uiObjectIsActive is false
-                                if (mOnDrawFrame != null)
-                                    // wrap up any lose ends closing the web page.
-                                    gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
-                                if (event.getHitX() > 0) {
-                                    // TODO: Stop Rotating the web page
-                                } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
-                                    // Stop translating the web page
-                                    if (gvrTextTranslationObject != null) {
-                                        gvrTextTranslationObject.setTextColor(textColorIsOver);
-                                    }
-                                    webViewTranslation = false;
-                                }   // end transltion web window, hit between 0 and .25,
-                                else if (event.getHitX() < -cubeUISize.x / 4.0f) {
-                                    // Stop scaling the web page
-                                    if (gvrTextScaleObject != null) {
-                                        gvrTextScaleObject.setTextColor(textColorIsOver);
-                                    }
-                                    webViewScale = false;
-                                }  // end scaling web window, hit between -2 and -1,
-                            }
+                if (event.isActive()) {
+                    clickDown = !clickDown;
+                    if (clickDown) {
+                        // only go through once even if object is clicked a long time
+                        uiObjectIsActive = !uiObjectIsActive;
+                        if (uiObjectIsActive) {
+                            if (event.getHitX() > cubeUISize.x / 4.0f) {
+                                // Delete the WebView page, control currently far right of web page
+                                gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
+                                if (gvrTextScaleObject != null) {
+                                    gvrWebViewSceneObjectFinal.removeChildObject(gvrTextScaleObject);
+                                }
+                                if (gvrTextRotateObject != null) {
+                                    gvrWebViewSceneObjectFinal.removeChildObject(gvrTextRotateObject);
+                                }
+                                if (gvrTextTranslationObject != null) {
+                                    gvrWebViewSceneObjectFinal.removeChildObject(gvrTextTranslationObject);
+                                }
+                                gvrTextExitObject = null;
+                                gvrTextScaleObject = null;
+                                gvrTextRotateObject = null;
+                                gvrTextTranslationObject = null;
+                                gvrSceneObjectAnchorFinal.removeChildObject(webPagePlusUISceneObjectFinal);
+                                webViewTranslation = false;
+                                webViewScale = false;
+                                gvrWebView = null;
+                                webPagePlusUISceneObject = null;
+                                webPageActive = false;
+                            } else if (event.getHitX() > 0) {
+                                // TODO: Rotate the web view, control currently right side of control bar
+                                webViewTranslation = false;
+                            } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
+                                // Translate the web view, control currently left side of control bar
+                                TranslationControl(gvrWebViewSceneObjectFinal);
+                            }   // end transltion web window, hit between 0 and .25,
+                            else {
+                                // Scale the web view, control currently in upper right corner
+                                webViewTranslation = false;
+                                ScaleControl(gvrWebViewSceneObjectFinal, gvrSceneObjectAnchorFinal, urlFinal);
+                            }  // end scaling web window, hit between -2 and -1,
+                        } else {  // uiObjectIsActive is false
+                            if (mOnDrawFrame != null)
+                                // wrap up any lose ends closing the web page.
+                                gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
+                            if (event.getHitX() > 0) {
+                                // TODO: Stop Rotating the web page
+                            } else if (event.getHitX() > -cubeUISize.x / 4.0f) {
+                                // Stop translating the web page
+                                if (gvrTextTranslationObject != null) {
+                                    gvrTextTranslationObject.setTextColor(textColorIsOver);
+                                }
+                                webViewTranslation = false;
+                            }   // end transltion web window, hit between 0 and .25,
+                            else if (event.getHitX() < -cubeUISize.x / 4.0f) {
+                                // Stop scaling the web page
+                                if (gvrTextScaleObject != null) {
+                                    gvrTextScaleObject.setTextColor(textColorIsOver);
+                                }
+                                webViewScale = false;
+                            }  // end scaling web window, hit between -2 and -1,
                         }
-                    } else if (event.isOver() && !uiObjectIsActive) {
-                        // highlight the icons to give visual cue to users
-                        if (event.getHitX() > cubeUISize.x / 4.0f) {
-                            if (gvrTextExitObject != null)
-                                gvrTextExitObject.setTextColor(textColorIsOver);
-                            if (gvrTextRotateObject != null)
-                                gvrTextRotateObject.setTextColor(textColorDefault);
-                            if (gvrTextTranslationObject != null)
-                                gvrTextTranslationObject.setTextColor(textColorDefault);
-                            if (gvrTextScaleObject != null)
-                                gvrTextScaleObject.setTextColor(textColorDefault);
-                            webViewTranslation = false;
-                            webViewScale = false;
-                        } else if (event.getHitX() > 0) {
-                            if (gvrTextExitObject != null)
-                                gvrTextExitObject.setTextColor(textColorDefault);
-                            if (gvrTextRotateObject != null)
-                                gvrTextRotateObject.setTextColor(textColorIsOver);
-                            if (gvrTextTranslationObject != null)
-                                gvrTextTranslationObject.setTextColor(textColorDefault);
-                            if (gvrTextScaleObject != null)
-                                gvrTextScaleObject.setTextColor(textColorDefault);
-                            webViewTranslation = false;
-                            webViewScale = false;
-                        }  // end scaling web window, hit between 0 and .25,
-                        else if (event.getHitX() > -cubeUISize.x / 4.0f) {
-                            if (gvrTextExitObject != null)
-                                gvrTextExitObject.setTextColor(textColorDefault);
-                            if (gvrTextRotateObject != null)
-                                gvrTextRotateObject.setTextColor(textColorDefault);
-                            if (gvrTextTranslationObject != null)
-                                gvrTextTranslationObject.setTextColor(textColorIsOver);
-                            if (gvrTextScaleObject != null)
-                                gvrTextScaleObject.setTextColor(textColorDefault);
-                            webViewTranslation = false;
-                            webViewScale = false;
-                        } else {
-                            if (gvrTextExitObject != null)
-                                gvrTextExitObject.setTextColor(textColorDefault);
-                            if (gvrTextRotateObject != null)
-                                gvrTextRotateObject.setTextColor(textColorDefault);
-                            if (gvrTextTranslationObject != null)
-                                gvrTextTranslationObject.setTextColor(textColorDefault);
-                            if (gvrTextScaleObject != null)
-                                gvrTextScaleObject.setTextColor(textColorIsOver);
-                            webViewTranslation = false;
-                            webViewScale = false;
-                        }
-                    } else if (!event.isOver() && !uiObjectIsActive) {
+                    }
+                } else if (event.isOver() && !uiObjectIsActive) {
+                    // highlight the icons to give visual cue to users
+                    if (event.getHitX() > cubeUISize.x / 4.0f) {
                         if (gvrTextExitObject != null)
-                            gvrTextExitObject.setTextColor(textColorDefault);
+                            gvrTextExitObject.setTextColor(textColorIsOver);
                         if (gvrTextRotateObject != null)
                             gvrTextRotateObject.setTextColor(textColorDefault);
                         if (gvrTextTranslationObject != null)
@@ -646,8 +569,39 @@ public class AnchorImplementation {
                             gvrTextScaleObject.setTextColor(textColorDefault);
                         webViewTranslation = false;
                         webViewScale = false;
+                    } else if (event.getHitX() > 0) {
+                        if (gvrTextExitObject != null) gvrTextExitObject.setTextColor(textColorDefault);
+                        if (gvrTextRotateObject != null) gvrTextRotateObject.setTextColor(textColorIsOver);
+                        if (gvrTextTranslationObject != null) gvrTextTranslationObject.setTextColor(textColorDefault);
+                        if (gvrTextScaleObject != null) gvrTextScaleObject.setTextColor(textColorDefault);
+                        webViewTranslation = false;
+                        webViewScale = false;
+                    }  // end scaling web window, hit between 0 and .25,
+                    else if (event.getHitX() > -cubeUISize.x / 4.0f) {
+                        if (gvrTextExitObject != null) gvrTextExitObject.setTextColor(textColorDefault);
+                        if (gvrTextRotateObject != null) gvrTextRotateObject.setTextColor(textColorDefault);
+                        if (gvrTextTranslationObject != null) gvrTextTranslationObject.setTextColor(textColorIsOver);
+                        if (gvrTextScaleObject != null) gvrTextScaleObject.setTextColor(textColorDefault);
+                        webViewTranslation = false;
+                        webViewScale = false;
+                    } else {
+                        if (gvrTextExitObject != null) gvrTextExitObject.setTextColor(textColorDefault);
+                        if (gvrTextRotateObject != null) gvrTextRotateObject.setTextColor(textColorDefault);
+                        if (gvrTextTranslationObject != null) gvrTextTranslationObject.setTextColor(textColorDefault);
+                        if (gvrTextScaleObject != null) gvrTextScaleObject.setTextColor(textColorIsOver);
+                        webViewTranslation = false;
+                        webViewScale = false;
                     }
-                //} // check for multi-start
+                } else if (!event.isOver() && !uiObjectIsActive) {
+                    if (gvrTextExitObject != null) gvrTextExitObject.setTextColor(textColorDefault);
+                    if (gvrTextRotateObject != null)
+                        gvrTextRotateObject.setTextColor(textColorDefault);
+                    if (gvrTextTranslationObject != null)
+                        gvrTextTranslationObject.setTextColor(textColorDefault);
+                    if (gvrTextScaleObject != null) gvrTextScaleObject.setTextColor(textColorDefault);
+                    webViewTranslation = false;
+                    webViewScale = false;
+                }
             }
         });
     }  //  end WebPageTranformControls
@@ -744,6 +698,10 @@ public class AnchorImplementation {
         }
     }
 
+    /**
+     * Prases RSS - XML data that is part of a web page
+     * Inserts CSS DIV tags.
+     */
     class UserHandler extends DefaultHandler {
 
         boolean title = false;
