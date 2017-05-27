@@ -15,22 +15,23 @@
 
 package org.gearvrf.animation;
 
-import org.gearvrf.GVRPostEffect;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderData;
 
-/** Animate a {@link GVRPostEffect}. */
+/** Animate a {@link GVRShaderData}. */
 public abstract class GVRPostEffectAnimation extends GVRAnimation {
 
-    protected final GVRPostEffect mPostEffectData;
+    protected final GVRShaderData mPostEffectData;
 
     /**
      * Sets the {@code protected final GVRPostEffectData mPostEffectData} field.
      * 
      * @param target
-     *            {@link GVRPostEffect} to animate
+     *            {@link GVRShaderData} to animate
      * @param duration
      *            The animation duration, in seconds.
      */
-    protected GVRPostEffectAnimation(GVRPostEffect target, float duration) {
+    protected GVRPostEffectAnimation(GVRShaderData target, float duration) {
         super(target, duration);
         mPostEffectData = target;
     }

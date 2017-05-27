@@ -293,7 +293,7 @@ void GVRActivity::leaveVrMode() {
         for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             frameBuffer_[eye].destroy();
         }
-
+        Renderer::resetInstance();
         vrapi_LeaveVrMode(oculusMobile_);
         oculusMobile_ = nullptr;
     } else {

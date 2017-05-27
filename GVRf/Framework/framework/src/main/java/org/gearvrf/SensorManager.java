@@ -46,9 +46,16 @@ class SensorManager {
     private SensorManager() {
         sensors = new ConcurrentHashMap<GVRBaseSensor, Integer>();
         // Create a readback buffer and forward it to the native layer
-        readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
-        readbackBufferB.order(ByteOrder.nativeOrder());
-        readbackBuffer = readbackBufferB.asFloatBuffer();
+        try
+        {
+            readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
+            readbackBufferB.order(ByteOrder.nativeOrder());
+            readbackBuffer = readbackBufferB.asFloatBuffer();
+        }
+        catch (Exception ex)
+        {
+            Log.e("Sensor", "Exception creating sensor manager " + ex.getMessage());
+        }
     }
 
     static SensorManager getInstance(){

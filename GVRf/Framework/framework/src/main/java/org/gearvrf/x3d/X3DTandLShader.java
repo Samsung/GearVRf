@@ -19,12 +19,7 @@ package org.gearvrf.x3d;
 /* shader to test x3d functionality */
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMaterialMap;
-import org.gearvrf.GVRMaterialShaderManager;
-
-import android.util.Log;
-
-import org.gearvrf.GVRCustomMaterialShaderId;
+import org.gearvrf.GVRShader;
 
 /**
  * 
@@ -32,27 +27,28 @@ import org.gearvrf.GVRCustomMaterialShaderId;
  * implements shader for X3D developers who will eventually
  * set their own values, which X3D allows.
  */
-public class X3DTandLShader {
+public class X3DTandLShader extends GVRShader
+{
 
-    public final String TEXTURECENTER_KEY = "texturecenter";
-    public final String TEXTUREROTATION_KEY = "texturerotation";
-    public final String TEXTURESCALE_KEY = "texturescale";
-    public final String TEXTURETRANSLATION_KEY = "texturetranslation";
+    public final String TEXTURECENTER_KEY = "u_texturecenter";
+    public final String TEXTUREROTATION_KEY = "u_texturerotation";
+    public final String TEXTURESCALE_KEY = "u_texturescale";
+    public final String TEXTURETRANSLATION_KEY = "u_texturetranslation";
 
     public final String MODELMATRIX_KEY = "modelmatrix";
 
-    public final String DIFFUSECOLOR_KEY = "diffusecolor";
-    public final String EMISSIVECOLOR_KEY = "emissivecolor";
-    public final String SPECULARCOLOR_KEY = "specularcolor";
-    public final String SHININESS_KEY = "shininess";
+    public final String DIFFUSECOLOR_KEY = "u_diffusecolor";
+    public final String EMISSIVECOLOR_KEY = "u_emissivecolor";
+    public final String SPECULARCOLOR_KEY = "u_specularcolor";
+    public final String SHININESS_KEY = "u_shininess";
     
     public static final String LIGHT_KEY = "light";
     public static final String EYE_KEY = "eye";
-    public final String TEXTURE_KEY = "texture";
-    public static final String CENTER_KEY = "center";
-    public static final String ROTATION_KEY = "rotation";
-    public static final String SCALE_KEY = "scale";
-    public static final String TRANSLATION_KEY = "translation";
+    public final String TEXTURE_KEY = "u_texture";
+    public static final String CENTER_KEY = "u_center";
+    public static final String ROTATION_KEY = "u_rotation";
+    public static final String SCALE_KEY = "u_scale";
+    public static final String TRANSLATION_KEY = "u_translation";
 
     public static final String MAT1_KEY = "u_mat1";
     public static final String MAT2_KEY = "u_mat2";
@@ -62,7 +58,7 @@ public class X3DTandLShader {
     private final String VERTEX_SHADER = "" //
             + "attribute vec4 a_position;\n"
             + "attribute vec3 a_normal;\n" //
-            + "attribute vec2 a_tex_coord;\n"
+            + "attribute vec2 a_texcoord;\n"
             + "uniform mat4 u_mvp;\n" //
             + "uniform mat4 u_modelmatrix;\n" //
             + "uniform vec2 u_texturecenter;\n" //
@@ -83,7 +79,7 @@ public class X3DTandLShader {
             + "  mat3 texturetranslationmatrix = mat3(1.0, 0.0, 0.0,   0.0, 1.0, 0.0,   u_texturetranslation.s, u_texturetranslation.t, 1.0);\n" //
             + "  mat3 texturematrix = mat3(1.0, 0.0, 0.0,  0.0, 1.0, 0.0,  0.0, 0.0, 1.0);\n" // 
             + " texturematrix = texturenegcentermatrix * texturescalematrix * texturerotationmatrix * texturecentermatrix * texturetranslationmatrix;\n" //
-            + " texturecoord = vec2((texturematrix * vec3(a_tex_coord, 1.0)).xy);\n" //
+            + " texturecoord = vec2((texturematrix * vec3(a_texcoord, 1.0)).xy);\n" //
              
      		+ "  v_normal = (u_modelmatrix * vec4(a_normal, 0.0)).xyz;\n"
             + "  v_position = vec3((u_modelmatrix * a_position).xyz);\n"
@@ -184,13 +180,11 @@ public class X3DTandLShader {
 
     public String FRAGMENT_SHADER_Lights = ""; //
 
-    private GVRCustomMaterialShaderId mShaderId;
-    private GVRMaterialMap mCustomShader = null;
-    private GVRMaterialShaderManager shaderManager = null;
-
     public X3DTandLShader(GVRContext gvrContext) {
-        shaderManager = gvrContext
-                .getMaterialShaderManager();
+        super("float2 u_texturecenter, float u_texturerotation, float2 u_texturescale, float2 u_texturetranslation "
+              + "float3 u_diffusecolor, float3 u_emissivecolor, float3 u_specularcolor, float  u_shininess",
+              "sampler2D u_texture",
+              "float3 a_position float2 a_texcoord, float3 a_normal", 300);
     }
 
     public void appendFragmentShaderLights(String lightString) {
@@ -227,25 +221,6 @@ public class X3DTandLShader {
         Log.e(" -- Frag", FRAGMENT_SHADER_Lights);
         Log.e(" -- Frag", FRAGMENT_SHADER_DmainEnd);
         */
-        
-        mShaderId = shaderManager.addShader(VERTEX_SHADER, FRAGMENT_SHADER);
-        mCustomShader = shaderManager.getShaderMap(mShaderId);
-        
-        mCustomShader.addUniformVec3Key("u_diffusecolor", DIFFUSECOLOR_KEY);
-        mCustomShader.addUniformVec3Key("u_emissivecolor", EMISSIVECOLOR_KEY);
-        mCustomShader.addUniformVec3Key("u_specularcolor", SPECULARCOLOR_KEY);
-        mCustomShader.addUniformFloatKey("u_shininess", SHININESS_KEY);
-        
-        mCustomShader.addUniformVec2Key("u_texturecenter", TEXTURECENTER_KEY);
-        mCustomShader.addUniformFloatKey("u_texturerotation", TEXTUREROTATION_KEY);
-        mCustomShader.addUniformVec2Key("u_texturescale", TEXTURESCALE_KEY);
-        mCustomShader.addUniformVec2Key("u_texturetranslation", TEXTURETRANSLATION_KEY);
-        mCustomShader.addUniformMat4Key("u_modelmatrix", MODELMATRIX_KEY);
-        
-        mCustomShader.addTextureKey("texture", TEXTURE_KEY);
-    }
 
-    public GVRCustomMaterialShaderId getShaderId() {
-        return mShaderId;
     }
 }

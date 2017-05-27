@@ -22,11 +22,12 @@
 
 namespace gvr {
 class GLFrameBuffer;
+class ShaderData;
 
     class ShadowMap : public RenderTarget
     {
     public:
-        ShadowMap(Material* mtl);
+        ShadowMap(ShaderData* mtl);
         ~ShadowMap();
         virtual void  beginRendering();
         void setLayerIndex(int layerIndex);
@@ -34,6 +35,7 @@ class GLFrameBuffer;
 
     protected:
         int     mLayerIndex;
+        bool    fboInit_ = false;
     };
 }
 #endif

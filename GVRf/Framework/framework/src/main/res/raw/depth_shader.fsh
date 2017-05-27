@@ -2,6 +2,11 @@ precision highp float;
 out vec4 color;
 in vec4 proj_position;
 
+layout (std140) uniform Material_ubo
+{
+    float shadow_near;
+    float shadow_far;
+};
 vec4 packFloatToVec4i(const float depth)
 {
     const vec4 packFactors = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);

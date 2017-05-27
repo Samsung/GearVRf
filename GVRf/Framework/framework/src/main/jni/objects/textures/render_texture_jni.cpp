@@ -18,10 +18,9 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "render_texture.h"
-
-#include "util/gvr_jni.h"
-
+#include "gl/gl_render_texture.h"
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
@@ -56,14 +55,16 @@ Java_org_gearvrf_NativeRenderTexture_bind(JNIEnv * env, jobject obj, jlong ptr);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jint width,
         jint height) {
-    return reinterpret_cast<jlong>(new RenderTexture(width, height));
+    //RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 0, 0, 0, 0, NULL);
+    RenderTexture* tex = new GLRenderTexture(width, height, 0, 0, 0, 0, NULL);
+    return reinterpret_cast<jlong>(tex);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj,
         jint width, jint height, jint sample_count) {
-    return reinterpret_cast<jlong>(new RenderTexture(width, height,
-            sample_count));
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, 0, 0, 0, NULL);
+    return reinterpret_cast<jlong>(tex);
 }
 
 JNIEXPORT jlong JNICALL
@@ -72,19 +73,23 @@ Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv * env,
         jint color_format, jint depth_format, jboolean resolve_depth,
         jintArray j_parameters) {
     jint* parameters = env->GetIntArrayElements(j_parameters, NULL);
-    jlong result =
-            reinterpret_cast<jlong>(new RenderTexture(width, height,
-                    sample_count, color_format, depth_format, resolve_depth,
-                    parameters));
+    TextureParameters texparams;
+    texparams.setMinFilter(parameters[0]);
+    texparams.setMagFilter(parameters[1]);
+    texparams.setMaxAnisotropy((float) parameters[2]);
+    texparams.setWrapU(parameters[3]);
+    texparams.setWrapV(parameters[2]);
+    Texture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count,
+                                                                color_format, depth_format, resolve_depth, &texparams);
     env->ReleaseIntArrayElements(j_parameters, parameters, 0);
-    return result;
+    return reinterpret_cast<jlong>(tex);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorArray(JNIEnv * env,
           jobject obj, jint width, jint height, jint numLayers)
 {
-    RenderTexture* texarray = new RenderTextureArray(width, height, numLayers);
+    RenderTexture* texarray = Renderer::getInstance()->createRenderTextureArray(width, height, numLayers);
     return reinterpret_cast<jlong>(texarray);
 }
 

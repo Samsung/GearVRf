@@ -67,7 +67,7 @@ class ObjectCursorAsset extends CursorAsset {
     private GVRModelSceneObject loadModelSceneObject() {
         GVRModelSceneObject modelSceneObject = null;
         try {
-            modelSceneObject = context.loadModel(assetName);
+            modelSceneObject = context.getAssetLoader().loadModel(assetName);
         } catch (IOException e) {
             //should not happen
             Log.e(TAG, "Could not load model", e);

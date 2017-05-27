@@ -15,8 +15,10 @@
 
 package org.gearvrf;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,7 +28,6 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
-import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
@@ -127,25 +128,39 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * 
      */
     public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh,
-            GVRTexture texture, GVRMaterialShaderId shaderId) {
+            GVRTexture texture, GVRShaderId shaderId) {
         super(gvrContext, NativeSceneObject.ctor());
-
         attachComponent(new GVRTransform(getGVRContext()));
 
+        if ((mesh == null) && (texture == null)) {
+            return;
+        }
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachComponent(renderData);
         if (mesh != null) {
-            GVRRenderData renderData = new GVRRenderData(gvrContext);
-            attachComponent(renderData);
             renderData.setMesh(mesh);
         }
+        if (shaderId == null) {
+            shaderId = GVRShaderType.Phong.ID;
+        }
+        GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
+        renderData.setMaterial(material);
 
         if (texture != null) {
-            GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
             material.setMainTexture(texture);
-            getRenderData().setMaterial(material);
         }
     }
 
-    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
+    public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh, GVRMaterial material) {
+        super(gvrContext, NativeSceneObject.ctor());
+        attachComponent(new GVRTransform(getGVRContext()));
+
+        GVRRenderData renderData = new GVRRenderData(gvrContext, material);
+        attachComponent(renderData);
+        renderData.setMesh(mesh);
+    }
+
+    private static final GVRShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
 
     /**
      * Constructs a scene object with {@linkplain GVRMesh an arbitrarily complex
@@ -167,66 +182,50 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         this(gvrContext, mesh, texture, STANDARD_SHADER);
     }
 
-    /**
-     * Very high-level constructor that asynchronously loads the mesh and
-     * texture.
-     * 
-     * Note that because of <a href="package-summary.html#async">asynchronous
-     * request consolidation</a> you generally don't have to do anything special
-     * to create several objects that share the same mesh or texture: if you
-     * create all the objects in {@link GVRMain#onInit(GVRContext) onInit(),}
-     * the meshes and textures will generally <em>not</em> have loaded before
-     * your {@code onInit()} method finishes. Thus, the loading code will see
-     * that, say, {@code sceneObject2} and {@code sceneObject3} are using the
-     * same mesh as {@code sceneObject1}, and will only load the mesh once.
-     * 
-     * @param gvrContext
-     *            current {@link GVRContext}.
-     * @param futureMesh
-     *            mesh of the object.
-     * @param futureTexture
-     *            texture of the object.
-     * 
-     * @since 1.6.8
-     */
-    public GVRSceneObject(GVRContext gvrContext, Future<GVRMesh> futureMesh,
-            Future<GVRTexture> futureTexture) {
-        this(gvrContext);
-
-        // Create the render data
-        GVRRenderData renderData = new GVRRenderData(gvrContext);
-
-        // Set the mesh
-        renderData.setMesh(futureMesh);
-
-        // Set the texture
-        GVRMaterial material = new GVRMaterial(gvrContext);
-        material.setMainTexture(futureTexture);
-        renderData.setMaterial(material);
-
-        // Attach the render data
-        attachComponent(renderData);
-    }
 
     /**
      * Very high-level constructor that asynchronously loads the mesh and
      * texture.
-     * 
+     * <p>
+     * Upon return from this function, the scene object will not have a mesh.
+     * The mesh will be added when the 3D asset in the mesh resource is loaded
+     * and a mesh is found in that file.
+     * <p>
+     * If an error occurs while the asset is loading it will be sent to the
+     * GVRContext and can be observed by attaching an IAssetEvents interface
+     * as an event receiver.
      * @param gvrContext
      *            current {@link GVRContext}.
-     * @param mesh
-     *            Basically, a stream containing a mesh file.
-     * @param texture
-     *            Basically, a stream containing a texture file. This can be
+     * @param meshResource
+     *            A stream containing a mesh file.
+     * @param textureResource
+     *            A stream containing a texture file. This can be
      *            either a compressed texture or a regular Android bitmap file.
      * 
      * @since 1.6.7
      */
-    public GVRSceneObject(GVRContext gvrContext, GVRAndroidResource mesh,
-            GVRAndroidResource texture) {
-        this(gvrContext, gvrContext.loadFutureMesh(mesh), gvrContext
-                .getAssetLoader().loadFutureTexture(texture));
-    }
+    public GVRSceneObject(GVRContext gvrContext, GVRAndroidResource meshResource, GVRAndroidResource textureResource) {
+        this(gvrContext, null, gvrContext.getAssetLoader().loadTexture(textureResource));
+        final GVRSceneObject root = this;
+        IAssetEvents handler = new IAssetEvents()
+        {
+            public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, String errors) { }
+            public void onTextureLoaded(GVRContext context, GVRTexture texture, String filePath) { }
+            public void onModelError(GVRContext context, String error, String filePath) { }
+            public void onTextureError(GVRContext context, String error, String filePath) { }
+            public void onModelLoaded(GVRContext context, GVRSceneObject model, String filePath)
+            {
+                GVRMesh mesh = GVRAssetLoader.findMesh(model);
+                if (mesh != null)
+                {
+                    root.getRenderData().setMesh(mesh);
+                }
+                root.getChildren().clear();
+            }
+        };
+        GVRResourceVolume volume = new GVRResourceVolume(gvrContext, meshResource);
+        gvrContext.getAssetLoader().loadModel(volume, this, GVRImportSettings.getRecommendedSettings(), false, handler);
+     }
 
     /**
      * Create a standard, rectangular texture object, using a non-default shader
@@ -244,7 +243,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            a specific shader Id
      */
     public GVRSceneObject(GVRContext gvrContext, float width, float height,
-            GVRTexture texture, GVRMaterialShaderId shaderId) {
+            GVRTexture texture, GVRShaderId shaderId) {
         this(gvrContext, gvrContext.createQuad(width, height), texture,
                 shaderId);
     }

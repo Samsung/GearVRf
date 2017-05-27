@@ -15,18 +15,85 @@
 
 package org.gearvrf;
 
-/**
- * Opaque type that specifies a shader ID.
- * A shader ID designates a type of shader,
- * either stock or custom. Custom shaders
- * are implemented via a Java class that inherits
- * from @{link GVRShaderTemplate}
- */
-public abstract class GVRShaderId
-{
-    final int ID;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
-    protected GVRShaderId(int id) {
+/**
+ * Opaque type that specifies a material shader.
+ */
+public class GVRShaderId {
+    final Class<? extends GVRShader> ID;
+    protected GVRShader mShaderTemplate;
+    protected int mNativeShader;
+
+    public GVRShaderId(Class<? extends GVRShader> id)
+    {
         ID = id;
+        mShaderTemplate = null;
+        mNativeShader = 0;
+    }
+
+    protected GVRShaderId(GVRShader template)
+    {
+        ID = template.getClass();
+        mShaderTemplate = template;
+    }
+
+    String getUniformDescriptor(GVRContext ctx)
+    {
+        if (mShaderTemplate == null)
+        {
+            mShaderTemplate = makeTemplate(ID, ctx);
+        }
+        return mShaderTemplate.getUniformDescriptor();
+    }
+
+    GVRShader getTemplate(GVRContext ctx)
+    {
+        if (mShaderTemplate == null)
+        {
+            mShaderTemplate = makeTemplate(ID, ctx);
+        }
+        return mShaderTemplate;
+    }
+
+    void setTemplate(GVRShader shader)
+    {
+        mShaderTemplate = shader;
+    }
+
+    int getNativeShader(GVRContext ctx, GVRShaderManager manager)
+    {
+        if (mNativeShader == 0)
+        {
+            GVRShader shader = getTemplate(ctx);
+            if ((shader != null) && !shader.hasVariants())
+            {
+                mNativeShader = shader.bindShader(ctx, manager);
+            }
+        }
+        return mNativeShader;
+    }
+
+    GVRShader makeTemplate(Class<? extends GVRShader> id, GVRContext ctx)
+    {
+        try
+        {
+            Constructor<? extends GVRShader> maker = id.getDeclaredConstructor(GVRContext.class);
+            return maker.newInstance(ctx);
+        }
+        catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException ex)
+        {
+            try
+            {
+                Constructor<? extends GVRShader> maker = id.getDeclaredConstructor();
+                return maker.newInstance();
+            }
+            catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException ex2)
+            {
+                ctx.getEventManager().sendEvent(ctx, IErrorEvents.class, "onError", new Object[] {ex2.getMessage(), this});
+                return null;
+            }
+        }
     }
 }

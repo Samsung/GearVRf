@@ -105,7 +105,7 @@ public class X3Dobject {
     // GVRSceneObjects
     // when new GVRScene objects are generated to support animation
     private static int animationCount = 1;
-
+    private X3DTandLShader mX3DTandLShaderTest;
 
     private final static int verticesComponent = 1;
     private final static int normalsComponent = 2;
@@ -169,10 +169,8 @@ public class X3Dobject {
     // TRANSFORM and GROUP nodes
 
 
-    private X3DTandLShader mX3DTandLShaderTest = null;
-
     private GVRTextureParameters gvrTextureParameters = null;
-    private Future<GVRTexture> gvrTexture = null;
+    private GVRTexture gvrTexture = null;
 
     private Vector<Vertex> vertices = new Vector<Vertex>(); // vertices
     private Vector<VertexNormal> vertexNormal = new Vector<VertexNormal>();
@@ -1064,10 +1062,10 @@ public class X3Dobject {
                         }
 
                         final String defValue = attributes.getValue("DEF");
-                        GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest,
-                                filename, gvrTextureParameters);
-                        Future<GVRTexture> texture = assetRequest
-                                .loadFutureTexture(request);
+                        GVRTexture texture = new GVRTexture(gvrContext, gvrTextureParameters);
+                        GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(assetRequest,
+                                texture, filename);
+                        assetRequest.loadTexture(textureRequest);
                         shaderSettings.setTexture(texture);
                         if (defValue != null) {
                             DefinedItem item = new DefinedItem(defValue);
@@ -2891,7 +2889,7 @@ public class X3Dobject {
                             && (frontUrl.length > 0) && (leftUrl.length > 0)
                             && (rightUrl.length > 0) && (topUrl.length > 0)) {
 
-                        ArrayList<Future<GVRTexture>> futureTextureList = new ArrayList<Future<GVRTexture>>(6);
+                        ArrayList<GVRTexture> textureList = new ArrayList<GVRTexture>(6);
                         GVRAssetLoader loader = gvrContext.getAssetLoader();
                         String urlAttribute = backUrl[0].substring(0,
                                 backUrl[0].indexOf("."));
@@ -2899,9 +2897,11 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
-                                            gvrContext, assetID)));
+                            GVRTexture texture = new GVRTexture(gvrContext);
+                            textureList.add(texture);
+                            GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(
+                                    new GVRAndroidResource(gvrContext, assetID), texture);
+                            assetRequest.loadTexture(textureRequest);
                         }
 
                         urlAttribute = rightUrl[0].substring(0, rightUrl[0].indexOf("."));
@@ -2909,9 +2909,11 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
-                                            gvrContext, assetID)));
+                            GVRTexture texture = new GVRTexture(gvrContext);
+                            textureList.add(texture);
+                            GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(
+                                    new GVRAndroidResource(gvrContext, assetID), texture);
+                            assetRequest.loadTexture(textureRequest);
                         }
 
                         urlAttribute = frontUrl[0].substring(0, frontUrl[0].indexOf("."));
@@ -2919,9 +2921,11 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
-                                            gvrContext, assetID)));
+                            GVRTexture texture = new GVRTexture(gvrContext);
+                            textureList.add(texture);
+                            GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(
+                                    new GVRAndroidResource(gvrContext, assetID), texture);
+                            assetRequest.loadTexture(textureRequest);
                         }
 
                         urlAttribute = leftUrl[0].substring(0, leftUrl[0].indexOf("."));
@@ -2929,9 +2933,11 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
-                                            gvrContext, assetID)));
+                            GVRTexture texture = new GVRTexture(gvrContext);
+                            textureList.add(texture);
+                            GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(
+                                    new GVRAndroidResource(gvrContext, assetID), texture);
+                            assetRequest.loadTexture(textureRequest);
                         }
 
                         urlAttribute = topUrl[0].substring(0, topUrl[0].indexOf("."));
@@ -2939,9 +2945,11 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
-                                            gvrContext, assetID)));
+                            GVRTexture texture = new GVRTexture(gvrContext);
+                            textureList.add(texture);
+                            GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(
+                                    new GVRAndroidResource(gvrContext, assetID), texture);
+                            assetRequest.loadTexture(textureRequest);
                         }
 
                         urlAttribute = bottomUrl[0].substring(0, bottomUrl[0].indexOf("."));
@@ -2949,13 +2957,15 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
-                                            gvrContext, assetID)));
+                            GVRTexture texture = new GVRTexture(gvrContext);
+                            textureList.add(texture);
+                            GVRAssetLoader.TextureRequest textureRequest = new GVRAssetLoader.TextureRequest(
+                                    new GVRAndroidResource(gvrContext, assetID), texture);
+                            assetRequest.loadTexture(textureRequest);
                         }
 
                         GVRCubeSceneObject mCubeEvironment = new GVRCubeSceneObject(
-                                gvrContext, false, futureTextureList);
+                                gvrContext, false, textureList);
                         mCubeEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
                                 CUBE_WIDTH);
 

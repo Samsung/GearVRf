@@ -43,7 +43,7 @@ import org.joml.Vector3f;
  * @see GVRRenderData#bindShader(GVRScene)
  * @see GVRLightBase#setCastShadow(boolean)
  */
-public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
+public class GVRLightBase extends GVRJavaComponent implements GVRDrawFrameListener
 {
     protected Matrix4f mLightRot;
     protected Vector3f mOldDir;
@@ -89,10 +89,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
 
-
     static public long getComponentType() {
         return NativeLight.getComponentType();
     }
+
 
     /**
      * Enable or disable shadow casting by this light.
@@ -163,8 +163,10 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      *
      * The shadow material has several public attributes which affect the shadow
      * map construction:
-     *  - shadow_near   near plane of the shadow map camera (default 0.1)
-     *  - shadow_far    far plane of the shadow map camera (default 50)
+     * <ul>
+     * <li>shadow_near   near plane of the shadow map camera (default 0.1)</li>
+     * <li>shadow_far    far plane of the shadow map camera (default 50)</li>
+     * </ul>
      * The shadow map is constructed using a depth map rendered
      * from the viewpoint of the light. This global material
      * contains the shadow map properties. Modifying the near and far

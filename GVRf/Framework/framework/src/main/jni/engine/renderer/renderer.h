@@ -22,31 +22,34 @@
 
 #include <vector>
 #include <memory>
-
-#include "gl/gl_headers.h"
+#include <unordered_map>
 
 #include "glm/glm.hpp"
 #include "batch.h"
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
-#include "gl/gl_program.h"
-#include <unordered_map>
+#include "shaders/shader_manager.h"
 #include "batch_manager.h"
 
 typedef unsigned long Long;
+
 namespace gvr {
 extern bool use_multiview;
 class Camera;
 class Scene;
 class SceneObject;
-class PostEffectData;
-class PostEffectShaderManager;
+class ShaderData;
 class RenderData;
 class RenderTarget;
 class RenderTexture;
-class ShaderManager;
 class Light;
+class BitmapImage;
+class CubemapImage;
+class CompressedImage;
+class FloatImage;
+class Shader;
+class UniformBlock;
 
 /*
  * These uniforms are commonly used in shaders.
@@ -58,15 +61,14 @@ struct ShaderUniformsPerObject {
     glm::mat4   u_proj;         // projection matrix
     glm::mat4   u_view_[2];     // for multiview
     glm::mat4   u_view_inv;     // inverse of View matrix
-    glm::mat4   u_view_inv_[2];     // inverse of View matrix
+    glm::mat4   u_view_inv_[2]; // inverse of View matrix
     glm::mat4   u_mv;           // ModelView matrix
-    glm::mat4   u_mv_[2];           // ModelView matrix
+    glm::mat4   u_mv_[2];       // ModelView matrix
     glm::mat4   u_mvp;          // ModelViewProjection matrix
-    glm::mat4   u_mvp_[2];          // ModelViewProjection matrix
+    glm::mat4   u_mvp_[2];      // ModelViewProjection matrix
     glm::mat4   u_mv_it;        // inverse transpose of ModelView
-    glm::mat4   u_mv_it_[2];        // inverse transpose of ModelView
+    glm::mat4   u_mv_it_[2];    // inverse transpose of ModelView
     int         u_right;        // 1 = right eye, 0 = left
-
 };
 
 struct RenderState {
@@ -75,11 +77,14 @@ struct RenderState {
     int                     viewportY;
     int                     viewportWidth;
     int                     viewportHeight;
+    bool                    invalidateShaders;
     Scene*                  scene;
-    Material*               material_override;
+    ShaderData*             material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
-    bool shadow_map;
+    bool                    shadow_map;
+    Shader*                 depth_shader;
+
 };
 
 class Renderer {
@@ -107,10 +112,25 @@ public:
      int incrementDrawCalls(){
         return ++numberDrawCalls;
      }
-     static Renderer* getInstance(const char* type = " ");
+     static Renderer* getInstance(std::string type =  " ");
      static void resetInstance(){
         delete instance;
+         instance = NULL;
      }
+     virtual ShaderData* createMaterial(const std::string& desc) = 0;
+     virtual RenderData* createRenderData() = 0;
+     virtual UniformBlock* createUniformBlock(const std::string& desc, int, const std::string& name) = 0;
+     virtual Image* createImage(int type, int format) = 0;
+     virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
+     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                                int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                const TextureParameters* texture_parameters) = 0;
+     virtual RenderTexture* createRenderTextureArray(int width, int height, int layers) = 0;
+     virtual Shader* createShader(int id, const std::string& signature,
+                                 const std::string& uniformDescriptor, const std::string& textureDescriptor,
+                                 const std::string& vertexDescriptor, const std::string& vertexShader,
+                                 const std::string& fragmentShader) = 0;
+     void updateTransforms(RenderState& rstate, UniformBlock* block, Transform* model);
      virtual void initializeStats();
      virtual void set_face_culling(int cull_face) = 0;
      virtual void renderRenderDataVector(RenderState &rstate);
@@ -148,6 +168,8 @@ public:
                                 ShaderManager* shader_manager);
     virtual void restoreRenderStates(RenderData* render_data) = 0;
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
+    virtual Texture* createSharedTexture( int id) =0;
+    virtual int renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData) = 0;
     virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
                         ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
                         RenderTexture* post_effect_render_texture_a,
@@ -161,9 +183,6 @@ private:
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
 
-    virtual bool isShader3d(const Material* curr_material);
-    virtual bool isDefaultPosition3d(const Material* curr_material);
-
     Renderer(const Renderer& render_engine);
     Renderer(Renderer&& render_engine);
     Renderer& operator=(const Renderer& render_engine);
@@ -174,21 +193,20 @@ private:
 protected:
     Renderer();
     virtual ~Renderer(){
-        delete batch_manager;
+        if(batch_manager)
+            delete batch_manager;
+        batch_manager = NULL;
     }
     virtual void state_sort();
     virtual void renderMesh(RenderState& rstate, RenderData* render_data) = 0;
-    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material) = 0;
-    virtual void occlusion_cull(Scene* scene,
-                std::vector<SceneObject*>& scene_objects,
-                ShaderManager *shader_manager, glm::mat4 vp_matrix) = 0;
-    void addRenderData(RenderData *render_data);
+    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader) = 0;
+    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects) = 0;
+    void addRenderData(RenderData *render_data, Scene* scene);
     virtual bool occlusion_cull_init(Scene* scene, std::vector<SceneObject*>& scene_objects);
 
-    virtual void
-            renderPostEffectData(Camera* camera,
-            RenderTexture* render_texture, PostEffectData* post_effect_data,
-            PostEffectShaderManager* post_effect_shader_manager);
+    virtual void renderPostEffectData(RenderState& rstate,
+            Texture* render_texture, ShaderData* post_effect_data);
+    RenderData* post_effect_render_data();
 
     std::vector<RenderData*> render_data_vector;
     int numberDrawCalls;
@@ -196,9 +214,10 @@ protected:
     bool useStencilBuffer_ = false;
 
 public:
-    //to be used only on the gl thread
+    //to be used only on the rendering thread
     const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
-
+    int numLights;
+    RenderData* post_effect_render_data_;
     void setUseStencilBuffer(bool enable) { useStencilBuffer_ = enable; }
 };
 extern Renderer* gRenderer;

@@ -18,19 +18,14 @@
  ***************************************************************************/
 
 #include "render_data.h"
-
-#include "util/gvr_jni.h"
-
-#include "objects/mesh.h"
-#include "objects/material.h"
+#include "engine/renderer/renderer.h"
 #include "objects/components/texture_capturer.h"
 
 namespace gvr {
 
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-            jobject obj);
+Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj);
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
@@ -42,10 +37,6 @@ extern "C" {
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
             jobject obj, jlong jrender_data, jlong jrender_pass);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
-            jobject obj, jlong jrender_data, jlong jlight);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
@@ -189,9 +180,10 @@ extern "C" {
 
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-    jobject obj) {
-return reinterpret_cast<jlong>(new RenderData());
+Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj)
+{
+    Renderer* renderer = Renderer::getInstance();
+    return reinterpret_cast<jlong>(renderer->createRenderData());
 }
 
 JNIEXPORT jlong JNICALL
@@ -212,15 +204,8 @@ Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
         jobject obj, jlong jrender_data, jlong jrender_pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     RenderPass* render_pass = reinterpret_cast<RenderPass*>(jrender_pass);
+    LOGD("SHADER: RenderPass: NativeRenderData_addPass(%p[%p])", render_data, render_pass);
     render_data->add_pass(render_pass);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
-    jobject obj, jlong jrender_data, jlong jlight) {
-RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-Light* light = reinterpret_cast<Light*>(jlight);
-render_data->set_light(light);
 }
 
 JNIEXPORT void JNICALL

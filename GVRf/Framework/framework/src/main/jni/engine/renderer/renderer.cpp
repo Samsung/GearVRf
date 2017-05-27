@@ -18,45 +18,23 @@
  ***************************************************************************/
 
 #include "renderer.h"
-#include "glm/gtc/matrix_inverse.hpp"
-
-#include "objects/post_effect_data.h"
 #include "objects/scene.h"
-#include "objects/textures/render_texture.h"
-#include "shaders/shader_manager.h"
-#include "shaders/post_effect_shader_manager.h"
 
-#include "gl_renderer.h"
-#include "vulkan_renderer.h"
 #define MAX_INDICES 500
 #define BATCH_SIZE 60
-bool do_batching = true;
+bool do_batching = false;
 
 namespace gvr {
 Renderer* gRenderer = nullptr;
 bool use_multiview= false;
-Renderer* Renderer::instance = nullptr;
-bool Renderer::isVulkan_ = false;
 void Renderer::initializeStats() {
     // TODO: this function will be filled in once we add draw time stats
 }
-/***
-    Till we have Vulkan implementation, lets create GLRenderer by-default
-***/
-Renderer* Renderer::getInstance(const char* type){
-    if(nullptr == instance){
-        if(0 == std::strcmp(type,"Vulkan")) {
-            instance = new VulkanRenderer();
-            isVulkan_ = true;
-        }
-        else {
-            instance = new GLRenderer();
-        }
-        std::atexit(resetInstance);      // Destruction of instance registered at runtime exit
-    }
-    return instance;
-}
-Renderer::Renderer():numberDrawCalls(0), numberTriangles(0), batch_manager(nullptr) {
+Renderer::Renderer() : numberDrawCalls(0),
+                       numberTriangles(0),
+                       numLights(0),
+                       batch_manager(nullptr),
+                       post_effect_render_data_(nullptr){
     if(do_batching && !gRenderer->isVulkanInstace()) {
         batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
     }
@@ -140,7 +118,7 @@ void Renderer::state_sort() {
                 LOGD(
                         "SORTING: pass_count = %d, rendering order = %d, shader_type = %d, camera_distance = %f\n",
                         renderData->pass_count(), renderData->rendering_order(),
-                        renderData->material(0)->shader_type(),
+                        renderData->get_shader(0),
                         renderData->camera_distance());
             }
         }
@@ -159,7 +137,7 @@ bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2){
         return false;
 
     for(int i=0; i< pass_count1; i++){
-        if(!(rdata1->material(i) == rdata2->material(i) && rdata1->material(i)->shader_type() == rdata2->material(i)->shader_type() &&
+        if(!(rdata1->material(i) == rdata2->material(i) && rdata1->get_shader(0) == rdata2->get_shader(0) &&
                    rdata1->cull_face(i) == rdata2->cull_face(i)))
             return false;
     }
@@ -190,14 +168,21 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
         ShaderManager* shader_manager)
 {
     std::vector<SceneObject*> scene_objects;
-    glm::mat4 view_matrix = camera->getViewMatrix();
-    glm::mat4 projection_matrix = camera->getProjectionMatrix();
-    glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
-    glm::vec3 campos(view_matrix[3]);
+    RenderState rstate;
 
-    scene_objects.reserve(1024);
-    scene_objects.clear();
     render_data_vector.clear();
+    scene_objects.clear();
+    scene_objects.reserve(1024);
+    rstate.material_override = NULL;
+    rstate.shader_manager = shader_manager;
+    rstate.uniforms.u_view = camera->getViewMatrix();
+    rstate.uniforms.u_proj = camera->getProjectionMatrix();
+    rstate.shader_manager = shader_manager;
+    rstate.scene = scene;
+    rstate.render_mask = camera->render_mask();
+    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+    glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj * rstate.uniforms.u_view);
+    glm::vec3 campos(rstate.uniforms.u_view[3]);
 
     // Travese all scene objects in the scene as a tree and do frustum culling at the same time if enabled
     // 1. Build the view frustum
@@ -215,7 +200,7 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
         LOGD("FRUSTUM: end frustum culling for root %s\n", object->name().c_str());
     }
     // 3. do occlusion culling, if enabled
-    occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
+    occlusion_cull(rstate, scene_objects);
 }
 
 
@@ -231,19 +216,35 @@ void Renderer::renderRenderDataVector(RenderState &rstate) {
     }
 }
 
-void Renderer::addRenderData(RenderData *render_data) {
+void Renderer::addRenderData(RenderData *render_data, Scene* scene) {
     if (render_data == 0 || render_data->material(0) == 0 || !render_data->enabled()) {
         return;
     }
-
     if (render_data->mesh() == NULL) {
         return;
     }
-
+    const RenderPass* pass = render_data->pass(0);
+    int shaderID = pass->get_shader();
+    if (shaderID < 0)
+    {
+        //LOGE("SHADER: RenderData %p[%p] shader being generated", render_data, pass);
+        return;
+    }
+    u_short dirty_bits =0;
+    dirty_bits |= (1 << NEW_TEXTURE);
+    dirty_bits |= (1 << CUSTOM_ATTRIBS);
+    dirty_bits |= (1 << MOD_SHADER_ID);
+    if (shaderID == 0 || render_data->isDirty(dirty_bits))
+    {
+        LOGE("SHADER: RenderData %p[%p] has no shader", render_data, pass);
+        render_data->set_shader(0, -1);
+        render_data->bindShader(scene);
+        render_data->clearDirtyBits(~dirty_bits);
+        return;
+    }
     if (render_data->render_mask() == 0) {
         return;
     }
-
     render_data_vector.push_back(render_data);
     return;
 }
@@ -257,13 +258,13 @@ bool Renderer::occlusion_cull_init(Scene* scene, std::vector<SceneObject*>& scen
         for (auto it = scene_objects.begin(); it != scene_objects.end(); ++it) {
             SceneObject *scene_object = (*it);
             RenderData* render_data = scene_object->render_data();
-            addRenderData(render_data);
+            addRenderData(render_data, scene);
             scene->pick(scene_object);
         }
         scene->unlockColliders();
         return false;
     }
-
+    //LOGE("in occlusion cull %d", render_data_vector.size());
     return true;
 }
 
@@ -362,47 +363,6 @@ void Renderer::build_frustum(float frustum[6][4], const float *vp_matrix) {
     frustum[5][3] /= t;
 }
 
-
-bool Renderer::isShader3d(const Material* curr_material) {
-    bool shaders3d;
-
-    switch (curr_material->shader_type()) {
-    case Material::ShaderType::UNLIT_HORIZONTAL_STEREO_SHADER:
-    case Material::ShaderType::UNLIT_VERTICAL_STEREO_SHADER:
-    case Material::ShaderType::OES_SHADER:
-    case Material::ShaderType::OES_HORIZONTAL_STEREO_SHADER:
-    case Material::ShaderType::OES_VERTICAL_STEREO_SHADER:
-    case Material::ShaderType::CUBEMAP_SHADER:
-    case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-        shaders3d = false;
-        break;
-    case Material::ShaderType::TEXTURE_SHADER:
-    case Material::ShaderType::EXTERNAL_RENDERER_SHADER:
-    case Material::ShaderType::ASSIMP_SHADER:
-    case Material::ShaderType::LIGHTMAP_SHADER:
-    default:
-        shaders3d = true;
-        break;
-    }
-
-    return shaders3d;
-}
-
-bool Renderer::isDefaultPosition3d(const Material* curr_material) {
-    bool defaultShadersForm = false;
-
-    switch (curr_material->shader_type()) {
-    case Material::ShaderType::TEXTURE_SHADER:
-        defaultShadersForm = true;
-        break;
-    default:
-        defaultShadersForm = false;
-        break;
-    }
-
-    return defaultShadersForm;
-}
-
 void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     if (!(rstate.render_mask & render_data->render_mask()))
         return;
@@ -418,39 +378,98 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     restoreRenderStates(render_data);
 }
 
-void Renderer::renderPostEffectData(Camera* camera,
-        RenderTexture* render_texture, PostEffectData* post_effect_data,
-        PostEffectShaderManager* post_effect_shader_manager) {
-    try {
-        switch (post_effect_data->shader_type()) {
-        case PostEffectData::ShaderType::COLOR_BLEND_SHADER:
-            post_effect_shader_manager->getColorBlendPostEffectShader()->render(
-                    render_texture, post_effect_data,
-                    post_effect_shader_manager->quad_vertices(),
-                    post_effect_shader_manager->quad_uvs(),
-                    post_effect_shader_manager->quad_triangles());
-            break;
-        case PostEffectData::ShaderType::HORIZONTAL_FLIP_SHADER:
-            post_effect_shader_manager->getHorizontalFlipPostEffectShader()->render(
-                    render_texture, post_effect_data,
-                    post_effect_shader_manager->quad_vertices(),
-                    post_effect_shader_manager->quad_uvs(),
-                    post_effect_shader_manager->quad_triangles());
-            break;
-        default:
-            post_effect_shader_manager->getCustomPostEffectShader(
-                    post_effect_data->shader_type())->render(camera,
-                    render_texture, post_effect_data,
-                    post_effect_shader_manager->quad_vertices(),
-                    post_effect_shader_manager->quad_uvs(),
-                    post_effect_shader_manager->quad_triangles());
-            break;
-        }
-    } catch (const std::string& error) {
-        LOGE(
-                "Error detected in Renderer::renderPostEffectData; error : %s", error.c_str());
+RenderData* Renderer::post_effect_render_data()
+{
+    if (post_effect_render_data_)
+    {
+        return post_effect_render_data_;
     }
+    std::vector<glm::vec3> quad_vertices;
+    std::vector<glm::vec2> quad_uvs;
+    std::vector<unsigned short> quad_triangles;
+
+    quad_vertices.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
+    quad_vertices.push_back(glm::vec3(-1.0f, 1.0f, 0.0f));
+    quad_vertices.push_back(glm::vec3(1.0f, -1.0f, 0.0f));
+    quad_vertices.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
+
+    quad_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    quad_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    quad_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    quad_uvs.push_back(glm::vec2(1.0f, 1.0f));
+
+    quad_triangles.push_back(0);
+    quad_triangles.push_back(1);
+    quad_triangles.push_back(2);
+
+    quad_triangles.push_back(1);
+    quad_triangles.push_back(3);
+    quad_triangles.push_back(2);
+    Mesh* mesh = new Mesh(std::string("float3 a_position float2 a_texcoord"));
+    mesh->set_vertices(quad_vertices);
+    mesh->setVec2Vector("a_texcoord",quad_uvs);
+    mesh->set_triangles(quad_triangles);
+
+    RenderPass* pass = new RenderPass();
+
+    post_effect_render_data_ = createRenderData();
+    post_effect_render_data_->set_mesh(mesh);
+    post_effect_render_data_->add_pass(pass);
+    return post_effect_render_data_;
 }
 
+void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo, Transform* model)
+{
+    rstate.uniforms.u_model = model->getModelMatrix();
+    rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
+    rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
+    rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
+    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+
+    if (use_multiview && !rstate.shadow_map)
+    {
+        rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
+        rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
+        rstate.uniforms.u_mv_[0] = rstate.uniforms.u_view_[0] * rstate.uniforms.u_model;
+        rstate.uniforms.u_mv_[1] = rstate.uniforms.u_view_[1] * rstate.uniforms.u_model;
+        rstate.uniforms.u_mv_it_[0] = glm::inverseTranspose(rstate.uniforms.u_mv_[0]);
+        rstate.uniforms.u_mv_it_[1] = glm::inverseTranspose(rstate.uniforms.u_mv_[1]);
+        rstate.uniforms.u_mvp_[0] = rstate.uniforms.u_proj * rstate.uniforms.u_mv_[0];
+        rstate.uniforms.u_mvp_[1] = rstate.uniforms.u_proj * rstate.uniforms.u_mv_[1];
+        rstate.uniforms.u_view_inv_[0] = glm::inverse(rstate.uniforms.u_view_[0]);
+        rstate.uniforms.u_view_inv_[1] = glm::inverse(rstate.uniforms.u_view_[1]);
+    }
+    if (use_multiview)
+    {
+        transform_ubo->setMat4("u_view_", rstate.uniforms.u_view_[0]);
+        transform_ubo->setMat4("u_mvp_", rstate.uniforms.u_mvp_[0]);
+        transform_ubo->setMat4("u_mv_", rstate.uniforms.u_mv_[0]);
+        transform_ubo->setMat4("u_mv_it_", rstate.uniforms.u_mv_it_[0]);
+        transform_ubo->setMat4("u_view_i_", rstate.uniforms.u_view_inv_[0]);
+    }
+    else
+    {
+        transform_ubo->setMat4("u_view", rstate.uniforms.u_view);
+        transform_ubo->setMat4("u_mvp", rstate.uniforms.u_mvp);
+        transform_ubo->setMat4("u_mv", rstate.uniforms.u_mv);
+        transform_ubo->setMat4("u_mv_it", rstate.uniforms.u_mv_it);
+        transform_ubo->setMat4("u_view_i", rstate.uniforms.u_view_inv);
+    }
+    transform_ubo->setMat4("u_model", rstate.uniforms.u_model);
+    transform_ubo->updateGPU(this);
+}
+
+void Renderer::renderPostEffectData(RenderState& rstate, Texture* render_texture, ShaderData* post_effect_data)
+{
+    Shader* shader = rstate.shader_manager->getShader(post_effect_data->getNativeShader());
+    RenderData* rdata = post_effect_render_data();
+
+    if (!rdata->get_shader(0))
+    {
+        post_effect_data->setTexture("u_texture", render_texture);
+        rdata->set_shader(0, post_effect_data->getNativeShader());
+    }
+    renderWithShader(rstate, shader, post_effect_render_data(), post_effect_data);
+}
 
 }

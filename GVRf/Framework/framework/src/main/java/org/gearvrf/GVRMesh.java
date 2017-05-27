@@ -38,12 +38,17 @@ import org.gearvrf.utility.Log;
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     private static final String TAG = GVRMesh.class.getSimpleName();
 
+
     public GVRMesh(GVRContext gvrContext) {
-        this(gvrContext, NativeMesh.ctor());
+        this(gvrContext, "float3 a_position float3 a_normal float2 a_texcoord");
+    }
+
+    public GVRMesh(GVRContext gvrContext, String vertexDescriptor) {
+        this(gvrContext, vertexDescriptor, NativeMesh.ctor(vertexDescriptor));
         mAttributeKeys = new HashSet<String>();
     }
 
-    GVRMesh(GVRContext gvrContext, long ptr) {
+    GVRMesh(GVRContext gvrContext, String vertexDescriptor, long ptr) {
         super(gvrContext, ptr);
         setBones(new ArrayList<GVRBone>());
         mVertexBoneData = new GVRVertexBoneData(gvrContext, this);
@@ -75,7 +80,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVertices(float[] vertices) {
         checkValidFloatArray("vertices", vertices, 3);
-        mAttributeKeys.add("a_position");
         NativeMesh.setVertices(getNative(), vertices);
     }
 
@@ -102,7 +106,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setNormals(float[] normals) {
         checkValidFloatArray("normals", normals, 3);
-        mAttributeKeys.add("a_normal");
         NativeMesh.setNormals(getNative(), normals);
     }
 
@@ -136,7 +139,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
         String key = (index > 0) ? ("a_texcoord" +index) : "a_texcoord";
         checkValidFloatArray(key, texCoords, 2);
-        mAttributeKeys.add(key);
         NativeMesh.setVec2Vector(getNative(),key,texCoords);
     }
 
@@ -219,7 +221,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setFloatVector(String key, float[] floatVector) {
         checkValidFloatVector("key", key, "floatVector", floatVector, 1);
-        mAttributeKeys.add(key);
         NativeMesh.setFloatVector(getNative(), key, floatVector);
     }
 
@@ -247,7 +248,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVec2Vector(String key, float[] vec2Vector) {
         checkValidFloatVector("key", key, "vec2Vector", vec2Vector, 2);
-        mAttributeKeys.add(key);
         NativeMesh.setVec2Vector(getNative(), key, vec2Vector);
     }
 
@@ -275,7 +275,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVec3Vector(String key, float[] vec3Vector) {
         checkValidFloatVector("key", key, "vec3Vector", vec3Vector, 3);
-        mAttributeKeys.add(key);
         NativeMesh.setVec3Vector(getNative(), key, vec3Vector);
     }
 
@@ -303,7 +302,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setVec4Vector(String key, float[] vec4Vector) {
         checkValidFloatVector("key", key, "vec4Vector", vec4Vector, 4);
-        mAttributeKeys.add(key);
         NativeMesh.setVec4Vector(getNative(), key, vec4Vector);
     }
     
@@ -312,15 +310,14 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return array of string names
      */
     public Set<String> getAttributeNames() {
-        if(mAttributeKeys.size() > 0)
+        if (mAttributeKeys.size() > 0)
             return mAttributeKeys;
         
-        String[] attribKeys = NativeMesh.getAttribNames(getNative());
-        
-        for(String i : attribKeys){
+        String[] attribNames = NativeMesh.getAttribNames(getNative());
+        for (String i : attribNames){
             mAttributeKeys.add(i);
         }
-        return mAttributeKeys;    
+        return mAttributeKeys;
     }
     
     /**
@@ -356,7 +353,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return A {@link GVRMesh} of the bounding box.
      */
     public GVRMesh getBoundingBox() {
-        return new GVRMesh(getGVRContext(),
+        return new GVRMesh(getGVRContext(), "float3 a_position",
                 NativeMesh.getBoundingBox(getNative()));
     }
 
@@ -396,8 +393,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
             }
         }
         if (getVertexBoneData() != null) {
-            mAttributeKeys.add("a_bone_indices");
-            mAttributeKeys.add("a_bone_weights");
             getVertexBoneData().normalizeWeights();
         }
     }
@@ -477,7 +472,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 }
 
 class NativeMesh {
-    static native long ctor();
+    static native long ctor(String vertexDescriptor);
     
     static native String[] getAttribNames(long mesh);
     

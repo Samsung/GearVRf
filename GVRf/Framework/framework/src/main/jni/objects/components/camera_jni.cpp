@@ -158,8 +158,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_addPostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data) {
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
-    PostEffectData* post_effect_data =
-            reinterpret_cast<PostEffectData*>(jpost_effect_data);
+    ShaderData* post_effect_data =
+            reinterpret_cast<ShaderData*>(jpost_effect_data);
     camera->addPostEffect(post_effect_data);
 }
 
@@ -167,8 +167,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data) {
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
-    PostEffectData* post_effect_data =
-            reinterpret_cast<PostEffectData*>(jpost_effect_data);
+    ShaderData* post_effect_data =
+            reinterpret_cast<ShaderData*>(jpost_effect_data);
     camera->removePostEffect(post_effect_data);
 }
 

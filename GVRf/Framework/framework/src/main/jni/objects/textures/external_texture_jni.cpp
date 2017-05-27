@@ -18,9 +18,8 @@
  * JNI
  ***************************************************************************/
 
-#include "external_texture.h"
-
-#include "util/gvr_jni.h"
+#include "objects/textures/texture.h"
+#include "engine/renderer/renderer.h"
 
 namespace gvr {
 extern "C" {
@@ -33,7 +32,7 @@ Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeExternalTexture_ctor(JNIEnv * env,
         jobject obj) {
-    return reinterpret_cast<jlong>(new ExternalTexture());
+    return reinterpret_cast<jlong>(Renderer::getInstance()->createTexture(Texture::TextureType::TEXTURE_EXTERNAL));
 }
 
 }

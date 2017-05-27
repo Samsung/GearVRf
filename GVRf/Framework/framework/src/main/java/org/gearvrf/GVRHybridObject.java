@@ -115,6 +115,15 @@ public abstract class GVRHybridObject {
         return mNativePointer;
     }
 
+    protected void setNative(long nativePtr)
+    {
+        if (mNativePointer == 0)
+        {
+            mNativePointer = nativePtr;
+            getGVRContext().registerHybridObject(this, mNativePointer, null);
+        }
+    }
+
     /*package*/ static long[] getNativePtrArray(Collection<? extends GVRHybridObject> objects) {
         long[] ptrs = new long[objects.size()];
 

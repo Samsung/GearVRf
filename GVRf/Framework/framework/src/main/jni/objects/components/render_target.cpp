@@ -59,33 +59,6 @@ RenderTarget::RenderTarget()
     mRenderState.material_override = NULL;
 }
 
-/**
- * Constructs a render target component of the specified dimensionss
- * which renders to a particular GL texture.
- * The scene will be rendered from the viewpoint of the scene object
- * the RenderTarget is attached to. Nothing will be rendered if
- * the render target is not attached to a scene object.
- *
- * If a RenderTarget is actually a ShadowMap, it is rendered
- * automatically by the lighting code. Otherwise, the
- * Java application is responsible for initiating rendering.
- * This constructor must be called from the GL thread!
- *
- * @param width     pixel width of render target
- * @param height    pixel height of render target
- * @param texture   GLTexture to render to
- */
-RenderTarget::RenderTarget(int width, int height, GLTexture* tex)
-:   Component(RenderTarget::getComponentType()),
-    mRenderTexture(new RenderTexture(width, height, tex)),
-    mCamera(nullptr)
-{
-    mRenderState.viewportY = 0;
-    mRenderState.viewportX = 0;
-    mRenderState.shadow_map = false;
-    mRenderState.material_override = NULL;
-}
-
 RenderTarget::~RenderTarget()
 {
     if (mRenderTexture)
@@ -122,7 +95,8 @@ void  RenderTarget::beginRendering()
     {
         mRenderTexture->setBackgroundColor(mCamera->background_color_r(),
                                            mCamera->background_color_g(),
-                                           mCamera->background_color_b());
+                                           mCamera->background_color_b(),
+                                           mCamera->background_color_a());
     }
     mRenderTexture->beginRendering();
     checkGLError("RenderTarget::beginRendering");

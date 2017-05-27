@@ -52,12 +52,12 @@ import org.gearvrf.GVRShaderTemplate;
 public class YuvNv21ToRgbShader extends GVRShaderTemplate
 {
     private static final String VERTEX_SHADER =
-            "in vec4 a_position;\n" +
+            "in vec3 a_position;\n" +
             "in vec2 a_texcoord;\n" +
             "out vec2 v_texCoord;\n" +
             "uniform mat4 u_mvp;\n" +
             "void main() {\n" +
-            "  gl_Position = u_mvp * a_position;\n" +
+            "  gl_Position = u_mvp * vec4(a_position, 1.0);\n" +
             "  v_texCoord = a_texcoord;\n" +
             "}\n";
 
@@ -81,7 +81,7 @@ public class YuvNv21ToRgbShader extends GVRShaderTemplate
 
     public YuvNv21ToRgbShader(GVRContext gvrContext)
     {
-        super("sampler2D y_texture, sampler2D uv_texture", 300);
+        super("", "sampler2D y_texture, sampler2D uv_texture", "float3 a_position float2 a_texcoord", 300);
         setSegment("FragmentTemplate", FRAGMENT_SHADER);
         setSegment("VertexTemplate", VERTEX_SHADER);
     }
