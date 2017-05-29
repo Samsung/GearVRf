@@ -1,0 +1,11 @@
+Devices:
+
+_VENDOR_TODO_ update device info here. This information helps app developers easily add this io device to their settings.xml.
+
+1) name="Mobile IO device"
+   deviceId= "gvrmobile"
+   vendorId = 525
+   productId= 0
+   vendorName="Template Company"
+
+

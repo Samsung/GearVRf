@@ -453,4 +453,11 @@ public class IoDevice {
     GVRCursorController getGvrCursorController() {
         return gvrCursorController;
     }
+
+    /**
+     * Each type of IO device that handles output events has to implement to define what to do
+     * with the output event.
+     * @param outputEvent
+     */
+    protected void handleOutputEvent(OutputEvent outputEvent) {}
 }

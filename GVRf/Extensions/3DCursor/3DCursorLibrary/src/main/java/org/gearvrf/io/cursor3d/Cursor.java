@@ -788,4 +788,14 @@ public abstract class Cursor {
                 0.0f, 0.0f, 0.0f, 0.0f};
         cursorSceneObject.setModelMatrix(matrix);
     }
+
+    /**
+     * @brief This method takes as input the output events/actions
+     *        that are currently present
+     * */
+    public void handleOutputEvent(OutputEvent outputEvent) {
+        if (isActive()) {
+            ioDevice.handleOutputEvent(outputEvent);
+        }
+    }
 }
