@@ -21,7 +21,7 @@
 
 VulkanCore* VulkanCore::theInstance = NULL;
 
-bool VulkanCore::CreateInstance(){
+bool VulkanCore::CreateInstance() {
     VkResult ret = VK_SUCCESS;
 
     // Discover the number of extensions listed in the instance properties in order to allocate
@@ -32,35 +32,41 @@ bool VulkanCore::CreateInstance(){
 
     VkBool32 surfaceExtFound = 0;
     VkBool32 platformSurfaceExtFound = 0;
-    VkExtensionProperties* instanceExtensions = nullptr;
+    VkExtensionProperties *instanceExtensions = nullptr;
     instanceExtensions = new VkExtensionProperties[instanceExtensionCount];
 
     // Now request instanceExtensionCount VkExtensionProperties elements be read into out buffer
-    ret = vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, instanceExtensions);
+    ret = vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount,
+                                                 instanceExtensions);
     GVR_VK_CHECK(!ret);
 
     // We require two extensions, VK_KHR_surface and VK_KHR_android_surface. If they are found,
     // add them to the extensionNames list that we'll use to initialize our instance with later.
     uint32_t enabledExtensionCount = 0;
-    const char* extensionNames[16];
+    const char *extensionNames[16];
     for (uint32_t i = 0; i < instanceExtensionCount; i++) {
         if (!strcmp(VK_KHR_SURFACE_EXTENSION_NAME, instanceExtensions[i].extensionName)) {
             surfaceExtFound = 1;
             extensionNames[enabledExtensionCount++] = VK_KHR_SURFACE_EXTENSION_NAME;
         }
 
-        if (!strcmp(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME, instanceExtensions[i].extensionName)) {
+        if (!strcmp(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
+                    instanceExtensions[i].extensionName)) {
             platformSurfaceExtFound = 1;
             extensionNames[enabledExtensionCount++] = VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
         }
         GVR_VK_CHECK(enabledExtensionCount < 16);
     }
     if (!surfaceExtFound) {
-        LOGE("vkEnumerateInstanceExtensionProperties failed to find the " VK_KHR_SURFACE_EXTENSION_NAME" extension.");
+        LOGE("vkEnumerateInstanceExtensionProperties failed to find the "
+                     VK_KHR_SURFACE_EXTENSION_NAME
+                     " extension.");
         return false;
     }
     if (!platformSurfaceExtFound) {
-        LOGE("vkEnumerateInstanceExtensionProperties failed to find the " VK_KHR_ANDROID_SURFACE_EXTENSION_NAME" extension.");
+        LOGE("vkEnumerateInstanceExtensionProperties failed to find the "
+                     VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
+                     " extension.");
         return false;
     }
 
@@ -113,15 +119,14 @@ bool VulkanCore::CreateInstance(){
     return true;
 }
 
-bool VulkanCore::GetPhysicalDevices(){
+bool VulkanCore::GetPhysicalDevices() {
     VkResult ret = VK_SUCCESS;
 
     // Query number of physical devices available
     ret = vkEnumeratePhysicalDevices(m_instance, &(m_physicalDeviceCount), nullptr);
     GVR_VK_CHECK(!ret);
 
-    if (m_physicalDeviceCount == 0)
-    {
+    if (m_physicalDeviceCount == 0) {
         LOGE("No physical devices detected.");
         return false;
     }
@@ -154,18 +159,20 @@ void VulkanCore::InitDevice() {
     // that we have selected to use.
     uint32_t deviceExtensionCount = 0;
     VkExtensionProperties *device_extensions = nullptr;
-    ret = vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &deviceExtensionCount, nullptr);
+    ret = vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &deviceExtensionCount,
+                                               nullptr);
     GVR_VK_CHECK(!ret);
 
     VkBool32 swapchainExtFound = 0;
-    VkExtensionProperties* deviceExtensions = new VkExtensionProperties[deviceExtensionCount];
-    ret = vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &deviceExtensionCount, deviceExtensions);
+    VkExtensionProperties *deviceExtensions = new VkExtensionProperties[deviceExtensionCount];
+    ret = vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &deviceExtensionCount,
+                                               deviceExtensions);
     GVR_VK_CHECK(!ret);
 
     // For our example, we require the swapchain extension, which is used to present backbuffers efficiently
     // to the users screen.
     uint32_t enabledExtensionCount = 0;
-    const char* extensionNames[16] = {0};
+    const char *extensionNames[16] = {0};
     for (uint32_t i = 0; i < deviceExtensionCount; i++) {
         if (!strcmp(VK_KHR_SWAPCHAIN_EXTENSION_NAME, deviceExtensions[i].extensionName)) {
             swapchainExtFound = 1;
@@ -174,7 +181,9 @@ void VulkanCore::InitDevice() {
         GVR_VK_CHECK(enabledExtensionCount < 16);
     }
     if (!swapchainExtFound) {
-        LOGE("vkEnumerateDeviceExtensionProperties failed to find the " VK_KHR_SWAPCHAIN_EXTENSION_NAME " extension: vkCreateInstance Failure");
+        LOGE("vkEnumerateDeviceExtensionProperties failed to find the "
+                     VK_KHR_SWAPCHAIN_EXTENSION_NAME
+                     " extension: vkCreateInstance Failure");
 
         // Always attempt to enable the swapchain
         extensionNames[enabledExtensionCount++] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
@@ -188,16 +197,18 @@ void VulkanCore::InitDevice() {
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, nullptr);
 
-    VkQueueFamilyProperties* queueProperties = new VkQueueFamilyProperties[queueFamilyCount];
-    vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, queueProperties);
+    VkQueueFamilyProperties *queueProperties = new VkQueueFamilyProperties[queueFamilyCount];
+    vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount,
+                                             queueProperties);
     GVR_VK_CHECK(queueFamilyCount >= 1);
 
     // We query each queue family in turn for the ability to support the android surface
     // that was created earlier. We need the device to be able to present its images to
     // this surface, so it is important to test for this.
-    VkBool32* supportsPresent = new VkBool32[queueFamilyCount];
+    VkBool32 *supportsPresent = new VkBool32[queueFamilyCount];
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
-        vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, i,  m_surface, &supportsPresent[i]);
+        vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, i, m_surface,
+                                             &supportsPresent[i]);
     }
 
 
@@ -213,11 +224,12 @@ void VulkanCore::InitDevice() {
         }
     }
 
-    delete [] supportsPresent;
-    delete [] queueProperties;
+    delete[] supportsPresent;
+    delete[] queueProperties;
 
     if (queueIndex == (queueFamilyCount + 1)) {
-        GVR_VK_CHECK("Could not obtain a queue family for both graphics and presentation." && 0);
+        GVR_VK_CHECK(
+                "Could not obtain a queue family for both graphics and presentation." && 0);
     }
 
     // We have identified a queue family which both supports our android surface,
@@ -227,7 +239,7 @@ void VulkanCore::InitDevice() {
 
     // As we create the device, we state we will be creating a queue of the
     // family type required. 1.0 is the highest priority and we use that.
-    float queuePriorities[1] = { 1.0 };
+    float queuePriorities[1] = {1.0};
     VkDeviceQueueCreateInfo deviceQueueCreateInfo = {};
     deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     deviceQueueCreateInfo.pNext = nullptr;
@@ -255,7 +267,7 @@ void VulkanCore::InitDevice() {
     vkGetDeviceQueue(m_device, m_queueFamilyIndex, 0, &m_queue);
 }
 
-void VulkanCore::InitSwapchain(uint32_t width, uint32_t height){
+void VulkanCore::InitSwapchain(uint32_t width, uint32_t height) {
     VkResult ret = VK_SUCCESS;
 
 
@@ -403,8 +415,8 @@ void VulkanCore::InitSwapchain(uint32_t width, uint32_t height){
     }
 }
 
-bool VulkanCore::GetMemoryTypeFromProperties( uint32_t typeBits, VkFlags requirements_mask, uint32_t* typeIndex)
-{
+bool VulkanCore::GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
+                                             uint32_t* typeIndex) {
     GVR_VK_CHECK(typeIndex != nullptr);
     // Search memtypes to find first index with those properties
     for (uint32_t i = 0; i < 32; i++) {
@@ -422,7 +434,7 @@ bool VulkanCore::GetMemoryTypeFromProperties( uint32_t typeBits, VkFlags require
     return false;
 }
 
-void VulkanCore::InitCommandbuffers(){
+void VulkanCore::InitCommandbuffers() {
     VkResult ret = VK_SUCCESS;
     // Command buffers are allocated from a pool; we define that pool here and create it.
     VkCommandPoolCreateInfo commandPoolCreateInfo = {};
@@ -640,7 +652,7 @@ void VulkanCore::InitPipeline(){
 
     // Our vertex input is a single vertex buffer, and its layout is defined
     // in our m_vertices object already. Use this when creating the pipeline.
-    VkPipelineVertexInputStateCreateInfo   vi = {};
+    VkPipelineVertexInputStateCreateInfo vi = {};
     vi = m_vertices.vi;
 
     // Our vertex buffer describes a triangle list.
@@ -797,7 +809,7 @@ void VulkanCore::InitFrameBuffers(){
     }
 }
 
-void VulkanCore::InitSync(){
+void VulkanCore::InitSync() {
     VkResult ret = VK_SUCCESS;
     // For synchronization, we have semaphores for rendering and backbuffer signalling.
     VkSemaphoreCreateInfo semaphoreCreateInfo = {};
@@ -896,7 +908,8 @@ void VulkanCore::BuildCmdBuffer()
 
         // Set our pipeline. This holds all major state
         // the pipeline defines, for example, that the vertex buffer is a triangle list.
-        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          m_pipeline);
 
         // Bind our vertex buffer, with a 0 offset.
         VkDeviceSize offsets[1] = {0};
@@ -1028,8 +1041,7 @@ void VulkanCore::BuildCmdBuffer()
     }
 }
 
-void VulkanCore::initVulkanCore()
-{
+void VulkanCore::initVulkanCore() {
 #if 0
         InitVulkan();
         CreateInstance();

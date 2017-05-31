@@ -552,9 +552,8 @@ public class GVRAndroidResource {
      */
     @Override
     public String toString() {
-        return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s, url=%s, " +
-                "inputStreamName=%s}",streamState, filePath, resourceId, assetPath, url,
-                inputStreamName);
+        return String.format("%s { %s %x %s }",
+                             streamState, getResourceFilename(), resourceId, inputStreamName);
     }
 
     /*

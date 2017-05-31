@@ -91,7 +91,8 @@ public class GVRRenderPass extends GVRHybridObject {
      *            The {@link GVRMaterial material} this {@link GVRRenderPass pass}
      *            will be rendered with.
      */
-    public void setMaterial(GVRMaterial material) {
+    public void setMaterial(GVRMaterial material)
+    {
         mMaterial = material;
         NativeRenderPass.setMaterial(getNative(), material.getNative());
     }

@@ -58,7 +58,8 @@ public class GVRTexture extends GVRHybridObject {
                 cdl.countDown();
             }
         });
-        try {
+        try
+        {
             cdl.await();
         } catch (final Exception exc) {
             throw new IllegalStateException("Unable to obtain texture id");

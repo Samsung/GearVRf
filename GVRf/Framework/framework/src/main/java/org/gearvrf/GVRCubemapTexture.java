@@ -74,19 +74,21 @@ public class GVRCubemapTexture extends GVRTexture {
      *            corresponding to +x, -x, +y, -y, +z, and -z faces of the cube
      *            map texture respectively.
      */
-    public static void setFaceNames(String[] nameArray) {
-        if (nameArray.length != 6) {
+    public static void setFaceNames(String[] nameArray)
+    {
+        if (nameArray.length != 6)
+        {
             throw new IllegalArgumentException("nameArray length is not 6.");
         }
-
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++)
+        {
             faceIndexMap.put(nameArray[i], i);
         }
     }
 
-    final static Map<String, Integer> faceIndexMap = new HashMap<String, Integer>(
-            6);
-    static {
+    final static Map<String, Integer> faceIndexMap = new HashMap<String, Integer>(6);
+    static
+    {
         /*
          *  File extensions can be .png for uncompressed cubemap textures,
          *  or .pkm for compressed cubemap textures.

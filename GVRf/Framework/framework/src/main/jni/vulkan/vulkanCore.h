@@ -84,7 +84,7 @@ private:
 
 
     VkInstance m_instance;
-    VkPhysicalDevice* m_pPhysicalDevices;
+    VkPhysicalDevice *m_pPhysicalDevices;
     VkPhysicalDevice m_physicalDevice;
     VkPhysicalDeviceProperties m_physicalDeviceProperties;
     VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;

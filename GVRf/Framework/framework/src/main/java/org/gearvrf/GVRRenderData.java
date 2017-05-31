@@ -379,7 +379,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
      */
-    public GVRMaterial getMaterial(int passIndex) {
+    public GVRMaterial getMaterial(int passIndex)
+    {
         if (passIndex < mRenderPassList.size()) {
             return mRenderPassList.get(passIndex).getMaterial();
         } else {
@@ -407,10 +408,14 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      *            The rendering pass this material will be assigned to.
      * 
      */
-    public void setMaterial(GVRMaterial material, int passIndex) {
-        if (passIndex < mRenderPassList.size()) {
+    public void setMaterial(GVRMaterial material, int passIndex)
+    {
+        if (passIndex < mRenderPassList.size())
+        {
             mRenderPassList.get(passIndex).setMaterial(material);
-        } else {
+        }
+        else
+        {
             Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
         }
         
@@ -514,13 +519,16 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * GVRLight.enable(). GVRLight.enable turns on a light, while this method
      * enables the lighting effect for the render_data.
      */
-    public void enableLight() {
-        if (!isLightEnabled) {
+    public void enableLight()
+    {
+        if (!isLightEnabled)
+        {
             NativeRenderData.enableLight(getNative());
             isLightEnabled = true;
             bindShader(getGVRContext().getMainScene());
         }
     }
+
 
     /**
      * Disable lighting effect for the render_data.
@@ -528,8 +536,10 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
      * GVRLight.disable turns off a light, while this method
      * disables the lighting effect for the render_data.
      */
-    public void disableLight() {
-        if (isLightEnabled) {
+    public void disableLight()
+    {
+        if (isLightEnabled)
+        {
             NativeRenderData.disableLight(getNative());
             isLightEnabled = false;
             if (mShaderTemplate != null) {

@@ -19,21 +19,21 @@ import org.joml.Matrix4f;
 
 /**
  * Illuminates object in the scene with a cone shaped beam.
- * 
+ * <p>
  * The apex of the cone is at the position of the scene object
  * the light is attached to. The direction of the cone is the
  * forward direction of that scene object.
- * 
+ * </p><p>
  * There are two angles for the cone. Beyond the "outer angle"
  * no light is emitted. Inside the "inner angle" the light is
  * at full intensity. Between the two angles the light linearly
  * decreases allowing for soft edges.
- * 
+ * </p><p>
  * The intensity of the light diminishes with distance from the
  * cone apex. Three attenuation factors are provided to specify how
  * the intensity of the light falls off with distance:
  * {@code I = attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2}
- *
+ * </p><p>
  * Spot light uniforms:
  * {@literal
  *   enabled               1 = light is enabled, 0 = light is disabled
@@ -54,10 +54,10 @@ import org.joml.Matrix4f;
  *   sm2                   shadow matrix column 3
  *   sm3                   shadow matrix column 4
  * }
- * 
+ * </p><p>
  * Note: some mobile GPU drivers do not correctly pass a mat4 thru so we currently
  * use 4 vec4's instead.
- *  
+ * </p>
  * @see GVRPointLight
  * @see GVRLightBase
  */
