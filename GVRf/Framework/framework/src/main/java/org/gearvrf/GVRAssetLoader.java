@@ -1313,51 +1313,6 @@ public final class GVRAssetLoader {
         return model;
     }
 
-    /**
-     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
-     * replaces the current scene with it.
-     * This function loads the model and its textures asynchronously in the background
-     * and will return before the model is loaded.
-     * IAssetEvents are emitted to event listeners attached to the context.
-     *
-     * @param model
-     *          Scene object to become the root of the loaded model.
-     *          This scene object will be named with the base filename of the loaded asset.
-     * @param volume
-     *            A GVRResourceVolume based on the asset path to load.
-     *            This volume will be used as the base for loading textures
-     *            and other models contained within the model.
-     *            You can subclass GVRResourceVolume to provide custom IO.
-     * @param scene
-     *            Scene to be replaced with the model.
-     * @param handler
-     *            IAssetEvents handler to process asset loading events
-     */
-    public void loadScene(final GVRSceneObject model, final GVRResourceVolume volume, final GVRScene scene, final IAssetEvents handler)
-    {
-        Threads.spawn(new Runnable()
-        {
-            public void run()
-            {
-            AssetRequest assetRequest = new AssetRequest(model, volume, scene, handler, true);
-            String filePath = volume.getFileName();
-            String ext = filePath.substring(filePath.length() - 3).toLowerCase();
-
-            model.setName(assetRequest.getBaseName());
-            try
-            {
-                if (ext.equals("x3d"))
-                    loadX3DModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
-                else
-                    loadJassimpModel(assetRequest, model, GVRImportSettings.getRecommendedSettings());
-            }
-            catch (IOException ex)
-            {
-                // onModelError is generated in this case
-            }
-            }
-        });
-    }
 
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
