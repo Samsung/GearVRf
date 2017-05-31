@@ -1036,6 +1036,7 @@ public class X3Dobject {
                     gvrTextureParameters = new GVRTextureParameters(gvrContext);
                     gvrTextureParameters.setWrapSType(TextureWrapType.GL_REPEAT);
                     gvrTextureParameters.setWrapTType(TextureWrapType.GL_REPEAT);
+                    gvrTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
 
                     String urlAttribute = attributes.getValue("url");
                     if (urlAttribute != null) {
