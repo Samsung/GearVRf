@@ -57,6 +57,7 @@ namespace gvr {
         return configuration_manager->getMaxLights();
     }
 
+
     JNIEXPORT void JNICALL Java_org_gearvrf_NativeConfigurationManager_delete(JNIEnv *env,
                                                                               jobject obj,
                                                                               jlong jConfigurationManager) {

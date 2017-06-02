@@ -26,11 +26,7 @@
 #include "util/gvr_log.h"
 #include "mesh_collider.h"
 #include "render_data.h"
-#include "objects/mesh.h"
-#include "objects/bounding_volume.h"
-#include "objects/mesh.h"
 #include "objects/scene_object.h"
-#include "sphere_collider.h"
 
 namespace gvr {
 MeshCollider::MeshCollider(Mesh* mesh) :

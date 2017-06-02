@@ -23,6 +23,8 @@ import java.util.List;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 
+import org.gearvrf.GVRCompressedTexture;
+
 /**
  * Implement this class to use compressed texture formats that GVRF does not
  * support.
@@ -30,7 +32,7 @@ import android.opengl.GLES20;
  * A {@link GVRCompressedTextureLoader} contains the logic to detect a
  * particular file type, and to parse the header. It is an abstract class (not
  * an interface) so that it can contain a protected method (
- * {@code CompressedTexture()}) that calls the private {@code CompressedTexture}
+ * {@code CompressedImage()}) that calls the private {@code CompressedImage}
  * constructor: this limits the chances that someone will create an instance
  * with invalid value, while still allowing apps to add new loaders without
  * having to add them to this package.
@@ -43,9 +45,9 @@ import android.opengl.GLES20;
  * returns {@code true}, the data is passed to the corresponding
  * {@linkplain #parse(byte[], Reader) parse()} method
  * <li>The {@code parse()} method extracts GL parameters, and uses
- * {@code CompressedTexture()} to return an internal {@code CompressedTexture}
+ * {@code CompressedImage()} to return an internal {@code CompressedImage}
  * instance
- * <li>The internal load method passes that {@code CompressedTexture} to a
+ * <li>The internal load method passes that {@code CompressedImage} to a
  * GL-thread callback, that converts it to a texture and passes that texture to
  * the app's {@link org.gearvrf.GVRAndroidResource.BitmapTextureCallback
  * BitmapTextureCallback}
@@ -81,7 +83,7 @@ public abstract class GVRCompressedTextureLoader {
      * Does this byte array contain an instance of 'my' compressed texture? The
      * {@link CompressedTexture#load(InputStream, int, boolean)} methods will call all
      * registered Loader's sniffers: if one and only one returns {@code true},
-     * the load() method will return a {@code CompressedTexture}.
+     * the load() method will return a {@code CompressedImage}.
      * 
      * <p>
      * <em>Note:</em> This routine needs to be very fast! The
@@ -108,16 +110,16 @@ public abstract class GVRCompressedTextureLoader {
      *            {@code true}.
      * @param reader
      *            A data reader, pointing to data[0]
-     * @return A {@code CompressedTexture}, from
+     * @return A {@code CompressedImage}, from
      *         {@link #CompressedTexture(int, int, int, int, int, byte[], int, int)}
      */
     public abstract CompressedTexture parse(byte[] data, Reader reader);
 
     /**
      * Provides external parsers access to the internal
-     * {@code CompressedTexture} constructor.
+     * {@code CompressedImage} constructor.
      * 
-     * The {@code CompressedTexture} class represents a texture file, loaded
+     * The {@code CompressedImage} class represents a texture file, loaded
      * into memory; it's what your {@link #parse(byte[], Reader)} method needs
      * to return.
      * 

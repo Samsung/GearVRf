@@ -204,9 +204,9 @@ public class GVRShadowMap extends GVRRenderTarget
     {
         if (sShadowMaterial == null)
         {
-            sShadowMaterial = new GVRMaterial(ctx);
-            GVRShaderTemplate depthShader = ctx.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
-            depthShader.bindShader(ctx, sShadowMaterial);
+            GVRShaderId depthShaderID = new GVRShaderId(GVRDepthShader.class);
+            sShadowMaterial = new GVRMaterial(ctx, depthShaderID);
+            depthShaderID.getTemplate(ctx).bindShader(ctx, sShadowMaterial);
         }
         return sShadowMaterial;
     }

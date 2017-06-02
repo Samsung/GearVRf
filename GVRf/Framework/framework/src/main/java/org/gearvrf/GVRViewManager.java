@@ -71,11 +71,6 @@ abstract class GVRViewManager extends GVRContext {
 
     void onDestroy() {
         mInputManager.close();
-        mScriptManager.destroy();
-
-        mFrameListeners.clear();
-        mRunnables.clear();
-        mRunnablesPostRender.clear();
     }
 
     public GVREventManager getEventManager() {
@@ -521,7 +516,7 @@ abstract class GVRViewManager extends GVRContext {
             renderBundle) {
         renderCamera(scene.getNative(), camera.getNative(),
                 renderBundle.getMaterialShaderManager().getNative(),
-                renderBundle.getPostEffectShaderManager().getNative(),
+                0,
                 renderBundle.getPostEffectRenderTextureA().getNative(),
                 renderBundle.getPostEffectRenderTextureB().getNative());
     }
@@ -547,7 +542,7 @@ abstract class GVRViewManager extends GVRContext {
 
     @Override
     public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return mRenderBundle.getPostEffectShaderManager();
+        return null;
     }
 
     protected GVRScreenshotCallback mScreenshotCenterCallback;
@@ -695,7 +690,9 @@ abstract class GVRViewManager extends GVRContext {
         }
 
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
-        final GVRPostEffect postEffect = new GVRPostEffect(this, GVRPostEffect.GVRPostEffectShaderType.HorizontalFlip.ID);
+        GVRShaderId flipShaderID = new GVRShaderId(GVRHorizontalFlipShader.class);
+        final GVRShaderData postEffect = new GVRShaderData(this, flipShaderID);
+        flipShaderID.getTemplate(this).bindShader(this, postEffect);
         centerCamera.addPostEffect(postEffect);
         renderCamera(mMainScene, centerCamera, mRenderBundle);
         centerCamera.removePostEffect(postEffect);
@@ -732,7 +729,7 @@ abstract class GVRViewManager extends GVRContext {
         GVRSceneObject centerCameraObject = new GVRSceneObject(this);
 
         centerCameraObject.attachCamera(centerCamera);
-        centerCamera.addPostEffect(new GVRPostEffect(this, GVRPostEffect.GVRPostEffectShaderType.HorizontalFlip.ID));
+        centerCamera.addPostEffect(new GVRShaderData(this, GVRMaterial.GVRShaderType.HorizontalFlip.ID));
 
         mainCameraRig.getOwnerObject().addChildObject(centerCameraObject);
         GVRTransform centerCameraTransform = centerCameraObject.getTransform();

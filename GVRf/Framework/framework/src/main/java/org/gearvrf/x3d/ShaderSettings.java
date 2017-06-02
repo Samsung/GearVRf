@@ -77,7 +77,7 @@ public class ShaderSettings
   public float[] modelMatrix = new float[16];
 
 
-  public Future<GVRTexture> texture = null;
+  public GVRTexture texture = null;
 
   public String fragmentShaderLights = "";
   
@@ -201,7 +201,7 @@ public class ShaderSettings
     return this.transparency;
   }
 
-  public void setTexture(Future<GVRTexture> texture)
+  public void setTexture(GVRTexture texture)
   {
     this.texture = texture;
     this.material.setTexture("diffuseTexture", texture);

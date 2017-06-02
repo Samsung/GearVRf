@@ -25,31 +25,37 @@
 #include <string>
 
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
 
+#include "objects/shader_data.h"
+#include "engine/renderer/renderer.h"
 #include "objects/hybrid_object.h"
 #include "objects/scene_object.h"
 #include "objects/components/shadow_map.h"
 #include "components/component.h"
-#include "objects/material.h"
+
 #include "util/gvr_jni.h"
 #include "engine/renderer/renderer.h"
-#include "glm/gtc/matrix_inverse.hpp"
 
 namespace gvr {
 class Color;
 class SceneObject;
 class Scene;
 class ShaderManager;
+class GLFrameBuffer;
+class GLImage;
+class Shader;
 class ShadowMap;
 
-//#define DEBUG_LIGHT 1
+#define DEBUG_LIGHT 1
 
-class Light: public Component {
+class Light: public JavaComponent {
 public:
 
     explicit Light()
-    :   Component(Light::getComponentType()),
-		shadowMapIndex_(-1) {
+    :   JavaComponent(Light::getComponentType()),
+		shadowMapIndex_(-1)
+	{
     }
 
     static long long getComponentType() {
@@ -60,6 +66,7 @@ public:
         enabled_ = enable;
         setDirty();
     }
+    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     float getFloat(std::string key) {
         auto it = floats_.find(key);
@@ -164,7 +171,7 @@ public:
      * bindShadowMaps will bind the resulting framebuffer as a
      * texture on the light.
      */
-    void castShadow(Material* material)
+    void castShadow(ShaderData* material)
     {
         SceneObject* owner = owner_object();
         if (owner == nullptr)
@@ -185,9 +192,8 @@ public:
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
      * @param program   ID of GL shader program
-     * @param texIndex  GL texture index for shadow map
      */
-    void render(int program, int texIndex);
+    void render(Shader* shader);
 
     /**
      * Internal function called at the start of each frame
@@ -195,6 +201,11 @@ public:
      */
     bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
 
+    /**
+     * Internal function called during rendering to bind the shadow map
+     * framebuffer to the texture for this light.
+     */
+    static void bindShadowMap(Shader* shader, int texIndex);
 
     std::string getLightID() {
         return lightID_;
@@ -209,6 +220,9 @@ public:
     void setLightID(std::string lightid) {
         lightID_ = lightid;
     };
+
+    virtual void onAddedToScene(Scene* scene);
+    virtual void onRemovedFromScene(Scene* scene);
 
 private:
     Light(const Light& light);

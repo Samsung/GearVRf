@@ -19,8 +19,8 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRPostEffect;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRTransform;
 
 import android.graphics.Color;
@@ -33,7 +33,7 @@ import android.graphics.Color;
  * runtime reflection is used) code to change individual properties. Most
  * animations involve a {@linkplain GVRTransform scene object's position,}
  * {@linkplain GVRMaterial a scene object's surface appearance,} or an optional
- * {@linkplain GVRPostEffect "post effect":} accordingly, most actual animations
+ * {@linkplain GVRShaderData "post effect":} accordingly, most actual animations
  * descend from {@link GVRTransformAnimation}, {@link GVRMaterialAnimation}, or
  * {@link GVRPostEffectAnimation} and not directly from {@link GVRAnimation}.
  * 

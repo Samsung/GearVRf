@@ -22,24 +22,29 @@
 
 #include <memory>
 #include <vector>
+#include<sstream>
 
 #include "gl/gl_program.h"
 #include "glm/glm.hpp"
-#include "objects/mesh.h"
-#include "objects/components/component.h"
+#include "java_component.h"
+#include "objects/shader_data.h"
 #include "objects/render_pass.h"
-#include "objects/material.h"
-#include<sstream>
+#include "engine/renderer/renderer.h"
+
 typedef unsigned long Long;
 namespace gvr {
+
 class Mesh;
-class Material;
+class ShaderData;
 class Light;
 class Batch;
 class TextureCapturer;
 class RenderPass;
+class UniformBlock;
 
-template<typename T> std::string to_string(T value) {
+template<typename T>
+std::string to_string(T value) {
+
     //create an output string stream
     std::ostringstream os;
 
@@ -50,7 +55,7 @@ template<typename T> std::string to_string(T value) {
     return os.str();
 }
 
-class RenderData: public Component {
+class RenderData: public JavaComponent {
 public:
     enum Queue {
         Stencil = -1000, Background = 1000, Geometry = 2000, Transparent = 3000, Overlay = 4000
@@ -65,26 +70,30 @@ public:
     };
 
     RenderData() :
-            Component(RenderData::getComponentType()), mesh_(0), light_(0),
-                    use_light_(false), use_lightmap_(false), batching_(true),
-                    render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
-                    rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
-                    offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
-                    depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
-                    source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
-                    sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE), draw_mode_(GL_TRIANGLES),
-                    texture_capturer(0), cast_shadows_(true), dirty_flag_(std::make_shared<bool>(true)) {
+            JavaComponent(RenderData::getComponentType()), mesh_(0),
+                use_light_(false), use_lightmap_(false), batching_(true),
+                render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
+                rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
+                offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
+                depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
+                sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
+                source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
+                draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
+                bones_ubo_(nullptr),dirty_flag_(std::make_shared<u_short>(0))
+    {
     }
+
+    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     void copy(const RenderData& rdata) {
         Component(rdata.getComponentType());
         hash_code = rdata.hash_code;
         mesh_ = rdata.mesh_;
-        light_ = rdata.light_;
         use_light_ = rdata.use_light_;
         use_lightmap_ = rdata.use_lightmap_;
         batching_ = rdata.batching_;
         render_mask_ = rdata.render_mask_;
+        bones_ubo_ = rdata.bones_ubo_;
         cast_shadows_ = rdata.cast_shadows_;
         batch_ = rdata.batch_;
         for(int i=0;i<rdata.render_pass_list_.size();i++) {
@@ -130,6 +139,7 @@ public:
         return mesh_;
     }
 
+    virtual bool updateGPU(Renderer*);
     void set_mesh(Mesh* mesh);
 
     void add_pass(RenderPass* render_pass);
@@ -139,22 +149,17 @@ public:
         return render_pass_list_.size();
     }
 
-    Material* material(int pass) const ;
+    ShaderData* material(int pass) const ;
 
-    void setDirty(bool dirty);
+    /**
+     * Select or generate a shader for this render data.
+     * This function executes a Java task on the Framework thread.
+     */
+    void bindShader(Scene* scene);
+    void setDirty(u_short dirty);
 
-    bool isDirty(){
-        return *dirty_flag_;
-    }
-
-    Light* light() const {
-        return light_;
-    }
-
-    void set_light(Light* light) {
-        light_ = light;
-        use_light_ = true;
-        hash_code_dirty_ = true;
+    bool isDirty(u_short bit){
+        return *dirty_flag_ & bit;
     }
 
     void enable_light() {
@@ -317,66 +322,37 @@ public:
         return draw_mode_;
     }
 
-    float camera_distance() {
-        if (nullptr != cameraDistanceLambda_) {
+    float camera_distance()
+    {
+        if (nullptr != cameraDistanceLambda_)
+        {
             camera_distance_ = cameraDistanceLambda_();
             cameraDistanceLambda_ = nullptr;
         }
         return camera_distance_;
     }
 
-    void set_draw_mode(GLenum draw_mode) {
+    void set_draw_mode(GLenum draw_mode)
+    {
         draw_mode_ = draw_mode;
         hash_code_dirty_ = true;
     }
+    void clearDirtyBits(u_short bits);
+    bool isHashCodeDirty()  { return hash_code_dirty_; }
+    void set_texture_capturer(TextureCapturer *capturer) { texture_capturer = capturer; }
 
-    bool isHashCodeDirty()  {
-        return hash_code_dirty_;
-    }
-
-    void set_texture_capturer(TextureCapturer *capturer) {
-        texture_capturer = capturer;
-    }
     // TODO: need to consider texture_capturer in hash_code ?
-    TextureCapturer *get_texture_capturer() {
-        return texture_capturer;
+    TextureCapturer *get_texture_capturer() { return texture_capturer; }
+
+    void set_shader(int pass, int shaderid)
+    {
+        LOGD("SHADER: RenderData:setNativeShader %d %p", shaderid, this);
+        render_pass_list_[pass]->set_shader(shaderid);
     }
 
-    std::string getHashCode() {
-        if (hash_code_dirty_) {
-            std::string render_data_string;
-            render_data_string.append(to_string(use_light_));
-            render_data_string.append(to_string(light_));
-            render_data_string.append(to_string(getComponentType()));
-            render_data_string.append(to_string(use_lightmap_));
-            render_data_string.append(to_string(render_mask_));
-            render_data_string.append(to_string(offset_));
-            render_data_string.append(to_string(offset_factor_));
-            render_data_string.append(to_string(offset_units_));
-            render_data_string.append(to_string(depth_test_));
-            render_data_string.append(to_string(alpha_blend_));
-            render_data_string.append(to_string(alpha_to_coverage_));
-            render_data_string.append(to_string(sample_coverage_));
-            render_data_string.append(to_string(invert_coverage_mask_));
-            render_data_string.append(to_string(draw_mode_));
-
-            render_data_string.append(to_string(stencilTestFlag_));
-            render_data_string.append(to_string(stencilMaskMask_));
-            render_data_string.append(to_string(stencilFuncFunc_));
-            render_data_string.append(to_string(stencilFuncRef_));
-            render_data_string.append(to_string(stencilFuncMask_));
-            render_data_string.append(to_string(stencilOpSfail_));
-            render_data_string.append(to_string(stencilOpDpfail_));
-            render_data_string.append(to_string(stencilOpDppass_));
-
-            hash_code = render_data_string;
-            hash_code_dirty_ = false;
-
-        }
-        return hash_code;
-    }
-
-    void setCameraDistanceLambda(std::function<float()> func);
+    int             get_shader(int pass =0) const { return render_pass_list_[pass]->get_shader(); }
+    std::string     getHashCode();
+    void            setCameraDistanceLambda(std::function<float()> func);
 
     void setStencilFunc(int func, int ref, int mask);
 
@@ -399,16 +375,18 @@ private:
     RenderData& operator=(const RenderData& render_data);
     RenderData& operator=(RenderData&& render_data);
 
-private:
+protected:
     static const int DEFAULT_RENDER_MASK = Left | Right;
     static const int DEFAULT_RENDERING_ORDER = Geometry;
+    jmethodID bindShaderMethod_;
     Mesh* mesh_;
+    UniformBlock* bones_ubo_;
     Batch* batch_;
     bool hash_code_dirty_;
     std::string hash_code;
     std::vector<RenderPass*> render_pass_list_;
     Light* light_;
-    std::shared_ptr<bool> dirty_flag_;
+    std::shared_ptr<u_short> dirty_flag_;
     int source_alpha_blend_func_;
     int dest_alpha_blend_func_;
     bool use_light_;
@@ -428,7 +406,6 @@ private:
     GLenum draw_mode_;
     float camera_distance_;
     TextureCapturer *texture_capturer;
-
     std::function<float()> cameraDistanceLambda_ = nullptr;
 
     int stencilFuncFunc_ = 0;

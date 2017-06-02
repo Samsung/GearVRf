@@ -52,7 +52,7 @@ public class DefinedItem {
     private String name = "";
     private GVRMesh gvrMesh = null;
     private GVRSceneObject gvrSceneObject = null;
-    private Future<GVRTexture> gvrTexture = null;
+    private GVRTexture gvrTexture = null;
     private GVRRenderData gvrRenderData = null;
     private GVRMaterial gvrMaterial = null;
     private Viewpoint viewpoint = null;
@@ -138,11 +138,11 @@ public class DefinedItem {
         return this.gvrRenderData;
     }
 
-    public void setGVRTexture(Future<GVRTexture> gvrTexture) {
+    public void setGVRTexture(GVRTexture gvrTexture) {
         this.gvrTexture = gvrTexture;
     }
 
-    public Future<GVRTexture> getGVRTexture() {
+    public GVRTexture getGVRTexture() {
         return this.gvrTexture;
     }
 

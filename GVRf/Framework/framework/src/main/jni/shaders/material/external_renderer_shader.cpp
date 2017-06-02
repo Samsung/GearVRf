@@ -5,10 +5,11 @@
 #include "external_renderer_shader.h"
 
 #include "glm/gtc/matrix_transform.hpp"
-#include "objects/material.h"
+#include "objects/shader_data.h"
+#include "objects/mesh.h"
+#include "objects/components/render_data.h"
 #include "objects/components/texture_capturer.h"
-#include "objects/textures/external_renderer_texture.h"
-#include "util/gvr_log.h"
+#include "objects/textures/external_image.h"
 
 static GVRF_ExternalRenderer externalRenderer = NULL;
 
@@ -18,20 +19,20 @@ void GVRF_installExternalRenderer(GVRF_ExternalRenderer fct) {
 
 namespace gvr {
 
-void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, Material* mtl_unused) {
+void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, ShaderData* mtl_unused) {
     if (externalRenderer == NULL) {
         LOGE("External renderer not installed");
         return;
     }
 
-    Material* material = render_data->pass(0)->material();
+    ShaderData* material = render_data->pass(0)->material();
     if (material == NULL) {
         LOGE("No material");
         return;
     }
 
     Texture *texture = material->getTexture("main_texture");
-    if (texture->getTarget() != ExternalRendererTexture::TARGET) {
+    if (texture->getType() != Texture::TextureType::TEXTURE_EXTERNAL_RENDERER) {
         LOGE("External renderer only takes external renderer textures");
         return;
     }
@@ -68,13 +69,16 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
     glActiveTexture(GL_TEXTURE0);
 
     TextureCapturer *capturer(render_data->get_texture_capturer());
+    ExternalImage* extImage = reinterpret_cast<ExternalImage*>(texture->getImage());
     if (!capturer || !capturer->getAndClearPendingCapture()) {
         // Original rendering
-        externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
+        float opacity = 1.0f;
+        material->getFloat("u_opacity", opacity);
+        externalRenderer(extImage->getData(),
                          scratchBuffer, 6,
                          glm::value_ptr(rstate->uniforms.u_mvp), 16,
                          glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,
-                         material->getFloat("opacity"));
+                         opacity);
     } else {
         // Capture texture in RenderTexture
         capturer->beginCapture();
@@ -85,7 +89,7 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
             float halfHeight = fabs(vertices[0][1]);
 
             glm::mat4 mvp = capturer->getMvpMatrix(halfWidth, halfHeight);
-            externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
+            externalRenderer(extImage->getData(),
                     scratchBuffer, 6,
                     glm::value_ptr(mvp), 16,
                     glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,

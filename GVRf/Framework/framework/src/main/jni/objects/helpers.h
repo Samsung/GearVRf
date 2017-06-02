@@ -18,13 +18,25 @@
 
 #include <memory>
 #include <unordered_set>
-
+enum DIRTY_BITS {
+    STD_ATTRIBS = 0,
+    CUSTOM_ATTRIBS,
+    NEW_MATERIAL,
+    MOD_CULL_FACE,
+    MOD_SHADER_ID,
+    NEW_TEXTURE,
+    MOD_TEXTURE,
+    MAT_DATA,
+    NATIVE_SHADER,
+    RENDER_PASS,
+    NEW_MESH
+};
 namespace gvr {
 
-static void dirtyImpl(std::unordered_set<std::shared_ptr<bool>>& dirty_flags) {
-    for (std::unordered_set<std::shared_ptr<bool>>::iterator it = dirty_flags.begin();
+static void dirtyImpl(std::unordered_set<std::shared_ptr<u_short>>& dirty_flags,DIRTY_BITS bit) {
+    for (std::unordered_set<std::shared_ptr<u_short>>::iterator it = dirty_flags.begin();
          it != dirty_flags.end(); ++it) {
-        const std::shared_ptr<bool> &flag = *it;
+        const std::shared_ptr<u_short> &flag = *it;
 
         if (1 == flag.use_count()) {
             dirty_flags.erase(it);
@@ -32,7 +44,7 @@ static void dirtyImpl(std::unordered_set<std::shared_ptr<bool>>& dirty_flags) {
                 break;
             }
         } else {
-            *flag = true;
+            *flag = *flag | ( 1 << bit);
         }
     }
 }

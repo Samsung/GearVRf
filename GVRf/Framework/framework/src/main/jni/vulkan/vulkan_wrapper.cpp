@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define VK_USE_PLATFORM_ANDROID_KHR
+
 #include "vulkan_wrapper.h"
 #include <dlfcn.h>
 

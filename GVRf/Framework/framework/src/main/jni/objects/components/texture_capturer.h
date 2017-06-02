@@ -9,8 +9,11 @@
 #include <memory>
 
 #include "glm/glm.hpp"
+#include "util/gvr_jni.h"
+#include "util/jni_utils.h"
 #include "objects/lazy.h"
 #include "objects/components/component.h"
+#include "objects/shader_data.h"
 #include "objects/textures/render_texture.h"
 #include "shaders/shader_manager.h"
 
@@ -56,6 +59,7 @@ private:
 private:
     ShaderManager *mShaderManager;
     RenderTexture *mRenderTexture;
+    ShaderData *mMaterial;
     bool mPendingCapture;
     bool mHasNewCapture;
     long long mCaptureIntervalNS;

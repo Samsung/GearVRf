@@ -24,7 +24,9 @@ namespace gvr {
 Batch::Batch(int no_vertices, int no_indices) :
         draw_count_(0), vertex_count_(0), index_count_(0), vertex_limit_(no_vertices),
         indices_limit_(no_indices), renderdata_(nullptr),mesh_init_(false),
-        index_offset_(0), not_batched_(false), batch_dirty_(false) {
+        index_offset_(0), not_batched_(false), batch_dirty_(false),
+        mesh_(std::string("float3 a_position float3 a_normal float2 a_texcoord"))
+{
 
     vertices_.reserve(no_vertices);
     indices_.reserve(no_indices);
@@ -37,6 +39,21 @@ Batch::~Batch() {
     clearData();
     delete renderdata_;
     renderdata_ = nullptr;
+}
+
+void Batch::removeRenderData(RenderData* renderdata){
+    renderdata->set_batching(false);
+    render_data_set_.erase(renderdata);
+    batch_dirty_ = true;
+    if(0 == render_data_set_.size())
+        resetBatch();
+}
+
+ShaderData* Batch::material(int passIndex)
+{
+    if(passIndex ==0)
+        return material_;
+    return renderdata_->pass(passIndex)->material();
 }
 
 bool Batch::updateMesh(Mesh* render_mesh){
@@ -86,7 +103,8 @@ bool Batch::add(RenderData *render_data) {
         model_matrix = glm::mat4(t->getModelMatrix());
     }
     render_data->getHashCode();
-    render_data->setDirty(false);
+
+    render_data->setDirty(0);
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;
@@ -102,11 +120,11 @@ bool Batch::add(RenderData *render_data) {
     // if it is not texture shader, dont add into batch, render in normal way
     for(int i=0; i<render_data->pass_count();i++)
     {
-        Material* mat = render_data->pass(i)->material();
-        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
+        ShaderData* mat = render_data->pass(i)->material();
+//        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
             render_data_set_.insert(render_data);
             return true;
-        }
+//        }
     }
     // if mesh is large, render in normal way
     if (indices.size() == 0 || (indices.size() + index_count_ > indices_limit_)) {
@@ -122,7 +140,8 @@ bool Batch::add(RenderData *render_data) {
     // Copy all renderData properties
     if (draw_count_ == 0) {
         if (!renderdata_) {
-            renderdata_ = new RenderData(*render_data);
+            renderdata_ = Renderer::getInstance()->createRenderData();
+            renderdata_->copy(*render_data);
             renderdata_->set_batching(true);
        }
     }

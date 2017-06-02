@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 #include "shadow_map.h"
+#include "gl/gl_render_image.h"
 
 namespace gvr {
 
-ShadowMap::ShadowMap(Material* mtl)
+ShadowMap::ShadowMap(ShaderData* mtl)
 : RenderTarget(nullptr),
   mLayerIndex(-1)
 {
@@ -38,21 +39,27 @@ void ShadowMap::setLayerIndex(int layerIndex)
 
 void ShadowMap::bindTexture(int loc, int texIndex)
 {
-    RenderTextureArray* texArray = static_cast<RenderTextureArray*>(mRenderTexture);
+    Image* image = mRenderTexture->getImage();
 
-    if (texArray)
+    if (image)
     {
+        GLRenderImageArray* texArray = static_cast<GLRenderImageArray*>(image);
         texArray->bindTexture(loc, texIndex);
     }
 }
 
 void  ShadowMap::beginRendering()
 {
-    RenderTextureArray* texArray = static_cast<RenderTextureArray*>(mRenderTexture);
+    Image* image = mRenderTexture->getImage();
 
-    if (texArray && (mLayerIndex >= 0))
+    if (image && (mLayerIndex >= 0))
     {
-        texArray->bindFrameBuffer(mLayerIndex);
+        GLRenderImageArray* texArray = static_cast<GLRenderImageArray*>(image);
+        if(!fboInit_) {
+            mRenderTexture->bind();
+            texArray->bindFrameBuffer(mLayerIndex);
+            fboInit_ = true;
+        }
     }
     RenderTarget::beginRendering();
     mRenderState.render_mask = 1;

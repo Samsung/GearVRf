@@ -15,20 +15,22 @@
 
 #ifndef BATCH_H
 #define BATCH_H
+
 #include "renderer.h"
-#include "objects/mesh.h"
 #include "objects/components/render_data.h"
+#include "batch_manager.h"
+
 #include <map>
 #include <unordered_map>
-#include "batch_manager.h"
 #include <memory>
 #include <vector>
 #include <string>
 #include <set>
 #include<unordered_set>
+
 namespace gvr{
 class RenderData;
-class Material;
+class ShaderData;
 class Mesh;
 class Batch {
 public:
@@ -45,13 +47,8 @@ public:
             matrices_[matrix_index_map_[renderdata]] = model_matrix;
         }
     }
-    void removeRenderData(RenderData* renderdata){
-        renderdata->set_batching(false);
-        render_data_set_.erase(renderdata);
-        batch_dirty_ = true;
-        if(0 == render_data_set_.size())
-            resetBatch();
-    }
+    void removeRenderData(RenderData* renderdata);
+
     const std::vector<glm::mat4>& get_matrices() {
         return matrices_;
     }
@@ -67,11 +64,8 @@ public:
     bool notBatched(){
         return not_batched_;
     }
-    Material* material(int passIndex=0){
-        if(passIndex ==0)
-            return material_;
-        return renderdata_->pass(passIndex)->material();
-    }
+    ShaderData* material(int passIndex=0);
+
     void setDirty(bool dirty){
         batch_dirty_ = dirty;
     }
@@ -93,7 +87,7 @@ private:
     std::unordered_set<RenderData*>render_data_set_;
     Mesh mesh_;
     RenderData *renderdata_;
-    Material *material_;
+    ShaderData *material_;
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
     std::vector<glm::vec2> tex_coords_;
