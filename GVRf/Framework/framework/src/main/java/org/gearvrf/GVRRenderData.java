@@ -215,8 +215,8 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
                     }
                 };
 
-                getGVRContext().loadMesh(callback,
-                        ((FutureResource<GVRMesh>) mesh).getResource());
+                getGVRContext().getAssetLoader().loadMesh(callback,
+                        ((FutureResource<GVRMesh>) mesh).getResource(), GVRAssetLoader.DEFAULT_PRIORITY);
             } else {
                 Threads.spawn(new Runnable() {
                     @Override
