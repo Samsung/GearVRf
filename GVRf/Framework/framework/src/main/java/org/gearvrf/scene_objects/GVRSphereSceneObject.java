@@ -57,7 +57,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         super(gvrContext);
 
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, true,
-                new GVRMaterial(gvrContext));
+                new GVRMaterial(gvrContext), 1);
     }
 
     /**
@@ -78,7 +78,46 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         super(gvrContext);
 
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
-                new GVRMaterial(gvrContext));
+                new GVRMaterial(gvrContext), 1);
+    }
+
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     *
+     * The sphere's triangles and normals are facing either in or out and the
+     * same texture will be applied to each side of the sphere.
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     *
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     */
+    /**
+     * Constructs a sphere scene object 18 stacks, and 36
+     * slices.
+     *
+     * The sphere's triangles and normals are facing either in or out and the
+     * same texture will be applied to each side of the sphere.
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     *
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * @param radius
+     *          sets the sphere with the radius parameter.  Radius must be > 0
+     *          otherwise, set it to the default of 1
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut, float radius) {
+        super(gvrContext);
+
+        if (radius < 0) radius = 1;
+        generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
+                new GVRMaterial(gvrContext), radius);
     }
 
     /**
@@ -106,7 +145,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber, boolean facingOut) {
         super(gvrContext);
 
-        generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, new GVRMaterial(gvrContext));
+        generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, new GVRMaterial(gvrContext), 1);
     }
 
     /**
@@ -134,7 +173,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         GVRMaterial material = new GVRMaterial(gvrContext);
         material.setMainTexture(futureTexture);
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
-                material);
+                material, 1);
     }
 
     /**
@@ -168,7 +207,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
         GVRMaterial material = new GVRMaterial(gvrContext);
         material.setMainTexture(futureTexture);
-        generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, material);
+        generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, material, 1);
     }
 
     /**
@@ -193,7 +232,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         super(gvrContext);
 
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
-                material);
+                material, 1);
     }
 
     /**
@@ -238,7 +277,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         }
 
         generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut,
-                material);
+                material, 1);
     }
 
     /**
@@ -311,9 +350,14 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     }
 
     private void generateSphereObject(GVRContext gvrContext, int stackNumber,
-            int sliceNumber, boolean facingOut, GVRMaterial material) {
+            int sliceNumber, boolean facingOut, GVRMaterial material, float radius) {
         generateSphere(stackNumber, sliceNumber, facingOut);
 
+        // multiply by radius > 0
+        //float radius = 1;
+        for (int i = 0; i < vertices.length; i++) {
+            vertices[i] *= radius;
+        }
         GVRMesh mesh = new GVRMesh(gvrContext);
         mesh.setVertices(vertices);
         mesh.setNormals(normals);

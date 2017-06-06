@@ -17,8 +17,16 @@ package org.gearvrf.x3d;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.widget.TextView;
+
+import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.utility.Log;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,7 +90,7 @@ public class X3Dobject {
      */
     public static final String X3D_ROOT_NODE = "x3d_root_node_";
 
-    private static final String TAG = "X3DObject";
+    private static final String TAG = X3Dobject.class.getSimpleName();
 
     // Like a C++ pre-compiler switch to select shaders.
     // Default is true to use Universal lights shader.
@@ -126,7 +134,7 @@ public class X3Dobject {
     private Context activityContext = null;
 
     private GVRSceneObject root = null;
-    private GVRSceneObject mainCamera = null;
+    //private GVRSceneObject mainCamera = null;
     /**
      * Array list of DEFined items Clones objects with 'USE' parameter
      * As public, enables implementation of HTML5 DOM's
@@ -224,6 +232,9 @@ public class X3Dobject {
     private String javaScriptCode = "";
 
 
+    private int fontTextCount = 0;
+
+
     /**
      * X3DObject parses and X3D file using Java SAX parser.
      * Constructor sets up camera rig structure and
@@ -252,21 +263,22 @@ public class X3Dobject {
             centerCamera
                     .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
             cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
-            this.mainCamera = cameraRigAtRoot.getOwnerObject();
-            this.mainCamera.setName("MainCamera");
+            //this.mainCamera = cameraRigAtRoot.getOwnerObject();
+            //this.mainCamera.setName("MainCamera");
+            cameraRigAtRoot.getOwnerObject().setName("MainCamera");
             cameraRigAtRoot.attachLeftCamera(leftCamera);
             cameraRigAtRoot.attachRightCamera(rightCamera);
             cameraRigAtRoot.attachCenterCamera(centerCamera);
             cameraRigAtRoot.getLeftCamera().setBackgroundColor(Color.BLACK);
             cameraRigAtRoot.getRightCamera().setBackgroundColor(Color.BLACK);
-            this.root.addChildObject(this.mainCamera);
+            //this.root.addChildObject(this.mainCamera);
 
-            //this.mAnimations = root.getAnimations();
             lodManager = new LODmanager();
 
             animationInteractivityManager = new AnimationInteractivityManager(
                     this, gvrContext, root, mDefinedItems, interpolators,
-                    sensors, timeSensors, eventUtilities, scriptObjects
+                    sensors, timeSensors, eventUtilities, scriptObjects,
+                    viewpoints
             );
         } catch (Exception e) {
             Log.e(TAG, "X3Dobject constructor error: " + e);
@@ -863,7 +875,8 @@ public class X3Dobject {
             else if (qName.equalsIgnoreCase("shape")) {
 
                 gvrRenderData = new GVRRenderData(gvrContext);
-                // gvrRenderData.setCullFace(GVRCullFaceEnum.None);
+               // gvrRenderData.setAlphaToCoverage(true);
+                gvrRenderData.setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
                 shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
                 gvrRenderData.setShaderTemplate(GVRPhongShader.class);
@@ -1043,10 +1056,6 @@ public class X3Dobject {
                         urlAttribute = urlAttribute.replace("\"", ""); // remove double and
                         // single quotes
                         urlAttribute = urlAttribute.replace("\'", "");
-                        urlAttribute = urlAttribute.toLowerCase();
-
-                        // urlAttribute = urlAttribute.substring(0,
-                        // urlAttribute.indexOf("."));
 
                         final String filename = urlAttribute;
                         String repeatSAttribute = attributes.getValue("repeatS");
@@ -2010,7 +2019,6 @@ public class X3Dobject {
                     Interpolator newInterporlator = new Interpolator(name, keysList,
                             keyValuesList);
                     interpolators.add(newInterporlator);
-
                 } // end <OrientationInterpolator> node
 
 
@@ -2020,7 +2028,7 @@ public class X3Dobject {
                             {
                                     2, 2, 2
                             };
-                    boolean solid = true; // cone visible from inside
+                    boolean solid = true; // box visible from inside
 
                     attributeValue = attributes.getValue("size");
                     if (attributeValue != null) {
@@ -2029,14 +2037,12 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Box solid not currently implemented. ");
                     }
+                    Vector3f sizeVector = new Vector3f(size[0], size[1], size[2]);
                     GVRCubeSceneObject gvrCubeSceneObject = new GVRCubeSceneObject(
-                            gvrContext);
+                            gvrContext, solid, sizeVector);
                     currentSceneObject.addChildObject(gvrCubeSceneObject);
                     meshAttachedSceneObject = gvrCubeSceneObject;
-
-
                 } // end <Box> node
 
 
@@ -2067,13 +2073,12 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Cone solid not currently implemented. ");
                     }
                     GVRCylinderSceneObject.CylinderParams params = new GVRCylinderSceneObject.CylinderParams();
                     params.BottomRadius = bottomRadius;
                     params.TopRadius = 0;
                     params.Height = height;
-                    params.FacingOut = true;
+                    params.FacingOut = solid;
                     params.HasTopCap = false;
                     params.HasBottomCap = bottom;
                     GVRCylinderSceneObject cone = new GVRCylinderSceneObject(gvrContext,
@@ -2081,7 +2086,6 @@ public class X3Dobject {
 
                     currentSceneObject.addChildObject(cone);
                     meshAttachedSceneObject = cone;
-
                 }  // end <Cone> node
 
 
@@ -2113,7 +2117,6 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Cylinder solid not currently implemented. ");
                     }
                     attributeValue = attributes.getValue("top");
                     if (attributeValue != null) {
@@ -2125,7 +2128,7 @@ public class X3Dobject {
                     params.Height = height;
                     params.HasBottomCap = bottom;
                     params.HasTopCap = top;
-                    params.FacingOut = true;
+                    params.FacingOut = solid;
                     GVRCylinderSceneObject gvrCylinderSceneObject = new GVRCylinderSceneObject(
                             gvrContext, params);
                     currentSceneObject.addChildObject(gvrCylinderSceneObject);
@@ -2137,7 +2140,7 @@ public class X3Dobject {
                 /********** Sphere **********/
                 else if (qName.equalsIgnoreCase("Sphere")) {
                     float radius = 1;
-                    boolean solid = true; // cylinder visible from inside
+                    boolean solid = true; // sphere visible from inside
                     attributeValue = attributes.getValue("radius");
                     if (attributeValue != null) {
                         radius = parseSingleFloatString(attributeValue, false, true);
@@ -2145,10 +2148,9 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
                         solid = parseBooleanString(attributeValue);
-                        Log.e(TAG, "Sphere solid not currently implemented. ");
                     }
                     GVRSphereSceneObject gvrSphereSceneObject = new GVRSphereSceneObject(
-                            gvrContext);
+                            gvrContext, solid, radius);
                     currentSceneObject.addChildObject(gvrSphereSceneObject);
                     meshAttachedSceneObject = gvrSphereSceneObject;
 
@@ -2184,6 +2186,8 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         centerOfRotation = parseFixedLengthFloatString(attributeValue, 3,
                                 false, false);
+                        Log.e(TAG, "X3D Viewpoint centerOfRotation not implemented in GearVR.");
+
                     }
                     attributeValue = attributes.getValue("description");
                     if (attributeValue != null) {
@@ -2227,71 +2231,69 @@ public class X3Dobject {
                         definedItem.setViewpoint(viewpoint);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     }
-
-
                 } // end <Viewpoint> node
 
 
                 /********** Text **********/
                 else if (qName.equalsIgnoreCase("Text")) {
+                    float[] length = null;
+                    float maxExtent = 0;
                     String name = "";
-                    String[] string = {};
-                    String[] mfStrings = null;
+                    String[] string = null;
+                    boolean solid = false;
+
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         name = attributeValue;
                     }
+                    attributeValue = attributes.getValue("length");
+                    if (attributeValue != null) {
+                        // reusing the keys parsing here cause it works
+                        parseNumbersString(attributeValue, X3Dobject.interpolatorKeyComponent,
+                                1);
+                        length = new float[keys.size()];
+                        for (int i = 0; i < length.length; i++) {
+                            Key keyObject = keys.get(i);
+                            length[i] = keyObject.key;
+                        }
+                        keys.clear();
+                        Log.e(TAG, "Text 'length' attribute currently not implemented. ");
+                    }
+                    attributeValue = attributes.getValue("maxExtent");
+                    if (attributeValue != null) {
+                        maxExtent = parseSingleFloatString(attributeValue, false, true);
+                        Log.e(TAG, "Text 'maxExtent' attribute currently not implemented. ");
+                    }
                     attributeValue = attributes.getValue("string");
                     if (attributeValue != null) {
-                        mfStrings = parseMFString(attributeValue);
-
+                        string = parseMFString(attributeValue);
                     }
-                    gvrTextViewSceneObject = new GVRTextViewSceneObject(gvrContext);
-                    String text = "";
-                    if (mfStrings != null) {
-                        for (int i = 0; i < mfStrings.length; i++) {
-                            if (i > 0)
-                                text += " ";
-                            text += mfStrings[i];
-                        }
+                    attributeValue = attributes.getValue("solid");
+                    if (attributeValue != null) {
+                        Log.e(TAG, "Text 'solid' attribute not implemented. ");
+                        solid = parseBooleanString(attributeValue);
                     }
-                    gvrTextViewSceneObject.setText(text);
-
-                    Matrix4f matrix4f = currentSceneObject.getTransform()
-                            .getModelMatrix4f();
+                    gvrTextViewSceneObject = new GVRTextViewSceneObject(gvrContext, string);
 
                     gvrTextViewSceneObject.setTextColor(Color.WHITE); // default
                     gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default
 
                     currentSceneObject.addChildObject(gvrTextViewSceneObject);
-                    // Mark that this object does not require a gvrRenderingData
-                    // nor gvrMesh attached.
-                    // meshAttachedSceneObject = gvrTextViewSceneObject;
-
                 } // end <Text> node
 
 
                 /********** FontStyle **********/
-                //TODO: FontStyle not currently implemented
                 else if (qName.equalsIgnoreCase("FontStyle")) {
+
                     String name = "";
-                    String[] family =
-                            {
-                                    "SERIF"
-                            };
+                    String[] family = { GVRTextViewSceneObject.DEFAULT_FONT };
                     boolean horizontal = true;
-                    String[] justify =
-                            {
-                                    "BEGIN"
-                            }; // BEGIN, END, FIRST, MIDDLE
+                    GVRTextViewSceneObject.justifyTypes[] justify = { GVRTextViewSceneObject.justifyTypes.BEGIN };
                     String language = "";
                     boolean leftToRight = true;
-                    float size = 1;
-                    float spacing = 1;
-                    String[] style =
-                            {
-                                    "PLAIN"
-                            }; // PLAIN | BOLD | ITALIC | BOLDITALIC
+                    float spacing = 1.0f;
+                    float size = 1.0f;
+                    GVRTextViewSceneObject.fontStyleTypes style = GVRTextViewSceneObject.fontStyleTypes.PLAIN;
                     boolean topToBottom = true;
 
                     attributeValue = attributes.getValue("DEF");
@@ -2301,46 +2303,76 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("family");
                     if (attributeValue != null) {
                         family = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle family attribute not implemented. ");
+                        // handle spaces in the font name
+                        if ( family.length > 1) {
+                            for (int i = 1; i < family.length; i++) {
+                                family[0] += (" " + family[i] );
+                            }
+                        }
+                    }
+                    attributeValue = attributes.getValue("horizontal");
+                    if (attributeValue != null) {
+                        horizontal = parseBooleanString(attributeValue);
+                        Log.e(TAG, "horizontal feature of FontStyle not implemented");
                     }
                     attributeValue = attributes.getValue("justify");
                     if (attributeValue != null) {
-                        justify = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle justify attribute not implemented. ");
+                        String[] justifyMFString = parseMFString(attributeValue);
+                        justify = new GVRTextViewSceneObject.justifyTypes[justifyMFString.length];
+                        for (int i = 0; i < justify.length; i++) {
+                            if ( justifyMFString[i].equalsIgnoreCase("END")) justify[i] = GVRTextViewSceneObject.justifyTypes.END;
+                            else if ( justifyMFString[i].equalsIgnoreCase("FIRST")) justify[i] = GVRTextViewSceneObject.justifyTypes.FIRST;
+                            else if ( justifyMFString[i].equalsIgnoreCase("MIDDLE")) justify[i] = GVRTextViewSceneObject.justifyTypes.MIDDLE;
+                            else justify[i] = GVRTextViewSceneObject.justifyTypes.BEGIN;
+                        }
                     }
                     attributeValue = attributes.getValue("language");
                     if (attributeValue != null) {
                         language = attributeValue;
-                        Log.e(TAG, "FontStyle language attribute not implemented. ");
+                        Log.e(TAG, "language feature of FontStyle not implemented");
                     }
                     attributeValue = attributes.getValue("leftToRight");
                     if (attributeValue != null) {
                         leftToRight = parseBooleanString(attributeValue);
-                        Log.e(TAG, "FontStyle leftToRight attribute not implemented. ");
+                        Log.e(TAG, "leftToRight feature of FontStyle not implemented");
+                    }
+                    attributeValue = attributes.getValue("spacing");
+                    if (attributeValue != null) {
+                        spacing = parseSingleFloatString(attributeValue, false, true);
+                        Log.e(TAG, "spacing feature of FontStyle not implemented");
                     }
                     attributeValue = attributes.getValue("size");
                     if (attributeValue != null) {
                         size = parseSingleFloatString(attributeValue, false, true);
                     }
-                    attributeValue = attributes.getValue("spacing");
-                    if (attributeValue != null) {
-                        spacing = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "FontStyle spacing attribute not implemented. ");
-                    }
                     attributeValue = attributes.getValue("style");
                     if (attributeValue != null) {
-                        style = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle style attribute not implemented. ");
+                        if ( attributeValue.equalsIgnoreCase("BOLD")) {
+                            style = GVRTextViewSceneObject.fontStyleTypes.BOLD;
+                        }
+                        else if ( attributeValue.equalsIgnoreCase("ITALIC")) {
+                            style = GVRTextViewSceneObject.fontStyleTypes.ITALIC;
+                        }
+                        else if ( attributeValue.equalsIgnoreCase("BOLDITALIC")) {
+                            style = GVRTextViewSceneObject.fontStyleTypes.BOLDITALIC;
+                        }
+                        else {
+                            style = GVRTextViewSceneObject.fontStyleTypes.PLAIN;
+                        }
                     }
                     attributeValue = attributes.getValue("topToBottom");
                     if (attributeValue != null) {
                         topToBottom = parseBooleanString(attributeValue);
-                        Log.e(TAG, "FontStyle topToBottom attribute not implemented. ");
+                        Log.e(TAG, "topToBottom feature of FontStyle not implemented");
                     }
-                    // not clear how gravity and textSize will be used.
-                    // currently, just using a default value
+                    if (gvrTextViewSceneObject != null) {
 
-                    gvrTextViewSceneObject.setTextSize(size * 10);
+                        gvrTextViewSceneObject.setJustification( justify[0] );
+                        gvrTextViewSceneObject.setLineSpacing((spacing - 1) * 10.0f);
+                        gvrTextViewSceneObject.setTextSize(size * 10.0f);
+                        gvrTextViewSceneObject.setTypeface(gvrContext, family[0], style);
+                    }
+
                 } // end <FontStyle> node
 
 
@@ -2469,6 +2501,8 @@ public class X3Dobject {
                             currentSceneObject);
                     sensor.setAnchorURL(url);
                     sensors.add(sensor);
+                    animationInteractivityManager.BuildInteractiveObjectFromAnchor(sensor, url);
+
                     currentSensor = sensor;
                 } // end <Anchor> node
 
@@ -2963,16 +2997,14 @@ public class X3Dobject {
                         root.addChildObject(mCubeEvironment);
                     } else {
                         // Not cubemapping, then set default skyColor
-                        cameraRigAtRoot.getLeftCamera()
-                                .setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
-                        cameraRigAtRoot.getRightCamera()
-                                .setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
+                        gvrContext.getMainScene().getMainCameraRig().getLeftCamera().setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
+                        gvrContext.getMainScene().getMainCameraRig().getRightCamera().setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
                     }
 
                 } // end <Background> node
 
-                // These nodes are once per file commands and thus moved to the end of the
-                //  end of the parsing's if-then-else statement
+                // These next few nodes are used once per file and thus moved
+                //  to the end of the parsing's if-then-else statement
 
                 /********** X3D **********/
                 else if (qName.equalsIgnoreCase("x3d")) {
@@ -3274,7 +3306,15 @@ public class X3Dobject {
             } else if (qName.equalsIgnoreCase("ProximitySensor")) {
                 currentSensor = null;
             } else if (qName.equalsIgnoreCase("Text")) {
-                ;
+                // since the text node is complete, now calculate
+                // the widths, heights and justification for this text
+                float maxLineLength = 0;
+                for (int i = 0; i < gvrTextViewSceneObject.getMaxLines(); i++) {
+                    float lineLength = gvrTextViewSceneObject.lineLength(gvrTextViewSceneObject.getTextLine(i));
+                    if ( maxLineLength < lineLength ) maxLineLength = lineLength;
+                }
+                gvrTextViewSceneObject.setTextPlaneSize(maxLineLength, (gvrTextViewSceneObject.getMaxLines()*gvrTextViewSceneObject.getLineHeight()) );
+
             } else if (qName.equalsIgnoreCase("FontStyle")) {
                 ;
             } else if (qName.equalsIgnoreCase("Billboard")) {
@@ -3341,47 +3381,38 @@ public class X3Dobject {
                 // we now have all the ROUTES, and set up either the default or an actual
                 // camera based on a <Viewpoint> in the scene.
 
-                // Set up the camera / Viewpoint
+                // First, set up the camera / Viewpoint
                 // The camera rig is indirectly attached to the root
-
                 if (cameraRigAtRoot != null) {
-                    GVRTransform cameraTransform = cameraRigAtRoot.getTransform();
+                    GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
 
-                    if (viewpoints.isEmpty()) {
-
-                        // No <Viewpoint> node(s) included in X3D file,
-
-                        // so use default viewpoint values
-                        cameraTransform.setPosition(0, 0, 10);
-                        AxisAngle4f axisAngle4f = new AxisAngle4f(0, 0, 1, 0);
-                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                        cameraTransform.setRotation(quaternionf.w, quaternionf.x,
-                                quaternionf.y, quaternionf.z);
-                        mainCamera.setName("DefaultCamera");
-                    } else {
+                    float[] cameraPosition = {0, 0, 10}; // X3D's default camera position
+                    if ( !viewpoints.isEmpty()) {
                         // X3D file contained a <Viewpoint> node.
-                        // Per spec., grab the first viewpoint from the X3D file
+                        // Per X3D spec., when there is 1 or more Viewpoints in the
+                        // X3D file, init with the first viewpoint in the X3D file
                         Viewpoint viewpoint = viewpoints.firstElement();
                         viewpoint.setIsBound(true);
-                        float[] position = viewpoint.getPosition();
-                        cameraTransform.setPosition(position[0], position[1], position[2]);
-                        float[] orientation = viewpoint.getOrientation();
-                        AxisAngle4f axisAngle4f = new AxisAngle4f(orientation[3],
-                                orientation[0], orientation[1], orientation[2]);
-                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
-                        float[] centerOfRotation = viewpoint.getCenterOfRotation();
-                        cameraTransform
-                                .rotateWithPivot(quaternionf.w, quaternionf.x, quaternionf.y,
-                                        quaternionf.z, centerOfRotation[0],
-                                        centerOfRotation[1], centerOfRotation[2]);
-                        if (viewpoint.getParent() != null) {
-                            Matrix4f cameraMatrix4f = cameraTransform.getLocalModelMatrix4f();
-                            Matrix4f parentMatrix4x4f = viewpoint.getParent().getTransform()
-                                    .getModelMatrix4f();
-                            parentMatrix4x4f.mul(cameraMatrix4f);
-                            cameraTransform.setModelMatrix(parentMatrix4x4f);
-                        }
+                        cameraPosition = viewpoint.getPosition();
                     } // <Viewpoint> node existed
+                    mainCameraRig.getTransform().setPosition(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+                    GVRCursorController gazeController = null;
+                    GVRInputManager inputManager = gvrContext.getInputManager();
+
+                    // Set up cursor based on camera position
+                    List<GVRCursorController> controllerList = inputManager.getCursorControllers();
+
+                    for(GVRCursorController controller: controllerList){
+                        if(controller.getControllerType() == GVRControllerType.GAZE);
+                        {
+                            gazeController = controller;
+                            break;
+                        }
+                    }
+                    if ( gazeController != null) {
+                        gazeController.setOrigin(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+                    }
+
                 } // end setting based on new camera rig
 
                 animationInteractivityManager.initAnimationsAndInteractivity();
@@ -3661,5 +3692,4 @@ public class X3Dobject {
         }
 
     } // end Parse
-
 }
