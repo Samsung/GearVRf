@@ -129,7 +129,7 @@ class AnimatedCursorAsset extends MeshCursorAsset {
 
                 @Override
                 public Future<GVRTexture> getItem(GVRContext context, GVRAndroidResource resource) {
-                    return context.loadFutureTexture(resource);
+                    return context.getAssetLoader().loadFutureTexture(resource);
                 }
             });
         } catch (IOException e) {

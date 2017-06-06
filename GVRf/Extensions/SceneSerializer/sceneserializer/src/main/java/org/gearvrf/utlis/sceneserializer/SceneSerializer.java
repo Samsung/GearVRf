@@ -9,6 +9,7 @@ import com.google.gson.JsonParser;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -151,7 +152,7 @@ public class SceneSerializer {
             environmentSceneObject = new GVRCubeSceneObject(gvrContext, false,
                     cubemapMaterial);
             environmentSceneObject.getTransform().setScale(targetScale, targetScale, targetScale);
-            Future<GVRTexture> futureCubeTexture = gvrContext.loadFutureCubemapTexture
+            Future<GVRTexture> futureCubeTexture = gvrContext.getAssetLoader().loadFutureCubemapTexture
                     (resource);
             environmentSceneObject.getRenderData().getMaterial().setMainTexture
                     (futureCubeTexture);
@@ -161,7 +162,7 @@ public class SceneSerializer {
             environmentSceneObject = new GVRSphereSceneObject(gvrContext, false,
                     material);
             environmentSceneObject.getTransform().setScale(targetScale, targetScale, targetScale);
-            Future<GVRTexture> futureSphereTexture = gvrContext.loadFutureTexture(resource);
+            Future<GVRTexture> futureSphereTexture = gvrContext.getAssetLoader().loadFutureTexture(resource);
             environmentSceneObject.getRenderData().getMaterial().setMainTexture(futureSphereTexture);
             gvrScene.addSceneObject(environmentSceneObject);
         }
@@ -259,7 +260,9 @@ public class SceneSerializer {
             while (iterator.hasNext()) {
                 currentSod = iterator.next();
                 try {
-                    context.loadModelFromSD(currentSod.getSrc());
+                    context.getAssetLoader().loadModel(
+                            "sd:" + currentSod.getSrc(), GVRImportSettings.getRecommendedSettings(),
+                            true, null);
                     break;
                 } catch (IOException e) {
                     Log.e(TAG, "Could not load model:%s from sdcard:%s", currentSod.getSrc(),
