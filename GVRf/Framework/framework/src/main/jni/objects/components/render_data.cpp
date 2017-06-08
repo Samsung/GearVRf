@@ -36,9 +36,14 @@ const RenderPass* RenderData::pass(int pass) const {
 }
 
 void RenderData::set_mesh(Mesh* mesh) {
-    mesh_ = mesh;
-    mesh->add_dirty_flag(dirty_flag_);
-    *dirty_flag_ = true;
+    if (mesh != nullptr) {
+        mesh_ = mesh;
+        mesh->add_dirty_flag(dirty_flag_);
+        *dirty_flag_ = true;
+    }
+    else {
+        LOGE("RenderData::set_mesh mesh cannot be NULL");
+    }
 }
 
 void RenderData::setDirty(bool dirty){

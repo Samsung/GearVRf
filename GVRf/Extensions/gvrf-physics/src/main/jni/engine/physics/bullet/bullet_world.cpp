@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <algorithm>
 #include "bullet_world.h"
 #include "bullet_rigidbody.h"
 #include "util/gvr_log.h"
@@ -22,6 +22,7 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 namespace gvr {
+std::mutex BulletWorld::sLock;
 
 BulletWorld::BulletWorld() {
     initialize();
@@ -78,11 +79,18 @@ void BulletWorld::addRigidBody(PhysicsRigidBody *body) {
     mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody());
 }
 
+void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
+    mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(),
+                                collidesWith, collisiontype);
+
+}
+
 void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
     mPhysicsWorld->removeRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody());
 }
 
 void BulletWorld::step(float timeStep) {
+    std::lock_guard<std::mutex> lock(sLock);
     mPhysicsWorld->stepSimulation(timeStep);
 }
 
@@ -149,9 +157,19 @@ void BulletWorld::listCollisions(std::list <ContactPoint> &contactPoints) {
 
 }
 
-void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
-    mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(), collidesWith, collisiontype);
+
+void BulletWorld::setGravity(float x, float y, float z) {
+    mPhysicsWorld->setGravity(btVector3(x, y, z));
 }
 
+void BulletWorld::setGravity(glm::vec3 gravity) {
+    mPhysicsWorld->setGravity(btVector3(gravity.x, gravity.y, gravity.z));
+}
+
+glm::vec3 BulletWorld::getGravity() {
+    btVector3 g = mPhysicsWorld->getGravity();
+    glm::vec3 v(g.getX(), g.getY(), g.getZ());
+    return v;
+}
 }
 
