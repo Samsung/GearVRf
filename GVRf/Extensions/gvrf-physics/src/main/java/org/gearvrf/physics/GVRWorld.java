@@ -74,7 +74,9 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
      * @return true if the world contains the specified rigid body.
      */
     public boolean contains(GVRRigidBody rigidBody) {
-        return mRigidBodies.get(rigidBody.getNative()) != null;
+        synchronized (mRigidBodies) {
+            return mRigidBodies.get(rigidBody.getNative()) != null;
+        }
     }
 
     /**
@@ -83,20 +85,22 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
      * @param gvrBody The {@link GVRRigidBody} to add.
      */
     public void addBody(GVRRigidBody gvrBody) {
-        if (contains(gvrBody)) {
-            return;
-        }
+        synchronized (mRigidBodies) {
+            if (contains(gvrBody)) {
+                return;
+            }
 
-        if (gvrBody.getCollisionGroup() < 0 || gvrBody.getCollisionGroup() > 15
-                || mCollisionMatrix == null) {
-            NativePhysics3DWorld.addRigidBody(getNative(), gvrBody.getNative());
-        } else {
-            NativePhysics3DWorld.addRigidBodyWithMask(getNative(), gvrBody.getNative(),
-                    mCollisionMatrix.getCollisionFilterGroup(gvrBody.getCollisionGroup()),
-                    mCollisionMatrix.getCollisionFilterMask(gvrBody.getCollisionGroup()));
-        }
+            if (gvrBody.getCollisionGroup() < 0 || gvrBody.getCollisionGroup() > 15
+                    || mCollisionMatrix == null) {
+                NativePhysics3DWorld.addRigidBody(getNative(), gvrBody.getNative());
+            } else {
+                NativePhysics3DWorld.addRigidBodyWithMask(getNative(), gvrBody.getNative(),
+                        mCollisionMatrix.getCollisionFilterGroup(gvrBody.getCollisionGroup()),
+                        mCollisionMatrix.getCollisionFilterMask(gvrBody.getCollisionGroup()));
+            }
 
-        mRigidBodies.put(gvrBody.getNative(), gvrBody);
+            mRigidBodies.put(gvrBody.getNative(), gvrBody);
+        }
     }
 
     /**
@@ -105,9 +109,11 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
      * @param gvrBody the {@link GVRRigidBody} to remove.
      */
     public void removeBody(GVRRigidBody gvrBody) {
-        if (contains(gvrBody)) {
-            NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
-            mRigidBodies.remove(gvrBody.getNative());
+        synchronized (mRigidBodies) {
+            if (contains(gvrBody)) {
+                NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
+                mRigidBodies.remove(gvrBody.getNative());
+            }
         }
     }
 
@@ -135,14 +141,16 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     }
 
     private void sendCollisionEvent(GVRCollisionInfo info, String eventName) {
-        GVRSceneObject bodyA = mRigidBodies.get(info.bodyA).getOwnerObject();
-        GVRSceneObject bodyB = mRigidBodies.get(info.bodyB).getOwnerObject();
+        synchronized (mRigidBodies) {
+            GVRSceneObject bodyA = mRigidBodies.get(info.bodyA).getOwnerObject();
+            GVRSceneObject bodyB = mRigidBodies.get(info.bodyB).getOwnerObject();
 
-        getGVRContext().getEventManager().sendEvent(bodyA, ICollisionEvents.class, eventName,
-                bodyA, bodyB, info.normal, info.distance);
+            getGVRContext().getEventManager().sendEvent(bodyA, ICollisionEvents.class, eventName,
+                    bodyA, bodyB, info.normal, info.distance);
 
-        getGVRContext().getEventManager().sendEvent(bodyB, ICollisionEvents.class, eventName,
-                bodyB, bodyA, info.normal, info.distance);
+            getGVRContext().getEventManager().sendEvent(bodyB, ICollisionEvents.class, eventName,
+                    bodyB, bodyA, info.normal, info.distance);
+        }
     }
 
     private void doPhysicsAttach(GVRSceneObject rootSceneObject) {
