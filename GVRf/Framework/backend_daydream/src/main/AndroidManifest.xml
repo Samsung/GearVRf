@@ -21,10 +21,6 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk
-        android:minSdkVersion="19"
-        android:targetSdkVersion="24" />
-
     <!-- copied from https://github.com/googlevr/gvr-android-sdk/blob/master/samples/sdk-treasurehunt/src/main/AndroidManifest.xml-->
 
     <!-- Required for vibration feedback when the trigger action is performed. -->

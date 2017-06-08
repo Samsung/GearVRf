@@ -17,7 +17,7 @@ android {
     buildToolsVersion '25.0.2'
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 21
         externalNativeBuild {
             cmake {
