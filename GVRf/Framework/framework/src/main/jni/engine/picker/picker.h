@@ -46,9 +46,10 @@ public:
             Transform* t,
             float ox, float oy, float oz,
             float dx, float dy, float dz);
-    static float pickSceneObject(
-            const SceneObject* scene_object,
-            const CameraRig* camera_rig);
+    static void pickSceneObject(
+            const SceneObject *scene_object,
+            const CameraRig *camera_rig,
+            ColliderData &colliderData);
     static glm::vec3 pickSceneObjectAgainstBoundingBox(
             const SceneObject* scene_object, float ox, float oy, float oz,
             float dx, float dy, float dz);
