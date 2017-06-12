@@ -31,8 +31,8 @@ namespace gvr {
 class Collider;
 
 /*
-* Information from a collision when a collider is picked.
-*/
+ * Information from a collision when a collider is picked.
+ */
 class ColliderData {
 public:
     ColliderData(Collider* collider);
@@ -51,9 +51,9 @@ public:
 };
 
 /*
-* Component attached to a SceneObject that provides
-* collision geometry and makes an object pickable.
-*/
+ * Component attached to a SceneObject that provides
+ * collision geometry and makes an object pickable.
+ */
 class Collider: public Component {
 public:
     Collider() :Component(getComponentType()), pick_distance_(0) {}

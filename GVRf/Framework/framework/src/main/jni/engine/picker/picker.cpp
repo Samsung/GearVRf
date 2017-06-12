@@ -146,9 +146,9 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
 /**
  * Picks a single scene object from the scene. If the object has a mesh collider, the picker will calculate the
  * texture coordinates and barycentric coordinates of the corresponding hit-point.
- * @param scene_object
- * @param camera_rig
- * @param colliderData
+ * @param scene_object  the SceneObject to be tested for collisions
+ * @param camera_rig    the camera whose looking-ray will be used for picking
+ * @param colliderData  a ColliderData instance to be populated with the picking results
  */
 void Picker::pickSceneObject(const SceneObject *scene_object, const CameraRig *camera_rig,
                              ColliderData &colliderData){

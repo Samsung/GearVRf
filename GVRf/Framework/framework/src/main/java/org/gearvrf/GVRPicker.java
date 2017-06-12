@@ -30,32 +30,33 @@ import org.joml.Vector3f;
  * The picker can function in two modes. One way is to simply call its
  * static functions to make a single scan through the scene to determine
  * what is hit by the picking ray.
- *
+ * <p/>
  * The other way is to add the picker as a component to a scene object.
  * The picking ray is generated from the camera viewpoint
  * each frame. It's origin is the camera position and it's direction is
  * the camera forward look vector (what the user is looking at).
- *
+ * <p/>
  * For a {@linkplain GVRSceneObject scene object} to be pickable, it must have a
  * {@link GVRCollider} component attached to it that is enabled.
  * The picker "casts" a ray into the screen graph, and returns an array
  * containing all the collisions as instances of GVRPickedObject.
  * The picked object contains the collider instance hit, the distance from the
  * camera and the hit position.
- *
+ * <p/>
  * The picker maintains the list of currently picked objects
  * (which can be obtained with getPicked()) and continually updates it each frame.
- *
+ * <p/>
  * In this mode, when the ray from the scene object hits a pickable object,
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
- *  - onEnter(GVRSceneObject)  called when the pick ray enters a scene object.
- *  - onExit(GVRSceneObject)   called when the pick ray exits a scene object.
- *  - onInside(GVRSceneObject) called while the pick ray penetrates a scene object.
- *  - onPick(GVRPicker)        called when the set of picked objects changes.
- *  - onNoPick(GVRPicker)      called once when nothing is picked.
- *
+ * <ul>>
+ * <li>onEnter(GVRSceneObject)  called when the pick ray enters a scene object.</li>
+ * <li>onExit(GVRSceneObject)   called when the pick ray exits a scene object.</li>
+ * <li>onInside(GVRSceneObject) called while the pick ray penetrates a scene object.</li>
+ * <li>onPick(GVRPicker)        called when the set of picked objects changes.</li>
+ * <li>onNoPick(GVRPicker)      called once when nothing is picked.</li>
+ * </ul
  * @see IPickEvents
  * @see GVRSceneObject#attachCollider(GVRCollider)
  * @see GVRCollider
@@ -114,13 +115,13 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * Get the current ray to use for picking.
-     *
+     * <p/>
      * If the picker is attached to a scene object,
      * this ray is derived from the scene object's transform.
      * The origin of the ray is the translation component
      * of the total model matrix and the ray direction
      * is the forward look vector.
-     *
+     * <p/>
      * If not attached to a scene object, the origin of the
      * ray is the position of the viewer and its direction
      * is where the viewer is looking.
@@ -140,7 +141,7 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * Gets the current pick list.
-     *
+     * <p/>
      * Each collision with an object is described as a
      * GVRPickedObject which contains the scene object
      * and collider hit, the distance from the camera
@@ -366,7 +367,7 @@ public class GVRPicker extends GVRBehavior {
     /**
      * Tests the {@link GVRSceneObject}s contained within scene against the
      * camera rig's lookat vector.
-     *
+     * <p/>
      * Note: this function only returns GVREyePointeeHolder colliders
      * and is deprecated in favor of pickObject which returns all colliders.
      *
@@ -433,7 +434,7 @@ public class GVRPicker extends GVRBehavior {
      *
      * @param dz
      *            The z vector of the ray direction.
-
+     *
      * @param readbackBuffer The readback buffer is a small optimization on this call. Instead of
      *                       creating a new float array every time this call is made, the
      *                       readback buffer allows the caller to forward a dedicated array that
@@ -476,7 +477,7 @@ public class GVRPicker extends GVRBehavior {
      * and it extracts the hit data during within its synchronized block. You
      * can then examine the return list without worrying about another thread
      * corrupting your hit data.
-     *
+     * <p>
      * Depending on the type of collider, that the hit location may not be exactly
      * where the ray would intersect the scene object itself. Rather, it is
      * where the ray intersects the collision geometry associated with the collider.
@@ -521,7 +522,7 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * Casts a ray into the scene graph, and returns the objects it intersects.
-     *
+     * <p/>
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
      * {@code [dx, dy, dz]}. The ray is in the coordinate system of the
      * input transform, allowing it to be with respect to a scene object.
@@ -540,7 +541,7 @@ public class GVRPicker extends GVRBehavior {
      * and it extracts the hit data during within its synchronized block. You
      * can then examine the return list without worrying about another thread
      * corrupting your hit data.
-     *
+     * <p/>
      * Depending on the type of collider, that the hit location may not be exactly
      * where the ray would intersect the scene object itself. Rather, it is
      * where the ray intersects the collision geometry associated with the collider.
@@ -599,7 +600,9 @@ public class GVRPicker extends GVRBehavior {
     /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
-    static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz, int faceIndex, float barycentricx, float barycentricy, float barycentricz, float texu, float texv)
+    static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz,
+                                   int faceIndex, float barycentricx, float barycentricy, float barycentricz,
+                                   float texu, float texv)
     {
         GVRCollider collider = GVRCollider.lookup(colliderPointer);
         if (collider == null)
@@ -636,7 +639,7 @@ public class GVRPicker extends GVRBehavior {
 
     /**
      * The result of a pick request which hits an object.
-     *
+     * <p/>
      * When a pick request is performed, each collision is
      * described as a GVRPickedObject.
      *
@@ -667,7 +670,8 @@ public class GVRPicker extends GVRBehavior {
          * @see GVRPicker#pickObjects(GVRScene, float, float, float, float, float, float)
          * @see GVRCollider
          */
-        public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance, int faceIndex, float[] barycentricCoords, float[] textureCoords) {
+        public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance, int faceIndex,
+                               float[] barycentricCoords, float[] textureCoords) {
             hitObject = hitCollider.getOwnerObject();
             this.hitDistance = hitDistance;
             this.hitCollider = hitCollider;
@@ -783,16 +787,16 @@ public class GVRPicker extends GVRBehavior {
 
 final class NativePicker {
     static native long[] pickScene(long scene, float ox, float oy, float oz,
-                                   float dx, float dy, float dz);
+            float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject[] pickObjects(long scene, long transform, float ox, float oy, float oz,
-                                                          float dx, float dy, float dz);
+            float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject pickSceneObject(long sceneObject, long cameraRig);
 
     static native GVRPicker.GVRPickedObject[] pickVisible(long scene);
 
     static native boolean pickSceneObjectAgainstBoundingBox(long sceneObject,
-                                                            float ox, float oy, float oz, float dx, float dy, float dz, ByteBuffer readbackBuffer);
+            float ox, float oy, float oz, float dx, float dy, float dz, ByteBuffer readbackBuffer);
 }
 

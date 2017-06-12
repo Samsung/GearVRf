@@ -124,7 +124,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
  * @param rayDir    direction of the pick ray in model coordinates
  * @return ColliderData with the hit point and distance in model coordinates
  */
-ColliderData MeshCollider::isHit(const Mesh &mesh, const glm::vec3 &rayStart, const glm::vec3 &rayDir) {
+ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir) {
     const std::vector<glm::vec3>& vertices = mesh.vertices();
     ColliderData data;
     if (vertices.size() > 0) {
