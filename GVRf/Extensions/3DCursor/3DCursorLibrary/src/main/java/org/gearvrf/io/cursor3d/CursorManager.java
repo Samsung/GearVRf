@@ -146,7 +146,7 @@ public final class CursorManager {
         }
         this.scene = scene;
         this.context = context;
-        this.inputManager = CursorInputManager.getInstance(context);
+        this.inputManager = new CursorInputManager(context);
         activationListeners = new ArrayList<CursorActivationListener>();
         globalSettings = GlobalSettings.getInstance();
         themes = new HashMap<String, CursorTheme>();
