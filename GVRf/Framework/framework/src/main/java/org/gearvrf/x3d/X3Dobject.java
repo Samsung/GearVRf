@@ -858,6 +858,8 @@ public class X3Dobject {
             else if (qName.equalsIgnoreCase("shape")) {
 
                 gvrRenderData = new GVRRenderData(gvrContext);
+               // gvrRenderData.setAlphaToCoverage(true);
+                gvrRenderData.setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
                 shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
                 gvrRenderData.setShaderTemplate(GVRPhongShader.class);
@@ -2217,31 +2219,44 @@ public class X3Dobject {
 
                 /********** Text **********/
                 else if (qName.equalsIgnoreCase("Text")) {
+                    float[] length = null;
+                    float maxExtent = 0;
                     String name = "";
-                    String[] string = {};
-                    String[] mfStrings = null;
+                    String[] string = null;
+                    boolean solid = false;
+
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         name = attributeValue;
                     }
+                    attributeValue = attributes.getValue("length");
+                    if (attributeValue != null) {
+                        // reusing the keys parsing here cause it works
+                        parseNumbersString(attributeValue, X3Dobject.interpolatorKeyComponent,
+                                1);
+                        length = new float[keys.size()];
+                        for (int i = 0; i < length.length; i++) {
+                            Key keyObject = keys.get(i);
+                            length[i] = keyObject.key;
+                        }
+                        keys.clear();
+                        Log.e(TAG, "Text 'length' attribute currently not implemented. ");
+                    }
+                    attributeValue = attributes.getValue("maxExtent");
+                    if (attributeValue != null) {
+                        maxExtent = parseSingleFloatString(attributeValue, false, true);
+                        Log.e(TAG, "Text 'maxExtent' attribute currently not implemented. ");
+                    }
                     attributeValue = attributes.getValue("string");
                     if (attributeValue != null) {
-                        mfStrings = parseMFString(attributeValue);
-
+                        string = parseMFString(attributeValue);
                     }
-                    gvrTextViewSceneObject = new GVRTextViewSceneObject(gvrContext);
-                    String text = "";
-                    if (mfStrings != null) {
-                        for (int i = 0; i < mfStrings.length; i++) {
-                            if (i > 0)
-                                text += " ";
-                            text += mfStrings[i];
-                        }
+                    attributeValue = attributes.getValue("solid");
+                    if (attributeValue != null) {
+                        Log.e(TAG, "Text 'solid' attribute not implemented. ");
+                        solid = parseBooleanString(attributeValue);
                     }
-                    gvrTextViewSceneObject.setText(text);
-
-                    Matrix4f matrix4f = currentSceneObject.getTransform()
-                            .getModelMatrix4f();
+                    gvrTextViewSceneObject = new GVRTextViewSceneObject(gvrContext, string);
 
                     gvrTextViewSceneObject.setTextColor(Color.WHITE); // default
                     gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default
@@ -2257,24 +2272,16 @@ public class X3Dobject {
                 /********** FontStyle **********/
                 //TODO: FontStyle not currently implemented
                 else if (qName.equalsIgnoreCase("FontStyle")) {
+
                     String name = "";
-                    String[] family =
-                            {
-                                    "SERIF"
-                            };
+                    String[] family = { GVRTextViewSceneObject.DEFAULT_FONT };
                     boolean horizontal = true;
-                    String[] justify =
-                            {
-                                    "BEGIN"
-                            }; // BEGIN, END, FIRST, MIDDLE
+                    GVRTextViewSceneObject.justifyTypes[] justify = { GVRTextViewSceneObject.justifyTypes.BEGIN };
                     String language = "";
                     boolean leftToRight = true;
-                    float size = 1;
-                    float spacing = 1;
-                    String[] style =
-                            {
-                                    "PLAIN"
-                            }; // PLAIN | BOLD | ITALIC | BOLDITALIC
+                    float spacing = 1.0f;
+                    float size = 1.0f;
+                    GVRTextViewSceneObject.fontStyleTypes style = GVRTextViewSceneObject.fontStyleTypes.PLAIN;
                     boolean topToBottom = true;
 
                     attributeValue = attributes.getValue("DEF");
@@ -2284,46 +2291,76 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("family");
                     if (attributeValue != null) {
                         family = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle family attribute not implemented. ");
+                        // handle spaces in the font name
+                        if ( family.length > 1) {
+                            for (int i = 1; i < family.length; i++) {
+                                family[0] += (" " + family[i] );
+                            }
+                        }
+                    }
+                    attributeValue = attributes.getValue("horizontal");
+                    if (attributeValue != null) {
+                        horizontal = parseBooleanString(attributeValue);
+                        Log.e(TAG, "horizontal feature of FontStyle not implemented");
                     }
                     attributeValue = attributes.getValue("justify");
                     if (attributeValue != null) {
-                        justify = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle justify attribute not implemented. ");
+                        String[] justifyMFString = parseMFString(attributeValue);
+                        justify = new GVRTextViewSceneObject.justifyTypes[justifyMFString.length];
+                        for (int i = 0; i < justify.length; i++) {
+                            if ( justifyMFString[i].equalsIgnoreCase("END")) justify[i] = GVRTextViewSceneObject.justifyTypes.END;
+                            else if ( justifyMFString[i].equalsIgnoreCase("FIRST")) justify[i] = GVRTextViewSceneObject.justifyTypes.FIRST;
+                            else if ( justifyMFString[i].equalsIgnoreCase("MIDDLE")) justify[i] = GVRTextViewSceneObject.justifyTypes.MIDDLE;
+                            else justify[i] = GVRTextViewSceneObject.justifyTypes.BEGIN;
+                        }
                     }
                     attributeValue = attributes.getValue("language");
                     if (attributeValue != null) {
                         language = attributeValue;
-                        Log.e(TAG, "FontStyle language attribute not implemented. ");
+                        Log.e(TAG, "language feature of FontStyle not implemented");
                     }
                     attributeValue = attributes.getValue("leftToRight");
                     if (attributeValue != null) {
                         leftToRight = parseBooleanString(attributeValue);
-                        Log.e(TAG, "FontStyle leftToRight attribute not implemented. ");
+                        Log.e(TAG, "leftToRight feature of FontStyle not implemented");
+                    }
+                    attributeValue = attributes.getValue("spacing");
+                    if (attributeValue != null) {
+                        spacing = parseSingleFloatString(attributeValue, false, true);
+                        Log.e(TAG, "spacing feature of FontStyle not implemented");
                     }
                     attributeValue = attributes.getValue("size");
                     if (attributeValue != null) {
                         size = parseSingleFloatString(attributeValue, false, true);
                     }
-                    attributeValue = attributes.getValue("spacing");
-                    if (attributeValue != null) {
-                        spacing = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "FontStyle spacing attribute not implemented. ");
-                    }
                     attributeValue = attributes.getValue("style");
                     if (attributeValue != null) {
-                        style = parseMFString(attributeValue);
-                        Log.e(TAG, "FontStyle style attribute not implemented. ");
+                        if ( attributeValue.equalsIgnoreCase("BOLD")) {
+                            style = GVRTextViewSceneObject.fontStyleTypes.BOLD;
+                        }
+                        else if ( attributeValue.equalsIgnoreCase("ITALIC")) {
+                            style = GVRTextViewSceneObject.fontStyleTypes.ITALIC;
+                        }
+                        else if ( attributeValue.equalsIgnoreCase("BOLDITALIC")) {
+                            style = GVRTextViewSceneObject.fontStyleTypes.BOLDITALIC;
+                        }
+                        else {
+                            style = GVRTextViewSceneObject.fontStyleTypes.PLAIN;
+                        }
                     }
                     attributeValue = attributes.getValue("topToBottom");
                     if (attributeValue != null) {
                         topToBottom = parseBooleanString(attributeValue);
-                        Log.e(TAG, "FontStyle topToBottom attribute not implemented. ");
+                        Log.e(TAG, "topToBottom feature of FontStyle not implemented");
                     }
-                    // not clear how gravity and textSize will be used.
-                    // currently, just using a default value
+                    if (gvrTextViewSceneObject != null) {
 
-                    gvrTextViewSceneObject.setTextSize(size * 10);
+                        gvrTextViewSceneObject.setJustification( justify[0] );
+                        gvrTextViewSceneObject.setLineSpacing((spacing - 1) * 10.0f);
+                        gvrTextViewSceneObject.setTextSize(size * 10.0f);
+                        gvrTextViewSceneObject.setTypeface(gvrContext, family[0], style);
+                    }
+
                 } // end <FontStyle> node
 
 
@@ -3257,7 +3294,15 @@ public class X3Dobject {
             } else if (qName.equalsIgnoreCase("ProximitySensor")) {
                 currentSensor = null;
             } else if (qName.equalsIgnoreCase("Text")) {
-                ;
+                // since the text node is complete, now calculate
+                // the widths, heights and justification for this text
+                float maxLineLength = 0;
+                for (int i = 0; i < gvrTextViewSceneObject.getMaxLines(); i++) {
+                    float lineLength = gvrTextViewSceneObject.lineLength(gvrTextViewSceneObject.getTextLine(i));
+                    if ( maxLineLength < lineLength ) maxLineLength = lineLength;
+                }
+                gvrTextViewSceneObject.setTextPlaneSize(maxLineLength, (gvrTextViewSceneObject.getMaxLines()*gvrTextViewSceneObject.getLineHeight()) );
+
             } else if (qName.equalsIgnoreCase("FontStyle")) {
                 ;
             } else if (qName.equalsIgnoreCase("Billboard")) {
