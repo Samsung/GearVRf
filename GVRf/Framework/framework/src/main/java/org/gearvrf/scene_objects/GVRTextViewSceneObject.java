@@ -115,7 +115,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     // individual lines of text.  Assists in determining lenghts of
     // strings once the fonts are set.
     private String linesOfText[] = null;
-    private GVRMaterial gvrMaterialX3D = null;
+    //private GVRMaterial gvrMaterialX3D = null;
 
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
@@ -210,9 +210,9 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * Special constructor called by X3D parser
      * setTextPlaneSize() called once parameters such as font and size are set.
      *
-     * @param gvrContext
-     * @param strings
+
      */
+    /*
     public GVRTextViewSceneObject(GVRContext gvrContext, String[] strings) {
         super(gvrContext);
 
@@ -246,6 +246,86 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mCount = sReferenceCounter;
         mFirstFrame = true;
     }
+    */
+
+    public GVRTextViewSceneObject(GVRContext gvrContext, String string, String font,
+                                  justifyTypes justify, float spacing, float size, fontStyleTypes style) {
+        super(gvrContext);
+
+        final GVRActivity activity = gvrContext.getActivity();
+        mTextView = new TextView(activity);
+        mTextView.setBackgroundColor(Color.TRANSPARENT);
+        mTextView.setTextColor(Color.WHITE);
+
+        mTextView.setText(string);
+        mTextViewContainer = new LinearLayout(activity);
+        mFrameListener = new GVRDrawFrameListenerImpl(this);
+
+        GVRTexture texture = new GVRExternalTexture(gvrContext);
+
+        GVRMaterial gvrMaterial = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
+        gvrMaterial.setMainTexture(texture);
+
+        mSurfaceTexture = new SurfaceTexture(texture.getId());
+        mSurface = new Surface(mSurfaceTexture);
+
+        int numberOfLines = 1;
+        String text = string;
+        while ( text.indexOf("\n") != -1) {
+            numberOfLines++;
+            text = text.substring(text.indexOf("\n")+1, text.length() );
+        }
+        String[] lines = new String[numberOfLines];
+        int lineNumber = 0;
+        while ( string.indexOf("\n") != -1) {
+            lines[lineNumber] = string.substring(0, string.indexOf("\n") );
+            lineNumber++;
+            string = string.substring(string.indexOf("\n")+1, string.length() );
+        }
+        lines[lineNumber] = string.substring(string.indexOf("\n")+1, string.length() );
+
+        setJustification( justify );
+        setLineSpacing((spacing - 1) * 10.0f);
+        setTextSize(size * 10.0f);
+        setTypeface(gvrContext, font, style);
+
+        float maxLineLength = 0;
+        for (int i = 0; i < lines.length; i++) {
+            float lineLength = getLineLength(lines[i]);
+            if ( maxLineLength < lineLength ) maxLineLength = lineLength;
+        }
+
+        int canvasWidthInt = (int)Math.ceil(maxLineLength);
+        int canvasHeightInt = (int)Math.ceil( numberOfLines*getLineHeight() );
+        mTextView.setVisibility(View.VISIBLE);
+        mTextView.setLayoutParams(new LayoutParams( canvasWidthInt,  canvasHeightInt) );
+
+        float width = maxLineLength / FACTOR_IMAGE_SIZE;
+        float height = (numberOfLines*getLineHeight()) / FACTOR_IMAGE_SIZE;
+
+        GVRMesh gvrMesh = gvrContext.createQuad(width, height);
+
+        GVRRenderData gvrRenderData = new GVRRenderData(gvrContext);
+        gvrRenderData.setRenderingOrder(GVRRenderData.GVRRenderingOrder.TRANSPARENT);
+        gvrRenderData.setMesh(gvrMesh);
+        gvrRenderData.setMaterial(gvrMaterial);
+        this.attachRenderData( gvrRenderData );
+
+        mTextViewContainer.addView(mTextView);
+        mTextViewContainer.setVisibility(View.VISIBLE);
+
+        mTextViewContainer.measure(canvasWidthInt, canvasHeightInt);
+        mTextViewContainer.layout(0, 0, canvasWidthInt, canvasHeightInt);
+
+        gvrContext.registerDrawFrameListener(mFrameListener);
+
+        mSurfaceTexture.setDefaultBufferSize(canvasWidthInt, canvasHeightInt);
+
+        sReferenceCounter++;
+        mCount = sReferenceCounter;
+        mFirstFrame = true;
+
+    }
 
     /**
      * Once the font family, size and style are set, one can build the Quad
@@ -253,6 +333,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * @param canvasWidth
      * @param canvasHeight
      */
+    /*
     public void setTextPlaneSize(float canvasWidth, float canvasHeight) {
         int canvasWidthInt = (int)Math.ceil(canvasWidth);
         int canvasHeightInt = (int)Math.ceil(canvasHeight);
@@ -285,6 +366,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mCount = sReferenceCounter;
         mFirstFrame = true;
     }
+    */
 
     /**
      * Set the text size.
@@ -381,31 +463,38 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * set the number of lines for this text
      * @param lines
      */
+    /*
     public void setNumberLines(int lines) {
         mTextView.setLines(lines);
         mIsChanged = true;
     }
+    */
     /**
      * Min Lines for this text
      * @return
      */
+    /*
     public int getMinLines() {
         return mTextView.getMinLines();
     }
+    */
 
     /**
      * max lines for this text
      * @return
      */
+    /*
     public int getMaxLines() {
         return mTextView.getMaxLines();
     }
+    */
 
     /**
      * Saves the lines of text and used later to calculate the
      * length in pixels based on font-family, size, etc.
-     * @param textString
+     * @param
      */
+    /*
     public void setTextStrings(String[] textString) {
         linesOfText = new String[textString.length];
         for (int i = 0; i < textString.length; i++) {
@@ -420,17 +509,22 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         }
         return returnString;
     }
+    */
 
     /**
-     * get the length of this line based in pixels and dependent on
-     * the font and size of the characters.
+     * returns the length of this line based in pixels and dependent on
+     * the font family and size of the characters.
      * @param text
      * @return
      */
+    /*
     public float lineLength(String text) {
         return mTextView.getPaint().measureText(text);
     }
-
+    */
+    public float getLineLength(String text) {
+        return mTextView.getPaint().measureText(text);
+    }
     /**
      * set the justification to left, center/middle or right.  The values from
      * the enumerated type are from X3D's <FontStyle> justify setting.
