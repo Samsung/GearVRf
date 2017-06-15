@@ -384,22 +384,52 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Tests the {@link GVRSceneObject} against the camera rig's lookat vector.
+     * Tests the {@link GVRSceneObject} against the ray information passed to the function.
      *
      * @param sceneObject
      *            The {@link GVRSceneObject} to be tested.
      *
-     * @param cameraRig
-     *            The {@link GVRCameraRig} to use for ray testing.
+     * @param ox
+     *            The x coordinate of the ray origin (in world coords).
      *
-     * @return the distance from the camera rig. It returns positive infinity if
-     *         the cameraRig is not pointing to the sceneObject.
+     * @param oy
+     *            The y coordinate of the ray origin (in world coords).
+     *
+     * @param oz
+     *            The z coordinate of the ray origin (in world coords).
+     *
+     * @param dx
+     *            The x vector of the ray direction (in world coords).
+     *
+     * @param dy
+     *            The y vector of the ray direction (in world coords).
+     *
+     * @param dz
+     *            The z vector of the ray direction (in world coords).
+     *
+     * @return  a {@link GVRPicker.GVRPickedObject} containing the picking information
      *
      */
-    public static final GVRPickedObject pickSceneObject(GVRSceneObject sceneObject,
-                                                        GVRCameraRig cameraRig) {
-        return NativePicker.pickSceneObject(sceneObject.getNative(),
-                cameraRig.getNative());
+    public static final GVRPickedObject pickSceneObject(GVRSceneObject sceneObject, float ox, float oy, float oz, float dx,
+                                                        float dy, float dz) {
+        return NativePicker.pickSceneObject(sceneObject.getNative(), ox, oy, oz, dx, dy, dz);
+    }
+
+    /**
+     * Tests the {@link GVRSceneObject} against the main camera rig's lookat vector.
+     *
+     * @param sceneObject
+     *            The {@link GVRSceneObject} to be tested.
+     *
+     * @return  a {@link GVRPicker.GVRPickedObject} containing the picking information
+     *
+     */
+    public static final GVRPickedObject pickSceneObject(GVRSceneObject sceneObject) {
+        GVRCameraRig cam = sceneObject.getGVRContext().getMainScene().getMainCameraRig();
+        GVRTransform t = cam.getHeadTransform();
+        float[] lookat = cam.getLookAt();
+        return NativePicker.pickSceneObject(sceneObject.getNative(), t.getPositionX(), t.getPositionY(), t.getPositionZ(),
+                lookat[0], lookat[1], lookat[2]);
     }
 
     /**
@@ -666,6 +696,17 @@ public class GVRPicker extends GVRBehavior {
          *            The distance from the origin if the ray.
          * @param hitLocation
          *            The hit location, as an [x, y, z] array.
+         * @param faceIndex
+         *            The index of the face intersected if a {@link GVRMeshCollider} was attached
+         *            to the {@link GVRSceneObject}, -1 otherwise
+         * @param barycentricCoords
+         *            The barycentric coordinates of the hit location on the intersected face
+         *            if a {@link GVRMeshCollider} was attached to the {@link GVRSceneObject},
+         *            [ -1.0f, -1.0f, -1.0f ] otherwise.
+         * @param textureCoords
+         *            The texture coordinates of the hit location on the intersected face
+         *            if a {@link GVRMeshCollider} was attached to the {@link GVRSceneObject},
+         *            [ -1.0f, -1.0f ] otherwise.
          *
          * @see GVRPicker#pickObjects(GVRScene, float, float, float, float, float, float)
          * @see GVRCollider
@@ -679,6 +720,16 @@ public class GVRPicker extends GVRBehavior {
             this.faceIndex = faceIndex;
             this.barycentricCoords = barycentricCoords;
             this.textureCoords = textureCoords;
+        }
+
+        public GVRPickedObject(GVRSceneObject hitObject, float[] hitLocation) {
+            this.hitObject = hitObject;
+            this.hitLocation = hitLocation;
+            this.hitDistance = -1;
+            this.hitCollider = null;
+            this.faceIndex = -1;
+            this.barycentricCoords = new float[]{-1.0f, -1.0f, -1.0f};
+            this.textureCoords = new float[]{-1.0f, -1.0f};
         }
 
         /**
@@ -792,7 +843,8 @@ final class NativePicker {
     static native GVRPicker.GVRPickedObject[] pickObjects(long scene, long transform, float ox, float oy, float oz,
             float dx, float dy, float dz);
 
-    static native GVRPicker.GVRPickedObject pickSceneObject(long sceneObject, long cameraRig);
+    static native GVRPicker.GVRPickedObject pickSceneObject(long sceneObject, float ox, float oy, float oz,
+            float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject[] pickVisible(long scene);
 

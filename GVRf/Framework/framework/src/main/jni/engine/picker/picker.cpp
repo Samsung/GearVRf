@@ -145,27 +145,24 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
 
 /**
  * Picks a single scene object from the scene. If the object has a mesh collider, the picker will calculate the
- * texture coordinates and barycentric coordinates of the corresponding hit-point.
- * @param scene_object  the SceneObject to be tested for collisions
- * @param camera_rig    the camera whose looking-ray will be used for picking
- * @param colliderData  a ColliderData instance to be populated with the picking results
+ * texture coordinates and barycentric coordinates of the corresponding hit-point. Note that this will do nothing
+ * if the scene object doesn't have a collider.
  */
-void Picker::pickSceneObject(const SceneObject *scene_object, const CameraRig *camera_rig,
-                             ColliderData &colliderData){
-    Transform* t = camera_rig->getHeadTransform();
-    glm::vec3 ray_start(0, 0, 0);
-    glm::vec3 ray_dir(0, 0, -1.0f);
-    const glm::mat4& model_matrix = t->getModelMatrix();
-
-    Collider::transformRay(model_matrix, ray_start, ray_dir);
+void Picker::pickSceneObject(const SceneObject *scene_object, float ox, float oy, float oz, float dx, float dy, float dz, ColliderData &colliderData){
     Collider* collider = scene_object->collider();
-    if (collider->enabled() && scene_object->enabled()) {
-        colliderData = collider->isHit(ray_start, ray_dir);
+    if(collider == nullptr){
+        return;
     }
-    // In order, we check that the object was hit,  that the collider-shape is a mesh, and that
-    // the face-index is valid to ensure bounding-collisions aren't being used with the mesh-collider
-    if(colliderData.IsHit && collider->shape_type() == COLLIDER_SHAPE_MESH && colliderData.FaceIndex != -1){
-        populateTexCoords(*scene_object->render_data()->mesh(), colliderData);
+    else if (collider->enabled() && scene_object->enabled()) {
+        glm::vec3 rayStart(ox, oy, oz);
+        glm::vec3 rayDir(dx, dy, dz);
+
+        colliderData = collider->isHit(rayStart, rayDir);
+        // In order, we check that the object was hit,  that the collider-shape is a mesh, and that
+        // the face-index is valid to ensure bounding-collisions aren't being used with the mesh-collider
+        if(colliderData.IsHit && collider->shape_type() == COLLIDER_SHAPE_MESH && colliderData.FaceIndex != -1){
+            populateTexCoords(*scene_object->render_data()->mesh(), colliderData);
+        }
     }
 }
 /*

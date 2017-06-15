@@ -36,7 +36,9 @@ extern "C" {
                                               jfloat dy, jfloat dz);
     JNIEXPORT jobject JNICALL
     Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
-                                                  jobject obj, jlong jscene_object, jlong jcamera_rig);
+                                                  jobject obj, jlong jscene_object,
+                                                  jfloat ox, jfloat oy, jfloat oz,
+                                                  jfloat dx, jfloat dy, jfloat dz);
     JNIEXPORT bool JNICALL
     Java_org_gearvrf_NativePicker_pickSceneObjectAgainstBoundingBox(JNIEnv * env,
                                                                     jobject obj, jlong jscene_object, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
@@ -109,13 +111,14 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
 
 JNIEXPORT jobject JNICALL
 Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
-                                              jobject obj, jlong jscene_object, jlong jcamera_rig) {
+                                              jobject obj, jlong jscene_object,
+                                              jfloat ox, jfloat oy, jfloat oz,
+                                              jfloat dx, jfloat dy, jfloat dz) {
     SceneObject* scene_object =
             reinterpret_cast<SceneObject*>(jscene_object);
-    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
 
     ColliderData data;
-    Picker::pickSceneObject(scene_object, camera_rig, data);
+    Picker::pickSceneObject(scene_object, ox, oy, oz, dx, dy, dz, data);
 
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
