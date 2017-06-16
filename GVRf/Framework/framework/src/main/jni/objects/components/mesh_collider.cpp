@@ -127,10 +127,8 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
 ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir) {
     const std::vector<glm::vec3>& vertices = mesh.vertices();
     ColliderData data;
-    if (vertices.size() > 0)
-    {
-        for (int i = 0; i < mesh.triangles().size(); i += 3)
-        {
+    if (vertices.size() > 0) {
+        for (int i = 0; i < mesh.triangles().size(); i += 3) {
             glm::vec3 V1(vertices[mesh.triangles()[i]]);
             glm::vec3 V2(vertices[mesh.triangles()[i + 1]]);
             glm::vec3 V3(vertices[mesh.triangles()[i + 2]]);
@@ -142,69 +140,69 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, co
              */
             glm::vec3 hitPos;
             float distance = rayTriangleIntersect(hitPos, rayStart, rayDir, V1, V2, V3);
-            if ((distance > 0) && (distance < data.Distance))
-            {
+            if ((distance > 0) && (distance < data.Distance)) {
                 data.IsHit = true;
                 data.HitPosition = hitPos;
                 data.Distance = distance;
+                data.FaceIndex = i/3;
             }
-         }
-      }
-      return data;
-   }
-
-    /*
-     * Determine if the ray penetrates an axially aligned bounding box
-     * @param bounds    bounding volume (radius ignored, corners of box are used)
-     * @param rayStart  origin of ray in model coordinates
-     * @param rayDir    direction of ray in model coordinates
-     */
-    ColliderData MeshCollider::isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir) {
-        ColliderData data;
-        glm::vec3 hitPos;
-        if (bounds.intersect(hitPos, rayStart, rayDir))
-        {
-            data.IsHit = true;
-            data.HitPosition = hitPos;
-            data.Distance = glm::distance(rayStart, hitPos);
-         }
-         return data;
+        }
     }
+    return data;
+}
 
-    float MeshCollider::rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
-                                       const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3)
+/*
+ * Determine if the ray penetrates an axially aligned bounding box
+ * @param bounds    bounding volume (radius ignored, corners of box are used)
+ * @param rayStart  origin of ray in model coordinates
+ * @param rayDir    direction of ray in model coordinates
+ */
+ColliderData MeshCollider::isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir) {
+    ColliderData data;
+    glm::vec3 hitPos;
+    if (bounds.intersect(hitPos, rayStart, rayDir))
     {
-        glm::vec3 e1(V2 - V1);
-        glm::vec3 e2(V3 - V1);
-        glm::vec3 P = glm::cross(rayDir, e2);
-        glm::vec3 T(glm::vec3(rayStart) - V1);
-        float det = glm::dot(e1, P);
-        const float EPSILON = 0.00001f;
+        data.IsHit = true;
+        data.HitPosition = hitPos;
+        data.Distance = glm::distance(rayStart, hitPos);
+    }
+    return data;
+}
 
-        if (det > -EPSILON && det < EPSILON) {
-            return -1;
-        }
+float MeshCollider::rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
+                                         const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3)
+{
+    glm::vec3 e1(V2 - V1);
+    glm::vec3 e2(V3 - V1);
+    glm::vec3 P = glm::cross(rayDir, e2);
+    glm::vec3 T(glm::vec3(rayStart) - V1);
+    float det = glm::dot(e1, P);
+    const float EPSILON = 0.00001f;
 
-        float inv_det = 1.0f / det;
-        float u = glm::dot(T, P) * inv_det;
-
-        if (u < 0.0f || u > 1.0f) {
-            return -1;
-        }
-
-        glm::vec3 Q = glm::cross(T, e1);
-        float v = glm::dot(glm::vec3(rayDir), Q) * inv_det;
-
-        if (v < 0.0f || (u + v) > 1.0f) {
-            return -1;
-        }
-
-        float t = glm::dot(e2, Q) * inv_det;
-
-        if (t > EPSILON) {
-            hitPos = (1.0f - u - v) * V1 + u * V2 + v * V3;
-            return t;
-        }
+    if (det > -EPSILON && det < EPSILON) {
         return -1;
     }
+
+    float inv_det = 1.0f / det;
+    float u = glm::dot(T, P) * inv_det;
+
+    if (u < 0.0f || u > 1.0f) {
+        return -1;
+    }
+
+    glm::vec3 Q = glm::cross(T, e1);
+    float v = glm::dot(glm::vec3(rayDir), Q) * inv_det;
+
+    if (v < 0.0f || (u + v) > 1.0f) {
+        return -1;
+    }
+
+    float t = glm::dot(e2, Q) * inv_det;
+
+    if (t > EPSILON) {
+        hitPos = (1.0f - u - v) * V1 + u * V2 + v * V3;
+        return t;
+    }
+    return -1;
+}
 }
