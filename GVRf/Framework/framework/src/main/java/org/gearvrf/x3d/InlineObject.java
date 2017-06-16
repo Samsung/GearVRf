@@ -27,27 +27,37 @@ import org.gearvrf.GVRSceneObject;
 
 public class InlineObject {
 
-  private GVRSceneObject inlineGVRSceneObject = null;
-  private String[] url = {};
+    private GVRSceneObject inlineGVRSceneObject = null;
+    private String[] url = {};
+    private String name = null;
 
-  public InlineObject() { }
+    public InlineObject() { }
 
-  public InlineObject(GVRSceneObject inlineGVRSceneObject, String[] url) {
-     this.inlineGVRSceneObject = inlineGVRSceneObject;
-     this.url = url;
-  }
+    public InlineObject(GVRSceneObject inlineGVRSceneObject, String[] url) {
+        this.inlineGVRSceneObject = inlineGVRSceneObject;
+        this.url = url;
+    }
+    public InlineObject(GVRSceneObject inlineGVRSceneObject, String[] url, String name) {
+        this.inlineGVRSceneObject = inlineGVRSceneObject;
+        this.url = url;
+        this.name = name;
+    }
 
-  public String[] getURL() {
+    public String[] getURL() {
      return this.url;
   }
 
-  public int getTotalURL() {
+    public int getTotalURL() {
      return url.length;
   }
 
-  public GVRSceneObject getInlineGVRSceneObject() {
+    public GVRSceneObject getInlineGVRSceneObject() {
      return this.inlineGVRSceneObject;
   }
+
+    public String getName() {
+        return name;
+    }
 
 }
 

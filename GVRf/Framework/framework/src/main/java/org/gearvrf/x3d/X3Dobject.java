@@ -20,6 +20,8 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 
 import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVRExternalScene;
+import org.gearvrf.GVRScene;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.utility.Log;
@@ -300,7 +302,7 @@ public class X3Dobject {
             animationInteractivityManager = new AnimationInteractivityManager(
                     this, gvrContext, root, mDefinedItems, interpolators,
                     sensors, timeSensors, eventUtilities, scriptObjects,
-                    viewpoints
+                    viewpoints, inlineObjects
             );
         } catch (Exception e) {
             Log.e(TAG, "X3Dobject constructor error: " + e);
@@ -2436,7 +2438,7 @@ public class X3Dobject {
                             lodManager.increment();
                         }
                         InlineObject inlineObject = new InlineObject(inlineGVRSceneObject,
-                                url);
+                                url, name);
                         inlineObjects.add(inlineObject);
                     }
 
@@ -3674,24 +3676,40 @@ public class X3Dobject {
                     InlineObject inlineObject = inlineObjects.get(i);
                     String[] urls = inlineObject.getURL();
                     for (int j = 0; j < urls.length; j++) {
-                        GVRAndroidResource gvrAndroidResource = null;
-                        try {
-                            gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
-                            inputStream = gvrAndroidResource.getStream();
-                            currentSceneObject = inlineObject.getInlineGVRSceneObject();
-                            saxParser.parse(inputStream, userhandler);
-                        } catch (FileNotFoundException e) {
-                            Log.e(TAG,
-                                    "Inline file reading: GVRAndroidResource File Not Found Exception: "
-                                            + e);
-                        } catch (IOException ioException) {
-                            Log.e(TAG,
-                                    "Inline file reading: GVRAndroidResource IOException url["
-                                            + j + "] url " + urls[j]);
-                            Log.e(TAG, "Inline file reading: " + ioException.toString());
-                        } catch (Exception exception) {
-                            Log.e(TAG, "Inline file reading: GVRAndroidResource Exception: "
-                                    + exception);
+                        String url = urls[j];
+                        if (url.toLowerCase().endsWith(".x3d")) {
+                            GVRAndroidResource gvrAndroidResource = null;
+                            try {
+                                gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
+                                inputStream = gvrAndroidResource.getStream();
+                                currentSceneObject = inlineObject.getInlineGVRSceneObject();
+                                saxParser.parse(inputStream, userhandler);
+                            } catch (FileNotFoundException e) {
+                                Log.e(TAG,
+                                        "Inline file reading: GVRAndroidResource File Not Found Exception: "
+                                                + e);
+                            } catch (IOException ioException) {
+                                Log.e(TAG,
+                                        "Inline file reading: GVRAndroidResource IOException url["
+                                                + j + "] url " + urls[j]);
+                                Log.e(TAG, "Inline file reading: " + ioException.toString());
+                            } catch (Exception exception) {
+                                Log.e(TAG, "Inline file reading: GVRAndroidResource Exception: "
+                                        + exception);
+                            }
+                        }
+                        else {
+                            try {
+                                GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, urls[j], false);
+                                currentSceneObject = inlineObject.getInlineGVRSceneObject();
+                                currentSceneObject.attachComponent(gvrExternalScene);
+                                GVRScene gvrScene = gvrContext.getMainScene();
+                                gvrExternalScene.load(gvrScene);
+                            }
+                            catch (Exception e) {
+                                Log.e(TAG,
+                                        "Inline file reading: GVRExternalScene File " + urls[j] + " Exception: " + e);
+                            }
                         }
                     }
                 }

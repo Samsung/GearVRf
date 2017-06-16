@@ -44,6 +44,7 @@ public class InteractiveObject {
     private String eventUtilityFromField; // often 'toggle_changed'
     private String eventUtilityToField; // usually 'set_boolean'
     private ScriptObject scriptObject = null;
+    private InlineObject inlineObject = null;
 
     private DefinedItem definedItem = null;
     private String definedItemToField; // can be set_translation, set_rotation, set_position, set_orientation, set_scale
@@ -120,6 +121,15 @@ public class InteractiveObject {
     public String getDefinedItemFromField() {
         return this.definedItemFromField;
     }
+
+    public void setInlineObject(InlineObject inlineObject) {
+        this.inlineObject = inlineObject;
+    }
+
+    public InlineObject getInlineObject() {
+        return this.inlineObject;
+    }
+
 }
 
 
