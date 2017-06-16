@@ -31,6 +31,10 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,
         jobject obj, jint target);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_asynchronous_NativeCompressedTexture_setTransparency(JNIEnv * env, jobject obj, jlong jtexture, jboolean transparency);
+
 }
 
 
@@ -50,6 +54,14 @@ Java_org_gearvrf_asynchronous_NativeCompressedTexture_normalConstructor(JNIEnv *
 
     return reinterpret_cast<jlong>(texture);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_asynchronous_NativeCompressedTexture_setTransparency(JNIEnv * env, jobject obj, jlong jtexture, jboolean transparency) {
+    CompressedTexture* texture = reinterpret_cast<CompressedTexture*>(jtexture);
+    texture->set_transparency((bool)transparency);
+    return;
+}
+
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_asynchronous_NativeCompressedTexture_mipmappedConstructor(JNIEnv * env,

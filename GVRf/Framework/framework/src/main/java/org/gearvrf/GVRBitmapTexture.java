@@ -70,6 +70,19 @@ public class GVRBitmapTexture extends GVRTexture {
         super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters.getCurrentValuesArray()));
         NativeBaseTexture.setJavaOwner(getNative(), this);
         mBitmap = bitmap;
+
+        // check for transparency
+        if(mBitmap != null && mBitmap.hasAlpha()) {
+            mHasTransparency = NativeBaseTexture.bitmapHasTransparency(getNative(), bitmap);
+            NativeBaseTexture.setTransparency(getNative(), mHasTransparency);
+            // Warn if the image is actually opaque, but has an alpha channel.
+            if(!mHasTransparency) {
+                Log.i(TAG, "Bitmap " + 
+                        mBitmap.getWidth() + "x" + mBitmap.getHeight() + 
+                        "has an alpha channel with no translucent/transparent pixels.");
+                Log.i(TAG, "It would be better to encode this Bitmap with no alpha channel.  It would be faster to decode and more efficient as well.");
+            }
+        }
     }
 
     /**
@@ -114,6 +127,9 @@ public class GVRBitmapTexture extends GVRTexture {
     public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename,
             GVRTextureParameters textureParameters) {
         this(gvrContext, getBitmap(gvrContext, pngAssetFilename), textureParameters);
+        if(mBitmap.hasAlpha() && !mHasTransparency) {
+            Log.i(TAG, "Consider removing the alpha channel from: " + pngAssetFilename);
+        }
     }
 
     /**
@@ -388,4 +404,6 @@ final class NativeBaseTexture {
             byte[] grayscaleData);
 
     static native boolean updateFromBuffer(long pointer, int width, int height, int format, int type, Buffer pixels);
+    static native boolean bitmapHasTransparency(long pointer, Bitmap bitmap);
+    static native boolean setTransparency(long pointer, boolean hasTransparency);
 }

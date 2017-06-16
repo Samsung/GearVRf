@@ -88,6 +88,14 @@ public:
         this->ready = ready;
     }
 
+    void set_transparency(bool hasTransparency) {
+        has_transparency = hasTransparency;
+    }
+
+    bool transparency() {
+        return has_transparency;
+    }
+
 protected:
     Texture(GLTexture* gl_texture) : HybridObject() {
         gl_texture_ = gl_texture;
@@ -104,6 +112,7 @@ private:
 private:
     static const GLenum target = GL_TEXTURE_2D;
     bool ready = false;
+    bool has_transparency = false;
 };
 
 }

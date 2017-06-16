@@ -45,6 +45,37 @@ void RenderData::setDirty(bool dirty){
     *dirty_flag_ = dirty;
 }
 
+// TODO
+//      This needs to get called whenever a material changes any of
+//      its textures.
+void RenderData::adjustRenderingOrderForTransparency() {
+
+    int list_size = render_pass_list_.size();
+
+    for(int i=0;i<list_size;i++) {
+        Material *material_ = material(i);
+        Texture *mainTexture = material_->getTexture("main_texture");
+        Texture *diffuseTexture = material_->getTexture("diffuseTexture");
+
+        if((mainTexture != NULL && !mainTexture->transparency()) ||
+            diffuseTexture != NULL && !diffuseTexture->transparency()) {
+            // had transparency before, but is now opaque
+            if(rendering_order_ > Geometry) {
+                rendering_order_ = Geometry;
+                return;
+            }
+            continue;
+        }
+
+        // has transparency now, but was opaque before
+        if(rendering_order_ < Transparent) {
+            rendering_order_ = Transparent;
+            return;
+        }
+    }
+}
+
+
 bool RenderData::cull_face(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->cull_face();
