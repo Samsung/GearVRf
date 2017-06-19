@@ -66,6 +66,9 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     // use when no font family is set
     public static final String DEFAULT_FONT = "default";
     private String fontFamily = DEFAULT_FONT;
+    // Android's TextView.setGravity() RIGHT and LEFT return a value added by 0x30
+    private final int GRAVITY_RIGHT = Gravity.RIGHT + 0x30;
+    private final int GRAVITY_LEFT  = Gravity.LEFT + 0x30;
 
     /**
      * The refresh frequency of this sceneobject.
@@ -431,19 +434,23 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         else if (justify == justifyTypes.END) mTextView.setGravity(Gravity.RIGHT);
         else if (justify == justifyTypes.FIRST) mTextView.setGravity(Gravity.START);
         else mTextView.setGravity(Gravity.NO_GRAVITY);
-
     }
 
     /**
      * Returns the justification type defined the enumerated type.
-     * If none is set, it returns null
+     * If none is set, it returns null.
+     * Note that the value saved is not the value returned for
+     * setGravity(LEFT) and setGravity(RIGHT).  0x30 is added to those values by
+     * Android's TextView.setGravity()
      * @return
      */
     public justifyTypes getJustification() {
         justifyTypes justify = null;
         if ( mTextView.getGravity()== Gravity.LEFT) justify = justifyTypes.BEGIN;
+        else if ( mTextView.getGravity()== GRAVITY_LEFT) justify = justifyTypes.BEGIN;
         else if ( mTextView.getGravity()== Gravity.CENTER) justify = justifyTypes.MIDDLE;
         else if ( mTextView.getGravity()== Gravity.RIGHT) justify = justifyTypes.END;
+        else if ( mTextView.getGravity()== GRAVITY_RIGHT) justify = justifyTypes.END;
         else if ( mTextView.getGravity()== Gravity.START) justify = justifyTypes.FIRST;
         return justify;
     }
