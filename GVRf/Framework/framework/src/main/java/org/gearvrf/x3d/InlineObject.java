@@ -31,30 +31,66 @@ public class InlineObject {
     private String[] url = {};
     private String name = null;
 
+    /**
+     * Construct an empty Inline object
+     */
     public InlineObject() { }
 
+    /**
+     * Construct an Inline Object
+     * @param inlineGVRSceneObject
+     *          the GVRSceneObject that this Inlined object will be attached
+     *          For example, if the X3D scene is:
+     *          <Transform name="myTransform">
+     *              <Inline url='urlInlinedObject'/>
+     *          </Transform>
+     *          Then the inlineGVRSceneObject will be the GVRSceneObject associated with 'myTransform'
+     * @param url
+     *          The url (essentially X3D file whose file name ends with '.x3d') that will be inlined.
+     */
     public InlineObject(GVRSceneObject inlineGVRSceneObject, String[] url) {
         this.inlineGVRSceneObject = inlineGVRSceneObject;
         this.url = url;
     }
+
+    /**
+     * Similar to the above Inline Constructor
+     * @param inlineGVRSceneObject
+     * @param url
+     * @param name
+     *          The name DEFined in the <Inline /> tag. For example
+     *          <Inline url='myURL' name='myInlineName'/>
+     *          Then name will be set to 'myInlineName'
+     */
     public InlineObject(GVRSceneObject inlineGVRSceneObject, String[] url, String name) {
         this.inlineGVRSceneObject = inlineGVRSceneObject;
         this.url = url;
         this.name = name;
     }
 
+    /**
+     * Gets the url which will be a file name ending in '.x3d'
+     * @return
+     */
     public String[] getURL() {
-     return this.url;
-  }
+        return this.url;
+    }
 
-    public int getTotalURL() {
-     return url.length;
-  }
-
+    /**
+     * Get the GVRSceneObject that this Inline object will eventually
+     * be added as a child.
+     * @return
+     */
     public GVRSceneObject getInlineGVRSceneObject() {
-     return this.inlineGVRSceneObject;
-  }
+        return this.inlineGVRSceneObject;
+    }
 
+    /**
+     * Get the name saved in the Inline file
+     *          <Inline url='myURL' name='myInlineName'/>
+     *          then 'myInlineName' will be returned.
+     * @return
+     */
     public String getName() {
         return name;
     }

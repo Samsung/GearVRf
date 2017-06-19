@@ -200,6 +200,10 @@ public class GVRAnimator extends GVRBehavior
         }
     }
 
+    /**
+     * Return a list of the animations
+     * @return
+     */
     public List<GVRAnimation> getAnimationList() {
         return mAnimations;
     }

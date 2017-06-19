@@ -678,7 +678,6 @@ public class AnimationInteractivityManager {
                                             GVRSceneObject inlineSceneObject = inlineObject.getInlineGVRSceneObject();
                                             GVRAnimator animator = (GVRAnimator) inlineSceneObject.getComponent(GVRAnimator.getComponentType());
                                             if ( animator != null ) {
-                                                GVRAnimationEngine gvrAnimationEngine = gvrContext.getAnimationEngine();
                                                 List<GVRAnimation> gvrAnimations = animator.getAnimationList();
                                                 GVRAnimation gvrAnimation = gvrAnimations.get(0);
                                                 activeFBXanimation = true;
@@ -687,7 +686,6 @@ public class AnimationInteractivityManager {
                                                             @Override
                                                             public void finished(GVRAnimation animation) {
                                                                 activeFBXanimation = false;
-                                                                Log.e("X3D-", "animation finished");
                                                             }
                                                         });
                                             }

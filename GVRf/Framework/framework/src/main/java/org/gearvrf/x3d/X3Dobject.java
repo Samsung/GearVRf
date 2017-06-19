@@ -3686,19 +3686,18 @@ public class X3Dobject {
                                 saxParser.parse(inputStream, userhandler);
                             } catch (FileNotFoundException e) {
                                 Log.e(TAG,
-                                        "Inline file reading: GVRAndroidResource File Not Found Exception: "
+                                        "Inline file reading: " + url + ": File Not Found Exception: "
                                                 + e);
                             } catch (IOException ioException) {
                                 Log.e(TAG,
-                                        "Inline file reading: GVRAndroidResource IOException url["
-                                                + j + "] url " + urls[j]);
-                                Log.e(TAG, "Inline file reading: " + ioException.toString());
+                                        "Inline file reading" + url + ": IO Exception " + ioException.toString());
                             } catch (Exception exception) {
-                                Log.e(TAG, "Inline file reading: GVRAndroidResource Exception: "
+                                Log.e(TAG, "Inline file reading" + url + ": Exception: "
                                         + exception);
                             }
                         }
                         else {
+                            // Inline a .fbx or other file.
                             try {
                                 GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, urls[j], false);
                                 currentSceneObject = inlineObject.getInlineGVRSceneObject();
@@ -3708,7 +3707,7 @@ public class X3Dobject {
                             }
                             catch (Exception e) {
                                 Log.e(TAG,
-                                        "Inline file reading: GVRExternalScene File " + urls[j] + " Exception: " + e);
+                                        "Inline file reading " + urls[j] + ": Exception: " + e);
                             }
                         }
                     }
