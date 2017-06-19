@@ -46,7 +46,7 @@ public class GVRBillboard extends GVRBehavior
      * Does two cross products: First, between the world up vector and the camera
      * to object vector. This gives one of the axis of the local rotation of the
      * object. A second cross product between the object to camera
-     * vector and this axis and the gives the up vector of the object. Together,
+     * vector and this axis gives the up vector of the object. Together,
      * with the object position, this yields the desired model matrix
      */
 
