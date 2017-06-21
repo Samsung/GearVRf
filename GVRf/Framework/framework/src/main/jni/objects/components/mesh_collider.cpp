@@ -34,12 +34,17 @@
 
 namespace gvr {
 MeshCollider::MeshCollider(Mesh* mesh) :
-        Collider(getComponentType()), mesh_(mesh), useMeshBounds_(false)
+        Collider(getComponentType()), mesh_(mesh), pickCoordinates_(false), useMeshBounds_(false)
+{
+}
+
+MeshCollider::MeshCollider(Mesh* mesh, bool pickCoordinates) :
+        Collider(getComponentType()), mesh_(mesh), pickCoordinates_(pickCoordinates), useMeshBounds_(false)
 {
 }
 
 MeshCollider::MeshCollider(bool useMeshBounds) :
-        Collider(getComponentType()), mesh_(NULL), useMeshBounds_(useMeshBounds)
+        Collider(getComponentType()), mesh_(NULL), pickCoordinates_(false), useMeshBounds_(useMeshBounds)
 {
 }
 
@@ -63,6 +68,7 @@ MeshCollider::~MeshCollider() { }
 ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
     Mesh* mesh = mesh_;
+    bool pickCoordinates = pickCoordinates_;
     RenderData* rd = NULL;
     glm::mat4 model_view;
     SceneObject* owner = owner_object();
@@ -103,7 +109,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
         }
         else
         {
-            data = MeshCollider::isHit(*mesh, O, D);
+            data = MeshCollider::isHit(*mesh, O, D, pickCoordinates);
         }
         if (data.IsHit)
         {
@@ -117,6 +123,72 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     return data;
 }
 
+
+
+
+/**
+ * Efficient means of solving Barycentric coordinates by Christer Ericson/John Calsbeek found at
+ * https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
+ * @param p         3D point lying on triangle formed by points a, b, and c.
+ * @param a         the first of the three points forming the triangle
+ * @param b         the second of the three points forming the triangle
+ * @param c         the third of the three points forming the triangle
+ * @param coords    the vec3 that will hold the resulting Barcentric coordinates of p
+ */
+static void calcBarycentric(const glm::vec3 &p, const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c, glm::vec3 &coords)
+{
+    glm::vec3 v0 = b - a, v1 = c - a, v2 = p - a;
+    float d00 = glm::dot(v0, v0);
+    float d01 = glm::dot(v0, v1);
+    float d11 = glm::dot(v1, v1);
+    float d20 = glm::dot(v2, v0);
+    float d21 = glm::dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    coords.y = (d11 * d20 - d01 * d21) / denom;
+    coords.z = (d00 * d21 - d01 * d20) / denom;
+    coords.x = 1.0f - coords.y - coords.z;
+}
+
+/**
+ * Sets the Barycentric coordinates corresponding to the HitPoint on the mesh
+ * @param mesh          the Mesh of the object that was collided with
+ * @param colliderData  the ColliderData holding the HitPoint which will also store the Barycentric coordinates
+ */
+static void populateBarycentricCoords(const Mesh& mesh, ColliderData& colliderData) {
+    const std::vector<glm::vec3> &vertices = mesh.vertices();
+
+    glm::vec3 v1(vertices[mesh.triangles()[colliderData.FaceIndex * 3]]);
+    glm::vec3 v2(vertices[mesh.triangles()[colliderData.FaceIndex * 3 + 1]]);
+    glm::vec3 v3(vertices[mesh.triangles()[colliderData.FaceIndex * 3 + 2]]);
+
+    calcBarycentric(colliderData.HitPosition, v1, v2, v3, colliderData.BarycentricCoordinates);
+}
+
+/**
+ * Sets the Barycentric and UV coordinates corresponding to the HitPoint on the mesh
+ * @param mesh          the Mesh of the object that was collided with
+ * @param colliderData  the ColliderData holding the HitPoint which will also store the UV coordinates
+ */
+static void populateTexCoords(const Mesh& mesh, ColliderData& colliderData) {
+    populateBarycentricCoords(mesh, colliderData);
+    try{
+        const std::vector<glm::vec2> &texCoords = mesh.getVec2Vector("a_texcoord"); //may not exist
+        glm::vec2 u1(texCoords[mesh.triangles()[colliderData.FaceIndex * 3]]);
+        glm::vec2 u2(texCoords[mesh.triangles()[colliderData.FaceIndex * 3 + 1]]);
+        glm::vec2 u3(texCoords[mesh.triangles()[colliderData.FaceIndex * 3 + 2]]);
+
+        colliderData.TextureCoordinates =   u1 * colliderData.BarycentricCoordinates.x
+                                            + u2 * colliderData.BarycentricCoordinates.y
+                                            + u3 * colliderData.BarycentricCoordinates.z;
+    }
+    catch (const std::string& warning){
+        LOGW("%s", warning.c_str());
+    }
+    catch (...){
+        LOGE("An unexpected error occurred while calculating texture coordinates.");
+    }
+}
+
 /*
  * Hit test the input ray against the triangles of the given mesh.
  * @param mesh  mesh to hit test
@@ -124,7 +196,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
  * @param rayDir    direction of the pick ray in model coordinates
  * @return ColliderData with the hit point and distance in model coordinates
  */
-ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir) {
+ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir, bool pickCoordinates) {
     const std::vector<glm::vec3>& vertices = mesh.vertices();
     ColliderData data;
     if (vertices.size() > 0) {
@@ -147,6 +219,10 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, co
                 data.FaceIndex = i/3;
             }
         }
+        if(pickCoordinates){
+            populateTexCoords(mesh, data);
+        }
+
     }
     return data;
 }
@@ -205,4 +281,5 @@ float MeshCollider::rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& ray
     }
     return -1;
 }
+
 }
