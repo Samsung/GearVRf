@@ -170,7 +170,9 @@ tasks.whenTaskAdded { task ->
     } else if (task.name == 'bundleDebug') {
         task.finalizedBy(copyJarToBin)
     } else if (task.name == 'bundleRelease') {
-        task.finalizedBy(packageForPlugins)
+        if (!rootProject.hasProperty("do_not_package_for_plugins")) {
+            task.finalizedBy(packageForPlugins)
+        }
         task.finalizedBy(copyJarToBin)
     }
 }
