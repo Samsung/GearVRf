@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
-import org.gearvrf.asynchronous.GVRCompressedTexture;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
@@ -127,25 +126,38 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * 
      */
     public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh,
-            GVRTexture texture, GVRMaterialShaderId shaderId) {
+            GVRTexture texture, GVRShaderId shaderId) {
         super(gvrContext, NativeSceneObject.ctor());
-
         attachComponent(new GVRTransform(getGVRContext()));
 
+        if ((mesh == null) && (texture == null)) {
+            return;
+        }
+        GVRRenderData renderData = new GVRRenderData(gvrContext);
+        attachComponent(renderData);
         if (mesh != null) {
-            GVRRenderData renderData = new GVRRenderData(gvrContext);
-            attachComponent(renderData);
             renderData.setMesh(mesh);
         }
-
-        if (texture != null) {
-            GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
-            material.setMainTexture(texture);
-            getRenderData().setMaterial(material);
+        if (shaderId == null) {
+            shaderId = GVRShaderType.Phong.ID;
         }
+        GVRMaterial material = new GVRMaterial(gvrContext, shaderId);
+        if (texture != null) {
+            material.setMainTexture(texture);
+        }
+        renderData.setMaterial(material);
     }
 
-    private static final GVRMaterialShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
+    public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh, GVRMaterial material) {
+        super(gvrContext, NativeSceneObject.ctor());
+        attachComponent(new GVRTransform(getGVRContext()));
+
+        GVRRenderData renderData = new GVRRenderData(gvrContext, material);
+        attachComponent(renderData);
+        renderData.setMesh(mesh);
+    }
+
+    private static final GVRShaderId STANDARD_SHADER = GVRShaderType.Texture.ID;
 
     /**
      * Constructs a scene object with {@linkplain GVRMesh an arbitrarily complex
@@ -184,13 +196,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            current {@link GVRContext}.
      * @param futureMesh
      *            mesh of the object.
-     * @param futureTexture
+     * @param texture
      *            texture of the object.
      * 
      * @since 1.6.8
      */
     public GVRSceneObject(GVRContext gvrContext, Future<GVRMesh> futureMesh,
-            Future<GVRTexture> futureTexture) {
+            GVRTexture texture) {
         this(gvrContext);
 
         // Create the render data
@@ -201,7 +213,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
         // Set the texture
         GVRMaterial material = new GVRMaterial(gvrContext);
-        material.setMainTexture(futureTexture);
+        material.setMainTexture(texture);
         renderData.setMaterial(material);
 
         // Attach the render data
@@ -215,9 +227,9 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @param gvrContext
      *            current {@link GVRContext}.
      * @param mesh
-     *            Basically, a stream containing a mesh file.
+     *            A stream containing a mesh file.
      * @param texture
-     *            Basically, a stream containing a texture file. This can be
+     *            A stream containing a texture file. This can be
      *            either a compressed texture or a regular Android bitmap file.
      * 
      * @since 1.6.7
@@ -225,7 +237,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVRSceneObject(GVRContext gvrContext, GVRAndroidResource mesh,
             GVRAndroidResource texture) {
         this(gvrContext, gvrContext.loadFutureMesh(mesh), gvrContext
-                .getAssetLoader().loadFutureTexture(texture));
+                .getAssetLoader().loadTexture(texture));
     }
 
     /**
@@ -244,9 +256,29 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            a specific shader Id
      */
     public GVRSceneObject(GVRContext gvrContext, float width, float height,
-            GVRTexture texture, GVRMaterialShaderId shaderId) {
-        this(gvrContext, gvrContext.createQuad(width, height), texture,
-                shaderId);
+            GVRTexture texture, GVRShaderId shaderId) {
+        this(gvrContext, GVRMesh.createQuad(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal", width, height), texture, shaderId);
+    }
+
+    /**
+     * Create a standard, rectangular texture object, using a non-default shader
+     * to apply complex visual affects.
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param width
+     *            the rectangle's width
+     * @param height
+     *            the rectangle's height
+     * @param meshDesc
+     *            string describing vertex format of mesh {@link GVRVertexBuffer()}
+     * @param material
+     *            {@link GVRMaterial} with material properties
+     */
+    public GVRSceneObject(GVRContext gvrContext, float width, float height,
+                          String meshDesc, GVRMaterial material)
+    {
+        this(gvrContext, GVRMesh.createQuad(gvrContext, meshDesc, width, height), material);
     }
 
     /**
@@ -399,7 +431,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public GVRComponent getComponent(long type) {
         return  mComponents.get(type);
     }
-    
+
     /**
      * Replace the current {@link GVRTransform transform}
      * 
@@ -874,11 +906,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 	 * @param visitor ComponentVisitor interface implementing "visit" function
 	 * @param componentType type of component to find
 	 *
-	 * @see children
-	 * @see getChildren
+	 * @see GVRSceneObject#children()
+	 * @see GVRSceneObject#getChildren()
 	 * @see SceneVisitor
-	 * @see forAllDescendants
-	 * @see getComponent
+	 * @see GVRSceneObject#forAllDescendants(SceneVisitor)
+	 * @see GVRSceneObject#getComponent(long)
 	 */    
     public void forAllComponents(ComponentVisitor visitor, long componentType) {
         GVRComponent comp = getComponent(componentType);
@@ -902,11 +934,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 	 *
 	 * @param visitor ComponentVisitor interface implementing "visit" function
 	 *
-	 * @see children
-	 * @see getChildren
-	 * @see SceneVisitor
-	 * @see forAllDescendants
-	 * @see getComponent
+     * @see GVRSceneObject#children()
+     * @see GVRSceneObject#getChildren()
+     * @see SceneVisitor
+     * @see GVRSceneObject#forAllDescendants(SceneVisitor)
+     * @see GVRSceneObject#getComponent(long)
 	 */  
     public void forAllComponents(ComponentVisitor visitor) {
         for (GVRComponent comp : mComponents.values()) {
@@ -1054,47 +1086,9 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * {@link GVRSceneObject}s hierarchical bounding volume,
      * <code>false</code> otherwise.
      */
-    boolean intersectsBoundingVolume(GVRSceneObject otherObject) {
+    public boolean intersectsBoundingVolume(GVRSceneObject otherObject) {
         return NativeSceneObject.objectIntersectsBoundingVolume(getNative(), otherObject.getNative
                 ());
-    }
-
-    /**
-     * Sets the range of distances from the camera where this object will be shown.
-     *
-     * @param minRange
-     *      The closest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
-     * @param maxRange
-     *      The farthest distance to the camera rig in which this object should be shown.  This should be a positive number between 0 and Float.MAX_VALUE.
-     */
-    public void setLODRange(float minRange, float maxRange) {
-        if (minRange < 0 || maxRange < 0) {
-            throw new IllegalArgumentException(
-                    "minRange and maxRange must be between 0 and Float.MAX_VALUE");
-        }
-        if (minRange > maxRange) {
-            throw new IllegalArgumentException(
-                    "minRange should not be greater than maxRange");
-        }
-        NativeSceneObject.setLODRange(getNative(), minRange, maxRange);
-    }
-
-    /**
-     * Get the minimum distance from the camera in which to show this object.
-     * 
-     * @return the minimum distance from the camera in which to show this object.  Default value is 0.
-     */
-    public float getLODMinRange() {
-        return NativeSceneObject.getLODMinRange(getNative());
-    }
-
-    /**
-     * Get the maximum distance from the camera in which to show this object.
-     * 
-     * @return the maximum distance from the camera in which to show this object.  Default value is Float.MAX_VALUE.
-     */
-    public float getLODMaxRange() {
-        return NativeSceneObject.getLODMaxRange(getNative());
     }
 
     /**
@@ -1311,6 +1305,10 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         return new BoundingVolume(NativeSceneObject.getBoundingVolume(getNative()));
     }
 
+    float[] getBoundingVolumeRawValues() {
+        return NativeSceneObject.getBoundingVolume(getNative());
+    }
+
     /**
      * Expand the current volume by the given point
      * @param pointX    x coordinate of point
@@ -1372,8 +1370,6 @@ class NativeSceneObject {
     
     static native long findComponent(long sceneObject, long type);
     
-    static native long setParent(long sceneObject, long parent);
-
     static native void addChildObject(long sceneObject, long child);
 
     static native void removeChildObject(long sceneObject, long child);
@@ -1388,10 +1384,6 @@ class NativeSceneObject {
             float roy, float roz, float rdx, float rdy, float rdz);
 
     static native boolean objectIntersectsBoundingVolume(long sceneObject, long otherObject);
-
-    static native void setLODRange(long sceneObject, float minRange, float maxRange);
-    static native float getLODMinRange(long sceneObject);
-    static native float getLODMaxRange(long sceneObject);
 
     static native float[] getBoundingVolume(long sceneObject);
 

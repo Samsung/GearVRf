@@ -49,7 +49,7 @@ public class GVRComponent extends GVRHybridObject {
     }
     
     /**
-     * Special constructor, for descendants like {#link GVRMeshEyePointee} that
+     * Special constructor, for descendants like {#link GVRCollider} that
      * need to 'unregister' instances.
      * 
      * @param gvrContext
@@ -99,12 +99,13 @@ public class GVRComponent extends GVRHybridObject {
         }
         else
         {
-            onDetach(getOwnerObject());
-            if (getNative() != 0)
-            {
-                NativeComponent.setOwnerObject(getNative(), 0L);
+            if (null != this.owner) {
+                onDetach(this.owner);
+                if (getNative() != 0) {
+                    NativeComponent.setOwnerObject(getNative(), 0L);
+                }
+                this.owner = null;
             }
-            this.owner = null;
         }
     }
 
@@ -120,9 +121,9 @@ public class GVRComponent extends GVRHybridObject {
     /**
      * Enable or disable this component.
      * @param flag true to enable, false to disable.
-     * @see enable
-     * @see disable
-     * @see isEnabled
+     * @see #enable
+     * @see #disable
+     * @see #isEnabled
      */
     public void setEnable(boolean flag) {
         if (flag == mIsEnabled)
@@ -245,4 +246,3 @@ class NativeComponent {
     static native boolean isEnabled(long component);
     static native void setEnable(long component, boolean flag);
 }
-

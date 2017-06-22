@@ -115,6 +115,15 @@ public abstract class GVRHybridObject {
         return mNativePointer;
     }
 
+    protected void setNative(long nativePtr)
+    {
+        if (mNativePointer == 0)
+        {
+            mNativePointer = nativePtr;
+            getGVRContext().registerHybridObject(this, mNativePointer, null);
+        }
+    }
+
     /*package*/ static long[] getNativePtrArray(Collection<? extends GVRHybridObject> objects) {
         long[] ptrs = new long[objects.size()];
 
@@ -231,22 +240,6 @@ public abstract class GVRHybridObject {
             }
             return concatenation;
         }
-    }
-
-    /**
-     * Close this object, releasing any native resources.
-     * 
-     * Most objects will be automatically closed when Java's garbage collector
-     * detects that they are no longer being used: Explicitly closing an object
-     * that's still linked into the scene graph will almost certainly crash your
-     * GVRF app. You should only {@code close()} transient objects (especially
-     * those that use lots of memory, like large textures) that you
-     * <em>know</em> are no longer being used.
-     * 
-     * @since 3.0.0
-     */
-    public final void releaseNative() {
-        mGVRContext.releaseNative(this);
     }
 }
 

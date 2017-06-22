@@ -3,7 +3,7 @@
  ***************************************************************************/
 
 #include "objects/components/texture_capturer.h"
-
+#include "shaders/shader_manager.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_log.h"
 #include "glm/gtc/type_ptr.hpp"

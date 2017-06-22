@@ -48,7 +48,7 @@ class AsyncCubemapTexture {
      */
 
     static void loadTexture(GVRContext gvrContext,
-            CancelableCallback<GVRCubemapTexture> callback,
+                            CancelableCallback<GVRCubemapTexture> callback,
             GVRAndroidResource resource, int priority, Map<String, Integer> map) {
         faceIndexMap = map;
         AsyncManager.get().getScheduler().registerCallback(gvrContext, TEXTURE_CLASS, callback,

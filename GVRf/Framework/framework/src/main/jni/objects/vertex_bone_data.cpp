@@ -29,7 +29,7 @@ void VertexBoneData::setBones(std::vector<Bone*>&& bonesVec) {
     if (bones.empty())
         return;
 
-    int vertexNum(mesh->vertices().size());
+    int vertexNum(mesh->getVertexCount());
     boneData.clear();
     boneData.resize(vertexNum);
 
@@ -40,7 +40,7 @@ void VertexBoneData::setBones(std::vector<Bone*>&& bonesVec) {
 }
 
 int VertexBoneData::getFreeBoneSlot(int vertexId) {
-    int vertexNum(mesh->vertices().size());
+    int vertexNum(mesh->getVertexCount());
     if (vertexId < 0 || vertexId > vertexNum) {
         LOGD("Bad vertex id %d vertices %d", vertexId, vertexNum);
         return -1;
@@ -70,7 +70,7 @@ void VertexBoneData::normalizeWeights() {
     if (bones.empty())
         return;
 
-    int size = mesh->vertices().size();
+    int size = mesh->getVertexCount();
     for (int i = 0; i < size; ++i) {
         float wtSum = 0.f;
         for (int j = 0; j < BONES_PER_VERTEX; ++j) {

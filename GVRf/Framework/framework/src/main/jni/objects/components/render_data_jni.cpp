@@ -18,151 +18,172 @@
  ***************************************************************************/
 
 #include "render_data.h"
-
-#include "util/gvr_jni.h"
-
-#include "objects/mesh.h"
-#include "objects/material.h"
+#include "engine/renderer/renderer.h"
 #include "objects/components/texture_capturer.h"
 
 namespace gvr {
+
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-        jobject obj);
+    JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj);
 
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jmesh);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setMesh(JNIEnv * env,
+            jobject obj, jlong jrender_data, jlong jmesh);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
-        jobject obj, jlong jrender_data, jlong jrender_pass);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
+            jobject obj, jlong jrender_data, jlong jrender_pass);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
-        jobject obj, jlong jrender_data, jlong jlight);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_enableLight(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_disableLight(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_disableLight(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_enableLightMap(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_enableLightMap(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_disableLightMap(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_disableLightMap(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeRenderData_getRenderMask(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setRenderMask(JNIEnv * env,
+            jobject obj, jlong jrender_data, jint render_mask);
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeRenderData_getRenderingOrder(
+            JNIEnv * env, jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setRenderMask(JNIEnv * env,
-        jobject obj, jlong jrender_data, jint render_mask);
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeRenderData_getRenderingOrder(
-        JNIEnv * env, jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setRenderingOrder(
+            JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setRenderingOrder(
-        JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setOffset(JNIEnv * env,
+            jobject obj, jlong jrender_data, jboolean offset);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeRenderData_getOffsetFactor(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setOffset(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean offset);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeRenderData_getOffsetFactor(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setOffsetFactor(JNIEnv * env,
+            jobject obj, jlong jrender_data, jfloat offset_factor);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeRenderData_getOffsetUnits(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setOffsetFactor(JNIEnv * env,
-        jobject obj, jlong jrender_data, jfloat offset_factor);
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeRenderData_getOffsetUnits(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setOffsetUnits(JNIEnv * env,
+            jobject obj, jlong jrender_data, jfloat offset_units);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeRenderData_getDepthTest(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setOffsetUnits(JNIEnv * env,
-        jobject obj, jlong jrender_data, jfloat offset_units);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getDepthTest(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setDepthTest(JNIEnv * env,
+            jobject obj, jlong jrender_data, jboolean depth_test);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setDepthTest(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean depth_test);
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getAlphaBlend(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeRenderData_getAlphaBlend(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean alpha_blend);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setAlphaBlend(JNIEnv * env,
+            jobject obj, jlong jrender_data, jboolean alpha_blend);
 
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getAlphaToCoverage(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeRenderData_getAlphaToCoverage(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setAlphaToCoverage(JNIEnv * env,
-        jobject obj, jlong jrender_data, jboolean alphaToCoverage);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setAlphaToCoverage(JNIEnv * env,
+            jobject obj, jlong jrender_data, jboolean alphaToCoverage);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setSampleCoverage(JNIEnv * env,
-    jobject obj, jlong jrender_data, jfloat sampleCoverage);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setSampleCoverage(JNIEnv * env,
+        jobject obj, jlong jrender_data, jfloat sampleCoverage);
 
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeRenderData_getSampleCoverage(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT jfloat JNICALL
+    Java_org_gearvrf_NativeRenderData_getSampleCoverage(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setInvertCoverageMask(JNIEnv * env,
-    jobject obj, jlong jrender_data, jboolean invertCoverageMask);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setInvertCoverageMask(JNIEnv * env,
+        jobject obj, jlong jrender_data, jboolean invertCoverageMask);
 
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getInvertCoverageMask(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeRenderData_getInvertCoverageMask(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setCastShadows(JNIEnv * env,
-    jobject obj, jlong jrender_data, jboolean castShadows);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setCastShadows(JNIEnv * env,
+        jobject obj, jlong jrender_data, jboolean castShadows);
 
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeRenderData_getCastShadows(JNIEnv * env,
-        jobject obj, jlong jrender_data);
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeRenderData_getCastShadows(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 
-JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeRenderData_getDrawMode(
-        JNIEnv * env, jobject obj, jlong jrender_data);
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeRenderData_getDrawMode(
+            JNIEnv * env, jobject obj, jlong jrender_data);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setDrawMode(
-        JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setDrawMode(
+            JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
-        jlong jrender_data, jlong jtexture_capturer);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
+            jlong jrender_data, jlong jtexture_capturer);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setStencilFunc(JNIEnv *env, jclass type, jlong renderData,
+                                                     jint func, jint ref, jint mask);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setStencilOp(JNIEnv *env, jclass type, jlong renderData,
+                                                   jint fail, jint zfail, jint zpass);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setStencilMask(JNIEnv *env, jclass type, jlong renderData,
+                                                     jint mask);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setStencilTest(JNIEnv *env, jclass type, jlong renderData, jboolean flag);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeRenderData_setAlphaBlendFunc(JNIEnv * env,
+            jobject obj, jlong jrender_data, jint sourceBlend, jint destBlend);
+
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeRenderData_getSourceAlphaBlendFunc(JNIEnv * env,
+            jobject obj, jlong jrender_data);
+
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_NativeRenderData_getDestAlphaBlendFunc(JNIEnv * env,
+            jobject obj, jlong jrender_data);
 }
-;
+
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env,
-    jobject obj) {
-return reinterpret_cast<jlong>(new RenderData());
+Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj)
+{
+    Renderer* renderer = Renderer::getInstance();
+    return reinterpret_cast<jlong>(renderer->createRenderData());
 }
 
 JNIEXPORT jlong JNICALL
@@ -183,15 +204,8 @@ Java_org_gearvrf_NativeRenderData_addPass(JNIEnv* env,
         jobject obj, jlong jrender_data, jlong jrender_pass) {
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     RenderPass* render_pass = reinterpret_cast<RenderPass*>(jrender_pass);
+    LOGD("SHADER: RenderPass: NativeRenderData_addPass(%p[%p])", render_data, render_pass);
     render_data->add_pass(render_pass);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setLight(JNIEnv * env,
-    jobject obj, jlong jrender_data, jlong jlight) {
-RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-Light* light = reinterpret_cast<Light*>(jlight);
-render_data->set_light(light);
 }
 
 JNIEXPORT void JNICALL
@@ -320,6 +334,30 @@ RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
 render_data->set_alpha_blend(static_cast<bool>(alpha_blend));
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setAlphaBlendFunc(JNIEnv * env,
+    jobject obj, jlong jrender_data, jint sourceBlend, jint destBlend)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    render_data->set_alpha_blend_func(sourceBlend, destBlend);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getSourceAlphaBlendFunc(JNIEnv * env,
+   jobject obj, jlong jrender_data)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->source_alpha_blend_func();
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getDestAlphaBlendFunc(JNIEnv * env,
+    jobject obj, jlong jrender_data)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->dest_alpha_blend_func();
+}
+
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getAlphaToCoverage(JNIEnv * env,
     jobject obj, jlong jrender_data) {
@@ -399,4 +437,32 @@ Java_org_gearvrf_NativeRenderData_getCastShadows(JNIEnv * env,
     RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
     return render_data->cast_shadows();
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setStencilFunc(JNIEnv *env, jclass type, jlong renderData,
+                                                 jint func, jint ref, jint mask) {
+    RenderData* rd = reinterpret_cast<RenderData*>(renderData);
+    rd->setStencilFunc(func, ref, mask);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setStencilOp(JNIEnv *env, jclass type, jlong renderData,
+                                                 jint fail, jint zfail, jint zpass) {
+    RenderData* rd = reinterpret_cast<RenderData*>(renderData);
+    rd->setStencilOp(fail, zfail, zpass);
+}
+
+JNIEXPORT void JNICALL
+        Java_org_gearvrf_NativeRenderData_setStencilMask(JNIEnv *env, jclass type, jlong renderData,
+                                                         jint mask) {
+    RenderData* rd = reinterpret_cast<RenderData*>(renderData);
+    rd->setStencilMask(mask);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderData_setStencilTest(JNIEnv *env, jclass type, jlong renderData, jboolean flag) {
+    RenderData* rd = reinterpret_cast<RenderData*>(renderData);
+    rd->setStencilTest(flag);
+}
+
 }

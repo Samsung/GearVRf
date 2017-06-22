@@ -16,31 +16,33 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import static java.lang.Math.max;
 
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
-import org.gearvrf.jassimp2.AiAnimBehavior;
-import org.gearvrf.jassimp2.AiAnimation;
-import org.gearvrf.jassimp2.AiBone;
-import org.gearvrf.jassimp2.AiBoneWeight;
-import org.gearvrf.jassimp2.AiCamera;
-import org.gearvrf.jassimp2.AiColor;
-import org.gearvrf.jassimp2.AiLight;
-import org.gearvrf.jassimp2.AiLightType;
-import org.gearvrf.jassimp2.AiMaterial;
-import org.gearvrf.jassimp2.AiMesh;
-import org.gearvrf.jassimp2.AiNode;
-import org.gearvrf.jassimp2.AiNodeAnim;
-import org.gearvrf.jassimp2.AiPostProcessSteps;
-import org.gearvrf.jassimp2.AiScene;
-import org.gearvrf.jassimp2.AiTexture;
-import org.gearvrf.jassimp2.AiTextureMapMode;
-import org.gearvrf.jassimp2.AiTextureType;
-import org.gearvrf.jassimp2.GVRNewWrapperProvider;
-import org.gearvrf.jassimp2.Jassimp;
+import org.gearvrf.jassimp.AiAnimBehavior;
+import org.gearvrf.jassimp.AiAnimation;
+import org.gearvrf.jassimp.AiBone;
+import org.gearvrf.jassimp.AiBoneWeight;
+import org.gearvrf.jassimp.AiCamera;
+import org.gearvrf.jassimp.AiColor;
+import org.gearvrf.jassimp.AiLight;
+import org.gearvrf.jassimp.AiLightType;
+import org.gearvrf.jassimp.AiMaterial;
+import org.gearvrf.jassimp.AiMesh;
+import org.gearvrf.jassimp.AiNode;
+import org.gearvrf.jassimp.AiNodeAnim;
+import org.gearvrf.jassimp.AiPostProcessSteps;
+import org.gearvrf.jassimp.AiScene;
+import org.gearvrf.jassimp.AiTexture;
+import org.gearvrf.jassimp.AiTextureMapMode;
+import org.gearvrf.jassimp.AiTextureType;
+import org.gearvrf.jassimp.GVRNewWrapperProvider;
+import org.gearvrf.jassimp.Jassimp;
+import org.gearvrf.jassimp.JassimpConfig;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -57,7 +59,9 @@ class GVRJassimpAdapter {
     private AiScene mScene;
     private GVRContext mContext;
     private String mFileName;
-    private static final int MAX_TEX_COORDS = 8;
+    private static final int MAX_TEX_COORDS = JassimpConfig.MAX_NUMBER_TEXCOORDS;
+    private static final int MAX_VERTEX_COLORS = JassimpConfig.MAX_NUMBER_COLORSETS;
+
 
     public interface INodeFactory {
         GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
@@ -78,88 +82,184 @@ class GVRJassimpAdapter {
         mNodeFactories.remove(factory);
     }
 
-    public GVRMesh createMesh(GVRContext ctx, AiMesh aiMesh) {
-        GVRMesh mesh = new GVRMesh(ctx);
+    public GVRMesh createMesh(GVRContext ctx, AiMesh aiMesh, EnumSet<GVRImportSettings> settings)
+    {
+        String vertexDescriptor = "float3 a_position";
+        float[] verticesArray = null;
+        float[] tangentsArray = null;
+        float[] bitangentsArray = null;
+        float[] normalsArray = null;
+        List<GVRBone> bones = null;
+        boolean doTexturing = !settings.contains(GVRImportSettings.NO_TEXTURING);
+        boolean doLighting = !settings.contains(GVRImportSettings.NO_LIGHTING);
+        boolean doAnimation = !settings.contains(GVRImportSettings.NO_ANIMATION);
 
         // Vertices
         FloatBuffer verticesBuffer = aiMesh.getPositionBuffer();
         if (verticesBuffer != null) {
-            float[] verticesArray = new float[verticesBuffer.capacity()];
+            verticesArray = new float[verticesBuffer.capacity()];
             verticesBuffer.get(verticesArray, 0, verticesBuffer.capacity());
-            mesh.setVertices(verticesArray);
         }
-
-        // Tangents
-        FloatBuffer tangetsBuffer = aiMesh.getTangentBuffer();
-        if(tangetsBuffer != null) {
-            float[] tangentsArray = new float[tangetsBuffer.capacity()];
-            tangetsBuffer.get(tangentsArray, 0, tangetsBuffer.capacity());
-            mesh.setVec3Vector("a_tangent", tangentsArray);
-        }
-
-        // Bitangents
-        FloatBuffer bitangentsBuffer = aiMesh.getBitangentBuffer();
-        if(bitangentsBuffer != null) {
-            float[] bitangentsArray = new float[bitangentsBuffer.capacity()];
-            bitangentsBuffer.get(bitangentsArray, 0, bitangentsBuffer.capacity());
-            mesh.setVec3Vector("a_bitangent", bitangentsArray);
-        }
-
-        // Normals
-        FloatBuffer normalsBuffer = aiMesh.getNormalBuffer();
-        if (normalsBuffer != null) {
-            float[] normalsArray = new float[normalsBuffer.capacity()];
-            normalsBuffer.get(normalsArray, 0, normalsBuffer.capacity());
-            mesh.setNormals(normalsArray);
-        }
-
-        // TexCords
-        for(int texIndex=0; texIndex< MAX_TEX_COORDS; texIndex++) {
-            FloatBuffer fbuf = aiMesh.getTexCoordBuffer(texIndex);
-            if (fbuf != null) {
-                FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
-                if (aiMesh.getNumUVComponents(texIndex) == 2) {
-                    FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(texIndex);
-                    coords.put(coordsSource);
-                } else {
-                    for (int i = 0; i < aiMesh.getNumVertices(); ++i) {
-                        float u = aiMesh.getTexCoordU(i, texIndex);
-                        float v = aiMesh.getTexCoordV(i, texIndex);
-                        coords.put(u);
-                        coords.put(v);
+        // TexCoords
+        if (doTexturing)
+        {
+            for (int texIndex = 0; texIndex < MAX_TEX_COORDS; texIndex++)
+            {
+                FloatBuffer fbuf = aiMesh.getTexCoordBuffer(texIndex);
+                if (fbuf != null)
+                {
+                    vertexDescriptor += " float2 a_texcoord";
+                    if (texIndex > 0)
+                    {
+                        vertexDescriptor += texIndex;
                     }
                 }
-                mesh.setTexCoords(coords.array(), texIndex);
+            }
+        }
+        // Normals
+        if (doLighting)
+        {
+            FloatBuffer normalsBuffer = aiMesh.getNormalBuffer();
+            if (normalsBuffer != null)
+            {
+                vertexDescriptor += " float3 a_normal";
+                normalsArray = new float[normalsBuffer.capacity()];
+                normalsBuffer.get(normalsArray, 0, normalsBuffer.capacity());
             }
         }
 
-        // Triangles
-        IntBuffer indexBuffer = aiMesh.getIndexBuffer();
-        if (indexBuffer != null) {
-            CharBuffer triangles = CharBuffer.allocate(indexBuffer.capacity());
-            for (int i = 0; i < indexBuffer.capacity(); ++i) {
-                triangles.put((char)indexBuffer.get());
+        if (doTexturing)
+        {
+            // Tangents
+            FloatBuffer tangetsBuffer = aiMesh.getTangentBuffer();
+            if(tangetsBuffer != null)
+            {
+                vertexDescriptor += " float3 a_tangent";
+                tangentsArray = new float[tangetsBuffer.capacity()];
+                tangetsBuffer.get(tangentsArray, 0, tangetsBuffer.capacity());
             }
-            mesh.setIndices(triangles.array());
+
+            // Bitangents
+            FloatBuffer bitangentsBuffer = aiMesh.getBitangentBuffer();
+            if(bitangentsBuffer != null)
+            {
+                vertexDescriptor += " float3 a_bitangent";
+                bitangentsArray = new float[bitangentsBuffer.capacity()];
+                bitangentsBuffer.get(bitangentsArray, 0, bitangentsBuffer.capacity());
+            }
         }
+
+        for(int c = 0; c < MAX_VERTEX_COLORS; c++) {
+            FloatBuffer fbuf = aiMesh.getColorBuffer(c);
+            if (fbuf != null)
+            {
+                vertexDescriptor += " float4 a_color";
+                if (c > 0)
+                {
+                    vertexDescriptor += c;
+                }
+            }
+        }
+        if (doAnimation && aiMesh.hasBones())
+        {
+            bones = new ArrayList<GVRBone>();
+            vertexDescriptor += " float4 a_bone_weights int4 a_bone_indices";
+        }
+        GVRMesh mesh = new GVRMesh(ctx, vertexDescriptor);
+
+        // Vertex Colors
+        for(int c = 0; c < MAX_VERTEX_COLORS; c++)
+        {
+            FloatBuffer fbuf = aiMesh.getColorBuffer(c);
+            if (fbuf != null)
+            {
+                FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 4);
+                FloatBuffer source = aiMesh.getColorBuffer(c);
+                String name = "a_color";
+
+                if (c > 0)
+                {
+                    name += c;
+                }
+                coords.put(source);
+                mesh.setFloatVec(name, coords);
+            }
+        }
+
+        IntBuffer indices = aiMesh.getIndexBuffer();
+        int len = indices.capacity();
+        GVRIndexBuffer indexBuffer = new GVRIndexBuffer(ctx, 4, len);
+
+        indexBuffer.setIntVec(indices);
+        mesh.setIndexBuffer(indexBuffer);
+
 
         // Bones
-        if (aiMesh.hasBones()) {
-            List<GVRBone> bones = new ArrayList<GVRBone>();
-            for (AiBone bone : aiMesh.getBones()) {
+        if (doAnimation && aiMesh.hasBones())
+        {
+            bones = new ArrayList<GVRBone>();
+             for (AiBone bone : aiMesh.getBones()) {
                 bones.add(createBone(ctx, bone));
             }
-            mesh.setBones(bones);
         }
 
+        if (verticesArray != null)
+        {
+            mesh.setVertices(verticesArray);
+        }
+        if (normalsArray != null)
+        {
+            mesh.setNormals(normalsArray);
+        }
+        if (tangentsArray != null)
+        {
+            mesh.setFloatArray("a_tangent", tangentsArray);
+        }
+        if (bitangentsArray != null)
+        {
+            mesh.setFloatArray("a_bitangent", bitangentsArray);
+        }
+        // TexCords
+        if (doTexturing)
+        {
+            for (int texIndex = 0; texIndex < MAX_TEX_COORDS; texIndex++)
+            {
+                FloatBuffer fbuf = aiMesh.getTexCoordBuffer(texIndex);
+                if (fbuf != null)
+                {
+                    FloatBuffer coords = FloatBuffer.allocate(aiMesh.getNumVertices() * 2);
+                    if (aiMesh.getNumUVComponents(texIndex) == 2)
+                    {
+                        FloatBuffer coordsSource = aiMesh.getTexCoordBuffer(texIndex);
+                        coords.put(coordsSource);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < aiMesh.getNumVertices(); ++i)
+                        {
+                            float u = aiMesh.getTexCoordU(i, texIndex);
+                            float v = aiMesh.getTexCoordV(i, texIndex);
+                            coords.put(u);
+                            coords.put(v);
+                        }
+                    }
+                    mesh.setTexCoords(coords.array(), texIndex);
+                }
+            }
+        }
+        if (bones != null)
+        {
+            mesh.setBones(bones);
+        }
         return mesh;
     }
 
     private GVRBone createBone(GVRContext ctx, AiBone aiBone) {
+        float[] mtx = aiBone.getOffsetMatrix(sWrapperProvider);
         GVRBone bone = new GVRBone(ctx);
 
         bone.setName(aiBone.getName());
-        bone.setOffsetMatrix(aiBone.getOffsetMatrix(sWrapperProvider));
+        bone.setOffsetMatrix(mtx);
 
         List<GVRBoneWeight> weights = new ArrayList<GVRBoneWeight>();
         for (AiBoneWeight aiBoneWeight : aiBone.getBoneWeights()) {
@@ -292,6 +392,10 @@ class GVRJassimpAdapter {
                 return AiPostProcessSteps.OPTIMIZE_GRAPH;
             case FLIP_UV:
                 return AiPostProcessSteps.FLIP_UVS;
+            case NO_ANIMATION:
+            case NO_LIGHTING:
+            case NO_TEXTURING:
+                return null;
             default:
                 // Unsupported setting
                 Log.e(TAG, "Unsupported setting %s", setting);
@@ -299,12 +403,13 @@ class GVRJassimpAdapter {
         }
     }
 
-    public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume) throws IOException
+    public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume)
     {
         List<AiLight> aiLights = scene.getLights();
         Hashtable<String, GVRLightBase> lightList = new Hashtable<String, GVRLightBase>();
         GVRSceneObject camera;
 
+        EnumSet<GVRImportSettings> settings = request.getImportSettings();
         mScene = scene;
         mContext = model.getGVRContext();
         camera = makeCamera();
@@ -312,10 +417,17 @@ class GVRJassimpAdapter {
         {
             model.addChildObject(camera);
         }
-        importLights(aiLights, lightList);
-        if (scene != null)
+        if (!settings.contains(GVRImportSettings.NO_LIGHTING))
         {
-            recurseAssimpNodes(request, model, scene.getSceneRoot(sWrapperProvider), lightList);
+            importLights(aiLights, lightList);
+        }
+        if (scene == null)
+        {
+            return;
+        }
+        recurseAssimpNodes(request, model, scene.getSceneRoot(sWrapperProvider), lightList);
+        if (!settings.contains(GVRImportSettings.NO_ANIMATION))
+        {
             List<AiAnimation> animations = scene.getAnimations();
             if (animations.size() > 0)
             {
@@ -373,7 +485,7 @@ class GVRJassimpAdapter {
         GVRSceneObject parentSceneObject,
         AiNode node,
         Hashtable<String,
-        GVRLightBase> lightlist) throws IOException {
+        GVRLightBase> lightlist) {
         final GVRSceneObject sceneObject;
         final GVRContext context = mContext;
 
@@ -382,12 +494,14 @@ class GVRJassimpAdapter {
             parentSceneObject.addChildObject(sceneObject);
         } else if (node.getNumMeshes() == 1) {
             // add the scene object to the scene graph
-            sceneObject = createSubSceneObject(request, parentSceneObject, node, 0);
+            AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[0]);
+            sceneObject = createSubSceneObject(request, parentSceneObject, node, aiMesh);
         } else {
             sceneObject = createSceneObject(mContext, node);
             parentSceneObject.addChildObject(sceneObject);
             for (int i = 0; i < node.getNumMeshes(); i++) {
-                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, node, i);
+                AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[i]);
+                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, node, aiMesh);
             }
         }
 
@@ -395,7 +509,10 @@ class GVRJassimpAdapter {
             float[] matrix = node.getTransform(sWrapperProvider);
             sceneObject.getTransform().setModelMatrix(matrix);
         }
-        attachLights(lightlist, sceneObject);
+        if (!request.getImportSettings().contains(GVRImportSettings.NO_LIGHTING))
+        {
+            attachLights(lightlist, sceneObject);
+        }
         for (AiNode child : node.getChildren()) {
             recurseAssimpNodes(request, sceneObject, child, lightlist);
         }
@@ -425,28 +542,19 @@ class GVRJassimpAdapter {
     }
 
     /**
-     * Helper method to create a new {@link GVRSceneObject} with the mesh at the
-     * index {@link index} of the node mesh array with a color or texture
-     * material.
+     * Helper method to create a new {@link GVRSceneObject} with a given mesh
      *
-     * @param assetRelativeFilename
-     *            A filename, relative to the {@code assets} directory. The file
-     *            can be in a sub-directory of the {@code assets} directory:
-     *            {@code "foo/bar.png"} will open the file
-     *            {@code assets/foo/bar.png}
+     * @param assetRequest
+     *            GVRAssetRequest containing the original request to load the model
      *
      * @param node
      *            A reference to the AiNode for which we want to recurse all its
      *            children and meshes.
      *
-     * @param index
-     *            The index of the mesh in the array of meshes for that node.
-     *
-     * @param wrapperProvider
-     *            AiWrapperProvider for unwrapping Jassimp properties.
-     *
-     * @return The new {@link GVRSceneObject} with the mesh at the index
-     *         {@link index} for the node {@link node}
+     * @param aiMesh
+     *            The assimp mesh
+     **
+     * @return The new {@link GVRSceneObject} with the input mesh for the node {@link node}
      *
      * @throws IOException
      *             File does not exist or cannot be read
@@ -455,13 +563,17 @@ class GVRJassimpAdapter {
             GVRAssetLoader.AssetRequest assetRequest,
             GVRSceneObject parent,
             AiNode node,
-            int index)
-            throws IOException {
-        AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[index]);
-        FutureWrapper<GVRMesh> futureMesh = new FutureWrapper<GVRMesh>(
-                createMesh(mContext, aiMesh));
+            AiMesh aiMesh)
+    {
+        EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
+        GVRMesh mesh = createMesh(mContext, aiMesh, settings);
         AiMaterial material = mScene.getMaterials().get(aiMesh.getMaterialIndex());
-        final GVRMaterial meshMaterial = new GVRMaterial(mContext, GVRMaterial.GVRShaderType.BeingGenerated.ID);
+        final GVRMaterial meshMaterial = createMaterial(material, assetRequest.getImportSettings());
+
+        if (!settings.contains(GVRImportSettings.NO_TEXTURING))
+        {
+            loadTextures(assetRequest, material, meshMaterial, aiMesh);
+        }
 
         /* Diffuse color & Opacity */
         AiColor diffuseColor = material.getDiffuseColor(sWrapperProvider);        /* Opacity */
@@ -497,16 +609,11 @@ class GVRJassimpAdapter {
         float specularExponent = material.getShininess();
         meshMaterial.setSpecularExponent(specularExponent);
 
-        /* Diffuse Texture */
-        loadTextures(assetRequest, material, meshMaterial);
-
-
         GVRSceneObject sceneObject = createSceneObject(mContext, node);
         GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
-        sceneObjectRenderData.setMesh(futureMesh);
+        sceneObjectRenderData.setMesh(mesh);
 
         sceneObjectRenderData.setMaterial(meshMaterial);
-        sceneObjectRenderData.setShaderTemplate(GVRPhongShader.class);
         sceneObject.attachRenderData(sceneObjectRenderData);
 
         parent.addChildObject(sceneObject);
@@ -534,120 +641,209 @@ class GVRJassimpAdapter {
     static
     {
         wrapModeMap = new HashMap<AiTextureMapMode, GVRTextureParameters.TextureWrapType>();
-        wrapModeMap.put(AiTextureMapMode.WRAP,GVRTextureParameters.TextureWrapType.GL_REPEAT );
-        wrapModeMap.put(AiTextureMapMode.CLAMP,GVRTextureParameters.TextureWrapType.GL_CLAMP_TO_EDGE );
+        wrapModeMap.put(AiTextureMapMode.WRAP, GVRTextureParameters.TextureWrapType.GL_REPEAT );
+        wrapModeMap.put(AiTextureMapMode.CLAMP, GVRTextureParameters.TextureWrapType.GL_CLAMP_TO_EDGE );
         wrapModeMap.put(AiTextureMapMode.MIRROR, GVRTextureParameters.TextureWrapType.GL_MIRRORED_REPEAT );
 
     }
 
-    private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial material, final GVRMaterial meshMaterial) throws IOException {
+    private GVRMaterial createMaterial(AiMaterial material, EnumSet<GVRImportSettings> settings)
+    {
+        boolean layered = false;
+
         for (final AiTextureType texType : AiTextureType.values())
         {
-            if (texType == AiTextureType.UNKNOWN) {
+            if (texType != AiTextureType.UNKNOWN)
+            {
+                if (material.getNumTextures(texType) > 1)
+                {
+                    layered = true;
+                }
+            }
+        }
+        GVRShaderId shaderType = GVRMaterial.GVRShaderType.Phong.ID;
+        if (settings.contains(GVRImportSettings.NO_TEXTURING) || settings.contains(GVRImportSettings.NO_LIGHTING))
+        {
+            shaderType = GVRMaterial.GVRShaderType.Texture.ID;
+        }
+        else if (layered)
+        {
+            shaderType = GVRMaterial.GVRShaderType.PhongLayered.ID;
+        }
+        return new GVRMaterial(mContext, shaderType);
+    }
+
+    private void loadTexture(GVRAssetLoader.AssetRequest assetRequest,
+                             final AiMaterial aimtl, final GVRMaterial gvrmtl,
+                             final AiTextureType texType, int texIndex,
+                             int uvIndex)
+    {
+        int blendop = aimtl.getTextureOp(texType, texIndex).ordinal();
+        String typeName = textureMap.get(texType);
+        String textureKey = typeName + "Texture";
+        String texCoordKey = "a_texcoord";
+        String shaderKey = typeName + "_coord";
+        final String texFileName = aimtl.getTextureFile(texType, texIndex);
+
+        if (uvIndex > 0)
+        {
+            texCoordKey += uvIndex;
+        }
+        if (texIndex > 0)
+        {
+            textureKey += texIndex;
+            shaderKey += texIndex;
+            gvrmtl.setInt(textureKey + "_blendop", blendop);
+        }
+        gvrmtl.setTexCoord(textureKey, texCoordKey, shaderKey);
+        GVRTextureParameters texParams = new GVRTextureParameters(mContext);
+        texParams.setWrapSType(wrapModeMap.get(aimtl.getTextureMapModeU(texType, texIndex)));
+        texParams.setWrapTType(wrapModeMap.get(aimtl.getTextureMapModeV(texType, texIndex)));
+        GVRTexture gvrTex = new GVRTexture(mContext, texParams);
+        GVRAssetLoader.TextureRequest texRequest;
+
+        gvrmtl.setTexture(textureKey, gvrTex);
+        if (texFileName.startsWith("*"))
+        {
+            AiTexture tex = null;
+            try
+            {
+                int embeddedIndex = parseInt(texFileName.substring(1));
+                tex = mScene.getTextures().get(embeddedIndex);
+                texRequest = new GVRAssetLoader.TextureRequest(assetRequest, gvrTex, mFileName + texFileName);
+                assetRequest.loadEmbeddedTexture(texRequest, tex);
+            }
+            catch (NumberFormatException | IndexOutOfBoundsException ex)
+            {
+                assetRequest.onModelError(mContext, ex.getMessage(), mFileName);
+            }
+            catch (IOException ex2)
+            {
+                assetRequest.onTextureError(mContext, ex2.getMessage(), mFileName);
+            }
+        }
+        else
+        {
+            texRequest = new GVRAssetLoader.TextureRequest(assetRequest, gvrTex, texFileName);
+            assetRequest.loadTexture(texRequest);
+        }
+    }
+
+    private void loadTextures(GVRAssetLoader.AssetRequest assetRequest, AiMaterial aimtl, final GVRMaterial gvrmtl, final AiMesh aimesh)
+    {
+        for (final AiTextureType texType : AiTextureType.values())
+        {
+            if (texType == AiTextureType.UNKNOWN)
+            {
                 continue;
             }
-            for (int i = 0; i < material.getNumTextures(texType); ++i) {
-                final String texFileName = material.getTextureFile(texType, i);
+            for (int i = 0; i < aimtl.getNumTextures(texType); ++i)
+            {
+                final String texFileName = aimtl.getTextureFile(texType, i);
 
-                if ("".equals(texFileName)) {
-                    continue;
-                }
-                int uvIndex = material.getTextureUVIndex(texType, i);
-                int blendop = material.getTextureOp(texType, i).ordinal();
-                String typeName = textureMap.get(texType);
-                String textureKey = typeName + "Texture";
-                String texCoordKey = "a_texcoord";
-                String shaderKey = typeName + "_coord";
-                if (uvIndex > 0) {
-                    texCoordKey += uvIndex;
-                }
-                if (i > 0) {
-                    textureKey += i;
-                    shaderKey += i;
-                    meshMaterial.setFloat(textureKey + "_blendop", (float) blendop);
-                }
-                meshMaterial.setTexCoord(textureKey, texCoordKey, shaderKey);
-                GVRTextureParameters texParams = new GVRTextureParameters(mContext);
-                texParams.setWrapSType(wrapModeMap.get(material.getTextureMapModeU(texType,i)));
-                texParams.setWrapTType(wrapModeMap.get(material.getTextureMapModeV(texType,i)));
-                if (texFileName.startsWith("*"))
+                if (!"".equals(texFileName))
                 {
-                    AiTexture tex = null;
-                    try
+                    int uvIndex = aimtl.getTextureUVIndex(texType, i);
+                    if (!aimesh.hasTexCoords(uvIndex))
                     {
-                        int texIndex = parseInt(texFileName.substring(1));
-
-                        tex = mScene.getTextures().get(texIndex);
-                        GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, mFileName + texFileName, meshMaterial, textureKey, texParams);
-                        assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
+                        uvIndex = 0;
+                        Log.w("GVRAssetLoader", "UVIndex not found in mesh, defaulting to first set of texture coordinates");
                     }
-                    catch (NumberFormatException | IndexOutOfBoundsException ex)
-                    {
-                        assetRequest.onModelError(mContext, ex.getMessage(), mFileName);
-                    }
-                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, mFileName + texFileName, meshMaterial, textureKey, texParams);
-                    assetRequest.loadEmbeddedTexture(texRequest, tex, texParams);
-                }
-                else
-                {
-                    GVRAssetLoader.TextureRequest texRequest = new GVRAssetLoader.MaterialTextureRequest(assetRequest, texFileName, meshMaterial, textureKey, texParams);
-                    assetRequest.loadTexture(texRequest);
+                    loadTexture(assetRequest, aimtl, gvrmtl, texType, i, uvIndex);
                 }
             }
         }
     }
 
-    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist){
-        for(AiLight light: lights){
+    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist)
+    {
+        for(AiLight light: lights)
+        {
+            GVRLightBase l;
             AiLightType type = light.getType();
-            if(type == AiLightType.DIRECTIONAL){
-                GVRDirectLight gvrLight = new GVRDirectLight(mContext);
-                setPhongLightProp(gvrLight,light);
-                setLightProp(gvrLight, light);
-                String name = light.getName();
-                lightlist.put(name, gvrLight);
+            String name = light.getName();
+
+            if (type == AiLightType.DIRECTIONAL)
+            {
+                l = new GVRDirectLight(mContext);
             }
-            if(type == AiLightType.POINT){
-                GVRPointLight gvrLight = new GVRPointLight(mContext);
-                setPhongLightProp(gvrLight,light);
-                setLightProp(gvrLight, light);
-                String name = light.getName();
-                lightlist.put(name, gvrLight);
+            else if (type == AiLightType.POINT)
+            {
+                l = new GVRPointLight(mContext);
             }
-            if(type == AiLightType.SPOT){
+            else if (type == AiLightType.SPOT)
+            {
                 float outerAngleRadians = light.getAngleOuterCone();
                 float innerAngleRadians = light.getAngleInnerCone();
                 GVRSpotLight gvrLight = new GVRSpotLight(mContext);
-                setPhongLightProp(gvrLight,light);
-                setLightProp(gvrLight, light);
-                if (innerAngleRadians == 0.0f) {
+
+                if (innerAngleRadians == 0.0f)
+                {
                     innerAngleRadians = outerAngleRadians / 1.5f;
                 }
                 gvrLight.setInnerConeAngle((float) Math.toDegrees(innerAngleRadians));
                 gvrLight.setOuterConeAngle((float) Math.toDegrees(outerAngleRadians));
-                String name = light.getName();
-                lightlist.put(name, gvrLight);
+                l = gvrLight;
             }
+            else
+            {
+                continue;
+            }
+            lightlist.put(name, l);
+            setPhongLightProp(l,light);
+            setLightProp(l, light);
         }
 
     }
 
-    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight){
-        gvrLight.setFloat("attenuation_constant", assimpLight.getAttenuationConstant());
-        gvrLight.setFloat("attenuation_linear", assimpLight.getAttenuationLinear());
-        gvrLight.setFloat("attenuation_quadratic", assimpLight.getAttenuationQuadratic());
+    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight)
+    {
+        float aconstant = assimpLight.getAttenuationConstant();
+        float alinear = assimpLight.getAttenuationLinear();
+        float aquad = assimpLight.getAttenuationQuadratic();
+
+        if (Double.isInfinite(alinear))
+        {
+            alinear = 1.0f;
+        }
+        if (Double.isInfinite(aquad))
+        {
+            aquad = 1.0f;
+        }
+        if ((aconstant + aquad + alinear) == 0.0f)
+        {
+            aconstant = 1.0f;
+        }
+        gvrLight.setFloat("attenuation_constant", aconstant);
+        gvrLight.setFloat("attenuation_linear", alinear);
+        gvrLight.setFloat("attenuation_quadratic", aquad);
     }
 
-    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight){
-        org.gearvrf.jassimp2.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
-        org.gearvrf.jassimp2.AiColor diffuseCol = assimpLight.getColorDiffuse(sWrapperProvider);
-        org.gearvrf.jassimp2.AiColor specular = assimpLight.getColorSpecular(sWrapperProvider);
+    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight)
+    {
+        org.gearvrf.jassimp.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
+        org.gearvrf.jassimp.AiColor diffuseCol = assimpLight.getColorDiffuse(sWrapperProvider);
+        org.gearvrf.jassimp.AiColor specular = assimpLight.getColorSpecular(sWrapperProvider);
         float[] c = new float[3];
-        ambientCol.getColor(c);
+        getColor(ambientCol, c);
         gvrLight.setVec4("ambient_intensity", c[0], c[1], c[2], 1.0f);
-        diffuseCol.getColor(c);
+        getColor(diffuseCol, c);
         gvrLight.setVec4("diffuse_intensity", c[0], c[1], c[2], 1.0f);
-        specular.getColor(c);
+        getColor(specular, c);
         gvrLight.setVec4("specular_intensity", c[0], c[1], c[2], 1.0f);
+    }
+
+    private void getColor(AiColor c, float[] color)
+    {
+        color[0] = c.getRed();
+        color[1] = c.getGreen();
+        color[2] = c.getBlue();
+        float scale = max(max(color[0], color[1]), color[2]);
+        if (scale > 1)
+        {
+            color[0] /= scale;
+            color[1] /= scale;
+            color[2] /= scale;
+        }
     }
 }

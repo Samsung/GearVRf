@@ -39,8 +39,7 @@ void Java_org_gearvrf_OvrNativeMonoscopicRenderer_renderCamera(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    PostEffectShaderManager* post_effect_shader_manager =
-            reinterpret_cast<PostEffectShaderManager*>(jpost_effect_shader_manager);
+    ShaderManager* post_effect_shader_manager = shader_manager;
     RenderTexture* post_effect_render_texture_a =
             reinterpret_cast<RenderTexture*>(jpost_effect_render_texture_a);
     RenderTexture* post_effect_render_texture_b =

@@ -49,12 +49,11 @@ CameraRig::CameraRig() :
 CameraRig::~CameraRig() {
 }
 
-void CameraRig::predict(float time) {
-    return predict(time, rotation_sensor_data_);
-}
-
-void CameraRig::predict(float time, const RotationSensorData& rotationSensorData) {
-    setRotation(complementary_rotation_*rotationSensorData.quaternion());
+/**
+ * Update with the latest sensor data on file.
+ */
+void CameraRig::updateRotation() {
+    setRotation(complementary_rotation_*rotation_sensor_data_.quaternion());
 }
 
 void CameraRig::setPosition(const glm::vec3& transform_position) {

@@ -80,6 +80,11 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
     }
 
     @Override
+    public boolean onBackPress() {
+        return false;
+    }
+
+    @Override
     public void onPause() {
     }
 
@@ -121,11 +126,6 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
 
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
         return false;
     }
 

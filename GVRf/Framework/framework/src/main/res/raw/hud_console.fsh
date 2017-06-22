@@ -18,12 +18,13 @@ precision mediump float;
 uniform sampler2D u_texture;
 uniform sampler2D u_overlay;
 
-varying vec2 v_scene_coord;
-varying vec2 v_overlay_coord;
+in vec2 diffuse_coord;
+in vec2 v_overlay_coord;
+out vec4 OutColor;
 
 void main() {
-  vec4 rendered = texture2D(u_texture, v_scene_coord);
-  vec4 overlay = texture2D(u_overlay, v_overlay_coord);
+  vec4 rendered = texture(u_texture, diffuse_coord);
+  vec4 overlay = texture(u_overlay, v_overlay_coord);
 
-  gl_FragColor = mix(rendered, overlay, overlay.a);
+  OutColor = mix(rendered, overlay, overlay.a);
 }

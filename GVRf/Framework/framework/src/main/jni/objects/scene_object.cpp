@@ -25,15 +25,14 @@
 #include "objects/components/render_data.h"
 #include "util/gvr_log.h"
 #include "mesh.h"
+#include "scene.h"
 
 namespace gvr {
-bool SceneObject::using_lod_ = false;
 
 SceneObject::SceneObject() :
         HybridObject(), name_(""), children_(), visible_(true), transform_dirty_(false), in_frustum_(
-                false),  enabled_(true),query_currently_issued_(false), vis_count_(0), lod_min_range_(
-                0), lod_max_range_(MAXFLOAT), cull_status_(false), bounding_volume_dirty_(
-                true) {
+                false),  enabled_(true),query_currently_issued_(false), vis_count_(0),
+                cull_status_(false), bounding_volume_dirty_(true) {
 
     // Occlusion query setup
     queries_ = new GLuint[1];
@@ -51,7 +50,24 @@ bool SceneObject::attachComponent(Component* component) {
     }
     component->set_owner_object(this);
     components_.push_back(component);
-    dirtyHierarchicalBoundingVolume();
+    SceneObject* par = parent();
+    if (par)
+    {
+        Scene* scene = Scene::main_scene();
+        SceneObject* root = scene->getRoot();
+        if (scene != NULL)
+        {
+            while (par)
+            {
+                if (par == root)
+                {
+                    component->onAddedToScene(scene);
+                    return true;
+                }
+                par = par->parent();
+            }
+        }
+    }
     return true;
 }
 
@@ -59,9 +75,26 @@ bool SceneObject::detachComponent(Component* component) {
     auto it = std::find(components_.begin(), components_.end(), component);
     if (it == components_.end())
         return false;
+    SceneObject* par = parent();
+    if (par)
+    {
+        Scene* scene = Scene::main_scene();
+        SceneObject* root = scene->getRoot();
+        if (scene != NULL)
+        {
+            while (par)
+            {
+                if (par == root)
+                {
+                    component->onRemovedFromScene(scene);
+                    break;
+                }
+                par = par->parent();
+            }
+        }
+    }
     (*it)->set_owner_object(NULL);
     components_.erase(it);
-    dirtyHierarchicalBoundingVolume();
     return true;
 }
 
@@ -71,7 +104,6 @@ Component* SceneObject::detachComponent(long long type) {
             Component* component = *it;
             component->set_owner_object(NULL);
             components_.erase(it);
-            dirtyHierarchicalBoundingVolume();
             return component;
         }
     }
@@ -105,47 +137,153 @@ void SceneObject::getAllComponents(std::vector<Component*>& components, long lon
 }
 
 void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
-    for (SceneObject* parent = parent_; parent; parent = parent->parent_) {
-        if (child == parent) {
-            std::string error =
-                    "SceneObject::addChildObject() : cycle of scene objects is not allowed.";
-            LOGE("%s", error.c_str());
-            throw error;
+    Scene* scene = Scene::main_scene();
+    if (scene != NULL)
+    {
+        if (onAddChild(child, scene->getRoot()))
+        {
+            child->onAddedToScene(scene);
         }
+    }
+    else
+    {
+        onAddChild(child, NULL);
     }
     {
         std::lock_guard < std::mutex > lock(children_mutex_);
         children_.push_back(child);
     }
     child->parent_ = self;
-    Transform* const t = child->transform();
-    if (nullptr != t) {
-        t->invalidate(false);
+    child->onTransformChanged();
+}
+
+/**
+ * Called when a scene object is added to the current scene.
+ */
+void SceneObject::onAddedToScene(Scene* scene)
+{
+    for (auto it = components_.begin(); it != components_.end(); ++it)
+    {
+        (*it)->onAddedToScene(scene);
     }
-    dirtyHierarchicalBoundingVolume();
+    for (auto it2 = children_.begin(); it2 != children_.end(); ++it2)
+    {
+        SceneObject* obj = *it2;
+        obj->onAddedToScene(scene);
+    }
+}
+
+/**
+ * Called when a scene object is attached to a parent.
+ */
+bool SceneObject::onAddChild(SceneObject* addme, SceneObject* root)
+{
+    bounding_volume_dirty_ = true;
+    if (addme == this)
+    {
+        std::string error =  "SceneObject::addChildObject() : cycle of scene objects is not allowed.";
+        LOGE("%s", error.c_str());
+        throw error;
+    }
+    if (parent_ != NULL)
+    {
+        if (parent_->onAddChild(addme, root) || (parent_ == root))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Called when a child is detached from its parent
+ */
+bool SceneObject::onRemoveChild(SceneObject* removeme, SceneObject* root)
+{
+    bounding_volume_dirty_ = true;
+    if (parent_ != NULL)
+    {
+        if (parent_->onRemoveChild(removeme, root) || (parent_ == root))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Called when a scene object is removed from the current scene.
+ */
+void SceneObject::onRemovedFromScene(Scene* scene)
+{
+    for (auto it = components_.begin(); it != components_.end(); ++it)
+    {
+        (*it)->onRemovedFromScene(scene);
+    }
+    for (auto it2 = children_.begin(); it2 != children_.end(); ++it2)
+    {
+        SceneObject* obj = *it2;
+        obj->onRemovedFromScene(scene);
+    }
 }
 
 void SceneObject::removeChildObject(SceneObject* child) {
-    if (child->parent_ == this) {
+    Scene* scene = Scene::main_scene();
+
+    if (child->parent_ == this)
+    {
+        if (scene != NULL)
+        {
+            if (onRemoveChild(child, scene->getRoot()))
+            {
+                child->onRemovedFromScene(scene);
+            }
+        }
+        else
+        {
+            onRemoveChild(child, NULL);
+        }
         {
             std::lock_guard < std::mutex > lock(children_mutex_);
             children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
         }
         child->parent_ = NULL;
+        child->onTransformChanged();
     }
+}
 
-    Transform* const t = child->transform();
-    if (nullptr != t) {
-        t->invalidate(false);
+void SceneObject::onTransformChanged() {
+    setTransformDirty();
+    if (getChildrenCount() > 0)
+    {
+        std::lock_guard<std::mutex> lock(children_mutex_);
+        for (auto it = children_.begin(); it != children_.end(); ++it)
+        {
+            SceneObject* child = *it;
+            child->onTransformChanged();
+        }
     }
-    dirtyHierarchicalBoundingVolume();
 }
 
 void SceneObject::clear() {
+    Scene* scene = Scene::main_scene();
     std::lock_guard < std::mutex > lock(children_mutex_);
     for (auto it = children_.begin(); it != children_.end(); ++it) {
         SceneObject* child = *it;
+        if (scene != NULL)
+        {
+            if (onRemoveChild(child, scene->getRoot()))
+            {
+                child->onRemovedFromScene(scene);
+            }
+        }
+        else
+        {
+            onRemoveChild(child, NULL);
+        }
         child->parent_ = NULL;
+        child->onTransformChanged();
     }
     children_.clear();
 }
@@ -169,6 +307,18 @@ void SceneObject::getDescendants(std::vector<SceneObject*>& descendants) {
         SceneObject* obj = *it;
         descendants.push_back(obj);
         obj->getDescendants(descendants);
+    }
+}
+
+void SceneObject::dirtyHierarchicalBoundingVolume() {
+    if (bounding_volume_dirty_) {
+        return;
+    }
+
+    bounding_volume_dirty_ = true;
+
+    if (parent_ != NULL) {
+        parent_->dirtyHierarchicalBoundingVolume();
     }
 }
 
@@ -320,20 +470,9 @@ bool SceneObject::intersectsBoundingVolume(SceneObject *scene_object) {
             (this_min_corner.z <= that_max_corner.z);
 }
 
-void SceneObject::dirtyHierarchicalBoundingVolume() {
-    if (bounding_volume_dirty_) {
-        return;
-    }
-
-    bounding_volume_dirty_ = true;
-
-    if (parent_ != NULL) {
-        parent_->dirtyHierarchicalBoundingVolume();
-    }
-}
 
 BoundingVolume& SceneObject::getBoundingVolume() {
-    if (!bounding_volume_dirty_) {
+    if (!bounding_volume_dirty_ && !transform_dirty_) {
         return transformed_bounding_volume_;
     }
     RenderData* rdata = render_data();
@@ -360,6 +499,7 @@ BoundingVolume& SceneObject::getBoundingVolume() {
         }
     }
     bounding_volume_dirty_ = false;
+    BoundingVolume& bv = transformed_bounding_volume_;
     return transformed_bounding_volume_;
 }
 
@@ -431,10 +571,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
                     "FRUSTUM: HBV completely inside frustum, render %s and all its children\n",
                     name_.c_str());
         }
-
-        if (!using_lod_) {
-            return 3;
-        }
+        return 3;
     }
 
     // 2. Skip the empty objects with no render data
@@ -447,20 +584,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
         return 1;
     }
 
-    // 3. Check if the object against the Level-of-details
-    const float distance = rdata->camera_distance();
-    // if the object is not in the correct LOD level, cull out itself and all its children
-    if (!inLODRange(distance)) {
-        if (DEBUG_RENDERER) {
-            LOGD(
-                    "FRUSTUM: not in lod range, cull out %s and all its children\n",
-                    name_.c_str());
-        }
-
-        return 0;
-    }
-
-    // 4. Check if the object itself is intersecting with or inside the frustum
+    // 3. Check if the object itself is intersecting with or inside the frustum
     size_t size;
     {
         std::lock_guard < std::mutex > lock(children_mutex_);
@@ -629,5 +753,4 @@ bool SceneObject::checkAABBVsFrustumBasic(const float frustum[6][4],
     }
     return true;
 }
-
 }

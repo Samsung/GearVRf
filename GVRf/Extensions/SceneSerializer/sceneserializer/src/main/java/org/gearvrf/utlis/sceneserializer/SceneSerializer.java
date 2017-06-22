@@ -151,7 +151,7 @@ public class SceneSerializer {
             environmentSceneObject = new GVRCubeSceneObject(gvrContext, false,
                     cubemapMaterial);
             environmentSceneObject.getTransform().setScale(targetScale, targetScale, targetScale);
-            Future<GVRTexture> futureCubeTexture = gvrContext.loadFutureCubemapTexture
+            GVRTexture futureCubeTexture = gvrContext.getAssetLoader().loadCubemapTexture
                     (resource);
             environmentSceneObject.getRenderData().getMaterial().setMainTexture
                     (futureCubeTexture);
@@ -161,7 +161,7 @@ public class SceneSerializer {
             environmentSceneObject = new GVRSphereSceneObject(gvrContext, false,
                     material);
             environmentSceneObject.getTransform().setScale(targetScale, targetScale, targetScale);
-            Future<GVRTexture> futureSphereTexture = gvrContext.loadFutureTexture(resource);
+            GVRTexture futureSphereTexture = gvrContext.getAssetLoader().loadTexture(resource);
             environmentSceneObject.getRenderData().getMaterial().setMainTexture(futureSphereTexture);
             gvrScene.addSceneObject(environmentSceneObject);
         }
@@ -259,7 +259,7 @@ public class SceneSerializer {
             while (iterator.hasNext()) {
                 currentSod = iterator.next();
                 try {
-                    context.loadModelFromSD(currentSod.getSrc());
+                    context.getAssetLoader().loadModel("sd:"+currentSod.getSrc());
                     break;
                 } catch (IOException e) {
                     Log.e(TAG, "Could not load model:%s from sdcard:%s", currentSod.getSrc(),

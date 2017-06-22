@@ -25,7 +25,7 @@ namespace gvr {
 
         virtual ~ConfigurationManager();
 
-        void configureRendering();
+        void configureRendering(bool useStencil);
         int getMaxLights();
 
     private:

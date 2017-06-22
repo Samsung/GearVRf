@@ -16,12 +16,13 @@
 package org.gearvrf.utility;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
 import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRAndroidResource.Callback;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
-import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRImage;
 
 /**
  * Basic cache-by-resource-description.
@@ -74,7 +75,7 @@ public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase 
      * loaded()} resource
      */
     public static CompressedTextureCallback wrapCallback(
-            ResourceCache<GVRTexture> cache, CompressedTextureCallback callback) {
+            ResourceCache<GVRImage> cache, CompressedTextureCallback callback) {
         return new CompressedTextureCallbackWrapper(cache, callback);
     }
 
@@ -84,8 +85,18 @@ public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase 
      * loaded()} resource
      */
     public static BitmapTextureCallback wrapCallback(
-            ResourceCache<GVRTexture> cache, BitmapTextureCallback callback) {
+            ResourceCache<GVRImage> cache, BitmapTextureCallback callback) {
         return new BitmapTextureCallbackWrapper(cache, callback);
+    }
+
+    /**
+     * Wrap the callback, to cache the
+     * {@link TextureCallback#loaded(GVRHybridObject, GVRAndroidResource)
+     * loaded()} resource
+     */
+    public static TextureCallback wrapCallback(
+            ResourceCache<GVRImage> cache, TextureCallback callback) {
+        return new TextureCallbackWrapper(cache, callback);
     }
 
     private static class CallbackWrapper<T extends GVRHybridObject> implements
@@ -136,18 +147,27 @@ public class ResourceCache<T extends GVRHybridObject> extends ResourceCacheBase 
 
     // Those 'convenience' interfaces are getting to be a real annoyance
     private static class CompressedTextureCallbackWrapper extends
-            CancelableCallbackWrapper<GVRTexture> implements CompressedTextureCallback {
+            CancelableCallbackWrapper<GVRImage> implements CompressedTextureCallback {
 
-        CompressedTextureCallbackWrapper(ResourceCache<GVRTexture> cache,
+        CompressedTextureCallbackWrapper(ResourceCache<GVRImage> cache,
                 CompressedTextureCallback callback) {
             super(cache, callback);
         }
     }
 
+    private static class TextureCallbackWrapper extends
+            CancelableCallbackWrapper<GVRImage> implements
+            TextureCallback {
+        TextureCallbackWrapper(ResourceCache<GVRImage> cache,
+                               TextureCallback callback) {
+            super(cache, callback);
+        }
+    }
+
     private static class BitmapTextureCallbackWrapper extends
-            CancelableCallbackWrapper<GVRTexture> implements
+            CancelableCallbackWrapper<GVRImage> implements
             BitmapTextureCallback {
-        BitmapTextureCallbackWrapper(ResourceCache<GVRTexture> cache,
+        BitmapTextureCallbackWrapper(ResourceCache<GVRImage> cache,
                 BitmapTextureCallback callback) {
             super(cache, callback);
         }

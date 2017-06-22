@@ -42,11 +42,11 @@ import android.util.DisplayMetrics;
 
 /**
  * This is the core internal class.
- * 
+ *
  * It implements {@link GVRContext}. It handles Android application callbacks
  * like cycles such as the standard Android {@link Activity#onResume()},
  * {@link Activity#onPause()}, and {@link Activity#onDestroy()}.
- * 
+ *
  * <p>
  * Most importantly, {@link #onDrawFrame()} does the actual rendering, using the
  * current orientation from
@@ -64,7 +64,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     /**
      * Constructs OvrMonoscopicViewManager object with GVRMain which controls
      * GL activities
-     * 
+     *
      * @param gvrActivity
      *            Current activity object
      * @param gvrMain
@@ -141,10 +141,10 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
     private void drawEyes() {
         // Log.d(TAG, "drawEyes()");
-        mMainScene.getMainCameraRig().predict(3.5f / 60.0f);
+        mMainScene.getMainCameraRig().updateRotation();
         OvrMonoscopicRenderer.cull(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle);
         OvrMonoscopicRenderer.renderCamera(mMainScene, mMainScene
-                .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
+                        .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
                 mViewportWidth, mViewportHeight, mRenderBundle);
 
     }

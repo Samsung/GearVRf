@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.condition.Os
-
 apply plugin: 'com.android.library'
 
 repositories {
@@ -9,8 +7,9 @@ repositories {
 }
 
 android {
+    publishNonDefault !gradle.getStartParameter().taskNames.contains('uploadArchives')
     compileSdkVersion 24
-    buildToolsVersion '24.0.3'
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         minSdkVersion 19
@@ -20,56 +19,81 @@ android {
             ndkBuild {
                 arguments = ["-j" + Runtime.runtime.availableProcessors()]
                 arguments += ['OVR_MOBILE_SDK=' + rootProject.property("OVR_MOBILE_SDK")]
-                arguments += ['PROJECT_ROOT='+rootProject.projectDir]
+                arguments += ['PROJECT_ROOT=' + rootProject.projectDir]
+                arguments += ['PROJECT_DIR=' + projectDir.absolutePath]
                 arguments += ['BUILDTYPE=Release']      // for oculus
+                if (rootProject.hasProperty("ARM64")) {
+                    arguments += ['ARM64=true']
+                }
             }
         }
 
         ndk {
             moduleName "gvrf-oculus"
             stl "gnustl_static"
-            abiFilters = ['armeabi-v7a']
+            if (rootProject.hasProperty("ARM64")) {
+                abiFilters = ['arm64-v8a']
+            } else {
+                abiFilters = ['armeabi-v7a']
+            }
         }
     }
 
-    task buildInfo(type:Exec){
-        commandLine 'git log -n 1 --format=%H'.split()
+    task buildInfo() {
+        def commitId
+
+        File head = new File(projectDir.absolutePath + '/../../../.git/HEAD')
+        if (head.exists()) {
+            def elements = head.text.split()
+            if (elements.length > 0) {
+                File commit = new File(projectDir.absolutePath + '/../../../.git/' + elements[elements.length-1])
+                if (commit.exists()) {
+                    commitId = commit.text.trim();
+                } else {
+                    return
+                }
+            } else {
+                return
+            }
+        } else {
+            return
+        }
+
         def source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
         def javaSource = new File(projectDir.absolutePath + '/src/main/java/org/gearvrf/', 'OvrBuildInfo.java')
-        standardOutput = new ByteArrayOutputStream()
 
-        doLast {
-            source.text = '#include "util/gvr_log.h"\n'
-            source.text += '#include <jni.h>\n\n'
-            source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
-            source.text += '    LOGI("BACKEND_OCULUS-CPP  HEAD: '+ standardOutput.toString().trim() + '");\n'
-            source.text += '    JNIEnv* env;\n';
-            source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
-            source.text += '        jclass java_class = env->FindClass("org/gearvrf/OvrBuildInfo");\n'
-            source.text += '        if (env->ExceptionCheck()) {\n'
-            source.text += '            env->ExceptionClear();\n'
-            source.text += '        }\n'
-            source.text += '        if(nullptr != java_class) {\n'
-            source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
-            source.text += '            if (env->ExceptionCheck()) {\n'
-            source.text += '                env->ExceptionClear();\n'
-            source.text += '            }\n'
-            source.text += '            env->DeleteLocalRef(java_class);\n'
-            source.text += '        }\n'
-            source.text += '    }\n'
-            source.text += '    return JNI_VERSION_1_6;\n'
-            source.text += '}'
+        source.text = '#include "util/gvr_log.h"\n'
+        source.text += '#include <jni.h>\n\n'
+        source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
+        source.text += '    LOGI("BACKEND_OCULUS-CPP  HEAD: ' + commitId + '");\n'
+        source.text += '    JNIEnv* env;\n';
+        source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
+        source.text += '        jclass java_class = env->FindClass("org/gearvrf/OvrBuildInfo");\n'
+        source.text += '        if (env->ExceptionCheck()) {\n'
+        source.text += '            env->ExceptionClear();\n'
+        source.text += '        }\n'
+        source.text += '        if(nullptr != java_class) {\n'
+        source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
+        source.text += '            if (env->ExceptionCheck()) {\n'
+        source.text += '                env->ExceptionClear();\n'
+        source.text += '            }\n'
+        source.text += '            env->DeleteLocalRef(java_class);\n'
+        source.text += '        }\n'
+        source.text += '    }\n'
+        source.text += '    return JNI_VERSION_1_6;\n'
+        source.text += '}'
 
-            javaSource.text = 'package org.gearvrf;\n'
-            javaSource.text += 'public class OvrBuildInfo {\n'
-            javaSource.text += '    public final static String HEAD="' + standardOutput.toString().trim() + '";\n'
-            javaSource.text += '    static { android.util.Log.i("gvrf", "BACKEND_OCULUS-JAVA HEAD: " + HEAD); }\n'
-            javaSource.text += '}\n'
-        }
+        javaSource.text = 'package org.gearvrf;\n'
+        javaSource.text += 'public class OvrBuildInfo {\n'
+        javaSource.text += '    public final static String HEAD="' + commitId + '";\n'
+        javaSource.text += '    static { android.util.Log.i("gvrf", "BACKEND_OCULUS-JAVA HEAD: " + HEAD); }\n'
+        javaSource.text += '}\n'
     }
 
     buildTypes {
         debug {
+            debuggable = true
+            jniDebuggable = true
         }
         release {
             minifyEnabled false
@@ -91,17 +115,6 @@ android {
             path 'src/main/jni/Android.mk'
         }
     }
-
-    task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
-        }
-
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/backend_oculus-debug.aar').absolutePath
-    }
-    uploadToGitHub.doFirst {
-        println('uploading to github')
-    }
 }
 
 project.ext.jomlVersion = "1.9.1-SNAPSHOT"
@@ -113,58 +126,30 @@ dependencies {
     compile "org.joml:joml-android:${jomlVersion}"
 }
 
-task copyAARFiles(type: Copy) {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        println "copying aar files to the libs_directory"
-        def libsdirPath = projectDir.absolutePath + '/../../../' +
-                rootProject.property("LIBS_DIRECTORY")
-        def libsDir = new File(libsdirPath);
-        if (libsDir.exists()) {
-            from 'build/outputs/aar'
-            into libsDir
-            include '*-debug.aar'
-        } else {
-            println "Cannot copy aar files, libs directory does not exist!"
-        }
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
     }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
 }
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'externalNativeBuildDebug') {
+        task.dependsOn ":framework:externalNativeBuildDebug"
+        task.dependsOn 'buildInfo'
+    } else if (task.name == 'externalNativeBuildRelease') {
+        task.dependsOn ":framework:externalNativeBuildRelease"
         task.dependsOn 'buildInfo'
     } else if (task.name == 'bundleDebug') {
-        task<< {
-            tasks.copyAARFiles.execute()
-
-            def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-            if (file(testsLibs).exists()) {
-                copy {
-                    from 'build/outputs/aar'
-                    into testsLibs
-                    include 'backend_oculus-debug.aar'
-                }
-            }
-
-            def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-            if (!file(gearvrfLibs).exists()) {
-                file(gearvrfLibs).mkdir();
-            }
-            copy {
-                from 'build/outputs/aar'
-                into gearvrfLibs
-                include 'backend_oculus-debug.aar'
-            }
-
-            if (System.env['ACCESS_TOKEN'] == null) {
-                return
-            }
-
-            println 'removing oculus binaries'
-            exec {
-                commandLine = ['zip', '-d', 'build/outputs/aar/backend_oculus-debug.aar', 'jni/armeabi-v7a/libvrapi.so']
-            }
-
-            uploadToGitHub.execute();
-        }
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
     }
 }

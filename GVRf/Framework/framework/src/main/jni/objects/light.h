@@ -25,36 +25,37 @@
 #include <string>
 
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
 
+#include "objects/shader_data.h"
+#include "engine/renderer/renderer.h"
 #include "objects/hybrid_object.h"
-#include "../objects/scene_object.h"
+#include "objects/scene_object.h"
+#include "objects/components/shadow_map.h"
 #include "components/component.h"
 #include "util/gvr_jni.h"
-#include "objects/material.h"
-#include "../engine/renderer/renderer.h"
-#include "glm/gtc/matrix_inverse.hpp"
+#include "engine/renderer/renderer.h"
+
 namespace gvr {
 class Color;
 class SceneObject;
 class Scene;
 class ShaderManager;
 class GLFrameBuffer;
+class GLImage;
+class Shader;
+class ShadowMap;
 
 //#define DEBUG_LIGHT 1
 
-class Light: public Component {
+class Light: public JavaComponent {
 public:
-    static const int MAX_SHADOW_MAPS;
-    static const int SHADOW_MAP_SIZE;
 
     explicit Light()
-    :   Component(Light::getComponentType()),
-        shadowMaterial_(nullptr),
- 		shadowFB_(NULL),
-		shadowMapIndex_(-1) {
+    :   JavaComponent(Light::getComponentType()),
+		shadowMapIndex_(-1)
+	{
     }
-
-    ~Light();
 
     static long long getComponentType() {
         return COMPONENT_TYPE_LIGHT;
@@ -64,6 +65,7 @@ public:
         enabled_ = enable;
         setDirty();
     }
+    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     float getFloat(std::string key) {
         auto it = floats_.find(key);
@@ -76,9 +78,13 @@ public:
     }
 
     void setFloat(std::string key, float value) {
-        floats_[key] = value;
-        if (enabled_) {
-            setDirty();
+        if (floats_[key] != value)
+        {
+            floats_[key] = value;
+            if (enabled_)
+            {
+                setDirty();
+            }
         }
     }
 
@@ -132,8 +138,28 @@ public:
         }
     }
 
-    bool castShadow() {
-         return shadowMaterial_ != NULL;
+    bool castShadow()
+    {
+         return getShadowMap() != nullptr;
+    }
+
+    ShadowMap* getShadowMap()
+    {
+        SceneObject* owner = owner_object();
+        ShadowMap* shadowMap = nullptr;
+
+        if (owner == nullptr)
+        {
+            return nullptr;
+        }
+        shadowMap = (ShadowMap*) owner->getComponent(RenderTarget::getComponentType());
+        if ((shadowMap != nullptr) &&
+             shadowMap->enabled() &&
+             (shadowMap->getCamera() != nullptr))
+        {
+            return shadowMap;
+        }
+        return nullptr;
     }
 
     /**
@@ -144,8 +170,19 @@ public:
      * bindShadowMaps will bind the resulting framebuffer as a
      * texture on the light.
      */
-    void castShadow(Material* material) {
-        shadowMaterial_ = material;
+    void castShadow(ShaderData* material)
+    {
+        SceneObject* owner = owner_object();
+        if (owner == nullptr)
+        {
+            return;
+        }
+        ShadowMap* shadowMap = static_cast<ShadowMap*>(owner->getComponent(ShadowMap::getComponentType()));
+        if (shadowMap == nullptr)
+        {
+            shadowMap = new ShadowMap(material);
+            owner->attachComponent(shadowMap);
+        }
         setDirty();
     }
 
@@ -154,31 +191,20 @@ public:
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).
      * @param program   ID of GL shader program
-     * @param texIndex  GL texture index for shadow map
      */
-    void render(int program, int texIndex);
+    void render(Shader* shader);
 
     /**
      * Internal function called at the start of each frame
      * to update the shadow map.
      */
-    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex, std::vector<SceneObject*>& scene_objects, int, int);
+    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
 
     /**
      * Internal function called during rendering to bind the shadow map
      * framebuffer to the texture for this light.
      */
-    static void bindShadowMap(int program, int texIndex);
-
-    /***
-     * Creates the storage for shadow maps
-     */
-    void static createDepthTexture(int width, int height, int depth);
-
-    /***
-    *  Calls destructor depth texture and delete textures
-    */
-    void static deleteDepthTexture();
+    static void bindShadowMap(Shader* shader, int texIndex);
 
     std::string getLightID() {
         return lightID_;
@@ -194,7 +220,8 @@ public:
         lightID_ = lightid;
     };
 
-    void cleanup();
+    virtual void onAddedToScene(Scene* scene);
+    virtual void onRemovedFromScene(Scene* scene);
 
 private:
     Light(const Light& light);
@@ -202,11 +229,6 @@ private:
     Light& operator=(const Light& light);
     Light& operator=(Light&& light);
 
-
-    /*
-     * Generate the framebuffer used for shadow map generation
-     */
-    bool generateFBO();
 
     /*
      * Mark the light as needing update for all shaders using it
@@ -231,30 +253,16 @@ private:
         }
         return -1;
     }
-#ifdef DEBUG_LIGHT
-    void writeShadowMapToDisk();
-#endif
-
-public:
-#ifdef DEBUG_LIGHT
-    std::string ShadowMapFile;
-#endif
 
 private:
-    int size_;
     int shadowMapIndex_;
-    GLFrameBuffer* shadowFB_;
     std::string lightID_;
-    Material* shadowMaterial_;
     std::map<int, bool> dirty_;
-    glm::mat4 shadow_matrix_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec3> vec3s_;
     std::map<std::string, glm::vec4> vec4s_;
     std::map<std::string, glm::mat4> mat4s_;
     std::map<std::string, std::map<int, int> > offsets_;
-    std::map<std::string, Texture*> textures_;
-    static GLTexture* depth_texture_;
 };
 }
 #endif

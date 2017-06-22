@@ -11,16 +11,16 @@ Redistribution and use of this software in source and binary forms,
 with or without modification, are permitted provided that the following 
 conditions are met:
 
- * Redistributions of source code must retain the above
+* Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
   following disclaimer.
 
- * Redistributions in binary form must reproduce the above
+* Redistributions in binary form must reproduce the above
   copyright notice, this list of conditions and the
   following disclaimer in the documentation and/or other
   materials provided with the distribution.
 
- * Neither the name of the assimp team, nor the names of its
+* Neither the name of the assimp team, nor the names of its
   contributors may be used to endorse or promote products
   derived from this software without specific prior
   written permission of the assimp team.
@@ -37,18 +37,18 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
- */
+*/
 package org.gearvrf.jassimp;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
- * A node in the imported hierarchy.
- * <p>
- * 
- * Each node has name, a parent node (except for the root node), a
- * transformation relative to its parent and possibly several child nodes.
+ * A node in the imported hierarchy.<p>
+ *
+ * Each node has name, a parent node (except for the root node), 
+ * a transformation relative to its parent and possibly several child nodes.
  * Simple file formats don't support hierarchical structures - for these formats
  * the imported scene consists of only a single root node without children.
  */
@@ -56,27 +56,23 @@ public final class AiNode {
     /**
      * Constructor.
      * 
-     * @param parent
-     *            the parent node, may be null
-     * @param transform
-     *            the transform matrix
-     * @param meshReferences
-     *            array of mesh references
-     * @param name
-     *            the name of the node
+     * @param parent the parent node, may be null
+     * @param transform the transform matrix
+     * @param meshReferences array of mesh references
+     * @param name the name of the node
      */
-    public AiNode(AiNode parent, Object transform, int[] meshReferences,
-            String name) {
+    AiNode(AiNode parent, Object transform, int[] meshReferences, String name) {
         m_parent = parent;
         m_transformationMatrix = transform;
         m_meshReferences = meshReferences;
         m_name = name;
-
+        
         if (null != m_parent) {
             m_parent.addChild(this);
         }
     }
-
+    
+    
     /**
      * Returns the name of this node.
      * 
@@ -85,10 +81,10 @@ public final class AiNode {
     public String getName() {
         return m_name;
     }
-
+    
+    
     /**
-     * Returns the number of child nodes.
-     * <p>
+     * Returns the number of child nodes.<p>
      * 
      * This method exists for compatibility reasons with the native assimp API.
      * The returned value is identical to <code>getChildren().size()</code>
@@ -98,30 +94,29 @@ public final class AiNode {
     public int getNumChildren() {
         return getChildren().size();
     }
-
+    
+    
     /**
-     * Returns a 4x4 matrix that specifies the transformation relative to the
-     * parent node.
-     * <p>
+     * Returns a 4x4 matrix that specifies the transformation relative to 
+     * the parent node.<p>
      * 
-     * This method is part of the wrapped API (see {@link AiWrapperProvider} for
-     * details on wrappers).
-     * <p>
+     * This method is part of the wrapped API (see {@link AiWrapperProvider}
+     * for details on wrappers).<p>
      * 
      * The built in behavior is to return an {@link AiMatrix4f}.
      * 
-     * @param wrapperProvider
-     *            the wrapper provider (used for type inference)
+     * @param wrapperProvider the wrapper provider (used for type inference)
      * 
      * @return a matrix
      */
     @SuppressWarnings("unchecked")
-    public <V3, M4, C, N, Q> M4 getTransform(
-            AiWrapperProvider<V3, M4, C, N, Q> wrapperProvider) {
-
+    public <V3, M4, C, N, Q> M4 getTransform(AiWrapperProvider<V3, M4, C, N, Q> 
+            wrapperProvider) {
+        
         return (M4) m_transformationMatrix;
     }
-
+    
+    
     /**
      * Returns the children of this node.
      * 
@@ -130,7 +125,8 @@ public final class AiNode {
     public List<AiNode> getChildren() {
         return m_children;
     }
-
+    
+    
     /**
      * Returns the parent node.
      * 
@@ -139,48 +135,48 @@ public final class AiNode {
     public AiNode getParent() {
         return m_parent;
     }
-
+    
+    
     /**
      * Searches the node hierarchy below (and including) this node for a node
      * with the specified name.
      * 
-     * @param name
-     *            the name to look for
-     * @return the first node with the given name, or null if no such node
-     *         exists
+     * @param name the name to look for
+     * @return the first node with the given name, or null if no such node 
+     *              exists
      */
     public AiNode findNode(String name) {
         /* classic recursive depth first search */
-
+        
         if (m_name.equals(name)) {
             return this;
         }
-
+        
         for (AiNode child : m_children) {
             if (null != child.findNode(name)) {
                 return child;
             }
         }
-
+        
         return null;
     }
-
+    
+    
     /**
-     * Returns the number of meshes references by this node.
-     * <p>
+     * Returns the number of meshes references by this node.<p>
      * 
-     * This method exists for compatibility with the native assimp API. The
-     * returned value is identical to <code>getMeshes().length</code>
+     * This method exists for compatibility with the native assimp API.
+     * The returned value is identical to <code>getMeshes().length</code>
      * 
      * @return the number of references
      */
     public int getNumMeshes() {
         return m_meshReferences.length;
     }
-
-    /**
-     * Returns the meshes referenced by this node.
-     * <p>
+    
+    
+    /** 
+     * Returns the meshes referenced by this node.<p> 
      * 
      * Each entry is an index into the mesh list stored in {@link AiScene}.
      * 
@@ -189,37 +185,42 @@ public final class AiNode {
     public int[] getMeshes() {
         return m_meshReferences;
     }
-
+    
+    
     /**
      * Adds a child node.
      * 
-     * @param child
-     *            the child to add
+     * @param child the child to add
      */
     void addChild(AiNode child) {
         m_children.add(child);
     }
-
+    
+    
     /**
      * Name.
      */
     private final String m_name;
-
+    
+    
     /**
      * Parent node.
      */
     private final AiNode m_parent;
-
+    
+    
     /**
      * Mesh references.
      */
     private final int[] m_meshReferences;
-
+    
+    
     /**
      * List of children.
      */
     private final List<AiNode> m_children = new ArrayList<AiNode>();
-
+    
+    
     /**
      * Buffer for transformation matrix.
      */

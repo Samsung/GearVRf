@@ -40,7 +40,11 @@ import org.gearvrf.R;
 
        public GVRPhongShader(GVRContext gvrcontext)
        {
-           super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent", 300);
+            super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float3 u_color; float u_opacity; float specular_exponent; float line_width; float2 u_lightmap_offset; float2 u_lightmap_scale",
+                   "sampler2D diffuseTexture; sampler2D ambientTexture; sampler2D specularTexture; sampler2D opacityTexture; sampler2D lightmapTexture; sampler2D normalTexture; sampler2D emissiveTexture",
+                   "float3 a_position float2 a_texcoord float2 a_texcoord1 float2 a_texcoord2 float2 a_texcoord3 float3 a_normal float4 a_bone_weights int4 a_bone_indices float4 a_tangent float4 a_bitangent",
+                   400);
+
            if (fragTemplate == null)
            {
                Context context = gvrcontext.getContext();
@@ -66,18 +70,37 @@ import org.gearvrf.R;
            setSegment("VertexTemplate", vtxTemplate);
            setSegment("FragmentSurface", surfaceShader);
            setSegment("FragmentAddLight", addLight);
+           setSegment("VertexSkinShader", skinShader);
            setSegment("VertexShader", vtxShader);
            setSegment("VertexNormalShader", normalShader);
-           setSegment("VertexSkinShader", skinShader);
+
+           mHasVariants = true;
+           mUsesLights = true;
        }
        
-       public HashMap<String, Integer> getRenderDefines(GVRRenderData rdata, GVRScene scene)
+       public HashMap<String, Integer> getRenderDefines(IRenderable renderable, GVRScene scene)
        {
-           GVRLightBase[] lights = (scene != null) ? scene.getLightList() : null;
-           HashMap<String, Integer> defines = super.getRenderDefines(rdata, scene);
-           if (!rdata.isLightMapEnabled())
+           HashMap<String, Integer> defines = super.getRenderDefines(renderable, scene);
+           boolean lightMapEnabled  = (renderable instanceof GVRRenderData) ? ((GVRRenderData) renderable).isLightMapEnabled() : false;
+
+           if (!lightMapEnabled)
                defines.put("lightMapTexture", 0);
+           if (!defines.containsKey("LIGHTSOURCES") || (defines.get("LIGHTSOURCES") != 1))
+           {
+               defines.put("a_normal", 0);
+           }
            return defines;
-       }       
+       }
+
+       protected void setMaterialDefaults(GVRShaderData material)
+       {
+           material.setVec4("ambient_color", 0.2f, 0.2f, 0.2f, 1.0f);
+           material.setVec4("diffuse_color", 0.8f, 0.8f, 0.8f, 1.0f);
+           material.setVec4("specular_color", 0.0f, 0.0f, 0.0f, 1.0f);
+           material.setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
+           material.setFloat("specular_exponent", 0.0f);
+           material.setFloat("line_width", 1.0f);
+           material.setFloat("u_opacity", 0.0f);
+       }
    }
 

@@ -24,10 +24,9 @@
 #include <unordered_set>
 #include "objects/hybrid_object.h"
 #include "objects/helpers.h"
-
 namespace gvr {
 
-class Material;
+class ShaderData;
 
 class RenderPass : public HybridObject {
 public:
@@ -37,15 +36,14 @@ public:
     };
 
     RenderPass() :
-            material_(0),
-            cull_face_(DEFAULT_CULL_FACE) {
-    }
+            material_(0), shaderID_(0), cull_face_(DEFAULT_CULL_FACE)
+    { }
 
-    Material* material() const {
+    ShaderData* material() const {
         return material_;
     }
 
-    void set_material(Material* material);
+    void set_material(ShaderData* material);
 
     int cull_face() const {
         return cull_face_;
@@ -53,20 +51,29 @@ public:
 
     void set_cull_face(int cull_face) {
         cull_face_ = cull_face;
-        dirty();
+        dirty(MOD_CULL_FACE);
     }
 
-    void dirty() {
-        dirtyImpl(dirty_flags_);
+    void set_shader(int shaderid)
+    {
+        shaderID_ = shaderid;
+        dirty(MOD_SHADER_ID);
     }
 
-    void add_dirty_flag(const std::shared_ptr<bool>& dirty_flag);
+    int get_shader() const { return shaderID_; }
+
+    void dirty(DIRTY_BITS bit) {
+        dirtyImpl(dirty_flags_,bit);
+    }
+
+    void add_dirty_flag(const std::shared_ptr<u_short>& dirty_flag);
 
 private:
     static const int DEFAULT_CULL_FACE = CullBack;
-    Material* material_;
+    ShaderData* material_;
+    int shaderID_;
     int cull_face_;
-    std::unordered_set<std::shared_ptr<bool>> dirty_flags_;
+    std::unordered_set<std::shared_ptr<u_short>> dirty_flags_;
 };
 
 }

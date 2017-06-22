@@ -29,15 +29,15 @@ import android.graphics.Color;
  * them, one for each eye. You can {@linkplain #setRenderMask(int) specify which
  * eye(s)} this camera is serving; {@linkplain #setBackgroundColor(int) set a
  * background color}; and add any number of
- * {@linkplain #addPostEffect(GVRPostEffect) 'post effects'} which are basically
+ * {@linkplain #addPostEffect(GVRShaderData) 'post effects'} which are basically
  * (stock or custom) GL shaders, applied after the scene graph has been
  * rendered.
  */
 public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     /**
      * We use a {@code Set}, not a {@code List}, because while
-     * {@link #addPostEffect(GVRPostEffect)} can add multiple copies of the same
-     * post-effect, {@link #removePostEffect(GVRPostEffect)} will remove all
+     * {@link #addPostEffect(GVRShaderData)} can add multiple copies of the same
+     * post-effect, {@link #removePostEffect(GVRShaderData)} will remove all
      * copies. Since this collection is used only to maintain a hard reference
      * to the post-effects, there's no need to model the possible multiplicity
      * ... and removing a single item from a {@code Set} is cheaper than
@@ -46,7 +46,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
      * We make the collection {@code private} because descendant classes have no
      * APIs that care whether or not a particular post-effect is attached.
      */
-    private final Set<GVRPostEffect> mPostEffects = new HashSet<GVRPostEffect>();
+    private final Set<GVRShaderData> mPostEffects = new HashSet<GVRShaderData>();
 
     protected GVRCamera(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
@@ -201,8 +201,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     }
 
     /**
-     * Add a {@linkplain GVRPostEffect post-effect} to this camera's render
-     * chain.
+     * Add a post-effect to this camera's render chain.
      * 
      * Post-effects are GL shaders, applied to the texture (hardware bitmap)
      * containing the rendered scene graph. Each post-effect combines a shader
@@ -212,19 +211,19 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
      * @param postEffectData
      *            Post-effect to append to this camera's render chain
      */
-    public void addPostEffect(GVRPostEffect postEffectData) {
+    public void addPostEffect(GVRShaderData postEffectData) {
         mPostEffects.add(postEffectData);
         NativeCamera.addPostEffect(getNative(), postEffectData.getNative());
     }
 
     /**
-     * Remove (all instances of) a {@linkplain GVRPostEffect post-effect} from
+     * Remove (all instances of) a {@linkplain GVRShaderData post-effect} from
      * this camera's render chain
      * 
      * @param postEffectData
      *            Post-effect to remove.
      */
-    public void removePostEffect(GVRPostEffect postEffectData) {
+    public void removePostEffect(GVRShaderData postEffectData) {
         mPostEffects.remove(postEffectData);
         NativeCamera.removePostEffect(getNative(), postEffectData.getNative());
     }
@@ -309,6 +308,27 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         return 0;
     }
 
+    /**
+     * Sets the view matrix of the Camera.
+     * The view matrix is the inverse of the camera model matrix.
+     * Normally it is computed automatically from the GVRTransform
+     * attached to the GVRSceneObject which owns the camera.
+     * If the camera is NOT attached to a scene object,
+     * you can use this call to set the view matrix so the
+     * camera can be used with a GVRRenderTarget.
+     *
+     * @param matrix new view matrix.
+     * @see GVRRenderTarget#setCamera(GVRCamera)
+     */
+    public void setViewMatrix(float[] matrix)
+    {
+        if (matrix.length != 16)
+        {
+            throw new IllegalArgumentException("Matrix size not equal to 16.");
+        }
+        NativeCamera.setViewMatrix(getNative(), matrix);
+    }
+
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         sb.append(Log.getSpaces(indent));
@@ -366,4 +386,6 @@ class NativeCamera {
     static native void addPostEffect(long camera, long postEffectData);
 
     static native void removePostEffect(long camera, long postEffectData);
+
+    static native void setViewMatrix(long camera, float[] matrix);
 }

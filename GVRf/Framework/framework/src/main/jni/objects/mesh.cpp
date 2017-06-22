@@ -13,482 +13,298 @@
  * limitations under the License.
  */
 
-/***************************************************************************
- * The mesh for rendering.
- ***************************************************************************/
-
 #include "mesh.h"
-
-#include "assimp/Importer.hpp"
+#include "engine/renderer/renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
-#include "objects/helpers.h"
 
-namespace gvr {
+namespace gvr
+{
 
-std::vector<std::string> Mesh::dynamicAttribute_Names_ = {"a_bone_indices", "a_bone_weights"};
+    Mesh::Mesh(const char* descriptor)
+    : mVertices(nullptr),
+      mIndices(nullptr),
+      have_bounding_volume_(false),
+      vertexBoneData_(this)
+    {
+        mVertices = Renderer::getInstance()->createVertexBuffer(descriptor, 0);
+    }
 
-Mesh* Mesh::createBoundingBox() {
+    Mesh::Mesh(VertexBuffer& vbuf)
+    : mVertices(&vbuf), mIndices(nullptr),
+      have_bounding_volume_(false),
+      vertexBoneData_(this)
+    {
+    }
 
-    Mesh* mesh = new Mesh();
+    Mesh *Mesh::createBoundingBox()
+    {
+        Mesh *mesh = new Mesh("float3 a_position");
+        getBoundingVolume(); // Make sure bounding_volume is valid
 
-    getBoundingVolume(); // Make sure bounding_volume is valid
-
-    glm::vec3 min_corner = bounding_volume.min_corner();
-    glm::vec3 max_corner = bounding_volume.max_corner();
-
-    float min_x = min_corner[0];
-    float min_y = min_corner[1];
-    float min_z = min_corner[2];
-    float max_x = max_corner[0];
-    float max_y = max_corner[1];
-    float max_z = max_corner[2];
-
-    mesh->vertices_.push_back(glm::vec3(min_x, min_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, min_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, max_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, max_y, min_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, min_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, min_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(min_x, max_y, max_z));
-    mesh->vertices_.push_back(glm::vec3(max_x, max_y, max_z));
-
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(3);
-
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(3);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(5);
-
-    mesh->indices_.push_back(4);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(6);
-
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(4);
-    mesh->indices_.push_back(6);
-
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(1);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(0);
-    mesh->indices_.push_back(5);
-    mesh->indices_.push_back(4);
-
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(7);
-    mesh->indices_.push_back(3);
-    mesh->indices_.push_back(2);
-    mesh->indices_.push_back(6);
-    mesh->indices_.push_back(7);
-
-    return mesh;
-}
+        glm::vec3 min_corner = bounding_volume.min_corner();
+        glm::vec3 max_corner = bounding_volume.max_corner();
+        float min_x = min_corner[0];
+        float min_y = min_corner[1];
+        float min_z = min_corner[2];
+        float max_x = max_corner[0];
+        float max_y = max_corner[1];
+        float max_z = max_corner[2];
+        float positions[24] =
+                {min_x, min_y, min_z, max_x, min_y, min_z, min_x, max_y, min_z, max_x, max_y, min_z,
+                 min_x, min_y, max_z, max_x, min_y, max_z, min_x, max_y, max_z, max_x, max_y,
+                 max_z};
+        unsigned short indices[] =
+                {0, 2, 1, 1, 2, 3, 1, 3, 7, 1, 7, 5, 4, 5, 6, 5, 7, 6, 0, 6, 2, 0, 4, 6, 0, 1, 5, 0,
+                 5, 4, 2, 7, 3, 2, 6, 7};
+        mesh->setVertices(positions, sizeof(positions) / (8 * sizeof(float)));
+        mesh->setTriangles(indices, sizeof(indices) / (sizeof(short)));
+        return mesh;
+    }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
-const BoundingVolume& Mesh::getBoundingVolume() {
-    if (have_bounding_volume_) {
+    const BoundingVolume &Mesh::getBoundingVolume()
+    {
+        if (have_bounding_volume_)
+        {
+            return bounding_volume;
+        }
+        mVertices->getBoundingVolume(bounding_volume);
+        have_bounding_volume_ = true;
         return bounding_volume;
     }
-    bounding_volume.reset();
-    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
-        bounding_volume.expand(*it);
-    }
 
-    have_bounding_volume_ = true;
-    return bounding_volume;
-}
-
-void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat,
-        float *transformed_bounding_box) {
-
-    if (have_bounding_volume_ == false) {
-        getBoundingVolume();
-    }
-
-    glm::mat4 M = *Mat;
-    float a, b;
-
-    //Inspired by Graphics Gems - TransBox.c
-    //Transform the AABB to the correct position in world space
-    //Generate a new AABB from the non axis aligned bounding box
-
-    transformed_bounding_box[0] = M[3].x;
-    transformed_bounding_box[3] = M[3].x;
-
-    transformed_bounding_box[1] = M[3].y;
-    transformed_bounding_box[4] = M[3].y;
-
-    transformed_bounding_box[2] = M[3].z;
-    transformed_bounding_box[5] = M[3].z;
-
-    glm::vec3 min_corner = bounding_volume.min_corner();
-    glm::vec3 max_corner = bounding_volume.max_corner();
-
-    for (int i = 0; i < 3; i++) {
-        //x coord
-        a = M[i].x * min_corner.x;
-        b = M[i].x * max_corner.x;
-        if (a < b) {
-            transformed_bounding_box[0] += a;
-            transformed_bounding_box[3] += b;
-        } else {
-            transformed_bounding_box[0] += b;
-            transformed_bounding_box[3] += a;
-        }
-
-        //y coord
-        a = M[i].y * min_corner.y;
-        b = M[i].y * max_corner.y;
-        if (a < b) {
-            transformed_bounding_box[1] += a;
-            transformed_bounding_box[4] += b;
-        } else {
-            transformed_bounding_box[1] += b;
-            transformed_bounding_box[4] += a;
-        }
-
-        //z coord
-        a = M[i].z * min_corner.z;
-        b = M[i].z * max_corner.z;
-        if (a < b) {
-            transformed_bounding_box[2] += a;
-            transformed_bounding_box[5] += b;
-        } else {
-            transformed_bounding_box[2] += b;
-            transformed_bounding_box[5] += a;
-        }
-    }
-}
-
-void Mesh::createAttributeMapping(int programId,
-        int& totalStride, int& attrLen)
-{
-    totalStride = attrLen = 0;
-    if (programId == -1)
+    void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat, float* transformed_bounding_box)
     {
-        // If program id has not been set, return.
-        return;
-    }
-    GLint numActiveAtributes;
-    glGetProgramiv(programId, GL_ACTIVE_ATTRIBUTES, &numActiveAtributes);
-    GLchar attrName[512];
-    GLAttributeMapping attrData;
-
-    for (int i = 0; i < numActiveAtributes; i++)
-    {
-        GLsizei length;
-        GLint size;
-        GLenum type;
-        glGetActiveAttrib(programId, i, 512, &length, &size, &type, attrName);
-        if (std::find(dynamicAttribute_Names_.begin(), dynamicAttribute_Names_.end(), attrName) != dynamicAttribute_Names_.end())
+        if (!have_bounding_volume_)
         {
-            // Skip dynamic attributes. Currently only bones are dynamic attributes which changes each frame.
-            // They are handled seperately.
+            getBoundingVolume();
         }
-        else
-        {
-            attrData.type = GL_FLOAT;
-            int loc = glGetAttribLocation(programId, attrName);
-            attrData.index = loc;
-            attrData.data = NULL;
-            attrData.offset = totalStride;
-            bool addData = true;
-            int len = 0;
 
-            // Two things to note --
-            // 1. The 3 builtin buffers are still seperate from the maps used for the other attributes
-            // 2. The attribute index *has* to be 0, 1 and 2 for position, tex_coords and normal. The
-            // index from querying via glGetActiveAttrib cannot be used. Needs analysis.
-            if (strcmp(attrName, "a_position") == 0)
+        glm::mat4 M = *Mat;
+        float a, b;
+
+        //Inspired by Graphics Gems - TransBox.c
+        //Transform the AABB to the correct position in world space
+        //Generate a new AABB from the non axis aligned bounding box
+
+        transformed_bounding_box[0] = M[3].x;
+        transformed_bounding_box[3] = M[3].x;
+        transformed_bounding_box[1] = M[3].y;
+        transformed_bounding_box[4] = M[3].y;
+        transformed_bounding_box[2] = M[3].z;
+        transformed_bounding_box[5] = M[3].z;
+
+        glm::vec3 min_corner = bounding_volume.min_corner();
+        glm::vec3 max_corner = bounding_volume.max_corner();
+
+        for (int i = 0; i < 3; i++)
+        {
+            //x coord
+            a = M[i].x * min_corner.x;
+            b = M[i].x * max_corner.x;
+            if (a < b)
             {
-                attrData.size = 3;
-                len = vertices_.size();
-                attrData.data = vertices_.data();
-            }
-            else if (strcmp(attrName, "a_normal") == 0)
-            {
-                attrData.size = 3;
-                len = normals_.size();
-                attrData.data = normals_.data();
+                transformed_bounding_box[0] += a;
+                transformed_bounding_box[3] += b;
             }
             else
             {
-
-                switch (type)
-                {
-                    case GL_FLOAT:
-                        attrData.size = 1;
-                        {
-                            const std::vector<float>& curr = getFloatVector(attrName);
-                            len = curr.size();
-                            attrData.data = curr.data();
-                        }
-                        break;
-                    case GL_FLOAT_VEC2:
-                        attrData.size = 2;
-                        {
-                            const std::vector<glm::vec2>& curr = getVec2Vector(attrName);
-                            len = curr.size();
-                            attrData.data = curr.data();
-                        }
-                        break;
-                    case GL_FLOAT_VEC3:
-                        attrData.size = 3;
-                        {
-                            const std::vector<glm::vec3>& curr = getVec3Vector(attrName);
-                            len = curr.size();
-                            attrData.data = curr.data();
-                        }
-                        break;
-                    case GL_FLOAT_VEC4:
-                        attrData.size = 4;
-                        {
-                            const std::vector<glm::vec4>& curr = getVec4Vector(attrName);
-                            len = curr.size();
-                            attrData.data = curr.data();
-                        }
-                        break;
-                    default:
-                        addData = false;
-                        LOGE("Looking up %s failed ", attrName);
-                            break;
-                }
+                transformed_bounding_box[0] += b;
+                transformed_bounding_box[3] += a;
             }
-            if (addData)
+
+            //y coord
+            a = M[i].y * min_corner.y;
+            b = M[i].y * max_corner.y;
+            if (a < b)
             {
-                totalStride += attrData.size;
-                attrMapping.push_back(attrData);
-                if (attrLen == 0)
-                    attrLen = len;
-                else
-                {
-                    if (len != attrLen)
-                        LOGE(" $$$$*** Attib length does not match %d vs %d", len, attrLen);
-                }
+                transformed_bounding_box[1] += a;
+                transformed_bounding_box[4] += b;
+            }
+            else
+            {
+                transformed_bounding_box[1] += b;
+                transformed_bounding_box[4] += a;
+            }
+
+            //z coord
+            a = M[i].z * min_corner.z;
+            b = M[i].z * max_corner.z;
+            if (a < b)
+            {
+                transformed_bounding_box[2] += a;
+                transformed_bounding_box[5] += b;
+            }
+            else
+            {
+                transformed_bounding_box[2] += b;
+                transformed_bounding_box[5] += a;
             }
         }
     }
-}
 
-void Mesh::createBuffer(std::vector<GLfloat>& buffer, int attrLength)
-{
-    for (int i = 0; i < attrLength; i++)
+    bool Mesh::getAttributeInfo(const char* attributeName,
+                                int &index,
+                                int &offset,
+                                int &size) const
     {
-        for (auto it = attrMapping.begin(); it != attrMapping.end(); ++it)
+        return mVertices->getInfo(attributeName, index, offset, size);
+    }
+
+    bool Mesh::getVertices(float *vertices, int nelems)
+    {
+        return mVertices->getFloatVec("a_position", vertices, nelems, 3);
+    }
+
+    bool Mesh::setVertices(const float *vertices, int nelems)
+    {
+        return mVertices->setFloatVec("a_position", vertices, nelems, 3);
+    }
+
+    bool Mesh::setNormals(const float *normals, int nelems)
+    {
+        return mVertices->setFloatVec("a_normal", normals, nelems, 3);
+    }
+
+    bool Mesh::getNormals(float *normals, int nelems)
+    {
+        return mVertices->getFloatVec("a_normal", normals, nelems, 3);
+    }
+
+    bool Mesh::setIndices(const unsigned int *indices, int nindices)
+    {
+        if (!mIndices)
         {
-            GLAttributeMapping currAttr = *it;
-            const float* ptr = (float*) currAttr.data;
-            for (int k = 0; k < currAttr.size; k++)
+            mIndices = Renderer::getInstance()->createIndexBuffer(sizeof(int), nindices);
+        }
+        return mIndices->setIntVec(indices, nindices);
+    }
+
+    bool Mesh::setTriangles(const unsigned short *indices, int nindices)
+    {
+        if (!mIndices)
+        {
+            mIndices = Renderer::getInstance()->createIndexBuffer(sizeof(short), nindices);
+        }
+        return mIndices->setShortVec(indices, nindices);
+    }
+
+    bool Mesh::getIndices(unsigned short *dest, int nindices)
+    {
+        if (mIndices)
+        {
+            return mIndices->getShortVec(dest, nindices);
+        }
+        return false;
+    }
+
+    bool Mesh::getLongIndices(unsigned int *dest, int nindices)
+    {
+        if (mIndices)
+        {
+            return mIndices->getIntVec(dest, nindices);
+        }
+        return false;
+    }
+
+    bool Mesh::setFloatVec(const char* attrName, const float *src, int nelems)
+    {
+        return mVertices->setFloatVec(attrName, src, nelems, 0);
+    }
+
+    bool Mesh::setIntVec(const char* attrName, const int *src, int nelems)
+    {
+        mVertices->setIntVec(attrName, src, nelems, 1);
+    }
+
+    bool Mesh::getFloatVec(const char* attrName, float *dest, int nelems)
+    {
+        return mVertices->getFloatVec(attrName, dest, nelems, 0);
+    }
+
+    bool Mesh::getIntVec(const char* attrName, int *dest, int nelems)
+    {
+        return mVertices->getIntVec(attrName, dest, nelems, 1);
+    }
+
+    void Mesh::forAllIndices(std::function<void(int iter, int index)> func)
+    {
+        if (!mIndices)
+        {
+            for (int i = 0; i < getVertexCount(); ++i)
             {
-                buffer.push_back(ptr[i * currAttr.size + k]);
+                func(i, i);
+            }
+        }
+        else if (mIndices->getIndexSize() == 2)
+        {
+            const unsigned short* indexData = reinterpret_cast<const unsigned short *>(mIndices->getIndexData());
+            for (int i = 0; i < mIndices->getIndexCount(); ++i)
+            {
+                int v = *(indexData + i);
+                func(i, v);
+            }
+        }
+        else
+        {
+            const unsigned int* indexData = reinterpret_cast<const unsigned int *>(mIndices->getIndexData());
+            for (int i = 0; i < mIndices->getIndexCount(); ++i)
+            {
+                int v = *(indexData + i);
+                func(i, v);
             }
         }
     }
+
+
+    void Mesh::forAllVertices(const char* attrName,
+                              std::function<void(int iter, const float *vertex)> func) const
+    {
+        mVertices->forAllVertices(attrName, func);
+    }
+
+    void Mesh::forAllTriangles(std::function<void(int iter, const float *v1,
+                                                  const float *v2, const float *v3)> func) const
+    {
+        int n = getIndexCount();
+        const float* vertData = mVertices->getVertexData();
+        const float *V1;
+        const float *V2;
+        const float *V3;
+        int stride = mVertices->getVertexSize();
+        if (mIndices->getIndexSize() == 2)
+        {
+            const unsigned short* intData = reinterpret_cast<const unsigned short*>(mIndices->getIndexData());
+            for (int i = 0; i < n; i += 3)
+            {
+                V1 = vertData + (stride * *intData++);
+                V2 = vertData + (stride * *intData++);
+                V3 = vertData + (stride * *intData++);
+                func(i / 3, V1, V2, V3);
+            }
+        }
+        else
+        {
+            const unsigned int* intData = mIndices->getIndexData();
+            for (int i = 0; i < n; i += 3)
+            {
+                V1 = vertData + (stride * *intData++);
+                V2 = vertData + (stride * *intData++);
+                V3 = vertData + (stride * *intData++);
+                func(i / 3, V1, V2, V3);
+            }
+        }
+    }
+
+    void Mesh::add_dirty_flag(const std::shared_ptr<u_short> &dirty_flag)
+    {
+        dirty_flags_.insert(dirty_flag);
+    }
+
+    void Mesh::dirty(DIRTY_BITS bit)
+    {
+        dirtyImpl(dirty_flags_, bit);
+    }
 }
 
 
-const GLuint Mesh::getVAOId(int programId) {
-    if (programId == -1)
-    {
-        LOGI("!! %p Prog Id -- %d ", this, programId);
-        return 0;
-    }
-    if (vao_dirty_)
-    {
-        generateVAO(programId);
-    }
-    auto it = program_ids_.find(programId);
-    if (it != program_ids_.end())
-    {
-        GLVaoVboId id = it->second;
-        return id.vaoID;
-    }
-    vao_dirty_ = true;
-    generateVAO(programId);
-    it = program_ids_.find(programId);
-    if (it != program_ids_.end())
-    {
-        GLVaoVboId id = it->second;
-        return id.vaoID;
-    }
-    LOGI("!! %p Error in creating VAO  for Prog Id -- %d", this, programId);
-    return 0;
-}
-
-// generate vertex array object
-void Mesh::generateVAO(int programId) {
-    GLuint tmpID;
-
-    if (!vao_dirty_) {
-         return;
-    }
-    obtainDeleter();
-
-    if (vertices_.size() == 0 && normals_.size() == 0) {
-        std::string error = "no vertex data yet, shouldn't call here. ";
-        throw error;
-    }
-    if (0 != normals_.size() && vertices_.size() != normals_.size()) {
-        LOGW("mesh: number of vertices and normals do not match! vertices %d, normals %d", vertices_.size(), normals_.size());
-    }
-
-    GLuint vaoID_;
-    GLuint triangle_vboID_;
-    GLuint static_vboID_;
-    auto it = program_ids_.find(programId);
-    if (it != program_ids_.end())
-    {
-
-        GLVaoVboId ids = it->second;
-        vaoID_ = ids.vaoID;
-        triangle_vboID_ = ids.triangle_vboID;
-        static_vboID_ = ids.static_vboID;
-    }
-    else
-    {
-        glGenVertexArrays(1, &vaoID_);
-        glGenBuffers(1, &triangle_vboID_);
-        glGenBuffers(1, &static_vboID_);
-    }
-
-
-    glBindVertexArray(vaoID_);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_vboID_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-            sizeof(unsigned short) * indices_.size(), &indices_[0],
-            GL_STATIC_DRAW);
-    numTriangles_ = indices_.size() / 3;
-
-    attrMapping.clear();
-    int totalStride;
-    int attrLength;
-    createAttributeMapping(programId, totalStride, attrLength);
-
-    std::vector<GLfloat> buffer;
-    createBuffer(buffer, attrLength);
-    glBindBuffer(GL_ARRAY_BUFFER, static_vboID_);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * buffer.size(),
-            &buffer[0], GL_STATIC_DRAW);
-    int localCnt = 0;
-    for ( std::vector<GLAttributeMapping>::iterator it = attrMapping.begin(); it != attrMapping.end(); ++it)
-    {
-        GLAttributeMapping currData = *it;
-        glVertexAttribPointer(currData.index, currData.size, currData.type, 0, totalStride * sizeof(GLfloat), (GLvoid*) (currData.offset * sizeof(GLfloat)));
-        glEnableVertexAttribArray(currData.index);
-    }
-
-
-    // done generation
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    if (it == program_ids_.end())
-    {
-        GLVaoVboId id;
-        id.vaoID = vaoID_;
-        id.static_vboID = static_vboID_;
-        id.triangle_vboID = triangle_vboID_;
-        program_ids_[programId] = id;
-    }
-    vao_dirty_ = false;
-}
-
-void Mesh::getAttribNames(std::set<std::string> &attrib_names) {
-    	 if(vertices_.size() > 0)
-    		 attrib_names.insert("a_position");
-    	 if(normals_.size() > 0)
-    		 attrib_names.insert("a_normal");
-
-    	 if(hasBones()){
-    		 attrib_names.insert("a_bone_indices");
-    		 attrib_names.insert("a_bone_weights");
-    	 }
-
-    	 for(auto it : vec2_vectors_){
-    		 attrib_names.insert(it.first);
-    		 LOGE("vec2 vector %s",(it.first).c_str());
-    	 }
-    	 for(auto it : vec3_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-    	 for(auto it : vec4_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-    	 for(auto it : float_vectors_){
-    		 attrib_names.insert(it.first);
-    	 }
-
-    }
-
-void Mesh::generateBoneArrayBuffers(GLuint programId) {
-    if (!bone_data_dirty_) {
-        return;
-    }
-
-
-    // delete
-    if (boneVboID_ != GVR_INVALID) {
-        deleter_->queueBuffer(boneVboID_);
-        boneVboID_ = GVR_INVALID;
-    }
-
-    int nVertices = vertices().size();
-    if (!vertexBoneData_.getNumBones() || !nVertices) {
-        LOGV("no bones or vertices");
-        return;
-    }
-
-    auto it = program_ids_.find(programId);
-    if (it == program_ids_.end())
-    {
-        LOGV("Invalid program Id for bones");
-        return;
-    }
-    GLVaoVboId id = it->second;
-    glBindVertexArray(id.vaoID);
-
-    // BoneID
-    GLuint boneVboID;
-    glGenBuffers(1, &boneVboID);
-    glBindBuffer(GL_ARRAY_BUFFER, boneVboID);
-    glBufferData(GL_ARRAY_BUFFER,
-            sizeof(vertexBoneData_.boneData[0]) * vertexBoneData_.boneData.size(),
-            &vertexBoneData_.boneData[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(getBoneIndicesLoc());
-    glVertexAttribIPointer(getBoneIndicesLoc(), 4, GL_INT, sizeof(VertexBoneData::BoneData), (const GLvoid*) 0);
-
-    // BoneWeight
-    glEnableVertexAttribArray(getBoneWeightsLoc());
-    glVertexAttribPointer(getBoneWeightsLoc(), 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData::BoneData),
-            (const GLvoid*) (sizeof(VertexBoneData::BoneData::ids)));
-
-    boneVboID_ = boneVboID;
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void Mesh::add_dirty_flag(const std::shared_ptr<bool>& dirty_flag) {
-    dirty_flags_.insert(dirty_flag);
-}
-
-void Mesh::dirty() {
-    dirtyImpl(dirty_flags_);
-}
-
-}

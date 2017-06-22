@@ -685,7 +685,7 @@ public abstract class Threads {
      * Miscellaneous thread utilities
      */
 
-    /** Shorthand for <code>Thread.currentThread().getId()</code> */
+    /** Shorthand for <code>Thread.currentThread().id()</code> */
     public static long threadId() {
         return Thread.currentThread().getId();
     }

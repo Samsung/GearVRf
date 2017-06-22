@@ -27,6 +27,8 @@ namespace gvr {
     static const long long COMPONENT_TYPE_TEXTURE_CAPTURER   = 10009;
     static const long long COMPONENT_TYPE_PHYSICS_RIGID_BODY = 10010;
     static const long long COMPONENT_TYPE_PHYSICS_WORLD      = 10011;
+    static const long long COMPONENT_TYPE_RENDER_TARGET      = 10012;
+
 }
 
 #endif

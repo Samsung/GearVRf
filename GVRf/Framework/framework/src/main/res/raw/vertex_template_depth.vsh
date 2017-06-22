@@ -1,30 +1,30 @@
-uniform mat4 u_bone_matrix[60];
-uniform mat4 u_model;
+
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+
 uniform mat4 shadow_matrix;
+
 #ifdef HAS_MULTIVIEW
 #extension GL_OVR_multiview2 : enable
 layout(num_views = 2) in;
-uniform mat4 u_mvp_[2];
-uniform mat4 u_view_[2];
-uniform mat4 u_mv_it_[2];
-#else
-uniform mat4 u_mvp;
-uniform mat4 u_view;
-uniform mat4 u_mv_it;
 #endif
 
+@MATRIX_UNIFORMS
 
-in vec3 a_position;
-in vec4 a_bone_weights;
-in ivec4 a_bone_indices;
-out vec4 local_position;
-out vec4 proj_position;
+layout (std140) uniform Bones_ubo
+{
+    mat4 u_bone_matrix[60];
+};
+
+layout(location = 0) in vec3 a_position;
+layout(location = 0) out vec4 proj_position;
 struct Vertex
 {
 	vec4 local_position;
 };
 
-void main() {
+void main()
+{
 	Vertex vertex;
 
 	vertex.local_position = vec4(a_position.xyz, 1.0);

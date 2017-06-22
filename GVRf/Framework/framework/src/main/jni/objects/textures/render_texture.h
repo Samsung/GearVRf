@@ -21,95 +21,69 @@
 #ifndef RENDER_TEXTURE_H_
 #define RENDER_TEXTURE_H_
 
-#include "gl/gl_render_buffer.h"
-#include "gl/gl_frame_buffer.h"
 #include "util/gvr_parameters.h"
-#include "objects/textures/base_texture.h"
-#include "util/gvr_gl.h"
+#include "objects/textures/texture.h"
 
 namespace gvr {
-
-class RenderTexture: public Texture {
+class Renderer;
+class RenderTexture : public Texture
+{
 public:
-    explicit RenderTexture(int width, int height);
-    explicit RenderTexture(int width, int height, int sample_count);
-    explicit RenderTexture(int width, int height, int sample_count,
-            int jcolor_format, int jdepth_format, bool resolve_depth,
-            int* texture_parameters);
+    explicit RenderTexture(int sample_count = 0)
+            : Texture(TextureType::TEXTURE_2D),
+              mSampleCount(sample_count),
+              mUseStencil(false),
+              mBackColor{ 0, 0, 0, 1.0f},
+              readback_started_(false)
+    { }
 
-    virtual ~RenderTexture() {
-        delete renderTexture_gl_render_buffer_;
-        delete renderTexture_gl_frame_buffer_;
-        delete renderTexture_gl_color_buffer_;
-        delete renderTexture_gl_resolve_buffer_;
-
-        if (0 != renderTexture_gl_pbo_) {
-            glDeleteBuffers(1, &renderTexture_gl_pbo_);
-        }
+    RenderTexture(Image* image)
+    : Texture(image->getType()),
+      mSampleCount(1),
+      mUseStencil(false),
+      mBackColor{ 0, 0, 0, 1.0f},
+      readback_started_(false)
+    {
+        setImage(image);
     }
 
-    void initialize(int width, int height) {
-        glGenBuffers(1, &renderTexture_gl_pbo_);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, renderTexture_gl_pbo_);
-        glBufferData(GL_PIXEL_PACK_BUFFER, width_ * height_ * 4, 0, GL_DYNAMIC_READ);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-        readback_started_ = false;
-    }
-
-    GLenum getTarget() const {
-        return TARGET;
-    }
-
-    GLuint getFrameBufferId() const {
-        return renderTexture_gl_frame_buffer_->id();
-    }
-
-    void bind() {
-        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
-    }
-
-    int width() const {
-        return width_;
-    }
-
-    int height() const {
-        return height_;
-    }
-
-    void beginRendering();
-    void endRendering();
+    virtual ~RenderTexture() { }
+    virtual int width() const { mImage->getWidth(); }
+    virtual int height() const { return mImage->getHeight(); }
+    virtual unsigned int getFrameBufferId() const = 0;
+    virtual void bind() = 0;
+    virtual void beginRendering(Renderer*) = 0;
+    virtual void endRendering(Renderer*) = 0;
 
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.
-    void startReadBack();
+    virtual void startReadBack() = 0;
 
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
-    bool readRenderResult(uint32_t *readback_buffer, long capacity);
+    virtual bool readRenderResult(unsigned int *readback_buffer, long capacity) = 0;
 
+    void useStencil(bool useFlag) { mUseStencil = useFlag; }
+    void setBackgroundColor(float r, float g, float b, float a)
+    {
+        mBackColor[0] = r;
+        mBackColor[1] = g;
+        mBackColor[2] = b;
+        mBackColor[3] = a;
+
+    }
 private:
-    RenderTexture(const RenderTexture& render_texture);
-    RenderTexture(RenderTexture&& render_texture);
-    RenderTexture& operator=(const RenderTexture& render_texture);
-    RenderTexture& operator=(RenderTexture&& render_texture);
-    void generateRenderTextureNoMultiSampling(int jdepth_format,GLenum depth_format, int width, int height);
-    void generateRenderTextureEXT(int sample_count,int jdepth_format,GLenum depth_format, int width, int height);
-    void generateRenderTexture(int sample_count, int jdepth_format, GLenum depth_format, int width,
-            int height, int jcolor_format);
-    void invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer);
-private:
-    static const GLenum TARGET = GL_TEXTURE_2D;
-    int width_;
-    int height_;
-    int sample_count_;
-    GLenum texture_filter;
-    GLRenderBuffer* renderTexture_gl_render_buffer_ = nullptr;// This is actually depth buffer.
-    GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
-    GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;
-    GLRenderBuffer* renderTexture_gl_color_buffer_ = nullptr;// This is only for multisampling case
-                                     // when resolveDepth is on.
-    GLuint renderTexture_gl_pbo_ = 0;
-    bool readback_started_;          // set by startReadBack()
-};}
+    RenderTexture(const RenderTexture&);
+    RenderTexture(RenderTexture&&);
+    RenderTexture& operator=(const RenderTexture&);
+    RenderTexture& operator=(RenderTexture&&);
+
+protected:
+    float   mBackColor[4];
+    bool    mUseStencil;
+    int     mSampleCount;
+    bool    readback_started_;  // set by startReadBack()
+};
+
+}
 #endif

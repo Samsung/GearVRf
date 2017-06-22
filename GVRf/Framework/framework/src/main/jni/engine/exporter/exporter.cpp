@@ -79,41 +79,37 @@ void gvr2aiNode(SceneObject &gvrobj, aiNode &ainode, int i) {
 
 /* Converts the GVRMesh to aiMesh */
 void gvr2aiMesh(Mesh &gvrmesh, aiMesh &aimesh) {
-    const auto &vertices = gvrmesh.vertices();
-    const auto &normals = gvrmesh.normals();
-    const auto &uvs = gvrmesh.getVec2Vector("a_texcoord");
+    int nverts = gvrmesh.getVertexCount();
+    float* verts = static_cast<float*>(&(aimesh.mVertices[0].x));
+    float* norms = static_cast<float*>(&(aimesh.mNormals[0].x));
 
     aimesh.mMaterialIndex = 0;
-    aimesh.mVertices = new aiVector3D[vertices.size()];
-    aimesh.mNormals = new aiVector3D[vertices.size()];
-    aimesh.mNumVertices = vertices.size();
-
-    aimesh.mTextureCoords[0] = new aiVector3D[vertices.size()];
-    aimesh.mNumUVComponents[0] = vertices.size();
-
-    int j;
-    for (j = 0; j < aimesh.mNumVertices; j++) {
-        aimesh.mNormals[j] = aiVector3D(normals[j].x, normals[j].y, normals[j].z);
-        aimesh.mVertices[j] = aiVector3D(vertices[j].x, vertices[j].y, vertices[j].z);
-        aimesh.mTextureCoords[0][j] = aiVector3D(uvs[j].x, uvs[j].y, 0);
-    }
-
-    const auto &indices = gvrmesh.indices();
-
-    aimesh.mNumFaces = (unsigned int)(indices.size() / 3);
+    aimesh.mVertices = new aiVector3D[nverts];
+    aimesh.mNormals = new aiVector3D[nverts];
+    aimesh.mNumVertices = nverts;
+    aimesh.mTextureCoords[0] = new aiVector3D[nverts];
+    aimesh.mNumUVComponents[0] = nverts;
+    gvrmesh.getVertices(verts, nverts * 3);
+    gvrmesh.getNormals(norms, nverts * 3);
+    gvrmesh.forAllVertices("a_texcoord", [aimesh](int iter, const float* uvs)
+    {
+        aimesh.mTextureCoords[0][iter] = aiVector3D(uvs[0], uvs[1], 0);
+    });
+    int nIndices = gvrmesh.getIndexCount();
+    aimesh.mNumFaces = (unsigned int)(nIndices / 3);
     aimesh.mFaces = new aiFace[aimesh.mNumFaces];
-
-    j = 0;
-    for (int i = 0; i < aimesh.mNumFaces; i++) {
-        aiFace &face = aimesh.mFaces[i];
-        face.mIndices = new unsigned int[3];
-        face.mNumIndices = 3;
-
-        face.mIndices[0] = indices[j + 2];
-        face.mIndices[1] = indices[j + 1];
-        face.mIndices[2] = indices[j];
-        j = j + 3;
-    }
+        gvrmesh.forAllIndices([aimesh](int iter, int index)
+                              {
+                                  int faceIndex = iter / 3;
+                                  aiFace &face = aimesh.mFaces[faceIndex];
+                                  if (face.mIndices == NULL)
+                                  {
+                                      face.mIndices = new unsigned int[3];
+                                      face.mNumIndices = 3;
+                                  }
+                                  face.mIndices[iter % 3] = index;
+                              }
+        );
 }
 
 /* Converts the given GVRScene to aiScene */

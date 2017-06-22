@@ -26,7 +26,16 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjnlua.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE    := jav8
+LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjav8.so
+include $(PREBUILT_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_STATIC_LIBRARIES := shaderc
+
+include $(CLEAR_VARS)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
@@ -36,10 +45,10 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include/Compiler
 
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/jassimp2
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/jassimp
 # Uncomment for logs
 # LOCAL_CFLAGS += -DANDROID -DJNI_LOG
-FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/jassimp2/*.cpp)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/contrib/jassimp/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib
@@ -70,9 +79,9 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/engine/memory/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/gl/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/*.cpp)	
+FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
-FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/components/*.cpp)	
+FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/components/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 FILE_LIST := $(wildcard $(LOCAL_PATH)/objects/textures/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
@@ -89,6 +98,8 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += assimp
 LOCAL_SHARED_LIBRARIES += jnlua
+LOCAL_SHARED_LIBRARIES += jav8
+LOCAL_STATIC_LIBRARIES += shaderc
 
 ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
 LOCAL_ARM_NEON  := true
@@ -109,3 +120,4 @@ LOCAL_CFLAGS := -Wattributes
 LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 
 include $(BUILD_SHARED_LIBRARY)
+$(call import-module, third_party/shaderc)

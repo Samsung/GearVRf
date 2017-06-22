@@ -146,6 +146,14 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
         return mEventReceiver;
     }
 
+    /**
+     * Handle back key press
+     * @return true if handled by the app
+     */
+    public boolean onBackPress() {
+        return false;
+    }
+
     /*
      * Splash screen support: methods to call or overload to change the default
      * splash screen behavior
@@ -254,7 +262,9 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
         Bitmap bitmap = BitmapFactory.decodeResource( //
                 gvrContext.getContext().getResources(), //
                 R.drawable.__default_splash_screen__);
-        return new GVRBitmapTexture(gvrContext, bitmap);
+        GVRTexture tex = new GVRTexture(gvrContext);
+        tex.setImage(new GVRBitmapTexture(gvrContext, bitmap));
+        return tex;
     }
 
     /**
@@ -286,7 +296,7 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
      *
      * @since 1.6.4
      */
-    public GVRMaterialShaderId getSplashShader(GVRContext gvrContext) {
+    public GVRShaderId getSplashShader(GVRContext gvrContext) {
         return GVRMaterial.GVRShaderType.Texture.ID;
     }
 

@@ -74,7 +74,7 @@ public class GVRScriptManager {
         sBuiltinTargetMap.put(TARGET_GVRMAIN, new TargetResolver() {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
-                    String name) {
+                                         String name) {
                 return gvrContext.getActivity().getMain();
             }
         });
@@ -83,7 +83,7 @@ public class GVRScriptManager {
         sBuiltinTargetMap.put(TARGET_GVRACTIVITY, new TargetResolver() {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
-                    String name) {
+                                         String name) {
                 return gvrContext.getActivity();
             }
         });
@@ -157,7 +157,7 @@ public class GVRScriptManager {
 
     /**
      * Add a variable to the scripting context.
-     * 
+     *
      * @param varName The variable name.
      * @param value The variable value.
      */
@@ -266,7 +266,7 @@ public class GVRScriptManager {
 
                 @Override
                 public void onInit(GVRContext gvrContext) throws Throwable {
-                    mainScene = gvrContext.getNextMainScene();
+                    mainScene = gvrContext.getMainScene();
                 }
 
                 @Override

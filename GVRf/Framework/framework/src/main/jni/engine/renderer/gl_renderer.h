@@ -40,24 +40,31 @@
 #include "gl/gl_program.h"
 #include <unordered_map>
 #include "renderer.h"
+#include "gl/gl_uniform_block.h"
 
 typedef unsigned long Long;
 namespace gvr {
 class Camera;
 class Scene;
 class SceneObject;
-class PostEffectData;
-class PostEffectShaderManager;
+class ShaderData;
+class RenderTexture;
 class RenderData;
 class RenderTexture;
-class ShaderManager;
 class Light;
 
 class GLRenderer: public Renderer {
     friend class Renderer;
 protected:
-    GLRenderer(){}
-    virtual ~GLRenderer(){}
+    GLRenderer();
+
+    virtual ~GLRenderer()
+    {
+        if(transform_ubo_)
+            delete transform_ubo_;
+        transform_ubo_ = NULL;
+    }
+
 public:
     // pure virtual
      void renderCamera(Scene* scene, Camera* camera,
@@ -74,9 +81,15 @@ public:
 
     void restoreRenderStates(RenderData* render_data);
     void setRenderStates(RenderData* render_data, RenderState& rstate);
-    void renderShadowMap(RenderState& rstate, Camera* camera, GLuint framebufferId, std::vector<SceneObject*>& scene_objects);
-    void makeShadowMaps(Scene* scene, ShaderManager* shader_manager, int width, int height);
+    Texture* createSharedTexture(int id);
+    virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
+    virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount);
 
+    virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
+                        ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
+                        RenderTexture* post_effect_render_texture_a,
+                        RenderTexture* post_effect_render_texture_b);
+    void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
 
     // Specific to GL
      void renderCamera(Scene* scene, Camera* camera, int framebufferId,
@@ -93,19 +106,34 @@ public:
             RenderTexture* post_effect_render_texture_b);
 
      void set_face_culling(int cull_face);
+    virtual RenderPass* createRenderPass();
+    virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc);
+    virtual RenderData* createRenderData();
+    virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name);
+    virtual Image* createImage(int type, int format);
+    virtual Texture* createTexture(int target = GL_TEXTURE_2D);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const TextureParameters* texture_parameters);
+    virtual Shader* createShader(int id, const char* signature,
+                                 const char* uniformDescriptor, const char* textureDescriptor,
+                                 const char* vertexDescriptor, const char* vertexShader,
+                                 const char* fragmentShader);
+    GLUniformBlock* getTransformUbo() { return transform_ubo_; }
 
 private:
-    // this is specific to GL
-    bool checkTextureReady(Material* material);
-
-    // Pure Virtual
+    void updateLights(RenderState &rstate, Shader* shader, int texIndex);
     virtual void renderMesh(RenderState& rstate, RenderData* render_data);
-    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material) ;
-    void occlusion_cull(Scene* scene,
-                    std::vector<SceneObject*>& scene_objects,
-                    ShaderManager *shader_manager, glm::mat4 vp_matrix);
+    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
+    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader);
+    void occlusion_cull(RenderState& rstate,
+                    std::vector<SceneObject*>& scene_objects);
+    void clearBuffers(const Camera& camera) const;
 
+    GLUniformBlock* transform_ubo_;
 };
+
 }
 #endif
 

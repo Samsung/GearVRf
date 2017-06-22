@@ -123,16 +123,15 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      *            whether the triangles and normals should be facing in or
      *            facing out.
      * 
-     * @param futureTexture
-     *            the texture for the sphere. {@code Future<GVRTexture>} is used
-     *            here for asynchronously loading the texture.
+     * @param texture
+     *            the texture for the sphere.
      */
     public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut,
-            Future<GVRTexture> futureTexture) {
+            GVRTexture texture) {
         super(gvrContext);
 
         GVRMaterial material = new GVRMaterial(gvrContext);
-        material.setMainTexture(futureTexture);
+        material.setMainTexture(texture);
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
                 material);
     }
@@ -159,15 +158,14 @@ public class GVRSphereSceneObject extends GVRSceneObject {
      *            whether the triangles and normals should be facing in or
      *            facing out.
      * 
-     * @param futureTexture
-     *            the texture for the sphere. {@code Future<GVRTexture>} is used
-     *            here for asynchronously loading the texture.
+     * @param texture
+     *            the texture for the sphere.
      */
-    public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber, boolean facingOut, Future<GVRTexture> futureTexture) {
+    public GVRSphereSceneObject(GVRContext gvrContext, int stackNumber, int sliceNumber, boolean facingOut, GVRTexture texture) {
         super(gvrContext);
 
         GVRMaterial material = new GVRMaterial(gvrContext);
-        material.setMainTexture(futureTexture);
+        material.setMainTexture(texture);
         generateSphereObject(gvrContext, stackNumber, sliceNumber, facingOut, material);
     }
 
@@ -314,16 +312,15 @@ public class GVRSphereSceneObject extends GVRSceneObject {
             int sliceNumber, boolean facingOut, GVRMaterial material) {
         generateSphere(stackNumber, sliceNumber, facingOut);
 
-        GVRMesh mesh = new GVRMesh(gvrContext);
+        GVRMesh mesh = new GVRMesh(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal");
         mesh.setVertices(vertices);
         mesh.setNormals(normals);
         mesh.setTexCoords(texCoords);
         mesh.setTriangles(indices);
 
-        GVRRenderData renderData = new GVRRenderData(gvrContext);
-        attachRenderData(renderData);
+        GVRRenderData renderData = new GVRRenderData(gvrContext, material);
+        attachComponent(renderData);
         renderData.setMesh(mesh);
-        renderData.setMaterial(material);
     }
 
     private void generateSphere(int stackNumber, int sliceNumber,
@@ -634,9 +631,8 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
         // attached an empty renderData for parent object, so that we can set
         // some common properties
-        GVRRenderData renderData = new GVRRenderData(gvrContext);
-        renderData.setMaterial(material);
-        attachRenderData(renderData);
+        GVRRenderData renderData = new GVRRenderData(gvrContext, material);
+        attachComponent(renderData);
     }
 
     private void createComplexCap(GVRContext gvrContext, int stackNumber,
@@ -765,14 +761,12 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
             sliceCounter++;
             if (sliceCounter == slicePerSegment) {
-                GVRMesh mesh = new GVRMesh(gvrContext);
+                GVRMesh mesh = new GVRMesh(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal");
                 mesh.setVertices(vertices);
                 mesh.setNormals(normals);
                 mesh.setTexCoords(texCoords);
                 mesh.setTriangles(indices);
-                GVRSceneObject childObject = new GVRSceneObject(gvrContext,
-                        mesh);
-                childObject.getRenderData().setMaterial(material);
+                GVRSceneObject childObject = new GVRSceneObject(gvrContext, mesh, material);
                 addChildObject(childObject);
 
                 sliceCounter = 0;
@@ -958,7 +952,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                     }
                 }
 
-                GVRMesh mesh = new GVRMesh(gvrContext);
+                GVRMesh mesh = new GVRMesh(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal");
                 mesh.setVertices(vertices);
                 mesh.setNormals(normals);
                 mesh.setTexCoords(texCoords);

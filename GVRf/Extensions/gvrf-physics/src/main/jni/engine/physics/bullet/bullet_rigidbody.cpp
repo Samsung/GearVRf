@@ -42,7 +42,7 @@ void BulletRigidBody::onAttach() {
     }
 
     mConstructionInfo.m_collisionShape = convertCollider2CollisionShape(
-            owner_object()->collider());
+            static_cast<Collider*>(owner_object()->getComponent(COMPONENT_TYPE_COLLIDER)));
 
     if (isDynamic) {
         mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),

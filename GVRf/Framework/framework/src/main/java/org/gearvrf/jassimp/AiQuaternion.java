@@ -11,16 +11,16 @@ Redistribution and use of this software in source and binary forms,
 with or without modification, are permitted provided that the following 
 conditions are met:
 
- * Redistributions of source code must retain the above
+* Redistributions of source code must retain the above
   copyright notice, this list of conditions and the
   following disclaimer.
 
- * Redistributions in binary form must reproduce the above
+* Redistributions in binary form must reproduce the above
   copyright notice, this list of conditions and the
   following disclaimer in the documentation and/or other
   materials provided with the distribution.
 
- * Neither the name of the assimp team, nor the names of its
+* Neither the name of the assimp team, nor the names of its
   contributors may be used to endorse or promote products
   derived from this software without specific prior
   written permission of the assimp team.
@@ -37,14 +37,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
- */
+*/
 package org.gearvrf.jassimp;
 
 import java.nio.ByteBuffer;
 
+
 /**
- * Wrapper for a quaternion.
- * <p>
+ * Wrapper for a quaternion.<p>
  * 
  * The wrapper is writable, i.e., changes performed via the set-methods will
  * modify the underlying mesh/animation.
@@ -53,20 +53,19 @@ public final class AiQuaternion {
     /**
      * Constructor.
      * 
-     * @param buffer
-     *            the buffer to wrap
-     * @param offset
-     *            offset into buffer
+     * @param buffer the buffer to wrap
+     * @param offset offset into buffer
      */
     public AiQuaternion(ByteBuffer buffer, int offset) {
         if (null == buffer) {
             throw new IllegalArgumentException("buffer may not be null");
         }
-
+        
         m_buffer = buffer;
         m_offset = offset;
     }
-
+    
+    
     /**
      * Returns the x value.
      * 
@@ -75,7 +74,8 @@ public final class AiQuaternion {
     public float getX() {
         return m_buffer.getFloat(m_offset + 4);
     }
-
+    
+    
     /**
      * Returns the y value.
      * 
@@ -84,7 +84,8 @@ public final class AiQuaternion {
     public float getY() {
         return m_buffer.getFloat(m_offset + 8);
     }
-
+    
+    
     /**
      * Returns the z value.
      * 
@@ -93,7 +94,8 @@ public final class AiQuaternion {
     public float getZ() {
         return m_buffer.getFloat(m_offset + 12);
     }
-
+    
+    
     /**
      * Returns the w value.
      * 
@@ -102,58 +104,61 @@ public final class AiQuaternion {
     public float getW() {
         return m_buffer.getFloat(m_offset);
     }
-
+    
+    
     /**
      * Sets the x component.
      * 
-     * @param x
-     *            the new value
+     * @param x the new value
      */
     public void setX(float x) {
         m_buffer.putFloat(m_offset + 4, x);
     }
-
+    
+    
     /**
      * Sets the y component.
      * 
-     * @param y
-     *            the new value
+     * @param y the new value
      */
     public void setY(float y) {
         m_buffer.putFloat(m_offset + 8, y);
     }
-
+    
+    
     /**
      * Sets the z component.
      * 
-     * @param z
-     *            the new value
+     * @param z the new value
      */
     public void setZ(float z) {
         m_buffer.putFloat(m_offset + 12, z);
     }
-
+    
+    
     /**
      * Sets the z component.
      * 
-     * @param w
-     *            the new value
+     * @param w the new value
      */
     public void setW(float w) {
         m_buffer.putFloat(m_offset, w);
     }
-
+    
+    
     @Override
     public String toString() {
-        return "[" + getX() + ", " + getY() + ", " + getZ() + ", " + getW()
-                + "]";
+        return "[" + getX() + ", " + getY() + ", " + getZ() + ", " + 
+                getW() + "]";
     }
-
+    
+    
     /**
      * Wrapped buffer.
      */
     private final ByteBuffer m_buffer;
-
+    
+    
     /**
      * Offset into m_buffer.
      */

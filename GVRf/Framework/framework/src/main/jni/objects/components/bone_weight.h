@@ -5,7 +5,8 @@
 #ifndef BONE_WEIGHT_H_
 #define BONE_WEIGHT_H_
 
-#include "objects/components/component.h"
+#include "component.h"
+#include "component.inl"
 
 namespace gvr {
 class BoneWeight: public Component {

@@ -21,7 +21,7 @@ import org.gearvrf.utility.TextFile;
 /**
 * Manages a set of variants on vertex and fragment shaders from the same source
 * code.
-*/
+ */
 public class GVRDepthShader extends GVRShaderTemplate
 {
     private static String fragTemplate = null;
@@ -30,8 +30,9 @@ public class GVRDepthShader extends GVRShaderTemplate
 
     public GVRDepthShader(GVRContext gvrcontext)
     {
-        super("", 300);
-        if (fragTemplate == null) {
+        super("", "", "float3 a_position float3 a_normal float4 a_bone_weights int4 a_bone_indices", 400);
+        if (fragTemplate == null)
+        {
             Context context = gvrcontext.getContext();
             fragTemplate = TextFile.readTextFile(context, R.raw.depth_shader);
             vtxTemplate = TextFile.readTextFile(context, R.raw.vertex_template_depth);

@@ -52,7 +52,10 @@ public class GVRAndroidResource {
         NEW, OPEN, CLOSED
     }
 
-    private enum ResourceType {
+    /**
+     * Designates the type of volume this resource comes from.
+     */
+    public enum ResourceType {
         ANDROID_ASSETS, ANDROID_RESOURCE, LINUX_FILESYSTEM, NETWORK, INPUT_STREAM
     }
 
@@ -60,7 +63,7 @@ public class GVRAndroidResource {
      * Instance members
      */
 
-    private InputStream stream = null;
+    private InputStream stream;
     private StreamStates streamState;
 
     // Save parameters, for hashCode() and equals()
@@ -72,7 +75,7 @@ public class GVRAndroidResource {
     private final URL url;
     private boolean enableUrlLocalCache = false;
     
-    private Context context = null;
+    private Context context;
     private ResourceType resourceType;
     private String inputStreamName;
 
@@ -130,7 +133,7 @@ public class GVRAndroidResource {
      *            A {@code R.raw} or {@code R.drawable} id
      */
     public GVRAndroidResource(Context context, int resourceId) {
-        this.context = context;
+        this.context = context.getApplicationContext();
         Resources resources = context.getResources();
         streamState = StreamStates.NEW;
 
@@ -172,7 +175,7 @@ public class GVRAndroidResource {
      *            {@code assets/foo/bar.png}
      */
     public GVRAndroidResource(Context context, String assetRelativeFilename) {
-        this.context = context;    
+        this.context = context.getApplicationContext();
         streamState = StreamStates.NEW;
 
         filePath = null;
@@ -213,6 +216,22 @@ public class GVRAndroidResource {
         resourceFilePath = null;
         url = null;
         resourceType = ResourceType.INPUT_STREAM;
+    }
+
+    /**
+     * Gets the type of volume this resource resides on.
+     * <ul>
+     * <li>ANDROID_ASSETS  resource is a file in the "assets" directory of the application.</li>
+     * <li>ANDROID_RESOURCE  resource is referenced by resource ID.</li>
+     * <li>LINUX_FILESYSTEM  resource is on the SD card of the device.</li>
+     * <li>NETWORK  resource is a URL on the network.</li>
+     * <li>INPUT_STREAM  resource is from an input stream.</li>
+     * </ul>
+     * @return GVRAndroidResource.ResourceType giving type of resource
+     */
+    ResourceType getResourceType()
+    {
+        return resourceType;
     }
 
     /*
@@ -308,7 +327,7 @@ public class GVRAndroidResource {
      */
     public synchronized final void closeStream() {
         try {
-            if (streamState == StreamStates.OPEN) {
+            if ((stream != null) && (streamState == StreamStates.OPEN)) {
                 stream.close();
                 stream = null;
             }
@@ -515,9 +534,8 @@ public class GVRAndroidResource {
      */
     @Override
     public String toString() {
-        return String.format("%s{filePath=%s; resourceId=%x; assetPath=%s, url=%s, " +
-                "inputStreamName=%s}",streamState, filePath, resourceId, assetPath, url,
-                inputStreamName);
+        return String.format("%s { %s %x %s }",
+                             streamState, getResourceFilename(), resourceId, inputStreamName);
     }
 
     /*
@@ -618,7 +636,7 @@ public class GVRAndroidResource {
      * 
      * @since 1.6.7
      */
-    public interface TextureCallback extends CancelableCallback<GVRTexture> {
+    public interface TextureCallback extends CancelableCallback<GVRImage> {
     }
 
     /** Callback for asynchronous mesh loads */

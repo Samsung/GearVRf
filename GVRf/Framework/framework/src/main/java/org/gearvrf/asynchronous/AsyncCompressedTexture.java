@@ -18,6 +18,7 @@ package org.gearvrf.asynchronous;
 import java.io.IOException;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRCompressedTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;

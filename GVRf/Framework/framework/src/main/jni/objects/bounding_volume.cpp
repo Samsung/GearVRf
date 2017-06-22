@@ -161,6 +161,8 @@ void BoundingVolume::transform(const BoundingVolume &in_volume, glm::mat4 matrix
 
     expand(glm::vec3(bb_min.x, bb_min.y, bb_min.z));
     expand(glm::vec3(bb_max.x, bb_max.y, bb_max.z));
+
+    updateCenterAndRadius();
 }
 
 bool BoundingVolume::intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const

@@ -28,6 +28,9 @@ public:
     HybridObject() {
     }
 
+    /**
+     * The dtor is always called on the drawing thread
+     */
     virtual ~HybridObject() {
     }
 };

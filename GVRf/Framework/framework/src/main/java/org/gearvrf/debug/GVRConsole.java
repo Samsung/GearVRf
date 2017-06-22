@@ -17,19 +17,17 @@ package org.gearvrf.debug;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCustomPostEffectShaderId;
-import org.gearvrf.GVRPostEffect;
-import org.gearvrf.GVRPostEffectMap;
-import org.gearvrf.GVRPostEffectShaderId;
-import org.gearvrf.GVRPostEffectShaderManager;
+import org.gearvrf.GVRImage;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRShader;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderId;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.R;
 
 import android.graphics.Bitmap;
@@ -37,6 +35,8 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+
+import org.gearvrf.utility.TextFile;
 
 /**
  * A debugging console for VR apps.
@@ -59,7 +59,29 @@ import android.graphics.Paint;
  * <li>Does not support Java escape characters like \n or \t.
  * </ul>
  */
-public class GVRConsole extends GVRPostEffect {
+public class GVRConsole extends GVRShaderData
+{
+
+    public static class ConsoleShader extends GVRShader
+    {
+        static private String vertexShader;
+        static private String fragmentShader;
+
+        public ConsoleShader(GVRContext ctx)
+        {
+            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord",300);
+            if (vertexShader == null)
+            {
+                vertexShader = TextFile.readTextFile(ctx.getContext(), R.raw.posteffect_quad);
+            }
+            if (fragmentShader == null)
+            {
+                fragmentShader = TextFile.readTextFile(ctx.getContext(), R.raw.hud_console);
+            }
+            setSegment("FragmentTemplate", fragmentShader);
+            setSegment("VertexTemplate", vertexShader);
+        }
+    }
 
 //    private static final String TAG = Log.tag(GVRConsole.class);
 
@@ -97,7 +119,7 @@ public class GVRConsole extends GVRPostEffect {
     private Canvas canvas = new Canvas(HUD);
     private final Paint paint = new Paint();
     private final float defaultTextSize = paint.getTextSize();
-    private GVRBitmapTexture texture = null;
+    private GVRTexture texture = null;
     private float textXOffset = 0.0f;
     private float textYOffset = TOP_FUDGE;
     private int hudWidth = HUD_WIDTH;
@@ -370,39 +392,38 @@ public class GVRConsole extends GVRPostEffect {
 
     private void setMainTexture() {
 
-        Future<Boolean> textureUpdated = null;
-        if (texture != null) {
-            textureUpdated = texture.update(HUD);
+        Boolean textureUpdated = false;
+        if (texture == null)
+        {
+            texture = new GVRTexture(getGVRContext());
         }
-
-        try {
-            if (texture == null || (textureUpdated.get() != null && !textureUpdated.get())) {
-                texture = new GVRBitmapTexture(getGVRContext(), HUD);
-                setMainTexture(texture);
+        GVRImage image = texture.getImage();
+        if (image != null)
+        {
+            if (GVRBitmapTexture.class.isAssignableFrom(image.getClass()))
+            {
+                GVRBitmapTexture bmapImage = (GVRBitmapTexture) image;
+                bmapImage.setBitmap(HUD);
+                textureUpdated = true;
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
         }
-    }
+        if (!textureUpdated)
+        {
+            image = new GVRBitmapTexture(getGVRContext(), HUD);
+            texture.setImage(image);
+            setTexture("u_overlay", texture);
+        }
+     }
 
-    private static synchronized GVRPostEffectShaderId getShaderId(
-            GVRContext gvrContext) {
-        if (shaderId == null) {
-            GVRPostEffectShaderManager shaderManager = gvrContext
-                    .getPostEffectShaderManager();
-            shaderId = shaderManager.addShader(R.raw.posteffect_quad,
-                    R.raw.hud_console);
-
-            shaderMap = shaderManager.getShaderMap(shaderId);
-            shaderMap.addTextureKey("u_overlay", MAIN_TEXTURE);
+    private static synchronized GVRShaderId getShaderId(GVRContext gvrContext) {
+        if (shaderId == null)
+        {
+            shaderId = gvrContext.getMaterialShaderManager().getShaderType(ConsoleShader.class);
         }
         return shaderId;
     }
 
-    private static GVRCustomPostEffectShaderId shaderId;
-    private static GVRPostEffectMap shaderMap;
+    private static GVRShaderId shaderId;
 
     static {
         GVRContext.addResetOnRestartHandler(new Runnable() {
@@ -410,7 +431,6 @@ public class GVRConsole extends GVRPostEffect {
             @Override
             public void run() {
                 shaderId = null; // should be enough
-                shaderMap = null; // can't hurt
             }
         });
     }
@@ -424,3 +444,5 @@ public class GVRConsole extends GVRPostEffect {
      */
     private static final float TOP_FUDGE = 20;
 }
+
+

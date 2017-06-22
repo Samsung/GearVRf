@@ -2,18 +2,15 @@
  * installable external renderer
  ***************************************************************************/
 
+#include <contrib/glm/gtc/type_ptr.hpp>
 #include "external_renderer_shader.h"
 
 #include "glm/gtc/matrix_transform.hpp"
-#include "objects/material.h"
+#include "objects/shader_data.h"
 #include "objects/mesh.h"
 #include "objects/components/render_data.h"
 #include "objects/components/texture_capturer.h"
-#include "objects/textures/texture.h"
-#include "objects/textures/external_renderer_texture.h"
-#include "util/gvr_gl.h"
-#include "util/gvr_log.h"
-#include "engine/renderer/renderer.h"
+#include "objects/textures/external_image.h"
 
 static GVRF_ExternalRenderer externalRenderer = NULL;
 
@@ -23,31 +20,31 @@ void GVRF_installExternalRenderer(GVRF_ExternalRenderer fct) {
 
 namespace gvr {
 
-void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, Material* mtl_unused) {
+void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data, ShaderData* mtl_unused) {
     if (externalRenderer == NULL) {
         LOGE("External renderer not installed");
         return;
     }
 
-    Material* material = render_data->pass(0)->material();
+    ShaderData* material = render_data->pass(0)->material();
     if (material == NULL) {
         LOGE("No material");
         return;
     }
 
     Texture *texture = material->getTexture("main_texture");
-    if (texture->getTarget() != ExternalRendererTexture::TARGET) {
+    if (texture->getType() != Texture::TextureType::TEXTURE_EXTERNAL_RENDERER) {
         LOGE("External renderer only takes external renderer textures");
         return;
     }
-
+    ExternalImage* image = static_cast<ExternalImage*>(texture->getImage());
     Mesh* mesh = render_data->mesh();
     if (mesh == NULL) {
         LOGE("No mesh!?");
         return;
     }
 
-    if (mesh->vertices().empty()) {
+    if (mesh->getVertexCount() == 0) {
         LOGE("No vertices!?");
         return;
     }
@@ -73,28 +70,39 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
     glActiveTexture(GL_TEXTURE0);
 
     TextureCapturer *capturer(render_data->get_texture_capturer());
+    int index, offset, size;
+    int nverts = mesh->getVertexCount();
+    const VertexBuffer* vbuf = mesh->getVertexBuffer();
+    if (!vbuf->getInfo("a_texcoord", index, offset, size))
+    {
+        return;
+    }
+    const float* texcoords = vbuf->getVertexData() + (offset / sizeof(float));
     if (!capturer || !capturer->getAndClearPendingCapture()) {
         // Original rendering
-        externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
-                         scratchBuffer, 6,
-                         glm::value_ptr(rstate->uniforms.u_mvp), 16,
-                         glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,
-                         material->getFloat("opacity"));
+        float opacity = 1.0f;
+
+        material->getFloat("u_opacity", opacity);
+        if (vbuf->getInfo("a_texcoord", index, offset, size))
+        {
+            externalRenderer(image->getData(),
+                             scratchBuffer, 6, glm::value_ptr(rstate->uniforms.u_mvp), 16,
+                             texcoords, nverts * 2, opacity);
+        }
     } else {
         // Capture texture in RenderTexture
         capturer->beginCapture();
 
-        const std::vector<glm::vec3>& vertices(mesh->vertices());
-        if (!vertices.empty()) {
-            float halfWidth = fabs(vertices[0][0]);
-            float halfHeight = fabs(vertices[0][1]);
+        const float* vertices = vbuf->getVertexData();
+        if (nverts > 0) {
+            float halfWidth = fabs(vertices[0]);
+            float halfHeight = fabs(vertices[1]);
 
             glm::mat4 mvp = capturer->getMvpMatrix(halfWidth, halfHeight);
-            externalRenderer(reinterpret_cast<ExternalRendererTexture*>(texture)->getData(),
+            externalRenderer(image->getData(),
                     scratchBuffer, 6,
                     glm::value_ptr(mvp), 16,
-                    glm::value_ptr(*mesh->getVec2Vector("a_texcoord").data()), mesh->getVec2Vector("a_texcoord").size() * 2,
-                    1.0);
+                    texcoords, nverts * 2, 1.0f);
         }
 
         capturer->startReadBack();
@@ -107,7 +115,7 @@ void ExternalRendererShader::render(RenderState* rstate, RenderData* render_data
         capturer->callback(TCCB_NEW_CAPTURE, 0);
     }
 
-    checkGlError("ExternalRendererShader::render");
+    checkGLError("ExternalRendererShader::render");
 }
 
 }

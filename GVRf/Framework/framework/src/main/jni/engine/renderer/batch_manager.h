@@ -29,7 +29,7 @@
 #define BATCH_POOL_SIZE 150
 namespace gvr{
 class RenderData;
-class Material;
+class ShaderData;
 class Mesh;
 class Batch;
 struct RenderState;
@@ -52,6 +52,8 @@ private:
     }
     void getNewBatch(RenderData* rdata, Batch** existing_batch);
     void createBatch(int start, int end, std::vector<RenderData*>& render_data_vector);
+    void render_batch(const std::vector<glm::mat4>& model_matrix,
+              RenderData* render_data, unsigned int);
 
     std::vector<Batch*>batch_pool_;
     /*

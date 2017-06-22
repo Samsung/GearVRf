@@ -39,7 +39,8 @@ public class GVRTransform extends GVRComponent {
         super(gvrContext, NativeTransform.ctor());
         setOwnerObject(owner);
     }
-    
+
+
     private GVRTransform(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -87,8 +88,9 @@ public class GVRTransform extends GVRComponent {
      * @param z
      *            'Z' component of the absolute position.
      */
-    public void setPosition(float x, float y, float z) {
+    public GVRTransform setPosition(float x, float y, float z) {
         NativeTransform.setPosition(getNative(), x, y, z);
+        return this;
     }
 
     /**
@@ -99,8 +101,9 @@ public class GVRTransform extends GVRComponent {
      * @param x
      *            New 'X' component of the absolute position.
      */
-    public void setPositionX(float x) {
+    public GVRTransform setPositionX(float x) {
         NativeTransform.setPositionX(getNative(), x);
+        return this;
     }
 
     /**
@@ -111,8 +114,9 @@ public class GVRTransform extends GVRComponent {
      * @param y
      *            New 'Y' component of the absolute position.
      */
-    public void setPositionY(float y) {
+    public GVRTransform setPositionY(float y) {
         NativeTransform.setPositionY(getNative(), y);
+        return this;
     }
 
     /**
@@ -123,8 +127,9 @@ public class GVRTransform extends GVRComponent {
      * @param z
      *            New 'Z' component of the absolute position.
      */
-    public void setPositionZ(float z) {
+    public GVRTransform setPositionZ(float z) {
         NativeTransform.setPositionZ(getNative(), z);
+        return this;
     }
 
     /**
@@ -213,8 +218,9 @@ public class GVRTransform extends GVRComponent {
      * @param z
      *            'Z' component of the quaternion.
      */
-    public void setRotation(float w, float x, float y, float z) {
+    public GVRTransform setRotation(float w, float x, float y, float z) {
         NativeTransform.setRotation(getNative(), w, x, y, z);
+        return this;
     }
 
     /**
@@ -254,8 +260,9 @@ public class GVRTransform extends GVRComponent {
      * @param z
      *            Scaling factor on the 'Z' axis.
      */
-    public void setScale(float x, float y, float z) {
+    public GVRTransform setScale(float x, float y, float z) {
         NativeTransform.setScale(getNative(), x, y, z);
+        return this;
     }
 
     /**
@@ -264,8 +271,9 @@ public class GVRTransform extends GVRComponent {
      * @param x
      *            Scaling factor on the 'X' axis.
      */
-    public void setScaleX(float x) {
+    public GVRTransform setScaleX(float x) {
         NativeTransform.setScaleX(getNative(), x);
+        return this;
     }
 
     /**
@@ -274,8 +282,9 @@ public class GVRTransform extends GVRComponent {
      * @param y
      *            Scaling factor on the 'Y' axis.
      */
-    public void setScaleY(float y) {
+    public GVRTransform setScaleY(float y) {
         NativeTransform.setScaleY(getNative(), y);
+        return this;
     }
 
     /**
@@ -284,8 +293,9 @@ public class GVRTransform extends GVRComponent {
      * @param z
      *            Scaling factor on the 'Z' axis.
      */
-    public void setScaleZ(float z) {
+    public GVRTransform setScaleZ(float z) {
         NativeTransform.setScaleZ(getNative(), z);
+        return this;
     }
 
     /**
@@ -340,11 +350,12 @@ public class GVRTransform extends GVRComponent {
      *            An array of 16 {@code float}s representing a 4x4 matrix in
      *            OpenGL-compatible column-major format.
      */
-    public void setModelMatrix(float[] mat) {
+    public GVRTransform setModelMatrix(float[] mat) {
         if (mat.length != 16) {
             throw new IllegalArgumentException("Size not equal to 16.");
         }
         NativeTransform.setModelMatrix(getNative(), mat);
+        return this;
     }
 
     /**
@@ -355,8 +366,9 @@ public class GVRTransform extends GVRComponent {
      *            A {@code Matrix4f} representing a 4x4 matrix in
      *            OpenGL-compatible column-major format.
      */
-    public void setModelMatrix(Matrix4f mat) {
+    public GVRTransform setModelMatrix(Matrix4f mat) {
         setModelMatrix(mat.get(new float[16]));
+        return this;
     }
 
     /**
@@ -396,8 +408,9 @@ public class GVRTransform extends GVRComponent {
      * @param z
      *            'Z' component of the axis.
      */
-    public void setRotationByAxis(float angle, float x, float y, float z) {
+    public GVRTransform setRotationByAxis(float angle, float x, float y, float z) {
         NativeTransform.setRotationByAxis(getNative(), angle * TO_RADIANS, x, y, z);
+        return this;
     }
 
     /**

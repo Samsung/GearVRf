@@ -20,91 +20,140 @@
 #ifndef TEXTURE_H_
 #define TEXTURE_H_
 
-#include "gl/gl_texture.h"
-#include "objects/hybrid_object.h"
-#include "objects/gl_pending_task.h"
+#include "image.h"
+#include "util/gvr_jni.h"
+
+#define MAX_TEXTURE_PARAM_NUM 10
 
 namespace gvr {
+class Image;
 
-class Texture: public HybridObject, GLPendingTask {
+/*
+ * Packed representation of texture parameters.
+ * Integer values for filtering and wrapping are
+ * packed into a single byte. Maximum anisotropy,
+ * a floating point value, is separate.
+ * Texture parameters are supplied as an array
+ * of values on input and converted to this
+ * internal format.
+ */
+class TextureParameters
+{
 public:
-    virtual ~Texture() {
-        delete gl_texture_;
+    enum
+    {
+        CLAMP = 0,
+        REPEAT = 1,
+        MIRROR = 2,
+
+        NEAREST = 0,
+        LINEAR = 1,
+        NEAREST_MIPMAP_NEAREST = 2,
+        NEAREST_MIPMAP_LINEAR = 3,
+        LINEAR_MIPMAP_NEAREST = 4,
+        LINEAR_MIPMAP_LINEAR = 5,
+    };
+
+    TextureParameters() : MaxAnisotropy(1.0f)
+    {
+        Params.HashCode = 0;
+        Params.BitFields.MinFilter = LINEAR;
+        Params.BitFields.MagFilter = LINEAR;
+        Params.BitFields.WrapU = CLAMP;
+        Params.BitFields.WrapV = CLAMP;
     }
 
-    // Should be called in GL context.
-    virtual GLuint getId() {
-        if (gl_texture_ == 0) {
-            // must be recycled already. The caller will handle error.
-            return 0;
-        }
-
-        // Before returning the ID makes sure nothing is pending
-        runPendingGL();
-
-        return gl_texture_->id();
+    TextureParameters(const int* params)
+    {
+        setMinFilter(params[0]);
+        setMagFilter(params[1]);
+        setMaxAnisotropy((float) params[2]);
+        setWrapU(params[3]);
+        setWrapV(params[4]);
     }
 
-    virtual void updateTextureParameters(int* texture_parameters) {
-        // Sets the new MIN FILTER
-        GLenum min_filter_type_ = texture_parameters[0];
-
-        // Sets the MAG FILTER
-        GLenum mag_filter_type_ = texture_parameters[1];
-
-        // Sets the wrap parameter for texture coordinate S
-        GLenum wrap_s_type_ = texture_parameters[3];
-
-        // Sets the wrap parameter for texture coordinate S
-        GLenum wrap_t_type_ = texture_parameters[4];
-
-        glBindTexture(target, getId());
-
-        // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
-        if (texture_parameters[2] > 1.0f) {
-            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, texture_parameters[2]);
-        }
-
-        glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
-        glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
-        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter_type_);
-        glBindTexture(target, 0);
+    TextureParameters& operator=(const int* params)
+    {
+        setMinFilter(params[0]);
+        setMagFilter(params[1]);
+        setMaxAnisotropy((float) params[2]);
+        setWrapU(params[3]);
+        setWrapV(params[4]);
     }
 
-    virtual GLenum getTarget() const = 0;
+    int getMinFilter() const { return Params.BitFields.MinFilter; }
+    int getMagFilter() const { return Params.BitFields.MagFilter; }
+    int getWrapU() const { return Params.BitFields.WrapU; }
+    int getWrapV() const { return Params.BitFields.WrapV; }
+    float getMaxAnisotropy() const { return MaxAnisotropy; }
+    unsigned char getHashCode() const { return Params.HashCode; }
+    void setMinFilter(int f) { Params.BitFields.MinFilter = f; }
+    void setMagFilter(int f) { Params.BitFields.MagFilter = f; }
+    void setWrapU(int wrap) { Params.BitFields.WrapU = wrap; }
+    void setWrapV(int wrap) { Params.BitFields.WrapV = wrap; }
+    void setMaxAnisotropy(float v) { MaxAnisotropy = v; }
 
-    virtual void runPendingGL() {
-        if (gl_texture_) {
-            gl_texture_->runPendingGL();
-        }
-    }
+protected:
+    union
+    {
+        struct
+        {
+            unsigned int MinFilter : 2;
+            unsigned int MagFilter : 2;
+            unsigned int WrapU : 2;
+            unsigned int WrapV : 2;
+        } BitFields;
+        unsigned char HashCode;
+    } Params;
+    float MaxAnisotropy;
+};
 
-    bool isReady() {
-        return ready;
-    }
+class Texture : public HybridObject
+{
+public:
+    /*
+     * Texture types correspond to different subclasses of Texture.
+     */
+    enum TextureType
+    {
+        TEXTURE_2D = 1,
+        TEXTURE_ARRAY,
+        TEXTURE_EXTERNAL,
+        TEXTURE_RENDER,
+        TEXTURE_EXTERNAL_RENDERER
+    };
 
-    void setReady(bool ready) {
-        this->ready = ready;
+
+    Texture(int type = TEXTURE_2D);
+    virtual ~Texture();
+    virtual void clearData(JNIEnv* env);
+    virtual void setImage(Image* image);
+    virtual void setImage(JNIEnv* env, jobject javaImage, Image* image);
+    void updateTextureParameters(const int* texture_parameters, int n);
+
+    int getType() const { return mType; }
+    Image*  getImage()  { return mImage; }
+    virtual int getId() { return mImage ? mImage->getId() : 0; }
+    virtual bool isReady();
+
+    const TextureParameters& getTexParams() const
+    {
+        return mTexParams;
     }
 
 protected:
-    Texture(GLTexture* gl_texture) : HybridObject() {
-        gl_texture_ = gl_texture;
-    }
-
-    GLTexture* gl_texture_;
-    bool gl_texture_bound_;
+    JavaVM* mJava;
+    jobject mJavaImage;
+    Image*  mImage;
+    int     mType;
+    bool    mTexParamsDirty;
+    TextureParameters   mTexParams;
 
 private:
     Texture(const Texture& texture);
     Texture(Texture&& texture);
     Texture& operator=(const Texture& texture);
     Texture& operator=(Texture&& texture);
-
-private:
-    static const GLenum target = GL_TEXTURE_2D;
-    bool ready = false;
 };
 
 }

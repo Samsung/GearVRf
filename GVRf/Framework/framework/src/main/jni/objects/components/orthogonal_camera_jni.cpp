@@ -91,7 +91,7 @@ Java_org_gearvrf_NativeOrthogonalCamera_setLeftClippingDistance(
         JNIEnv * env, jobject obj, jlong jorthogonal_camera, jfloat left) {
     OrthogonalCamera* orthogonal_camera =
             reinterpret_cast<OrthogonalCamera*>(jorthogonal_camera);
-    orthogonal_camera->set_near_clipping_distance(left);
+    orthogonal_camera->set_left_clipping_distance(left);
 }
 
 JNIEXPORT jfloat JNICALL

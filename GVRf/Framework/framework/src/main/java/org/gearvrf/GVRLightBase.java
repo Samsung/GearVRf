@@ -33,15 +33,11 @@ import java.util.regex.Pattern;
 
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.ImageUtils;
+import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
-
-import android.graphics.Bitmap;
-import android.os.Environment;
-import android.util.Log;
 
 /**
  * Base class for defining light sources.
@@ -65,26 +61,32 @@ import android.util.Log;
  * @see GVRRenderData#bindShader(GVRScene)
  * @see GVRLightBase#setCastShadow(boolean)
  */
-public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
+public class GVRLightBase extends GVRJavaComponent implements GVRDrawFrameListener
 {
-    protected Matrix4f lightrot;
-    protected Vector3f olddir;
-    protected Vector3f oldpos;
-    protected Vector3f newdir;
-    protected Vector3f newpos;
-    
+    protected Matrix4f mLightRot;
+    protected Vector3f mOldDir;
+    protected Vector3f mOldPos;
+    protected Vector3f mNewDir;
+    protected Vector3f mNewPos;
+    protected Quaternionf mDefaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
+    protected String mFragmentShaderSource = null;
+    protected String mVertexShaderSource = null;
+    protected String mUniformDescriptor = null;
+    protected String mVertexDescriptor = null;
+    protected boolean mCastShadow = false;
+
     public GVRLightBase(GVRContext gvrContext, GVRSceneObject parent)
     {
         super(gvrContext, NativeLight.ctor());
         setOwnerObject(parent);
-        uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
-        vertexDescriptor = null;
+        mUniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
+        mVertexDescriptor = null;
         setFloat("enabled", 1.0f);
-        lightrot = new Matrix4f();
-        newdir = new Vector3f(0.0f, 0.0f, -1.0f);
-        olddir = new Vector3f();
-        oldpos = new Vector3f();
-        newpos = new Vector3f();
+        mLightRot = new Matrix4f();
+        mNewDir = new Vector3f(0.0f, 0.0f, -1.0f);
+        mOldDir = new Vector3f();
+        mOldPos = new Vector3f();
+        mNewPos = new Vector3f();
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
@@ -92,18 +94,17 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
     public GVRLightBase(GVRContext gvrContext)
     {
         super(gvrContext, NativeLight.ctor());
-        uniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
-        vertexDescriptor = null;
-        lightrot = new Matrix4f();
-        olddir = new Vector3f();
-        oldpos = new Vector3f();
-        newpos = new Vector3f();
-        newdir = new Vector3f(0.0f, 0.0f, -1.0f);
+        mUniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
+        mVertexDescriptor = null;
+        mLightRot = new Matrix4f();
+        mOldDir = new Vector3f();
+        mOldPos = new Vector3f();
+        mNewPos = new Vector3f();
+        mNewDir = new Vector3f(0.0f, 0.0f, -1.0f);
         setFloat("enabled", 1.0f);
         setVec3("world_position", 0.0f, 0.0f, 0.0f);
         setVec3("world_direction", 0.0f, 0.0f, 1.0f);
     }
-
 
     static public long getComponentType() {
         return NativeLight.getComponentType();
@@ -131,28 +132,24 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public void setCastShadow(boolean enableFlag)
     {
-        GVRContext context = getGVRContext();
-
         if (enableFlag)
         {
-            GVRMaterial mtl = getShadowMaterial(context);
-            GVRShaderTemplate depthShader = context.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
-            depthShader.bindShader(context, mtl);
-            NativeLight.setCastShadow(getNative(), mtl.getNative());
+            throw new UnsupportedOperationException("This light cannot cast shadows");
         }
-        else
-        {
-            NativeLight.setCastShadow(getNative(), 0);            
-        }
-     }
-    
+    }
+
+    public void setShadowRange(float near, float far)
+    {
+        throw new UnsupportedOperationException("This light cannot cast shadows");
+    }
+
     /**
      * Determines if this light is currently casting shadows.
      * @return true if shadow casting enabled, else false
      */
     public boolean getCastShadow()
     {
-        return NativeLight.getCastShadow(getNative());
+        return mCastShadow;
     }
     
     public void setOwnerObject(GVRSceneObject newOwner)
@@ -162,38 +159,37 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
         if (newOwner != null)
         {
             if (owner == null)
+            {
                 getGVRContext().registerDrawFrameListener(this);
+                super.setOwnerObject(newOwner);
+                if (mCastShadow)
+                {
+                    GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
+                    if (shadowMap == null)
+                    {
+                        setCastShadow(true);
+                    }
+                }
+            }
         }
         else if (owner != null)
+        {
             getGVRContext().unregisterDrawFrameListener(this);
-        super.setOwnerObject(newOwner);
+            super.setOwnerObject(newOwner);
+        }
     }
 
     /**
      * Gets the shadow material used in constructing shadow maps.
-     *
-     * The shadow material has several public attributes which affect the shadow
-     * map construction:
-     *  - shadow_near   near plane of the shadow map camera (default 0.1)
-     *  - shadow_far    far plane of the shadow map camera (default 50)
-     *
+     * <p>
      * The shadow map is constructed using a depth map rendered
      * from the viewpoint of the light. This global material
-     * contains the shadow map properties. Modifying the near and far
-     * planes change how much of the scene is visible from the light.
-     * The shadow map will be more detailed if this range is small.
-     * It may be blocky if the range is too large.
-     *
+     * does not currently contain any settable properties.
      * @return shadow map material
      */
-    public static GVRMaterial getShadowMaterial(GVRContext ctx) {
-        if (mShadowMaterial == null)
-        {
-            mShadowMaterial = new GVRMaterial(ctx);
-            mShadowMaterial.setFloat("shadow_near", 0.1f);
-            mShadowMaterial.setFloat("shadow_far", 50);
-        }
-        return mShadowMaterial;
+    public static GVRMaterial getShadowMaterial(GVRContext ctx)
+    {
+        return GVRShadowMap.getShadowMaterial(ctx);
     }
 
     /**
@@ -271,7 +267,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public String getFragmentShaderSource()
     {
-        return fragmentShaderSource;
+        return mFragmentShaderSource;
     }
 
     /**
@@ -290,7 +286,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public String getVertexShaderSource()
     {
-        return vertexShaderSource;
+        return mVertexShaderSource;
     }
     
     /**
@@ -308,7 +304,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public String getUniformDescriptor()
     {
-        return uniformDescriptor;
+        return mUniformDescriptor;
     }
 
     /**
@@ -323,7 +319,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public String getVertexDescriptor()
     {
-        return vertexDescriptor;
+        return mVertexDescriptor;
     }
     
     /**
@@ -445,7 +441,7 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public Quaternionf getDefaultOrientation()
     {
-        return defaultDir;
+        return mDefaultDir;
     }
 
     /**
@@ -464,7 +460,8 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
      */
     public void setDefaultOrientation(Quaternionf orientation)
     {
-        defaultDir = orientation;
+        mDefaultDir = orientation;
+        mDefaultDir.get(mLightRot);
     }
 
 
@@ -474,45 +471,34 @@ public class GVRLightBase extends GVRComponent implements GVRDrawFrameListener
  */
     public void onDrawFrame(float frameTime)
     {     
-        if ((getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
+        if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
         GVRSceneObject parent = owner;
         Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
-        olddir.x = odir[0];
-        olddir.y = odir[1];
-        olddir.z = odir[2];
-        
-        oldpos.x = opos[0];
-        oldpos.y = opos[1];
-        oldpos.z = opos[2];
 
-        newdir.x = 0.0f;
-        newdir.y = 0.0f;
-        newdir.z = -1.0f;
-        
-        lightrot.identity();
-        
-        defaultDir.get(lightrot);
-        worldmtx.getTranslation(newpos);
-        worldmtx.mul(lightrot);
-        worldmtx.transformDirection(newdir);
-        if ((olddir.x != newdir.x) || (olddir.y != newdir.y) || (olddir.z != newdir.z))
+        mOldDir.x = odir[0];
+        mOldDir.y = odir[1];
+        mOldDir.z = odir[2];
+        mOldPos.x = opos[0];
+        mOldPos.y = opos[1];
+        mOldPos.z = opos[2];
+        mNewDir.x = 0.0f;
+        mNewDir.y = 0.0f;
+        mNewDir.z = -1.0f;
+        worldmtx.getTranslation(mNewPos);
+        worldmtx.mul(mLightRot);
+        worldmtx.transformDirection(mNewDir);
+        if ((mOldDir.x != mNewDir.x) || (mOldDir.y != mNewDir.y) || (mOldDir.z != mNewDir.z))
         {
-            setVec3("world_direction", newdir.x, newdir.y, newdir.z);
+            setVec3("world_direction", mNewDir.x, mNewDir.y, mNewDir.z);
         }
-        if ((oldpos.x != newpos.x) || (oldpos.y != newpos.y) || (oldpos.z != newpos.z))
+        if ((mOldPos.x != mNewPos.x) || (mOldPos.y != mNewPos.y) || (mOldPos.z != mNewPos.z))
         {
-            setVec3("world_position", newpos.x, newpos.y, newpos.z);
+            setVec3("world_position", mNewPos.x, mNewPos.y, mNewPos.z);
         }
     }
 
-    protected Quaternionf defaultDir = new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f);
-    protected String fragmentShaderSource = null;
-    protected String vertexShaderSource = null;
-    protected String uniformDescriptor = null;
-    protected String vertexDescriptor = null;
-    static protected GVRMaterial mShadowMaterial = null;
 }
 
 class NativeLight
@@ -520,10 +506,6 @@ class NativeLight
     static native long ctor();
 
     static native long getComponentType();
-
-    static native void enable(long light);
-
-    static native void disable(long light);
 
     static native float getFloat(long light, String key);
 
@@ -544,8 +526,4 @@ class NativeLight
     static native void getMat4(long light, String key, float[] matrix);
     
     static native void setMat4(long light, String key, float[] matrix);
-    
-    static native void setCastShadow(long light, long material);
-    
-    static native boolean getCastShadow(long light);
 }

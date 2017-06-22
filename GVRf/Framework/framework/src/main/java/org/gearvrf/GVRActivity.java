@@ -49,7 +49,7 @@ import android.view.WindowManager;
  * The typical GVRF application will have a single Android {@link Activity},
  * which <em>must</em> descend from {@link GVRActivity}, not directly from
  * {@code Activity}.
- * 
+ *
  * {@code GVRActivity} creates and manages the internal classes which use sensor
  * data to manage a viewpoint, and thus present an appropriate stereoscopic view
  * of your scene graph. {@code GVRActivity} also gives GVRF a full-screen window
@@ -66,11 +66,11 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     private volatile GVRConfigurationManager mConfigurationManager;
     private GVRMain mGVRMain;
     private VrAppSettings mAppSettings;
-    private static View mFullScreenView = null;
+    private static View mFullScreenView;
 
     // Group of views that are going to be drawn
     // by some GVRViewSceneObject to the scene.
-    private ViewGroup mRenderableViewGroup = null;
+    private ViewGroup mRenderableViewGroup;
     private IActivityNative mActivityNative;
     private boolean mPaused = true;
 
@@ -139,19 +139,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
-        mDockEventReceiver = new DockEventReceiver(this,
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        handleOnDock();
-                    }
-                }, new Runnable() {
-                    @Override
-                    public void run() {
-                        handleOnUndock();
-                    }
-                });
-        mDockEventReceiver.start();
 
         mActivityNative = mDelegate.getActivityNative();
     }
@@ -165,7 +152,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mConfigurationManager.configureForHeadset(GVRConfigurationManager.DEFAULT_HEADSET_MODEL);
         mDelegate.parseXmlSettings(getAssets(), dataFilename);
 
-        startDockEventReceiver();
         onInitAppSettings(mAppSettings);
     }
 
@@ -227,6 +213,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     this,
                     IActivityEvents.class,
                     "onDestroy");
+            mViewManager = null;
         }
         if (null != mDockEventReceiver) {
             mDockEventReceiver.stop();
@@ -236,18 +223,26 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mActivityNative.onDestroy();
             mActivityNative = null;
         }
+
+        mDockListeners.clear();
+        mGVRMain = null;
+        mDelegate = null;
+        mAppSettings = null;
+        mRenderableViewGroup = null;
+        mConfigurationManager = null;
+
         super.onDestroy();
     }
 
     /**
      * Links {@linkplain GVRMain a script} to the activity; sets the version;
-     * 
+     *
      * @param gvrMain
      *            An instance of {@link GVRMain} to handle callbacks on the GL
      *            thread.
      * @param dataFileName
-     *            Name of the XML file containing the framebuffer parameters. 
-     * 
+     *            Name of the XML file containing the framebuffer parameters.
+     *
      *            <p>
      *            The XML filename is relative to the application's
      *            {@code assets} directory, and can specify a file in a
@@ -267,23 +262,31 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             }
             mDelegate.setViewManager(mViewManager);
 
+            if (mConfigurationManager.isDockListenerRequired()) {
+                startDockEventReceiver();
+            } else {
+                handleOnDock();
+            }
+
             mViewManager.getEventManager().sendEventWithMask(
                     SEND_EVENT_MASK,
                     this,
                     IActivityEvents.class,
                     "onSetMain", gvrMain);
+
             final GVRConfigurationManager localConfigurationManager = mConfigurationManager;
-            if (null != mDockEventReceiver && !isMonoscopicMode && localConfigurationManager
-                    .isDockListenerRequired()) {
-                getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
-                    @Override
-                    public void onDrawFrame(float frameTime) {
-                        if (localConfigurationManager.isHmtConnected()) {
-                            handleOnDock();
-                            getGVRContext().unregisterDrawFrameListener(this);
+            if (!isMonoscopicMode) {
+                if (null != mDockEventReceiver && localConfigurationManager.isDockListenerRequired()) {
+                    getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
+                        @Override
+                        public void onDrawFrame(float frameTime) {
+                            if (localConfigurationManager.isHmtConnected()) {
+                                handleOnDock();
+                                getGVRContext().unregisterDrawFrameListener(this);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         } else {
             throw new IllegalArgumentException(
@@ -325,8 +328,16 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     /**
+     * Uses the default configuration file that comes with the framework.
+     * @see GVRActivity#setMain(GVRMain, String)
+     */
+    public final void setMain(GVRMain gvrMain) {
+        setMain(gvrMain, "_gvr.xml");
+    }
+
+    /**
      * Sets whether to force rendering to be single-eye, monoscopic view.
-     * 
+     *
      * @param force
      *            If true, will create a OvrMonoscopicViewManager when
      *            {@linkplain GVRActivity#setMain(GVRMain, String)} is called. If false, will
@@ -344,7 +355,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     /**
      * Returns whether a monoscopic view was asked to be forced during
      * {@linkplain #setMain(GVRMain, String) setMain()}.
-     * 
+     *
      * @see GVRActivity#setForceMonoscopic(boolean)
      * @deprecated
      */
@@ -367,33 +378,50 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         }
     }
 
+    private long mBackKeyDownTime;
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        final int keyAction = event.getAction();
+        if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
+            if (KeyEvent.ACTION_DOWN == keyAction) {
+                if (0 == mBackKeyDownTime) {
+                    mBackKeyDownTime = event.getDownTime();
+                }
+            } else if (KeyEvent.ACTION_UP == keyAction) {
+                final long duration = event.getEventTime() - mBackKeyDownTime;
+                mBackKeyDownTime = 0;
+                if (!isPaused()) {
+                    if (duration < 250) {
+                        if (!mGVRMain.onBackPress()) {
+                            if (!mDelegate.onBackPress()) {
+                                mViewManager.getActivity().finish();
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        } else {
+            switch (event.getKeyCode()) {
+                case KeyEvent.KEYCODE_VOLUME_UP:
+                    if (keyAction == KeyEvent.ACTION_DOWN) {
+                        final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                                AudioManager.ADJUST_RAISE, 0);
+                        return true;
+                    }
+                case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    if (keyAction == KeyEvent.ACTION_DOWN) {
+                        final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                                AudioManager.ADJUST_LOWER, 0);
+                        return true;
+                    }
+            }
+        }
         if (mViewManager.dispatchKeyEvent(event)) {
             return true;
         }
-        if (mDelegate.dispatchKeyEvent(event)) {
-            return true;
-        }
-
-        final int keyAction = event.getAction();
-        switch (event.getKeyCode()) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-                if(keyAction == KeyEvent.ACTION_DOWN) {
-                    final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-                    audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                            AudioManager.ADJUST_RAISE, 0);
-                    return true;
-                }
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-                if(keyAction == KeyEvent.ACTION_DOWN) {
-                    final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-                    audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                            AudioManager.ADJUST_LOWER, 0);
-                    return true;
-                }
-        }
-
         return super.dispatchKeyEvent(event);
     }
 
@@ -532,7 +560,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     /**
      * Remove a child view of Android hierarchy view .
-     * 
+     *
      * @param view View to be removed.
      */
     public final void unregisterView(final View view) {
@@ -601,7 +629,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         return mConfigurationManager;
     }
 
-    static interface DockListener {
+    interface DockListener {
         void onDock();
         void onUndock();
     }
@@ -629,6 +657,8 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 });
         if (null != mDockEventReceiver) {
             mDockEventReceiver.start();
+        } else {
+            Log.w(TAG, "dock listener not started");
         }
     }
 
@@ -647,7 +677,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyDown(int keyCode, KeyEvent event);
         boolean onKeyUp(int keyCode, KeyEvent event);
         boolean onKeyLongPress(int keyCode, KeyEvent event);
-        boolean dispatchKeyEvent(KeyEvent event);
 
         void setMain(GVRMain gvrMain, String dataFileName);
         void setViewManager(GVRViewManager viewManager);
@@ -660,5 +689,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         GVRCameraRig makeCameraRig(GVRContext context);
         GVRConfigurationManager makeConfigurationManager(GVRActivity activity);
         void parseXmlSettings(AssetManager assetManager, String dataFilename);
+
+        boolean onBackPress();
     }
 }

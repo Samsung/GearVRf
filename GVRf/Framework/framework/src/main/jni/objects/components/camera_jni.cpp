@@ -18,6 +18,7 @@
  * JNI
  ***************************************************************************/
 
+#include <glm/gtc/type_ptr.hpp>
 #include "camera.h"
 
 #include "util/gvr_jni.h"
@@ -25,53 +26,57 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCamera_getComponentType(JNIEnv * env, jobject obj);
+Java_org_gearvrf_NativeCamera_getComponentType(JNIEnv* env, jobject obj);
 
 JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCamera_getBackgroundColorR(JNIEnv * env,
-        jobject obj, jlong jcamera);
+Java_org_gearvrf_NativeCamera_getBackgroundColorR(JNIEnv* env,
+                                                  jobject obj, jlong jcamera);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_setBackgroundColorR(JNIEnv * env,
-        jobject obj, jlong jcamera, jfloat r);
+Java_org_gearvrf_NativeCamera_setBackgroundColorR(JNIEnv* env,
+                                                  jobject obj, jlong jcamera, jfloat r);
 JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCamera_getBackgroundColorG(JNIEnv * env,
-        jobject obj, jlong jcamera);
+Java_org_gearvrf_NativeCamera_getBackgroundColorG(JNIEnv* env,
+                                                  jobject obj, jlong jcamera);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_setBackgroundColorG(JNIEnv * env,
-        jobject obj, jlong jcamera, jfloat g);
+Java_org_gearvrf_NativeCamera_setBackgroundColorG(JNIEnv* env,
+                                                  jobject obj, jlong jcamera, jfloat g);
 JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCamera_getBackgroundColorB(JNIEnv * env,
-        jobject obj, jlong jcamera);
+Java_org_gearvrf_NativeCamera_getBackgroundColorB(JNIEnv* env,
+                                                  jobject obj, jlong jcamera);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_setBackgroundColorB(JNIEnv * env,
-        jobject obj, jlong jcamera, jfloat b);
+Java_org_gearvrf_NativeCamera_setBackgroundColorB(JNIEnv* env,
+                                                  jobject obj, jlong jcamera, jfloat b);
 JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_NativeCamera_getBackgroundColorA(JNIEnv * env,
-        jobject obj, jlong jcamera);
+Java_org_gearvrf_NativeCamera_getBackgroundColorA(JNIEnv* env,
+                                                  jobject obj, jlong jcamera);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_setBackgroundColorA(JNIEnv * env,
-        jobject obj, jlong jcamera, jfloat a);
+Java_org_gearvrf_NativeCamera_setBackgroundColorA(JNIEnv* env,
+                                                  jobject obj, jlong jcamera, jfloat a);
 JNIEXPORT jint JNICALL
-Java_org_gearvrf_NativeCamera_getRenderMask(JNIEnv * env,
-        jobject obj, jlong jcamera);
+Java_org_gearvrf_NativeCamera_getRenderMask(JNIEnv* env,
+                                            jobject obj, jlong jcamera);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_setRenderMask(JNIEnv * env,
-        jobject obj, jlong jcamera, jint render_mask);
+Java_org_gearvrf_NativeCamera_setRenderMask(JNIEnv* env,
+                                            jobject obj, jlong jcamera, jint render_mask);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_addPostEffect(JNIEnv * env,
-        jobject obj, jlong jcamera, jlong jpost_effect_data);
+Java_org_gearvrf_NativeCamera_addPostEffect(JNIEnv* env,
+                                            jobject obj, jlong jcamera,
+                                            jlong jpost_effect_data);
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv * env,
-        jobject obj, jlong jcamera, jlong jpost_effect_data);
-}
-;
+Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv* env,
+                                               jobject obj, jlong jcamera,
+                                               jlong jpost_effect_data);
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCamera_setViewMatrix(JNIEnv* env, jobject obj, jlong jcamera, jfloatArray mat);
+};
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCamera_getComponentType(JNIEnv * env, jobject obj) {
@@ -153,8 +158,8 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_addPostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data) {
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
-    PostEffectData* post_effect_data =
-            reinterpret_cast<PostEffectData*>(jpost_effect_data);
+    ShaderData* post_effect_data =
+            reinterpret_cast<ShaderData*>(jpost_effect_data);
     camera->addPostEffect(post_effect_data);
 }
 
@@ -162,8 +167,21 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeCamera_removePostEffect(JNIEnv * env,
         jobject obj, jlong jcamera, jlong jpost_effect_data) {
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
-    PostEffectData* post_effect_data =
-            reinterpret_cast<PostEffectData*>(jpost_effect_data);
+    ShaderData* post_effect_data =
+            reinterpret_cast<ShaderData*>(jpost_effect_data);
     camera->removePostEffect(post_effect_data);
 }
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeCamera_setViewMatrix(JNIEnv* env,
+                                            jobject obj, jlong jcamera, jfloatArray mat)
+{
+    Camera* camera = reinterpret_cast<Camera*>(jcamera);
+    jfloat* mat_arr = env->GetFloatArrayElements(mat, 0);
+    glm::mat4 matrix = glm::make_mat4x4(mat_arr);
+    camera->setViewMatrix(matrix);
+    env->ReleaseFloatArrayElements(mat, mat_arr, 0);
+}
+
+
 }

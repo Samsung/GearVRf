@@ -47,7 +47,7 @@ import java.util.concurrent.Future;
  */
 class AnimatedCursorAsset extends MeshCursorAsset {
     private static final String TAG = AnimatedCursorAsset.class.getSimpleName();
-    private List<Future<GVRTexture>> loaderTextures;
+    private List<GVRTexture> loaderTextures;
     private final static float LOADING_IMAGE_FRAME_ANIMATION_DURATION = 1f;
     private float animationDuration = LOADING_IMAGE_FRAME_ANIMATION_DURATION;
     private final static int LOOP_REPEAT = -1;
@@ -125,11 +125,11 @@ class AnimatedCursorAsset extends MeshCursorAsset {
         }
         try {
             loaderTextures = ZipLoader.load(context, zipFileName, new ZipLoader
-                    .ZipEntryProcessor<Future<GVRTexture>>() {
+                    .ZipEntryProcessor<GVRTexture>() {
 
                 @Override
-                public Future<GVRTexture> getItem(GVRContext context, GVRAndroidResource resource) {
-                    return context.loadFutureTexture(resource);
+                public GVRTexture getItem(GVRContext context, GVRAndroidResource resource) {
+                    return context.getAssetLoader().loadTexture(resource);
                 }
             });
         } catch (IOException e) {
@@ -161,7 +161,7 @@ class AnimatedCursorAsset extends MeshCursorAsset {
      * Implements texture update animation.
      */
     private static class GVRImageFrameAnimation extends GVRAnimation {
-        private final List<Future<GVRTexture>> animationTextures;
+        private final List<GVRTexture> animationTextures;
         private int lastFileIndex = -1;
 
         /**
@@ -171,7 +171,7 @@ class AnimatedCursorAsset extends MeshCursorAsset {
          */
 
         private GVRImageFrameAnimation(GVRMaterial material, float duration,
-                                       final List<Future<GVRTexture>> texturesForAnimation) {
+                                       final List<GVRTexture> texturesForAnimation) {
             super(material, duration);
             animationTextures = texturesForAnimation;
         }

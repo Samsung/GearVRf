@@ -12,33 +12,26 @@ package org.gearvrf.accessibility;
  */
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRPostEffect;
+import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderId;
 
 public class GVRAccessibilityInvertedColors {
 
-    private GVRPostEffect postEffect;
-    private GVRAccessibilityPostEffectShader shaderManager;
+    private GVRShaderData postEffect;
     private boolean mInverted;
     private GVRContext mGvrContext;
 
     /**
-     * Initialize {@link GVRPostEffect}
+     * Initialize {@link GVRShaderData}
      * 
      * @param gvrContext
      */
     public GVRAccessibilityInvertedColors(final GVRContext gvrContext) {
         mGvrContext = gvrContext;
-        gvrContext.runOnGlThread(new Runnable() {
-
-            @Override
-            public void run() {
-                shaderManager = new GVRAccessibilityPostEffectShader(gvrContext);
-                postEffect = new GVRPostEffect(gvrContext, shaderManager
-                        .getShaderId());
-
-            }
-        });
+        GVRShaderId shaderId = gvrContext.getMaterialShaderManager().getShaderType(GVRAccessibilityPostEffectShader.class);
+        postEffect = new GVRShaderData(gvrContext, shaderId);
     }
 
     public void turnOn(final GVRScene... scene) {

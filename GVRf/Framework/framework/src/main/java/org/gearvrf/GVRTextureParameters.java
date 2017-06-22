@@ -24,7 +24,6 @@ import android.opengl.GLES20;
  * loading texture and also to enhance texture even after they are loaded.
  */
 public class GVRTextureParameters {
-
     private TextureFilterType minFilterType;
     private TextureFilterType magFilterType;
     private TextureWrapType wrapSType;
@@ -236,11 +235,12 @@ public class GVRTextureParameters {
      * Enum values for all the filter types along with all its actual values.
      */
     public enum TextureFilterType {
-        GL_LINEAR(GLES20.GL_LINEAR), GL_NEAREST(GLES20.GL_NEAREST), GL_NEAREST_MIPMAP_NEAREST(
-                GLES20.GL_NEAREST_MIPMAP_NEAREST), GL_NEAREST_MIPMAP_LINEAR(
-                GLES20.GL_NEAREST_MIPMAP_LINEAR), GL_LINEAR_MIPMAP_NEAREST(
-                GLES20.GL_LINEAR_MIPMAP_NEAREST), GL_LINEAR_MIPMAP_LINEAR(
-                GLES20.GL_LINEAR_MIPMAP_LINEAR);
+        GL_LINEAR(1),
+        GL_NEAREST(0),
+        GL_NEAREST_MIPMAP_NEAREST(2),
+        GL_NEAREST_MIPMAP_LINEAR(3),
+        GL_LINEAR_MIPMAP_NEAREST(4),
+        GL_LINEAR_MIPMAP_LINEAR(5);
 
         private int filterValue;
 
@@ -257,8 +257,9 @@ public class GVRTextureParameters {
      * Enum values for all the wrap types along with all its actual values.
      */
     public enum TextureWrapType {
-        GL_CLAMP_TO_EDGE(GLES20.GL_CLAMP_TO_EDGE), GL_MIRRORED_REPEAT(
-                GLES20.GL_MIRRORED_REPEAT), GL_REPEAT(GLES20.GL_REPEAT);
+        GL_CLAMP_TO_EDGE(0),
+        GL_MIRRORED_REPEAT(2),
+        GL_REPEAT(1);
 
         private int wrapValue;
 

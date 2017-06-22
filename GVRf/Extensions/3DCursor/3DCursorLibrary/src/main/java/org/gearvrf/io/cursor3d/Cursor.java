@@ -162,7 +162,7 @@ public abstract class Cursor {
         if (scene != null) {
             // new objects have been added to the cursorSceneObject
             // force bind shaders
-            scene.bindShaders(cursorSceneObject.getMainSceneObject());
+           // scene.bindShaders(cursorSceneObject.getMainSceneObject());
         }
         if (currentCursorAsset != null) {
             currentCursorAsset = cursorTheme.getAsset(currentCursorAsset.getAction());
@@ -538,7 +538,7 @@ public abstract class Cursor {
         }
     }
 
-    private void setupIoDevice(IoDevice ioDevice) {
+    void setupIoDevice(IoDevice ioDevice) {
         if (ioDevice != null) {
             // should have a normal asset
             setAsset(cursorTheme.getAsset(Action.DEFAULT));

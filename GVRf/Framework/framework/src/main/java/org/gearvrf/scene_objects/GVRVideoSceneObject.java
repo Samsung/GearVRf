@@ -24,7 +24,7 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMaterialShaderId;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 
@@ -136,7 +136,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                                final GVRVideoSceneObjectPlayer mediaPlayer, final GVRExternalTexture texture,
                                int videoType) {
         super(gvrContext, mesh);
-        GVRMaterialShaderId materialType;
+        GVRShaderId materialType;
 
         switch (videoType) {
             case GVRVideoType.MONO:
@@ -149,7 +149,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                 materialType = GVRShaderType.OESVerticalStereo.ID;
                 break;
             default:
-                texture.releaseNative();
                 throw new IllegalArgumentException();
         }
         GVRMaterial material = new GVRMaterial(gvrContext, materialType);
@@ -159,7 +158,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         gvrContext.runOnGlThread(new Runnable() {
             @Override
             public void run() {
-                // Because texture.getId() is called, this needs to run in GL thread
+                // Because texture.id() is called, this needs to run in GL thread
                 mVideo = new GVRVideo(gvrContext, mediaPlayer, texture);
             }
         });

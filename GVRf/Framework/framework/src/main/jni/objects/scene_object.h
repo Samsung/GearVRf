@@ -24,6 +24,7 @@
 #include <mutex>
 
 #include "objects/hybrid_object.h"
+#include "objects/components/component.h"
 #include "objects/components/render_data.h"
 #include "objects/components/transform.h"
 #include "objects/components/camera.h"
@@ -100,21 +101,23 @@ public:
         return (CameraRig*) getComponent(CameraRig::getComponentType());
     }
 
-    Collider* collider() const {
-        return (Collider*) getComponent(Collider::getComponentType());
-    }
-
     SceneObject* parent() const {
         return parent_;
     }
+
     void setTransformUnDirty(){
     	transform_dirty_ = false;
     }
-    void setTransformDirty(){
+    void setTransformDirty() {
     	transform_dirty_ = true;
-
+        Transform* t = transform();
+        if (t)
+        {
+            t->invalidate();
+        }
     }
-    bool isTransformDirty(){
+
+    bool isTransformDirty() {
     	return transform_dirty_;
     }
     void setCullStatus(bool cull){
@@ -143,34 +146,13 @@ public:
             float rdy, float rdz);
     bool intersectsBoundingVolume(SceneObject *scene_object);
 
-    void setLODRange(float minRange, float maxRange) {
-        lod_min_range_ = minRange * minRange;
-        lod_max_range_ = maxRange * maxRange;
-        using_lod_ = true;
-    }
-
-    float getLODMinRange() {
-        return lod_min_range_;
-    }
-
-    float getLODMaxRange() {
-        return lod_max_range_;
-    }
-
-    bool inLODRange(float distance_from_camera) {
-        if (!using_lod_) {
-            return true;
-        }
-        if (distance_from_camera >= lod_min_range_
-                && distance_from_camera < lod_max_range_) {
-            return true;
-        }
-        return false;
-    }
-
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
-
+    void onTransformChanged();
+    bool onAddChild(SceneObject* addme, SceneObject* root);
+    bool onRemoveChild(SceneObject* removeme, SceneObject* root);
+    void onAddedToScene(Scene* scene);
+    void onRemovedFromScene(Scene* scene);
     int frustumCull(glm::vec3 camera_position, const float frustum[6][4], int& planeMask);
 
 private:
@@ -178,9 +160,6 @@ private:
     std::vector<Component*> components_;
     SceneObject* parent_ = nullptr;
     std::vector<SceneObject*> children_;
-    float lod_min_range_;
-    float lod_max_range_;
-    static bool using_lod_;
     bool cull_status_;
     bool transform_dirty_;
     BoundingVolume transformed_bounding_volume_;
@@ -214,4 +193,6 @@ private:
 };
 
 }
+#include "components/component.inl"
+
 #endif

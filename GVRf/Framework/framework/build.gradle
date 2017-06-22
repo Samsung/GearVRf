@@ -7,8 +7,9 @@ repositories {
 }
 
 android {
+    publishNonDefault !gradle.getStartParameter().taskNames.contains('uploadArchives')
     compileSdkVersion 24
-    buildToolsVersion '24.0.3'
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         minSdkVersion 19
@@ -39,44 +40,64 @@ android {
         }
     }
 
-    task buildInfo(type:Exec){
-        commandLine 'git log -n 1 --format=%H'.split()
-        def source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
-        def javaSource = new File(projectDir.absolutePath + '/src/main/java/org/gearvrf/', 'BuildInfo.java')
-        standardOutput = new ByteArrayOutputStream()
+    task buildInfo() {
+        def commitId
 
-        doLast {
-            source.text = '#include "util/gvr_log.h"\n'
-            source.text += '#include <jni.h>\n\n'
-            source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
-            source.text += '    LOGI("FRAMEWORK-CPP  HEAD: '+ standardOutput.toString().trim() + '");\n'
-            source.text += '    JNIEnv* env;\n';
-            source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
-            source.text += '        jclass java_class = env->FindClass("org/gearvrf/BuildInfo");\n'
-            source.text += '        if (env->ExceptionCheck()) {\n'
-            source.text += '            env->ExceptionClear();\n'
-            source.text += '        }\n'
-            source.text += '        if(nullptr != java_class) {\n'
-            source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
-            source.text += '            if (env->ExceptionCheck()) {\n'
-            source.text += '                env->ExceptionClear();\n'
-            source.text += '            }\n'
-            source.text += '            env->DeleteLocalRef(java_class);\n'
-            source.text += '        }\n'
-            source.text += '    }\n'
-            source.text += '    return JNI_VERSION_1_6;\n'
-            source.text += '}'
-
-            javaSource.text = 'package org.gearvrf;\n'
-            javaSource.text += 'public class BuildInfo {\n'
-            javaSource.text += '    public final static String HEAD="' + standardOutput.toString().trim() + '";\n'
-            javaSource.text += '    static { android.util.Log.i("gvrf", "FRAMEWORK-JAVA HEAD: " + HEAD); }\n'
-            javaSource.text += '}\n'
+        File head = new File(projectDir.absolutePath + '/../../../.git/HEAD')
+        if (head.exists()) {
+            def elements = head.text.split()
+            if (elements.length > 0) {
+                File commit = new File(projectDir.absolutePath + '/../../../.git/' + elements[elements.length-1])
+                if (commit.exists()) {
+                    commitId = commit.text.trim();
+                } else {
+                    println "HEAD commit missing"
+                    return
+                }
+            } else {
+                println "HEAD elements empty"
+                return
+            }
+        } else {
+            println "HEAD file missing"
+            return
         }
+
+        File source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
+        def javaSource = new File(projectDir.absolutePath + '/src/main/java/org/gearvrf/', 'BuildInfo.java')
+
+        source.text = '#include "util/gvr_log.h"\n'
+        source.text += '#include <jni.h>\n\n'
+        source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
+        source.text += '    LOGI("FRAMEWORK-CPP  HEAD: ' + commitId + '");\n'
+        source.text += '    JNIEnv* env;\n';
+        source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
+        source.text += '        jclass java_class = env->FindClass("org/gearvrf/BuildInfo");\n'
+        source.text += '        if (env->ExceptionCheck()) {\n'
+        source.text += '            env->ExceptionClear();\n'
+        source.text += '        }\n'
+        source.text += '        if(nullptr != java_class) {\n'
+        source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
+        source.text += '            if (env->ExceptionCheck()) {\n'
+        source.text += '                env->ExceptionClear();\n'
+        source.text += '            }\n'
+        source.text += '            env->DeleteLocalRef(java_class);\n'
+        source.text += '        }\n'
+        source.text += '    }\n'
+        source.text += '    return JNI_VERSION_1_6;\n'
+        source.text += '}'
+
+        javaSource.text = 'package org.gearvrf;\n'
+        javaSource.text += 'public class BuildInfo {\n'
+        javaSource.text += '    public final static String HEAD="' + commitId + '";\n'
+        javaSource.text += '    static { android.util.Log.i("gvrf", "FRAMEWORK-JAVA HEAD: " + HEAD); }\n'
+        javaSource.text += '}\n'
     }
 
     buildTypes {
         debug {
+            debuggable = true
+            jniDebuggable = true
         }
         release {
             minifyEnabled false
@@ -92,17 +113,6 @@ android {
             srcDir 'src/main/libs'
         }
     }
-
-    task uploadToGitHub(type: Exec) {
-        onlyIf {
-            System.env['ACCESS_TOKEN'] != null
-        }
-
-        commandLine '../../tools/upload_to_github', file('build/outputs/aar/' + project.name + '-debug.aar').absolutePath
-    }
-    uploadToGitHub.doFirst {
-        println('uploading to github')
-    }
 }
 
 project.ext.jomlVersion = "1.9.1-SNAPSHOT"
@@ -111,91 +121,56 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
     compile "org.joml:joml-android:${jomlVersion}"
+    compile 'com.google.code.gson:gson:2.7'
 }
 
 clean {}.doLast {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        def libsdirPath = projectDir.absolutePath + '/../../../' +
-                rootProject.property("LIBS_DIRECTORY")
-        project.delete(libsdirPath + '/' + project.name + '-debug.aar')
-    }
-
-    def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-    if (file(testsLibs).exists()) {
-        project.delete(testsLibs + '/' + project.name + '-debug.aar')
-    }
-
     def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
     if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
         project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
         project.delete(gearvrfLibs + '/' + project.name + '-for-plugins.zip')
     }
 }
 
-task copyAARFiles(type: Copy) {
-    if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-        println "copying aar files to the libs_directory"
-        def libsdirPath = projectDir.absolutePath + '/../../../' +
-                rootProject.property("LIBS_DIRECTORY")
-        def libsDir = new File(libsdirPath);
-        if (libsDir.exists()) {
-            from 'build/outputs/aar'
-            into libsDir
-            include project.name + '-debug.aar'
-        } else {
-            println "Cannot copy aar files, libs directory does not exist!"
-        }
-    }
-}
-
 task packageForPlugins(type: Zip) {
+    outputs.upToDateWhen { false }
+
     baseName project.name + '-for-plugins'
 
-    from './build/intermediates/bundles/debug/classes.jar'
-    rename 'classes.jar', project.name  + '-classes.jar'
+    from './build/intermediates/bundles/default/classes.jar'
+    rename 'classes.jar', project.name + '-classes.jar'
 
     from './src/main/libs/'
     include '*.jar'
 
-    from './build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/'
+    from './build/intermediates/ndkBuild/release/obj/local/armeabi-v7a/'
     include '*.so'
+
+    doLast {
+        copy {
+            from 'build/distributions/'
+            into project.rootDir.absolutePath + "/../gearvrf-libs"
+            include project.name + '-for-plugins.zip'
+        }
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
 }
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'externalNativeBuildDebug') {
         task.dependsOn 'buildInfo'
+    } else if (task.name == 'externalNativeBuildRelease') {
+        task.dependsOn 'buildInfo'
     } else if (task.name == 'bundleDebug') {
-        task<< {
-            tasks.copyAARFiles.execute()
-
-            def testsLibs = "../../../../GearVRf-Tests/gearvrf-libs/"
-            if (file(testsLibs).exists()) {
-                copy {
-                    from 'build/outputs/aar'
-                    into testsLibs
-                    include project.name + '-debug.aar'
-                }
-            }
-            def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
-            if (!file(gearvrfLibs).exists()) {
-                file(gearvrfLibs).mkdir();
-            }
-            copy {
-                from 'build/outputs/aar'
-                into gearvrfLibs
-                include project.name + '-debug.aar'
-            }
-
-            if (System.env['ACCESS_TOKEN'] != null) {
-                uploadToGitHub.execute();
-            }
-
-            tasks.packageForPlugins.execute()
-            copy {
-                from 'build/distributions/'
-                into gearvrfLibs
-                include project.name + '-for-plugins.zip'
-            }
-        }
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(packageForPlugins)
+        task.finalizedBy(copyJarToBin)
     }
 }

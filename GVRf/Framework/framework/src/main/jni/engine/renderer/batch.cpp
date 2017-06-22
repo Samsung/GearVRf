@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <contrib/glm/gtc/type_ptr.hpp>
 #include "batch.h"
 #include "objects/scene_object.h"
 #include "objects/components/camera.h"
@@ -24,7 +25,9 @@ namespace gvr {
 Batch::Batch(int no_vertices, int no_indices) :
         draw_count_(0), vertex_count_(0), index_count_(0), vertex_limit_(no_vertices),
         indices_limit_(no_indices), renderdata_(nullptr),mesh_init_(false),
-        index_offset_(0), not_batched_(false), batch_dirty_(false) {
+        index_offset_(0), not_batched_(false), batch_dirty_(false),
+        mesh_("float3 a_position float2 a_texcoord float3 a_normal")
+{
 
     vertices_.reserve(no_vertices);
     indices_.reserve(no_indices);
@@ -39,54 +42,65 @@ Batch::~Batch() {
     renderdata_ = nullptr;
 }
 
+void Batch::removeRenderData(RenderData* renderdata){
+    renderdata->set_batching(false);
+    render_data_set_.erase(renderdata);
+    batch_dirty_ = true;
+    if(0 == render_data_set_.size())
+        resetBatch();
+}
+
+ShaderData* Batch::material(int passIndex)
+{
+    if(passIndex ==0)
+        return material_;
+    return renderdata_->pass(passIndex)->material();
+}
+
 bool Batch::updateMesh(Mesh* render_mesh){
-    const std::vector<unsigned short>& indices = render_mesh->indices();
-    const std::vector<glm::vec3>& vertices = render_mesh->vertices();
-    const std::vector<glm::vec3>& normals = render_mesh->normals();
-    const std::vector<glm::vec2>& tex_cords = render_mesh->getVec2Vector("a_texcoord");
+    int nverts = render_mesh->getVertexCount();
 
-    int size = 0;
-    size = vertices.size();
-
-    for(int i=0;i<size;i++){
-        vertices_.push_back(vertices[i]);
+    render_mesh->forAllVertices("a_position", [this](int iter, const float* pos)
+    {
+        vertices_.push_back(glm::vec3(pos[0], pos[1], pos[3]));
         matrix_indices_.push_back(draw_count_);
-        tex_coords_.push_back(tex_cords[i]);
-    }
-    // Check if models has normals
-    if(normals.size() > 0){
-        int normals_size = normals.size();
-        for(int i=0;i<normals_size;i++)
-            normals_.push_back(normals[i]);
-    }
-    size = indices.size();
-    index_count_+=size;
-    for (int i = 0; i < size; i++) {
-        unsigned short index = indices[i];
-        index += index_offset_;
-        indices_.push_back(index);
-    }
+    });
+    render_mesh->forAllVertices("a_texcoord", [this](int iter, const float* pos)
+    {
+        tex_coords_.push_back(glm::vec2(pos[0], pos[1]));
+    });
+    render_mesh->forAllVertices("a_normal", [this](int iter, const float* norm)
+    {
+        normals_.push_back(glm::vec3(norm[0], norm[1], norm[3]));
+    });
+    index_count_ += render_mesh->getIndexCount();
+    render_mesh->forAllIndices([this](int iter, int index)
+                               {
+                                   indices_.push_back(index + index_offset_);
+                               }
+    );
     // update all VBO data
-    vertex_count_ += vertices.size();
-    index_offset_ += vertices.size();
+    vertex_count_ += nverts;
+    index_offset_ += nverts;
     draw_count_++;
     mesh_init_ = false;
 }
+
 /*
  * Add renderdata of scene object into mesh, add vertices, texcoords, normals, model matrices
  */
 bool Batch::add(RenderData *render_data) {
     material_ = render_data->pass(0)->material();
     Mesh *render_mesh = render_data->mesh();
-    const std::vector<unsigned short>& indices = render_mesh->indices();
-
+    int indexCount = render_mesh->getIndexCount();
     Transform* const t = render_data->owner_object()->transform();
     glm::mat4 model_matrix;
     if (t != NULL) {
         model_matrix = glm::mat4(t->getModelMatrix());
     }
     render_data->getHashCode();
-    render_data->setDirty(false);
+
+    render_data->setDirty(0);
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;
@@ -102,14 +116,14 @@ bool Batch::add(RenderData *render_data) {
     // if it is not texture shader, dont add into batch, render in normal way
     for(int i=0; i<render_data->pass_count();i++)
     {
-        Material* mat = render_data->pass(i)->material();
-        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
+        ShaderData* mat = render_data->pass(i)->material();
+//        if (mat->shader_type() != Material::ShaderType::TEXTURE_SHADER ) {
             render_data_set_.insert(render_data);
             return true;
-        }
+//        }
     }
     // if mesh is large, render in normal way
-    if (indices.size() == 0 || (indices.size() + index_count_ > indices_limit_)) {
+    if (indexCount == 0 || (indexCount + index_count_ > indices_limit_)) {
         if (draw_count_ > 0) {
             return false;
         } else {
@@ -122,7 +136,8 @@ bool Batch::add(RenderData *render_data) {
     // Copy all renderData properties
     if (draw_count_ == 0) {
         if (!renderdata_) {
-            renderdata_ = new RenderData(*render_data);
+            renderdata_ = Renderer::getInstance()->createRenderData();
+            renderdata_->copy(*render_data);
             renderdata_->set_batching(true);
        }
     }
@@ -170,11 +185,11 @@ void Batch::resetBatch(){
 
 void Batch::meshInit(){
     mesh_init_ = true;
-    mesh_.set_vertices(vertices_);
-    mesh_.set_normals(normals_);
-    mesh_.setVec2Vector("a_texcoord",tex_coords_);
-    mesh_.set_indices(indices_);
-    mesh_.setFloatVector("a_matrix_index", matrix_indices_);
+    mesh_.setVertices(glm::value_ptr(vertices_[0]), vertices_.size());
+    mesh_.setNormals(glm::value_ptr(normals_[0]), normals_.size());
+    mesh_.setFloatVec("a_texcoord", glm::value_ptr(tex_coords_[0]), tex_coords_.size());
+    mesh_.setTriangles(indices_.data(), indices_.size());
+    mesh_.setFloatVec("a_matrix_index", matrix_indices_.data(), matrix_indices_.size());
     if (nullptr != renderdata_) {
         renderdata_->set_mesh(&mesh_);
     }
@@ -198,7 +213,6 @@ void Batch::regenerateMeshData(){
     for(auto it= render_data_set_.begin();it!=render_data_set_.end();++it){
         RenderData* render_data = *it;
         Mesh *render_mesh = render_data->mesh();
-        const std::vector<unsigned short>& indices = render_mesh->indices();
         Transform* const t = render_data->owner_object()->transform();
         glm::mat4 model_matrix;
         if (t != NULL) {

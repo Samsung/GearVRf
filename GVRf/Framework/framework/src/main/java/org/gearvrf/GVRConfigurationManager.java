@@ -205,8 +205,8 @@ abstract class GVRConfigurationManager {
         return false;
     }
 
-    public void configureRendering(){
-        NativeConfigurationManager.configureRendering(mPtr);
+    public void configureRendering(boolean useStencil){
+        NativeConfigurationManager.configureRendering(mPtr, useStencil);
     }
 
     /**
@@ -239,7 +239,7 @@ abstract class GVRConfigurationManager {
 
 class NativeConfigurationManager {
     static native long ctor();
-    public static native int getMaxLights(long jConfigurationManager);
-    public static native void configureRendering(long jConfigurationManager);
+    static native int getMaxLights(long jConfigurationManager);
+    static native void configureRendering(long jConfigurationManager, boolean useStencil);
     static native void delete(long jConfigurationManager);
 }

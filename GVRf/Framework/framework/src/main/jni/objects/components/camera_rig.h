@@ -44,7 +44,6 @@ public:
     };
 
     static long long getComponentType() {
-LOGD("ND: GVRCameraRig.getComponentType = %lld", COMPONENT_TYPE_CAMERA_RIG);
         return COMPONENT_TYPE_CAMERA_RIG;
     }
 
@@ -52,8 +51,7 @@ LOGD("ND: GVRCameraRig.getComponentType = %lld", COMPONENT_TYPE_CAMERA_RIG);
     virtual ~CameraRig();
 
 public:
-    void predict(float time);
-    void predict(float time, const RotationSensorData& rotationSensorData);
+    void updateRotation();
     void setPosition(const glm::vec3& transform_position);
 
     virtual Transform* getHeadTransform() const;

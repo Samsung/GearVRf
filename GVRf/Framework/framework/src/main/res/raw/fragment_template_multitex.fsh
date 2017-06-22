@@ -1,76 +1,21 @@
-#ifdef HAS_MULTIVIEW
-#extension GL_OVR_multiview2 : enable
-	precision highp float;
-    precision highp sampler2DArray;
-	uniform mat4 u_view_[2];
-#else
-    precision highp float;
-    precision highp sampler2DArray;
-    uniform mat4 u_view; 
-#endif
 
-out vec4 fragColor;
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
 
-uniform mat4 u_model;
+precision highp float;
 
-in vec3 viewspace_position;
-in vec3 viewspace_normal;
-in vec4 local_position;
-in vec4 proj_position;
-in vec3 view_direction;
+layout(location = 0) out vec4 fragColor;
 
-in vec2 diffuse_coord;
+@MATRIX_UNIFORMS
 
-#ifdef HAS_ambientTexture
-in vec2 ambient_coord;
-#endif
-
-#ifdef HAS_opacityTexture
-in vec2 opacity_coord;
-#endif
-
-#ifdef HAS_specularTexture
-in vec2 specular_coord;
-#endif
-
-#ifdef HAS_emissiveTexture
-in vec2 emissive_coord;
-#endif
-
-#ifdef HAS_normalTexture
-in vec2 normal_coord;
-#endif
-
-#ifdef HAS_lightMapTexture
-in vec2 lightmap_coord;
-#endif
-
-#ifdef HAS_ambientTexture1
-in vec2 ambient_coord1;
-#endif
-
-#ifdef HAS_diffuseTexture1
-in vec2 diffuse_coord1;
-#endif
-
-#ifdef HAS_specularTexture1
-in vec2 specular_coord1;
-#endif
-
-#ifdef HAS_emissiveTexture1
-in vec2 emissive_coord1;
-#endif
-
-#ifdef HAS_normalTexture1
-in vec2 normal_coord1;
-#endif
-
-#ifdef HAS_lightMapTexture1
-in vec2 lightmap_coord1;
-#endif
+layout(location = 1) in vec3 viewspace_position;
+layout(location = 2) in vec3 viewspace_normal;
+layout(location = 3) in vec4 local_position;
+layout(location = 0) in vec3 view_direction;
+layout(location = 4) in vec2 diffuse_coord;
 
 #ifdef HAS_SHADOWS
-uniform sampler2DArray u_shadow_maps;
+layout(set = 0, binding = 3) uniform lowp sampler2DArray u_shadow_maps;
 #endif
 
 struct Radiance

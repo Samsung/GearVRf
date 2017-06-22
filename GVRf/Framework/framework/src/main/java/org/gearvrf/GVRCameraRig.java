@@ -533,16 +533,10 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
     }
 
     /**
-     * Predict what the orientation of the camera rig will be at {@code time}
-     * based on the current rotation and angular velocity.
-     *
-     * @param time
-     *            Time to predict orientation for, in seconds.
-     * @see #setRotationSensorData(long, float, float, float, float, float,
-     *      float, float)
+     * Update the rotation transform from the latest sensor data on file
      */
-    void predict(float time) {
-        NativeCameraRig.predict(getNative(), time);
+    void updateRotation() {
+        NativeCameraRig.updateRotation(getNative());
     }
 
     /**
@@ -662,7 +656,7 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
 class NativeCameraRig {
     static native long ctor();
 
-    static native void predict(long cameraRig, float time);
+    static native void updateRotation(long cameraRig);
 
     static native int getCameraRigType(long cameraRig);
 

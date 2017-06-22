@@ -1,0 +1,173 @@
+05-12 17:03:46.036 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_position index=0 offset=0 size=12
+05-12 17:03:46.036 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_normal index=1 offset=12 size=12
+05-12 17:03:46.036 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_texcoord index=2 offset=24 size=8
+05-12 17:03:46.037 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_position 72
+05-12 17:03:46.038 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: allocating vertex buffer of 768 bytes with 24 vertices
+05-12 17:03:46.038 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_normal 72
+05-12 17:03:46.038 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_texcoord 48
+05-12 17:03:46.529 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_position index=0 offset=0 size=12
+05-12 17:03:46.529 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_normal index=1 offset=12 size=12
+05-12 17:03:46.529 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_texcoord index=2 offset=24 size=8
+05-12 17:03:46.530 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_position 72
+05-12 17:03:46.530 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: allocating vertex buffer of 768 bytes with 24 vertices
+05-12 17:03:46.530 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_normal 72
+05-12 17:03:46.530 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_texcoord 48
+05-12 17:03:46.531 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_position index=0 offset=0 size=12
+05-12 17:03:46.531 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_normal index=1 offset=12 size=12
+05-12 17:03:46.531 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: a_texcoord index=2 offset=24 size=8
+05-12 17:03:46.531 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_position 72
+05-12 17:03:46.531 12404-12419/org.gearvrf.tester V/gvrf: VertexBuffer: allocating vertex buffer of 768 bytes with 24 vertices
+05-12 17:03:46.532 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_normal 72
+05-12 17:03:46.532 12404-12419/org.gearvrf.tester D/gvrf: VertexBuffer::setFloatVec a_texcoord 48
+05-12 17:03:46.637 12404-12440/org.gearvrf.tester D/gvrf: VertexBuffer::updateGPU creating vertex array 1
+05-12 17:03:46.637 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::updateGPU created vertex buffer 9 with 24 vertices
+05-12 17:03:46.637 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::updateGPU updated vertex buffer 9
+05-12 17:03:46.639 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.639 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindToShader bind buffer 9 to shader 6
+05-12 17:03:46.639 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer: vertex attrib #0 a_position loc 0 ofs 0
+05-12 17:03:46.640 12404-12440/org.gearvrf.tester D/gvrf: VertexBuffer::updateGPU creating vertex array 2
+05-12 17:03:46.640 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::updateGPU created vertex buffer 12 with 24 vertices
+05-12 17:03:46.640 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::updateGPU updated vertex buffer 12
+05-12 17:03:46.644 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.644 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindToShader bind buffer 12 to shader 9
+05-12 17:03:46.644 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer: vertex attrib #0 a_position loc 0 ofs 0
+05-12 17:03:46.646 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.647 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.658 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.659 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.734 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.739 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.741 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.742 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.758 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.759 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.766 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.767 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.775 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.775 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.777 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.778 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.791 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.792 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.794 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.795 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.808 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.809 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.811 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.812 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.825 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.826 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.828 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.828 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.841 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.842 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.844 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.845 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.865 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.867 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.869 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.871 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.876 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.877 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.879 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.880 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.892 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.893 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.896 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.897 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.908 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.909 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.911 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.912 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.925 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.925 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.927 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.928 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.941 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.942 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.944 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.945 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.958 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.959 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.961 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.961 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.975 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.976 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.977 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.978 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.991 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.992 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:46.994 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:46.995 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.008 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.009 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.030 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.031 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.041 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.042 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.044 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.045 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.058 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.059 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.060 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.061 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.074 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.075 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.077 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.078 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.095 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.096 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.098 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.099 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.108 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.109 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.110 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.111 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.124 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.125 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.146 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.147 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.248 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.249 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.251 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.255 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.274 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.275 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.277 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.277 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.291 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.292 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.294 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.295 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.308 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.308 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.310 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.311 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.325 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.325 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.343 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.344 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.358 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.359 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.363 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.365 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.374 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.375 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.379 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.380 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.392 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.394 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.397 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.398 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.407 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.408 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.410 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.411 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.424 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.425 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.427 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.428 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.441 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.442 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
+05-12 17:03:47.444 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 1 9
+05-12 17:03:47.445 12404-12440/org.gearvrf.tester V/gvrf: VertexBuffer::bindBuffer 2 12
