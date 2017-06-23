@@ -676,9 +676,7 @@ public class AnimationInteractivityManager {
                                     }
                                     else {
                                         // this is an fbx or other non-X3D file for animation
-                                        Log.e("X3D-", "fbx animate click");
                                         if ( !activeFBXanimation ) {
-                                            Log.e("X3D-", "no animation running, begin new animation");
                                             InlineObject inlineObject = interactiveObjectFinal.getInlineObject();
                                             GVRSceneObject inlineSceneObject = inlineObject.getInlineGVRSceneObject();
                                             GVRAnimator animator = (GVRAnimator) inlineSceneObject.getComponent(GVRAnimator.getComponentType());
@@ -707,26 +705,38 @@ public class AnimationInteractivityManager {
                                                             GVRAnimationChannel gvrOriginalAnimationChannel = gvrOriginalKeyFrameAnimation.getChannel(0);
 
                                                             try {
+                                                                // copy the original animation, then save just the requested frames
+                                                                // and their translation, scale and rotate
                                                                 int beginFrame = inlineObject.getBeginKeyFrame();
                                                                 int endFrame = inlineObject.getEndKeyFrame();
                                                                 double beginTime = gvrOriginalAnimationChannel.getRotKeyTime(beginFrame);
                                                                 double endTime = gvrOriginalAnimationChannel.getRotKeyTime(endFrame);
 
-                                                                int rotationFrames = (endFrame - beginFrame) + 1;
-                                                                Quaternionf[] rotation = new Quaternionf[rotationFrames];
-                                                                double[] keyTimes = new double[rotationFrames];
-                                                                for (int i = 0; i < rotationFrames; i++) {
+                                                                int keyFrames = (endFrame - beginFrame) + 1;
+                                                                Quaternionf[] rotation = new Quaternionf[keyFrames];
+                                                                Vector3f[] translation = new Vector3f[keyFrames];
+                                                                Vector3f[] scale = new Vector3f[keyFrames];
+                                                                double[] keyTimes = new double[keyFrames];
+                                                                for (int i = 0; i < keyFrames; i++) {
                                                                     rotation[i] = gvrOriginalAnimationChannel.getRotKeyQuaternion(beginFrame + i);
+                                                                    translation[i] = gvrOriginalAnimationChannel.getPosKeyVector(beginFrame + i);
+                                                                    scale[i] = gvrOriginalAnimationChannel.getScaleKeyVector(beginFrame + i);
                                                                     keyTimes[i] = gvrOriginalAnimationChannel.getRotKeyTime(beginFrame + i);
-                                                                    Log.e("X3D-a", "rot[" + i + "] w, z:" + rotation[i].w + ", " + rotation[i].z + "; keyTimes: " + keyTimes[i]);
                                                                 }
                                                                 GVRAnimationChannel fbxGVRAnimationChannel = new GVRAnimationChannel(
-                                                                        gvrOriginalAnimationChannel.getNodeName(), 0, rotationFrames, 0,
+                                                                        gvrOriginalAnimationChannel.getNodeName(), keyFrames, keyFrames, keyFrames,
                                                                         GVRAnimationBehavior.DEFAULT, GVRAnimationBehavior.DEFAULT);
-                                                                for (int i = 0; i < rotationFrames; i++) {
+                                                                // Insert the new key frames animations into an AnimationChannel,
+                                                                // but the first animated frame will be set to frame 0
+                                                                for (int i = 0; i < keyFrames; i++) {
                                                                     fbxGVRAnimationChannel.setRotKeyQuaternion(i, (float) (keyTimes[i] - keyTimes[0]),
                                                                             rotation[i]);
+                                                                    fbxGVRAnimationChannel.setPosKeyVector(i, (float) (keyTimes[i] - keyTimes[0]),
+                                                                            translation[i].x, translation[i].y, translation[i].z);
+                                                                    fbxGVRAnimationChannel.setScaleKeyVector(i, (float) (keyTimes[i] - keyTimes[0]),
+                                                                            scale[i].x, scale[i].y, scale[i].z);
                                                                 }
+
                                                                 GVRHybridObject fbxHybridObject = (GVRHybridObject) gvrOriginalAnimation.getTargetObj();
                                                                 if (fbxHybridObject instanceof GVRSceneObject) {
                                                                     GVRSceneObject fbxObject = (GVRSceneObject) fbxHybridObject;
@@ -745,11 +755,10 @@ public class AnimationInteractivityManager {
                                                             }
                                                             catch (Exception e) {
                                                                 Log.e(TAG, "Problem with getting subset of FBX frames");
-                                                                Log.e("X3D-", "Problem with getting subset of FBX frames");
                                                             }
                                                         }
                                                         else {
-                                                            Log.e("X3D-a", "gvrOriginalAnimation NOT instanceof GVRKeyFrameAnimation");
+                                                            Log.e(TAG, "Original animation NOT (instanceof) a GVRKeyFrameAnimation");
                                                         }
                                                     }
                                                 }
@@ -759,8 +768,8 @@ public class AnimationInteractivityManager {
                                                             .setOnFinish(new GVROnFinish() {
                                                                 @Override
                                                                 public void finished(GVRAnimation animation) {
+                                                                    // enable the animation to be clicked when current animation done.
                                                                     activeFBXanimation = false;
-                                                                    Log.e("X3D-", "fbx animation finished");
                                                                 }
                                                             });
                                                 }
