@@ -97,6 +97,7 @@ namespace gvr
         else
         {
             RenderTexture* texture_render_texture = post_effect_render_texture_a;
+            RenderTexture* input_texture = texture_render_texture;
 
             GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getFrameBufferId()));
             GL(glViewport(0, 0, texture_render_texture->width(), texture_render_texture->height()));
@@ -114,24 +115,25 @@ namespace gvr
             {
                 if (i % 2 == 0)
                 {
-                    texture_render_texture = post_effect_render_texture_a;
+                    texture_render_texture = post_effect_render_texture_b;
                 }
                 else
                 {
                     texture_render_texture = post_effect_render_texture_b;
                 }
-                GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+                GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getFrameBufferId()));
                 GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
 
                 GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-                GL(renderPostEffectData(camera, texture_render_texture,
+                GL(renderPostEffectData(camera, input_texture,
                         post_effects[i], post_effect_shader_manager));
+                input_texture = texture_render_texture;
             }
 
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
             GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
             GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-            renderPostEffectData(camera, texture_render_texture, post_effects.back(), post_effect_shader_manager);
+            renderPostEffectData(camera, input_texture, post_effects.back(), post_effect_shader_manager);
         }
 
         GL(glDisable(GL_DEPTH_TEST));
