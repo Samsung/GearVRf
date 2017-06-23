@@ -16,6 +16,7 @@
 package org.gearvrf.x3d;
 
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.utility.Log;
 
 /**
  * 
@@ -27,9 +28,14 @@ import org.gearvrf.GVRSceneObject;
 
 public class InlineObject {
 
+    private static final String TAG = InlineObject.class.getSimpleName();
     private GVRSceneObject inlineGVRSceneObject = null;
     private String[] url = {};
     private String name = null;
+
+    public static final int UNSET_KEY_FRAME = -1;
+    private int beginKeyFrame = UNSET_KEY_FRAME;
+    private int endKeyFrame = UNSET_KEY_FRAME;
 
     /**
      * Construct an empty Inline object
@@ -68,6 +74,11 @@ public class InlineObject {
         this.name = name;
     }
 
+    public void copy(InlineObject original) {
+        this.inlineGVRSceneObject = original.inlineGVRSceneObject;
+        this.url = original.url;
+        this.name = original.name;
+    }
     /**
      * Gets the url which will be a file name ending in '.x3d'
      * @return
@@ -93,6 +104,50 @@ public class InlineObject {
      */
     public String getName() {
         return name;
+    }
+
+
+    /**
+     * An extension to X3D to enable animations between
+     * specific key frames.  This value will be set in
+     * the 'toField' of a ROUTE to an Inline object
+     * @param frameRange
+     *          Must be two comma-separated values
+     */
+    public void setKeyFrames(String frameRange) {
+        if ( !frameRange.contains("enabled") ) {
+            try {
+                beginKeyFrame = Integer.valueOf( frameRange.substring(0,frameRange.indexOf(',')).trim() ).intValue();
+                endKeyFrame = Integer.valueOf( frameRange.substring((frameRange.indexOf(',')+1), frameRange.length()).trim() ).intValue();
+            }
+            catch (NumberFormatException e) {
+                Log.e(TAG, "Inline node, NumberFormatException on " + frameRange + ": " + e );
+            }
+            catch (Exception e) {
+                Log.e(TAG, "Inline node, Exception on " + frameRange + ": "  + e);
+            }
+            if ( beginKeyFrame >= endKeyFrame) {
+                Log.e(TAG, "Inline node error: Begining frame must be less than ending frame instead of " + frameRange );
+                beginKeyFrame = UNSET_KEY_FRAME;
+                endKeyFrame = UNSET_KEY_FRAME;
+            }
+        }
+    }
+
+    /**
+     * Get the begin key frame
+     * @return
+     */
+    public int getBeginKeyFrame() {
+        return beginKeyFrame;
+    }
+
+    /**
+     * get the ending KeyFrame
+     * @return
+     */
+    public int getEndKeyFrame() {
+        return endKeyFrame;
     }
 
 }

@@ -19,6 +19,7 @@ package org.gearvrf.x3d;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
@@ -476,7 +477,10 @@ public class AnimationInteractivityManager {
         }  //  end if routeToDefinedItem != null
         if ( routeToInlineObject != null ) {
             InteractiveObject interactiveObject = new InteractiveObject();
-            InlineObject inlineObject = routeToInlineObject;
+            InlineObject originalInlineObject = routeToInlineObject;
+            InlineObject inlineObject = new InlineObject();
+            inlineObject.copy(originalInlineObject);
+            inlineObject.setKeyFrames(toField);
             interactiveObject.setInlineObject(inlineObject);
             interactiveObject.setSensor(routeFromSensor, fromField);
             interactiveObjects.add(interactiveObject);
@@ -658,7 +662,6 @@ public class AnimationInteractivityManager {
                                             .IS_ACTIVE))) {
                                 if (!stateChanged) {
                                     stateChanged = true;
-                                    Log.e("X3D-", "fbx animate, stateChanged = " + stateChanged);
                                     EventUtility eventUtility = interactiveObjectFinal.getEventUtility();
                                     if ( eventUtility != null ) {
                                         eventUtility.setToggle(!eventUtility.getToggle());
@@ -673,21 +676,94 @@ public class AnimationInteractivityManager {
                                     }
                                     else {
                                         // this is an fbx or other non-X3D file for animation
+                                        Log.e("X3D-", "fbx animate click");
                                         if ( !activeFBXanimation ) {
+                                            Log.e("X3D-", "no animation running, begin new animation");
                                             InlineObject inlineObject = interactiveObjectFinal.getInlineObject();
                                             GVRSceneObject inlineSceneObject = inlineObject.getInlineGVRSceneObject();
                                             GVRAnimator animator = (GVRAnimator) inlineSceneObject.getComponent(GVRAnimator.getComponentType());
                                             if ( animator != null ) {
                                                 List<GVRAnimation> gvrAnimations = animator.getAnimationList();
-                                                GVRAnimation gvrAnimation = gvrAnimations.get(0);
-                                                activeFBXanimation = true;
-                                                gvrAnimation.start( gvrContext.getAnimationEngine() )
-                                                        .setOnFinish(new GVROnFinish() {
-                                                            @Override
-                                                            public void finished(GVRAnimation animation) {
-                                                                activeFBXanimation = false;
+                                                GVRAnimation gvrAnimation = null;
+
+                                                if  ( (inlineObject.getBeginKeyFrame() == InlineObject.UNSET_KEY_FRAME) || (inlineObject.getEndKeyFrame() == InlineObject.UNSET_KEY_FRAME)) {
+                                                    if ( (inlineObject.getBeginKeyFrame() == InlineObject.UNSET_KEY_FRAME) && (inlineObject.getEndKeyFrame() == InlineObject.UNSET_KEY_FRAME)) {
+                                                        // use the original FBX animation.
+                                                        gvrAnimation = gvrAnimations.get(0);
+                                                    }
+                                                    else {
+                                                        Log.e(TAG, "Error: ROUTE specifying the keyFrame range - only 1 may be an integers");
+                                                    }
+                                                }
+                                                else {
+                                                    // FBX animation specified in ROUTE as a set of keyFrames
+                                                    // play only a subset of the animation based on keyframes
+                                                    gvrAnimation = interactiveObjectFinal.getFBXAnimation();
+                                                    // check if we already copied over the animation
+                                                    if (gvrAnimation == null) {
+                                                        GVRAnimation gvrOriginalAnimation = gvrAnimations.get(0);
+                                                        if (gvrOriginalAnimation instanceof GVRKeyFrameAnimation) {
+                                                            GVRKeyFrameAnimation gvrOriginalKeyFrameAnimation = (GVRKeyFrameAnimation) gvrOriginalAnimation;
+                                                            GVRAnimationChannel gvrOriginalAnimationChannel = gvrOriginalKeyFrameAnimation.getChannel(0);
+
+                                                            try {
+                                                                int beginFrame = inlineObject.getBeginKeyFrame();
+                                                                int endFrame = inlineObject.getEndKeyFrame();
+                                                                double beginTime = gvrOriginalAnimationChannel.getRotKeyTime(beginFrame);
+                                                                double endTime = gvrOriginalAnimationChannel.getRotKeyTime(endFrame);
+
+                                                                int rotationFrames = (endFrame - beginFrame) + 1;
+                                                                Quaternionf[] rotation = new Quaternionf[rotationFrames];
+                                                                double[] keyTimes = new double[rotationFrames];
+                                                                for (int i = 0; i < rotationFrames; i++) {
+                                                                    rotation[i] = gvrOriginalAnimationChannel.getRotKeyQuaternion(beginFrame + i);
+                                                                    keyTimes[i] = gvrOriginalAnimationChannel.getRotKeyTime(beginFrame + i);
+                                                                    Log.e("X3D-a", "rot[" + i + "] w, z:" + rotation[i].w + ", " + rotation[i].z + "; keyTimes: " + keyTimes[i]);
+                                                                }
+                                                                GVRAnimationChannel fbxGVRAnimationChannel = new GVRAnimationChannel(
+                                                                        gvrOriginalAnimationChannel.getNodeName(), 0, rotationFrames, 0,
+                                                                        GVRAnimationBehavior.DEFAULT, GVRAnimationBehavior.DEFAULT);
+                                                                for (int i = 0; i < rotationFrames; i++) {
+                                                                    fbxGVRAnimationChannel.setRotKeyQuaternion(i, (float) (keyTimes[i] - keyTimes[0]),
+                                                                            rotation[i]);
+                                                                }
+                                                                GVRHybridObject fbxHybridObject = (GVRHybridObject) gvrOriginalAnimation.getTargetObj();
+                                                                if (fbxHybridObject instanceof GVRSceneObject) {
+                                                                    GVRSceneObject fbxObject = (GVRSceneObject) fbxHybridObject;
+                                                                    float duration = (float) (endTime - beginTime);
+                                                                    GVRKeyFrameAnimation gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
+                                                                            gvrOriginalAnimationChannel.getNodeName(), fbxObject,
+                                                                            duration, gvrOriginalKeyFrameAnimation.getTicksPerSecond()
+                                                                    );
+
+
+                                                                    gvrKeyFrameAnimation.addChannel(fbxGVRAnimationChannel);
+                                                                    gvrKeyFrameAnimation.prepare();
+                                                                    interactiveObjectFinal.setFBXAnimation(gvrKeyFrameAnimation);
+                                                                    gvrAnimation = interactiveObjectFinal.getFBXAnimation();
+                                                                }
                                                             }
-                                                        });
+                                                            catch (Exception e) {
+                                                                Log.e(TAG, "Problem with getting subset of FBX frames");
+                                                                Log.e("X3D-", "Problem with getting subset of FBX frames");
+                                                            }
+                                                        }
+                                                        else {
+                                                            Log.e("X3D-a", "gvrOriginalAnimation NOT instanceof GVRKeyFrameAnimation");
+                                                        }
+                                                    }
+                                                }
+                                                if ( gvrAnimation != null) {
+                                                    activeFBXanimation = true;
+                                                    gvrAnimation.start(gvrContext.getAnimationEngine())
+                                                            .setOnFinish(new GVROnFinish() {
+                                                                @Override
+                                                                public void finished(GVRAnimation animation) {
+                                                                    activeFBXanimation = false;
+                                                                    Log.e("X3D-", "fbx animation finished");
+                                                                }
+                                                            });
+                                                }
                                             }
                                         }
                                     }
@@ -698,7 +774,6 @@ public class AnimationInteractivityManager {
                             } else if (!event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor
                                     .IS_OVER)) {
                                 stateChanged = false;
-                                Log.e("X3D-", "   reset state changed to false ");
                             }
                         }
                     });

@@ -54,6 +54,10 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
         mChannels.add(channel);
     }
 
+    public GVRAnimationChannel getChannel (int i) {
+        return mChannels.get(i);
+    }
+
     /**
      * Must be called after adding all channels.
      */
@@ -129,5 +133,9 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
             mTransforms[i++].set(channel.animate(animationTime));
         }
         return mTransforms;
+    }
+
+    public float getTicksPerSecond () {
+        return mTicksPerSecond;
     }
 }
