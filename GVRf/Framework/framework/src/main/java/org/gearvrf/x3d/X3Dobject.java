@@ -1071,6 +1071,7 @@ public class X3Dobject {
                         urlAttribute = urlAttribute.replace("\"", ""); // remove double and
                         // single quotes
                         urlAttribute = urlAttribute.replace("\'", "");
+                        urlAttribute = urlAttribute.toLowerCase();
 
                         final String filename = urlAttribute;
                         String repeatSAttribute = attributes.getValue("repeatS");
