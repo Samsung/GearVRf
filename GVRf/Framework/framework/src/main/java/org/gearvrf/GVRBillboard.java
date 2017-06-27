@@ -32,6 +32,11 @@ public class GVRBillboard extends GVRBehavior
         mMainCameraRig = gvrContext.getMainScene().getMainCameraRig();
     }
 
+    /**
+     * Constructor
+     * @param gvrContext
+     * @param up:       the up vector about which the scene object is constrained to rotate
+     */
     public GVRBillboard(GVRContext gvrContext, Vector3f up )
     {
         super(gvrContext);
