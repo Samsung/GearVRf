@@ -51,15 +51,9 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         samplerBinding.push_back(dummy_binding);
     }
 
-    if (getUniformDescriptor().getNumEntries() > 0)
-    {
-        VkDescriptorSetLayoutBinding &material_uniformBinding = reinterpret_cast<VulkanUniformBlock&>(vkMtl.uniforms()).getVulkanDescriptor()->getLayoutBinding();
-        samplerBinding.push_back(material_uniformBinding);
-    }
-    else{
-        dummy_binding.binding = 1;
-        samplerBinding.push_back(dummy_binding);
-    }
+    // Dummy binding for Material UBO, since now a push Constant
+    dummy_binding.binding = 1;
+    samplerBinding.push_back(dummy_binding);
 
     if(vkdata->mesh()->hasBones()){
        VkDescriptorSetLayoutBinding &bones_uniformBinding = reinterpret_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();

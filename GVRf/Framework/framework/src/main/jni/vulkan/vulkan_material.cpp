@@ -21,17 +21,7 @@ namespace gvr
      : ShaderData(texture_desc),
        uniforms_(uniform_desc, MATERIAL_UBO_INDEX, "Material_ubo")
     {
-        uniforms_.useGPUBuffer(true);
-    }
-
-    int VulkanMaterial::render(Shader *shader, Renderer *unused)
-    {
-        if (uniforms_.isDirty())
-        {
-            std::lock_guard<std::mutex> lock(mLock);
-            uniforms_.bindBuffer(shader, unused);
-        }
-        return 0;
+        uniforms_.useGPUBuffer(false);
     }
 
 }

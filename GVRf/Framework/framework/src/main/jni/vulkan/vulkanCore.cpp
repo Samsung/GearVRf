@@ -280,6 +280,7 @@ namespace gvr {
         vkGetPhysicalDeviceProperties(m_physicalDevice, &(m_physicalDeviceProperties));
 
         LOGI("Vulkan Device: %s", m_physicalDeviceProperties.deviceName);
+        LOGI("Vulkan Device: Push Constant limitations %u", m_physicalDeviceProperties.limits.maxPushConstantsSize);
 
         // Get Memory information and properties - this is required later, when we begin
         // allocating buffers to store data.
@@ -548,9 +549,14 @@ namespace gvr {
                                           &descriptorLayout);
         GVR_VK_CHECK(!ret);
 
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.offset                        = 0;
+        pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
+        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_FRAGMENT_BIT;
+
         VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
-                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0, 0),
+                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 1, &pushConstantRange),
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
         shader->setShaderDirty(false);
@@ -1004,10 +1010,20 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
                 VkDescriptorSet descriptorSet = rdata->getDescriptorSet(curr_pass);
                //bind out descriptor set, which handles our uniforms and samplers
-               if (!rdata->isDescriptorSetNull(curr_pass))
+               if (!rdata->isDescriptorSetNull(curr_pass)) {
+                   VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(rdata->material(
+                           curr_pass));
+
+                   vkCmdPushConstants(cmdBuffer, shader->getPipelineLayout(),
+                                      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                      0,
+                                      (uint32_t) vkmtl->uniforms().getTotalSize(),
+                                      vkmtl->uniforms().getUniformData());
+
                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                            shader->getPipelineLayout(), 0, 1,
                                            &descriptorSet, 0, NULL);
+               }
 
                // Bind our vertex buffer, with a 0 offset.
                VkDeviceSize offsets[1] = {0};
@@ -1159,11 +1175,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if (transformUboPresent) {
             vkData->getTransformUbo().setDescriptorSet(descriptorSet);
             writes.push_back(vkData->getTransformUbo().getDescriptorSet());
-        }
-
-        if (uniformDescriptor.getNumEntries()) {
-            static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).setDescriptorSet(descriptorSet);
-            writes.push_back(static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).getDescriptorSet());
         }
 
         if(vkData->mesh()->hasBones() && bones_present){

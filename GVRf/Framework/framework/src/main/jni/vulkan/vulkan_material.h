@@ -31,9 +31,8 @@ namespace gvr {
     public:
         VulkanMaterial(const char* uniform_desc, const char* texture_desc);
 
-        virtual int render(Shader* shader, Renderer* renderer);
-        virtual UniformBlock& uniforms() { return uniforms_; }
-        virtual const UniformBlock& uniforms() const { return uniforms_; }
+        virtual VulkanUniformBlock& uniforms() { return uniforms_; }
+        virtual const VulkanUniformBlock& uniforms() const { return uniforms_; }
     protected:
         VulkanUniformBlock uniforms_;
     };
