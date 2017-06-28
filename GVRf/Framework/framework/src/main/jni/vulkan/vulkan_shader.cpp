@@ -176,7 +176,15 @@ VulkanShader::~VulkanShader() { }
         desc.forEachEntry([&stream](const DataDescriptor::DataEntry& entry) mutable
         {
             if(entry.IsSet)
-                stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
+            {
+                int nelems = entry.Count;
+                stream << "   " << entry.Type << " " << entry.Name;
+                if (nelems > 1)
+                {
+                    stream << "[" << nelems << "]";
+                }
+                stream << ";" << std::endl;
+            }
         });
         stream << "};" << std::endl;
         return stream.str();
