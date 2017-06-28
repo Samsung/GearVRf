@@ -26,13 +26,10 @@
 #include "util/gvr_gl.h"
 #include "engine/renderer/renderer.h"
 
-static const char USE_MULTIVIEW[] = "#define MULTIVIEW\n";
-static const char NOT_USE_MULTIVIEW[] = "#undef MULTIVIEW\n";
-static const char version[] = "#version 300 es\n";
-static const char EGL_IMAGE_EXT_ADRENO [] = "#extension GL_OES_EGL_image_external_essl3 : require\n";
-static const char EGL_IMAGE_EXT_MALI [] = "#extension GL_OES_EGL_image_external : require\n";
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
+static const char VERTEX_SHADER[] =
+        "#version 300 es\n"
+        "attribute vec4 a_position;\n"
         "attribute vec2 a_texcoord;\n"
         "uniform mat4 u_mvp;\n"
         "varying vec2 v_tex_coord;\n"
@@ -42,7 +39,9 @@ static const char VERTEX_SHADER[] = "attribute vec4 a_position;\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
-        "#extension GL_OES_EGL_image_external : require\n"
+        "#version 300 es\n"
+        "#extension GL_OES_EGL_image_external : enable\n"
+        "#extension GL_OES_EGL_image_external_essl3 : enable\n"
                 "precision highp float;\n"
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform vec3 u_color;\n"
@@ -56,7 +55,7 @@ static const char FRAGMENT_SHADER[] =
 
 
 static const char VERTEX_SHADER_MULTIVIEW[] =
-
+        "#version 300 es\n"
         "#extension GL_OVR_multiview2 : enable\n"
         "layout(num_views = 2) in;\n"
         "uniform mat4 u_mvp_[2];\n"
@@ -69,6 +68,9 @@ static const char VERTEX_SHADER_MULTIVIEW[] =
         "}\n";
 
 static const char FRAGMENT_SHADER_MULTIVIEW[] =
+        "#version 300 es\n"
+        "#extension GL_OES_EGL_image_external : enable\n"
+        "#extension GL_OES_EGL_image_external_essl3 : enable\n"
                 "precision highp float;\n"
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform vec3 u_color;\n"
@@ -93,38 +95,12 @@ OESShader::OESShader() :
 
 void OESShader::programInit() {
     if (use_multiview) {
-        const char* frag_shader_strings[3];
-        GLint frag_shader_string_lengths[3];
-
-        const char* vertex_shader_strings[3];
-        GLint vertex_shader_string_lengths[3];
-        vertex_shader_strings[0] = version;
-        frag_shader_strings[0] = version;
-        vertex_shader_string_lengths[0] = (GLint) strlen(version);
-        frag_shader_string_lengths[0] = vertex_shader_string_lengths[0];
-        vertex_shader_string_lengths[2] = (GLint) strlen(VERTEX_SHADER_MULTIVIEW);
-        frag_shader_string_lengths[2] = (GLint) strlen(FRAGMENT_SHADER_MULTIVIEW);
-        vertex_shader_strings[2] = VERTEX_SHADER_MULTIVIEW;
-        frag_shader_strings[2] = FRAGMENT_SHADER_MULTIVIEW;
-
         const char* extensions = (const char*) glGetString(GL_EXTENSIONS);
-        const char* vendor = (const char*) glGetString(GL_VENDOR);
-        if (strcmp(vendor, "Qualcomm") == 0 && std::strstr(extensions, "GL_OES_EGL_image_external") != NULL) {
-            frag_shader_strings[1] = EGL_IMAGE_EXT_ADRENO;
-            frag_shader_string_lengths[1] = (GLint) strlen(EGL_IMAGE_EXT_ADRENO);
-            vertex_shader_strings[1] = "\n";
-            vertex_shader_string_lengths[1] = (GLint) strlen("\n");
-        } else if (std::strstr(extensions, "GL_OES_EGL_image_external") != NULL) {
-            frag_shader_strings[1] = EGL_IMAGE_EXT_MALI;
-            frag_shader_string_lengths[1] = (GLint) strlen(EGL_IMAGE_EXT_MALI);
-            vertex_shader_strings[1] = "\n";
-            vertex_shader_string_lengths[1] = (GLint) strlen("\n");
-        } else {
+        if (std::strstr(extensions, "GL_OES_EGL_image_external") == NULL) {
             LOGE("GLSL does not support GL_OES_EGL_image_external, try with disabling multiview \n");
         }
 
-        program_ = new GLProgram(vertex_shader_strings, vertex_shader_string_lengths, frag_shader_strings,
-                frag_shader_string_lengths, 3);
+        program_ = new GLProgram(VERTEX_SHADER_MULTIVIEW,FRAGMENT_SHADER_MULTIVIEW);
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
     } else {
         LOGE("not a multiview");

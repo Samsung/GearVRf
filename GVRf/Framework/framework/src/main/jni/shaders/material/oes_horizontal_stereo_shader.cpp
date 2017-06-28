@@ -38,7 +38,8 @@ static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
-        "#extension GL_OES_EGL_image_external : require\n"
+        "#extension GL_OES_EGL_image_external : enable\n"
+        "#extension GL_OES_EGL_image_external_essl3 : enable\n"
                 "precision highp float;\n"
                 "uniform samplerExternalOES u_texture;\n"
                 "uniform float u_opacity;\n"
