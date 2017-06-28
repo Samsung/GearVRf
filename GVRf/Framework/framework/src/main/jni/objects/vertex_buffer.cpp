@@ -459,6 +459,7 @@ namespace gvr {
         const DataEntry* attr = find(attrName);
         const float*    data = reinterpret_cast<float*>(mVertexData);
         int             stride = getVertexSize();
+        int             ofs;
 
         if ((attr == NULL) || !attr->IsSet)
         {
@@ -470,9 +471,10 @@ namespace gvr {
             LOGD("VertexBuffer: cannot find attribute %s", attrName);
             return false;
         }
+        ofs = attr->Offset / sizeof(float);
         for (int i = 0; i < mVertexCount; ++i)
         {
-            func(i, data + attr->Offset);
+            func(i, data + ofs);
             data += stride;
         }
         return true;
@@ -490,6 +492,37 @@ namespace gvr {
             {
                 float f = *v++;
                 os << std::fixed << f << " ";
+            }
+            LOGV("%s", os.str().c_str());
+        });
+    }
+
+    void VertexBuffer::dump(const char* attrName) const
+    {
+        int vsize = getVertexSize();
+        const DataEntry* attr = find(attrName);
+
+        forAllVertices(attrName, [attr](int iter, const float* vertex)
+        {
+            std::ostringstream os;
+            os.precision(3);
+            int asize = attr->Size / sizeof(float);
+            if (attr->IsInt)
+            {
+                const int* iv = (const int*) vertex;
+                for (int i = 0; i < asize; ++i)
+                {
+                    os << *iv++ << " ";
+                }
+            }
+            else
+            {
+                const float* v = vertex;
+                for (int i = 0; i < asize; ++i)
+                {
+                    float f = *v++;
+                    os << std::fixed << f << " ";
+                }
             }
             LOGV("%s", os.str().c_str());
         });

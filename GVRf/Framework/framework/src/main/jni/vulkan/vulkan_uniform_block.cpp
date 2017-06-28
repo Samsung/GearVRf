@@ -19,8 +19,14 @@
 
 namespace gvr {
 
-    VulkanUniformBlock::VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName)
+    VulkanUniformBlock::VulkanUniformBlock(const char* descriptor, int bindingPoint, const char* blockName)
             : UniformBlock(descriptor, bindingPoint, blockName), vk_descriptor(nullptr)
+    {
+        vk_descriptor = new VulkanDescriptor();
+    }
+
+    VulkanUniformBlock::VulkanUniformBlock(const char* descriptor, int bindingPoint, const char* blockName, int maxelems)
+            : UniformBlock(descriptor, bindingPoint, blockName, maxelems), vk_descriptor(nullptr)
     {
         vk_descriptor = new VulkanDescriptor();
     }

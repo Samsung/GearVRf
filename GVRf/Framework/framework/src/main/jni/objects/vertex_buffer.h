@@ -137,6 +137,7 @@ namespace gvr {
         virtual bool    updateGPU(Renderer*, IndexBuffer*, Shader*) = 0;
         virtual void    bindToShader(Shader* shader, IndexBuffer* ibuf) = 0;
         void            dump() const;
+        void            dump(const char* attrName) const;
 
     protected:
         virtual void    parseDescriptor();
