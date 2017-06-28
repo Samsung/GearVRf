@@ -313,6 +313,8 @@ class GVRJassimpAdapter {
                 return AiPostProcessSteps.OPTIMIZE_GRAPH;
             case FLIP_UV:
                 return AiPostProcessSteps.FLIP_UVS;
+            case START_ANIMATIONS:
+                return null;
             default:
                 // Unsupported setting
                 Log.e(TAG, "Unsupported setting %s", setting);
