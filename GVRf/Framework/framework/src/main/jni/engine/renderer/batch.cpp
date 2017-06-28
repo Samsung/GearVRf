@@ -39,7 +39,7 @@ Batch::~Batch() {
     renderdata_ = nullptr;
 }
 
-bool Batch::updateMesh(Mesh* render_mesh){
+void Batch::updateMesh(Mesh* render_mesh){
     const std::vector<unsigned short>& indices = render_mesh->indices();
     const std::vector<glm::vec3>& vertices = render_mesh->vertices();
     const std::vector<glm::vec3>& normals = render_mesh->normals();
