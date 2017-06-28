@@ -139,7 +139,7 @@ public:
      */
     bool isDirty() const { return mIsDirty; }
     virtual void markDirty() { mIsDirty = true; }
-    virtual std::string makeShaderType(const char* type, int byteSize, int arraySize);
+    virtual std::string makeShaderType(const char* type, int byteSize);
 
     /**
      * Calculate the byte size of the given type.
@@ -154,7 +154,7 @@ protected:
      */
     virtual void parseDescriptor();
 
-    const char* addName(const char* name, DataEntry& entry);
+    const char* addName(const char* name, int len, DataEntry& entry);
     int findName(const char* name) const;
 
     mutable bool mIsDirty;          // true if data in block has changed since last render

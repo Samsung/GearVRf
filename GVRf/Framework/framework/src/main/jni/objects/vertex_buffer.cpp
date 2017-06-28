@@ -55,7 +55,7 @@ namespace gvr {
                 return;
 
             DataEntry entry;
-            entry.Type = makeShaderType(type, byteSize, 1);
+            entry.Type = makeShaderType(type, byteSize);
             entry.IsSet = false;
             entry.Count = 1;
             entry.NotUsed = false;
@@ -70,7 +70,7 @@ namespace gvr {
                 entry.NotUsed = true;
                 ++name;
             }
-            addName(name, entry);
+            addName(name, strlen(name), entry);
             mLayout.push_back(entry);
             LOGV("VertexBuffer: %s index=%d offset=%d size=%d %d entries\n",
                  entry.Name, entry.Index, entry.Offset, entry.Size, mLayout.size());
