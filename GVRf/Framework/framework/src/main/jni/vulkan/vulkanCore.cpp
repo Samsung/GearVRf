@@ -552,7 +552,7 @@ namespace gvr {
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.offset                        = 0;
         pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
-        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
@@ -1015,7 +1015,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                            curr_pass));
 
                    vkCmdPushConstants(cmdBuffer, shader->getPipelineLayout(),
-                                      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                       0,
                                       (uint32_t) vkmtl->uniforms().getTotalSize(),
                                       vkmtl->uniforms().getUniformData());
