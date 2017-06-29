@@ -17,6 +17,10 @@ public class GVRBillboard extends GVRBehavior
     private Vector3f lookat = new Vector3f(0, 0, 0);
     private Vector3f ownerXaxis = new Vector3f(0, 0, 0);
     private Vector3f ownerYaxis = new Vector3f(0, 0, 0);
+    private Vector3f ownerZaxis = new Vector3f(0, 0, 0);
+
+    private boolean isCustomUpPresent = false;
+    private Vector3f customUp;
 
     /**
      *  Constructor
@@ -28,16 +32,35 @@ public class GVRBillboard extends GVRBehavior
         mMainCameraRig = gvrContext.getMainScene().getMainCameraRig();
     }
 
+    /**
+     * Constructor
+     * @param gvrContext
+     * @param up:       the up vector about which the scene object is constrained to rotate
+     */
+    public GVRBillboard(GVRContext gvrContext, Vector3f up )
+    {
+        super(gvrContext);
+        mMainCameraRig = gvrContext.getMainScene().getMainCameraRig();
+        customUp = up;
+        isCustomUpPresent = true;
+    }
+
     static public long getComponentType() { return TYPE_BILLBOARD; }
 
     /**
      * Should not be used from the application.
      */
 
-     public void onDrawFrame(float frameTime)
+    public void onDrawFrame(float frameTime)
     {
         if ( isEnabled() ) {
-            faceObjectToCamera();
+
+            if (!isCustomUpPresent) {
+                faceObjectToCamera();
+            }
+            else {
+                faceObjectToCameraWithCustomUp();
+            }
         }
     }
 
@@ -77,5 +100,38 @@ public class GVRBillboard extends GVRBehavior
                 ownerX, ownerY, ownerZ, 1.0f});
     }
 
+    /**
+     * Set the model matrix of the owner object to face the camera when the up vector of the
+     * owner object is provided. This constraints the owner object to rotate only about that
+     * up vector.
+     */
+
+    private void faceObjectToCameraWithCustomUp()
+    {
+        customUp = customUp.normalize();
+        GVRSceneObject ownerObject = getOwnerObject();
+
+        float camX = mMainCameraRig.getTransform().getPositionX();
+        float camY = mMainCameraRig.getTransform().getPositionY();
+        float camZ = mMainCameraRig.getTransform().getPositionZ();
+
+        float ownerX = ownerObject.getTransform().getPositionX();
+        float ownerY = ownerObject.getTransform().getPositionY();
+        float ownerZ = ownerObject.getTransform().getPositionZ();
+
+        lookat.set(camX - ownerX, camY - ownerY, camZ - ownerZ);
+        lookat = lookat.normalize();
+
+        customUp.cross(lookat.x, lookat.y, lookat.z, ownerXaxis);
+        ownerXaxis = ownerXaxis.normalize();
+
+        ownerXaxis.cross(customUp.x, customUp.y, customUp.z, ownerZaxis);
+
+        ownerObject.getTransform().setModelMatrix(new float[]{ownerXaxis.x, ownerXaxis.y, ownerXaxis.z, 0.0f,
+                customUp.x, customUp.y, customUp.z, 0.0f,
+                ownerZaxis.x, ownerZaxis.y, ownerZaxis.z, 0.0f,
+                ownerX, ownerY, ownerZ, 1.0f});
+
+    }
 }
 
