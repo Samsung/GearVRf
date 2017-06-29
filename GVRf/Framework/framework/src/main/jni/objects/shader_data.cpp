@@ -242,10 +242,6 @@ namespace gvr {
                 }
             }
         }
-        if (uniforms().updateGPU(renderer))
-        {
-            return 1;
-        }
         return 0;
     }
 

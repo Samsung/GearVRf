@@ -67,6 +67,8 @@ namespace gvr {
         void setDescriptorSet(VkDescriptorSet descriptorSet){
             writeDescriptorSet.dstSet = descriptorSet;
         }
+
+        char * getUniformData() { return mUniformData; }
     protected:
         void createBuffer(VulkanCore*);
         void updateBuffer(VulkanCore* vk);
